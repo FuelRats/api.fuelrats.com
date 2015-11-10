@@ -85,7 +85,6 @@ GET /rats/:id
 Gets a rat
 \*****************************************************************************/
 router.route( '/rats/:id' )
-.put( rat.post )
 .get( rat.get );
 
 /*****************************************************************************\
@@ -107,6 +106,7 @@ GET /rescues/:id
 Gets a rescue
 \*****************************************************************************/
 router.route( '/rescues/:id' )
+.post( rescue.post )
 .put( rescue.post )
 .get( rescue.get );
 
