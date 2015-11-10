@@ -1,0 +1,27 @@
+{
+  "name": "api.fuelrats.com",
+  "version": "1.1.0",
+  "description": "",
+  "authors": [
+    "Trezy <tre@trezy.com>"
+  ],
+  "scripts": {
+    "api": "./node_modules/node-dev/bin/node-dev api.js",
+    "mongo": "./bin/mongo.sh",
+    "dev": "npm run mongo && npm run api"
+  },
+  "license": "MIT",
+  "main": "api.js",
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "cors": "^2.7.1",
+    "express": "^4.13.3",
+    "express-session": "^1.12.1",
+    "mongodb": "^2.0.48",
+    "mongoose": "^4.2.4",
+    "passport": "^0.3.0",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^3.1.0",
+    "socket.io": "^1.3.7"
+  }
+}
