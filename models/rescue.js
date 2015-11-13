@@ -12,23 +12,35 @@ RescueSchema = new Schema({
     index: 'text',
     type: String
   },
+  'codeRed': {
+    default: false,
+    type: Boolean
+  },
   'nickname': {
     index: 'text',
     required: true,
     type: String
   },
-  'codeRed': {
-    default: false,
+  'open': {
+    default: true,
     type: Boolean
   },
-  'nearestSystem': String,
+  'nearestSystem': {
+    type: String
+  },
   'platform': {
     default: 'PC',
     type: String
   },
-  'rats': [String],
-  'stage': String,
-  'system': String
+  'rats': {
+    type: [String]
+  },
+  'stage': {
+    type: String
+  },
+  'system': {
+    type: String
+  }
 });
 
 //RescueSchema.index( { '$**': 'text' } );
