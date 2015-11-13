@@ -3,6 +3,9 @@ var bodyParser, cors, express, http, mongoose, io, rat, rescue, app, httpServer,
 // IMPORT
 // =============================================================================
 
+// Import config
+config = require( './config' );
+
 // Import libraries
 bodyParser = require( 'body-parser' );
 cors = require( 'cors' );
@@ -32,7 +35,7 @@ app.use( cors() );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 app.use( expressSession({
-  secret: 'foobarbazdiddlydingdongsdf]08st0agf/b',
+  secret: config.secretSauce,
   resave: false,
   saveUninitialized: false
 }));
@@ -44,7 +47,7 @@ app.set( 'x-powered-by', false );
 
 httpServer = http.Server( app );
 
-port = process.env.PORT || 8080;
+port = process.env.PORT || config.port;
 
 // Prepare the Passport
 // =============================================================================
@@ -73,7 +76,7 @@ router = express.Router();
 router.use( function ( request, response, next ) {
   console.log( '' );
   console.log( request.method, request.originalUrl );
-  console.log( request.body );
+  console.log( request );
   next();
 });
 

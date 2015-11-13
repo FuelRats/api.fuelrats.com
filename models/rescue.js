@@ -33,7 +33,9 @@ RescueSchema = new Schema({
     type: String
   },
   'rats': {
-    type: [String]
+    type: [{
+      type: String
+    }]
   },
   'stage': {
     type: String
@@ -41,6 +43,14 @@ RescueSchema = new Schema({
   'system': {
     type: String
   }
+});
+
+RescueSchema.pre( 'save', function ( next ) {
+  if ( !this.open ) {
+    this.active = false;
+  }
+
+  next();
 });
 
 //RescueSchema.index( { '$**': 'text' } );
