@@ -2,9 +2,8 @@
 
 ## Setup
 
-To get the system up and running just install all of the required Node modules:
+To get the system up and running, `cd` into your new repository and install all of the required Node modules:
 
-    npm install -g grunt-cli node-dev
     npm install
 
 After that, development should be easy! Use our `dev` task to get everything up and running:
@@ -12,3 +11,7 @@ After that, development should be easy! Use our `dev` task to get everything up 
     npm run dev
 
 Then you can hit the API at [http://localhost:8080](http://localhost:8080).
+
+## Running on Windows
+
+I don't own a Windows machine and I'm not enough of a masochist to try developing on one. If you need assistance, talk to [Tyrope](https://github.com/tyrope).
