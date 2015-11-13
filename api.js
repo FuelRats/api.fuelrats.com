@@ -76,7 +76,7 @@ router = express.Router();
 router.use( function ( request, response, next ) {
   console.log( '' );
   console.log( request.method, request.originalUrl );
-  console.log( request );
+  console.log( request.body );
   next();
 });
 
@@ -98,8 +98,8 @@ GET /rats/:id
 Gets a list of rats
 \*****************************************************************************/
 router.route( '/rats' )
-.post( rat.post )
-.get( rat.get );
+.get( rat.get )
+.post( rat.post );
 
 /*****************************************************************************\
 PUT /rescues/:id
@@ -109,9 +109,9 @@ GET /rescues/:id
 Gets a rescue
 \*****************************************************************************/
 router.route( '/rescues/:id' )
-.post( rescue.post )
-.put( rescue.post )
-.get( rescue.get );
+.get( rescue.get )
+.put( rescue.put )
+.post( rescue.post );
 
 /*****************************************************************************\
 POST /rescues
@@ -121,8 +121,8 @@ GET /rescues/:id
 Gets a list of rescues
 \*****************************************************************************/
 router.route( '/rescues' )
-.post( rescue.post )
-.get( rescue.get );
+.get( rescue.get )
+.post( rescue.post );
 
 router.route( '/search/rescues/:query' )
 .get( rescue.search );

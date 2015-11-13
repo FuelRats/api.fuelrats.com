@@ -1,19 +1,14 @@
-var Rescue, rescue;
+var Rescue, rescue, save, swaggerMongoose;
 
 Rescue = require( '../models/rescue' );
-rescue = new Rescue
+swaggerMongoose = require('swagger-mongoose');
+rescue = new Rescue;
 
-exports.post = function ( request, response, respond ) {
-  if ( !respond ) {
-    respond = true;
-  }
+save = function ( entity, response ) {
+  var ret, status;
 
-  for ( var key in request.body ) {
-    rescue[key] = request.body[key]
-  }
-
-  rescue.save( function ( error ) {
-    var errors, errorTypes, ret;
+  entity.save( function ( error, entity ) {
+    var errors, errorTypes;
 
     if ( error ) {
       errors = error['errors'];
@@ -26,13 +21,52 @@ exports.post = function ( request, response, respond ) {
         ret.push( errors[errorType].message );
       }
 
-      response.status( 406 )
-      response.json( ret );
+      status = 406;
+      ret = ret;
 
-    } else if ( respond ) {
-      response.json( rescue );
+    } else {
+      status = 201;
+      ret = entity;
     }
+
+    response.status( status );
+    response.json( ret );
   });
+};
+
+exports.post = function ( request, response, respond ) {
+  var saveResponse;
+
+  if ( !respond ) {
+    respond = true;
+  }
+
+  for ( var key in request.body ) {
+    rescue[key] = request.body[key]
+  }
+
+  save( rescue, response );
+
+  return rescue;
+};
+
+exports.put = function ( request, response, respond ) {
+  var saveResponse;
+
+  if ( id = request.params.id ) {
+    Rescue.findById( id, function ( error, rescue ) {
+      if ( error ) {
+        response.status( 404 );
+        response.send( error );
+      }
+
+      for ( var key in request.body ) {
+        rescue[key] = request.body[key]
+      }
+
+      save( rescue, response );
+    });
+  }
 
   return rescue;
 };
