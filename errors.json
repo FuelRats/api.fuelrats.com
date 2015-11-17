@@ -1,0 +1,14 @@
+{
+  "bad_request": {
+    "code": 400,
+    "detail": "You've made a request. How naughty. :-(",
+    "status": "Bad Request"
+  },
+
+  "missing_required_field": {
+    "code": 400,
+    "detail": "",
+    "status": "Bad Request",
+    "title": "Missing Required Field"
+  }
+}
