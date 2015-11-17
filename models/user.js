@@ -16,6 +16,13 @@ modelProperties = {
 
 UserSchema = new Schema( modelProperties );
 
+UserSchema.methods.toJSON = function () {
+  obj = this.toObject();
+  delete obj.hash;
+  delete obj.salt;
+  return obj;
+};
+
 UserSchema.plugin( passportLocalMongoose, {
   usernameField: 'email'
 });

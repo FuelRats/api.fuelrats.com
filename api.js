@@ -1,4 +1,4 @@
-var bodyParser, cors, express, http, mongoose, io, rat, rescue, app, httpServer, passport, port, router, socket;
+var bodyParser, cors, express, http, io, mongoose, notAllowed, rat, rescue, app, httpServer, passport, port, router, socket;
 
 // IMPORT
 // =============================================================================
@@ -80,6 +80,12 @@ router.use( function ( request, response, next ) {
   next();
 });
 
+// Function for disallowed methods
+notAllowed = function notAllowed ( request, response ) {
+  response.status( 405 );
+  response.send( 'Method Not Allowed' );
+}
+
 /*****************************************************************************\
 PUT /rats/:id
 Updates a rat
@@ -110,8 +116,9 @@ Gets a rescue
 \*****************************************************************************/
 router.route( '/rescues/:id' )
 .get( rescue.get )
+.post( rescue.post )
 .put( rescue.put )
-.post( rescue.post );
+.delete( notAllowed );
 
 /*****************************************************************************\
 POST /rescues
@@ -122,7 +129,9 @@ Gets a list of rescues
 \*****************************************************************************/
 router.route( '/rescues' )
 .get( rescue.get )
-.post( rescue.post );
+.post( rescue.post )
+.put( notAllowed )
+.delete( notAllowed );
 
 router.route( '/search/rescues/:query' )
 .get( rescue.search );

@@ -54,6 +54,22 @@ RescueSchema.pre( 'save', function ( next ) {
 });
 
 //RescueSchema.index( { '$**': 'text' } );
-RescueSchema.set( 'toJSON', { virtuals: true } );
+RescueSchema.set( 'toJSON', {
+  virtuals: true,
+   transform: function ( document, ret, options ) {
+     ret.id = ret._id;
+     delete ret._id;
+   }
+});
+
+//RescueSchema.methods.toJSON = function () {
+//  var obj;
+//
+//  obj = this.toObject();
+//
+//  //delete obj._id;
+//
+//  return obj;
+//}
 
 module.exports = mongoose.model( 'Rescue', RescueSchema );

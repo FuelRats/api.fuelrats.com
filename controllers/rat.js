@@ -1,13 +1,14 @@
 var Rat, rat;
 
 Rat = require( '../models/rat' );
-rat = new Rat
+rat = new Rat;
 
 exports.post = function ( request, response, respond ) {
-
   if ( !respond ) {
     respond = true;
   }
+
+  console.log( Rat );
 
   for ( var key in request.body ) {
     rat[key] = request.body[key]
