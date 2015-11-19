@@ -138,18 +138,12 @@ exports.put = function ( request, response ) {
       if ( error ) {
         responseModel.errors = responseModel.errors || [];
         responseModel.errors.push( error );
-        status = 400;
+        response.status( 400 );
+        response.json( responseModel );
+        return;
 
       } else if ( !rescue ) {
-        responseModel.errors.push({
-          message: 'Couldn\'t find a rescue with _id', id
-        });
-        status = 404;
-      };
-
-      if ( responseModel.errors.length ) {
-        response.status( status );
-        response.json( responseModel );
+        response.status( 404 ).send();
         return;
       }
 
@@ -181,15 +175,12 @@ exports.put = function ( request, response ) {
             responseModel.errors.push( errorModel );
           }
 
-          status = 400;
+          response.status( 400 );
+          response.json( responseModel );
 
         } else {
-          responseModel.data = rescue;
-          status = 201;
+          response.status( 204 ).send();
         }
-
-        response.status( status );
-        response.json( responseModel );
       });
     });
   } else {
@@ -199,6 +190,14 @@ exports.put = function ( request, response ) {
 
   return rescue;
 };
+
+
+
+
+
+exports.options = function ( request, response ) {
+  response.json( rescue );
+}
 
 
 

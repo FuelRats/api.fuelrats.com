@@ -55,9 +55,6 @@ passport.use( User.createStrategy() );
 passport.serializeUser( User.serializeUser() );
 passport.deserializeUser( User.deserializeUser() );
 
-// ROUTES
-// =============================================================================
-
 app.use( expressSession({
   secret: 'foobarbazdiddlydingdongsdf]08st0agf/b',
   resave: false,
@@ -144,6 +141,13 @@ router.route( '/search/rats/:query' )
 
 router.route( '/search/rats' )
 .get( rat.get );
+
+/*****************************************************************************\
+GET /
+Return docs
+\*****************************************************************************/
+router.route( '/' )
+// .get( docs )
 
 // Register routes
 app.use( '/api', router );

@@ -19,6 +19,7 @@
     "cors": "^2.7.1",
     "express": "^4.13.3",
     "express-session": "^1.12.1",
+    "jquery": "^2.1.4",
     "mocha": "^2.3.4",
     "mongodb": "^2.0.48",
     "mongoose": "^4.2.6",
