@@ -1,4 +1,8 @@
-var bodyParser, cors, express, http, io, mongoose, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
+var bodyParser, cors, docs, express, http, io, mongoose, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
+
+
+
+
 
 // IMPORT
 // =============================================================================
@@ -9,6 +13,7 @@ config = require( './config' );
 // Import libraries
 bodyParser = require( 'body-parser' );
 cors = require( 'cors' );
+docs = require( 'express-mongoose-docs' );
 express = require( 'express' );
 expressSession = require( 'express-session' );
 http = require( 'http' );
@@ -28,7 +33,11 @@ rescue = require( './controllers/rescue' );
 // Connect to MongoDB
 mongoose.connect( 'mongodb://localhost/fuelrats' );
 
-// Prepare the Express server
+
+
+
+
+// MIDDLEWARE
 // =============================================================================
 
 app = express();
@@ -50,8 +59,6 @@ httpServer = http.Server( app );
 
 port = process.env.PORT || config.port;
 
-// Prepare the Passport
-// =============================================================================
 passport.use( User.createStrategy() );
 passport.serializeUser( User.serializeUser() );
 passport.deserializeUser( User.deserializeUser() );
@@ -64,7 +71,13 @@ app.use( expressSession({
 app.use( passport.initialize() );
 app.use( passport.session() );
 
-// ROUTES
+docs( app, mongoose );
+
+
+
+
+
+// ROUTER
 // =============================================================================
 
 // Create router
@@ -78,53 +91,39 @@ router.use( function ( request, response, next ) {
   next();
 });
 
+
+
+
+
+// SHARED METHODS
+// =============================================================================
+
 // Function for disallowed methods
 notAllowed = function notAllowed ( request, response ) {
   response.status( 405 );
   response.send( 'Method Not Allowed' );
 }
 
-/*****************************************************************************\
-PUT /rats/:id
-Updates a rat
 
-GET /rats/:id
-Gets a rat
-\*****************************************************************************/
+
+
+
+// ROUTES
+// =============================================================================
+
 router.route( '/rats/:id' )
 .get( rat.get );
 
-/*****************************************************************************\
-POST /rats
-Creates a rat
-
-GET /rats/:id
-Gets a list of rats
-\*****************************************************************************/
 router.route( '/rats' )
 .get( rat.get )
 .post( rat.post );
 
-/*****************************************************************************\
-PUT /rescues/:id
-Updates a rescue
-
-GET /rescues/:id
-Gets a rescue
-\*****************************************************************************/
 router.route( '/rescues/:id' )
 .get( rescue.get )
 .post( rescue.post )
 .put( rescue.put )
 .delete( notAllowed );
 
-/*****************************************************************************\
-POST /rescues
-Creates a rescue
-
-GET /rescues/:id
-Gets a list of rescues
-\*****************************************************************************/
 router.route( '/rescues' )
 .get( rescue.get )
 .post( rescue.post )
@@ -143,15 +142,14 @@ router.route( '/search/rats/:query' )
 router.route( '/search/rats' )
 .get( rat.get );
 
-/*****************************************************************************\
-GET /
-Return docs
-\*****************************************************************************/
-
 // Register routes
 app.use( '/api', router );
 app.use( '/test', express.static( 'test' ) );
 app.use( '/node_modules', express.static( 'node_modules' ) );
+
+
+
+
 
 // SOCKET
 // =============================================================================
@@ -162,7 +160,12 @@ socket.on( 'connection', function ( socket ) {
   console.log( 'a user connected' );
 });
 
+
+
+
+
 // START THE SERVER
 // =============================================================================
+
 httpServer.listen( port );
 console.log( 'Listening for requests on port ' + port + '...' );
