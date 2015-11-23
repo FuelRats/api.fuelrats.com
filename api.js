@@ -101,7 +101,7 @@ router.use( function ( request, response, next ) {
 // Function for disallowed methods
 notAllowed = function notAllowed ( request, response ) {
   response.status( 405 );
-  response.send( 'Method Not Allowed' );
+  response.send();
 }
 
 
