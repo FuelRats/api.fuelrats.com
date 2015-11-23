@@ -1,0 +1,17 @@
+default:
+  description: Default Grunt task
+  tasks:
+  - 'server'
+  - 'watch'
+
+server:
+  tasks:
+  - 'shell:mongo'
+  - 'shell:api'
+
+test:
+  tasks:
+  - 'shell:mongo'
+  - 'shell:api'
+  - 'browserify'
+  - 'mocha:test'
