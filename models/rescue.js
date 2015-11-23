@@ -62,14 +62,4 @@ RescueSchema.set( 'toJSON', {
    }
 });
 
-//RescueSchema.methods.toJSON = function () {
-//  var obj;
-//
-//  obj = this.toObject();
-//
-//  //delete obj._id;
-//
-//  return obj;
-//}
-
 module.exports = mongoose.model( 'Rescue', RescueSchema );
