@@ -15,3 +15,10 @@ test:
   - 'shell:api'
   - 'browserify'
   - 'mocha:test'
+
+coverage:
+  tasks:
+  - 'shell:mongo'
+  - 'shell:api'
+  - 'browserify'
+  - 'mocha:coverage'

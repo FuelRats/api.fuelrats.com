@@ -10,14 +10,15 @@ module.exports = {
     options: {
       reporter: 'Spec'
     },
-    src: 'test/test.html'
+    src: 'test/index.html'
   },
 
   coverage: {
     options: {
+      captureFile: './doc/coverage.html',
       reporter: 'HTMLCov'
     },
-    src: 'test/test.html',
+    src: 'test/index.html',
     dest: './doc/coverage.html'
   }
 }

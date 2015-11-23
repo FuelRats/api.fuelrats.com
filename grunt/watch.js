@@ -4,12 +4,10 @@ module.exports = {
     interrupt: true
   },
 
-  sass: {
-    files: 'scss/**/*.scss',
+  test: {
+    files: 'test/spec/*.js',
     tasks: [
-      'sass',
-      'autoprefixer',
-      'notify:sass'
+      'browserify'
     ]
   }
 }

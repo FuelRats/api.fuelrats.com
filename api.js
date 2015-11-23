@@ -1,4 +1,4 @@
-var bodyParser, cors, express, http, io, mongoose, notAllowed, rat, rescue, app, httpServer, passport, port, router, socket;
+var bodyParser, cors, express, http, io, mongoose, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
 
 // IMPORT
 // =============================================================================
@@ -14,6 +14,7 @@ expressSession = require( 'express-session' );
 http = require( 'http' );
 mongoose = require( 'mongoose' );
 passport = require( 'passport' );
+path = require( 'path' );
 io = require( 'socket.io' );
 LocalStrategy = require( 'passport-local' ).Strategy;
 
@@ -146,11 +147,11 @@ router.route( '/search/rats' )
 GET /
 Return docs
 \*****************************************************************************/
-router.route( '/' )
-// .get( docs )
 
 // Register routes
 app.use( '/api', router );
+app.use( '/test', express.static( 'test' ) );
+app.use( '/node_modules', express.static( 'node_modules' ) );
 
 // SOCKET
 // =============================================================================
