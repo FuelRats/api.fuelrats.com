@@ -9,7 +9,7 @@
     "api": "./node_modules/node-dev/bin/node-dev api.js",
     "dev": "npm run mongo && npm run api",
     "mongo": "./bin/mongo.sh",
-    "test": "./node_modules/.bin/mocha --reporter spec"
+    "test": "grunt test"
   },
   "license": "MIT",
   "main": "api.js",
@@ -28,8 +28,10 @@
     "grunt-shell-spawn": "^0.3.10",
     "jquery": "^2.1.4",
     "load-grunt-config": "^0.19.0",
+    "lodash": "^3.10.1",
     "mocha": "^2.3.4",
     "mongoose": "^4.2.6",
+    "morgan": "^1.6.1",
     "node-dev": "^2.7.1",
     "passport": "^0.3.0",
     "passport-local": "^1.0.0",
