@@ -1,4 +1,4 @@
-var bodyParser, cors, docs, express, http, io, mongoose, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
+var bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morgan, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
 
 
 
@@ -13,11 +13,13 @@ config = require( './config' );
 // Import libraries
 bodyParser = require( 'body-parser' );
 cors = require( 'cors' );
+// docket = require( './docket.js' );
 docs = require( 'express-mongoose-docs' );
 express = require( 'express' );
 expressSession = require( 'express-session' );
 http = require( 'http' );
 mongoose = require( 'mongoose' );
+morgan = require( 'morgan' );
 passport = require( 'passport' );
 path = require( 'path' );
 io = require( 'socket.io' );
@@ -37,10 +39,24 @@ mongoose.connect( 'mongodb://localhost/fuelrats' );
 
 
 
+// SHARED METHODS
+// =============================================================================
+
+// Function for disallowed methods
+notAllowed = function notAllowed ( request, response ) {
+  response.status( 405 );
+  response.send();
+};
+
+
+
+
+
 // MIDDLEWARE
 // =============================================================================
 
 app = express();
+app.use( morgan( 'combined' ) )
 app.use( cors() );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
@@ -72,6 +88,7 @@ app.use( passport.initialize() );
 app.use( passport.session() );
 
 docs( app, mongoose );
+// docket( app, mongoose );
 
 
 
@@ -83,27 +100,6 @@ docs( app, mongoose );
 // Create router
 router = express.Router();
 
-// Create middleware
-router.use( function ( request, response, next ) {
-  console.log( '' );
-  console.log( request.method, request.originalUrl );
-  console.log( request.body );
-  next();
-});
-
-
-
-
-
-// SHARED METHODS
-// =============================================================================
-
-// Function for disallowed methods
-notAllowed = function notAllowed ( request, response ) {
-  response.status( 405 );
-  response.send();
-}
-
 
 
 
@@ -111,36 +107,24 @@ notAllowed = function notAllowed ( request, response ) {
 // ROUTES
 // =============================================================================
 
-router.route( '/rats/:id' )
-.get( rat.get );
+router.get( '/rats/:id', rat.get );
 
-router.route( '/rats' )
-.get( rat.get )
-.post( rat.post );
+router.get( '/rats', rat.get );
+router.post( '/rats', rat.post );
 
-router.route( '/rescues/:id' )
-.get( rescue.get )
-.post( rescue.post )
-.put( rescue.put )
-.delete( notAllowed );
+router.get( '/rescues/:id', rescue.get );
+router.post( '/rescues/:id', rescue.post );
+router.put( '/rescues/:id', rescue.put );
+router.delete( '/rescues/:id', notAllowed );
 
-router.route( '/rescues' )
-.get( rescue.get )
-.post( rescue.post )
-.put( notAllowed )
-.delete( notAllowed );
+router.get( '/rescues', rescue.get );
+router.post( '/rescues', rescue.post );
+router.put( '/rescues', notAllowed );
+router.delete( '/rescues', notAllowed );
 
-router.route( '/search/rescues/:query' )
-.get( rescue.search );
+router.get( '/search/rescues', rescue.search );
 
-router.route( '/search/rescues' )
-.get( rescue.get );
-
-router.route( '/search/rats/:query' )
-.get( rat.search );
-
-router.route( '/search/rats' )
-.get( rat.get );
+router.get( '/search/rats', rat.search );
 
 // Register routes
 app.use( '/api', router );

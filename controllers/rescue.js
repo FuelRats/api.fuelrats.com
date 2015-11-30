@@ -23,8 +23,6 @@ exports.get = function ( request, response ) {
     }
   };
 
-  console.log( 'Fresh:', request.fresh );
-
   if ( id = request.params.id ) {
     Rescue.findById( id, function ( error, rescue ) {
       var status;
@@ -190,14 +188,6 @@ exports.put = function ( request, response ) {
 
   return rescue;
 };
-
-
-
-
-
-exports.options = function ( request, response ) {
-  response.json( rescue );
-}
 
 
 
