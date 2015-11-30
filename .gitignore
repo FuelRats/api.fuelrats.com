@@ -1,7 +1,9 @@
 ### Project ###
+data/
 doc/
 test/bundle.js
 npm-debug.log.*
+log*
 
 
 # Created by https://www.gitignore.io
