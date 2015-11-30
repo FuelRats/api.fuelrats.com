@@ -1,4 +1,4 @@
-var bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morgan, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
+var _, bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morgan, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
 
 
 
@@ -11,6 +11,7 @@ var bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morgan,
 config = require( './config' );
 
 // Import libraries
+_ = require( 'lodash' );
 bodyParser = require( 'body-parser' );
 cors = require( 'cors' );
 // docket = require( './docket.js' );
@@ -56,7 +57,7 @@ notAllowed = function notAllowed ( request, response ) {
 // =============================================================================
 
 app = express();
-app.use( morgan( 'combined' ) )
+// app.use( morgan( 'combined' ) )
 app.use( cors() );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
@@ -89,6 +90,16 @@ app.use( passport.session() );
 
 docs( app, mongoose );
 // docket( app, mongoose );
+
+// Combine query parameters with the request body, prioritizing the body
+app.use( function ( request, response, next ) {
+  request.body = _.extend( request.query, request.body );
+
+  console.log( 'METHOD:', request.method );
+  console.log( 'DATA:', request.body );
+
+  next();
+});
 
 
 

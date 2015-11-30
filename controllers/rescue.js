@@ -42,7 +42,7 @@ exports.get = function ( request, response ) {
     });
 
   } else {
-    Rescue.find( request.query, function ( error, rescues ) {
+    Rescue.find( request.body, function ( error, rescues ) {
       var status;
 
       if ( error ) {
@@ -76,11 +76,7 @@ exports.post = function ( request, response ) {
     }
   };
 
-  for ( var key in request.body ) {
-    rescue[key] = request.body[key];
-  }
-
-  rescue.save( function ( error, rescue ) {
+  Rescue.create( request.body, function ( error, rescue ) {
     var errors, errorTypes, status;
 
     if ( error ) {
@@ -102,9 +98,11 @@ exports.post = function ( request, response ) {
         responseModel.errors.push( errorModel );
       }
 
+      console.log( 'failed', error );
       status = 400;
 
     } else {
+      console.log( 'succeeded', rescue );
       responseModel.data = rescue;
       status = 201;
     }
@@ -173,12 +171,15 @@ exports.put = function ( request, response ) {
             responseModel.errors.push( errorModel );
           }
 
-          response.status( 400 );
-          response.json( responseModel );
+          status = 400;
 
         } else {
-          response.status( 204 ).send();
+          status = 200;
+          responseModel = rescue;
         }
+
+        response.status( status );
+        response.json( responseModel );
       });
     });
   } else {
@@ -198,11 +199,15 @@ exports.put = function ( request, response ) {
 exports.search = function ( request, response ) {
   var query;
 
-  query = {
-    $text: {
-      $search: request.params.query
-    }
-  };
+  if ( request.params.query ) {
+    query = {
+      $text: {
+        $search: request.params.query
+      }
+    };
+  } else {
+    query = request.body;
+  }
 
   scoring = {
     score: {
@@ -216,7 +221,6 @@ exports.search = function ( request, response ) {
   .limit( 10 )
   .exec( function ( error, rescues ) {
     if ( error ) {
-      console.log( Object.keys( error ) )
       return response.send( error );
     }
 

@@ -1,4 +1,4 @@
-var chai, expect, randomRescue, rootUrl, superagent;
+var app, chai, expect, randomRescue, request, rootUrl, superagent;
 
 
 
@@ -7,7 +7,9 @@ var chai, expect, randomRescue, rootUrl, superagent;
 // Imports
 // =============================================================================
 
+//app = require( '../../api.js' );
 chai = require( 'chai' );
+//request = require( 'express-mock-request' );
 superagent = require( 'superagent' );
 expect = chai.expect;
 
@@ -21,13 +23,14 @@ expect = chai.expect;
 rootUrl = 'http://localhost:8080/api';
 randomRescue = function () {
   randomName = 'Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36);
+
   return {
     CMDRname: 'CMDR ' + randomName,
     codeRed: !!Math.round( Math.random() ), // Randomly decide if this is a code red
     nearestSystem: 'Eravate',
     nickname: randomName,
     platform: Math.round( Math.random() ) ? 'PC' : 'XB' // Randomly decide if the client is PC or Xbox
-  }
+  };
 };
 
 
@@ -51,6 +54,7 @@ describe( 'POST /api/rescues', function () {
   rescue = randomRescue();
 
   it( 'should create a new rescue', function ( done ) {
+
     superagent
     .post( rootUrl + '/rescues' )
     .send( rescue )
@@ -194,7 +198,7 @@ describe( 'PUT /api/rescues/:id', function () {
     superagent
     .put( rootUrl + '/rescues/' + rescue.id )
     .send({
-      nickname: 'Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
+      nickname: 'Edited Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
     })
     .end( function ( error, response ) {
       if ( error ) {
@@ -202,7 +206,7 @@ describe( 'PUT /api/rescues/:id', function () {
       }
 
       // Make sure the POST succeeded
-      expect( response.status ).to.equal( 204 );
+      expect( response.status ).to.equal( 200 );
 
       done();
     });

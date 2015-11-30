@@ -9,7 +9,6 @@ RescueSchema = new Schema({
     type: Boolean
   },
   'CMDRname': {
-    index: 'text',
     type: String
   },
   'codeRed': {
@@ -17,7 +16,6 @@ RescueSchema = new Schema({
     type: Boolean
   },
   'nickname': {
-    index: 'text',
     required: true,
     type: String
   },
@@ -43,6 +41,11 @@ RescueSchema = new Schema({
   'system': {
     type: String
   }
+});
+
+RescueSchema.index({
+  'CMDRname': 'text',
+  'nickname': 'text'
 });
 
 RescueSchema.pre( 'save', function ( next ) {

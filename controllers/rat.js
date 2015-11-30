@@ -52,7 +52,7 @@ exports.get = function ( request, response ) {
     });
 
   } else {
-    Rat.find( request.query, function ( error, rats ) {
+    Rat.find( request.body, function ( error, rats ) {
       if ( error ) {
         response.send( error );
       }
