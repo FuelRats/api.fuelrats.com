@@ -174,7 +174,7 @@ exports.put = function ( request, response ) {
 
         } else {
           status = 200;
-          responseModel = rescue;
+          responseModel.data = rescue;
         }
 
         response.status( status );
