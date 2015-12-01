@@ -196,8 +196,13 @@ exports.put = function ( request, response ) {
 // SEARCH
 // =============================================================================
 exports.search = function ( request, response ) {
-  var query, scoring;
+  var query, responseModel, scoring;
 
+  responseModel = {
+    links: {
+      self: request.originalUrl
+    }
+  };
   scoring = {};
 
   if ( request.params.query ) {
@@ -220,9 +225,15 @@ exports.search = function ( request, response ) {
   .limit( 10 )
   .exec( function ( error, rats ) {
     if ( error ) {
-      return response.send( error );
+      responseModel.errors = [];
+      responseModel.errors.push( error );
+      status = 400;
+    } else {
+      responseModel.data = rats;
+      status = 200;
     }
 
-    response.json( rats );
+    response.status( status );
+    response.json( responseModel );
   });
 };
