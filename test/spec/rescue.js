@@ -1,4 +1,4 @@
-var app, chai, expect, randomRescue, request, rootUrl, superagent;
+var app, chai, expect, generate, request, rootUrl, superagent;
 
 
 
@@ -13,6 +13,8 @@ chai = require( 'chai' );
 superagent = require( 'superagent' );
 expect = chai.expect;
 
+generate = require( '../generator' );
+
 
 
 
@@ -21,17 +23,6 @@ expect = chai.expect;
 // =============================================================================
 
 rootUrl = 'http://localhost:8080/api';
-randomRescue = function () {
-  randomName = 'Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36);
-
-  return {
-    CMDRname: 'CMDR ' + randomName,
-    codeRed: !!Math.round( Math.random() ), // Randomly decide if this is a code red
-    nearestSystem: 'Eravate',
-    nickname: randomName,
-    platform: Math.round( Math.random() ) ? 'PC' : 'XB' // Randomly decide if the client is PC or Xbox
-  };
-};
 
 
 
@@ -51,7 +42,7 @@ describe( 'POST /api/rescues', function () {
   var rescue;
 
   // Create a rescue object
-  rescue = randomRescue();
+  rescue = generate.randomRescue();
 
   it( 'should create a new rescue', function ( done ) {
 
@@ -125,7 +116,7 @@ describe( 'GET /api/rescues/:id', function () {
   var rescue;
 
   // Create a rescue object
-  rescue = randomRescue();
+  rescue = generate.randomRescue();
 
   // Create a new rescue to test against
   before( function ( done ) {
@@ -176,7 +167,7 @@ describe( 'PUT /api/rescues/:id', function () {
   var newNickname, rescue;
 
   // Create a rescue object
-  rescue = randomRescue();
+  rescue = generate.randomRescue();
 
   // Create a new rescue to test against
   before( function ( done ) {
