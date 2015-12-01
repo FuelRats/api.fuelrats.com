@@ -5,20 +5,33 @@ Schema = mongoose.Schema;
 
 RatSchema = new Schema({
   'CMDRname': {
-    type: String,
-    index: 'text'
+    type: String
+  },
+  'gamertag': {
+    type: String
   },
   'nickname': {
     required: true,
-    type: String,
-    index: 'text'
-  },
-  'platform': {
-    default: 'PC',
     type: String
+  },
+  'drilled': {
+    default: false,
+    type: Boolean
   }
 });
 
-RatSchema.set( 'toJSON', { virtuals: true } );
+RatSchema.index({
+  'CMDRname': 'text',
+  'gamertag': 'text',
+  'nickname': 'text'
+});
+
+RatSchema.set( 'toJSON', {
+  virtuals: true,
+  transform: function ( document, ret, options ) {
+    ret.id = ret._id;
+    delete ret._id;
+  }
+});
 
 module.exports = mongoose.model( 'Rat', RatSchema );

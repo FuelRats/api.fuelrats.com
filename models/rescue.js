@@ -59,10 +59,10 @@ RescueSchema.pre( 'save', function ( next ) {
 //RescueSchema.index( { '$**': 'text' } );
 RescueSchema.set( 'toJSON', {
   virtuals: true,
-   transform: function ( document, ret, options ) {
-     ret.id = ret._id;
-     delete ret._id;
-   }
+  transform: function ( document, ret, options ) {
+    ret.id = ret._id;
+    delete ret._id;
+  }
 });
 
 module.exports = mongoose.model( 'Rescue', RescueSchema );

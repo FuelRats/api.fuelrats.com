@@ -27,6 +27,7 @@ io = require( 'socket.io' );
 LocalStrategy = require( 'passport-local' ).Strategy;
 
 // Import models
+Rat = require( './models/rat' );
 User = require( './models/user' );
 
 // Import controllers
@@ -117,6 +118,46 @@ router = express.Router();
 
 // ROUTES
 // =============================================================================
+
+router.post( '/register', function ( request, response ) {
+  ratData = {}
+
+  if ( request.body.CMDRname ) {
+    ratData.CMDRname = request.body.CMDRname;
+  }
+
+  if ( request.body.gamertag ) {
+    ratData.gamertag = request.body.gamertag;
+  }
+
+  rat = new Rat( ratData );
+
+  user = new User({
+    email: request.body.email,
+    rat: rat._id
+  });
+
+  User.register( user, request.body.password, function ( error, user ) {
+    if ( error ) {
+      response.send( error );
+      return;
+    }
+
+    Rat.create( rat );
+
+    auth = passport.authenticate( 'local' );
+
+    auth( request, response, function () {
+      response.status( 200 );
+      response.json( user );
+    });
+  });
+});
+
+router.post( '/login', passport.authenticate( 'local' ), function ( request, response ) {
+  response.status( 200 );
+  response.json( request.user );
+});
 
 router.get( '/rats/:id', rat.get );
 
