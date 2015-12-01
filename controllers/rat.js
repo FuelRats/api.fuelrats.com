@@ -1,81 +1,218 @@
-var Rat, rat;
+var Rat, rat, save;
+
+
+
+
 
 Rat = require( '../models/rat' );
-rat = new Rat;
+ErrorModels = require( '../errors' );
 
-exports.post = function ( request, response, respond ) {
-  if ( !respond ) {
-    respond = true;
-  }
 
-  console.log( Rat );
 
-  for ( var key in request.body ) {
-    rat[key] = request.body[key]
-  }
 
-  rat.save( function ( error ) {
-    var errors, errorTypes, ret;
 
-    if ( error ) {
-      errors = error['errors'];
-      errorTypes = Object.keys( errors );
-      ret = [];
+// GET
+// =============================================================================
+exports.get = function ( request, response ) {
+  var id, responseModel;
 
-      for ( var i = 0; i < errorTypes.length; i++ ) {
-        var errorType = errorTypes[i];
+  responseModel = {
+    links: {
+      self: request.originalUrl
+    }
+  };
 
-        ret.push( errors[errorType].message );
+  if ( id = request.params.id ) {
+    Rat.findById( id, function ( error, rat ) {
+      var status;
+
+      if ( error ) {
+        responseModel.errors = [];
+        responseModel.errors.push( error );
+        status = 400;
+
+      } else {
+        responseModel.data = rat;
+        status = 200;
       }
 
-      response.status( 406 );
-      response.json( ret );
+      response.status( status );
+      response.json( responseModel );
+    });
 
-    } else if ( respond ) {
-      response.json( rat );
+  } else {
+    Rat.find( request.body, function ( error, rats ) {
+      var status;
+
+      if ( error ) {
+        responseModel.errors = [];
+        responseModel.errors.push( error );
+        status = 400;
+
+      } else {
+        responseModel.data = rats;
+        status = 200;
+      }
+
+      response.status( status );
+      response.json( responseModel );
+    });
+  }
+};
+
+
+
+
+
+// POST
+// =============================================================================
+exports.post = function ( request, response ) {
+  var responseModel;
+
+  responseModel = {
+    links: {
+      self: request.originalUrl
     }
+  };
+
+  Rat.create( request.body, function ( error, rat ) {
+    var errors, errorTypes, status;
+
+    if ( error ) {
+      errorTypes = Object.keys( error.errors );
+      responseModel.errors = [];
+
+      for ( var i = 0; i < errorTypes.length; i++ ) {
+        var error, errorModel, errorType;
+
+        errorType = errorTypes[i];
+        error = error.errors[errorType].properties;
+
+        if ( error.type === 'required' ) {
+          errorModel = ErrorModels['missing_required_field'];
+        }
+
+        errorModel.detail = 'You\'re missing the required field: ' + error.path;
+
+        responseModel.errors.push( errorModel );
+      }
+
+      console.log( 'failed', error );
+      status = 400;
+
+    } else {
+      console.log( 'succeeded', rat );
+      responseModel.data = rat;
+      status = 201;
+    }
+
+    response.status( status );
+    response.json( responseModel );
   });
 
   return rat;
 };
 
-exports.get = function ( request, response ) {
-  var id;
+
+
+
+
+// PUT
+// =============================================================================
+exports.put = function ( request, response ) {
+  var responseModel, status;
+
+  responseModel = {
+    links: {
+      self: request.originalUrl
+    }
+  };
 
   if ( id = request.params.id ) {
     Rat.findById( id, function ( error, rat ) {
       if ( error ) {
-        response.send( error );
+        responseModel.errors = responseModel.errors || [];
+        responseModel.errors.push( error );
+        response.status( 400 );
+        response.json( responseModel );
+        return;
+
+      } else if ( !rat ) {
+        response.status( 404 ).send();
+        return;
       }
 
-      response.json( rat );
-    });
+      for ( var key in request.body ) {
+        rat[key] = request.body[key]
+      }
 
+      rat.increment();
+      rat.save( function ( error, rat ) {
+        var errors, errorTypes, status;
+
+        if ( error ) {
+
+          errorTypes = Object.keys( error.errors );
+          responseModel.errors = [];
+
+          for ( var i = 0; i < errorTypes.length; i++ ) {
+            var error, errorModel, errorType;
+
+            errorType = errorTypes[i];
+            error = error.errors[errorType].properties;
+
+            if ( error.type === 'required' ) {
+              errorModel = ErrorModels['missing_required_field'];
+            }
+
+            errorModel.detail = 'You\'re missing the required field: ' + error.path;
+
+            responseModel.errors.push( errorModel );
+          }
+
+          status = 400;
+
+        } else {
+          status = 200;
+          responseModel = rat;
+        }
+
+        response.status( status );
+        response.json( responseModel );
+      });
+    });
   } else {
-    Rat.find( request.body, function ( error, rats ) {
-      if ( error ) {
-        response.send( error );
-      }
-
-      response.json( rats );
-    });
+    response.status( 400 );
+    response.send();
   }
+
+  return rat;
 };
 
+
+
+
+
+// SEARCH
+// =============================================================================
 exports.search = function ( request, response ) {
-  var query;
+  var query, scoring;
 
-  query = {
-    $text: {
-      $search: request.params.query
-    }
-  };
+  scoring = {};
 
-  scoring = {
-    score: {
+  if ( request.params.query ) {
+    query = {
+      $text: {
+        $search: request.params.query
+      }
+    };
+
+    scoring.score = {
       $meta: 'textScore'
-    }
-  };
+    };
+  } else {
+    query = request.body;
+  }
 
   Rat
   .find( query, scoring )
@@ -83,7 +220,6 @@ exports.search = function ( request, response ) {
   .limit( 10 )
   .exec( function ( error, rats ) {
     if ( error ) {
-      console.log( Object.keys( error ) )
       return response.send( error );
     }
 

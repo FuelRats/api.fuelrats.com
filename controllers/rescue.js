@@ -6,7 +6,6 @@ var Rescue, rescue, save;
 
 Rescue = require( '../models/rescue' );
 ErrorModels = require( '../errors' );
-rescue = new Rescue;
 
 
 
@@ -197,7 +196,9 @@ exports.put = function ( request, response ) {
 // SEARCH
 // =============================================================================
 exports.search = function ( request, response ) {
-  var query;
+  var query, scoring;
+
+  scoring = {};
 
   if ( request.params.query ) {
     query = {
@@ -205,15 +206,13 @@ exports.search = function ( request, response ) {
         $search: request.params.query
       }
     };
+
+    scoring.score = {
+      $meta: 'textScore'
+    };
   } else {
     query = request.body;
   }
-
-  scoring = {
-    score: {
-      $meta: 'textScore'
-    }
-  };
 
   Rescue
   .find( query, scoring )
