@@ -96,6 +96,8 @@ docs( app, mongoose );
 app.use( function ( request, response, next ) {
   request.body = _.extend( request.query, request.body );
 
+  console.log( '' );
+  console.log( 'ENDPOINT:', request.originalUrl );
   console.log( 'METHOD:', request.method );
   console.log( 'DATA:', request.body );
 
