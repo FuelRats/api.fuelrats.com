@@ -16,3 +16,10 @@ After that, development should be easy! Use our `dev` task to get everything up 
     npm run dev
 
 Then you can hit the API at [http://localhost:8080](http://localhost:8080).
+
+## Archives
+
+There are a couple of import scripts available in the `bin` folder for grabbing the rats and rescues currently listed in our Google spreadsheets. You can run them with the `node` CLI:
+
+    node bin/import-rats
+    node bin/import-rescues

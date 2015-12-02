@@ -8,6 +8,10 @@ RescueSchema = new Schema({
     default: true,
     type: Boolean
   },
+  'archive': {
+    default: false,
+    type: Boolean
+  },
   'CMDRname': {
     type: String
   },
@@ -22,7 +26,6 @@ RescueSchema = new Schema({
     type: Date
   },
   'nickname': {
-    required: true,
     type: String
   },
   'open': {
@@ -30,6 +33,9 @@ RescueSchema = new Schema({
     type: Boolean
   },
   'nearestSystem': {
+    type: String
+  },
+  'notes': {
     type: String
   },
   'platform': {
@@ -41,8 +47,8 @@ RescueSchema = new Schema({
       type: String
     }]
   },
-  'stage': {
-    type: String
+  'successful': {
+    type: Boolean
   },
   'system': {
     type: String

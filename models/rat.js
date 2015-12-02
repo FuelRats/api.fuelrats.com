@@ -4,6 +4,10 @@ mongoose = require( 'mongoose' );
 Schema = mongoose.Schema;
 
 RatSchema = new Schema({
+  'archive': {
+    default: false,
+    type: Boolean
+  },
   'CMDRname': {
     type: String
   },
