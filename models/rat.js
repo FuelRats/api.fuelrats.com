@@ -7,11 +7,21 @@ RatSchema = new Schema({
   'CMDRname': {
     type: String
   },
+  'createdAt': {
+    type: Date
+  },
   'gamertag': {
     type: String
   },
-  'nickname': {
+  'lastModified': {
+    type: Date
+  },
+  'joined': {
+    default: Date.now(),
     required: true,
+    type: Date
+  },
+  'nickname': {
     type: String
   },
   'drilled': {
@@ -24,6 +34,17 @@ RatSchema.index({
   'CMDRname': 'text',
   'gamertag': 'text',
   'nickname': 'text'
+});
+
+RatSchema.pre( 'save', function ( next ) {
+  var timestamp;
+
+  timestamp = Date.now();
+
+  this.createdAt = this.createdAt || timestamp;
+  this.lastModified = timestamp;
+
+  next();
 });
 
 RatSchema.set( 'toJSON', {

@@ -15,6 +15,12 @@ RescueSchema = new Schema({
     default: false,
     type: Boolean
   },
+  'createdAt': {
+    type: Date
+  },
+  'lastModified': {
+    type: Date
+  },
   'nickname': {
     required: true,
     type: String
@@ -49,9 +55,16 @@ RescueSchema.index({
 });
 
 RescueSchema.pre( 'save', function ( next ) {
+  var timestamp;
+
+  timestamp = Date.now();
+
   if ( !this.open ) {
     this.active = false;
   }
+
+  this.createdAt = this.createdAt || timestamp;
+  this.lastModified = timestamp;
 
   next();
 });

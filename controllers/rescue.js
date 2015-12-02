@@ -101,7 +101,6 @@ exports.post = function ( request, response ) {
       status = 400;
 
     } else {
-      console.log( 'succeeded', rescue );
       responseModel.data = rescue;
       status = 201;
     }
