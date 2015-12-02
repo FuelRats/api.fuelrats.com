@@ -166,20 +166,17 @@ describe( 'GET /api/rescues/:id', function () {
 describe( 'PUT /api/rescues/:id', function () {
   var newNickname, rescue;
 
-  // Create a rescue object
-  rescue = generate.randomRescue();
-
   // Create a new rescue to test against
   before( function ( done ) {
     superagent
     .post( rootUrl + '/rescues' )
-    .send( rescue )
+    .send( generate.randomRescue() )
     .end( function ( error, response ) {
       if ( error ) {
         return done( error );
       }
 
-      rescue.id = response.body.data.id;
+      rescue = response.body.data;
 
       done();
     });
@@ -203,4 +200,3 @@ describe( 'PUT /api/rescues/:id', function () {
     });
   });
 });
-

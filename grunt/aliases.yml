@@ -2,28 +2,26 @@ default:
   description: Default Grunt task
   tasks:
   - 'server'
-  - 'buildTest'
+  - 'browserify'
   - 'watch'
 
 server:
+  description: Start a dev server
   tasks:
   - 'shell:mongo'
   - 'shell:api'
 
-buildTest:
+test:
+  description: Run the tests
   tasks:
   - 'browserify'
-
-test:
-  tasks:
-  - 'buildTest'
   - 'shell:mongo'
   - 'shell:api'
   - 'mocha:test'
 
 coverage:
+  description: Not working yet. :-/
   tasks:
-  - 'buildTest'
   - 'shell:mongo'
   - 'shell:api'
   - 'mocha:coverage'

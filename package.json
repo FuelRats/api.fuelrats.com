@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "api": "./node_modules/node-dev/bin/node-dev api.js",
-    "dev": "npm run mongo && npm run api",
+    "dev": "grunt",
     "mongo": "./bin/mongo.sh",
     "test": "grunt test"
   },
