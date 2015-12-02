@@ -18,6 +18,8 @@
     "browserify": "^12.0.1",
     "chai": "^3.4.1",
     "cors": "^2.7.1",
+    "csv": "^0.4.6",
+    "download": "^4.4.3",
     "express": "^4.13.3",
     "express-mock-request": "0.0.2",
     "express-mongoose-docs": "^0.3.1",
