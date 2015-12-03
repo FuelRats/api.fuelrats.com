@@ -198,6 +198,8 @@ router.delete( '/rats/:id', notAllowed );
 
 router.get( '/rats', rat.get );
 router.post( '/rats', rat.post );
+router.put( '/rescues', notAllowed );
+router.delete( '/rescues', notAllowed );
 
 router.get( '/rescues/:id', rescue.get );
 router.post( '/rescues/:id', rescue.post );
