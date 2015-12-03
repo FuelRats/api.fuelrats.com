@@ -3,10 +3,12 @@ module.exports = {
     randomName = ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 );
 
     return {
-      CMDRname: 'CMDR ' + randomName,
+      client: {
+        CMDRname: 'CMDR ' + randomName,
+        nickname: randomName,
+      },
       codeRed: !!Math.round( Math.random() ), // Randomly decide if this is a code red
-      nearestSystem: 'Eravate',
-      nickname: randomName,
+      system: 'Eravate',
       platform: Math.round( Math.random() ) ? 'PC' : 'XB' // Randomly decide if the client is PC or Xbox
     };
   },

@@ -64,10 +64,10 @@ describe( 'POST /api/rescues', function () {
       expect( response.body.data ).to.be.an( 'object' );
 
       // Check all of the properties on the returned object
-      expect( response.body.data.CMDRname ).to.equal( rescue.CMDRname );
+      expect( response.body.data.client.CMDRname ).to.equal( rescue.client.CMDRname );
+      expect( response.body.data.client.nickname ).to.equal( rescue.client.nickname );
       expect( response.body.data.codeRed ).to.equal( rescue.codeRed );
       expect( response.body.data.nearestSystem ).to.equal( rescue.nearestSystem );
-      expect( response.body.data.nickname ).to.equal( rescue.nickname );
       expect( response.body.data.platform ).to.equal( rescue.platform );
 
       done();

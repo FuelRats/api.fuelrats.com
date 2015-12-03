@@ -12,8 +12,15 @@ RescueSchema = new Schema({
     default: false,
     type: Boolean
   },
-  'CMDRname': {
-    type: String
+  'client': {
+    type: {
+      'CMDRname': {
+        type: String
+      },
+      'nickname': {
+        type: String
+      }
+    }
   },
   'codeRed': {
     default: false,
@@ -25,15 +32,9 @@ RescueSchema = new Schema({
   'lastModified': {
     type: Date
   },
-  'nickname': {
-    type: String
-  },
   'open': {
     default: true,
     type: Boolean
-  },
-  'nearestSystem': {
-    type: String
   },
   'notes': {
     type: String
