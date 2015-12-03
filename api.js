@@ -162,6 +162,9 @@ router.post( '/login', passport.authenticate( 'local' ), function ( request, res
 });
 
 router.get( '/rats/:id', rat.get );
+router.post( '/rats/:id', rat.post );
+router.put( '/rats/:id', rat.put );
+router.delete( '/rats/:id', notAllowed );
 
 router.get( '/rats', rat.get );
 router.post( '/rats', rat.post );

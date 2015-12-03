@@ -164,7 +164,7 @@ describe( 'GET /api/rescues/:id', function () {
 
 
 describe( 'PUT /api/rescues/:id', function () {
-  var newNickname, rescue;
+  var rescue;
 
   // Create a new rescue to test against
   before( function ( done ) {
@@ -186,7 +186,7 @@ describe( 'PUT /api/rescues/:id', function () {
     superagent
     .put( rootUrl + '/rescues/' + rescue.id )
     .send({
-      nickname: 'Edited Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
+      nickname: 'Edited Test Client ' + ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 )
     })
     .end( function ( error, response ) {
       if ( error ) {

@@ -1,4 +1,4 @@
-var app, chai, expect, generate, randomRat, request, rootUrl, superagent;
+var app, chai, expect, generate, request, rootUrl, superagent;
 
 
 
@@ -41,14 +41,14 @@ rootUrl = 'http://localhost:8080/api';
 describe( 'POST /api/rats', function () {
   var rat;
 
-  // Create a rescue object
+  // Create a rat object
   rat = generate.randomRat();
 
   it( 'should create a new rat', function ( done ) {
 
     superagent
     .post( rootUrl + '/rats' )
-    .send( rescue )
+    .send( rat )
     .end( function ( error, response ) {
       if ( error ) {
         return done( error );
@@ -64,7 +64,6 @@ describe( 'POST /api/rats', function () {
       expect( response.body.data ).to.be.an( 'object' );
 
       // Check all of the properties on the returned object
-
       expect( response.body.data.CMDRname ).to.equal( rat.CMDRname );
       expect( response.body.data.gamertag ).to.equal( rat.gamertag );
       expect( response.body.data.drilled ).to.equal( rat.drilled );
@@ -115,10 +114,10 @@ describe( 'GET /api/rats/:id', function () {
 
   var rat;
 
-  // Create a rescue object
+  // Create a rat object
   rat = generate.randomRat();
 
-  // Create a new rescue to test against
+  // Create a new rat to test against
   before( function ( done ) {
     superagent
     .post( rootUrl + '/rats' )
@@ -134,9 +133,9 @@ describe( 'GET /api/rats/:id', function () {
     });
   });
 
-  it( 'should return a rescue', function ( done ) {
+  it( 'should return a rat', function ( done ) {
     superagent
-    .get( rootUrl + '/rescues/' + rescue.id )
+    .get( rootUrl + '/rats/' + rat.id )
     .end( function ( error, response ) {
       if ( error ) {
         return done( error );
@@ -164,22 +163,19 @@ describe( 'GET /api/rats/:id', function () {
 
 
 describe( 'PUT /api/rats/:id', function () {
-  var newNickname, rat;
+  var rat;
 
-  // Create a rescue object
-  rat = generate.randomRat();
-
-  // Create a new rescue to test against
+  // Create a new rat to test against
   before( function ( done ) {
     superagent
     .post( rootUrl + '/rats' )
-    .send( rat )
+    .send( generate.randomRat() )
     .end( function ( error, response ) {
       if ( error ) {
         return done( error );
       }
 
-      rat.id = response.body.data.id;
+      rat = response.body.data;
 
       done();
     });
@@ -187,9 +183,9 @@ describe( 'PUT /api/rats/:id', function () {
 
   it( 'should update a rat', function ( done ) {
     superagent
-    .put( rootUrl + '/rats/' + rescue.id )
+    .put( rootUrl + '/rats/' + rat.id )
     .send({
-      nickname: 'Edited Test Rat ' + ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 )
+      nickname: 'Edited Test Client ' + ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 )
     })
     .end( function ( error, response ) {
       if ( error ) {
@@ -203,4 +199,3 @@ describe( 'PUT /api/rats/:id', function () {
     });
   });
 });
-
