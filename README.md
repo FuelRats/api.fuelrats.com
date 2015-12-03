@@ -5,17 +5,18 @@
 [![Travis CI Build](http://img.shields.io/travis/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://travis-ci.org/FuelRats/api.fuelrats.com)
 ![Coveralls Coverage Report](http://img.shields.io/coveralls/FuelRats/api.fuelrats.com.svg?style=flat-square)
 
-## Setup
+## Development
 
 To get the system up and running, `cd` into your new repository and install all of the required Node modules:
 
     npm install
+    npm install -g grunt-cli
 
 After that, development should be easy! Use our `dev` task to get everything up and running:
 
     npm run dev
 
-Then you can hit the API at [http://localhost:8080](http://localhost:8080).
+Then you can hit the API at [http://localhost:8080](http://localhost:8080). You can also change the port (defaults to `8080`) and the salt used to hash passwords in the database in `config.json`
 
 ## Testing
 
