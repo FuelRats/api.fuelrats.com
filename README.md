@@ -17,7 +17,14 @@ After that, development should be easy! Use our `dev` task to get everything up 
 
 Then you can hit the API at [http://localhost:8080](http://localhost:8080).
 
-## Archives
+## Testing
+
+Make sure to start a server first, then run all of the test suites:
+
+    npm run dev
+    npm test
+
+## Importing Archives
 
 There are a couple of import scripts available in the `bin` folder for grabbing the rats and rescues currently listed in our Google spreadsheets. You can run them with the `node` CLI:
 

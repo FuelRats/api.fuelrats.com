@@ -13,9 +13,7 @@ coverage:
 default:
   description: Default Grunt task
   tasks:
-  - 'server'
-  - 'browserify'
-  - 'watch'
+  - 'api'
 
 server:
   description: Just an alias for the api task
@@ -25,6 +23,4 @@ server:
 test:
   description: Run the tests
   tasks:
-  - 'browserify'
-  - 'api'
-  - 'mocha:test'
+  - 'mochaTest'
