@@ -14,6 +14,10 @@ RatSchema = new Schema({
   'createdAt': {
     type: Date
   },
+  'drilled': {
+    default: false,
+    type: Boolean
+  },
   'gamertag': {
     type: String
   },
@@ -25,12 +29,18 @@ RatSchema = new Schema({
     required: true,
     type: Date
   },
+  'netlog': {
+    type: {
+      'commanderId': {
+        type: String
+      },
+      'userId': {
+        type: String
+      }
+    }
+  },
   'nickname': {
     type: String
-  },
-  'drilled': {
-    default: false,
-    type: Boolean
   }
 });
 
