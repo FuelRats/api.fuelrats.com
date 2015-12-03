@@ -1,3 +1,15 @@
+api:
+  description: Start the api
+  tasks:
+  - 'shell:mongo'
+  - 'shell:api'
+
+coverage:
+  description: Not working yet. :-/
+  tasks:
+  - 'api'
+  - 'mocha:coverage'
+
 default:
   description: Default Grunt task
   tasks:
@@ -6,22 +18,13 @@ default:
   - 'watch'
 
 server:
-  description: Start a dev server
+  description: Just an alias for the api task
   tasks:
-  - 'shell:mongo'
-  - 'shell:api'
+  - 'api'
 
 test:
   description: Run the tests
   tasks:
   - 'browserify'
-  - 'shell:mongo'
-  - 'shell:api'
+  - 'api'
   - 'mocha:test'
-
-coverage:
-  description: Not working yet. :-/
-  tasks:
-  - 'shell:mongo'
-  - 'shell:api'
-  - 'mocha:coverage'

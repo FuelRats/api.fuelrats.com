@@ -1,15 +1,16 @@
 module.exports = {
   mongo: {
-    command: 'npm run mongo',
+    command: './bin/mongo.sh',
     options: {
       async: true
     }
   },
 
   api: {
-    command: 'npm run api',
-    options: {
-      async: true
-    }
+    command: './node_modules/node-dev/bin/node-dev api.js'
+  },
+
+  apiNoLog: {
+    command: './node_modules/node-dev/bin/node-dev api.js --no-log'
   }
 }

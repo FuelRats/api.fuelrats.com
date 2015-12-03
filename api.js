@@ -1,4 +1,4 @@
-var _, bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morgan, notAllowed, rat, rescue, app, httpServer, passport, path, port, router, socket;
+var _, bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morgan, notAllowed, options, rat, rescue, app, httpServer, passport, path, port, router, socket;
 
 
 
@@ -37,6 +37,10 @@ rescue = require( './controllers/rescue' );
 // Connect to MongoDB
 mongoose.connect( 'mongodb://localhost/fuelrats' );
 
+options = {
+  logging: true
+};
+
 
 
 
@@ -49,6 +53,27 @@ notAllowed = function notAllowed ( request, response ) {
   response.status( 405 );
   response.send();
 };
+
+
+
+
+
+// Parse command line arguments
+// =============================================================================
+
+if ( process.argv ) {
+  for ( var i = 0; i < process.argv.length; i++ ) {
+    var arg;
+
+    arg = process.argv[i];
+
+    switch ( arg ) {
+      case '--no-log':
+        options.logging = false;
+        break;
+    }
+  }
+}
 
 
 
@@ -95,14 +120,19 @@ docs( app, mongoose );
 // Combine query parameters with the request body, prioritizing the body
 app.use( function ( request, response, next ) {
   request.body = _.extend( request.query, request.body );
-
-  console.log( '' );
-  console.log( 'ENDPOINT:', request.originalUrl );
-  console.log( 'METHOD:', request.method );
-  console.log( 'DATA:', request.body );
-
   next();
 });
+
+// Add logging
+if ( options.logging ) {
+  app.use( function ( request, response, next ) {
+    console.log( '' );
+    console.log( 'ENDPOINT:', request.originalUrl );
+    console.log( 'METHOD:', request.method );
+    console.log( 'DATA:', request.body );
+    next();
+  });
+}
 
 
 

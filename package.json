@@ -1,14 +1,12 @@
 {
   "name": "api.fuelrats.com",
-  "version": "0.2.2",
+  "version": "0.2.1",
   "description": "",
   "authors": [
     "Trezy <tre@trezy.com>"
   ],
   "scripts": {
-    "api": "./node_modules/node-dev/bin/node-dev api.js",
-    "dev": "grunt",
-    "mongo": "./bin/mongo.sh",
+    "dev": "grunt api",
     "test": "grunt test"
   },
   "license": "MIT",
