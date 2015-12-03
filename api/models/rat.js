@@ -26,13 +26,15 @@ RatSchema = new Schema({
   },
   'joined': {
     default: Date.now(),
-    required: true,
     type: Date
   },
   'netlog': {
     type: {
       'commanderId': {
         type: String
+      },
+      'data': {
+        type: Schema.Types.Mixed
       },
       'userId': {
         type: String
