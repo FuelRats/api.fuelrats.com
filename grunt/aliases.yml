@@ -8,15 +8,9 @@ coverage:
   description: Not working yet. :-/
   tasks:
   - 'api'
-  - 'mocha:coverage'
 
 default:
   description: Default Grunt task
-  tasks:
-  - 'api'
-
-server:
-  description: Just an alias for the api task
   tasks:
   - 'api'
 

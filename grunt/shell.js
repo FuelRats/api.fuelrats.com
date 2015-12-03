@@ -7,10 +7,10 @@ module.exports = {
   },
 
   api: {
-    command: './node_modules/node-dev/bin/node-dev api.js'
+    command: './node_modules/node-dev/bin/node-dev api/index.js'
   },
 
   apiNoLog: {
-    command: './node_modules/node-dev/bin/node-dev api.js --no-log'
+    command: './node_modules/node-dev/bin/node-dev api/index.js --no-log'
   }
-}
+};

@@ -3,6 +3,6 @@ module.exports = {
     options: {
       reporter: 'spec'
     },
-    src: 'test/spec/*.js'
+    src: ['test/spec/*.js']
   }
-}
+};
