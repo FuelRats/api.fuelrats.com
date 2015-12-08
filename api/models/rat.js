@@ -55,7 +55,7 @@ RatSchema.index({
 RatSchema.pre( 'save', function ( next ) {
   var timestamp;
 
-  timestamp = Date.now();
+  timestamp = new Date().getTime() / 1000;
 
   this.createdAt = this.createdAt || timestamp;
   this.lastModified = timestamp;
