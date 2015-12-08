@@ -42,7 +42,7 @@ RatSchema = new Schema({
     }
   },
   'nickname': {
-    type: String
+    type: [String]
   }
 });
 
