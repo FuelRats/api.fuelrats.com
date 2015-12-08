@@ -27,10 +27,15 @@ RescueSchema = new Schema({
     type: Boolean
   },
   'createdAt': {
-    type: Date
+    type: Number
   },
   'lastModified': {
-    type: Date
+    type: Number
+  },
+  'quotes': {
+    type: [{
+      type: String
+    }]
   },
   'open': {
     default: true,
@@ -64,7 +69,7 @@ RescueSchema.index({
 RescueSchema.pre( 'save', function ( next ) {
   var timestamp;
 
-  timestamp = Date.now();
+  timestamp = ( new Date().getTime() / 1000 ).toFixed();
 
   if ( !this.open ) {
     this.active = false;
@@ -80,7 +85,7 @@ RescueSchema.pre( 'save', function ( next ) {
 RescueSchema.set( 'toJSON', {
   virtuals: true,
   transform: function ( document, ret, options ) {
-    ret.id = ret._id;
+    ret.id = document._id;
     delete ret._id;
   }
 });
