@@ -1,4 +1,4 @@
-var app, chai, expect, generate, request, rootUrl, superagent;
+var app, chai, expect, generate, request, rootUrl, request;
 
 
 
@@ -7,13 +7,11 @@ var app, chai, expect, generate, request, rootUrl, superagent;
 // Imports
 // =============================================================================
 
-//app = require( '../../api.js' );
 chai = require( 'chai' );
-//request = require( 'express-mock-request' );
-superagent = require( 'superagent' );
+request = require( 'supertest' );
 expect = chai.expect;
 
-generate = require( '../generator' );
+generate = require( './generator' );
 
 
 
@@ -47,16 +45,14 @@ describe( 'Rescue Endpoints', function () {
 
     it( 'should create a new rescue', function ( done ) {
 
-      superagent
+      request
       .post( rootUrl + '/rescues' )
       .send( rescue )
+      .expect( 201 )
       .end( function ( error, response ) {
         if ( error ) {
           return done( error );
         }
-
-        // Make sure the POST succeeded
-        expect( response.status ).to.equal( 201 );
 
         // Make sure there are no errors
         expect( response.body ).to.not.have.property( 'errors' );
@@ -83,15 +79,13 @@ describe( 'Rescue Endpoints', function () {
   describe( 'GET /api/rescues', function () {
 
     it( 'should return a list of rescues', function ( done ) {
-      superagent
+      request
       .get( rootUrl + '/rescues' )
+      .expect( 200 )
       .end( function ( error, response ) {
         if ( error ) {
           return done( error );
         }
-
-        // Make sure the GET succeeded
-        expect( response.status ).to.equal( 200 );
 
         // Make sure there are no errors
         expect( response.body ).to.not.have.property( 'errors' );
@@ -121,7 +115,7 @@ describe( 'Rescue Endpoints', function () {
 
     // Create a new rescue to test against
     before( function ( done ) {
-      superagent
+      request
       .post( rootUrl + '/rescues' )
       .send( rescue )
       .end( function ( error, response ) {
@@ -136,15 +130,13 @@ describe( 'Rescue Endpoints', function () {
     });
 
     it( 'should return a rescue', function ( done ) {
-      superagent
+      request
       .get( rootUrl + '/rescues/' + rescue.id )
+      .expect( 200 )
       .end( function ( error, response ) {
         if ( error ) {
           return done( error );
         }
-
-        // Make sure the request succeeded
-        expect( response.status ).to.equal( 200 );
 
         // Make sure there are no errors
         expect( response.body ).to.not.have.property( 'errors' );
@@ -169,7 +161,7 @@ describe( 'Rescue Endpoints', function () {
 
     // Create a new rescue to test against
     before( function ( done ) {
-      superagent
+      request
       .post( rootUrl + '/rescues' )
       .send( generate.randomRescue() )
       .end( function ( error, response ) {
@@ -184,18 +176,16 @@ describe( 'Rescue Endpoints', function () {
     });
 
     it( 'should update a rescue', function ( done ) {
-      superagent
+      request
       .put( rootUrl + '/rescues/' + rescue.id )
       .send({
         nickname: 'Edited Test Client ' + ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 )
       })
+      .expect( 200 )
       .end( function ( error, response ) {
         if ( error ) {
           return done( error );
         }
-
-        // Make sure the POST succeeded
-        expect( response.status ).to.equal( 200 );
 
         done();
       });

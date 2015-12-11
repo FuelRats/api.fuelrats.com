@@ -1,4 +1,4 @@
-var app, chai, expect, generate, request, rootUrl, superagent;
+var app, chai, expect, generate, request, rootUrl, request;
 
 
 
@@ -7,13 +7,11 @@ var app, chai, expect, generate, request, rootUrl, superagent;
 // Imports
 // =============================================================================
 
-//app = require( '../../api.js' );
 chai = require( 'chai' );
-//request = require( 'express-mock-request' );
-superagent = require( 'superagent' );
+request = require( 'supertest' );
 expect = chai.expect;
 
-generate = require( '../generator' );
+generate = require( './generator' );
 
 
 
@@ -47,7 +45,7 @@ describe( 'Rat Endpoints', function () {
 
     it( 'should create a new rat', function ( done ) {
 
-      superagent
+      request
       .post( rootUrl + '/rats' )
       .send( rat )
       .end( function ( error, response ) {
@@ -82,7 +80,7 @@ describe( 'Rat Endpoints', function () {
   describe( 'GET /api/rats', function () {
 
     it( 'should return a list of rats', function ( done ) {
-      superagent
+      request
       .get( rootUrl + '/rats' )
       .end( function ( error, response ) {
         if ( error ) {
@@ -120,7 +118,7 @@ describe( 'Rat Endpoints', function () {
 
     // Create a new rat to test against
     before( function ( done ) {
-      superagent
+      request
       .post( rootUrl + '/rats' )
       .send( rat )
       .end( function ( error, response ) {
@@ -135,7 +133,7 @@ describe( 'Rat Endpoints', function () {
     });
 
     it( 'should return a rat', function ( done ) {
-      superagent
+      request
       .get( rootUrl + '/rats/' + rat.id )
       .end( function ( error, response ) {
         if ( error ) {
@@ -168,7 +166,7 @@ describe( 'Rat Endpoints', function () {
 
     // Create a new rat to test against
     before( function ( done ) {
-      superagent
+      request
       .post( rootUrl + '/rats' )
       .send( generate.randomRat() )
       .end( function ( error, response ) {
@@ -183,7 +181,7 @@ describe( 'Rat Endpoints', function () {
     });
 
     it( 'should update a rat', function ( done ) {
-      superagent
+      request
       .put( rootUrl + '/rats/' + rat.id )
       .send({
         nickname: 'Edited Test Client ' + ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 )
