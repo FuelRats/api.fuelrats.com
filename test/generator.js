@@ -1,5 +1,7 @@
 module.exports = {
   randomRescue: function () {
+    var randomName;
+
     randomName = ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 );
 
     return {
@@ -14,6 +16,8 @@ module.exports = {
   },
 
   randomRat: function () {
+    var randomName;
+
     randomName = ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 );
 
     return {
