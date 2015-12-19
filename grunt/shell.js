@@ -8,9 +8,5 @@ module.exports = {
 
   api: {
     command: './node_modules/node-dev/bin/node-dev api/index.js'
-  },
-
-  apiNoLog: {
-    command: './node_modules/node-dev/bin/node-dev api/index.js --no-log'
   }
 };

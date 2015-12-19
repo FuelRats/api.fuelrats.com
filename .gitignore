@@ -1,6 +1,7 @@
 ### Project ###
+api/docs/
 data/
-doc/
+docs/
 test/bundle.js
 npm-debug.log.*
 log*

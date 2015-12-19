@@ -1,11 +1,11 @@
-var Rat, rat, save;
+var Rat, rat, save
 
 
 
 
 
-Rat = require( '../models/rat' );
-ErrorModels = require( '../errors' );
+Rat = require( '../models/rat' )
+ErrorModels = require( '../errors' )
 
 
 
@@ -14,51 +14,51 @@ ErrorModels = require( '../errors' );
 // GET
 // =============================================================================
 exports.get = function ( request, response ) {
-  var id, responseModel;
+  var id, responseModel
 
   responseModel = {
     links: {
       self: request.originalUrl
     }
-  };
+  }
 
   if ( id = request.params.id ) {
     Rat.findById( id, function ( error, rat ) {
-      var status;
+      var status
 
       if ( error ) {
-        responseModel.errors = [];
-        responseModel.errors.push( error );
-        status = 400;
+        responseModel.errors = []
+        responseModel.errors.push( error )
+        status = 400
 
       } else {
-        responseModel.data = rat;
-        status = 200;
+        responseModel.data = rat
+        status = 200
       }
 
-      response.status( status );
-      response.json( responseModel );
-    });
+      response.status( status )
+      response.json( responseModel )
+    })
 
   } else {
     Rat.find( request.body, function ( error, rats ) {
-      var status;
+      var status
 
       if ( error ) {
-        responseModel.errors = [];
-        responseModel.errors.push( error );
-        status = 400;
+        responseModel.errors = []
+        responseModel.errors.push( error )
+        status = 400
 
       } else {
-        responseModel.data = rats;
-        status = 200;
+        responseModel.data = rats
+        status = 200
       }
 
-      response.status( status );
-      response.json( responseModel );
-    });
+      response.status( status )
+      response.json( responseModel )
+    })
   }
-};
+}
 
 
 
@@ -67,50 +67,50 @@ exports.get = function ( request, response ) {
 // POST
 // =============================================================================
 exports.post = function ( request, response ) {
-  var responseModel;
+  var responseModel
 
   responseModel = {
     links: {
       self: request.originalUrl
     }
-  };
+  }
 
   Rat.create( request.body, function ( error, rat ) {
-    var errors, errorTypes, status;
+    var errors, errorTypes, status
 
     if ( error ) {
-      errorTypes = Object.keys( error.errors );
-      responseModel.errors = [];
+      errorTypes = Object.keys( error.errors )
+      responseModel.errors = []
 
-      for ( var i = 0; i < errorTypes.length; i++ ) {
-        var error, errorModel, errorType;
+      for ( var i = 0 i < errorTypes.length i++ ) {
+        var error, errorModel, errorType
 
-        errorType = errorTypes[i];
-        error = error.errors[errorType].properties;
+        errorType = errorTypes[i]
+        error = error.errors[errorType].properties
 
         if ( error.type === 'required' ) {
-          errorModel = ErrorModels['missing_required_field'];
+          errorModel = ErrorModels['missing_required_field']
         }
 
-        errorModel.detail = 'You\'re missing the required field: ' + error.path;
+        errorModel.detail = 'You\'re missing the required field: ' + error.path
 
-        responseModel.errors.push( errorModel );
+        responseModel.errors.push( errorModel )
       }
 
-      console.log( 'failed', error );
-      status = 400;
+      console.log( 'failed', error )
+      status = 400
 
     } else {
-      responseModel.data = rat;
-      status = 201;
+      responseModel.data = rat
+      status = 201
     }
 
-    response.status( status );
-    response.json( responseModel );
-  });
+    response.status( status )
+    response.json( responseModel )
+  })
 
-  return rat;
-};
+  return rat
+}
 
 
 
@@ -119,74 +119,74 @@ exports.post = function ( request, response ) {
 // PUT
 // =============================================================================
 exports.put = function ( request, response ) {
-  var responseModel, status;
+  var responseModel, status
 
   responseModel = {
     links: {
       self: request.originalUrl
     }
-  };
+  }
 
   if ( id = request.params.id ) {
     Rat.findById( id, function ( error, rat ) {
       if ( error ) {
-        responseModel.errors = responseModel.errors || [];
-        responseModel.errors.push( error );
-        response.status( 400 );
-        response.json( responseModel );
-        return;
+        responseModel.errors = responseModel.errors || []
+        responseModel.errors.push( error )
+        response.status( 400 )
+        response.json( responseModel )
+        return
 
       } else if ( !rat ) {
-        response.status( 404 ).send();
-        return;
+        response.status( 404 ).send()
+        return
       }
 
       for ( var key in request.body ) {
         rat[key] = request.body[key]
       }
 
-      rat.increment();
+      rat.increment()
       rat.save( function ( error, rat ) {
-        var errors, errorTypes, status;
+        var errors, errorTypes, status
 
         if ( error ) {
 
-          errorTypes = Object.keys( error.errors );
-          responseModel.errors = [];
+          errorTypes = Object.keys( error.errors )
+          responseModel.errors = []
 
-          for ( var i = 0; i < errorTypes.length; i++ ) {
-            var error, errorModel, errorType;
+          for ( var i = 0 i < errorTypes.length i++ ) {
+            var error, errorModel, errorType
 
-            errorType = errorTypes[i];
-            error = error.errors[errorType].properties;
+            errorType = errorTypes[i]
+            error = error.errors[errorType].properties
 
             if ( error.type === 'required' ) {
-              errorModel = ErrorModels['missing_required_field'];
+              errorModel = ErrorModels['missing_required_field']
             }
 
-            errorModel.detail = 'You\'re missing the required field: ' + error.path;
+            errorModel.detail = 'You\'re missing the required field: ' + error.path
 
-            responseModel.errors.push( errorModel );
+            responseModel.errors.push( errorModel )
           }
 
-          status = 400;
+          status = 400
 
         } else {
-          status = 200;
-          responseModel.data = rat;
+          status = 200
+          responseModel.data = rat
         }
 
-        response.status( status );
-        response.json( responseModel );
-      });
-    });
+        response.status( status )
+        response.json( responseModel )
+      })
+    })
   } else {
-    response.status( 400 );
-    response.send();
+    response.status( 400 )
+    response.send()
   }
 
-  return rat;
-};
+  return rat
+}
 
 
 
@@ -195,27 +195,27 @@ exports.put = function ( request, response ) {
 // SEARCH
 // =============================================================================
 exports.search = function ( request, response ) {
-  var query, responseModel, scoring;
+  var query, responseModel, scoring
 
   responseModel = {
     links: {
       self: request.originalUrl
     }
-  };
-  scoring = {};
+  }
+  scoring = {}
 
   if ( request.params.query ) {
     query = {
       $text: {
         $search: request.params.query
       }
-    };
+    }
 
     scoring.score = {
       $meta: 'textScore'
-    };
+    }
   } else {
-    query = request.body;
+    query = request.body
   }
 
   Rat
@@ -224,15 +224,15 @@ exports.search = function ( request, response ) {
   .limit( 10 )
   .exec( function ( error, rats ) {
     if ( error ) {
-      responseModel.errors = [];
-      responseModel.errors.push( error );
-      status = 400;
+      responseModel.errors = []
+      responseModel.errors.push( error )
+      status = 400
     } else {
-      responseModel.data = rats;
-      status = 200;
+      responseModel.data = rats
+      status = 200
     }
 
-    response.status( status );
-    response.json( responseModel );
-  });
-};
+    response.status( status )
+    response.json( responseModel )
+  })
+}

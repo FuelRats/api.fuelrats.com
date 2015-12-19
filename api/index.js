@@ -8,7 +8,7 @@ var _, bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morg
 // =============================================================================
 
 // Import config
-config = require( './config' );
+config = require( '../config' );
 
 // Import libraries
 _ = require( 'lodash' );
@@ -38,7 +38,8 @@ rescue = require( './controllers/rescue' );
 mongoose.connect( 'mongodb://localhost/fuelrats' );
 
 options = {
-  logging: true
+  logging: true,
+  test: false
 };
 
 
@@ -70,6 +71,10 @@ if ( process.argv ) {
     switch ( arg ) {
       case '--no-log':
         options.logging = false;
+        break;
+
+      case '--test':
+        options.test = true;
         break;
     }
   }
@@ -124,7 +129,7 @@ app.use( function ( request, response, next ) {
 });
 
 // Add logging
-if ( options.logging ) {
+if ( options.logging || options.test ) {
   app.use( function ( request, response, next ) {
     console.log( '' );
     console.log( 'ENDPOINT:', request.originalUrl );
@@ -240,5 +245,8 @@ socket.on( 'connection', function ( socket ) {
 // START THE SERVER
 // =============================================================================
 
-httpServer.listen( port );
-console.log( 'Listening for requests on port ' + port + '...' );
+module.exports = httpServer.listen( port );
+
+if ( !module.parent ) {
+  console.log( 'Listening for requests on port ' + port + '...' );
+}
