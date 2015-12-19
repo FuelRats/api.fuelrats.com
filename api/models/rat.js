@@ -1,6 +1,7 @@
 var mongoose, RatSchema, Schema;
 
 mongoose = require( 'mongoose' );
+Rescue = require( './rescue' );
 Schema = mongoose.Schema;
 
 RatSchema = new Schema({
@@ -12,7 +13,7 @@ RatSchema = new Schema({
     type: String
   },
   'createdAt': {
-    type: Date
+    type: Number
   },
   'drilled': {
     default: false,
@@ -22,11 +23,11 @@ RatSchema = new Schema({
     type: String
   },
   'lastModified': {
-    type: Date
+    type: Number
   },
   'joined': {
     default: Date.now(),
-    type: Date
+    type: Number
   },
   'netlog': {
     type: {
@@ -41,8 +42,14 @@ RatSchema = new Schema({
       }
     }
   },
-  'nickname': {
+  'nicknames': {
     type: [String]
+  },
+  'rescues': {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Rescue'
+    }]
   }
 });
 
@@ -55,9 +62,10 @@ RatSchema.index({
 RatSchema.pre( 'save', function ( next ) {
   var timestamp;
 
-  timestamp = new Date().getTime() / 1000;
+  timestamp = parseInt( new Date().getTime() / 1000 );
 
   this.createdAt = this.createdAt || timestamp;
+  this.joined = this.joined || timestamp;
   this.lastModified = timestamp;
 
   next();
