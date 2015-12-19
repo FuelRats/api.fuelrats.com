@@ -69,7 +69,7 @@ RescueSchema.index({
 RescueSchema.pre( 'save', function ( next ) {
   var timestamp;
 
-  timestamp = ( new Date().getTime() / 1000 ).toFixed();
+  timestamp = parseInt( new Date().getTime() / 1000 );
 
   if ( !this.open ) {
     this.active = false;
