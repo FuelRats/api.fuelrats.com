@@ -9,11 +9,14 @@ download = require( 'download' );
 fs = require( 'fs' );
 mongoose = require( 'mongoose' );
 
-Rat = require( '../models/rat' );
+Rat = require( '../api/models/rat' );
+Rescue = require( '../api/models/rescue' );
 
 destination = 'data';
 filename = 'rats.csv';
 url = 'https://docs.google.com/spreadsheets/d/1JoTrC3TmBNFkEtU6lWcGhOZkUaRr9YUY24kLA5LQnoc/export?gid=445147052&format=csv';
+
+mongoose.Promise = global.Promise;
 
 
 
@@ -38,24 +41,26 @@ Rat.remove( { archive: true }, function ( error) {
       return;
     }
 
-    csv.parse( fs.readFileSync( destination + '/' + filename ), function ( error, data ) {
-      var ratsAdded, ratsCount;
+    csv.parse( fs.readFileSync( destination + '/' + filename ), function ( error, rats ) {
+      var promises, ratsAdded, ratsCount;
 
+      promises = [];
       ratsAdded = 0;
-      ratsCount = data.length - 1;
+      ratsCount = rats.length - 1;
 
       if ( error ) {
         console.log( error );
         return;
       }
 
-      for ( var i = 1; i < data.length; i++ ) {
-        var rat, ratData;
+      rats.shift()
+      rats.forEach( function ( ratData, index, rats ) {
+        var rat;
 
-        ratData = data[i];
         rat = {
           archive: true,
-          joined: new Date( ratData[0] )
+          joined: parseInt( new Date( ratData[0] || new Date ).getTime() / 1000 ),
+          rescues: []
         };
 
         if ( ratData[1] === 'CMDR' ) {
@@ -64,27 +69,43 @@ Rat.remove( { archive: true }, function ( error) {
           rat.gamertag = ratData[2];
         }
 
-        Rat.create( rat, function ( error, rat ) {
-          if ( error ) {
-            console.log( 'error creating rat' );
-            console.log( error );
-            return;
-          }
+        promises.push( new Promise( function ( resolve, reject ) {
+          Rescue.find( { rats: rat.CMDRname } )
+          .then( function ( rescues ) {
+            rescues.forEach( function ( rescue, index, rescues ) {
+              rat.rescues.push( rescue._id );
+            });
 
-          ratsAdded = ratsAdded + 1;
-
-          console.log( 'created', ( rat.CMDRname || rat.gamertag ), rat.id );
-
-          if ( ratsAdded === ratsCount ) {
-            Rat.count( {}, function ( error, count ) {
-              console.log( '' );
-              console.log( 'added ' + ratsCount + ' archived rats' );
-              console.log( count + ' total rats' )
-              mongoose.disconnect();
+            Rat.create( rat )
+            .then( function ( rat ) {
+              console.log( 'created', ( rat.CMDRname || rat.gamertag ), 'with', rat.rescues.length, 'rescues' );
+              resolve( rat );
             })
-          }
+            .catch( function ( error ) {
+              console.log( 'error creating rat', ( rat.CMDRname || rat.gamertag ) );
+              console.log( error );
+
+              reject( error );
+            });
+          })
+          .catch( function ( error ) {
+            console.log( 'error retrieving rescues for', ( rat.CMDRname || rat.gamertag ) );
+            console.log( error );
+
+            reject( error );
+          });
+        }));
+      });
+
+      Promise.all( promises )
+      .then( function () {
+        Rat.count( {}, function ( error, count ) {
+          console.log( '' );
+          console.log( 'added ' + ratsCount + ' archived rats' );
+          console.log( count + ' total rats' )
+          mongoose.disconnect();
         });
-      }
+      });
     });
   });
 });
