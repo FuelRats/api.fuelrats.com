@@ -4,7 +4,6 @@ data/
 docs/
 test/bundle.js
 npm-debug.log.*
-log*
 
 
 # Created by https://www.gitignore.io
