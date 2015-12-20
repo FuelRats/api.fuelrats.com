@@ -1,0 +1,38 @@
+---
+- name: Install nvm
+  sudo: true
+  sudo_user: "{{ user }}"
+  git: repo=https://github.com/creationix/nvm.git dest=~/.nvm version=v{{ nvm_version }}
+  tags: nvm
+
+- name: Source nvm in ~/.profile
+  sudo: true
+  sudo_user: "{{ user }}"
+  lineinfile: >
+    dest=~/.profile
+    line="source ~/.nvm/nvm.sh"
+    create=yes
+  tags: nvm
+
+- name: Install {{ node_version }}
+  command: sudo -iu {{ user }} nvm install {{ node_version }}
+  register: nvm_install_result
+  changed_when: "'is already installed.' not in nvm_install_result.stdout"
+  tags: nvm
+
+- name: Check if {{ node_version }} is the default node version
+  shell: sudo -iu {{ user }} nvm ls | grep -e 'default -> {{ node_version }}'
+  register: nvm_check_default
+  changed_when: false
+  ignore_errors: true
+  tags: nvm
+
+- name: Set default node version to {{ node_version }}
+  command: sudo -iu {{ user }} nvm alias default {{ node_version }}
+  when: nvm_check_default|failed
+  tags: nvm
+
+- name: Link the Node binary
+  sudo: true
+  sudo_user: "{{ user }}"
+  file: src={{ node_binary }} dest=/usr/local/node owner={{ user }} group={{ user }} state=link

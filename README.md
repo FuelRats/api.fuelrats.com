@@ -7,6 +7,23 @@
 
 ## Development
 
+### With Vagrant
+
+[Vagrant](vagrantup.com) allows us to run a local virtual machine clone of our production environment with ease. Make sure you have Vagrant installed, then run:
+
+    vagrant up
+
+Vagrant will do everything we need:
+
+1. Download an Ubuntu virtual machine image;
+1. Set up SSH access on the vm which we can access with `vagrant ssh`;
+1. Provision our vm using Ansible; and
+1. Start our API with [`forever`](https://www.npmjs.com/package/forever).
+
+
+
+### Without Vagrant
+
 To get the system up and running, `cd` into your new repository and install all of the required Node modules:
 
     npm install

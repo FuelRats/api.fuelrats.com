@@ -1,0 +1,16 @@
+---
+- name: Install forever
+  npm:
+    name: forever
+    global: true
+    state: latest
+    executable: "{{ npm_binary }}"
+
+- name: Get a list of apps running with forever
+  command: "{{ forever_binary }} list"
+  register: forever_list
+  changed_when: false
+
+- name: Start the API
+  command: "{{ forever_binary }} start /var/www/api/index.js"
+  when: "forever_list.stdout.find('/var/www/api/index.js') == -1"
