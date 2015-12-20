@@ -12,6 +12,10 @@ To get the system up and running, `cd` into your new repository and install all 
     npm install
     npm install -g grunt-cli
 
+Next, make sure to copy `config-example.json` to `config.json` and update your settings:
+
+    cp config-example.json config.json
+
 After that, development should be easy! Use our `dev` task to get everything up and running:
 
     npm run dev
