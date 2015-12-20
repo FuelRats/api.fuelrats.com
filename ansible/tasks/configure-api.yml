@@ -12,5 +12,5 @@
   changed_when: false
 
 - name: Start the API
-  command: "{{ forever_binary }} start /var/www/api/index.js"
+  shell: "{{ forever_binary }} start /var/www/api/index.js"
   when: "forever_list.stdout.find('/var/www/api/index.js') == -1"

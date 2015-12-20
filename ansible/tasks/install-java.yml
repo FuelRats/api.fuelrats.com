@@ -1,0 +1,9 @@
+---
+- name: Install Java
+  sudo: true
+  apt: pkg={{ item }}
+  with_items:
+  - openjdk-7-jdk
+
+- file: path=/usr/java state=directory mode=0755
+- file: src=/usr/lib/jvm/java-7-openjdk-amd64 dest=/usr/java/default state=link

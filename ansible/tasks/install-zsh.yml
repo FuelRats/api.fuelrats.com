@@ -1,0 +1,9 @@
+---
+- name: Install oh-my-zsh
+  sudo: true
+  apt: pkg={{ item }}
+  with_items:
+  - zsh
+
+- get_url: src=https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh dest=~/oh-my-zsh.sh
+- command: ~/oh-my-zsh.sh
