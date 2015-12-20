@@ -82,7 +82,7 @@ exports.post = function ( request, response ) {
       errorTypes = Object.keys( error.errors )
       responseModel.errors = []
 
-      for ( var i = 0 i < errorTypes.length i++ ) {
+      for ( var i = 0; i < errorTypes.length; i++ ) {
         var error, errorModel, errorType
 
         errorType = errorTypes[i]
@@ -154,7 +154,7 @@ exports.put = function ( request, response ) {
           errorTypes = Object.keys( error.errors )
           responseModel.errors = []
 
-          for ( var i = 0 i < errorTypes.length i++ ) {
+          for ( var i = 0; i < errorTypes.length; i++ ) {
             var error, errorModel, errorType
 
             errorType = errorTypes[i]
