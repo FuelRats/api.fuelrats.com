@@ -31,7 +31,9 @@ Rat = require( './models/rat' );
 User = require( './models/user' );
 
 // Import controllers
+login = require( './controllers/login' );
 rat = require( './controllers/rat' );
+register = require( './controllers/register' );
 rescue = require( './controllers/rescue' );
 
 // Connect to MongoDB
@@ -156,42 +158,11 @@ router = express.Router();
 // ROUTES
 // =============================================================================
 
-router.post( '/register', function ( request, response ) {
-  ratData = {}
+app.get( '/register', register.get );
+app.post( '/register', register.post );
 
-  if ( request.body.CMDRname ) {
-    ratData.CMDRname = request.body.CMDRname;
-  }
-
-  if ( request.body.gamertag ) {
-    ratData.gamertag = request.body.gamertag;
-  }
-
-  rat = new Rat( ratData );
-
-  user = new User({
-    email: request.body.email,
-    rat: rat._id
-  });
-
-  User.register( user, request.body.password, function ( error, user ) {
-    if ( error ) {
-      response.send( error );
-      return;
-    }
-
-    Rat.create( rat );
-
-    auth = passport.authenticate( 'local' );
-
-    auth( request, response, function () {
-      response.status( 200 );
-      response.json( user );
-    });
-  });
-});
-
-router.post( '/login', passport.authenticate( 'local' ), function ( request, response ) {
+app.get( '/login', login.get );
+app.post( '/login', passport.authenticate( 'local' ), function ( request, response ) {
   response.status( 200 );
   response.json( request.user );
 });
@@ -222,7 +193,6 @@ router.get( '/search/rats', rat.search );
 
 // Register routes
 app.use( '/api', router );
-app.use( '/test', express.static( 'test' ) );
 app.use( '/node_modules', express.static( 'node_modules' ) );
 
 
