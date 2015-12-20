@@ -15,6 +15,8 @@ destination = 'data'
 filename = 'rescues.csv'
 url = 'https://docs.google.com/spreadsheets/d/1JoTrC3TmBNFkEtU6lWcGhOZkUaRr9YUY24kLA5LQnoc/export?gid=1657880365&format=csv'
 
+mongoose.Promise = global.Promise
+
 
 
 
@@ -27,6 +29,7 @@ Rescue.remove( { archive: true }, function ( error ) {
   }
 
   console.log( 'removed all rescues' )
+  console.log( 'downloading archive' )
 
   download()
   .get( url )
@@ -38,52 +41,56 @@ Rescue.remove( { archive: true }, function ( error ) {
       return
     }
 
-    csv.parse( fs.readFileSync( destination + '/' + filename ), function ( error, data ) {
+    console.log( 'parsing archive' )
+
+    csv.parse( fs.readFileSync( destination + '/' + filename ), function ( error, rescues ) {
       var rescuesAdded, rescuesCount
 
-      rescuesAdded = 0
-      rescuesCount = data.length - 1
+      promises = []
 
       if ( error ) {
         console.log( error )
         return
       }
 
-      for ( var i = 1 i < data.length i++ ) {
-        var rescue, rescueData
-
-        rescueData = data[i]
+      rescues.shift()
+      rescues.forEach( function ( rescue, index, rescues ) {
         rescue = {
           archive: true,
           closed: true,
-          createdAt: new Date( rescueData[0] ).getTime() / 1000,
-          notes: rescueData[4],
-          rats: [rescueData[1]],
-          successful: rescueData[3] === 'Successful' ? true : false,
-          system: rescueData[2]
+          createdAt: new Date( rescue[0] ).getTime() / 1000,
+          notes: rescue[4],
+          rats: [rescue[1]],
+          successful: rescue[3] === 'Successful' ? true : false,
+          system: rescue[2]
         }
 
-        Rescue.create( rescue, function ( error, rescue ) {
-          if ( error ) {
+        promises.push( new Promise( function ( resolve, reject ) {
+          Rescue.create( rescue )
+          .then( function ( rescue ) {
+            console.log( 'created rescue', index )
+            resolve( rescue )
+          })
+          .catch( function ( error ) {
             console.log( 'error creating rescue' )
             console.log( error )
-            return
-          }
 
-          rescuesAdded = rescuesAdded + 1
+            reject( error )
+          })
+        }))
+      })
 
-          console.log( 'created rescue', rescuesAdded )
+      Promise.all( promises )
+      .then( function () {
+        fs.unlinkSync( destination + '/' + filename )
 
-          if ( rescuesAdded === rescuesCount ) {
-            Rescue.count( {}, function ( error, count ) {
-              console.log( '' )
-              console.log( 'added ' + rescuesCount + ' archived rescues' )
-              console.log( count + ' total rescues' )
-              mongoose.disconnect()
-            })
-          }
+        Rescue.count( {}, function ( error, count ) {
+          console.log( '' )
+          console.log( 'added ' + ( rescues.length - 1 ) + ' archived rescues' )
+          console.log( count + ' total rescues' )
+          mongoose.disconnect()
         })
-      }
+      })
     })
   })
 })
