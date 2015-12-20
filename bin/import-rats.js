@@ -99,6 +99,8 @@ Rat.remove( { archive: true }, function ( error) {
 
       Promise.all( promises )
       .then( function () {
+        fs.unlinkSync( destination + '/' + filename );
+
         Rat.count( {}, function ( error, count ) {
           console.log( '' );
           console.log( 'added ' + ratsCount + ' archived rats' );
