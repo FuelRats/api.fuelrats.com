@@ -5,47 +5,57 @@ Rescue = require( './rescue' );
 Schema = mongoose.Schema;
 
 RatSchema = new Schema({
-  'archive': {
+  archive: {
     default: false,
     type: Boolean
   },
-  'CMDRname': {
+  CMDRname: {
     type: String
   },
-  'createdAt': {
+  createdAt: {
     type: Number
   },
-  'drilled': {
-    default: false,
-    type: Boolean
+  drilled: {
+    default: {
+      dispatch: false,
+      rescue: false
+    },
+    type: {
+      dispatch: {
+        type: Boolean
+      },
+      rescue: {
+        type: Boolean
+      }
+    }
   },
-  'gamertag': {
+  gamertag: {
     type: String
   },
-  'lastModified': {
+  lastModified: {
     type: Number
   },
-  'joined': {
+  joined: {
     default: Date.now(),
     type: Number
   },
-  'netlog': {
+  netlog: {
     type: {
-      'commanderId': {
+      commanderId: {
         type: String
       },
-      'data': {
+      data: {
         type: Schema.Types.Mixed
       },
-      'userId': {
+      userId: {
         type: String
       }
     }
   },
-  'nicknames': {
+  nicknames: {
     type: [String]
   },
-  'rescues': {
+  rescues: {
     type: [{
       type: Schema.Types.ObjectId,
       ref: 'Rescue'

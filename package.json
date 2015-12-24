@@ -1,6 +1,6 @@
 {
   "name": "api.fuelrats.com",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "",
   "authors": [
     "Trezy <tre@trezy.com>"
@@ -10,7 +10,7 @@
     "test": "grunt test"
   },
   "license": "MIT",
-  "main": "api.js",
+  "main": "api/index.js",
   "dependencies": {
     "babel": "^6.1.18",
     "body-parser": "^1.14.1",
