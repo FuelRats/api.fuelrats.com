@@ -4,59 +4,63 @@ mongoose = require( 'mongoose' );
 Schema = mongoose.Schema;
 
 RescueSchema = new Schema({
-  'active': {
+  active: {
     default: true,
     type: Boolean
   },
-  'archive': {
+  archive: {
     default: false,
     type: Boolean
   },
-  'client': {
+  client: {
     type: {
-      'CMDRname': {
+      CMDRname: {
         type: String
       },
-      'nickname': {
+      nickname: {
         type: String
       }
     }
   },
-  'codeRed': {
+  codeRed: {
     default: false,
     type: Boolean
   },
-  'createdAt': {
+  createdAt: {
     type: Number
   },
-  'lastModified': {
+  epic: {
+    default: false,
+    type: Boolean
+  },
+  lastModified: {
     type: Number
   },
-  'quotes': {
+  quotes: {
     type: [{
       type: String
     }]
   },
-  'open': {
+  open: {
     default: true,
     type: Boolean
   },
-  'notes': {
+  notes: {
     type: String
   },
-  'platform': {
+  platform: {
     default: 'PC',
     type: String
   },
-  'rats': {
+  rats: {
     type: [{
       type: String
     }]
   },
-  'successful': {
+  successful: {
     type: Boolean
   },
-  'system': {
+  system: {
     type: String
   }
 });
