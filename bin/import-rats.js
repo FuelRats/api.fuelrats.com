@@ -14,7 +14,9 @@ Rescue = require( '../api/models/rescue' )
 
 destination = 'data'
 filename = 'rats.csv'
-url = 'https://docs.google.com/spreadsheets/d/1JoTrC3TmBNFkEtU6lWcGhOZkUaRr9YUY24kLA5LQnoc/export?gid=445147052&format=csv'
+ratsUrl = 'https://docs.google.com/spreadsheets/d/1JoTrC3TmBNFkEtU6lWcGhOZkUaRr9YUY24kLA5LQnoc/export?gid=445147052&format=csv'
+rescueDrilledUrl = 'https://docs.google.com/spreadsheets/d/1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y/export?gid=72806282&format=csv'
+dispatchDrilledUrl = 'https://docs.google.com/spreadsheets/d/1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y/export?gid=84232353&format=csv'
 
 mongoose.Promise = global.Promise
 
@@ -33,7 +35,7 @@ Rat.remove( { archive: true }, function ( error ) {
   console.log( 'downloading archive' )
 
   download()
-  .get( url )
+  .get( ratsUrl )
   .dest( destination )
   .rename( filename )
   .run( function ( error ) {
