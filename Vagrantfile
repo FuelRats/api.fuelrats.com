@@ -8,7 +8,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.memory = 2048
   end
 
-  config.vm.synced_folder ".", "/var/www"
+  config.vm.synced_folder '.', '/var/www'
 
   config.vm.network :forwarded_port, guest: 80, host:8080
   config.vm.network :forwarded_port, guest: 443, host:8443
@@ -17,7 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ansible.playbook = 'ansible/playbook.yml'
     ansible.host_key_checking = false
     ansible.extra_vars = {
-      user: "vagrant"
+      user: 'vagrant'
     }
     ansible.verbose = false
   end

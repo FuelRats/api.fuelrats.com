@@ -3,12 +3,14 @@
   remote_user: "{{ user }}"
   vars:
     user: ansible
-    node_version: 5.3.0
-    nvm_version: 0.29.0
     node_bin_folder: "/home/{{ user }}/.nvm/versions/node/v{{ node_version }}/bin"
     node_binary: "{{ node_bin_folder }}/node"
     npm_binary: "{{ node_bin_folder }}/npm"
-    forever_binary: "{{ node_bin_folder }}/forever"
+    forever_binary: "{{ node_binary }} {{ node_bin_folder }}/forever"
+
+    elasticsearch_version: 2.1.1
+    node_version: 5.3.0
+    nvm_version: 0.29.0
 
   tasks:
   # Update the apt cache and upgrade all upgradeable packages
@@ -16,8 +18,10 @@
 
   # Install dependencies
   - include: tasks/install-git.yml
+#  - include: tasks/install-zsh.yml
   - include: tasks/install-mongodb.yml
   - include: tasks/install-nvm.yml
+  - include: tasks/install-elasticsearch.yml
 
   # Configure API
   - include: tasks/configure-api.yml

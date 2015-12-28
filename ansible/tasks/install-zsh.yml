@@ -1,9 +1,17 @@
 ---
-- name: Install oh-my-zsh
+- name: Install zsh
   sudo: true
   apt: pkg={{ item }}
   with_items:
   - zsh
 
-- get_url: src=https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh dest=~/oh-my-zsh.sh
-- command: ~/oh-my-zsh.sh
+- name: Clone oh-my-zsh
+  git:
+    repo: "https://github.com/robbyrussell/oh-my-zsh.git"
+    dest: "/home/{{ user }}/.oh-my-zsh"
+
+- name: Set zsh as default shell
+  sudo: true
+  user:
+    name: "{{ user }}"
+    shell: "/bin/zsh"

@@ -1,0 +1,18 @@
+---
+- name: Check if Elasticsearch is installed
+  command: dpkg-query -W elasticsearch
+  register: elasticsearch_check_deb
+  failed_when: elasticsearch_check_deb.rc > 1
+  changed_when: elasticsearch_check_deb.rc == 1
+
+- name: Download Elasticsearch
+  get_url:
+    url: "https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/{{ elasticsearch_version }}/elasticsearch-{{ elasticsearch_version }}.deb"
+    dest: "/home/{{ user }}/elasticsearch.deb"
+  when: elasticsearch_check_deb.rc == 1
+
+- name: Install Elasticsearch
+  apt:
+    deb: "/home/{{ user }}/elasticsearch.deb"
+  sudo: true
+  when: elasticsearch_check_deb.rc == 1

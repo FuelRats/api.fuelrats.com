@@ -36,3 +36,7 @@
   sudo: true
   sudo_user: "{{ user }}"
   file: src={{ node_binary }} dest=/usr/local/node owner={{ user }} group={{ user }} state=link
+
+- name: Allow Node to bind on ports < 1024
+  sudo: true
+  command: "setcap 'cap_net_bind_service=+ep' {{ node_binary }}"

@@ -17,34 +17,10 @@ Vagrant will do everything we need:
 
 1. Download an Ubuntu virtual machine image;
 1. Set up SSH access on the vm which we can access with `vagrant ssh`;
-1. Provision our vm using Ansible; and
+1. Provision our vm using Ansible to set up Node and all the dependencies we need; and
 1. Start our API with [`forever`](https://www.npmjs.com/package/forever).
 
-
-
-### Without Vagrant
-
-To get the system up and running, `cd` into your new repository and install all of the required Node modules:
-
-    npm install
-    npm install -g grunt-cli
-
-Next, make sure to copy `config-example.json` to `config.json` and update your settings:
-
-    cp config-example.json config.json
-
-After that, development should be easy! Use our `dev` task to get everything up and running:
-
-    npm run dev
-
-Then you can hit the API at [http://localhost:8080](http://localhost:8080). You can also change the port (defaults to `8080`) and the salt used to hash passwords in the database in `config.json`
-
-## Testing
-
-Make sure to start a server first, then run all of the test suites:
-
-    npm run dev
-    npm test
+Once Vagrant finishes doing its thing you should be able to hit the API at `http://localhost:8080`. When you're done you can kill the Vagrant machine with `vagrant destroy` or, if you don't want to wait for the VM to be rebuilt from scratch, you can just pause the VM with `vagrant halt`.
 
 ## Importing Archives
 

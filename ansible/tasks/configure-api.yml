@@ -7,10 +7,12 @@
     executable: "{{ npm_binary }}"
 
 - name: Get a list of apps running with forever
-  command: "{{ forever_binary }} list"
+  shell: "{{ forever_binary }} list"
   register: forever_list
   changed_when: false
 
 - name: Start the API
+  sudo: true
+  sudo_user: "{{ user }}"
   shell: "{{ forever_binary }} start /var/www/api/index.js"
   when: "forever_list.stdout.find('/var/www/api/index.js') == -1"
