@@ -36,11 +36,6 @@ RescueSchema = new Schema({
   lastModified: {
     type: Number
   },
-  quotes: {
-    type: [{
-      type: String
-    }]
-  },
   open: {
     default: true,
     type: Boolean
@@ -51,6 +46,11 @@ RescueSchema = new Schema({
   platform: {
     default: 'PC',
     type: String
+  },
+  quotes: {
+    type: [{
+      type: String
+    }]
   },
   rats: {
     type: [{
