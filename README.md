@@ -5,7 +5,9 @@
 [![Travis CI Build](http://img.shields.io/travis/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://travis-ci.org/FuelRats/api.fuelrats.com)
 ![Coveralls Coverage Report](http://img.shields.io/coveralls/FuelRats/api.fuelrats.com.svg?style=flat-square)
 
-## Development
+## Setting up
+
+### With Vagrant
 
 [Vagrant](vagrantup.com) allows us to run a local virtual machine clone of our production environment with ease. Make sure you have Vagrant installed (Check out [this article](https://servercheck.in/blog/running-ansible-within-windows) if you're on Windows), then run:
 
@@ -20,3 +22,32 @@ Vagrant will do everything we need:
 1. Import all archived rats and rescues from the Google spreadsheets.
 
 Once Vagrant finishes doing its thing you should be able to hit the API at `http://localhost:8080`. When you're done you can kill the Vagrant machine with `vagrant destroy` or, if you don't want to wait for the VM to be rebuilt from scratch, you can just pause the VM with `vagrant halt`.
+
+### Without Vagrant
+
+So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
+
+1. [`nvm`](https://github.com/creationix/nvm)
+1. [`MongoDB`](https://www.mongodb.com/)
+1. [`Elasticsearch`](https://www.elastic.co/)
+
+Grab the repo:
+
+    git clone https://github.com/FuelRats/api.fuelrats.com.git
+
+Install all of the required Node modules:
+
+    cd api.fuelrats.com
+    npm install
+
+Now start the server!
+
+    npm run dev
+
+## Development
+
+To work for realsies you need to copy the `config-example.json` file and update any settings you need changed:
+
+    cp config-example.json config.json
+
+The `npm run dev` task starts the API with `node-dev` which will automatically restart the API when you change a file. Simply kill the process when you're done. Good luck, and may the force be with you.
