@@ -1,4 +1,8 @@
 ---
+- name: Install python-apt
+  sudo: true
+  raw: apt-get update && apt-get install python-apt -y -q
+
 - name: Update apt cache
   sudo: true
   apt: update_cache=yes
