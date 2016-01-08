@@ -1,4 +1,4 @@
-var _, bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morgan, notAllowed, options, rat, rescue, app, httpServer, passport, path, port, router, socket;
+var _, bodyParser, cors, docket, docs, express, fs, http, io, logger, mongoose, morgan, notAllowed, options, rat, rescue, app, httpServer, passport, path, port, router, socket;
 
 
 
@@ -6,9 +6,6 @@ var _, bodyParser, cors, docket, docs, express, http, io, logger, mongoose, morg
 
 // IMPORT
 // =============================================================================
-
-// Import config
-config = require( '../config' );
 
 // Import libraries
 _ = require( 'lodash' );
@@ -18,6 +15,7 @@ cors = require( 'cors' );
 docs = require( 'express-mongoose-docs' );
 express = require( 'express' );
 expressSession = require( 'express-session' );
+fs = require( 'fs' );
 http = require( 'http' );
 mongoose = require( 'mongoose' );
 morgan = require( 'morgan' );
@@ -25,6 +23,13 @@ passport = require( 'passport' );
 path = require( 'path' );
 io = require( 'socket.io' );
 LocalStrategy = require( 'passport-local' ).Strategy;
+
+// Import config
+if ( fs.existsSync( '../config.json' ) ) {
+  config = require( '../config' )
+} else {
+  config = require( '../config-example' )
+}
 
 // Import models
 Rat = require( './models/rat' );
