@@ -188,14 +188,14 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
   url = 'https://docs.google.com/spreadsheets/d/' + spreadsheet.workbookId + '/export?gid=' + spreadsheet.sheetId + '&format=csv'
 
   downloads.push( new Promise( function ( resolve, reject ) {
-//    download()
-//    .get( url )
-//    .dest( destinationFolder )
-//    .rename( name + '.csv' )
-//    .run( function ( error ) {
-//      if ( error ) {
-//        reject( error )
-//      } else {
+    download()
+    .get( url )
+    .dest( destinationFolder )
+    .rename( name + '.csv' )
+    .run( function ( error ) {
+      if ( error ) {
+        reject( error )
+      } else {
         console.log( 'Parsing spreadsheet:', name )
         csv.parse( fs.readFileSync( destinationFolder + '/' + name + '.csv' ), function ( error, data ) {
           if ( error ) {
@@ -205,8 +205,8 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
             resolve()
           }
         })
-//      }
-//    })
+      }
+    })
   }))
 })
 
