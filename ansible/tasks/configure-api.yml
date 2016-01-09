@@ -17,8 +17,5 @@
   shell: "{{ forever_binary }} start /var/www/api/index.js"
   when: "forever_list.stdout.find('/var/www/api/index.js') == -1"
 
-- name: Import archived rescues
-  shell: "{{ node_binary }} /var/www/bin/import-rescues"
-
-- name: Import archived rats
-  shell: "{{ node_binary }} /var/www/bin/import-rats"
+- name: Import archives
+  shell: "{{ node_binary }} /var/www/bin/import"
