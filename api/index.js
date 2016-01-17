@@ -159,7 +159,7 @@ router = express.Router();
 // ROUTES
 // =============================================================================
 
-app.get( '/badge', badge.get );
+app.get( '/badge/:rat', badge.get );
 
 app.get( '/register', register.get );
 app.post( '/register', register.post );
