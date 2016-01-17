@@ -36,6 +36,7 @@ Rat = require( './models/rat' );
 User = require( './models/user' );
 
 // Import controllers
+badge = require( './controllers/badge' );
 login = require( './controllers/login' );
 rat = require( './controllers/rat' );
 register = require( './controllers/register' );
@@ -163,14 +164,13 @@ router = express.Router();
 // ROUTES
 // =============================================================================
 
+app.get( '/badge/:rat', badge.get );
+
 app.get( '/register', register.get );
 app.post( '/register', register.post );
 
 app.get( '/login', login.get );
-app.post( '/login', passport.authenticate( 'local' ), function ( request, response ) {
-  response.status( 200 );
-  response.json( request.user );
-});
+app.post( '/login', passport.authenticate( 'local' ), login.post );
 
 router.get( '/rats/:id', rat.get );
 router.post( '/rats/:id', rat.post );
@@ -198,7 +198,9 @@ router.get( '/search/rats', rat.search );
 
 // Register routes
 app.use( '/api', router );
-app.use( '/node_modules', express.static( 'node_modules' ) );
+app.use( '/assets', express.static( __dirname + '/assets' ) );
+app.use( '/bower_components', express.static( __dirname + '/../bower_components' ) );
+app.use( '/node_modules', express.static( __dirname + '/../node_modules' ) );
 
 
 
