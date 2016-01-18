@@ -14,7 +14,7 @@ ErrorModels = require( '../errors' )
 // GET
 // =============================================================================
 exports.get = function ( request, response ) {
-  var id, responseModel
+  var filter, id, query, responseModel
 
   responseModel = {
     links: {
@@ -23,7 +23,9 @@ exports.get = function ( request, response ) {
   }
 
   if ( id = request.params.id ) {
-    Rat.findById( id, function ( error, rat ) {
+    Rat
+    .findById( id )
+    .exec( function ( error, rat ) {
       var status
 
       if ( error ) {
@@ -41,16 +43,57 @@ exports.get = function ( request, response ) {
     })
 
   } else {
-    Rat.find( request.body, function ( error, rats ) {
-      var status
+    filter = {}
+    query = {}
+    responseModel = {
+      links: {
+        self: request.originalUrl
+      }
+    }
 
+    filter.size = request.body.limit || 25
+    delete request.body.limit
+
+    filter.from = request.body.offset || 0
+    delete request.body.offset
+
+    for ( var key in request.body ) {
+      if ( key === 'q' ) {
+        query.query_string = {
+          query: request.body.q
+        }
+      } else {
+        if ( !query.bool ) {
+          query.bool = {
+            should: []
+          }
+        }
+
+        term = {}
+        term[key] = {
+          query: request.body[key],
+          fuzziness: 'auto'
+        }
+        query.bool.should.push( { match: term } )
+      }
+    }
+
+    Rat.search( query, function ( error, data ) {
       if ( error ) {
         responseModel.errors = []
         responseModel.errors.push( error )
         status = 400
-
       } else {
-        responseModel.data = rats
+        responseModel.meta = {
+          count: data.hits.hits.length,
+          limit: filter.size,
+          offset: filter.from,
+          total: data.hits.hits.length
+        }
+        responseModel.data = []
+        data.hits.hits.forEach( function ( hit, index, hits ) {
+          responseModel.data.push( hit._source )
+        })
         status = 200
       }
 
