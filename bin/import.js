@@ -84,33 +84,33 @@ processRats = function ( rats, rescueDrills, dispatchDrills ) {
         rat.gamertag = ratData[2]
       }
 
-      promises.push( new Promise( function ( resolve, reject ) {
-        Rescue.find( { rats: rat.CMDRname } )
-        .then( function ( rescues ) {
-          rescues.forEach( function ( rescue, index, rescues ) {
-            rat.rescues.push( rescue._id )
-          })
+      if ( rat.CMDRname || rat.gamertag ) {
+        promises.push( new Promise( function ( resolve, reject ) {
+          Rescue.find( { rats: rat.CMDRname } )
+          .then( function ( rescues ) {
+            rescues.forEach( function ( rescue, index, rescues ) {
+              rat.rescues.push( rescue._id )
+            })
 
-          Rat.create( rat )
-          .then( function ( rat ) {
-//            console.log( 'created', ( rat.CMDRname || rat.gamertag ), 'with', rat.rescues.length, 'rescues' )
-//            console.log( rat )
-            resolve( rat )
+            Rat.create( rat )
+            .then( function ( rat ) {
+              resolve( rat )
+            })
+            .catch( function ( error ) {
+              console.error( 'error creating rat', ( rat.CMDRname || rat.gamertag ) )
+              console.error( error )
+
+              reject( error )
+            })
           })
           .catch( function ( error ) {
-            console.error( 'error creating rat', ( rat.CMDRname || rat.gamertag ) )
+            console.error( 'error retrieving rescues for', ( rat.CMDRname || rat.gamertag ) )
             console.error( error )
 
             reject( error )
           })
-        })
-        .catch( function ( error ) {
-          console.error( 'error retrieving rescues for', ( rat.CMDRname || rat.gamertag ) )
-          console.error( error )
-
-          reject( error )
-        })
-      }))
+        }))
+      }
     })
 
     Promise.all( promises )
