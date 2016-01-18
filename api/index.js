@@ -1,4 +1,4 @@
-var _, bodyParser, cors, docket, docs, express, fs, http, io, logger, mongoose, morgan, notAllowed, options, rat, rescue, app, httpServer, passport, path, port, router, socket;
+var _, app, badge, bodyParser, config, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, mongoose, morgan, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket;
 
 
 
@@ -33,6 +33,7 @@ if ( fs.existsSync( '../config.json' ) ) {
 
 // Import models
 Rat = require( './models/rat' );
+Rescue = require( './models/rescue' );
 User = require( './models/user' );
 
 // Import controllers
