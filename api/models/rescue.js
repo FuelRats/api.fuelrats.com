@@ -88,11 +88,7 @@ RescueSchema.pre( 'save', function ( next ) {
 
 //RescueSchema.index( { '$**': 'text' } );
 RescueSchema.set( 'toJSON', {
-  virtuals: true,
-  transform: function ( document, ret, options ) {
-    ret.id = document._id;
-    delete ret._id;
-  }
+  virtuals: true
 });
 
 RescueSchema.plugin( mongoosastic )
