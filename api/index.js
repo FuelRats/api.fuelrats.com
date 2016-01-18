@@ -193,9 +193,9 @@ router.post( '/rescues', rescue.post );
 router.put( '/rescues', notAllowed );
 router.delete( '/rescues', notAllowed );
 
-router.get( '/search/rescues', rescue.search );
+router.get( '/search/rescues', rescue.get );
 
-router.get( '/search/rats', rat.search );
+router.get( '/search/rats', rat.get );
 
 // Register routes
 app.use( '/api', router );
