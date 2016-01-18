@@ -1,6 +1,7 @@
 var mongoose, RescueSchema, Schema;
 
 mongoose = require( 'mongoose' );
+mongoosastic = require( 'mongoosastic' );
 Schema = mongoose.Schema;
 
 RescueSchema = new Schema({
@@ -93,5 +94,7 @@ RescueSchema.set( 'toJSON', {
     delete ret._id;
   }
 });
+
+RescueSchema.plugin( mongoosastic )
 
 module.exports = mongoose.model( 'Rescue', RescueSchema );

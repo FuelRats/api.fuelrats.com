@@ -1,6 +1,7 @@
-var mongoose, RatSchema, Schema;
+var mongoose, RatSchema, Rescue, Schema;
 
 mongoose = require( 'mongoose' );
+mongoosastic = require( 'mongoosastic' )
 Rescue = require( './rescue' );
 Schema = mongoose.Schema;
 
@@ -88,5 +89,7 @@ RatSchema.set( 'toJSON', {
     delete ret._id;
   }
 });
+
+RatSchema.plugin( mongoosastic )
 
 module.exports = mongoose.model( 'Rat', RatSchema );
