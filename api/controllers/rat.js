@@ -51,10 +51,10 @@ exports.get = function ( request, response ) {
       }
     }
 
-    filter.size = request.body.limit || 25
+    filter.size = parseInt( request.body.limit ) || 25
     delete request.body.limit
 
-    filter.from = request.body.offset || 0
+    filter.from = parseInt( request.body.offset ) || 0
     delete request.body.offset
 
     for ( var key in request.body ) {
@@ -78,7 +78,7 @@ exports.get = function ( request, response ) {
       }
     }
 
-    Rat.search( query, function ( error, data ) {
+    Rat.search( query, filter, function ( error, data ) {
       if ( error ) {
         responseModel.errors = []
         responseModel.errors.push( error )
@@ -88,7 +88,7 @@ exports.get = function ( request, response ) {
           count: data.hits.hits.length,
           limit: filter.size,
           offset: filter.from,
-          total: data.hits.hits.length
+          total: data.hits.total
         }
         responseModel.data = []
         data.hits.hits.forEach( function ( hit, index, hits ) {
