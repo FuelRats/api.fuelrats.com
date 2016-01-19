@@ -25,23 +25,23 @@ io = require( 'socket.io' );
 LocalStrategy = require( 'passport-local' ).Strategy;
 
 // Import config
-if ( fs.existsSync( '../config.json' ) ) {
-  config = require( '../config' )
+if ( fs.existsSync( './config.json' ) ) {
+  config = require( './config' )
 } else {
-  config = require( '../config-example' )
+  config = require( './config-example' )
 }
 
 // Import models
-Rat = require( './models/rat' );
-Rescue = require( './models/rescue' );
-User = require( './models/user' );
+Rat = require( './api/models/rat' );
+Rescue = require( './api/models/rescue' );
+User = require( './api/models/user' );
 
 // Import controllers
-badge = require( './controllers/badge' );
-login = require( './controllers/login' );
-rat = require( './controllers/rat' );
-register = require( './controllers/register' );
-rescue = require( './controllers/rescue' );
+badge = require( './api/controllers/badge' );
+login = require( './api/controllers/login' );
+rat = require( './api/controllers/rat' );
+register = require( './api/controllers/register' );
+rescue = require( './api/controllers/rescue' );
 
 // Connect to MongoDB
 mongoose.connect( 'mongodb://localhost/fuelrats' );
@@ -200,8 +200,8 @@ router.get( '/search/rats', rat.get );
 // Register routes
 app.use( '/api', router );
 app.use( '/assets', express.static( __dirname + '/assets' ) );
-app.use( '/bower_components', express.static( __dirname + '/../bower_components' ) );
-app.use( '/node_modules', express.static( __dirname + '/../node_modules' ) );
+app.use( '/bower_components', express.static( __dirname + '/bower_components' ) );
+app.use( '/node_modules', express.static( __dirname + '/node_modules' ) );
 
 
 
