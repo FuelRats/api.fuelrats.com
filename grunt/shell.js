@@ -7,6 +7,6 @@ module.exports = {
   },
 
   api: {
-    command: './node_modules/node-dev/bin/node-dev api/index.js'
+    command: './node_modules/node-dev/bin/node-dev ./index.js'
   }
 };

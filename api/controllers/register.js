@@ -1,4 +1,4 @@
-var path
+var path, Rat, rat, User, user
 
 
 
@@ -11,7 +11,7 @@ path = require( 'path' )
 
 
 exports.get = function ( request, response ) {
-  response.sendFile( path.join( __dirname + '/../templates/register.html' ) )
+  response.sendFile( path.join( __dirname + '/templates/register.html' ) )
 }
 
 
@@ -19,6 +19,8 @@ exports.get = function ( request, response ) {
 
 
 exports.post = function ( request, response ) {
+  var ratData
+
   ratData = {}
 
   if ( request.body.CMDRname ) {
@@ -37,6 +39,8 @@ exports.post = function ( request, response ) {
   })
 
   User.register( user, request.body.password, function ( error, user ) {
+    var auth
+
     if ( error ) {
       response.send( error )
       return
