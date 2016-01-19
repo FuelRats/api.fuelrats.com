@@ -44,6 +44,8 @@ Now start the server!
 
     npm run dev
 
+This will ensure that Mongo is running as a service and start the API itself on whatever port you've set in `config.json`. You'll also need to make sure that Elasticsearch is running by either executing `elasticsearch` in your terminal or starting it as a service ([Windows](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service-win.html)|[Mac OS X](http://stackoverflow.com/questions/22850247/installing-elasticsearch-on-osx-mavericks/#answer-22855889)|[Linux](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service.html)).
+
 ## Development
 
 To work for realsies you need to copy the `config-example.json` file and update any settings you need changed:
