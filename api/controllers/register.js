@@ -55,8 +55,32 @@ exports.post = function ( request, response ) {
     auth = passport.authenticate( 'local' )
 
     auth( request, response, function () {
-      response.status( 200 )
-      response.json( user )
+      var responseModel
+
+      responseModel = {
+        links: {
+          self: request.originalUrl
+        }
+      }
+
+      Rat.findById( user.rat )
+      .exec( function ( error, rat ) {
+        var status
+
+        if ( error ) {
+          responseModel.errors = []
+          responseModel.errors.push( error )
+          status = 400
+
+        } else {
+          request.user.rat = rat
+          responseModel.data = user
+          status = 200
+        }
+
+        response.status( status )
+        response.json( responseModel )
+      })
     })
   })
 }
