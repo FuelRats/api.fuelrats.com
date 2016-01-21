@@ -225,6 +225,8 @@ app.use( '/node_modules', express.static( __dirname + '/node_modules' ) )
 socket = new ws({ server: httpServer })
 
 socket.on( 'connection', function ( client ) {
+  console.log( 'Client connected' )
+
   client.send( JSON.stringify({
     data: 'Welcome to the Fuel Rats API. You can check out the docs at absolutely fucking nowhere because Trezy is lazy.',
     type: 'welcome'
