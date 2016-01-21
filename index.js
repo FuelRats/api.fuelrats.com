@@ -196,6 +196,7 @@ router.get( '/search/rescues', rescue.get );
 router.get( '/search/rats', rat.get );
 
 // Register routes
+app.use( '/', router );
 app.use( '/api', router );
 app.use( '/assets', express.static( __dirname + '/assets' ) );
 app.use( '/bower_components', express.static( __dirname + '/bower_components' ) );
