@@ -8,7 +8,7 @@ var _, app, badge, bodyParser, config, cors, docket, docs, express, expressSessi
 // =============================================================================
 
 // Import libraries
-_ = require( 'lodash' );
+_ = require( 'underscore' );
 bodyParser = require( 'body-parser' );
 cors = require( 'cors' );
 // docket = require( './docket.js' );
