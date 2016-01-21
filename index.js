@@ -24,6 +24,16 @@ path = require( 'path' )
 LocalStrategy = require( 'passport-local' ).Strategy
 ws = require( 'ws' ).Server
 
+ws.prototype.broadcast = function ( data ) {
+  var clients
+
+  clients = this.clients
+
+  for ( var i = 0; i < clients.length; i++ ) {
+    clients[i].send( data )
+  }
+}
+
 // Import config
 if ( fs.existsSync( './config.json' ) ) {
   config = require( './config' )
@@ -214,10 +224,16 @@ app.use( '/node_modules', express.static( __dirname + '/node_modules' ) )
 
 socket = new ws({ server: httpServer })
 
-socket.on( 'connection', function ( socket ) {
-  socket.send( JSON.stringify({
-    data: 'Welcome! You\'ve connected to the Fuel Rats API server. Now GO AWAY.'
+socket.on( 'connection', function ( client ) {
+  client.send( JSON.stringify({
+    data: 'Welcome to the Fuel Rats API. You can check out the docs at absolutely fucking nowhere because Trezy is lazy.',
+    type: 'welcome'
   }))
+
+  client.on( 'message', function ( data ) {
+    data = JSON.parse( data )
+    console.log( data )
+  })
 })
 
 
