@@ -26,6 +26,7 @@
     "handlebars": "^4.0.5",
     "kerberos": "0.0.18",
     "load-grunt-config": "^0.19.1",
+    "mocha": "^2.3.4",
     "moment": "^2.11.1",
     "mongoosastic": "^3.6.0",
     "mongoose": "^4.3.6",
