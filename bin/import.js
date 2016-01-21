@@ -5,7 +5,7 @@ var _, csv, download, downloads, destination, filename, fs, mongoose, processRat
 
 
 // Node Modules
-_ = require( 'lodash' )
+_ = require( 'underscore' )
 csv = require( 'csv' )
 download = require( 'download' )
 fs = require( 'fs' )
@@ -70,11 +70,11 @@ processRats = function ( rats, rescueDrills, dispatchDrills ) {
         rescues: []
       }
 
-      if ( dispatchDrill = _.findWhere( rescueDrills, { 3: ratData[2] } ) ) {
+      if ( dispatchDrill = _.findWhere( dispatchDrills, { 3: ratData[2] } ) ) {
         rat.drilled.dispatch = dispatchDrill[4].toLowerCase() === 'pass'
       }
 
-      if ( rescueDrill = _.findWhere( dispatchDrills, { 3: ratData[2] } ) ) {
+      if ( rescueDrill = _.findWhere( rescueDrills, { 3: ratData[2] } ) ) {
         rat.drilled.rescue = rescueDrill[4].toLowerCase() === 'pass'
       }
 
