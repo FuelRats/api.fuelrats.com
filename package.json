@@ -14,6 +14,7 @@
   "dependencies": {
     "body-parser": "^1.14.2",
     "chai": "^3.4.1",
+    "cookie-parser": "^1.4.1",
     "cors": "^2.7.1",
     "csv": "^0.4.6",
     "download": "^4.4.3",
@@ -36,9 +37,9 @@
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^4.0.0",
-    "socket.io": "^1.4.4",
     "supertest": "^1.1.0",
     "time-grunt": "^1.3.0",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "ws": "^1.0.1"
   }
 }
