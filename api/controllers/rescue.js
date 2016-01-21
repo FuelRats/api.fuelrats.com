@@ -78,6 +78,10 @@ exports.get = function ( request, response ) {
       }
     }
 
+    if ( !Object.keys( query ).length ) {
+      query.match_all = {}
+    }
+
     Rescue.search( query, filter, function ( error, data ) {
       if ( error ) {
         responseModel.errors = []

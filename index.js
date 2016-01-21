@@ -1,4 +1,4 @@
-var _, app, badge, bodyParser, config, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, mongoose, morgan, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket;
+var _, app, badge, bodyParser, config, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, mongoose, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket;
 
 
 
@@ -18,7 +18,6 @@ expressSession = require( 'express-session' );
 fs = require( 'fs' );
 http = require( 'http' );
 mongoose = require( 'mongoose' );
-morgan = require( 'morgan' );
 passport = require( 'passport' );
 path = require( 'path' );
 io = require( 'socket.io' );
@@ -97,7 +96,6 @@ if ( process.argv ) {
 // =============================================================================
 
 app = express();
-// app.use( morgan( 'combined' ) )
 app.use( cors() );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
