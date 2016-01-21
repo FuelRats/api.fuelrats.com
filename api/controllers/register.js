@@ -1,10 +1,14 @@
-var path, Rat, rat, User, user
+var passport, path, Rat, rat, User, user
 
 
 
 
 
+passport = require( 'passport' )
 path = require( 'path' )
+
+Rat = require( '../models/rat.js' )
+User = require( '../models/user.js' )
 
 
 

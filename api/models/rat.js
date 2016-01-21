@@ -1,9 +1,9 @@
-var mongoose, RatSchema, Rescue, Schema;
+var mongoose, RatSchema, Rescue, Schema
 
-mongoose = require( 'mongoose' );
+mongoose = require( 'mongoose' )
 mongoosastic = require( 'mongoosastic' )
-Rescue = require( './rescue' );
-Schema = mongoose.Schema;
+Rescue = require( './rescue' )
+Schema = mongoose.Schema
 
 RatSchema = new Schema({
   archive: {
@@ -62,30 +62,34 @@ RatSchema = new Schema({
       ref: 'Rescue'
     }]
   }
-});
+})
 
 RatSchema.index({
   'CMDRname': 'text',
   'gamertag': 'text',
   'nickname': 'text'
-});
+})
 
 RatSchema.pre( 'save', function ( next ) {
-  var timestamp;
+  var timestamp
 
-  timestamp = parseInt( new Date().getTime() / 1000 );
+  timestamp = parseInt( new Date().getTime() / 1000 )
 
-  this.createdAt = this.createdAt || timestamp;
-  this.joined = this.joined || timestamp;
-  this.lastModified = timestamp;
+  this.createdAt = this.createdAt || timestamp
+  this.joined = this.joined || timestamp
+  this.lastModified = timestamp
 
-  next();
-});
+  next()
+})
 
 RatSchema.set( 'toJSON', {
   virtuals: true
-});
+})
 
 RatSchema.plugin( mongoosastic )
 
-module.exports = mongoose.model( 'Rat', RatSchema );
+if ( mongoose.models.Rat ) {
+  module.exports = mongoose.model( 'Rat' )
+} else {
+  module.exports = mongoose.model( 'Rat', RatSchema )
+}

@@ -1,8 +1,8 @@
-var mongoose, RescueSchema, Schema;
+var mongoose, RescueSchema, Schema
 
-mongoose = require( 'mongoose' );
-mongoosastic = require( 'mongoosastic' );
-Schema = mongoose.Schema;
+mongoose = require( 'mongoose' )
+mongoosastic = require( 'mongoosastic' )
+Schema = mongoose.Schema
 
 RescueSchema = new Schema({
   active: {
@@ -64,33 +64,37 @@ RescueSchema = new Schema({
   system: {
     type: String
   }
-});
+})
 
 RescueSchema.index({
   'CMDRname': 'text',
   'nickname': 'text'
-});
+})
 
 RescueSchema.pre( 'save', function ( next ) {
-  var timestamp;
+  var timestamp
 
-  timestamp = parseInt( new Date().getTime() / 1000 );
+  timestamp = parseInt( new Date().getTime() / 1000 )
 
   if ( !this.open ) {
-    this.active = false;
+    this.active = false
   }
 
-  this.createdAt = this.createdAt || timestamp;
-  this.lastModified = timestamp;
+  this.createdAt = this.createdAt || timestamp
+  this.lastModified = timestamp
 
-  next();
-});
+  next()
+})
 
-//RescueSchema.index( { '$**': 'text' } );
+//RescueSchema.index( { '$**': 'text' } )
 RescueSchema.set( 'toJSON', {
   virtuals: true
-});
+})
 
 RescueSchema.plugin( mongoosastic )
 
-module.exports = mongoose.model( 'Rescue', RescueSchema );
+if ( mongoose.models.Rescue ) {
+  module.exports = mongoose.model( 'Rescue' )
+} else {
+  module.exports = mongoose.model( 'Rescue', RescueSchema )
+}
