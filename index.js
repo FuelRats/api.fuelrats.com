@@ -211,9 +211,6 @@ router.get( '/search/rats', rat.get )
 app.use( express.static( __dirname + '/static' ) )
 app.use( '/', router )
 app.use( '/api', router )
-app.use( '/assets', express.static( __dirname + '/assets' ) )
-app.use( '/bower_components', express.static( __dirname + '/bower_components' ) )
-app.use( '/node_modules', express.static( __dirname + '/node_modules' ) )
 
 
 
@@ -225,8 +222,6 @@ app.use( '/node_modules', express.static( __dirname + '/node_modules' ) )
 socket = new ws({ server: httpServer })
 
 socket.on( 'connection', function ( client ) {
-  console.log( 'Client connected' )
-
   client.send( JSON.stringify({
     data: 'Welcome to the Fuel Rats API. You can check out the docs at absolutely fucking nowhere because Trezy is lazy.',
     type: 'welcome'
