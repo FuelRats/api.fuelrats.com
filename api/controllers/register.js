@@ -73,7 +73,7 @@ exports.post = function ( request, response ) {
           status = 400
 
         } else {
-          request.user.rat = rat
+          user.rat = rat
           responseModel.data = user
           status = 200
         }
