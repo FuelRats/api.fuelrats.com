@@ -10,5 +10,12 @@
     "detail": "",
     "status": "Bad Request",
     "title": "Missing Required Field"
+  },
+
+  "not_authenticated": {
+    "code": 401,
+    "detail": "User must be authenticated to perform that action",
+    "status": "Unauthorized",
+    "title": "Not Authenticated"
   }
 }

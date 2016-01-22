@@ -1,4 +1,4 @@
-var Rat, rat, save, winston
+var ErrorModels, Rat, rat, save, winston
 
 
 

@@ -13,7 +13,15 @@ Rat = require( '../models/rat' )
 
 
 exports.get = function ( request, response ) {
-  response.sendFile( path.join( __dirname + '/templates/login.html' ) )
+  if ( request.isUnauthenticated() ) {
+    response.render( 'login' )
+  } else {
+    Rat.findById( request.user.rat )
+    .exec( function ( error, rat ) {
+      request.user.rat = rat
+      response.render( 'welcome', request.user )
+    })
+  }
 }
 
 
@@ -21,7 +29,7 @@ exports.get = function ( request, response ) {
 
 
 exports.post = function ( request, response ) {
-  var responseModel
+  var referer, responseModel
 
   responseModel = {
     links: {
@@ -44,7 +52,12 @@ exports.post = function ( request, response ) {
       status = 200
     }
 
-    response.status( status )
-    response.json( responseModel )
+    if ( referer = request.get( 'Referer' ) ) {
+      response.redirect( '/login' )
+
+    } else {
+      response.status( status )
+      response.json( responseModel )
+    }
   })
 }

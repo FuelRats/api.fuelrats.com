@@ -1,4 +1,4 @@
-var _, app, badge, bodyParser, config, cookieParser, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, mongoose, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket, winston, ws
+var _, app, badge, bodyParser, config, cookieParser, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, logout, mongoose, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket, winston, ws
 
 
 
@@ -15,6 +15,7 @@ cookieParser = require( 'cookie-parser' )
 // docket = require( './docket.js' )
 docs = require( 'express-mongoose-docs' )
 express = require( 'express' )
+expressHandlebars = require( 'express-handlebars' )
 expressSession = require( 'express-session' )
 fs = require( 'fs' )
 http = require( 'http' )
@@ -40,6 +41,7 @@ User = require( './api/models/user' )
 // Import controllers
 badge = require( './api/controllers/badge' )
 login = require( './api/controllers/login' )
+logout = require( './api/controllers/logout' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
@@ -109,6 +111,13 @@ if ( process.argv ) {
 // =============================================================================
 
 app = express()
+
+app.engine( '.hbs', expressHandlebars({
+  defaultLayout: 'main',
+  extname: '.hbs'
+}))
+app.set( 'view engine', '.hbs' )
+
 app.use( cors() )
 app.use( bodyParser.urlencoded( { extended: true } ) )
 app.use( bodyParser.json() )
@@ -180,9 +189,14 @@ router = express.Router()
 
 app.get( '/badge/:rat', badge.get )
 
+app.get( '/register', register.get )
 app.post( '/register', register.post )
 
+app.get( '/login', login.get )
 app.post( '/login', passport.authenticate( 'local' ), login.post )
+
+app.get( '/logout', logout.post )
+app.post( '/logout', logout.post )
 
 router.get( '/rats/:id', rat.get )
 router.post( '/rats/:id', rat.post )

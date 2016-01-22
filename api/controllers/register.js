@@ -15,7 +15,7 @@ User = require( '../models/user.js' )
 
 
 exports.get = function ( request, response ) {
-  response.sendFile( path.join( __dirname + '/templates/register.html' ) )
+  response.redirect( '/login' )
 }
 
 
@@ -65,7 +65,7 @@ exports.post = function ( request, response ) {
 
       Rat.findById( user.rat )
       .exec( function ( error, rat ) {
-        var status
+        var referer, status
 
         if ( error ) {
           responseModel.errors = []
@@ -78,8 +78,13 @@ exports.post = function ( request, response ) {
           status = 200
         }
 
-        response.status( status )
-        response.json( responseModel )
+        if ( referer = request.get( 'Referer' ) ) {
+          response.redirect( '/login' )
+
+        } else {
+          response.status( status )
+          response.json( responseModel )
+        }
       })
     })
   })
