@@ -136,9 +136,9 @@ processRescues = function ( rescues ) {
 
       rescue = {
         archive: true,
-        closed: true,
         createdAt: new Date( rescueData[0] ).getTime() / 1000,
         notes: rescueData[4],
+        open: false,
         rats: [rescueData[1]],
         successful: rescueData[3] === 'Successful' ? true : false,
         system: rescueData[2]
