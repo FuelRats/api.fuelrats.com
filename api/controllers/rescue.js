@@ -1,11 +1,11 @@
-var Rescue, rescue, save, winston
+var Rat, rat, save, winston
 
 
 
 
 
 winston = require( 'winston' )
-Rescue = require( '../models/rescue' )
+Rat = require( '../models/rat' )
 ErrorModels = require( '../errors' )
 
 
@@ -24,9 +24,9 @@ exports.get = function ( request, response ) {
   }
 
   if ( id = request.params.id ) {
-    Rescue
+    Rat
     .findById( id )
-    .exec( function ( error, Rescue ) {
+    .exec( function ( error, rat ) {
       var status
 
       if ( error ) {
@@ -35,7 +35,7 @@ exports.get = function ( request, response ) {
         status = 400
 
       } else {
-        responseModel.data = Rescue
+        responseModel.data = rat
         status = 200
       }
 
@@ -83,7 +83,7 @@ exports.get = function ( request, response ) {
       query.match_all = {}
     }
 
-    Rescue.search( query, filter, function ( error, data ) {
+    Rat.search( query, filter, function ( error, data ) {
       if ( error ) {
         responseModel.errors = []
         responseModel.errors.push( error )
@@ -124,7 +124,7 @@ exports.post = function ( request, response ) {
     }
   }
 
-  Rescue.create( request.body, function ( error, rescue ) {
+  Rat.create( request.body, function ( error, rat ) {
     var errors, errorTypes, status
 
     if ( error ) {
@@ -150,15 +150,20 @@ exports.post = function ( request, response ) {
       status = 400
 
     } else {
-      responseModel.data = rescue
+      responseModel.data = rat
       status = 201
     }
 
-    response.status( status )
-    response.json( responseModel )
+    if ( referer = request.get( 'Referer' ) ) {
+      response.redirect( '/login' )
+
+    } else {
+      response.status( status )
+      response.json( responseModel )
+    }
   })
 
-  return rescue
+  return rat
 }
 
 
@@ -177,7 +182,7 @@ exports.put = function ( request, response ) {
   }
 
   if ( id = request.params.id ) {
-    Rescue.findById( id, function ( error, rescue ) {
+    Rat.findById( id, function ( error, rat ) {
       if ( error ) {
         responseModel.errors = responseModel.errors || []
         responseModel.errors.push( error )
@@ -185,17 +190,17 @@ exports.put = function ( request, response ) {
         response.json( responseModel )
         return
 
-      } else if ( !rescue ) {
+      } else if ( !rat ) {
         response.status( 404 ).send()
         return
       }
 
       for ( var key in request.body ) {
-        rescue[key] = request.body[key]
+        rat[key] = request.body[key]
       }
 
-      rescue.increment()
-      rescue.save( function ( error, rescue ) {
+      rat.increment()
+      rat.save( function ( error, rat ) {
         var errors, errorTypes, status
 
         if ( error ) {
@@ -222,7 +227,7 @@ exports.put = function ( request, response ) {
 
         } else {
           status = 200
-          responseModel.data = rescue
+          responseModel.data = rat
         }
 
         response.status( status )
@@ -234,5 +239,5 @@ exports.put = function ( request, response ) {
     response.send()
   }
 
-  return rescue
+  return rat
 }
