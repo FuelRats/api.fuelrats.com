@@ -2,63 +2,117 @@
 var _, autocompleteFields, limit, options, User, user
 
 limit = 10
-autocompleteFields = document.querySelectorAll( '[data-autocomplete="bootstrap"]' )
+autocompleteFields = document.querySelectorAll( '[data-autocomplete]' )
 
 _.forEach( autocompleteFields, function ( autocompleteField, index, autocompleteFields ) {
-  var dropdown, fieldName, parent
+  var dropdown, fieldNames, parent
 
   dropdown = document.createElement( 'div' )
-  fieldName = autocompleteField.getAttribute( 'name' )
+  fieldNames = autocompleteField.getAttribute( 'data-autocomplete' )
   parent = autocompleteField.parentNode
 
   dropdown.classList.add( 'dropdown-menu' )
   parent.classList.add( 'dropdown' )
   parent.appendChild( dropdown )
 
+  if ( fieldNames.indexOf( '|' ) !== -1 ) {
+    fieldNames = fieldNames.split( '|' )
+  } else {
+    fieldNames = [fieldNames]
+  }
+
   autocompleteField.addEventListener( 'input', function () {
-    var data, url
+    var data, requests
 
     data = {
       archive: true,
       limit: limit
     }
-    data[fieldName] = autocompleteField.value
-    url = 'http://localhost:8080/api/search/rats'
+    requests = []
 
-    Object.keys( data ).forEach( function ( key, index, keys ) {
-      if ( url.indexOf( '?' ) === -1 ) {
-        url = url + '?'
-      } else {
-        url = url + '&'
-      }
+    fieldNames.forEach( function ( fieldName, index, fieldNames ) {
+      var url
 
-      url = url + key + '=' + data[key]
+      data[fieldName] = autocompleteField.value
+      url = '/rats'
+
+      Object.keys( data ).forEach( function ( key, index, keys ) {
+        if ( url.indexOf( '?' ) === -1 ) {
+          url = url + '?'
+        } else {
+          url = url + '&'
+        }
+
+        url = url + key + '=' + data[key]
+      })
+
+      requests.push( fetch( url ) )
+      delete data[fieldName]
     })
 
-    fetch( url )
-    .then( function ( response ) {
-      // Convert the response to JSON
-      return response.json()
+    Promise.all( requests )
+    .then( function ( responses ) {
+      return new Promise( function ( resolve, reject ) {
+        var jsonConversions = []
+
+        // Convert the responses to JSON
+        responses.forEach( function ( response, index, responses ) {
+          jsonConversions.push( response.json() )
+        })
+
+        Promise.all( jsonConversions )
+        .then( resolve )
+        .catch( reject )
+      })
     })
-    .then( function ( response ) {
+    .then( function ( responses ) {
+      var responseData
+
+      responseData = []
+
       // Empty the dropdown
       dropdown.innerHTML = ''
 
-      if ( response.data.length ) {
+      // Combine and dedupe responses
+      for ( var i = 0; i < responses.length; ) {
+        responseData = _.union( responseData, responses.shift().data )
+      }
+
+      // Sort
+      responseData = _.sortBy( responseData, 'score' )
+
+      // Reverse
+      responseData = responseData.reverse()
+
+      // Minify
+      responseData = _.forEach( responseData, function ( responseDatum, index, responseData ) {
+        fieldNames.forEach( function ( fieldName, index, fieldNames ) {
+          if ( responseDatum[fieldName] ) {
+            responseData.push( responseDatum[fieldName] )
+          }
+        })
+      })
+
+      // Remove stale objects
+      responseData = _.filter( responseData, function ( datum ) {
+        return typeof datum !== 'object'
+      })
+
+      // Reduce
+      responseData = _.uniq( responseData )
+      responseData = _.take( responseData, 10 )
+
+      if ( responseData.length ) {
         parent.classList.add( 'open' )
 
-        response.data.forEach( function ( rat, index, rats ) {
+        responseData.forEach( function ( datum, index, data ) {
           var element
-
-          if ( !rat[fieldName] ) {
-            return
-          }
 
           element = document.createElement( 'button' )
 
           element.setAttribute( 'type', 'button' )
           element.classList.add( 'dropdown-item' )
-          element.innerHTML = rat[fieldName]
+          element.innerHTML = datum
 
           dropdown.appendChild( element )
 
@@ -131,8 +185,3 @@ _.forEach( autocompleteFields, function ( autocompleteField, index, autocomplete
     }, 100 )
   })
 })
-
-//$( 'form' ).submit( function ( event ) {
-//  event.preventDefault()
-//  console.log( event )
-//})
