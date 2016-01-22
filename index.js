@@ -180,10 +180,8 @@ router = express.Router()
 
 app.get( '/badge/:rat', badge.get )
 
-app.get( '/register', register.get )
 app.post( '/register', register.post )
 
-app.get( '/login', login.get )
 app.post( '/login', passport.authenticate( 'local' ), login.post )
 
 router.get( '/rats/:id', rat.get )
