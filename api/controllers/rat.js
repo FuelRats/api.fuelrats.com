@@ -1,9 +1,10 @@
-var Rat, rat, save
+var Rat, rat, save, winston
 
 
 
 
 
+winston = require( 'winston' )
 Rat = require( '../models/rat' )
 ErrorModels = require( '../errors' )
 
@@ -145,7 +146,7 @@ exports.post = function ( request, response ) {
         responseModel.errors.push( errorModel )
       }
 
-      console.log( 'failed', error )
+      winston.error( error )
       status = 400
 
     } else {

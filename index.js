@@ -1,4 +1,4 @@
-var _, app, badge, bodyParser, config, cookieParser, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, mongoose, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket, ws
+var _, app, badge, bodyParser, config, cookieParser, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, mongoose, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket, winston, ws
 
 
 
@@ -22,17 +22,8 @@ mongoose = require( 'mongoose' )
 passport = require( 'passport' )
 path = require( 'path' )
 LocalStrategy = require( 'passport-local' ).Strategy
+winston = require( 'winston' )
 ws = require( 'ws' ).Server
-
-ws.prototype.broadcast = function ( data ) {
-  var clients
-
-  clients = this.clients
-
-  for ( var i = 0; i < clients.length; i++ ) {
-    clients[i].send( data )
-  }
-}
 
 // Import config
 if ( fs.existsSync( './config.json' ) ) {
@@ -72,6 +63,17 @@ options = {
 notAllowed = function notAllowed ( request, response ) {
   response.status( 405 )
   response.send()
+}
+
+// Add a broadcast method for websockets
+ws.prototype.broadcast = function ( data ) {
+  var clients
+
+  clients = this.clients
+
+  for ( var i = 0; i < clients.length; i++ ) {
+    clients[i].send( data )
+  }
 }
 
 
@@ -150,10 +152,11 @@ app.use( function ( request, response, next ) {
 // Add logging
 if ( options.logging || options.test ) {
   app.use( function ( request, response, next ) {
-    console.log( '' )
-    console.log( 'ENDPOINT:', request.originalUrl )
-    console.log( 'METHOD:', request.method )
-    console.log( 'DATA:', request.body )
+    winston.info( '' )
+    winston.info( 'TIMESTAMP:', Date.now() )
+    winston.info( 'ENDPOINT:', request.originalUrl )
+    winston.info( 'METHOD:', request.method )
+    winston.info( 'DATA:', request.body )
     next()
   })
 }
@@ -229,7 +232,7 @@ socket.on( 'connection', function ( client ) {
 
   client.on( 'message', function ( data ) {
     data = JSON.parse( data )
-    console.log( data )
+    winston.info( data )
   })
 })
 
@@ -243,5 +246,5 @@ socket.on( 'connection', function ( client ) {
 module.exports = httpServer.listen( port )
 
 if ( !module.parent ) {
-  console.log( 'Listening for requests on port ' + port + '...' )
+  winston.info( 'Listening for requests on port ' + port + '...' )
 }

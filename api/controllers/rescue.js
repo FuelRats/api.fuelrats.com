@@ -1,9 +1,10 @@
-var Rescue, rescue, save
+var Rescue, rescue, save, winston
 
 
 
 
 
+winston = require( 'winston' )
 Rescue = require( '../models/rescue' )
 ErrorModels = require( '../errors' )
 
@@ -145,7 +146,7 @@ exports.post = function ( request, response ) {
         responseModel.errors.push( errorModel )
       }
 
-      console.log( 'failed', error )
+      winston.error( error )
       status = 400
 
     } else {
