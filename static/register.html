@@ -1,0 +1,38 @@
+<!doctype html>
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css">
+<link rel="stylesheet" href="/style.css">
+
+<div class="container-fluid">
+  <form action="/register" method="post">
+    <div class="form-group">
+      <label for="CMDRname">CMDR Name</label>
+      <div class="dropdown">
+        <input type="text" name="CMDRname" id="CMDRname" data-autocomplete="bootstrap" class="form-control">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="gamertag">Xbox Gamertag</label>
+      <input type="text" name="gamertag" id="gamertag" data-autocomplete="bootstrap" class="form-control">
+    </div>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" name="email" id="email" class="form-control" autocomplete="email" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" class="form-control" autocomplete="new-password" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Sign up!</button>
+  </form>
+</div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone-min.js"></script>
+<!--<script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>-->
+<!--<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/js/bootstrap.min.js"></script>-->
+
+<script src="register.js"></script>

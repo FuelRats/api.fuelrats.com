@@ -1,0 +1,60 @@
+/******************************************************************************\
+  Badge Editor
+\******************************************************************************/
+
+.focusIn {
+  animation-name: focusIn;
+  animation-duration: 0.5s;
+  transform: translateZ( 0 );
+}
+
+.hidden {
+  display: none;
+  visibility: hidden;
+}
+
+#badge {
+  opacity: 0;
+}
+
+#codeRed {
+  fill: red;
+}
+
+#laurel {
+  fill: #a80;
+}
+
+
+
+
+
+/******************************************************************************\
+  Registration
+\******************************************************************************/
+
+.dropdown-item.highlight {
+  background-color: #f5f5f5;
+  color: #2b2d2f;
+  text-decoration: none;
+}
+
+
+
+
+
+/******************************************************************************\
+  Animations
+\******************************************************************************/
+
+@keyframes focusIn {
+  0% {
+    -webkit-filter: blur( 10px );
+    opacity: 0;
+  }
+
+  100% {
+    -webkit-filter: blur( 0 );
+    opacity: 1;
+  }
+}
