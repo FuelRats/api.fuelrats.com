@@ -1,12 +1,15 @@
-var path, Rat
+var _, path, Rat, Rescue, winston
 
 
 
 
 
+_ = require( 'underscore' )
 path = require( 'path' )
+winston = require( 'winston' )
 
 Rat = require( '../models/rat' )
+Rescue = require( '../models/rescue' )
 
 
 
@@ -18,8 +21,21 @@ exports.get = function ( request, response ) {
   } else {
     Rat.findById( request.user.rat )
     .exec( function ( error, rat ) {
-      request.user.rat = rat
-      response.render( 'welcome', request.user )
+      var rescues
+
+      rescues = []
+
+      rescues.push( Rescue.find( { rats: rat.CMDRname } ) )
+      rescues.push( Rescue.find( { rats: rat.gamertag } ) )
+
+      Promise.all( rescues )
+      .then( function ( results ) {
+        rat.rescues = _.union( results[0], results[1] )
+        request.user.rat = rat
+        response.render( 'welcome', request.user )
+//        winston.info( )
+      })
+      .catch( winston.error )
     })
   }
 }
