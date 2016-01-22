@@ -1,4 +1,4 @@
-var _, app, badge, bodyParser, config, cookieParser, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, logout, mongoose, notAllowed, options, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket, winston, ws
+var _, app, badge, bodyParser, config, cookieParser, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, logout, mongoose, notAllowed, options, paperwork, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket, winston, ws
 
 
 
@@ -42,6 +42,7 @@ User = require( './api/models/user' )
 badge = require( './api/controllers/badge' )
 login = require( './api/controllers/login' )
 logout = require( './api/controllers/logout' )
+paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
@@ -187,16 +188,18 @@ router = express.Router()
 // ROUTES
 // =============================================================================
 
-app.get( '/badge/:rat', badge.get )
+router.get( '/badge/:rat', badge.get )
 
-app.get( '/register', register.get )
-app.post( '/register', register.post )
+router.get( '/register', register.get )
+router.post( '/register', register.post )
 
-app.get( '/login', login.get )
-app.post( '/login', passport.authenticate( 'local' ), login.post )
+router.get( '/login', login.get )
+router.post( '/login', passport.authenticate( 'local' ), login.post )
 
-app.get( '/logout', logout.post )
-app.post( '/logout', logout.post )
+router.get( '/logout', logout.post )
+router.post( '/logout', logout.post )
+
+router.get( '/paperwork', paperwork.get )
 
 router.get( '/rats/:id', rat.get )
 router.post( '/rats/:id', rat.post )
