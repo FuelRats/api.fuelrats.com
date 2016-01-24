@@ -97,6 +97,7 @@ exports.get = function ( request, response ) {
         }
         responseModel.data = []
         data.hits.hits.forEach( function ( hit, index, hits ) {
+          hit._source._id = hit._id
           hit._source.score = hit._score
           responseModel.data.push( hit._source )
         })

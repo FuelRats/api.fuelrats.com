@@ -88,6 +88,7 @@ exports.get = function ( request, response ) {
         responseModel.errors = []
         responseModel.errors.push( error )
         status = 400
+
       } else {
         responseModel.meta = {
           count: data.hits.hits.length,
@@ -100,6 +101,7 @@ exports.get = function ( request, response ) {
         winston.info( data.hits.hits[0].createdAt )
 
         data.hits.hits.forEach( function ( hit, index, hits ) {
+          hit._source._id = hit._id
           hit._source.score = hit._score
           responseModel.data.push( hit._source )
         })
