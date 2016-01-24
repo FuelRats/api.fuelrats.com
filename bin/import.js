@@ -10,6 +10,7 @@ csv = require( 'csv' )
 download = require( 'download' )
 fs = require( 'fs' )
 mongoose = require( 'mongoose' )
+require( 'mongoose-moment' )( mongoose )
 
 // Mongoose Models
 Rat = require( '../api/models/rat' )
@@ -136,7 +137,7 @@ processRescues = function ( rescues ) {
 
       rescue = {
         archive: true,
-        createdAt: new Date( rescueData[0] ).getTime() / 1000,
+        createdAt: new Date( rescueData[0] ).getTime(),
         notes: rescueData[4],
         open: false,
         rats: [rescueData[1]],

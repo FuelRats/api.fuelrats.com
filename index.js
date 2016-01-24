@@ -1,4 +1,39 @@
-var _, app, badge, bodyParser, config, cookieParser, cors, docket, docs, express, expressSession, fs, http, httpServer, io, LocalStrategy, logger, login, logout, mongoose, notAllowed, options, paperwork, passport, path, port, Rat, rat, register, Rescue, rescue, router, socket, winston, ws
+var _,
+    app,
+    badge,
+    bodyParser,
+    config,
+    cookieParser,
+    cors,
+    docket,
+    docs,
+    express,
+    expressSession,
+    fs,
+    http,
+    httpServer,
+    io,
+    LocalStrategy,
+    logger,
+    login,
+    logout,
+    moment,
+    mongoose,
+    notAllowed,
+    options,
+    paperwork,
+    passport,
+    path,
+    port,
+    Rat,
+    rat,
+    register,
+    Rescue,
+    rescue,
+    router,
+    socket,
+    winston,
+    ws
 
 
 
@@ -19,12 +54,16 @@ expressHandlebars = require( 'express-handlebars' )
 expressSession = require( 'express-session' )
 fs = require( 'fs' )
 http = require( 'http' )
+moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 passport = require( 'passport' )
 path = require( 'path' )
 LocalStrategy = require( 'passport-local' ).Strategy
 winston = require( 'winston' )
 ws = require( 'ws' ).Server
+
+// Import additional schema types
+require( 'mongoose-moment' )( mongoose )
 
 // Import config
 if ( fs.existsSync( './config.json' ) ) {
@@ -115,7 +154,12 @@ app = express()
 
 app.engine( '.hbs', expressHandlebars({
   defaultLayout: 'main',
-  extname: '.hbs'
+  extname: '.hbs',
+  helpers: {
+    dateFormat: function( context, block ) {
+      return moment( Date( context * 1000 ) ).format( block.hash.format || "MMM Do, YYYY" )
+    }
+  }
 }))
 app.set( 'view engine', '.hbs' )
 

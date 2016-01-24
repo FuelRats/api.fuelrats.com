@@ -1,8 +1,12 @@
-var mongoose, RatSchema, Rescue, Schema
+var moment, mongoose, RatSchema, Rescue, Schema, winston
 
+moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 mongoosastic = require( 'mongoosastic' )
+winston = require( 'winston' )
+
 Rescue = require( './rescue' )
+
 Schema = mongoose.Schema
 
 RatSchema = new Schema({
@@ -14,7 +18,7 @@ RatSchema = new Schema({
     type: String
   },
   createdAt: {
-    type: Number
+    type: 'Moment'
   },
   drilled: {
     default: {
@@ -34,11 +38,11 @@ RatSchema = new Schema({
     type: String
   },
   lastModified: {
-    type: Number
+    type: 'Moment'
   },
   joined: {
     default: Date.now(),
-    type: Number
+    type: 'Moment'
   },
   netlog: {
     type: {
@@ -73,13 +77,21 @@ RatSchema.index({
 RatSchema.pre( 'save', function ( next ) {
   var timestamp
 
-  timestamp = parseInt( new Date().getTime() / 1000 )
+  timestamp = new moment
 
-  this.createdAt = this.createdAt || timestamp
-  this.joined = this.joined || timestamp
+  if ( this.isNew ) {
+    this.createdAt = this.createdAt || timestamp
+    this.joined = this.joined || timestamp
+  }
+
   this.lastModified = timestamp
 
   next()
+})
+
+RatSchema.post( 'init', function ( doc ) {
+  doc.createdAt = doc.createdAt.valueOf()
+  doc.lastModified = doc.lastModified.valueOf()
 })
 
 RatSchema.set( 'toJSON', {

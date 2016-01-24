@@ -1,7 +1,10 @@
-var mongoose, RescueSchema, Schema
+var moment, mongoose, RescueSchema, Schema, winston
 
+moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 mongoosastic = require( 'mongoosastic' )
+winston = require( 'winston' )
+
 Schema = mongoose.Schema
 
 RescueSchema = new Schema({
@@ -28,14 +31,14 @@ RescueSchema = new Schema({
     type: Boolean
   },
   createdAt: {
-    type: Number
+    type: 'Moment'
   },
   epic: {
     default: false,
     type: Boolean
   },
   lastModified: {
-    type: Number
+    type: 'Moment'
   },
   open: {
     default: true,
@@ -74,19 +77,26 @@ RescueSchema.index({
 RescueSchema.pre( 'save', function ( next ) {
   var timestamp
 
-  timestamp = parseInt( new Date().getTime() / 1000 )
+  timestamp = new moment
 
   if ( !this.open ) {
     this.active = false
   }
 
-  this.createdAt = this.createdAt || timestamp
+  if ( this.isNew ) {
+    this.createdAt = this.createdAt || timestamp
+  }
+
   this.lastModified = timestamp
 
   next()
 })
 
-//RescueSchema.index( { '$**': 'text' } )
+RescueSchema.post( 'init', function ( doc ) {
+  doc.createdAt = doc.createdAt.valueOf()
+  doc.lastModified = doc.lastModified.valueOf()
+})
+
 RescueSchema.set( 'toJSON', {
   virtuals: true
 })
