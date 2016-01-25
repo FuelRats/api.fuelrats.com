@@ -1,9 +1,10 @@
-var passport, path, Rat, rat, User, user
+var _, passport, path, Rat, rat, User, user
 
 
 
 
 
+_ = require( 'underscore' )
 passport = require( 'passport' )
 path = require( 'path' )
 
@@ -23,68 +24,99 @@ exports.get = function ( request, response ) {
 
 
 exports.post = function ( request, response ) {
-  var ratData
+  var finds, ratData
 
-  ratData = {}
+  finds = []
+
+  user = new User({
+    email: request.body.email
+  })
 
   if ( request.body.CMDRname ) {
-    ratData.CMDRname = request.body.CMDRname
+    finds.push( Rat.find({
+      CMDRname: request.body.CMDRname
+    }))
   }
 
   if ( request.body.gamertag ) {
-    ratData.gamertag = request.body.gamertag
+    finds.push( Rat.find({
+      gamertag: request.body.gamertag
+    }))
   }
 
-  rat = new Rat( ratData )
-
-  user = new User({
-    email: request.body.email,
-    rat: rat._id
-  })
-
-  User.register( user, request.body.password, function ( error, user ) {
-    var auth
-
-    if ( error ) {
-      response.send( error )
-      return
+  Promise.all( finds )
+  .then( function ( results ) {
+    if ( results.length ) {
+      results.forEach( function ( result, index, results ) {
+        if ( result.length ) {
+          user.CMDRs.push( result[0] )
+        }
+      })
     }
 
-    Rat.create( rat )
+    if ( request.body.CMDRname && _.findWhere( user.CMDRs, { CMDRname: request.body.CMDRname } ) ) {
+      user.CMDRs.push( new Rat({
+        CMDRname: request.body.CMDRname
+      }))
+    }
 
-    auth = passport.authenticate( 'local' )
+    if ( request.body.gamertag && _.findWhere( user.CMDRs, { gamertag: request.body.gamertag } ) ) {
+      user.CMDRs.push( new Rat({
+        gamertag: request.body.gamertag
+      }))
+    }
 
-    auth( request, response, function () {
-      var responseModel
+    User.register( user, request.body.password, function ( error, user ) {
+      var auth, saves
 
-      responseModel = {
-        links: {
-          self: request.originalUrl
-        }
+      saves = []
+
+      if ( error ) {
+        response.send( error )
+        return
       }
 
-      Rat.findById( user.rat )
-      .exec( function ( error, rat ) {
-        var referer, status
-
-        if ( error ) {
-          responseModel.errors = []
-          responseModel.errors.push( error )
-          status = 400
+      user.CMDRs.forEach( function ( CMDR, index, CMDRs ) {
+        if ( CMDR._id ) {
+          saves.push( CMDR.save() )
 
         } else {
-          user.rat = rat
-          responseModel.data = user
-          status = 200
+          saves.push( Rat.create( CMDR ) )
         }
+      })
 
-        if ( referer = request.get( 'Referer' ) ) {
-          response.redirect( '/login' )
+      Promise.all( saves )
+      .then( function () {
+        auth = passport.authenticate( 'local' )
 
-        } else {
-          response.status( status )
-          response.json( responseModel )
-        }
+        auth( request, response, function () {
+          var referer, responseModel, status
+
+          responseModel = {
+            links: {
+              self: request.originalUrl
+            }
+          }
+
+          if ( error ) {
+            responseModel.errors = []
+            responseModel.errors.push( error )
+            status = 400
+
+          } else {
+            user.rat = rat
+            responseModel.data = user
+            status = 200
+          }
+
+          if ( referer = request.get( 'Referer' ) ) {
+            response.redirect( '/login' )
+
+          } else {
+            response.status( status )
+            response.json( responseModel )
+          }
+        })
       })
     })
   })
