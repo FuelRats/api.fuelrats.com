@@ -8,10 +8,13 @@ Schema = mongoose.Schema;
 modelProperties = {
   email: String,
   password: String,
-  rat: {
-    autopopulate: true,
-    type: Schema.Types.ObjectId,
-    ref: 'Rat'
+  CMDRs: {
+    default: [],
+    type: [{
+      autopopulate: true,
+      type: Schema.Types.ObjectId,
+      ref: 'Rat'
+    }]
   }
 };
 
