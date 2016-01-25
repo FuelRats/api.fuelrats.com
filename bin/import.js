@@ -1,4 +1,4 @@
-var _, csv, download, downloads, destination, filename, fs, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives
+var _, csv, download, downloads, destination, filename, fs, moment, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives
 
 
 
@@ -9,6 +9,7 @@ _ = require( 'underscore' )
 csv = require( 'csv' )
 download = require( 'download' )
 fs = require( 'fs' )
+moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 require( 'mongoose-moment' )( mongoose )
 
@@ -67,7 +68,7 @@ processRats = function ( rats, rescueDrills, dispatchDrills ) {
           dispatch: false,
           rescue: false
         },
-        joined: parseInt( new Date( ratData[0] || new Date ).getTime() / 1000 ),
+        joined: moment( new Date( ratData[0] ) || new Date ),
         rescues: []
       }
 
@@ -137,7 +138,7 @@ processRescues = function ( rescues ) {
 
       rescue = {
         archive: true,
-        createdAt: new Date( rescueData[0] ).getTime(),
+        createdAt: moment( new Date( rescueData[0] ) ),
         notes: rescueData[4],
         open: false,
         rats: [rescueData[1]],
