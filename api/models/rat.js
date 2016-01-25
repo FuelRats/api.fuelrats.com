@@ -1,4 +1,4 @@
-var moment, mongoose, RatSchema, Rescue, Schema, winston
+var moment, mongoose, RatSchema, Rescue, Schema, User, winston
 
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
@@ -6,6 +6,7 @@ mongoosastic = require( 'mongoosastic' )
 winston = require( 'winston' )
 
 Rescue = require( './rescue' )
+User = require( './user' )
 
 Schema = mongoose.Schema
 
@@ -45,6 +46,11 @@ RatSchema = new Schema({
     type: 'Moment'
   },
   netlog: {
+    default: {
+      commanderId: null,
+      data: null,
+      userId: null
+    },
     type: {
       commanderId: {
         type: String
@@ -65,6 +71,10 @@ RatSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: 'Rescue'
     }]
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   }
 })
 
