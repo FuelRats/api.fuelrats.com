@@ -1,4 +1,4 @@
-var _, csv, download, downloads, destination, filename, fs, moment, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives
+var _, csv, download, downloads, destination, filename, fs, moment, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives, winston
 
 
 
@@ -11,6 +11,7 @@ download = require( 'download' )
 fs = require( 'fs' )
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
+winston = require( 'winston' )
 require( 'mongoose-moment' )( mongoose )
 
 // Mongoose Models
@@ -52,7 +53,7 @@ mongoose.connect( 'mongodb://localhost/fuelrats' )
 
 
 processRats = function ( rats, rescueDrills, dispatchDrills ) {
-  console.log( 'Processing rats' )
+  winston.info( 'Processing rats' )
 
   return new Promise( function ( resolve, reject ) {
     var promises
@@ -99,15 +100,15 @@ processRats = function ( rats, rescueDrills, dispatchDrills ) {
               resolve( rat )
             })
             .catch( function ( error ) {
-              console.error( 'error creating rat', ( rat.CMDRname || rat.gamertag ) )
-              console.error( error )
+              winston.error( 'error creating rat', ( rat.CMDRname || rat.gamertag ) )
+              winston.error( error )
 
               reject( error )
             })
           })
           .catch( function ( error ) {
-            console.error( 'error retrieving rescues for', ( rat.CMDRname || rat.gamertag ) )
-            console.error( error )
+            winston.error( 'error retrieving rescues for', ( rat.CMDRname || rat.gamertag ) )
+            winston.error( error )
 
             reject( error )
           })
@@ -126,7 +127,7 @@ processRats = function ( rats, rescueDrills, dispatchDrills ) {
 
 
 processRescues = function ( rescues ) {
-  console.log( 'Processing rescues' )
+  winston.info( 'Processing rescues' )
 
   return new Promise( function ( resolve, reject ) {
     var promises
@@ -160,7 +161,7 @@ processRescues = function ( rescues ) {
 
 
 removeArchives = function removeArchives ( models ) {
-  console.log( 'Removing archives' )
+  winston.info( 'Removing archives' )
 
   return new Promise( function ( resolve, reject ) {
     var promises
@@ -182,7 +183,7 @@ removeArchives = function removeArchives ( models ) {
 
 
 // Download all of the spreadsheets
-console.log( 'Downloading spreadsheets' )
+winston.info( 'Downloading spreadsheets' )
 Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
   var url, spreadsheet
 
@@ -198,7 +199,7 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
       if ( error ) {
         reject( error )
       } else {
-        console.log( 'Parsing spreadsheet:', name )
+        winston.info( 'Parsing spreadsheet:', name )
         csv.parse( fs.readFileSync( destinationFolder + '/' + name + '.csv' ), function ( error, data ) {
           if ( error ) {
             reject( error )
@@ -258,23 +259,23 @@ Promise.all( downloads )
         oldRatCount = results[0]
         oldRescuesCount = results[1]
 
-        console.log( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
-        console.log( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
+        winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
+        winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
 
         mongoose.disconnect()
       })
       .catch( function ( error ) {
-        console.error( error )
+        winston.error( error )
       })
     })
     .catch( function ( error ) {
-      console.error( error )
+      winston.error( error )
     })
   })
   .catch( function ( error ) {
-    console.error( error )
+    winston.error( error )
   })
 })
 .catch( function ( error ) {
-  console.error( error )
+  winston.error( error )
 })
