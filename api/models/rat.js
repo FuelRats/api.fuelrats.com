@@ -66,6 +66,10 @@ RatSchema = new Schema({
   nicknames: {
     type: [String]
   },
+  platform: {
+    default: 'PC',
+    type: String
+  },
   rescues: {
     type: [{
       type: Schema.Types.ObjectId,
