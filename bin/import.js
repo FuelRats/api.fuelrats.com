@@ -316,6 +316,9 @@ Promise.all( downloads )
           winston.info( 'Linked', linkedRescuesCount, 'rescues to', linkedRatsCount, 'rats' )
 
           mongoose.disconnect()
+        }).catch(function(error) {
+            winston.error(error)
+            mongoose.disconnect()
         })
       })
       .catch( function ( error ) {
