@@ -21,6 +21,10 @@ RatSchema = new Schema({
   createdAt: {
     type: 'Moment'
   },
+  data: {
+    default: {},
+    type: Schema.Types.Mixed
+  },
   drilled: {
     default: {
       dispatch: false,
@@ -44,24 +48,6 @@ RatSchema = new Schema({
   joined: {
     default: Date.now(),
     type: 'Moment'
-  },
-  netlog: {
-    default: {
-      commanderId: null,
-      data: null,
-      userId: null
-    },
-    type: {
-      commanderId: {
-        type: String
-      },
-      data: {
-        type: Schema.Types.Mixed
-      },
-      userId: {
-        type: String
-      }
-    }
   },
   nicknames: {
     type: [String]
