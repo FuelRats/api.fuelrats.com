@@ -76,6 +76,8 @@ RescueSchema = new Schema({
   system: {
     type: String
   }
+}, {
+  versionKey: false
 })
 
 RescueSchema.pre( 'save', function ( next ) {

@@ -80,6 +80,8 @@ RatSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }
+}, {
+  versionKey: false
 })
 
 RatSchema.pre( 'save', function ( next ) {
