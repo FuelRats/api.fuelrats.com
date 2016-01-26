@@ -54,6 +54,10 @@ RatSchema = new Schema({
   },
   platform: {
     default: 'pc',
+    enum: [
+      'pc',
+      'xb'
+    ],
     type: String
   },
   rescues: {
@@ -73,6 +77,7 @@ RatSchema = new Schema({
 RatSchema.pre( 'save', function ( next ) {
   var timestamp
 
+  // Dealing with timestamps
   timestamp = new moment
 
   if ( this.isNew ) {
@@ -81,6 +86,9 @@ RatSchema.pre( 'save', function ( next ) {
   }
 
   this.lastModified = timestamp
+
+  // Dealing with platforms
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
 
   next()
 })

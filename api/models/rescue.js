@@ -53,7 +53,11 @@ RescueSchema = new Schema({
     type: String
   },
   platform: {
-    default: 'PC',
+    default: 'pc',
+    enum: [
+      'pc',
+      'xb'
+    ],
     type: String
   },
   quotes: {
@@ -86,6 +90,7 @@ RescueSchema = new Schema({
 RescueSchema.pre( 'save', function ( next ) {
   var timestamp
 
+  // Dealing with timestamps
   timestamp = new moment
 
   if ( !this.open ) {
@@ -97,6 +102,9 @@ RescueSchema.pre( 'save', function ( next ) {
   }
 
   this.lastModified = timestamp
+
+  // Dealing with platforms
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
 
   next()
 })
