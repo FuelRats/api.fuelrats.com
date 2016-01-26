@@ -67,7 +67,7 @@ RatSchema = new Schema({
     type: [String]
   },
   platform: {
-    default: 'PC',
+    default: 'pc',
     type: String
   },
   rescues: {
@@ -80,12 +80,6 @@ RatSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }
-})
-
-RatSchema.index({
-  'CMDRname': 'text',
-  'gamertag': 'text',
-  'nickname': 'text'
 })
 
 RatSchema.pre( 'save', function ( next ) {
