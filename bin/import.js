@@ -1,4 +1,4 @@
-var _, csv, download, downloads, destination, filename, fs, moment, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives, winston
+var _, csv, download, downloads, destination, filename, fs, linkModels, moment, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives, winston
 
 
 
@@ -52,72 +52,63 @@ mongoose.connect( 'mongodb://localhost/fuelrats' )
 
 
 
-processRats = function ( rats, rescueDrills, dispatchDrills ) {
-  winston.info( 'Processing rats' )
+linkModels = function () {
+  var linkedRatsCount, linkedRescuesCount, ratFind
+
+  winston.info( 'Linking models' )
+
+  linkedRatsCount = 0
+  linkedRescuesCount = 0
 
   return new Promise( function ( resolve, reject ) {
-    var promises
+    Rat.find({})
+    .then( function ( rats ) {
+      var rescueFinds
 
-    promises = []
+      rescueFinds = []
 
-    rats.forEach( function ( ratData, index, rats ) {
-      var dispatchDrill, rat, rescueDrill
+      rats.forEach( function ( rat, index, rats ) {
+        rescueFinds.push( Rescue.find( { tempRats: rat.CMDRname } ) )
+      })
 
-      rat = {
-        archive: true,
-        drilled: {
-          dispatch: false,
-          rescue: false
-        },
-        joined: moment( new Date( ratData[0] ) || new Date ),
-        rescues: []
-      }
+      Promise.all( rescueFinds )
+      .then( function ( results ) {
+        var saves
 
-      if ( dispatchDrill = _.findWhere( dispatchDrills, { 3: ratData[2] } ) ) {
-        rat.drilled.dispatch = dispatchDrill[4].toLowerCase() === 'pass'
-      }
+        saves = []
 
-      if ( rescueDrill = _.findWhere( rescueDrills, { 3: ratData[2] } ) ) {
-        rat.drilled.rescue = rescueDrill[4].toLowerCase() === 'pass'
-      }
+        results.forEach( function ( rescues, index, results ) {
+          var rat
 
-      if ( ratData[1] === 'CMDR' ) {
-        rat.CMDRname = ratData[2]
-      } else if ( ratData[1] === 'GameTag' ) {
-        rat.gamertag = ratData[2]
-      }
+          rat = rats[index]
 
-      if ( rat.CMDRname || rat.gamertag ) {
-        promises.push( new Promise( function ( resolve, reject ) {
-          Rescue.find( { rats: rat.CMDRname } )
-          .then( function ( rescues ) {
+          if ( rescues.length ) {
+            linkedRatsCount = linkedRatsCount + 1
+
             rescues.forEach( function ( rescue, index, rescues ) {
+              linkedRescuesCount = linkedRescuesCount + 1
+
+              winston.info( 'Linking rat', rat.CMDRname, 'to rescue', rescue._id )
+
+              rescue.tempRats = []
+              rescue.rats.push( rat._id )
               rat.rescues.push( rescue._id )
+              saves.push( rescue.save() )
+              saves.push( rat.save() )
             })
+          }
+        })
 
-            Rat.create( rat )
-            .then( function ( rat ) {
-              resolve( rat )
-            })
-            .catch( function ( error ) {
-              winston.error( 'error creating rat', ( rat.CMDRname || rat.gamertag ) )
-              winston.error( error )
-
-              reject( error )
-            })
-          })
-          .catch( function ( error ) {
-            winston.error( 'error retrieving rescues for', ( rat.CMDRname || rat.gamertag ) )
-            winston.error( error )
-
-            reject( error )
-          })
-        }))
-      }
+        winston.info( saves.length )
+        Promise.all( saves )
+        .then( function () {
+          winston.info( 'done!' )
+          resolve( linkedRatsCount, linkedRescuesCount )
+        })
+        .catch( reject )
+      })
+      .catch( reject )
     })
-
-    Promise.all( promises )
-    .then( resolve )
     .catch( reject )
   })
 }
@@ -126,33 +117,94 @@ processRats = function ( rats, rescueDrills, dispatchDrills ) {
 
 
 
-processRescues = function ( rescues ) {
+processRats = function ( ratData, rescueDrills, dispatchDrills ) {
+  winston.info( 'Processing rats' )
+
+  return new Promise( function ( resolve, reject ) {
+    var rats
+
+    rats = []
+
+    ratData.forEach( function ( ratDatum, index, ratData ) {
+      var dispatchDrill, rat, rescueDrill
+
+      rat = {
+        archive: true,
+        drilled: {
+          dispatch: false,
+          rescue: false
+        },
+        joined: moment( new Date( ratDatum[0] ) || new Date ),
+        rescues: []
+      }
+
+      if ( dispatchDrill = _.findWhere( dispatchDrills, { 3: ratDatum[2] } ) ) {
+        rat.drilled.dispatch = dispatchDrill[4].toLowerCase() === 'pass'
+      }
+
+      if ( rescueDrill = _.findWhere( rescueDrills, { 3: ratDatum[2] } ) ) {
+        rat.drilled.rescue = rescueDrill[4].toLowerCase() === 'pass'
+      }
+
+      if ( ratDatum[1] === 'CMDR' || ratDatum[1] === 'GameTag' ) {
+        rat.CMDRname = ratDatum[2]
+      }
+
+      if ( ratDatum[1] === 'GameTag' ) {
+        rat.platform = 'xb'
+      }
+
+      if ( rat.CMDRname ) {
+        rats.push( rat )
+      }
+    })
+
+    Rat.collection.insert( rats, function ( error, rats ) {
+      if ( error ) {
+        return reject( error )
+      }
+
+      resolve()
+    })
+  })
+}
+
+
+
+
+
+processRescues = function ( rescuesData ) {
   winston.info( 'Processing rescues' )
 
   return new Promise( function ( resolve, reject ) {
-    var promises
+    var rescues
 
-    promises = []
+    rescues = []
 
-    rescues.forEach( function ( rescueData, index, rescues ) {
+    rescuesData.forEach( function ( rescueDatum, index, rescuesData ) {
       var rescue
 
       rescue = {
         archive: true,
-        createdAt: moment( new Date( rescueData[0] ) ),
-        notes: rescueData[4],
+        createdAt: moment( new Date( rescueDatum[0] ) ),
+        notes: rescueDatum[4],
         open: false,
-        rats: [rescueData[1]],
-        successful: rescueData[3] === 'Successful' ? true : false,
-        system: rescueData[2]
+        rats: [],
+        tempRats: [rescueDatum[1]],
+        successful: rescueDatum[3].toLowerCase() === 'successful' ? true : false,
+        system: rescueDatum[2]
       }
 
-      promises.push( Rescue.create( rescue ) )
+      rescues.push( rescue )
     })
 
-    Promise.all( promises )
-    .then( resolve )
-    .catch( reject )
+    Rescue.collection.insert( rescues, function ( error ) {
+      if ( error ) {
+        return reject( error )
+      }
+
+      resolve ()
+    })
   })
 }
 
@@ -238,10 +290,8 @@ Promise.all( downloads )
 
     promises = []
 
-    promises.push( processRats( rats, rescueDrills, dispatchDrills ) )
-    promises.push( processRescues( rescues ) )
-
-    Promise.all( promises )
+    processRats( rats, rescueDrills, dispatchDrills )
+    .then( processRescues( rescues ) )
     .then( function () {
       var promises
 
@@ -259,10 +309,14 @@ Promise.all( downloads )
         oldRatCount = results[0]
         oldRescuesCount = results[1]
 
-        winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
-        winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
+        linkModels()
+        .then( function ( linkedRatsCount, linkedRescuesCount ) {
+          winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
+          winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
+          winston.info( 'Linked', linkedRescuesCount, 'rescues to', linkedRatsCount, 'rats' )
 
-        mongoose.disconnect()
+          mongoose.disconnect()
+        })
       })
       .catch( function ( error ) {
         winston.error( error )
