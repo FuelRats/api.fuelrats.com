@@ -46,6 +46,9 @@ RescueSchema = new Schema({
     default: true,
     type: Boolean
   },
+  name: {
+    type: String
+  },
   notes: {
     type: String
   },
