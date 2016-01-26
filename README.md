@@ -31,6 +31,8 @@ So you wanna do it the hard way? Fine. Make sure you install all of the dependen
 1. [`MongoDB`](https://www.mongodb.com/)
 1. [`Elasticsearch`](https://www.elastic.co/)
 
+You'll also need to make sure that Elasticsearch is running before you start the API by either executing `elasticsearch` in your terminal or starting it as a service ([Windows](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service-win.html)|[Mac OS X](http://stackoverflow.com/questions/22850247/installing-elasticsearch-on-osx-mavericks/#answer-22855889)|[Linux](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service.html)).
+
 Grab the repo:
 
     git clone https://github.com/FuelRats/api.fuelrats.com.git
@@ -44,7 +46,7 @@ Now start the server!
 
     npm run dev
 
-This will ensure that Mongo is running as a service and start the API itself on whatever port you've set in `config.json`. You'll also need to make sure that Elasticsearch is running by either executing `elasticsearch` in your terminal or starting it as a service ([Windows](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service-win.html)|[Mac OS X](http://stackoverflow.com/questions/22850247/installing-elasticsearch-on-osx-mavericks/#answer-22855889)|[Linux](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service.html)).
+This will ensure that Mongo is running as a service and start the API itself on either port 8080 or whatever port you've set in `config.json`.
 
 ## Development
 
