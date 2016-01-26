@@ -1,9 +1,11 @@
-var moment, mongoose, RescueSchema, Schema, winston
+var moment, mongoose, Rat, RescueSchema, Schema, winston
 
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 mongoosastic = require( 'mongoosastic' )
 winston = require( 'winston' )
+
+Rat = require( './rat' )
 
 Schema = mongoose.Schema
 
@@ -57,6 +59,13 @@ RescueSchema = new Schema({
     }]
   },
   rats: {
+    default: [],
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Rat'
+    }]
+  },
+  tempRats: {
     type: [{
       type: String
     }]
@@ -67,11 +76,6 @@ RescueSchema = new Schema({
   system: {
     type: String
   }
-})
-
-RescueSchema.index({
-  'CMDRname': 'text',
-  'nickname': 'text'
 })
 
 RescueSchema.pre( 'save', function ( next ) {
