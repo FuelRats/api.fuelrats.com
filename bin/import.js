@@ -105,13 +105,9 @@ linkModels = function () {
           winston.info( 'done!' )
           resolve( linkedRatsCount, linkedRescuesCount )
         })
-        .catch( function(error) {
-            reject(error)
-        } )
+        .catch( reject )
       })
-      .catch( function(error) {
-          reject(error)
-      })
+      .catch( reject )
     })
     .catch( reject )
   })
