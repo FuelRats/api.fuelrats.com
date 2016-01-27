@@ -5,7 +5,6 @@ var _,
     config,
     cookieParser,
     cors,
-    docket,
     docs,
     express,
     expressSession,
@@ -47,8 +46,6 @@ _ = require( 'underscore' )
 bodyParser = require( 'body-parser' )
 cors = require( 'cors' )
 cookieParser = require( 'cookie-parser' )
-// docket = require( './docket.js' )
-docs = require( 'express-mongoose-docs' )
 express = require( 'express' )
 expressHandlebars = require( 'express-handlebars' )
 expressSession = require( 'express-session' )
@@ -79,6 +76,7 @@ User = require( './api/models/user' )
 
 // Import controllers
 badge = require( './api/controllers/badge' )
+docs = require( './api/controllers/docs' )
 login = require( './api/controllers/login' )
 logout = require( './api/controllers/logout' )
 paperwork = require( './api/controllers/paperwork' )
@@ -194,9 +192,6 @@ app.use( expressSession({
 app.use( passport.initialize() )
 app.use( passport.session() )
 
-docs( app, mongoose )
-// docket( app, mongoose )
-
 // Combine query parameters with the request body, prioritizing the body
 app.use( function ( request, response, next ) {
   request.body = _.extend( request.query, request.body )
@@ -233,6 +228,8 @@ router = express.Router()
 // =============================================================================
 
 router.get( '/badge/:rat', badge.get )
+
+router.get( '/docs', docs.get )
 
 router.get( '/register', register.get )
 router.post( '/register', register.post )
@@ -285,7 +282,7 @@ socket = new ws({ server: httpServer })
 
 socket.on( 'connection', function ( client ) {
   client.send( JSON.stringify({
-    data: 'Welcome to the Fuel Rats API. You can check out the docs at absolutely fucking nowhere because Trezy is lazy.',
+    data: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.',
     type: 'welcome'
   }))
 
