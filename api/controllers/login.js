@@ -19,24 +19,7 @@ exports.get = function ( request, response ) {
   if ( request.isUnauthenticated() ) {
     response.render( 'login' )
   } else {
-    Rat.findById( request.user.rat )
-    .exec( function ( error, rat ) {
-      var rescues
-
-      rescues = []
-
-      rescues.push( Rescue.find( { rats: rat.CMDRname } ) )
-      rescues.push( Rescue.find( { rats: rat.gamertag } ) )
-
-      Promise.all( rescues )
-      .then( function ( results ) {
-        rat.rescues = _.union( results[0], results[1] )
-        request.user.rat = rat
-        response.render( 'welcome', request.user )
-//        winston.info( )
-      })
-      .catch( winston.error )
-    })
+    response.redirect( '/welcome' )
   }
 }
 

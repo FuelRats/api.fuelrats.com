@@ -40,7 +40,8 @@ exports.post = function ( request, response ) {
 
   if ( request.body.gamertag ) {
     finds.push( Rat.find({
-      gamertag: request.body.gamertag
+      CMDRname: request.body.gamertag,
+      platform: 'xb'
     }))
   }
 
@@ -60,9 +61,10 @@ exports.post = function ( request, response ) {
       }))
     }
 
-    if ( request.body.gamertag && _.findWhere( user.CMDRs, { gamertag: request.body.gamertag } ) ) {
+    if ( request.body.gamertag && _.findWhere( user.CMDRs, { CMDRname: request.body.gamertag } ) ) {
       user.CMDRs.push( new Rat({
-        gamertag: request.body.gamertag
+        CMDRname: request.body.gamertag,
+        platform: 'xb'
       }))
     }
 
@@ -78,6 +80,7 @@ exports.post = function ( request, response ) {
 
       user.CMDRs.forEach( function ( CMDR, index, CMDRs ) {
         if ( CMDR._id ) {
+          CMDR.archive = false
           saves.push( CMDR.save() )
 
         } else {
@@ -110,13 +113,16 @@ exports.post = function ( request, response ) {
           }
 
           if ( referer = request.get( 'Referer' ) ) {
-            response.redirect( '/login' )
+            response.redirect( '/welcome' )
 
           } else {
             response.status( status )
             response.json( responseModel )
           }
         })
+      })
+      .catch( function ( error ) {
+        console.error( error )
       })
     })
   })
