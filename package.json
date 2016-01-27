@@ -12,6 +12,7 @@
   "license": "MIT",
   "main": "api/index.js",
   "dependencies": {
+    "aglio": "^2.2.0",
     "body-parser": "^1.14.2",
     "chai": "^3.4.1",
     "cookie-parser": "^1.4.1",
