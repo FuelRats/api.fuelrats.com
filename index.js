@@ -32,6 +32,7 @@ var _,
     rescue,
     router,
     socket,
+    version,
     winston,
     ws
 
@@ -85,6 +86,7 @@ paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
+version = require( './api/controllers/version' )
 
 // Connect to MongoDB
 mongoose.connect( 'mongodb://localhost/fuelrats' )
@@ -268,6 +270,8 @@ router.delete( '/rescues', notAllowed )
 router.get( '/search/rescues', rescue.get )
 
 router.get( '/search/rats', rat.get )
+
+router.get( '/version', version.get)
 
 // Register routes
 app.use( express.static( __dirname + '/static' ) )
