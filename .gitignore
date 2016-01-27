@@ -1,7 +1,7 @@
 ### Project ###
 .vagrant/
-api/docs/
 data/
+docs/index.html
 test/bundle.js
 config.json
 npm-debug.log.*

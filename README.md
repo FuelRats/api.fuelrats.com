@@ -56,5 +56,8 @@ To work for realsies you need to copy the `config-example.json` file and update 
 
 The `npm run dev` task starts the API with `node-dev` which will automatically restart the API when you change a file. Simply kill the process when you're done. Good luck, and may the force be with you.
 
-## Generating Documentation
-Navigate to the /docs directory and run the gen.js script
+## Generating the docs
+
+It's so easy a DerryBear could do it! Just run the generator script:
+
+    node bin/compile-docs.js
