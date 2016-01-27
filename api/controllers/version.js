@@ -1,6 +1,6 @@
 var gitrev
 
-git = require('git-rev')
+gitrev = require('git-rev')
 
 exports.get = function (request, response) {
   var responseModel
@@ -11,7 +11,7 @@ exports.get = function (request, response) {
     }
   }
 
-  git.long(function (githash) {
+  gitrev.long(function (githash) {
     var status, serverVersion
 
     serverVersion = process.env.npm_package_version
