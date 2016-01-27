@@ -32,6 +32,7 @@ var _,
     rescue,
     router,
     socket,
+    welcome,
     winston,
     ws
 
@@ -85,6 +86,7 @@ paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
+welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
 mongoose.connect( 'mongodb://localhost/fuelrats' )
@@ -244,6 +246,8 @@ router.get( '/logout', logout.post )
 router.post( '/logout', logout.post )
 
 router.get( '/paperwork', paperwork.get )
+
+router.get( '/welcome', welcome.get )
 
 router.get( '/rats/:id', rat.get )
 router.post( '/rats/:id', rat.post )

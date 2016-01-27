@@ -204,7 +204,7 @@ exports.put = function ( request, response ) {
         rescue[key] = request.body[key]
       }
 
-      rescue.increment()
+//      rescue.increment()
       rescue.save( function ( error, rescue ) {
         var errors, errorTypes, status
 
