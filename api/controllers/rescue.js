@@ -1,9 +1,10 @@
-var Rescue, rescue, save, winston
+var _, Rescue, rescue, save, winston
 
 
 
 
 
+_ = require( 'underscore' )
 winston = require( 'winston' )
 Rescue = require( '../models/rescue' )
 ErrorModels = require( '../errors' )
@@ -190,16 +191,18 @@ exports.put = function ( request, response ) {
         responseModel.errors = responseModel.errors || []
         responseModel.errors.push( error )
         response.status( 400 )
-        response.json( responseModel )
-        return
+        return response.json( responseModel )
 
       } else if ( !rescue ) {
-        response.status( 404 ).send()
-        return
+        return response.status( 404 ).send()
       }
 
       for ( var key in request.body ) {
-        rescue[key] = request.body[key]
+        if ( key === 'client' ) {
+          _.extend( rescue.client, request.body[key] )
+        } else {
+          rescue[key] = request.body[key]
+        }
       }
 
 //      rescue.increment()
