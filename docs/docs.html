@@ -2,11 +2,11 @@
 <div class="warning">
 <p>The API is currently under development so this document is subject to change at short notice.</p>
 </div>
-<section id="rescues" class="resource-group"><h2 class="group-heading">Rescues <a href="#rescues" class="permalink">&para;</a></h2><div id="rescues-get-a-list-of-rescues" class="resource"><h3 class="resource-heading">Get a list of rescues <a href="#rescues-get-a-list-of-rescues" class="permalink">&nbsp;&para;</a></h3><div id="rescues-get-a-list-of-rescues-get" class="action get"><h4 class="action-heading"><div class="name">Get a list of rescues</div><a href="#rescues-get-a-list-of-rescues-get" class="method get">GET</a><code class="uri">/api/rescues</code></h4><p>Retrieves a list of any existing rescues and all associated information</p>
+<section id="rescues" class="resource-group"><h2 class="group-heading">Rescues <a href="#rescues" class="permalink">&para;</a></h2><div id="rescues-get-a-list-of-rescues" class="resource"><h3 class="resource-heading">Get a list of rescues <a href="#rescues-get-a-list-of-rescues" class="permalink">&nbsp;&para;</a></h3><div id="rescues-get-a-list-of-rescues-get" class="action get"><h4 class="action-heading"><div class="name">Get a list of rescues</div><a href="#rescues-get-a-list-of-rescues-get" class="method get">GET</a><code class="uri">/rescues</code></h4><p>Retrieves a list of any existing rescues and all associated information</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rescues</span></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rescues</span></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">meta</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">count</span>": <span class="hljs-value"><span class="hljs-number">25</span></span>,
@@ -81,9 +81,9 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"A list of rescues"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues- create-a-rescue" class="resource"><h3 class="resource-heading"> Create a rescue <a href="#rescues- create-a-rescue" class="permalink">&nbsp;&para;</a></h3><div id="rescues- create-a-rescue-post" class="action post"><h4 class="action-heading"><div class="name"> Create a rescue</div><a href="#rescues- create-a-rescue-post" class="method post">POST</a><code class="uri">/api/rescues</code></h4><p>Create a new active Rescue</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues- create-a-rescue" class="resource"><h3 class="resource-heading"> Create a rescue <a href="#rescues- create-a-rescue" class="permalink">&nbsp;&para;</a></h3><div id="rescues- create-a-rescue-post" class="action post"><h4 class="action-heading"><div class="name"> Create a rescue</div><a href="#rescues- create-a-rescue-post" class="method post">POST</a><code class="uri">/rescues</code></h4><p>Create a new active Rescue</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method post">POST</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rescues</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method post">POST</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rescues</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">nickname</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
   "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
   "<span class="hljs-attribute">codeRed</span>": <span class="hljs-value"><span class="hljs-literal">false</span>
@@ -110,7 +110,7 @@
   ]
 </span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>201</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
@@ -236,12 +236,12 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"The rescue that was just created"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues-retrieve-single-rescue" class="resource"><h3 class="resource-heading">Retrieve single rescue <a href="#rescues-retrieve-single-rescue" class="permalink">&nbsp;&para;</a></h3><div id="rescues-retrieve-single-rescue-get" class="action get"><h4 class="action-heading"><div class="name">Retrieve single rescue</div><a href="#rescues-retrieve-single-rescue-get" class="method get">GET</a><code class="uri">/api/rescues/{id}</code></h4><p>Retrieve a single rescue by its ID</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues-retrieve-single-rescue" class="resource"><h3 class="resource-heading">Retrieve single rescue <a href="#rescues-retrieve-single-rescue" class="permalink">&nbsp;&para;</a></h3><div id="rescues-retrieve-single-rescue-get" class="action get"><h4 class="action-heading"><div class="name">Retrieve single rescue</div><a href="#rescues-retrieve-single-rescue-get" class="method get">GET</a><code class="uri">/rescues/{id}</code></h4><p>Retrieve a single rescue by its ID</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rescues/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rescue to retrieve information on</p>
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rescues/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rescue to retrieve information on</p>
 </dd></dl></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
@@ -367,9 +367,9 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Information about the rescue"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues- search-rescues" class="resource"><h3 class="resource-heading"> Search Rescues <a href="#rescues- search-rescues" class="permalink">&nbsp;&para;</a></h3><div id="rescues- search-rescues-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rescues</div><a href="#rescues- search-rescues-get" class="method get">GET</a><code class="uri">/api/search/rescues</code></h4><p>Search records of rescues by matching fields</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues- search-rescues" class="resource"><h3 class="resource-heading"> Search Rescues <a href="#rescues- search-rescues" class="permalink">&nbsp;&para;</a></h3><div id="rescues- search-rescues-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rescues</div><a href="#rescues- search-rescues-get" class="method get">GET</a><code class="uri">/rescues</code></h4><p>Search records of rescues by matching fields</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/search/rescues</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rescues</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">active</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
   "<span class="hljs-attribute">codeRed</span>": <span class="hljs-value"><span class="hljs-literal">true</span>
 </span>}</code></pre><div style="height: 1px;"></div><h5>Schema</h5><pre><code>{
@@ -387,7 +387,7 @@
   </span>}
 </span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">meta</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">count</span>": <span class="hljs-value"><span class="hljs-number">25</span></span>,
@@ -462,7 +462,7 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"A list of rescues"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues-update-an-existing-rescue" class="resource"><h3 class="resource-heading">Update an existing rescue <a href="#rescues-update-an-existing-rescue" class="permalink">&nbsp;&para;</a></h3><div id="rescues-update-an-existing-rescue-put" class="action put"><h4 class="action-heading"><div class="name">Update an existing rescue</div><a href="#rescues-update-an-existing-rescue-put" class="method put">PUT</a><code class="uri">/api/rescues/{id}</code></h4><p>Change the values of an existing rescue</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues-update-an-existing-rescue" class="resource"><h3 class="resource-heading">Update an existing rescue <a href="#rescues-update-an-existing-rescue" class="permalink">&nbsp;&para;</a></h3><div id="rescues-update-an-existing-rescue-put" class="action put"><h4 class="action-heading"><div class="name">Update an existing rescue</div><a href="#rescues-update-an-existing-rescue-put" class="method put">PUT</a><code class="uri">/rescues/{id}</code></h4><p>Change the values of an existing rescue</p>
 <div class="warning">
 <p>This endpoint is currently broken. See <a href="https://github.com/FuelRats/api.fuelrats.com/issues/28">Modify rescue and modify rat API endpoint is broken #28</a></p>
 </div>
@@ -470,7 +470,7 @@
 <p>Rescues cannot be deleted, only marked as inactive or closed</p>
 </div>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method put">PUT</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rescues/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rescue to update</p>
+<h4>Example URI</h4><div class="definition"><span class="method put">PUT</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rescues/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rescue to update</p>
 </dd></dl></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-string">"xb"</span></span>,
   "<span class="hljs-attribute">codeRed</span>": <span class="hljs-value"><span class="hljs-literal">true</span>
@@ -489,7 +489,7 @@
   </span>}
 </span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
@@ -615,11 +615,11 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"The rescue that was just modified"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div></section><section id="rats" class="resource-group"><h2 class="group-heading">Rats <a href="#rats" class="permalink">&para;</a></h2><div id="rats-get-a-list-of-rats" class="resource"><h3 class="resource-heading">Get a list of rats <a href="#rats-get-a-list-of-rats" class="permalink">&nbsp;&para;</a></h3><div id="rats-get-a-list-of-rats-get" class="action get"><h4 class="action-heading"><div class="name">Get a list of rats</div><a href="#rats-get-a-list-of-rats-get" class="method get">GET</a><code class="uri">/api/rats</code></h4><p>Retrieves a list of any existing rats and all associated information</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div></section><section id="rats" class="resource-group"><h2 class="group-heading">Rats <a href="#rats" class="permalink">&para;</a></h2><div id="rats-get-a-list-of-rats" class="resource"><h3 class="resource-heading">Get a list of rats <a href="#rats-get-a-list-of-rats" class="permalink">&nbsp;&para;</a></h3><div id="rats-get-a-list-of-rats-get" class="action get"><h4 class="action-heading"><div class="name">Get a list of rats</div><a href="#rats-get-a-list-of-rats-get" class="method get">GET</a><code class="uri">/rats</code></h4><p>Retrieves a list of any existing rats and all associated information</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rats</span></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rats</span></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">meta</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">count</span>": <span class="hljs-value"><span class="hljs-number">25</span></span>,
@@ -695,9 +695,9 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"A list of rats"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats- create-a-rat" class="resource"><h3 class="resource-heading"> Create a rat <a href="#rats- create-a-rat" class="permalink">&nbsp;&para;</a></h3><div id="rats- create-a-rat-post" class="action post"><h4 class="action-heading"><div class="name"> Create a rat</div><a href="#rats- create-a-rat-post" class="method post">POST</a><code class="uri">/api/rats</code></h4><p>Create a new rat</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats- create-a-rat" class="resource"><h3 class="resource-heading"> Create a rat <a href="#rats- create-a-rat" class="permalink">&nbsp;&para;</a></h3><div id="rats- create-a-rat-post" class="action post"><h4 class="action-heading"><div class="name"> Create a rat</div><a href="#rats- create-a-rat-post" class="method post">POST</a><code class="uri">/rats</code></h4><p>Create a new rat</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method post">POST</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rats</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method post">POST</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rats</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">nicknames</span>": <span class="hljs-value">[
     <span class="hljs-string">"Trezy"</span>
   ]</span>,
@@ -721,7 +721,7 @@
   ]
 </span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>201</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-string">"56a8c2bc9b884b56e9cfe8ba"</span></span>,
@@ -855,15 +855,15 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"The rat that was just created"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats-retrieve-a-single-rat" class="resource"><h3 class="resource-heading">Retrieve a single rat <a href="#rats-retrieve-a-single-rat" class="permalink">&nbsp;&para;</a></h3><div id="rats-retrieve-a-single-rat-get" class="action get"><h4 class="action-heading"><div class="name">Retrieve a single rat</div><a href="#rats-retrieve-a-single-rat-get" class="method get">GET</a><code class="uri">/api/rats/{id}</code></h4><p>Retrieve a single rescue by its ID</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats-retrieve-a-single-rat" class="resource"><h3 class="resource-heading">Retrieve a single rat <a href="#rats-retrieve-a-single-rat" class="permalink">&nbsp;&para;</a></h3><div id="rats-retrieve-a-single-rat-get" class="action get"><h4 class="action-heading"><div class="name">Retrieve a single rat</div><a href="#rats-retrieve-a-single-rat-get" class="method get">GET</a><code class="uri">/rats/{id}</code></h4><p>Retrieve a single rat by its ID</p>
 <div class="warning">
 <p>This API is not yet implemented. See <a href="https://github.com/FuelRats/api.fuelrats.com/issues/29">Get rat by ID API endpoint not implemented. #29</a> for progress</p>
 </div>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rats/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rat to retrieve information on</p>
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rats/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rat to retrieve information on</p>
 </dd></dl></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value"><span class="hljs-literal">null</span>
 </span>}</code></pre><div style="height: 1px;"></div><h5>Schema</h5><pre><code>{
@@ -889,12 +889,12 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Not yet implemented"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats- search-rats" class="resource"><h3 class="resource-heading"> Search Rats <a href="#rats- search-rats" class="permalink">&nbsp;&para;</a></h3><div id="rats- search-rats-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rats</div><a href="#rats- search-rats-get" class="method get">GET</a><code class="uri">/api/search/rats</code></h4><p>Search records of rats by matching fields</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats- search-rats" class="resource"><h3 class="resource-heading"> Search Rats <a href="#rats- search-rats" class="permalink">&nbsp;&para;</a></h3><div id="rats- search-rats-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rats</div><a href="#rats- search-rats-get" class="method get">GET</a><code class="uri">/rats</code></h4><p>Search records of rats by matching fields</p>
 <div class="warning">
 <p>The search API does not yet work with nested objects, like drilled - dispatch, or nicknames. See <a href="https://github.com/FuelRats/api.fuelrats.com/issues/30">Rat search API does not work with nested objects in queries. #30</a> for progress</p>
 </div>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/search/rats</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rats</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
   "<span class="hljs-attribute">drilled</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">dispatch</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
@@ -925,7 +925,7 @@
   </span>}
 </span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">meta</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">count</span>": <span class="hljs-value"><span class="hljs-number">25</span></span>,
@@ -1001,12 +1001,12 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"A list of rats"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats-update-an-existing-rat" class="resource"><h3 class="resource-heading">Update an existing rat <a href="#rats-update-an-existing-rat" class="permalink">&nbsp;&para;</a></h3><div id="rats-update-an-existing-rat-put" class="action put"><h4 class="action-heading"><div class="name">Update an existing rat</div><a href="#rats-update-an-existing-rat-put" class="method put">PUT</a><code class="uri">/api/rats/{id}</code></h4><p>Change the values of an existing rat</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats-update-an-existing-rat" class="resource"><h3 class="resource-heading">Update an existing rat <a href="#rats-update-an-existing-rat" class="permalink">&nbsp;&para;</a></h3><div id="rats-update-an-existing-rat-put" class="action put"><h4 class="action-heading"><div class="name">Update an existing rat</div><a href="#rats-update-an-existing-rat-put" class="method put">PUT</a><code class="uri">/rats/{id}</code></h4><p>Change the values of an existing rat</p>
 <div class="warning">
 <p>This endpoint is currently broken. See <a href="https://github.com/FuelRats/api.fuelrats.com/issues/28">Modify rescue and modify rat API endpoint is broken #28</a></p>
 </div>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method put">PUT</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/api/rats/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rat to update</p>
+<h4>Example URI</h4><div class="definition"><span class="method put">PUT</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rats/<span class="hljs-attribute" title="id">56a78141f9fbac397a27ab3e</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>integer</code>&nbsp;<span class="required">(required)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>ID of the rat to update</p>
 </dd></dl></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-string">"xb"</span>
 </span>}</code></pre><div style="height: 1px;"></div><h5>Schema</h5><pre><code>{
@@ -1020,7 +1020,7 @@
   </span>}
 </span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/api/rescues"</span>
+    "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-string">"56a8c2bc9b884b56e9cfe8ba"</span></span>,
