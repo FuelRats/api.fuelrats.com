@@ -4,9 +4,5 @@ module.exports = {
     options: {
       async: true
     }
-  },
-
-  api: {
-    command: './node_modules/node-dev/bin/node-dev ./index.js'
   }
-};
+}
