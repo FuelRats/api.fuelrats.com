@@ -32,6 +32,7 @@ var _,
     rescue,
     router,
     socket,
+    version,
     welcome,
     winston,
     ws
@@ -86,6 +87,7 @@ paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
+version = require( './api/controllers/version' )
 welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
@@ -278,6 +280,8 @@ router.delete( '/rescues', notAllowed )
 router.get( '/search/rescues', rescue.get )
 
 router.get( '/search/rats', rat.get )
+
+router.get( '/version', version.get)
 
 // Register routes
 app.use( express.static( __dirname + '/static' ) )
