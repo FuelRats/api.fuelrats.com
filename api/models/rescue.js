@@ -91,7 +91,7 @@ RescueSchema.pre( 'save', function ( next ) {
   var timestamp
 
   // Dealing with timestamps
-  timestamp = new moment
+  timestamp = moment()
 
   if ( !this.open ) {
     this.active = false

@@ -98,8 +98,6 @@ exports.get = function ( request, response ) {
         }
         responseModel.data = []
 
-        winston.info( data.hits.hits[0].createdAt )
-
         data.hits.hits.forEach( function ( hit, index, hits ) {
           hit._source._id = hit._id
           hit._source.score = hit._score

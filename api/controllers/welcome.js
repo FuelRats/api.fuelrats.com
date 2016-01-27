@@ -1,10 +1,11 @@
-var _, path, Rat, Rescue, winston
+var _, moment, path, Rat, Rescue, winston
 
 
 
 
 
 _ = require( 'underscore' )
+moment = require( 'moment' )
 path = require( 'path' )
 winston = require( 'winston' )
 
@@ -37,9 +38,13 @@ exports.get = function ( request, response ) {
             }
 
             CMDR.rescues.forEach( function ( rescue, index, rescues ) {
-              rescue.createdAt = rescue.createdAt * 1000
-              rescue.lastModified = rescue.lastModified * 1000
+              console.log( 'createdAt', rescue.createdAt )
+              console.log( 'lastModified', rescue.lastModified )
+              rescue.createdAt = moment( rescue.createdAt )
+              rescue.lastModified = moment( rescue.lastModified )
             })
+
+            CMDR.rescues = _.sortBy( CMDR.rescues, 'createdAt' ).reverse()
 
             resolve( rescues )
           })
@@ -48,10 +53,10 @@ exports.get = function ( request, response ) {
 
       Promise.all( rescueFinds )
       .then( function () {
-        winston.info( 'finished finding rescues' )
+        request.user.rescues = []
 
         request.user.CMDRs.forEach( function ( CMDR, index, CMDRs ) {
-          winston.info( CMDR.rescues )
+          _.union( request.user, CMDR.rescues )
         })
 
         response.render( 'welcome', request.user )

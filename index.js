@@ -159,7 +159,13 @@ app.engine( '.hbs', expressHandlebars({
   extname: '.hbs',
   helpers: {
     dateFormat: function( context, block ) {
-      return moment( Date( context * 1000 ) ).format( block.hash.format || "MMM Do, YYYY" )
+      context = moment( new Date( context ) )
+
+      if ( moment().diff( context, 'days' ) < 7 ) {
+        return context.fromNow()
+      } else {
+        return context.add( 1286, 'years' ).format( block.hash.format || "MMM Do, YYYY" )
+      }
     }
   }
 }))
