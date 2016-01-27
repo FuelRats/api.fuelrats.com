@@ -1,11 +1,24 @@
-var aglio = require('aglio')
-var winston = require('winston')
+var aglio, options, path, winston
 
-var options = {
+aglio = require( 'aglio' )
+path = require( 'path' )
+winston = require( 'winston' )
+
+destination = path.join( __dirname + '/../views/docs.hbs' )
+options = {
   themeVariables: 'flatly'
 }
+source = path.join( __dirname + '/../docs/src/index.apib' )
 
-aglio.renderFile('src/index.apib', 'docs.html', options, function (err, warnings) {
-    if (err) return winston.error(err)
-    if (warnings) winston.warn(warnings)
+console.log( source )
+console.log( destination )
+
+aglio.renderFile( source, destination, options, function ( error, warnings ) {
+  if ( error ) {
+    return winston.error( error )
+  }
+
+  if ( warnings ) {
+    winston.warn( warnings )
+  }
 })
