@@ -195,7 +195,7 @@ exports.put = function ( request, response ) {
         rat[key] = request.body[key]
       }
 
-      rat.increment()
+//      rat.increment()
       rat.save( function ( error, rat ) {
         var errors, errorTypes, status
 

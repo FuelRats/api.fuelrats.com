@@ -33,6 +33,7 @@ var _,
     router,
     socket,
     version,
+    welcome,
     winston,
     ws
 
@@ -87,6 +88,7 @@ rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
 version = require( './api/controllers/version' )
+welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
 mongoose.connect( 'mongodb://localhost/fuelrats' )
@@ -159,7 +161,13 @@ app.engine( '.hbs', expressHandlebars({
   extname: '.hbs',
   helpers: {
     dateFormat: function( context, block ) {
-      return moment( Date( context * 1000 ) ).format( block.hash.format || "MMM Do, YYYY" )
+      context = moment( new Date( context ) )
+
+      if ( moment().diff( context, 'days' ) < 7 ) {
+        return context.fromNow()
+      } else {
+        return context.add( 1286, 'years' ).format( block.hash.format || "MMM Do, YYYY" )
+      }
     }
   }
 }))
@@ -246,6 +254,8 @@ router.get( '/logout', logout.post )
 router.post( '/logout', logout.post )
 
 router.get( '/paperwork', paperwork.get )
+
+router.get( '/welcome', welcome.get )
 
 router.get( '/rats/:id', rat.get )
 router.post( '/rats/:id', rat.post )

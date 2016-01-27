@@ -78,7 +78,7 @@ RatSchema.pre( 'save', function ( next ) {
   var timestamp
 
   // Dealing with timestamps
-  timestamp = new moment
+  timestamp = moment()
 
   if ( this.isNew ) {
     this.createdAt = this.createdAt || timestamp
@@ -93,10 +93,10 @@ RatSchema.pre( 'save', function ( next ) {
   next()
 })
 
-RatSchema.post( 'init', function ( doc ) {
-  doc.createdAt = doc.createdAt.valueOf()
-  doc.lastModified = doc.lastModified.valueOf()
-})
+//RatSchema.post( 'init', function ( doc ) {
+//  doc.createdAt = doc.createdAt.valueOf()
+//  doc.lastModified = doc.lastModified.valueOf()
+//})
 
 RatSchema.set( 'toJSON', {
   virtuals: true

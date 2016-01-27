@@ -1,9 +1,10 @@
-var Rescue, rescue, save, winston
+var _, Rescue, rescue, save, winston
 
 
 
 
 
+_ = require( 'underscore' )
 winston = require( 'winston' )
 Rescue = require( '../models/rescue' )
 ErrorModels = require( '../errors' )
@@ -98,8 +99,6 @@ exports.get = function ( request, response ) {
         }
         responseModel.data = []
 
-        winston.info( data.hits.hits[0].createdAt )
-
         data.hits.hits.forEach( function ( hit, index, hits ) {
           hit._source._id = hit._id
           hit._source.score = hit._score
@@ -192,19 +191,21 @@ exports.put = function ( request, response ) {
         responseModel.errors = responseModel.errors || []
         responseModel.errors.push( error )
         response.status( 400 )
-        response.json( responseModel )
-        return
+        return response.json( responseModel )
 
       } else if ( !rescue ) {
-        response.status( 404 ).send()
-        return
+        return response.status( 404 ).send()
       }
 
       for ( var key in request.body ) {
-        rescue[key] = request.body[key]
+        if ( key === 'client' ) {
+          _.extend( rescue.client, request.body[key] )
+        } else {
+          rescue[key] = request.body[key]
+        }
       }
 
-      rescue.increment()
+//      rescue.increment()
       rescue.save( function ( error, rescue ) {
         var errors, errorTypes, status
 

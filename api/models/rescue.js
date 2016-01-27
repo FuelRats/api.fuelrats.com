@@ -19,6 +19,7 @@ RescueSchema = new Schema({
     type: Boolean
   },
   client: {
+    default: {},
     type: {
       CMDRname: {
         type: String
@@ -91,7 +92,7 @@ RescueSchema.pre( 'save', function ( next ) {
   var timestamp
 
   // Dealing with timestamps
-  timestamp = new moment
+  timestamp = moment()
 
   if ( !this.open ) {
     this.active = false
@@ -109,10 +110,10 @@ RescueSchema.pre( 'save', function ( next ) {
   next()
 })
 
-RescueSchema.post( 'init', function ( doc ) {
-  doc.createdAt = doc.createdAt.valueOf()
-  doc.lastModified = doc.lastModified.valueOf()
-})
+//RescueSchema.post( 'init', function ( doc ) {
+//  doc.createdAt = doc.createdAt.valueOf()
+//  doc.lastModified = doc.lastModified.valueOf()
+//})
 
 RescueSchema.set( 'toJSON', {
   virtuals: true
