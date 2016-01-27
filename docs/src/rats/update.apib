@@ -1,0 +1,21 @@
+## Update an existing rat [PUT /api/rats/{id}]
+
+Change the values of an existing rat
+
+::: warning
+This endpoint is currently broken. See [Modify rescue and modify rat API endpoint is broken #28](https://github.com/FuelRats/api.fuelrats.com/issues/28)
+:::
+
+Scope: public
+
++ Parameters
+  + id: `56a78141f9fbac397a27ab3e` (integer, required) - ID of the rat to update
+
++ Request (application/json)
+    + Attributes
+        + platform: `xb` (string) - Changing the platform of the rat to Xbox 1
+
++ Response 200 (application/json)
+    + Attributes
+        + links (Link) - Links
+        + data (Rat) - The rat that was just modified

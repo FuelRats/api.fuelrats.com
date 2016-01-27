@@ -1,0 +1,11 @@
+## Get a list of rats [GET /api/rats]
+
+Retrieves a list of any existing rats and all associated information
+
+Scope: public
+
++ Response 200 (application/json)
+    + Attributes
+      + links (Link) - Links
+      + meta (Meta) - Statistics on the current result
+      + data (array[Rat]) - A list of rats

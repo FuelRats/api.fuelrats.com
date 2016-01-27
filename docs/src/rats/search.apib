@@ -1,0 +1,20 @@
+## Search Rats [GET /api/search/rats]
+
+Search records of rats by matching fields
+
+::: warning
+The search API does not yet work with nested objects, like drilled - dispatch, or nicknames. See [Rat search API does not work with nested objects in queries. #30](https://github.com/FuelRats/api.fuelrats.com/issues/30) for progress
+:::
+
+Scope: public
+
++ Request (application/json)
+    + Attributes
+      + platform: `xb` (boolean) - Return rats that are on Xbox One
+      + drilled: (Drilled) - Return rats that have not been drilled
+
++ Response 200 (application/json)
+    + Attributes
+      + links (Link) - Links
+      + meta (Meta) - Statistics on the current result
+      + data (array[Rat]) - A list of rats
