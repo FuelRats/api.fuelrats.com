@@ -1,54 +1,10 @@
 # Data Structures
-## Link (object)
-+ self: `/api/rescues` (string) -The endpoint of the current request
+<!-- include(models/link.apib) -->
 
-## Meta (object)
-+ count: `25` (number) - Number of results returned
-+ limit: `25` (number) - Maximum results returned per request
-+ offset: `0` (number) - The offset of the current results from the top index of the database
-+ total: `3484` (number) - The total number of results in the database
+<!-- include(models/meta.apib) -->
 
-## Rescue (object)
+<!-- include(models/rescue.apib) -->
 
-+ id: `56a78141f9fbac397a27ab3e` (number) - The ID for this rescue
-+ activate: `true` (boolean) - This rescue is currently active
-+ archive: `false` (boolean) - This rescue is archived
-+ client: (Client, required) - The client being rescued
-+ codeRed: (boolean) - Whether this case is a code-red/case-red
-+ createdAt: `2015-07-15T22:00:00.000Z` (string, required) - The timestamp for when this entry was created
-+ epic: `false` (boolean) - Whether this case is nominated as epic
-+ lastModified: `2016-01-26T20:22:47.643Z` (string, required) - The timestamp for when this entry was last modified
-+ open: `true` (boolean) - Whether this case is currently open
-+ notes: `Instancing problems, 2 jumps to client unsuccessful, met in SC and jumped together to normal space. Worked.` (string) - Any eventual notes about this rescued
-+ platform: `pc` (string) - The platform the client is on
-+ quotes: `RATSIGNAL HYDRAE SECTOR ZU-Y B2 PC` (array[string]) - IRC messages captured from the client
-+ rats: (array[Rat], required) - The rats that are part of this rescue operation
-+ successful: (boolean) - Whether the rescue was successful
-+ system: `HYDRAE SECTOR ZU-Y B2` (string) - The system of the client
+<!-- include(models/rat.apib) -->
 
-
-## Client (object)
-+ nicname: `Mogwai` (string, required) - The IRC nickname of the client
-+ CMDRname: `Mogwai` (string) - The in-game username of the client
-
-## Rat (object)
-+ archive: `false` (boolean) - This rat is archived
-+ CMDRname: `Trazy` (string, required) - The in-game username of this rat
-+ createdAt: `2015-07-15T22:00:00.000Z` (string, required) - The timestamp for when this entry was created
-+ drilled: (Drilled) - This rat's drill status
-+ gamertag: `Trazy` (string) - This rat's Xbox gamertag
-+ lastModified: `2016-01-26T20:22:47.643Z` (string, required) - The timestamp for when this entry was last modified
-+ joined: `2015-07-15T22:00:00.000Z` (string, required) - The timestamp for when this rat joined the fuel rats
-+ nicknames: `Trazy` (array[string], required) - The nicknames this rat uses on the IRC
-+ platform: `pc` (string, required) - The platform this rat is on
-+ rescues: ([Rescue]) - A list of all rescues that have been performed by this rat
-+ user: (User, required) - The user associated with this user.
-
-## Drilled (object)
-+ dispatch: `false` (boolean) - This rat is drilled as a dispatch
-+ rescue: `false` (boolean) - This rat is drilled for rescueing
-
-## User (object)
-+ email: `john@smith.com` (string, required) - The email address of this user
-+ password: `6b1b36cbb04b41490bfc0ab2bfa26f86` (string, required) - The password of this user
-+ CMDRs: `Trazy` ([Rat], required) - The rats registered under this user
+<!-- include(models/user.apib) -->
