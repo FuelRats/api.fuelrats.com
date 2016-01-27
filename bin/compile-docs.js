@@ -8,7 +8,7 @@ destination = path.join( __dirname + '/../views/docs.hbs' )
 options = {
   themeVariables: 'flatly'
 }
-source = path.join( __dirname + '/../docs/src/index.apib' )
+source = path.join( __dirname + '/../docs/index.apib' )
 
 console.log( source )
 console.log( destination )
