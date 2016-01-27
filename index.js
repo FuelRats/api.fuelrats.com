@@ -306,6 +306,10 @@ socket.on( 'connection', function ( client ) {
   client.on( 'message', function ( data ) {
     data = JSON.parse( data )
     winston.info( data )
+    client.send( JSON.stringify({
+      data: data,
+      type: 'test'
+    }))
   })
 })
 
