@@ -17,7 +17,7 @@
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">[
     {
       "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
-      "<span class="hljs-attribute">activate</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+      "<span class="hljs-attribute">active</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
       "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
       "<span class="hljs-attribute">client</span>": <span class="hljs-value">{
         "<span class="hljs-attribute">nicname</span>": <span class="hljs-value"><span class="hljs-string">"Mogwai"</span></span>,
@@ -114,7 +114,7 @@
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
-    "<span class="hljs-attribute">activate</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+    "<span class="hljs-attribute">active</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
     "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
     "<span class="hljs-attribute">client</span>": <span class="hljs-value">{
       "<span class="hljs-attribute">nicname</span>": <span class="hljs-value"><span class="hljs-string">"Mogwai"</span></span>,
@@ -157,7 +157,7 @@
           "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"number"</span></span>,
           "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"The ID for this rescue"</span>
         </span>}</span>,
-        "<span class="hljs-attribute">activate</span>": <span class="hljs-value">{
+        "<span class="hljs-attribute">active</span>": <span class="hljs-value">{
           "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
           "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"This rescue is currently active"</span>
         </span>}</span>,
@@ -245,7 +245,7 @@
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
-    "<span class="hljs-attribute">activate</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+    "<span class="hljs-attribute">active</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
     "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
     "<span class="hljs-attribute">client</span>": <span class="hljs-value">{
       "<span class="hljs-attribute">nicname</span>": <span class="hljs-value"><span class="hljs-string">"Mogwai"</span></span>,
@@ -288,7 +288,7 @@
           "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"number"</span></span>,
           "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"The ID for this rescue"</span>
         </span>}</span>,
-        "<span class="hljs-attribute">activate</span>": <span class="hljs-value">{
+        "<span class="hljs-attribute">active</span>": <span class="hljs-value">{
           "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
           "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"This rescue is currently active"</span>
         </span>}</span>,
@@ -367,25 +367,25 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Information about the rescue"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues- search-rescues" class="resource"><h3 class="resource-heading"> Search Rescues <a href="#rescues- search-rescues" class="permalink">&nbsp;&para;</a></h3><div id="rescues- search-rescues-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rescues</div><a href="#rescues- search-rescues-get" class="method get">GET</a><code class="uri">/rescues</code></h4><p>Search records of rescues by matching fields</p>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rescues- search-rescues" class="resource"><h3 class="resource-heading"> Search Rescues <a href="#rescues- search-rescues" class="permalink">&nbsp;&para;</a></h3><div id="rescues- search-rescues-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rescues</div><a href="#rescues- search-rescues-get" class="method get">GET</a><code class="uri">/rescues/{?codeRed,rats}</code></h4><p>Search records of rescues by matching fields</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rescues</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
-  "<span class="hljs-attribute">active</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
-  "<span class="hljs-attribute">codeRed</span>": <span class="hljs-value"><span class="hljs-literal">true</span>
-</span>}</code></pre><div style="height: 1px;"></div><h5>Schema</h5><pre><code>{
-  "<span class="hljs-attribute">$schema</span>": <span class="hljs-value"><span class="hljs-string">"http://json-schema.org/draft-04/schema#"</span></span>,
-  "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"object"</span></span>,
-  "<span class="hljs-attribute">properties</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">active</span>": <span class="hljs-value">{
-      "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
-      "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Return records that are currently active"</span>
-    </span>}</span>,
-    "<span class="hljs-attribute">codeRed</span>": <span class="hljs-value">{
-      "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
-      "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Return records that are marked as code red"</span>
-    </span>}
-  </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rescues/?<span class="hljs-attribute">codeRed=</span><span class="hljs-literal">true</span>&<span class="hljs-attribute">rats=</span><span class="hljs-literal">56a8c2bc9b884b56e9cfe8ba</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>number</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a78141f9fbac397a27ab3e</span></span><p>Return records that match this ID</p>
+</dd><dt>active</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>true</span></span><p>Return records that are currently active</p>
+</dd><dt>archive</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>false</span></span><p>Return records that are archived</p>
+</dd><dt>client.CMDRname</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>Trezy</span></span><p>Return records where the client in-game name matches this</p>
+</dd><dt>client.nickname</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>Trezy</span></span><p>Return records where the IRC nickname of the client matches this</p>
+</dd><dt>createdAt</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>2015-07-15T22%3A00%3A00.000Z</span></span><p>Return records where the created date of the rescue matches</p>
+</dd><dt>codeRed</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>true</span></span><p>Return records that are marked as code red</p>
+</dd><dt>epic</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>false</span></span><p>Return records that are marked as epic</p>
+</dd><dt>lastModified</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>2016-01-26T20%3A22%3A47.643Z</span></span><p>Return records where the last modified date of the rescue matches</p>
+</dd><dt>open</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>true</span></span><p>Return records of rescues that are open</p>
+</dd><dt>notes</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>instancing%20problems</span></span><p>Return records with notes that matches</p>
+</dd><dt>platform</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>pc</span></span><p>Return records where the platform matches</p>
+</dd><dt>quotes</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>RATSIGNAL%20HYDRAE%20SECTOR%20ZU-Y%20B2%20PC</span></span><p>Return quotes that contain this string</p>
+</dd><dt>rats</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a8c2bc9b884b56e9cfe8ba</span></span><p>Returns records that has a rat assigned with this ID</p>
+</dd><dt>successful</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<p>Returns records where the rescue was successful</p>
+</dd><dt>system</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<p>Returns records that matches this system</p>
+</dd></dl></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
@@ -398,7 +398,7 @@
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">[
     {
       "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
-      "<span class="hljs-attribute">activate</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+      "<span class="hljs-attribute">active</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
       "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
       "<span class="hljs-attribute">client</span>": <span class="hljs-value">{
         "<span class="hljs-attribute">nicname</span>": <span class="hljs-value"><span class="hljs-string">"Mogwai"</span></span>,
@@ -493,7 +493,7 @@
   </span>}</span>,
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-number">56</span></span>,
-    "<span class="hljs-attribute">activate</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
+    "<span class="hljs-attribute">active</span>": <span class="hljs-value"><span class="hljs-literal">true</span></span>,
     "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
     "<span class="hljs-attribute">client</span>": <span class="hljs-value">{
       "<span class="hljs-attribute">nicname</span>": <span class="hljs-value"><span class="hljs-string">"Mogwai"</span></span>,
@@ -536,7 +536,7 @@
           "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"number"</span></span>,
           "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"The ID for this rescue"</span>
         </span>}</span>,
-        "<span class="hljs-attribute">activate</span>": <span class="hljs-value">{
+        "<span class="hljs-attribute">active</span>": <span class="hljs-value">{
           "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
           "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"This rescue is currently active"</span>
         </span>}</span>,
@@ -631,17 +631,17 @@
     {
       "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-string">"56a8c2bc9b884b56e9cfe8ba"</span></span>,
       "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
-      "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+      "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
       "<span class="hljs-attribute">createdAt</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
       "<span class="hljs-attribute">drilled</span>": <span class="hljs-value">{
         "<span class="hljs-attribute">dispatch</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
         "<span class="hljs-attribute">rescue</span>": <span class="hljs-value"><span class="hljs-literal">false</span>
       </span>}</span>,
-      "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+      "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
       "<span class="hljs-attribute">lastModified</span>": <span class="hljs-value"><span class="hljs-string">"2016-01-26T20:22:47.643Z"</span></span>,
       "<span class="hljs-attribute">joined</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
       "<span class="hljs-attribute">nicknames</span>": <span class="hljs-value">[
-        <span class="hljs-string">"Trazy"</span>
+        <span class="hljs-string">"Trezy"</span>
       ]</span>,
       "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-string">"pc"</span></span>,
       "<span class="hljs-attribute">rescues</span>": <span class="hljs-value">[
@@ -650,7 +650,7 @@
       "<span class="hljs-attribute">user</span>": <span class="hljs-value">{
         "<span class="hljs-attribute">email</span>": <span class="hljs-value"><span class="hljs-string">"john@smith.com"</span></span>,
         "<span class="hljs-attribute">password</span>": <span class="hljs-value"><span class="hljs-string">"6b1b36cbb04b41490bfc0ab2bfa26f86"</span></span>,
-        "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span>
+        "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span>
       </span>}
     </span>}
   ]
@@ -726,17 +726,17 @@
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-string">"56a8c2bc9b884b56e9cfe8ba"</span></span>,
     "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
-    "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+    "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
     "<span class="hljs-attribute">createdAt</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
     "<span class="hljs-attribute">drilled</span>": <span class="hljs-value">{
       "<span class="hljs-attribute">dispatch</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
       "<span class="hljs-attribute">rescue</span>": <span class="hljs-value"><span class="hljs-literal">false</span>
     </span>}</span>,
-    "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+    "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
     "<span class="hljs-attribute">lastModified</span>": <span class="hljs-value"><span class="hljs-string">"2016-01-26T20:22:47.643Z"</span></span>,
     "<span class="hljs-attribute">joined</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
     "<span class="hljs-attribute">nicknames</span>": <span class="hljs-value">[
-      <span class="hljs-string">"Trazy"</span>
+      <span class="hljs-string">"Trezy"</span>
     ]</span>,
     "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-string">"pc"</span></span>,
     "<span class="hljs-attribute">rescues</span>": <span class="hljs-value">[
@@ -745,7 +745,7 @@
     "<span class="hljs-attribute">user</span>": <span class="hljs-value">{
       "<span class="hljs-attribute">email</span>": <span class="hljs-value"><span class="hljs-string">"john@smith.com"</span></span>,
       "<span class="hljs-attribute">password</span>": <span class="hljs-value"><span class="hljs-string">"6b1b36cbb04b41490bfc0ab2bfa26f86"</span></span>,
-      "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span>
+      "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span>
     </span>}
   </span>}
 </span>}</code></pre><div style="height: 1px;"></div><h5>Schema</h5><pre><code>{
@@ -889,41 +889,20 @@
       "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Not yet implemented"</span>
     </span>}
   </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats- search-rats" class="resource"><h3 class="resource-heading"> Search Rats <a href="#rats- search-rats" class="permalink">&nbsp;&para;</a></h3><div id="rats- search-rats-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rats</div><a href="#rats- search-rats-get" class="method get">GET</a><code class="uri">/rats</code></h4><p>Search records of rats by matching fields</p>
-<div class="warning">
-<p>The search API does not yet work with nested objects, like drilled - dispatch, or nicknames. See <a href="https://github.com/FuelRats/api.fuelrats.com/issues/30">Rat search API does not work with nested objects in queries. #30</a> for progress</p>
-</div>
+</span>}</code></pre><div style="height: 1px;"></div></div></div></div></div><div id="rats- search-rats" class="resource"><h3 class="resource-heading"> Search Rats <a href="#rats- search-rats" class="permalink">&nbsp;&para;</a></h3><div id="rats- search-rats-get" class="action get"><h4 class="action-heading"><div class="name"> Search Rats</div><a href="#rats- search-rats-get" class="method get">GET</a><code class="uri">/rats/{?platform,drilled.rescue}</code></h4><p>Search records of rats by matching fields</p>
 <p>Scope: public</p>
-<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rats</span></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
-  "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
-  "<span class="hljs-attribute">drilled</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">dispatch</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
-    "<span class="hljs-attribute">rescue</span>": <span class="hljs-value"><span class="hljs-literal">false</span>
-  </span>}
-</span>}</code></pre><div style="height: 1px;"></div><h5>Schema</h5><pre><code>{
-  "<span class="hljs-attribute">$schema</span>": <span class="hljs-value"><span class="hljs-string">"http://json-schema.org/draft-04/schema#"</span></span>,
-  "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"object"</span></span>,
-  "<span class="hljs-attribute">properties</span>": <span class="hljs-value">{
-    "<span class="hljs-attribute">platform</span>": <span class="hljs-value">{
-      "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
-      "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Return rats that are on Xbox One"</span>
-    </span>}</span>,
-    "<span class="hljs-attribute">drilled</span>": <span class="hljs-value">{
-      "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"object"</span></span>,
-      "<span class="hljs-attribute">properties</span>": <span class="hljs-value">{
-        "<span class="hljs-attribute">dispatch</span>": <span class="hljs-value">{
-          "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
-          "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"This rat is drilled as a dispatch"</span>
-        </span>}</span>,
-        "<span class="hljs-attribute">rescue</span>": <span class="hljs-value">{
-          "<span class="hljs-attribute">type</span>": <span class="hljs-value"><span class="hljs-string">"boolean"</span></span>,
-          "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"This rat is drilled for rescueing"</span>
-        </span>}
-      </span>}</span>,
-      "<span class="hljs-attribute">description</span>": <span class="hljs-value"><span class="hljs-string">"Return rats that have not been drilled"</span>
-    </span>}
-  </span>}
-</span>}</code></pre><div style="height: 1px;"></div></div></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
+<h4>Example URI</h4><div class="definition"><span class="method get">GET</span>&nbsp;<span class="uri"><span class="hostname">http://api.fuelrats.com</span>/rats/?<span class="hljs-attribute">platform=</span><span class="hljs-literal">pc</span>&<span class="hljs-attribute">drilled.rescue=</span><span class="hljs-literal">true</span></span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>id</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>56a8c2bc9b884b56e9cfe8ba</span></span><p>Return records where the ID matches</p>
+</dd><dt>archive</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>true</span></span><p>Return records of rats that are archived</p>
+</dd><dt>CMDRname</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>Trezy</span></span><p>Return records where the in-game username of this rat matches</p>
+</dd><dt>createdAt</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>2015-07-15T22%3A00%3A00.000Z</span></span><p>Return records where the created date of the rat matches</p>
+</dd><dt>drilled.dispatch</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>true</span></span><p>Return records of rats that are drilled for dispatching</p>
+</dd><dt>drilled.rescue</dt><dd><code>boolean</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>true</span></span><p>Return records of rats that are drilled for rescuing</p>
+</dd><dt>gamertag</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>Trezy</span></span><p>Return records of rats with a matching gamertag</p>
+</dd><dt>lastModified</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>2016-01-26T20%3A22%3A47.643Z</span></span><p>Return records where the last modified date matches</p>
+</dd><dt>joined</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>2015-07-15T22%3A00%3A00.000Z</span></span><p>Return records where the join date of the rat matches</p>
+</dd><dt>nickname</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>Trezy</span></span><p>Return records where the IRC nickname of the rat matches</p>
+</dd><dt>platform</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<span class="text-muted example"><strong>Example:&nbsp;</strong><span>pc</span></span><p>Return records where the platform of the rat matches</p>
+</dd></dl></div><div class="title"><strong>Response&nbsp;&nbsp;<code>200</code></strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
   "<span class="hljs-attribute">links</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">self</span>": <span class="hljs-value"><span class="hljs-string">"/rescues"</span>
   </span>}</span>,
@@ -937,17 +916,17 @@
     {
       "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-string">"56a8c2bc9b884b56e9cfe8ba"</span></span>,
       "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
-      "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+      "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
       "<span class="hljs-attribute">createdAt</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
       "<span class="hljs-attribute">drilled</span>": <span class="hljs-value">{
         "<span class="hljs-attribute">dispatch</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
         "<span class="hljs-attribute">rescue</span>": <span class="hljs-value"><span class="hljs-literal">false</span>
       </span>}</span>,
-      "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+      "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
       "<span class="hljs-attribute">lastModified</span>": <span class="hljs-value"><span class="hljs-string">"2016-01-26T20:22:47.643Z"</span></span>,
       "<span class="hljs-attribute">joined</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
       "<span class="hljs-attribute">nicknames</span>": <span class="hljs-value">[
-        <span class="hljs-string">"Trazy"</span>
+        <span class="hljs-string">"Trezy"</span>
       ]</span>,
       "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-string">"pc"</span></span>,
       "<span class="hljs-attribute">rescues</span>": <span class="hljs-value">[
@@ -956,7 +935,7 @@
       "<span class="hljs-attribute">user</span>": <span class="hljs-value">{
         "<span class="hljs-attribute">email</span>": <span class="hljs-value"><span class="hljs-string">"john@smith.com"</span></span>,
         "<span class="hljs-attribute">password</span>": <span class="hljs-value"><span class="hljs-string">"6b1b36cbb04b41490bfc0ab2bfa26f86"</span></span>,
-        "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span>
+        "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span>
       </span>}
     </span>}
   ]
@@ -1025,17 +1004,17 @@
   "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
     "<span class="hljs-attribute">id</span>": <span class="hljs-value"><span class="hljs-string">"56a8c2bc9b884b56e9cfe8ba"</span></span>,
     "<span class="hljs-attribute">archive</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
-    "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+    "<span class="hljs-attribute">CMDRname</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
     "<span class="hljs-attribute">createdAt</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
     "<span class="hljs-attribute">drilled</span>": <span class="hljs-value">{
       "<span class="hljs-attribute">dispatch</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
       "<span class="hljs-attribute">rescue</span>": <span class="hljs-value"><span class="hljs-literal">false</span>
     </span>}</span>,
-    "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span></span>,
+    "<span class="hljs-attribute">gamertag</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span></span>,
     "<span class="hljs-attribute">lastModified</span>": <span class="hljs-value"><span class="hljs-string">"2016-01-26T20:22:47.643Z"</span></span>,
     "<span class="hljs-attribute">joined</span>": <span class="hljs-value"><span class="hljs-string">"2015-07-15T22:00:00.000Z"</span></span>,
     "<span class="hljs-attribute">nicknames</span>": <span class="hljs-value">[
-      <span class="hljs-string">"Trazy"</span>
+      <span class="hljs-string">"Trezy"</span>
     ]</span>,
     "<span class="hljs-attribute">platform</span>": <span class="hljs-value"><span class="hljs-string">"pc"</span></span>,
     "<span class="hljs-attribute">rescues</span>": <span class="hljs-value">[
@@ -1044,7 +1023,7 @@
     "<span class="hljs-attribute">user</span>": <span class="hljs-value">{
       "<span class="hljs-attribute">email</span>": <span class="hljs-value"><span class="hljs-string">"john@smith.com"</span></span>,
       "<span class="hljs-attribute">password</span>": <span class="hljs-value"><span class="hljs-string">"6b1b36cbb04b41490bfc0ab2bfa26f86"</span></span>,
-      "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trazy"</span>
+      "<span class="hljs-attribute">CMDRs</span>": <span class="hljs-value"><span class="hljs-string">"Trezy"</span>
     </span>}
   </span>}
 </span>}</code></pre><div style="height: 1px;"></div><h5>Schema</h5><pre><code>{
