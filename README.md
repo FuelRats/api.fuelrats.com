@@ -30,8 +30,11 @@ So you wanna do it the hard way? Fine. Make sure you install all of the dependen
 1. [`nvm`](https://github.com/creationix/nvm)
 1. [`MongoDB`](https://www.mongodb.com/)
 1. [`Elasticsearch`](https://www.elastic.co/)
+  * Java
 
-You'll also need to make sure that Elasticsearch is running before you start the API by either executing `elasticsearch` in your terminal or starting it as a service ([Windows](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service-win.html)|[Mac OS X](http://stackoverflow.com/questions/22850247/installing-elasticsearch-on-osx-mavericks/#answer-22855889)|[Linux](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service.html)).
+Next, we need to make sure that MongoDB and Elasticsearch are running before starting the API. We've got a [handy dandy script](bin/mongo.sh) that will start Mongo as a service which should work on both Linux and Mac OS X. If you're on Windows, figure it out yourself.
+
+The easiest way to to get Elasticsearch running is to either executing `elasticsearch` in your terminal or starting it as a service ([Windows](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service-win.html)|[Mac OS X](http://stackoverflow.com/questions/22850247/installing-elasticsearch-on-osx-mavericks/#answer-22855889)|[Linux](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service.html)).
 
 Grab the repo:
 
@@ -52,7 +55,11 @@ This will ensure that Mongo is running as a service and start the API itself on 
 
 #### "Error: No Living connections"
 
-Elasticsearch isn't running. Refer to the [Running Without Vagrant](#without-vagrant) section. You may need to install Java to get it working.
+Elasticsearch isn't running. Refer to the [Running Without Vagrant](#without-vagrant) section. Elasticsearch also requires Java.
+
+#### "Missing indexes" or an empty object is returned
+
+Your databases are empty, home slice. You can use our [import script](bin/import.js) to grab a bunch of archived FuelRats data.
 
 ## Development
 
@@ -60,4 +67,4 @@ To work for realsies you need to copy the `config-example.json` file and update 
 
     cp config-example.json config.json
 
-The `npm run dev` task starts the API with `node-dev` which will automatically restart the API when you change a file. Simply kill the process when you're done. Good luck, and may the force be with you.
+The `npm run dev` task starts the API and will automatically restart it when you change a file. Simply kill the process when you're done. Good luck, and may the force be with you.
