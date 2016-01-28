@@ -31,6 +31,8 @@ var _,
     rescue,
     router,
     socket,
+    version,
+    welcome,
     winston,
     ws
 
@@ -83,6 +85,8 @@ paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
+version = require( './api/controllers/version' )
+welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
 mongoose.connect( 'mongodb://localhost/fuelrats' )
@@ -155,7 +159,13 @@ app.engine( '.hbs', expressHandlebars({
   extname: '.hbs',
   helpers: {
     dateFormat: function( context, block ) {
-      return moment( Date( context * 1000 ) ).format( block.hash.format || "MMM Do, YYYY" )
+      context = moment( new Date( context ) )
+
+      if ( moment().diff( context, 'days' ) < 7 ) {
+        return context.fromNow()
+      } else {
+        return context.add( 1286, 'years' ).format( block.hash.format || "MMM Do, YYYY" )
+      }
     }
   }
 }))
@@ -242,6 +252,8 @@ router.post( '/logout', logout.post )
 
 router.get( '/paperwork', paperwork.get )
 
+router.get( '/welcome', welcome.get )
+
 router.get( '/rats/:id', rat.get )
 router.post( '/rats/:id', rat.post )
 router.put( '/rats/:id', rat.put )
@@ -266,6 +278,8 @@ router.get( '/search/rescues', rescue.get )
 
 router.get( '/search/rats', rat.get )
 
+router.get( '/version', version.get)
+
 // Register routes
 app.use( express.static( __dirname + '/static' ) )
 app.use( '/', router )
@@ -289,6 +303,10 @@ socket.on( 'connection', function ( client ) {
   client.on( 'message', function ( data ) {
     data = JSON.parse( data )
     winston.info( data )
+    client.send( JSON.stringify({
+      data: data,
+      type: 'test'
+    }))
   })
 })
 

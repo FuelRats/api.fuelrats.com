@@ -19,6 +19,7 @@ RescueSchema = new Schema({
     type: Boolean
   },
   client: {
+    default: {},
     type: {
       CMDRname: {
         type: String
@@ -46,11 +47,18 @@ RescueSchema = new Schema({
     default: true,
     type: Boolean
   },
+  name: {
+    type: String
+  },
   notes: {
     type: String
   },
   platform: {
-    default: 'PC',
+    default: 'pc',
+    enum: [
+      'pc',
+      'xb'
+    ],
     type: String
   },
   quotes: {
@@ -83,7 +91,8 @@ RescueSchema = new Schema({
 RescueSchema.pre( 'save', function ( next ) {
   var timestamp
 
-  timestamp = new moment
+  // Dealing with timestamps
+  timestamp = moment()
 
   if ( !this.open ) {
     this.active = false
@@ -95,13 +104,16 @@ RescueSchema.pre( 'save', function ( next ) {
 
   this.lastModified = timestamp
 
+  // Dealing with platforms
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
   next()
 })
 
-RescueSchema.post( 'init', function ( doc ) {
-  doc.createdAt = doc.createdAt.valueOf()
-  doc.lastModified = doc.lastModified.valueOf()
-})
+//RescueSchema.post( 'init', function ( doc ) {
+//  doc.createdAt = doc.createdAt.valueOf()
+//  doc.lastModified = doc.lastModified.valueOf()
+//})
 
 RescueSchema.set( 'toJSON', {
   virtuals: true

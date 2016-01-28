@@ -1,6 +1,6 @@
 {
   "name": "api.fuelrats.com",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "",
   "authors": [
     "Trezy <tre@trezy.com>"
@@ -22,6 +22,7 @@
     "express": "^4.13.3",
     "express-handlebars": "^2.0.1",
     "express-session": "^1.13.0",
+    "git-rev": "^0.2.1",
     "grunt": "^0.4.5",
     "grunt-mocha-test": "^0.12.7",
     "grunt-shell-spawn": "^0.3.10",

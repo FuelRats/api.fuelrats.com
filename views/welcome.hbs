@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <nav class="navbar navbar-light bg-faded">
-    {{#if rat.CMDRname }}
+    {{#if rat.CMDRname}}
     <div class="navbar-brand">CMDR {{ rat.CMDRname }}</div>
     {{ else }}
     <div class="navbar-brand">CMDR {{ rat.gamertag }}</div>
@@ -13,37 +13,67 @@
     </ul>
   </nav>
 
-  <div class="row">
-    {{#each rat.rescues }}
-      <div class="col-sm-4">
-        <div class="card rescue-card">
-<!--
-          <div class="card-block">
-            <h3 class="card-title"></h3>
-            <p class="card-text"></p>
-          </div>
--->
+  <div class="flex-row">
+    {{#each CMDRs}}
+      <table class="table table-bordered table-striped table-hover">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Success/Failure</th>
+            <th>System</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
 
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item list-group-item-success rescue-successful">{{ open }}</li>
-            {{#unless open }}
-              {{#if successful }}
-                <li class="list-group-item list-group-item-success rescue-successful">Success</li>
-              {{ else }}
-                <li class="list-group-item list-group-item-danger rescue-successful">Failed</li>
-              {{/if}}
-            {{/unless}}
-            {{#if codeRed }}
-              <li class="list-group-item list-group-item-danger rescue-codeRed">CODE RED</li>
-            {{/if}}
-            <li class="list-group-item rescue-system">{{ system }}</li>
-            <li class="list-group-item rescue-platform">{{ platform }}</li>
-            {{#if notes }}
-              <li class="list-group-item rescue-notes">{{ notes }}</li>
-            {{/if}}
-          </ul>
-        </div>
-      </div>
+        <tbody>
+          {{#each rescues}}
+            <tr>
+              <td>{{ dateFormat createdAt }}</td>
+              <td class="{{#if successful}} table-success {{ else }} table-danger {{/if}}">
+                {{#if successful}} Success {{ else }} Failure {{/if}}
+              </td>
+              <td>{{ system }}</td>
+              <td>{{ notes }}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
     {{/each}}
+
+<!--
+    {{#each CMDRs}}
+      {{#each rescues}}
+        <div class="col-sm-4">
+          <div class="card rescue-card">
+
+            <div class="card-block">
+              <h3 class="card-title">{{ dateFormat createdAt }}</h3>
+              <p class="card-text"></p>
+            </div>
+
+            <ul class="list-group list-group-flush">
+              {{#unless open}}
+                {{#if successful}}
+                  <li class="list-group-item list-group-item-success rescue-successful">Success</li>
+                {{ else }}
+                  <li class="list-group-item list-group-item-danger rescue-successful">Failed</li>
+                {{/if}}
+              {{/unless}}
+
+              {{#if codeRed}}
+                <li class="list-group-item list-group-item-danger rescue-codeRed">CODE RED</li>
+              {{/if}}
+
+              <li class="list-group-item rescue-system">{{ system }}</li>
+
+              {{#if notes}}
+                <li class="list-group-item rescue-notes">{{ notes }}</li>
+              {{/if}}
+            </ul>
+          </div>
+        </div>
+      {{/each}}
+    {{/each}}
+-->
   </div>
 </div>

@@ -202,16 +202,20 @@ processRescues = function ( rescuesData ) {
         system: rescueDatum[2]
       }
 
-      rescues.push( rescue )
+      rescues.push( Rescue.create( rescue ) )
     })
 
-    Rescue.collection.insert( rescues, function ( error ) {
-      if ( error ) {
-        return reject( error )
-      }
+    Promise.all( rescues )
+    .then( resolve )
+    .catch( reject )
 
-      resolve ()
-    })
+//    Rescue.collection.insert( rescues, function ( error ) {
+//      if ( error ) {
+//        return reject( error )
+//      }
+//
+//      resolve ()
+//    })
   })
 }
 

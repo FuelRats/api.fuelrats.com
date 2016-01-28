@@ -48,6 +48,12 @@ Now start the server!
 
 This will ensure that Mongo is running as a service and start the API itself on either port 8080 or whatever port you've set in `config.json`.
 
+### Common Problems
+
+#### "Error: No Living connections"
+
+Elasticsearch isn't running. Refer to the [Running Without Vagrant](#without-vagrant) section. You may need to install Java to get it working.
+
 ## Development
 
 To work for realsies you need to copy the `config-example.json` file and update any settings you need changed:

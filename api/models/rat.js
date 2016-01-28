@@ -21,6 +21,10 @@ RatSchema = new Schema({
   createdAt: {
     type: 'Moment'
   },
+  data: {
+    default: {},
+    type: Schema.Types.Mixed
+  },
   drilled: {
     default: {
       dispatch: false,
@@ -45,29 +49,15 @@ RatSchema = new Schema({
     default: Date.now(),
     type: 'Moment'
   },
-  netlog: {
-    default: {
-      commanderId: null,
-      data: null,
-      userId: null
-    },
-    type: {
-      commanderId: {
-        type: String
-      },
-      data: {
-        type: Schema.Types.Mixed
-      },
-      userId: {
-        type: String
-      }
-    }
-  },
   nicknames: {
     type: [String]
   },
   platform: {
     default: 'pc',
+    enum: [
+      'pc',
+      'xb'
+    ],
     type: String
   },
   rescues: {
@@ -87,7 +77,8 @@ RatSchema = new Schema({
 RatSchema.pre( 'save', function ( next ) {
   var timestamp
 
-  timestamp = new moment
+  // Dealing with timestamps
+  timestamp = moment()
 
   if ( this.isNew ) {
     this.createdAt = this.createdAt || timestamp
@@ -96,13 +87,16 @@ RatSchema.pre( 'save', function ( next ) {
 
   this.lastModified = timestamp
 
+  // Dealing with platforms
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
   next()
 })
 
-RatSchema.post( 'init', function ( doc ) {
-  doc.createdAt = doc.createdAt.valueOf()
-  doc.lastModified = doc.lastModified.valueOf()
-})
+//RatSchema.post( 'init', function ( doc ) {
+//  doc.createdAt = doc.createdAt.valueOf()
+//  doc.lastModified = doc.lastModified.valueOf()
+//})
 
 RatSchema.set( 'toJSON', {
   virtuals: true
