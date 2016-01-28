@@ -30,6 +30,7 @@
     "grunt-shell-spawn": "^0.3.10",
     "handlebars": "^4.0.5",
     "kerberos": "0.0.18",
+    "letsencrypt-express": "^1.0.6",
     "load-grunt-config": "^0.19.1",
     "mocha": "^2.3.4",
     "moment": "^2.11.1",

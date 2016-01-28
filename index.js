@@ -13,6 +13,7 @@ var _,
     http,
     httpServer,
     io,
+    lex,
     LocalStrategy,
     logger,
     login,
@@ -32,6 +33,7 @@ var _,
     rescue,
     router,
     socket,
+    sslPort,
     version,
     welcome,
     winston,
@@ -56,6 +58,7 @@ expressHandlebars = require( 'express-handlebars' )
 expressSession = require( 'express-session' )
 fs = require( 'fs' )
 http = require( 'http' )
+lex = require( 'letsencrypt-express' ).testing()
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 passport = require( 'passport' )
@@ -68,10 +71,10 @@ ws = require( 'ws' ).Server
 require( 'mongoose-moment' )( mongoose )
 
 // Import config
+config = require( './config-example' )
+
 if ( fs.existsSync( './config.json' ) ) {
-  config = require( './config' )
-} else {
-  config = require( './config-example' )
+  _.extend( config, require( './config' ) )
 }
 
 // Import models
@@ -188,16 +191,15 @@ app.use( passport.session() )
 app.set( 'json spaces', 2 )
 app.set( 'x-powered-by', false )
 
-httpServer = http.Server( app )
-
 port = process.env.PORT || config.port
+sslPort = process.env.SSL_PORT || config.sslPort
 
 passport.use( User.createStrategy() )
 passport.serializeUser( User.serializeUser() )
 passport.deserializeUser( User.deserializeUser() )
 
 app.use( expressSession({
-  secret: 'foobarbazdiddlydingdongsdf]08st0agf/b',
+  secret: config.secretSauce,
   resave: false,
   saveUninitialized: false
 }))
@@ -288,6 +290,8 @@ app.use( express.static( __dirname + '/static' ) )
 app.use( '/', router )
 app.use( '/api', router )
 
+httpServer = http.Server( app )
+
 
 
 
@@ -320,8 +324,29 @@ socket.on( 'connection', function ( client ) {
 // START THE SERVER
 // =============================================================================
 
-module.exports = httpServer.listen( port )
+if ( config.ssl ) {
+  module.exports = lex.create({
+    approveRegistration: function ( hostname, callback ) {
+      callback( null, {
+        domains: [hostname],
+        email: 'tre@trezy.com',
+        agreeTos: true
+      })
+    },
+    onrequest: app
 
-if ( !module.parent ) {
-  winston.info( 'Listening for requests on port ' + port + '...' )
+  }).listen( [port], [sslPort], function () {
+    if ( !module.parent ) {
+      winston.info( 'Starting the Fuel Rats API' )
+      winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
+    }
+  })
+
+} else {
+  module.exports = httpServer.listen( port, function () {
+    if ( !module.parent ) {
+      winston.info( 'Starting the Fuel Rats API' )
+      winston.info( 'Listening for requests on port ' + port + '...' )
+    }
+  })
 }
