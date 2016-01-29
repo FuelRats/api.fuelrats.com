@@ -1,9 +1,10 @@
 # api.fuelrats.com
 
+[![node](https://img.shields.io/node/v/api.fuelrats.com.svg?style=flat-square)](https://nodejs.org)
+[![npm](https://img.shields.io/npm/v/api.fuelrats.com.svg?style=flat-square)](https://npmjs.com/)
 [![Dependencies](http://img.shields.io/david/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://david-dm.org/FuelRats/api.fuelrats.com)
 [![Open Github Issues](http://img.shields.io/github/issues/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://github.com/FuelRats/api.fuelrats.com/issues)
 [![Travis CI Build](http://img.shields.io/travis/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://travis-ci.org/FuelRats/api.fuelrats.com)
-![Coveralls Coverage Report](http://img.shields.io/coveralls/FuelRats/api.fuelrats.com.svg?style=flat-square)
 
 ## Setting up
 
