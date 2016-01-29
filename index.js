@@ -333,14 +333,28 @@ if ( config.ssl ) {
         agreeTos: true
       })
     },
-    onrequest: app
+    onRequest: app
 
-  }).listen( [port], [sslPort], function () {
-    if ( !module.parent ) {
-      winston.info( 'Starting the Fuel Rats API' )
-      winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
+  }).listen(
+    // Non SSL options
+    [{
+      port: port,
+      address: 'localhost'
+    }],
+
+    // SSL options
+    [{
+      port: sslPort,
+      address: 'localhost'
+    }],
+
+    function () {
+      if ( !module.parent ) {
+//        winston.info( 'Starting the Fuel Rats API' )
+//        winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
+      }
     }
-  })
+  )
 
 } else {
   module.exports = httpServer.listen( port, function () {
