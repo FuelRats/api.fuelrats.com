@@ -1,0 +1,13 @@
+## Retrieve single rescue [GET /rescues/{id}/]
+
+Retrieve a single rescue by its ID
+
+Scope: public
+
++ Parameters
+  + id: `56a78141f9fbac397a27ab3e` (integer, required) - ID of the rescue to retrieve information on
+
++ Response 200 (application/json)
+    + Attributes
+      + links (Link) - Links
+      + data (Rescue) - Information about the rescue

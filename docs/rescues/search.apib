@@ -1,0 +1,29 @@
+## Search Rescues [GET /rescues/{?codeRed,rats}]
+
+Search records of rescues by matching fields
+
+Scope: public
+
++ Parameters
+  + id: `56a78141f9fbac397a27ab3e` (number, optional) - Return records that match this ID
+  + active: `true` (boolean, optional) - Return records that are currently active
+  + archive: `false` (boolean, optional) - Return records that are archived
+  + client.CMDRname: `Trezy` (string, optional) - Return records where the client in-game name matches this
+  + client.nickname: `Trezy` (string, optional) - Return records where the IRC nickname of the client matches this
+  + createdAt: `2015-07-15T22%3A00%3A00.000Z` (string, optional) - Return records where the created date of the rescue matches
+  + codeRed: `true` (boolean, optional) - Return records that are marked as code red
+  + epic: `false` (boolean, optional) - Return records that are marked as epic
+  + lastModified: `2016-01-26T20%3A22%3A47.643Z` (string, optional) - Return records where the last modified date of the rescue matches
+  + open: `true` (boolean, optional) - Return records of rescues that are open
+  + notes: `instancing%20problems` (string, optional) - Return records with notes that matches
+  + platform: `pc` (string, optional) - Return records where the platform matches
+  + quotes: `RATSIGNAL%20HYDRAE%20SECTOR%20ZU-Y%20B2%20PC` (string, optional) - Return quotes that contain this string
+  + rats: `56a8c2bc9b884b56e9cfe8ba` (string, optional) - Returns records that has a rat assigned with this ID
+  + successful: (boolean, optional) - Returns records where the rescue was successful
+  + system: (string, optional) - Returns records that matches this system
+
++ Response 200 (application/json)
+    + Attributes
+      + links (Link) - Links
+      + meta (Meta) - Statistics on the current result
+      + data (array[Rescue]) - A list of rescues
