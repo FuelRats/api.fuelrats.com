@@ -8,4 +8,4 @@ module.exports = {
       'test/rescue.js'
     ]
   }
-};
+}

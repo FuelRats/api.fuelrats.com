@@ -1,10 +1,10 @@
 ### Project ###
 .vagrant/
 data/
-docs/index.html
 test/bundle.js
 config.json
 npm-debug.log.*
+views/docs.hbs
 
 
 # Created by https://www.gitignore.io

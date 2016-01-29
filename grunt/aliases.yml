@@ -2,12 +2,8 @@ api:
   description: Start the api
   tasks:
   - 'shell:mongo'
-  - 'shell:api'
-
-coverage:
-  description: Not working yet. :-/
-  tasks:
-  - 'api'
+  - 'express'
+  - 'watch'
 
 default:
   description: Default Grunt task
