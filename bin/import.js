@@ -202,20 +202,16 @@ processRescues = function ( rescuesData ) {
         system: rescueDatum[2]
       }
 
-      rescues.push( Rescue.create( rescue ) )
+      rescues.push( rescue )
     })
 
-    Promise.all( rescues )
-    .then( resolve )
-    .catch( reject )
+    Rescue.collection.insert( rescues, function ( error ) {
+      if ( error ) {
+        return reject( error )
+      }
 
-//    Rescue.collection.insert( rescues, function ( error ) {
-//      if ( error ) {
-//        return reject( error )
-//      }
-//
-//      resolve ()
-//    })
+      resolve ()
+    })
   })
 }
 
@@ -301,8 +297,10 @@ Promise.all( downloads )
 
     promises = []
 
-    processRats( rats, rescueDrills, dispatchDrills )
-    .then( processRescues( rescues ) )
+    promises.push( processRats( rats, rescueDrills, dispatchDrills ) )
+    promises.push( processRescues( rescues ) )
+
+    Promise.all( promises )
     .then( function () {
       var promises
 
@@ -320,18 +318,10 @@ Promise.all( downloads )
         oldRatCount = results[0]
         oldRescuesCount = results[1]
 
-        linkModels()
-        .then( function ( counts ) {
-          winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
-          winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
-          winston.info( 'Linked', counts.rescues, 'rescues to', counts.rats, 'rats' )
+        winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
+        winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
 
-          mongoose.disconnect()
-
-        }).catch( function( error ) {
-            winston.error( error )
-            mongoose.disconnect()
-        })
+        mongoose.disconnect()
       })
       .catch( function ( error ) {
         winston.error( error )
