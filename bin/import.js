@@ -162,17 +162,21 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
       }
 
       if ( rat.CMDRname ) {
-        rats.push( rat )
+        rats.push( Rat.create( rat ) )
       }
     })
 
-    Rat.collection.insert( rats, function ( error, rats ) {
-      if ( error ) {
-        return reject( error )
-      }
+    Promise.all( rats )
+    .then( resolve )
+    .catch( reject )
 
-      resolve()
-    })
+//    Rat.collection.insert( rats, function ( error, rats ) {
+//      if ( error ) {
+//        return reject( error )
+//      }
+//
+//      resolve()
+//    })
   })
 }
 
@@ -202,16 +206,20 @@ processRescues = function ( rescuesData ) {
         system: rescueDatum[2]
       }
 
-      rescues.push( rescue )
+      rescues.push( Rescue.create( rescue ) )
     })
 
-    Rescue.collection.insert( rescues, function ( error ) {
-      if ( error ) {
-        return reject( error )
-      }
+    Promise.all( rescues )
+    .then( resolve )
+    .catch( reject )
 
-      resolve ()
-    })
+//    Rescue.collection.insert( rescues, function ( error ) {
+//      if ( error ) {
+//        return reject( error )
+//      }
+//
+//      resolve ()
+//    })
   })
 }
 
