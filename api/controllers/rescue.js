@@ -1,4 +1,4 @@
-var _, Rescue, rescue, save, winston
+var _, ErrorModels, Rescue, rescue, save, winston
 
 
 

@@ -1,9 +1,10 @@
-var ErrorModels, Rat, rat, save, winston
+var _, ErrorModels, Rat, rat, save, winston
 
 
 
 
 
+_ = require( 'underscore' )
 winston = require( 'winston' )
 Rat = require( '../models/rat' )
 ErrorModels = require( '../errors' )
@@ -88,6 +89,7 @@ exports.get = function ( request, response ) {
         responseModel.errors = []
         responseModel.errors.push( error )
         status = 400
+
       } else {
         responseModel.meta = {
           count: data.hits.hits.length,
@@ -96,6 +98,7 @@ exports.get = function ( request, response ) {
           total: data.hits.total
         }
         responseModel.data = []
+
         data.hits.hits.forEach( function ( hit, index, hits ) {
           hit._source._id = hit._id
           hit._source.score = hit._score
@@ -155,8 +158,13 @@ exports.post = function ( request, response ) {
       status = 201
     }
 
-    response.status( status )
-    response.json( responseModel )
+    if ( referer = request.get( 'Referer' ) ) {
+      response.redirect( '/login' )
+
+    } else {
+      response.status( status )
+      response.json( responseModel )
+    }
   })
 
   return rat
@@ -183,16 +191,18 @@ exports.put = function ( request, response ) {
         responseModel.errors = responseModel.errors || []
         responseModel.errors.push( error )
         response.status( 400 )
-        response.json( responseModel )
-        return
+        return response.json( responseModel )
 
       } else if ( !rat ) {
-        response.status( 404 ).send()
-        return
+        return response.status( 404 ).send()
       }
 
       for ( var key in request.body ) {
-        rat[key] = request.body[key]
+        if ( key === 'client' ) {
+          _.extend( rat.client, request.body[key] )
+        } else {
+          rat[key] = request.body[key]
+        }
       }
 
 //      rat.increment()
