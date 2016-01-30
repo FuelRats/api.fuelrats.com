@@ -27,6 +27,7 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-express-server": "^0.5.1",
     "grunt-mocha-test": "^0.12.7",
+    "grunt-run": "^0.5.2",
     "grunt-shell-spawn": "^0.3.10",
     "handlebars": "^4.0.5",
     "kerberos": "0.0.18",
