@@ -204,6 +204,8 @@ app.use( function ( request, response, next ) {
   request.body = _.extend( request.query, request.body )
 
   response.model = {
+    data: {},
+    errors: [],
     links: {
       self: request.originalUrl
     },
@@ -263,17 +265,14 @@ router.get( '/paperwork', paperwork.get )
 
 router.get( '/welcome', welcome.get )
 
-router.get( '/rats/:id', rat.get )
+router.get( '/rats', rat.get )
+router.get( '/rats/:id', rat.getById )
 router.post( '/rats/:id', rat.post )
 router.put( '/rats/:id', rat.put )
 router.delete( '/rats/:id', notAllowed )
 
-router.get( '/rats', rat.get )
-router.post( '/rats', rat.post )
-router.put( '/rescues', notAllowed )
-router.delete( '/rescues', notAllowed )
-
-router.get( '/rescues/:id', rescue.get )
+router.get( '/rescues', rescue.get )
+router.get( '/rescues/:id', rescue.getById )
 router.post( '/rescues/:id', rescue.post )
 router.put( '/rescues/:id', rescue.put )
 router.delete( '/rescues/:id', notAllowed )
@@ -293,6 +292,19 @@ router.get( '/version', version.get)
 app.use( express.static( __dirname + '/static' ) )
 app.use( '/', router )
 app.use( '/api', router )
+
+// Send the response
+app.use( function ( request, response, next ) {
+  if ( response.model.errors.length ) {
+    delete response.model.data
+  } else {
+    delete response.model.errors
+  }
+
+  response.send( response.model )
+
+  next()
+})
 
 
 

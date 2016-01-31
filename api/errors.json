@@ -17,5 +17,12 @@
     "detail": "User must be authenticated to perform that action",
     "status": "Unauthorized",
     "title": "Not Authenticated"
+  },
+
+  "not_found": {
+    "code": 404,
+    "detail": "Resource not found",
+    "status": "Not Found",
+    "title": "Resource not found"
   }
 }
