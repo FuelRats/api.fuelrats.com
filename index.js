@@ -224,11 +224,7 @@ if ( options.logging || options.test ) {
     winston.info( 'TIMESTAMP:', Date.now() )
     winston.info( 'ENDPOINT:', request.originalUrl )
     winston.info( 'METHOD:', request.method )
-<<<<<<< Updated upstream
-    winston.info( 'DATA:', request.body )
-=======
     winston.info( 'DATA:', response.model.meta.params )
->>>>>>> Stashed changes
     next()
   })
 }
