@@ -18,6 +18,8 @@ ErrorModels = require( '../errors' )
 exports.get = function ( request, response ) {
   var filter, id, query
 
+  response.model.meta.params = _.extend( response.model.meta.params, request.params )
+
   if ( id = request.params.id ) {
     Rat
     .findById( id )
@@ -159,6 +161,8 @@ exports.post = function ( request, response ) {
 // =============================================================================
 exports.put = function ( request, response ) {
   var status
+
+  response.model.meta.params = _.extend( response.model.meta.params, request.params )
 
   if ( id = request.params.id ) {
     Rat.findById( id, function ( error, rat ) {
