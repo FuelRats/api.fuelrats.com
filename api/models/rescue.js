@@ -34,14 +34,14 @@ RescueSchema = new Schema({
     type: Boolean
   },
   createdAt: {
-    type: 'Moment'
+    type: Date
   },
   epic: {
     default: false,
     type: Boolean
   },
   lastModified: {
-    type: 'Moment'
+    type: Date
   },
   open: {
     default: true,
@@ -92,7 +92,7 @@ RescueSchema.pre( 'save', function ( next ) {
   var timestamp
 
   // Dealing with timestamps
-  timestamp = moment()
+  timestamp = new Date()
 
   if ( !this.open ) {
     this.active = false

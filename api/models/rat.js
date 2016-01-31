@@ -19,7 +19,7 @@ RatSchema = new Schema({
     type: String
   },
   createdAt: {
-    type: 'Moment'
+    type: Date
   },
   data: {
     default: {},
@@ -43,11 +43,11 @@ RatSchema = new Schema({
     type: String
   },
   lastModified: {
-    type: 'Moment'
+    type: Date
   },
   joined: {
     default: Date.now(),
-    type: 'Moment'
+    type: Date
   },
   nicknames: {
     type: [String]
@@ -78,7 +78,7 @@ RatSchema.pre( 'save', function ( next ) {
   var timestamp
 
   // Dealing with timestamps
-  timestamp = moment()
+  timestamp = new Date()
 
   if ( this.isNew ) {
     this.createdAt = this.createdAt || timestamp
