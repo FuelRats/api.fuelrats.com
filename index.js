@@ -61,9 +61,6 @@ LocalStrategy = require( 'passport-local' ).Strategy
 winston = require( 'winston' )
 ws = require( 'ws' ).Server
 
-// Import additional schema types
-require( 'mongoose-moment' )( mongoose )
-
 // Import config
 if ( fs.existsSync( './config.json' ) ) {
   config = require( './config' )
