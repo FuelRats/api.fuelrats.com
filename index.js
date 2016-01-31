@@ -202,6 +202,18 @@ app.use( passport.session() )
 // Combine query parameters with the request body, prioritizing the body
 app.use( function ( request, response, next ) {
   request.body = _.extend( request.query, request.body )
+
+  response.model = {
+    links: {
+      self: request.originalUrl
+    },
+    meta: {
+      method: request.method,
+      params: _.extend( request.query, request.body ),
+      timestamp: new Date().toISOString()
+    }
+  }
+
   next()
 })
 
@@ -212,7 +224,11 @@ if ( options.logging || options.test ) {
     winston.info( 'TIMESTAMP:', Date.now() )
     winston.info( 'ENDPOINT:', request.originalUrl )
     winston.info( 'METHOD:', request.method )
+<<<<<<< Updated upstream
     winston.info( 'DATA:', request.body )
+=======
+    winston.info( 'DATA:', response.model.meta.params )
+>>>>>>> Stashed changes
     next()
   })
 }
