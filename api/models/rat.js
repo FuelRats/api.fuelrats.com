@@ -61,10 +61,7 @@ RatSchema = new Schema({
     type: String
   },
   rescues: {
-    type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Rescue'
-    }]
+    type: []
   },
   user: {
     type: Schema.Types.ObjectId,
@@ -92,11 +89,6 @@ RatSchema.pre( 'save', function ( next ) {
 
   next()
 })
-
-//RatSchema.post( 'init', function ( doc ) {
-//  doc.createdAt = doc.createdAt.valueOf()
-//  doc.lastModified = doc.lastModified.valueOf()
-//})
 
 RatSchema.set( 'toJSON', {
   virtuals: true

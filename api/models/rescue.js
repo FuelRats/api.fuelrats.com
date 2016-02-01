@@ -69,12 +69,6 @@ RescueSchema = new Schema({
   rats: {
     default: [],
     type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Rat'
-    }]
-  },
-  tempRats: {
-    type: [{
       type: String
     }]
   },
@@ -109,11 +103,6 @@ RescueSchema.pre( 'save', function ( next ) {
 
   next()
 })
-
-//RescueSchema.post( 'init', function ( doc ) {
-//  doc.createdAt = doc.createdAt.valueOf()
-//  doc.lastModified = doc.lastModified.valueOf()
-//})
 
 RescueSchema.set( 'toJSON', {
   virtuals: true
