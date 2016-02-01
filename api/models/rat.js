@@ -61,7 +61,10 @@ RatSchema = new Schema({
     type: String
   },
   rescues: {
-    type: []
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Rescue'
+    }]
   },
   user: {
     type: Schema.Types.ObjectId,

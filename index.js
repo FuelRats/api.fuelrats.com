@@ -18,7 +18,6 @@ var _,
     logout,
     moment,
     mongoose,
-    notAllowed,
     options,
     paperwork,
     passport,
@@ -99,12 +98,6 @@ options = {
 
 // SHARED METHODS
 // =============================================================================
-
-// Function for disallowed methods
-notAllowed = function notAllowed ( request, response ) {
-  response.status( 405 )
-  response.send()
-}
 
 // Add a broadcast method for websockets
 ws.prototype.broadcast = function ( data ) {
@@ -269,24 +262,20 @@ router.get( '/rats', rat.get )
 router.get( '/rats/:id', rat.getById )
 router.post( '/rats/:id', rat.post )
 router.put( '/rats/:id', rat.put )
-router.delete( '/rats/:id', notAllowed )
 
 router.get( '/rescues', rescue.get )
 router.get( '/rescues/:id', rescue.getById )
 router.post( '/rescues/:id', rescue.post )
 router.put( '/rescues/:id', rescue.put )
-router.delete( '/rescues/:id', notAllowed )
 
 router.get( '/rescues', rescue.get )
 router.post( '/rescues', rescue.post )
-router.put( '/rescues', notAllowed )
-router.delete( '/rescues', notAllowed )
 
 router.get( '/search/rescues', rescue.get )
 
 router.get( '/search/rats', rat.get )
 
-router.get( '/version', version.get)
+router.get( '/version', version.get )
 
 // Register routes
 app.use( express.static( __dirname + '/static' ) )
@@ -302,8 +291,6 @@ app.use( function ( request, response, next ) {
   }
 
   response.send( response.model )
-
-  next()
 })
 
 

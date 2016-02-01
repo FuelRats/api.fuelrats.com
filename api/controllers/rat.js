@@ -59,7 +59,6 @@ exports.get = function ( request, response, next ) {
     rescueFinds = []
 
     if ( error ) {
-      response.model.errors = []
       response.model.errors.push( error )
       response.status( 400 )
 
@@ -121,7 +120,6 @@ exports.getById = function ( request, response, next ) {
     var status
 
     if ( error ) {
-      response.model.errors = []
       response.model.errors.push( error )
       response.status( 400 )
 
@@ -146,7 +144,6 @@ exports.post = function ( request, response, next ) {
 
     if ( error ) {
       errorTypes = Object.keys( error.errors )
-      response.model.errors = []
 
       for ( var i = 0; i < errorTypes.length; i++ ) {
         var error, errorModel, errorType
@@ -197,14 +194,12 @@ exports.put = function ( request, response, next ) {
   if ( id = request.params.id ) {
     Rat.findById( id, function ( error, rat ) {
       if ( error ) {
-        response.model.errors = response.model.errors || []
         response.model.errors.push( error )
         response.status( 400 )
 
         next()
 
       } else if ( !rat ) {
-        response.model.errors = response.model.errors || []
         response.model.errors.push( ErrorModels.not_found )
         response.status( 404 )
 
@@ -224,7 +219,6 @@ exports.put = function ( request, response, next ) {
 
           if ( error ) {
             errorTypes = Object.keys( error.errors )
-            response.model.errors = []
 
             for ( var i = 0; i < errorTypes.length; i++ ) {
               var error, errorModel, errorType
@@ -253,7 +247,6 @@ exports.put = function ( request, response, next ) {
       }
     })
   } else {
-    response.model.errors = response.model.errors || []
     response.model.errors.push( ErrorModels.missing_required_field )
     response.status( 400 )
 
