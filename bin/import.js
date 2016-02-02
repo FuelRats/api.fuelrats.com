@@ -83,7 +83,6 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
         joined: new Date( ratDatum[0] ) || new Date,
         rescues: []
       }
-      console.log(rat.joined)
 
       if ( dispatchDrill = _.findWhere( dispatchDrills, { 3: ratDatum[2] } ) ) {
         rat.drilled.dispatch = dispatchDrill[4].toLowerCase() === 'pass'
