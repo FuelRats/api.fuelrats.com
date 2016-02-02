@@ -51,15 +51,11 @@ linkModels = function () {
           .then( function ( rescues ) {
             rescues.forEach( function ( rescue, index, rescues ) {
               rat.rescues.push( rescue._id )
-              rescue.firstLimpet = rat._id
-              rescue.rats = [rat._id]
+              rescue.rats.push( rat._id )
+              rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, rat.CMDRname )
+//              rescue.firstLimpet = rat._id
 
               linkedRescuesCount += 1
-
-              console.log( '--- ' + rescue._id + ' ---' )
-              console.log( 'rats:', rescue.rats )
-              console.log( 'unidentifiedRats:', rescue.unidentifiedRats )
-              console.log()
 
               saves.push( rescue.save() )
             })
