@@ -1,4 +1,17 @@
-var _, csv, download, downloads, destination, filename, fs, linkModels, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives, winston
+var _,
+    csv,
+    download,
+    downloads,
+    destination,
+    filename,
+    fs,
+    mongoose,
+    processRats,
+    processRescues,
+    Rat,
+    ratSheet,
+    removeArchives,
+    winston
 
 
 
@@ -50,78 +63,6 @@ mongoose.connect( 'mongodb://localhost/fuelrats' )
 
 
 
-linkModels = function () {
-  var linkedRatsCount, linkedRescuesCount, ratFind
-
-  winston.info( 'Linking models' )
-
-  linkedRatsCount = 0
-  linkedRescuesCount = 0
-
-  return new Promise( function ( resolve, reject ) {
-    var rats, rescues, saves
-
-    rats = []
-    rescues = []
-    saves = []
-
-    Rat.find({})
-    .then( function ( ratData ) {
-      var rescueFinds
-
-      rescueFinds = []
-
-      ratData.forEach( function ( ratDatum, index, ratData ) {
-        rescueFinds.push( Rescue.find( { tempRats: ratDatum.CMDRname } ) )
-      })
-
-      Promise.all( rescueFinds )
-      .then( function ( results ) {
-        results.forEach( function ( rescueData, index, results ) {
-          var ratDatum
-
-          ratDatum = ratData[index]
-
-          if ( rescueData.length ) {
-            linkedRatsCount = linkedRatsCount + 1
-            linkedRescuesCount = linkedRescuesCount + rescueData.length
-
-            rescueData.forEach( function ( rescueDatum, index, rescueData ) {
-//              winston.info( 'Linking rat', ratDatum.CMDRname, 'to rescue', rescueDatum._id )
-
-              rescueDatum.tempRats = []
-              rescueDatum.rats.push( ratDatum._id )
-              ratDatum.rescues.push( rescueDatum._id )
-              saves.push( rescueDatum.save() )
-            })
-
-            saves.push( ratDatum.save() )
-          }
-        })
-
-//        saves.push( Rat.collection.save( rats ) )
-//        saves.push( Rescue.collection.save( rescues ) )
-
-        Promise.all( saves )
-        .then( function () {
-          winston.info( 'done!' )
-          resolve({
-            rats: linkedRatsCount,
-            rescues: linkedRescuesCount
-          })
-        })
-        .catch( reject )
-      })
-      .catch( reject )
-    })
-    .catch( reject )
-  })
-}
-
-
-
-
-
 processRats = function ( ratData, rescueDrills, dispatchDrills ) {
   winston.info( 'Processing rats' )
 
@@ -168,14 +109,6 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
     Promise.all( rats )
     .then( resolve )
     .catch( reject )
-
-//    Rat.collection.insert( rats, function ( error, rats ) {
-//      if ( error ) {
-//        return reject( error )
-//      }
-//
-//      resolve()
-//    })
   })
 }
 
@@ -211,14 +144,6 @@ processRescues = function ( rescuesData ) {
     Promise.all( rescues )
     .then( resolve )
     .catch( reject )
-
-//    Rescue.collection.insert( rescues, function ( error ) {
-//      if ( error ) {
-//        return reject( error )
-//      }
-//
-//      resolve ()
-//    })
   })
 }
 
