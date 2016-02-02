@@ -2,7 +2,6 @@ var moment, mongoose, RatSchema, Rescue, Schema, User, winston
 
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
-mongoosastic = require( 'mongoosastic' )
 winston = require( 'winston' )
 
 Rescue = require( './rescue' )
@@ -62,6 +61,7 @@ RatSchema = new Schema({
   },
   rescues: {
     type: [{
+      autopopulate: true,
       type: Schema.Types.ObjectId,
       ref: 'Rescue'
     }]
@@ -93,16 +93,12 @@ RatSchema.pre( 'save', function ( next ) {
   next()
 })
 
-//RatSchema.post( 'init', function ( doc ) {
-//  doc.createdAt = doc.createdAt.valueOf()
-//  doc.lastModified = doc.lastModified.valueOf()
-//})
-
 RatSchema.set( 'toJSON', {
   virtuals: true
 })
 
-RatSchema.plugin( mongoosastic )
+RatSchema.plugin( require( 'mongoosastic' ) )
+RatSchema.plugin( require( 'mongoose-autopopulate' ) )
 
 if ( mongoose.models.Rat ) {
   module.exports = mongoose.model( 'Rat' )

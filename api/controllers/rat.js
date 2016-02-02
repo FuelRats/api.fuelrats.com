@@ -1,4 +1,4 @@
-var _, ErrorModels, Rat, rat, save, winston
+var _, ErrorModels, Rat, rat, Rescue, save, winston
 
 
 
@@ -7,6 +7,7 @@ var _, ErrorModels, Rat, rat, save, winston
 _ = require( 'underscore' )
 winston = require( 'winston' )
 Rat = require( '../models/rat' )
+Rescue = require( '../models/rescue' )
 ErrorModels = require( '../errors' )
 
 
@@ -20,7 +21,6 @@ exports.get = function ( request, response, next ) {
 
   filter = {}
   query = {}
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
 
   filter.size = parseInt( request.body.limit ) || 25
   delete request.body.limit
@@ -54,8 +54,11 @@ exports.get = function ( request, response, next ) {
   }
 
   Rat.search( query, filter, function ( error, data ) {
+    var rescueFinds
+
+    rescueFinds = []
+
     if ( error ) {
-      response.model.errors = []
       response.model.errors.push( error )
       response.status( 400 )
 
@@ -68,14 +71,31 @@ exports.get = function ( request, response, next ) {
       }
       response.model.data = []
 
-      data.hits.hits.forEach( function ( hit, index, hits ) {
-        hit._source._id = hit._id
-        hit._source.score = hit._score
-        response.model.data.push( hit._source )
+      data.hits.hits.forEach( function ( rat, index, rats ) {
+        var ratToPopulate, rescueFind
+
+        rat._source._id = rat._id
+        rat._source.score = rat._score
+
+//        rescueFind = Rescue.find({
+//          platform: rat._source.platform,
+//          rats: rat._source.CMDRname
+//        })
+
+        response.model.data.push( rat._source )
+
+//        rescueFind.then( function ( rescues ) {
+//          rat._source.rescues = rescues
+//        })
+
+        rescueFinds.push( rescueFind )
       })
+
       response.status( 200 )
     }
 
+//    Promise.all( rescueFinds )
+//    .then( next )
     next()
   })
 }
@@ -89,25 +109,27 @@ exports.get = function ( request, response, next ) {
 exports.getById = function ( request, response, next ) {
   var id
 
-  if ( id = request.params.id ) {
-    Rat
-    .findById( id )
-    .exec( function ( error, rat ) {
-      var status
+  response.model.meta.params = _.extend( response.model.meta.params, request.params )
+  console.log( response.model.meta.params )
 
-      if ( error ) {
-        response.model.errors = []
-        response.model.errors.push( error )
-        response.status( 400 )
+  id = request.params.id
 
-      } else {
-        response.model.data = rat
-        response.status( 200 )
-      }
+  Rat
+  .findById( id )
+  .exec( function ( error, rat ) {
+    var status
 
-      next()
-    })
-  }
+    if ( error ) {
+      response.model.errors.push( error )
+      response.status( 400 )
+
+    } else {
+      response.model.data = rat
+      response.status( 200 )
+    }
+
+    next()
+  })
 }
 
 
@@ -122,7 +144,6 @@ exports.post = function ( request, response, next ) {
 
     if ( error ) {
       errorTypes = Object.keys( error.errors )
-      response.model.errors = []
 
       for ( var i = 0; i < errorTypes.length; i++ ) {
         var error, errorModel, errorType
@@ -173,14 +194,12 @@ exports.put = function ( request, response, next ) {
   if ( id = request.params.id ) {
     Rat.findById( id, function ( error, rat ) {
       if ( error ) {
-        response.model.errors = response.model.errors || []
         response.model.errors.push( error )
         response.status( 400 )
 
         next()
 
       } else if ( !rat ) {
-        response.model.errors = response.model.errors || []
         response.model.errors.push( ErrorModels.not_found )
         response.status( 404 )
 
@@ -200,7 +219,6 @@ exports.put = function ( request, response, next ) {
 
           if ( error ) {
             errorTypes = Object.keys( error.errors )
-            response.model.errors = []
 
             for ( var i = 0; i < errorTypes.length; i++ ) {
               var error, errorModel, errorType
@@ -229,7 +247,6 @@ exports.put = function ( request, response, next ) {
       }
     })
   } else {
-    response.model.errors = response.model.errors || []
     response.model.errors.push( ErrorModels.missing_required_field )
     response.status( 400 )
 

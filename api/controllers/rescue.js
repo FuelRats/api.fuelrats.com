@@ -20,7 +20,6 @@ exports.get = function ( request, response, next ) {
 
   filter = {}
   query = {}
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
 
   filter.size = parseInt( request.body.limit ) || 25
   delete request.body.limit
@@ -55,7 +54,6 @@ exports.get = function ( request, response, next ) {
 
   Rescue.search( query, filter, function ( error, data ) {
     if ( error ) {
-      response.model.errors = []
       response.model.errors.push( error )
       response.status( 400 )
 
@@ -66,13 +64,18 @@ exports.get = function ( request, response, next ) {
         offset: filter.from,
         total: data.hits.total
       }
+
       response.model.data = []
 
-      data.hits.hits.forEach( function ( hit, index, hits ) {
-        hit._source._id = hit._id
-        hit._source.score = hit._score
-        response.model.data.push( hit._source )
+      data.hits.hits.forEach( function ( rescue, index, rescues ) {
+        var rescueToPopulate, rescueFind
+
+        rescue._source._id = rescue._id
+        rescue._source.score = rescue._score
+
+        response.model.data.push( rescue._source )
       })
+
       response.status( 200 )
     }
 
@@ -89,25 +92,27 @@ exports.get = function ( request, response, next ) {
 exports.getById = function ( request, response, next ) {
   var id
 
-  if ( id = request.params.id ) {
-    Rescue
-    .findById( id )
-    .exec( function ( error, rescue ) {
-      var status
+  response.model.meta.params = _.extend( response.model.meta.params, request.params )
+  console.log( response.model.meta.params )
 
-      if ( error ) {
-        response.model.errors = []
-        response.model.errors.push( error )
-        response.status( 400 )
+  id = request.params.id
 
-      } else {
-        response.model.data = rescue
-        response.status( 200 )
-      }
+  Rescue
+  .findById( id )
+  .exec( function ( error, rescue ) {
+    var status
 
-      next()
-    })
-  }
+    if ( error ) {
+      response.model.errors.push( error )
+      response.status( 400 )
+
+    } else {
+      response.model.data = rescue
+      response.status( 200 )
+    }
+
+    next()
+  })
 }
 
 
@@ -122,7 +127,6 @@ exports.post = function ( request, response, next ) {
 
     if ( error ) {
       errorTypes = Object.keys( error.errors )
-      response.model.errors = []
 
       for ( var i = 0; i < errorTypes.length; i++ ) {
         var error, errorModel, errorType
@@ -173,14 +177,12 @@ exports.put = function ( request, response, next ) {
   if ( id = request.params.id ) {
     Rescue.findById( id, function ( error, rescue ) {
       if ( error ) {
-        response.model.errors = response.model.errors || []
         response.model.errors.push( error )
         response.status( 400 )
 
         next()
 
       } else if ( !rescue ) {
-        response.model.errors = response.model.errors || []
         response.model.errors.push( ErrorModels.not_found )
         response.status( 404 )
 
@@ -200,7 +202,6 @@ exports.put = function ( request, response, next ) {
 
           if ( error ) {
             errorTypes = Object.keys( error.errors )
-            response.model.errors = []
 
             for ( var i = 0; i < errorTypes.length; i++ ) {
               var error, errorModel, errorType
@@ -229,7 +230,6 @@ exports.put = function ( request, response, next ) {
       }
     })
   } else {
-    response.model.errors = response.model.errors || []
     response.model.errors.push( ErrorModels.missing_required_field )
     response.status( 400 )
 
