@@ -116,6 +116,7 @@ exports.getById = function ( request, response, next ) {
 
   Rat
   .findById( id )
+  .populate( 'rescues' )
   .exec( function ( error, rat ) {
     var status
 

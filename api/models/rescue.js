@@ -1,4 +1,4 @@
-var autopopulate, moment, mongoose, Rat, RescueSchema, Schema, winston
+var moment, mongoose, Rat, RescueSchema, Schema, winston
 
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
@@ -41,7 +41,6 @@ RescueSchema = new Schema({
   },
   firstLimpet: {
     type: {
-      autopopulate: true,
       type: Schema.Types.ObjectId,
       ref: 'Rat'
     }
@@ -75,7 +74,6 @@ RescueSchema = new Schema({
   rats: {
     default: [],
     type: [{
-      autopopulate: true,
       type: Schema.Types.ObjectId,
       ref: 'Rat'
     }]
@@ -121,14 +119,6 @@ RescueSchema.pre( 'save', function ( next ) {
 RescueSchema.set( 'toJSON', {
   virtuals: true
 })
-
-autopopulate = function ( next ) {
-  this.populate( 'rats' )
-  next()
-}
-
-RescueSchema.pre( 'find', autopopulate )
-RescueSchema.pre( 'findOne', autopopulate )
 
 RescueSchema.plugin( require( 'mongoosastic' ) )
 

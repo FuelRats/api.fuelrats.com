@@ -99,6 +99,7 @@ exports.getById = function ( request, response, next ) {
 
   Rescue
   .findById( id )
+  .populate( 'rats' )
   .exec( function ( error, rescue ) {
     var status
 
