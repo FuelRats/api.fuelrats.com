@@ -81,6 +81,7 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
           rescue: false
         },
         joined: new Date( ratDatum[0] ) || new Date,
+        platform: 'pc',
         rescues: []
       }
 
@@ -101,7 +102,22 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
       }
 
       if ( rat.CMDRname ) {
-        rats.push( Rat.create( rat ) )
+        rats.push( new Promise( function ( resolve, reject ) {
+          Rat.find({
+            CMDRname: rat.CMDRname,
+            platform: rat.platform
+          })
+          .then( function ( rats ) {
+            if ( !rats.length ) {
+              Rat.create( rat )
+              .then( resolve )
+              .catch( reject )
+            } else {
+              resolve()
+            }
+          })
+          .catch( reject )
+        }))
       }
     })
 
