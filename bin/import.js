@@ -133,7 +133,7 @@ processRescues = function ( rescuesData ) {
         notes: rescueDatum[4],
         open: false,
         rats: [],
-        tempRats: [rescueDatum[1]],
+        unidentifiedRats: [rescueDatum[1]],
         successful: rescueDatum[3].toLowerCase() === 'successful' ? true : false,
         system: rescueDatum[2]
       }
