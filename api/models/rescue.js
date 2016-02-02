@@ -1,4 +1,4 @@
-var moment, mongoose, Rat, RescueSchema, Schema, winston
+var autopopulate, moment, mongoose, Rat, RescueSchema, Schema, winston
 
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
@@ -122,8 +122,15 @@ RescueSchema.set( 'toJSON', {
   virtuals: true
 })
 
+autopopulate = function ( next ) {
+  this.populate( 'rats' )
+  next()
+}
+
+RescueSchema.pre( 'find', autopopulate )
+RescueSchema.pre( 'findOne', autopopulate )
+
 RescueSchema.plugin( require( 'mongoosastic' ) )
-RescueSchema.plugin( require( 'mongoose-autopopulate' ) )
 
 if ( mongoose.models.Rescue ) {
   module.exports = mongoose.model( 'Rescue' )
