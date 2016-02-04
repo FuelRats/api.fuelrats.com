@@ -81,6 +81,7 @@ paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
+rescueAdmin = require( './api/controllers/rescueAdmin' )
 version = require( './api/controllers/version' )
 welcome = require( './api/controllers/welcome' )
 
@@ -243,39 +244,38 @@ router = express.Router()
 
 router.get( '/badge/:rat', badge.get )
 
-router.get( '/docs', docs.get )
-
-router.get( '/register', register.get )
 router.post( '/register', register.post )
 
-router.get( '/login', login.get )
 router.post( '/login', passport.authenticate( 'local' ), login.post )
 
 router.get( '/logout', logout.post )
 router.post( '/logout', logout.post )
 
-router.get( '/paperwork', paperwork.get )
-
-router.get( '/welcome', welcome.get )
-
 router.get( '/rats', rat.get )
+router.post( '/rats', rat.post )
 router.get( '/rats/:id', rat.getById )
-router.post( '/rats/:id', rat.post )
 router.put( '/rats/:id', rat.put )
 
 router.get( '/rescues', rescue.get )
+router.post( '/rescues', rescue.post )
 router.get( '/rescues/:id', rescue.getById )
-router.post( '/rescues/:id', rescue.post )
 router.put( '/rescues/:id', rescue.put )
 
-router.get( '/rescues', rescue.get )
-router.post( '/rescues', rescue.post )
-
 router.get( '/search/rescues', rescue.get )
-
 router.get( '/search/rats', rat.get )
 
 router.get( '/version', version.get )
+
+router.get( '/docs', docs.get )
+router.get( '/login', login.get )
+router.get( '/paperwork', paperwork.get )
+router.get( '/register', register.get )
+router.get( '/welcome', welcome.get )
+
+router.get( '/rescue/:id', rescueAdmin.viewRescue )
+router.get( '/admin/rescues', rescueAdmin.listRescues )
+router.get( '/admin/rescues/:page', rescueAdmin.listRescues )
+router.get( '/admin/rescue/:id', rescueAdmin.editRescue )
 
 // Register routes
 app.use( express.static( __dirname + '/static' ) )

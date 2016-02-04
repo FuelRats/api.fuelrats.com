@@ -9,15 +9,30 @@
     </div>
 
     <div class="form-group">
-      <label for="rats">Who performed the rescue?</label>
-      <small>Please list only one CMDR</small>
-      {{#if rat.CMDRname }}
-        <input type="text" name="rats" id="rats" class="form-control" data-autocomplete="CMDRname|gamertag" value="{{ rat.CMDRname }}" required>
-      {{ else if rat.gamertag }}
-        <input type="text" name="rats" id="rats" class="form-control" data-autocomplete="CMDRname|gamertag" value="{{ rat.gamertag }}" required>
-      {{ else }}
-        <input type="text" name="rats" id="rats" class="form-control" data-autocomplete="CMDRname|gamertag" autofocus required>
-      {{/if}}
+      <label for="rats">Who arrived for the rescue?</label>
+      <input type="text" name="rats" id="rats" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="firstLimpet">Who fired the first limpet?</label>
+      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="successful">What platform was it on?</label>
+      <br>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" name="platform" value="pc" checked>
+          PC
+        </label>
+      </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" name="platform" value="xb">
+          Xbox One
+        </label>
+      </div>
     </div>
 
     <div class="form-group">
@@ -31,13 +46,13 @@
       <br>
       <div class="radio-inline">
         <label>
-          <input type="radio" name="successful" value="true" id="successful1" checked>
+          <input type="radio" name="successful" value="true" checked>
           Yes
         </label>
       </div>
       <div class="radio-inline">
         <label>
-          <input type="radio" name="successful" value="false" id="successful1">
+          <input type="radio" name="successful" value="false">
           No
         </label>
       </div>
@@ -53,3 +68,5 @@
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 </div>
+
+<script src="paperwork.js"></script>

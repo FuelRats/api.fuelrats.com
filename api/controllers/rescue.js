@@ -1,13 +1,43 @@
-var _, ErrorModels, Rescue, rescue, save, winston
+var _, ErrorModels, handleError, mongoose, Rat, Rescue, rescue, save, winston
 
 
 
 
 
 _ = require( 'underscore' )
+mongoose = require( 'mongoose' )
 winston = require( 'winston' )
+
+Rat = require( '../models/rat' )
 Rescue = require( '../models/rescue' )
 ErrorModels = require( '../errors' )
+
+
+
+
+
+// SHARED FUNCTIONS
+// =============================================================================
+handleError = function ( error ) {
+  errorTypes = Object.keys( error.errors )
+
+  console.error( errorTypes )
+
+  for ( var i = 0; i < errorTypes.length; i++ ) {
+    var errorModel, errorType
+
+    errorType = errorTypes[i]
+    error = error.errors[errorType].properties
+
+    if ( error.type === 'required' ) {
+      errorModel = ErrorModels['missing_required_field']
+    }
+
+    errorModel.detail = 'You\'re missing the required field: ' + error.path
+
+    response.model.errors.push( errorModel )
+  }
+}
 
 
 
@@ -123,36 +153,85 @@ exports.getById = function ( request, response, next ) {
 // POST
 // =============================================================================
 exports.post = function ( request, response, next ) {
-  Rescue.create( request.body, function ( error, rescue ) {
-    var errors, errorTypes, status
+  var finds, firstLimpetFind
 
-    if ( error ) {
-      errorTypes = Object.keys( error.errors )
+  finds = []
 
-      for ( var i = 0; i < errorTypes.length; i++ ) {
-        var error, errorModel, errorType
+  // Validate and update rats
+  if ( typeof request.body.rats === 'string' ) {
+    request.body.rats = request.body.rats.split( ',' )
+  }
 
-        errorType = errorTypes[i]
-        error = error.errors[errorType].properties
+  request.body.unidentifiedRats = []
 
-        if ( error.type === 'required' ) {
-          errorModel = ErrorModels['missing_required_field']
-        }
+  request.body.rats.forEach( function ( rat, index, rats ) {
+    var find, CMDRname
 
-        errorModel.detail = 'You\'re missing the required field: ' + error.path
+    if ( typeof rat === 'string' ) {
+      if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
+        CMDRname = rat
 
-        response.model.errors.push( errorModel )
+        request.body.rats = _.without( request.body.rats, CMDRname )
+
+        find = Rat.findOne({
+          CMDRname: CMDRname
+        })
+
+        find.then( function ( rat ) {
+          if ( rat ) {
+            request.body.rats.push( rat._id )
+          } else {
+            request.body.unidentifiedRats.push( CMDRname )
+          }
+        })
+
+        finds.push( find )
       }
 
-      winston.error( error )
-      response.status( 400 )
+    } else if ( typeof rat === 'object' && rat._id ) {
+      request.body.rats.push( rat._id )
+    }
+  })
 
-    } else {
-      response.model.data = rescue
-      response.status( 201 )
+  // Validate and update firstLimpet
+  if ( typeof request.body.firstLimpet === 'string' ) {
+    if ( !mongoose.Types.ObjectId.isValid( request.body.firstLimpet ) ) {
+      firstLimpetFind = Rat.findOne({
+        CMDRname: request.body.firstLimpet
+      })
+
+      firstLimpetFind.then( function ( rat ) {
+        if ( rat ) {
+          request.body.firstLimpet = rat._id
+        }
+      })
+
+      finds.push( firstLimpetFind )
     }
 
-    next()
+  } else if ( typeof request.body.firstLimpet === 'object' && request.body.firstLimpet._id ) {
+    request.body.firstLimpet = request.body.firstLimpet._id
+  }
+
+  Promise.all( finds )
+  .then( function () {
+    console.log( request.body )
+
+    Rescue.create( request.body, function ( error, rescue ) {
+      var errors, errorTypes, status
+
+      if ( error ) {
+        response.model.errors.push( error )
+        response.status( 400 )
+
+      } else {
+        response.model.data = rescue
+        response.status( 201 )
+      }
+
+      next()
+    })
+  })
 
 //    if ( referer = request.get( 'Referer' ) ) {
 //      response.redirect( '/login' )
@@ -161,7 +240,6 @@ exports.post = function ( request, response, next ) {
 //      response.status( status )
 //      response.json( response.model )
 //    }
-  })
 }
 
 
@@ -202,23 +280,7 @@ exports.put = function ( request, response, next ) {
           var errors, errorTypes, status
 
           if ( error ) {
-            errorTypes = Object.keys( error.errors )
-
-            for ( var i = 0; i < errorTypes.length; i++ ) {
-              var error, errorModel, errorType
-
-              errorType = errorTypes[i]
-              error = error.errors[errorType].properties
-
-              if ( error.type === 'required' ) {
-                errorModel = ErrorModels['missing_required_field']
-              }
-
-              errorModel.detail = 'You\'re missing the required field: ' + error.path
-
-              response.model.errors.push( errorModel )
-            }
-
+            response.model.errors.push( error )
             status = 400
 
           } else {
