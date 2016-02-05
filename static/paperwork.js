@@ -29,7 +29,7 @@ $( function () {
 
     rescue.save( {}, {
       success: function ( model ) {
-        window.location.href = '/admin/rescue/' + model.id
+        window.location.href = '/rescue/' + model.id
         console.log( 'model:', model )
       }
     })
