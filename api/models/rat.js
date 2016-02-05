@@ -65,6 +65,10 @@ RatSchema = new Schema({
       ref: 'Rescue'
     }]
   },
+  rescueCount: {
+    default: 0,
+    type: Number
+  },
   user: {
     type: Schema.Types.ObjectId,
     ref: 'User'
@@ -88,6 +92,9 @@ RatSchema.pre( 'save', function ( next ) {
 
   // Dealing with platforms
   this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
+  // Update rescue count
+  this.rescueCount = this.rescues.length
 
   next()
 })
