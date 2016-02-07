@@ -15,29 +15,33 @@
 
   <div class="flex-row">
     {{#each CMDRs}}
-      <table class="table table-bordered table-striped table-hover">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Success/Failure</th>
-            <th>System</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {{#each rescues}}
+      {{#if rescues}}
+        <table class="table table-bordered table-striped table-hover">
+          <thead>
             <tr>
-              <td>{{ dateFormat createdAt }}</td>
-              <td class="{{#if successful}} table-success {{ else }} table-danger {{/if}}">
-                {{#if successful}} Success {{ else }} Failure {{/if}}
-              </td>
-              <td>{{ system }}</td>
-              <td>{{ notes }}</td>
+              <th>Date</th>
+              <th>Success/Failure</th>
+              <th>System</th>
+              <th>Notes</th>
             </tr>
-          {{/each}}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {{#each rescues}}
+              <tr>
+                <td>{{ dateFormat createdAt }}</td>
+                <td class="{{#if successful}} table-success {{ else }} table-danger {{/if}}">
+                  {{#if successful}} Success {{ else }} Failure {{/if}}
+                </td>
+                <td>{{ system }}</td>
+                <td>{{ notes }}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      {{else}}
+        No rescues found for {{CMDRname}}
+      {{/if}}
     {{/each}}
 
 <!--
