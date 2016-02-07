@@ -1,83 +1,81 @@
+<nav class="navbar navbar-light bg-faded">
+  <div class="navbar-brand">Welcome, {{ email }}</div>
+
+  <ul class="nav navbar-nav pull-xs-right">
+    <li class="nav-item">
+      <a href="/logout" class="nav-link">Logout</a>
+    </li>
+  </ul>
+</nav>
+
 <div class="container-fluid">
-  <nav class="navbar navbar-light bg-faded">
-    {{#if rat.CMDRname}}
-    <div class="navbar-brand">CMDR {{ rat.CMDRname }}</div>
-    {{ else }}
-    <div class="navbar-brand">CMDR {{ rat.gamertag }}</div>
-    {{/if}}
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header">
+          <strong>Your CMDRs</strong>
+        </div>
 
-    <ul class="nav navbar-nav pull-xs-right">
-      <li class="nav-item">
-        <a href="/logout" class="nav-link">Logout</a>
-      </li>
-    </ul>
-  </nav>
-
-  <div class="flex-row">
-    {{#each CMDRs}}
-      {{#if rescues}}
-        <table class="table table-bordered table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Success/Failure</th>
-              <th>System</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {{#each rescues}}
-              <tr>
-                <td>{{ dateFormat createdAt }}</td>
-                <td class="{{#if successful}} table-success {{ else }} table-danger {{/if}}">
-                  {{#if successful}} Success {{ else }} Failure {{/if}}
-                </td>
-                <td>{{ system }}</td>
-                <td>{{ notes }}</td>
-              </tr>
+        <div class="card-block">
+<!--        <ul class="list-group list-group-flush rat-list">-->
+          <ul class="nav nav-stacked rat-list">
+            {{#each CMDRs}}
+  <!--            <li class="list-group-item">-->
+              <li class="nav-item">
+                <a class="nav-link active" href="#rescues-{{ _id }}">
+                  {{ CMDRname }}
+                  <span class="label label-pill label-default">{{ platform }}</span>
+                </a>
+              </li>
             {{/each}}
-          </tbody>
-        </table>
-      {{else}}
-        No rescues found for {{CMDRname}}
-      {{/if}}
-    {{/each}}
+          </ul>
+        </div>
 
-<!--
-    {{#each CMDRs}}
-      {{#each rescues}}
-        <div class="col-sm-4">
-          <div class="card rescue-card">
-
-            <div class="card-block">
-              <h3 class="card-title">{{ dateFormat createdAt }}</h3>
-              <p class="card-text"></p>
-            </div>
-
-            <ul class="list-group list-group-flush">
-              {{#unless open}}
-                {{#if successful}}
-                  <li class="list-group-item list-group-item-success rescue-successful">Success</li>
-                {{ else }}
-                  <li class="list-group-item list-group-item-danger rescue-successful">Failed</li>
-                {{/if}}
-              {{/unless}}
-
-              {{#if codeRed}}
-                <li class="list-group-item list-group-item-danger rescue-codeRed">CODE RED</li>
-              {{/if}}
-
-              <li class="list-group-item rescue-system">{{ system }}</li>
-
-              {{#if notes}}
-                <li class="list-group-item rescue-notes">{{ notes }}</li>
-              {{/if}}
-            </ul>
+        <div class="card-footer form-inline rat-adder" hidden>
+          <div class="row">
+            <input type="text" placeholder="Add Rat" class="form-control" data-autocomplete="CMDRname">
+            <button type="button" class="btn btn-primary">Add</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      {{#each CMDRs}}
+        <h2 id="rescues-{{ _id }}">
+          {{ CMDRname }}
+          <small class="text-muted pull-xs-right">{{ rescues.length }} rescues</small>
+        </h2>
+        <hr>
+
+        {{#if rescues}}
+          <table class="table table-bordered table-striped table-hover">
+            <thead class="thead-default">
+              <tr>
+                <th>Date</th>
+                <th>Success/Failure</th>
+                <th>System</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {{#each rescues}}
+                <tr>
+                  <td>{{ dateFormat createdAt }}</td>
+                  <td class="{{#if successful}} table-success {{ else }} table-danger {{/if}}">
+                    {{#if successful}} Success {{ else }} Failure {{/if}}
+                  </td>
+                  <td>{{ system }}</td>
+                  <td>{{ notes }}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}
+          No rescues found for {{ CMDRname }}
+        {{/if}}
       {{/each}}
-    {{/each}}
--->
+    </div>
   </div>
 </div>
