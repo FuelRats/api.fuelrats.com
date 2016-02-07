@@ -11,7 +11,6 @@ modelProperties = {
   CMDRs: {
     default: [],
     type: [{
-      autopopulate: true,
       type: Schema.Types.ObjectId,
       ref: 'Rat'
     }]
@@ -26,8 +25,6 @@ UserSchema.methods.toJSON = function () {
   delete obj.salt;
   return obj;
 };
-
-//UserSchema.plugin( require( 'mongoose-autopopulate' ) );
 
 UserSchema.plugin( passportLocalMongoose, {
   usernameField: 'email'
