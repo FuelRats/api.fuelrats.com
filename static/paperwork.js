@@ -15,7 +15,7 @@ $( function () {
       }
     })
 
-    window.rescue = rescue = new Rescue
+    rescue = new Rescue
 
     _.forEach( document.querySelectorAll( 'input, textarea' ), function ( element, index, elements ) {
       if ( element.getAttribute( 'type' ) === 'radio' || element.getAttribute( 'type' ) === 'checkbox' ) {
