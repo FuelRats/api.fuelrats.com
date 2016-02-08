@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "grunt api",
-    "import": "node bin/import && node bin/link",
+    "import": "node bin/import",
     "test": "grunt test"
   },
   "license": "MIT",

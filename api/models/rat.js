@@ -1,13 +1,89 @@
-var moment, mongoose, RatSchema, Rescue, Schema, User, winston
+var _,
+    linkRescues,
+    moment,
+    mongoose,
+    normalizePlatform,
+    Rat,
+    RatSchema,
+    Schema,
+    updateRescueCount,
+    updateTimestamps,
+    winston
 
+_ = require( 'underscore' )
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 winston = require( 'winston' )
 
-Rescue = require( './rescue' )
-User = require( './user' )
+mongoose.Promise = global.Promise
+
+Rat = require( './rat' )
 
 Schema = mongoose.Schema
+
+
+
+
+
+linkRescues = function ( next ) {
+  var rat
+
+  rat = this
+
+  rat.rescues = rat.rescues || []
+
+  Rescue.update({
+    unidentifiedRats: rat.CMDRname
+  }, {
+    $pull: {
+      unidentifiedRats: rat.CMDRname
+    },
+    $push: {
+      rats: rat._id
+    }
+  })
+  .then( function () {
+    Rescue.find({
+      unidentifiedRats: rat.CMDRname
+    })
+    .then( function ( rescues ) {
+      rescues.forEach( function ( rescue, index, rescues ) {
+        this.rescues.push( rescue._id )
+      })
+
+      next()
+    })
+    .catch( next )
+  })
+}
+
+normalizePlatform = function ( next ) {
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
+  next()
+}
+
+updateTimestamps = function ( next ) {
+  var timestamp
+
+  timestamp = new Date()
+
+  if ( !this.open ) {
+    this.active = false
+  }
+
+  if ( this.isNew ) {
+    this.createdAt = this.createdAt || timestamp
+  }
+
+  this.lastModified = timestamp
+
+  next()
+}
+
+
+
+
 
 RatSchema = new Schema({
   archive: {
@@ -67,6 +143,7 @@ RatSchema = new Schema({
   },
   rescueCount: {
     default: 0,
+    index: true,
     type: Number
   },
   user: {
@@ -77,27 +154,11 @@ RatSchema = new Schema({
   versionKey: false
 })
 
-RatSchema.pre( 'save', function ( next ) {
-  var timestamp
+RatSchema.pre( 'save', updateTimestamps )
+RatSchema.pre( 'save', normalizePlatform )
+RatSchema.pre( 'save', linkRescues )
 
-  // Dealing with timestamps
-  timestamp = new Date()
-
-  if ( this.isNew ) {
-    this.createdAt = this.createdAt || timestamp
-    this.joined = this.joined || timestamp
-  }
-
-  this.lastModified = timestamp
-
-  // Dealing with platforms
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
-
-  // Update rescue count
-  this.rescueCount = this.rescues.length
-
-  next()
-})
+RatSchema.pre( 'update', updateTimestamps )
 
 RatSchema.set( 'toJSON', {
   virtuals: true

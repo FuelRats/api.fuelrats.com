@@ -30,6 +30,7 @@ Rat = require( '../api/models/rat' )
 Rescue = require( '../api/models/rescue' )
 
 mongoose.Promise = global.Promise
+mongoose.set( 'debug', true )
 
 // Google Sheet URLs
 spreadsheets = {
@@ -109,7 +110,8 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
           })
           .then( function ( rats ) {
             if ( !rats.length ) {
-              Rat.create( rat )
+              new Rat( rat )
+              .save()
               .then( resolve )
               .catch( reject )
             } else {
@@ -153,7 +155,7 @@ processRescues = function ( rescuesData ) {
         system: rescueDatum[2]
       }
 
-      rescues.push( Rescue.create( rescue ) )
+      rescues.push( new Rescue( rescue ).save() )
     })
 
     Promise.all( rescues )
@@ -244,44 +246,40 @@ Promise.all( downloads )
 
     promises = []
 
-    promises.push( processRats( rats, rescueDrills, dispatchDrills ) )
-    promises.push( processRescues( rescues ) )
-
-    Promise.all( promises )
+    processRats( rats, rescueDrills, dispatchDrills )
     .then( function () {
-      var promises
-
-      promises = []
-
-      promises.push( Rat.count({}) )
-      promises.push( Rescue.count({}) )
-
+      return processRescues( rescues )
+    })
+    .then( function () {
       Promise.all( promises )
-      .then( function ( results ) {
-        var newRatCount, newRescuesCount, oldRatCount, oldRescuesCount
+      .then( function () {
+        var promises
 
-        newRatCount = rats.length
-        newRescuesCount = rescues.length
-        oldRatCount = results[0]
-        oldRescuesCount = results[1]
+        promises = []
 
-        winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
-        winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
+        promises.push( Rat.count({}) )
+        promises.push( Rescue.count({}) )
 
-        mongoose.disconnect()
+        Promise.all( promises )
+        .then( function ( results ) {
+          var newRatCount, newRescuesCount, oldRatCount, oldRescuesCount
+
+          newRatCount = rats.length
+          newRescuesCount = rescues.length
+          oldRatCount = results[0]
+          oldRescuesCount = results[1]
+
+          winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
+          winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
+
+          mongoose.disconnect()
+        })
+        .catch( winston.error )
       })
-      .catch( function ( error ) {
-        winston.error( error )
-      })
+      .catch( winston.error )
     })
-    .catch( function ( error ) {
-      winston.error( error )
-    })
+    .catch( winston.error )
   })
-  .catch( function ( error ) {
-    winston.error( error )
-  })
+  .catch( winston.error )
 })
-.catch( function ( error ) {
-  winston.error( error )
-})
+.catch( winston.error )
