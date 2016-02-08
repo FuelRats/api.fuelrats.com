@@ -3,9 +3,5 @@ module.exports = {
     args: [
       './bin/compile-docs'
     ]
-  },
-
-  mongo: {
-    cmd: './bin/mongo.sh'
   }
 }

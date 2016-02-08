@@ -1,7 +1,6 @@
 api:
   description: Start the api
   tasks:
-  - 'mongo'
   - 'docs'
   - 'express'
   - 'watch'
@@ -15,14 +14,3 @@ docs:
   description: Build the docs
   tasks:
   - 'run:docs'
-
-mongo:
-  description: Start Mongo
-  tasks:
-  - 'run:mongo'
-
-test:
-  description: Run the tests (non-functional)
-  tasks:
-  - 'mongo'
-  - 'mochaTest'
