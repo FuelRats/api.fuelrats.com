@@ -169,7 +169,7 @@ exports.post = function ( request, response, next ) {
 
     if ( typeof rat === 'string' ) {
       if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
-        CMDRname = rat
+        CMDRname = rat.trim()
 
         request.body.rats = _.without( request.body.rats, CMDRname )
 
@@ -197,7 +197,7 @@ exports.post = function ( request, response, next ) {
   if ( typeof request.body.firstLimpet === 'string' ) {
     if ( !mongoose.Types.ObjectId.isValid( request.body.firstLimpet ) ) {
       firstLimpetFind = Rat.findOne({
-        CMDRname: request.body.firstLimpet
+        CMDRname: request.body.firstLimpet.trim()
       })
 
       firstLimpetFind.then( function ( rat ) {
