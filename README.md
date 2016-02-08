@@ -29,8 +29,8 @@ Once Vagrant finishes doing its thing you should be able to hit the API at `http
 So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
 
 1. [`nvm`](https://github.com/creationix/nvm)
-1. [`MongoDB`](https://www.mongodb.com/)
-1. [`Elasticsearch`](https://www.elastic.co/)
+1. [`MongoDB v2.6.5+`](https://www.mongodb.com/)
+1. [`Elasticsearch v2.0.0+`](https://www.elastic.co/)
   * Java
 
 Next, we need to make sure that MongoDB and Elasticsearch are running before starting the API. We've got a [handy dandy script](bin/mongo.sh) that will start Mongo as a service which should work on both Linux and Mac OS X. If you're on Windows, figure it out yourself.
