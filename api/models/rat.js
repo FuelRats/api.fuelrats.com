@@ -5,6 +5,7 @@ var _,
     normalizePlatform,
     Rat,
     RatSchema,
+    Rescue,
     Schema,
     updateRescueCount,
     updateTimestamps,
@@ -18,6 +19,7 @@ winston = require( 'winston' )
 mongoose.Promise = global.Promise
 
 Rat = require( './rat' )
+Rescue = require( './Rescue' )
 
 Schema = mongoose.Schema
 

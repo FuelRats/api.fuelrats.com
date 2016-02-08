@@ -29,12 +29,12 @@ exports.post = function ( request, response, next ) {
   promises = []
 
   user = new User({
-    email: request.body.email
+    email: request.body.email.trim()
   })
 
   if ( request.body.CMDRname ) {
     CMDRfind = Rat.findOne({
-      CMDRname: request.body.CMDRname
+      CMDRname: request.body.CMDRname.trim()
     })
 
     CMDRfind.then( function ( rat ) {
@@ -44,7 +44,7 @@ exports.post = function ( request, response, next ) {
         user.CMDRs.push( rat._id )
       } else {
         ratCreate = Rat.create({
-          CMDRname: request.body.CMDRname
+          CMDRname: request.body.CMDRname.trim()
         })
 
         ratCreate.then( function ( rat ) {
@@ -60,7 +60,7 @@ exports.post = function ( request, response, next ) {
 
   if ( request.body.gamertag ) {
     gamertagFind = Rat.findOne({
-      CMDRname: request.body.gamertag,
+      CMDRname: request.body.gamertag.trim(),
       platform: 'xb'
     })
 
@@ -71,7 +71,7 @@ exports.post = function ( request, response, next ) {
         user.CMDRs.push( rat._id )
       } else {
         ratCreate = Rat.create({
-          CMDRname: request.body.gamertag,
+          CMDRname: request.body.gamertag.trim(),
           platform: 'xb'
         })
 
