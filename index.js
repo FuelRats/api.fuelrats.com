@@ -352,14 +352,12 @@ if ( config.ssl ) {
   }).listen(
     // Non SSL options
     [{
-      port: port,
-      address: hostName
+      port: port
     }],
 
     // SSL options
     [{
-      port: sslPort,
-      address: sslHostName
+      port: sslPort
     }],
 
     function () {
