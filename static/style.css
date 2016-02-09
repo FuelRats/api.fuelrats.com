@@ -2,6 +2,17 @@
   Framework
 \******************************************************************************/
 
+body > .navbar {
+  margin-bottom: 1rem;
+}
+
+.btn-group {
+  display: inline-flex;
+}
+
+table td {
+  white-space: nowrap;
+}
 
 
 
