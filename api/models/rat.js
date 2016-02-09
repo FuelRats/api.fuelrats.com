@@ -54,9 +54,6 @@ RatSchema = new Schema({
       }
     }
   },
-  gamertag: {
-    type: String
-  },
   lastModified: {
     type: Date
   },
