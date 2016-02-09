@@ -1,4 +1,8 @@
 {
+  "hostname": "localhost",
   "port": 8080,
-  "secretSauce": "Your secret goes here!"
+  "secretSauce": "Your secret goes here!",
+  "ssl": true,
+  "sslHostname": "localhost",
+  "sslPort": 4443
 }

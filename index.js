@@ -9,9 +9,11 @@ var _,
     express,
     expressSession,
     fs,
+    hostName,
     http,
     httpServer,
     io,
+    lex,
     LocalStrategy,
     logger,
     login,
@@ -28,8 +30,11 @@ var _,
     register,
     Rescue,
     rescue,
+    request,
     router,
     socket,
+    sslHostName,
+    sslPort,
     version,
     welcome,
     winston,
@@ -52,19 +57,21 @@ expressHandlebars = require( 'express-handlebars' )
 expressSession = require( 'express-session' )
 fs = require( 'fs' )
 http = require( 'http' )
+lex = require( 'letsencrypt-express' ).testing()
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 passport = require( 'passport' )
 path = require( 'path' )
 LocalStrategy = require( 'passport-local' ).Strategy
 winston = require( 'winston' )
+request = require( 'request' );
 ws = require( 'ws' ).Server
 
 // Import config
+config = require( './config-example' )
+
 if ( fs.existsSync( './config.json' ) ) {
-  config = require( './config' )
-} else {
-  config = require( './config-example' )
+  _.extend( config, require( './config' ) )
 }
 
 // Import models
@@ -177,16 +184,18 @@ app.use( passport.session() )
 app.set( 'json spaces', 2 )
 app.set( 'x-powered-by', false )
 
-httpServer = http.Server( app )
+hostName = config.hostname
+sslHostName = config.sslHostname
 
 port = process.env.PORT || config.port
+sslPort = process.env.SSL_PORT || config.sslPort
 
 passport.use( User.createStrategy() )
 passport.serializeUser( User.serializeUser() )
 passport.deserializeUser( User.deserializeUser() )
 
 app.use( expressSession({
-  secret: 'foobarbazdiddlydingdongsdf]08st0agf/b',
+  secret: config.secretSauce,
   resave: false,
   saveUninitialized: false
 }))
@@ -282,6 +291,8 @@ app.use( express.static( __dirname + '/static' ) )
 app.use( '/', router )
 app.use( '/api', router )
 
+httpServer = http.Server( app )
+//=======
 // Send the response
 app.use( function ( request, response, next ) {
   if ( response.model.errors.length ) {
@@ -325,8 +336,51 @@ socket.on( 'connection', function ( client ) {
 // START THE SERVER
 // =============================================================================
 
-module.exports = httpServer.listen( port )
+if ( config.ssl ) {
+    
+    var firstRequestSent = false
+    
+  module.exports = lex.create({
+    approveRegistration: function ( hostname, callback ) {
+      callback( null, {
+        domains: [hostname],
+        email: 'tre@trezy.com',
+        agreeTos: true
+      })
+    },
+    onRequest: app
+  }).listen(
+    // Non SSL options
+    [{
+      port: port
+    }],
 
-if ( !module.parent ) {
-  winston.info( 'Listening for requests on port ' + port + '...' )
+    // SSL options
+    [{
+      port: sslPort
+    }],
+
+    function () {
+      if ( !module.parent ) {
+        if( !firstRequestSent ) {
+            winston.info( 'Starting the Fuel Rats API' )
+            winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
+            
+            // Really, I shouldn't have to do this, but first request _always_ fails.
+            request('https://' + sslHostName + ':' + sslPort + '/welcome', function() {
+                winston.info( 'Firing initial request to generate certificates')
+            })
+            firstRequestSent = true
+        }
+      }
+    }
+  )
+
+} else {
+  module.exports = httpServer.listen( port, function () {
+    if ( !module.parent ) {
+      winston.info( 'Starting the Fuel Rats API' )
+      winston.info( 'Listening for requests on port ' + port + '...' )
+    }
+  })
 }
