@@ -24,81 +24,6 @@ Schema = mongoose.Schema
 
 
 
-linkRats = function ( next ) {
-  var finds, rescue, updates
-
-  finds = []
-  rescue = this
-  updates = []
-
-  rescue.rats = rescue.rats || []
-  rescue.unidentifiedRats = rescue.unidentifiedRats || []
-
-  rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
-    var find
-
-    updates.push( Rat.update({
-      CMDRname: rat
-    }, {
-      $inc: {
-        rescueCount: 1
-      },
-      $push: {
-        rescues: rescue._id
-      }
-    }))
-
-    find = Rat.findOne({
-      CMDRname: rat
-    })
-
-    find.then( function ( rat ) {
-      if ( rat ) {
-        rescue.rats.push( rat._id )
-        rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, rat.CMDRname )
-      }
-    })
-
-    finds.push( find )
-  })
-
-  Promise.all( updates )
-  .then( function () {
-    Promise.all( finds )
-    .then( next )
-    .catch( next )
-  })
-  .catch( next )
-}
-
-normalizePlatform = function ( next ) {
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
-
-  next()
-}
-
-updateTimestamps = function ( next ) {
-  var timestamp
-
-  timestamp = new Date()
-
-  if ( !this.open ) {
-    this.active = false
-  }
-
-  if ( this.isNew ) {
-    this.createdAt = this.createdAt || timestamp
-  }
-
-  this.lastModified = timestamp
-
-  next()
-}
-
-
-
-
-
 RescueSchema = new Schema({
   active: {
     default: true,
@@ -184,6 +109,85 @@ RescueSchema = new Schema({
 }, {
   versionKey: false
 })
+
+
+
+
+
+linkRats = function ( next ) {
+  var finds, rescue, updates
+
+  finds = []
+  rescue = this
+  updates = []
+
+  rescue.rats = rescue.rats || []
+  rescue.unidentifiedRats = rescue.unidentifiedRats || []
+
+  rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
+    var find
+
+    updates.push( mongoose.models.Rat.update({
+      CMDRname: rat
+    }, {
+      $inc: {
+        rescueCount: 1
+      },
+      $push: {
+        rescues: rescue._id
+      }
+    }))
+
+    find = mongoose.models.Rat.findOne({
+      CMDRname: rat
+    })
+
+    find.then( function ( rat ) {
+      if ( rat ) {
+        rescue.rats.push( rat._id )
+        rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, rat.CMDRname )
+      }
+    })
+
+    finds.push( find )
+  })
+
+  Promise.all( updates )
+  .then( function () {
+    Promise.all( finds )
+    .then( next )
+    .catch( next )
+  })
+  .catch( next )
+}
+
+normalizePlatform = function ( next ) {
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
+  next()
+}
+
+updateTimestamps = function ( next ) {
+  var timestamp
+
+  timestamp = new Date()
+
+  if ( !this.open ) {
+    this.active = false
+  }
+
+  if ( this.isNew ) {
+    this.createdAt = this.createdAt || timestamp
+  }
+
+  this.lastModified = timestamp
+
+  next()
+}
+
+
+
+
 
 RescueSchema.pre( 'save', updateTimestamps )
 RescueSchema.pre( 'save', normalizePlatform )
