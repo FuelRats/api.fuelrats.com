@@ -3,7 +3,6 @@ var _,
     moment,
     mongoose,
     normalizePlatform,
-    Rat,
     RatSchema,
     Rescue,
     Schema,
@@ -18,7 +17,6 @@ winston = require( 'winston' )
 
 mongoose.Promise = global.Promise
 
-Rat = require( './rat' )
 Rescue = require( './Rescue' )
 
 Schema = mongoose.Schema
