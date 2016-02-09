@@ -3,5 +3,11 @@ module.exports = {
     args: [
       './bin/compile-docs'
     ]
+  },
+
+  import: {
+    args: [
+      './bin/import'
+    ]
   }
 }
