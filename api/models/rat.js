@@ -17,7 +17,7 @@ winston = require( 'winston' )
 
 mongoose.Promise = global.Promise
 
-Rescue = require( './Rescue' )
+Rescue = require( './rescue' )
 
 Schema = mongoose.Schema
 
