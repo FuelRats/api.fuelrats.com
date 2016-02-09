@@ -1,7 +1,7 @@
 api:
   description: Start the api
   tasks:
-  - 'shell:mongo'
+  - 'docs'
   - 'express'
   - 'watch'
 
@@ -10,9 +10,7 @@ default:
   tasks:
   - 'api'
 
-test:
-  description: Run the tests (non-functional)
+docs:
+  description: Build the docs
   tasks:
-  - 'shell:mongo'
-  - 'shell:apiTest'
-  - 'mochaTest'
+  - 'run:docs'

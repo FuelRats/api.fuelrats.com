@@ -1,9 +1,10 @@
 # api.fuelrats.com
 
+[![node](https://img.shields.io/node/v/api.fuelrats.com.svg?style=flat-square)](https://nodejs.org)
+[![npm](https://img.shields.io/npm/v/api.fuelrats.com.svg?style=flat-square)](https://npmjs.com/)
 [![Dependencies](http://img.shields.io/david/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://david-dm.org/FuelRats/api.fuelrats.com)
 [![Open Github Issues](http://img.shields.io/github/issues/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://github.com/FuelRats/api.fuelrats.com/issues)
 [![Travis CI Build](http://img.shields.io/travis/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://travis-ci.org/FuelRats/api.fuelrats.com)
-![Coveralls Coverage Report](http://img.shields.io/coveralls/FuelRats/api.fuelrats.com.svg?style=flat-square)
 
 ## Setting up
 
@@ -28,8 +29,8 @@ Once Vagrant finishes doing its thing you should be able to hit the API at `http
 So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
 
 1. [`nvm`](https://github.com/creationix/nvm)
-1. [`MongoDB`](https://www.mongodb.com/)
-1. [`Elasticsearch`](https://www.elastic.co/)
+1. [`MongoDB v2.6.5+`](https://www.mongodb.com/)
+1. [`Elasticsearch v2.0.0+`](https://www.elastic.co/)
   * Java
 
 Next, we need to make sure that MongoDB and Elasticsearch are running before starting the API. We've got a [handy dandy script](bin/mongo.sh) that will start Mongo as a service which should work on both Linux and Mac OS X. If you're on Windows, figure it out yourself.
@@ -67,4 +68,11 @@ To work for realsies you need to copy the `config-example.json` file and update 
 
     cp config-example.json config.json
 
+
 The `npm run dev` task starts the API and will automatically restart it when you change a file. Simply kill the process when you're done. Good luck, and may the force be with you.
+
+## Generating the docs
+
+It's so easy a DerryBear could do it! Just run the generator script:
+
+    node bin/compile-docs.js

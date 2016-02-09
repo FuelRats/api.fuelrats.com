@@ -1,4 +1,13 @@
 module.exports = {
+  docs: {
+    files: [
+      'docs/**/*.apib'
+    ],
+    tasks: [
+      'docs'
+    ]
+  },
+
   express: {
     files: [
       'index.js',
@@ -7,6 +16,8 @@ module.exports = {
     options: {
       spawn: false
     },
-    tasks: [ 'express:dev' ]
+    tasks: [
+      'express:dev'
+    ]
   }
 }

@@ -1,36 +1,42 @@
-var modelProperties, mongoose, passportLocalMongoose, Rat, Schema, UserSchema;
+var autopopulate, mongoose, Rat, Schema, UserSchema
 
-mongoose = require( 'mongoose' );
-passportLocalMongoose = require( 'passport-local-mongoose' );
-Rat = require( './rat' );
-Schema = mongoose.Schema;
+mongoose = require( 'mongoose' )
 
-modelProperties = {
+mongoose.Promise = global.Promise
+
+Rat = require( './rat' )
+
+Schema = mongoose.Schema
+
+UserSchema = new Schema({
   email: String,
   password: String,
   CMDRs: {
     default: [],
     type: [{
-      autopopulate: true,
       type: Schema.Types.ObjectId,
       ref: 'Rat'
     }]
   }
-};
+})
 
-UserSchema = new Schema( modelProperties );
+autopopulate = function ( next ) {
+  this.populate( 'CMDRs' )
+  next()
+}
+
+UserSchema.pre( 'find', autopopulate)
+UserSchema.pre( 'findOne', autopopulate)
 
 UserSchema.methods.toJSON = function () {
-  obj = this.toObject();
-  delete obj.hash;
-  delete obj.salt;
-  return obj;
-};
+  obj = this.toObject()
+  delete obj.hash
+  delete obj.salt
+  return obj
+}
 
-//UserSchema.plugin( require( 'mongoose-autopopulate' ) );
-
-UserSchema.plugin( passportLocalMongoose, {
+UserSchema.plugin( require( 'passport-local-mongoose' ), {
   usernameField: 'email'
-});
+})
 
-module.exports = mongoose.model( 'User', UserSchema );
+module.exports = mongoose.model( 'User', UserSchema )

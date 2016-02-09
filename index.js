@@ -5,12 +5,12 @@ var _,
     config,
     cookieParser,
     cors,
-    docket,
     docs,
     express,
     expressSession,
     fs,
-    http,
+    hostName,
+    https,
     httpServer,
     io,
     lex,
@@ -20,7 +20,6 @@ var _,
     logout,
     moment,
     mongoose,
-    notAllowed,
     options,
     paperwork,
     passport,
@@ -31,8 +30,10 @@ var _,
     register,
     Rescue,
     rescue,
+    request,
     router,
     socket,
+    sslHostName,
     sslPort,
     version,
     welcome,
@@ -51,8 +52,6 @@ _ = require( 'underscore' )
 bodyParser = require( 'body-parser' )
 cors = require( 'cors' )
 cookieParser = require( 'cookie-parser' )
-// docket = require( './docket.js' )
-docs = require( 'express-mongoose-docs' )
 express = require( 'express' )
 expressHandlebars = require( 'express-handlebars' )
 expressSession = require( 'express-session' )
@@ -65,10 +64,8 @@ passport = require( 'passport' )
 path = require( 'path' )
 LocalStrategy = require( 'passport-local' ).Strategy
 winston = require( 'winston' )
+request = require( 'request' );
 ws = require( 'ws' ).Server
-
-// Import additional schema types
-require( 'mongoose-moment' )( mongoose )
 
 // Import config
 config = require( './config-example' )
@@ -84,12 +81,14 @@ User = require( './api/models/user' )
 
 // Import controllers
 badge = require( './api/controllers/badge' )
+docs = require( './api/controllers/docs' )
 login = require( './api/controllers/login' )
 logout = require( './api/controllers/logout' )
 paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
+rescueAdmin = require( './api/controllers/rescueAdmin' )
 version = require( './api/controllers/version' )
 welcome = require( './api/controllers/welcome' )
 
@@ -107,12 +106,6 @@ options = {
 
 // SHARED METHODS
 // =============================================================================
-
-// Function for disallowed methods
-notAllowed = function notAllowed ( request, response ) {
-  response.status( 405 )
-  response.send()
-}
 
 // Add a broadcast method for websockets
 ws.prototype.broadcast = function ( data ) {
@@ -191,6 +184,9 @@ app.use( passport.session() )
 app.set( 'json spaces', 2 )
 app.set( 'x-powered-by', false )
 
+hostName = config.hostname
+sslHostName = config.sslHostname
+
 port = process.env.PORT || config.port
 sslPort = process.env.SSL_PORT || config.sslPort
 
@@ -206,12 +202,23 @@ app.use( expressSession({
 app.use( passport.initialize() )
 app.use( passport.session() )
 
-docs( app, mongoose )
-// docket( app, mongoose )
-
 // Combine query parameters with the request body, prioritizing the body
 app.use( function ( request, response, next ) {
   request.body = _.extend( request.query, request.body )
+
+  response.model = {
+    data: {},
+    errors: [],
+    links: {
+      self: request.originalUrl
+    },
+    meta: {
+      method: request.method,
+      params: _.extend( request.query, request.body ),
+      timestamp: new Date().toISOString()
+    }
+  }
+
   next()
 })
 
@@ -222,7 +229,7 @@ if ( options.logging || options.test ) {
     winston.info( 'TIMESTAMP:', Date.now() )
     winston.info( 'ENDPOINT:', request.originalUrl )
     winston.info( 'METHOD:', request.method )
-    winston.info( 'DATA:', request.body )
+    winston.info( 'DATA:', response.model.meta.params )
     next()
   })
 }
@@ -246,44 +253,38 @@ router = express.Router()
 
 router.get( '/badge/:rat', badge.get )
 
-router.get( '/register', register.get )
 router.post( '/register', register.post )
 
-router.get( '/login', login.get )
 router.post( '/login', passport.authenticate( 'local' ), login.post )
 
 router.get( '/logout', logout.post )
 router.post( '/logout', logout.post )
 
-router.get( '/paperwork', paperwork.get )
-
-router.get( '/welcome', welcome.get )
-
-router.get( '/rats/:id', rat.get )
-router.post( '/rats/:id', rat.post )
-router.put( '/rats/:id', rat.put )
-router.delete( '/rats/:id', notAllowed )
-
 router.get( '/rats', rat.get )
 router.post( '/rats', rat.post )
-router.put( '/rescues', notAllowed )
-router.delete( '/rescues', notAllowed )
-
-router.get( '/rescues/:id', rescue.get )
-router.post( '/rescues/:id', rescue.post )
-router.put( '/rescues/:id', rescue.put )
-router.delete( '/rescues/:id', notAllowed )
+router.get( '/rats/:id', rat.getById )
+router.put( '/rats/:id', rat.put )
 
 router.get( '/rescues', rescue.get )
 router.post( '/rescues', rescue.post )
-router.put( '/rescues', notAllowed )
-router.delete( '/rescues', notAllowed )
+router.get( '/rescues/:id', rescue.getById )
+router.put( '/rescues/:id', rescue.put )
 
 router.get( '/search/rescues', rescue.get )
-
 router.get( '/search/rats', rat.get )
 
-router.get( '/version', version.get)
+router.get( '/version', version.get )
+
+router.get( '/docs', docs.get )
+router.get( '/login', login.get )
+router.get( '/paperwork', paperwork.get )
+router.get( '/register', register.get )
+router.get( '/welcome', welcome.get )
+
+router.get( '/rescue/:id', rescueAdmin.viewRescue )
+router.get( '/admin/rescues', rescueAdmin.listRescues )
+router.get( '/admin/rescues/:page', rescueAdmin.listRescues )
+router.get( '/admin/rescue/:id', rescueAdmin.editRescue )
 
 // Register routes
 app.use( express.static( __dirname + '/static' ) )
@@ -291,6 +292,17 @@ app.use( '/', router )
 app.use( '/api', router )
 
 httpServer = http.Server( app )
+//=======
+// Send the response
+app.use( function ( request, response, next ) {
+  if ( response.model.errors.length ) {
+    delete response.model.data
+  } else {
+    delete response.model.errors
+  }
+
+  response.send( response.model )
+})
 
 
 
@@ -303,7 +315,7 @@ socket = new ws({ server: httpServer })
 
 socket.on( 'connection', function ( client ) {
   client.send( JSON.stringify({
-    data: 'Welcome to the Fuel Rats API. You can check out the docs at absolutely fucking nowhere because Trezy is lazy.',
+    data: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.',
     type: 'welcome'
   }))
 
@@ -325,6 +337,9 @@ socket.on( 'connection', function ( client ) {
 // =============================================================================
 
 if ( config.ssl ) {
+    
+    var firstRequestSent = false
+    
   module.exports = lex.create({
     approveRegistration: function ( hostname, callback ) {
       callback( null, {
@@ -334,24 +349,31 @@ if ( config.ssl ) {
       })
     },
     onRequest: app
-
   }).listen(
     // Non SSL options
     [{
       port: port,
-      address: 'localhost'
+      address: hostName
     }],
 
     // SSL options
     [{
       port: sslPort,
-      address: 'localhost'
+      address: sslHostName
     }],
 
     function () {
       if ( !module.parent ) {
-//        winston.info( 'Starting the Fuel Rats API' )
-//        winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
+        if( !firstRequestSent ) {
+            winston.info( 'Starting the Fuel Rats API' )
+            winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
+            
+            // Really, I shouldn't have to do this, but first request _always_ fails.
+            request('https://' + sslHostName + ':' + sslPort + '/welcome', function() {
+                winston.info( 'Firing initial request to generate certificates')
+            })
+            firstRequestSent = true
+        }
       }
     }
   )

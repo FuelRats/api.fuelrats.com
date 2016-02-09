@@ -1,0 +1,17 @@
+# Group Version
+
+## Server Version Information [GET /version]
+
+Retrieves the package version and the current commit hash of the server
+
+Scope: public
+
++ Response 200 (application/json)
+  + Attributes
+    + links (Link) - Links
+    + data (Version) - Version Data
+
+# Data Structures
+## Version (object)
++ commit: `15092bc4445c77a506457350a6a300e50dcb4b47` (string) - The commit hash of the current server version
++ version: `0.4.1` (string) - The current package version of the server

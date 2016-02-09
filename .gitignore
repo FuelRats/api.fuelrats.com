@@ -1,6 +1,5 @@
 ### Project ###
 .vagrant/
-api/docs/
 data/
 test/bundle.js
 config.json
@@ -107,3 +106,5 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+views/docs.hbs

@@ -1,4 +1,17 @@
-var _, csv, download, downloads, destination, filename, fs, linkModels, moment, mongoose, processRats, processRescues, Rat, ratSheet, removeArchives, winston
+var _,
+    csv,
+    download,
+    downloads,
+    destination,
+    filename,
+    fs,
+    mongoose,
+    processRats,
+    processRescues,
+    Rat,
+    ratSheet,
+    removeArchives,
+    winston
 
 
 
@@ -9,16 +22,15 @@ _ = require( 'underscore' )
 csv = require( 'csv' )
 download = require( 'download' )
 fs = require( 'fs' )
-moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 winston = require( 'winston' )
-require( 'mongoose-moment' )( mongoose )
 
 // Mongoose Models
 Rat = require( '../api/models/rat' )
 Rescue = require( '../api/models/rescue' )
 
 mongoose.Promise = global.Promise
+mongoose.set( 'debug', true )
 
 // Google Sheet URLs
 spreadsheets = {
@@ -52,78 +64,6 @@ mongoose.connect( 'mongodb://localhost/fuelrats' )
 
 
 
-linkModels = function () {
-  var linkedRatsCount, linkedRescuesCount, ratFind
-
-  winston.info( 'Linking models' )
-
-  linkedRatsCount = 0
-  linkedRescuesCount = 0
-
-  return new Promise( function ( resolve, reject ) {
-    var rats, rescues, saves
-
-    rats = []
-    rescues = []
-    saves = []
-
-    Rat.find({})
-    .then( function ( ratData ) {
-      var rescueFinds
-
-      rescueFinds = []
-
-      ratData.forEach( function ( ratDatum, index, ratData ) {
-        rescueFinds.push( Rescue.find( { tempRats: ratDatum.CMDRname } ) )
-      })
-
-      Promise.all( rescueFinds )
-      .then( function ( results ) {
-        results.forEach( function ( rescueData, index, results ) {
-          var ratDatum
-
-          ratDatum = ratData[index]
-
-          if ( rescueData.length ) {
-            linkedRatsCount = linkedRatsCount + 1
-            linkedRescuesCount = linkedRescuesCount + rescueData.length
-
-            rescueData.forEach( function ( rescueDatum, index, rescueData ) {
-//              winston.info( 'Linking rat', ratDatum.CMDRname, 'to rescue', rescueDatum._id )
-
-              rescueDatum.tempRats = []
-              rescueDatum.rats.push( ratDatum._id )
-              ratDatum.rescues.push( rescueDatum._id )
-              saves.push( rescueDatum.save() )
-            })
-
-            saves.push( ratDatum.save() )
-          }
-        })
-
-//        saves.push( Rat.collection.save( rats ) )
-//        saves.push( Rescue.collection.save( rescues ) )
-
-        Promise.all( saves )
-        .then( function () {
-          winston.info( 'done!' )
-          resolve({
-            rats: linkedRatsCount,
-            rescues: linkedRescuesCount
-          })
-        })
-        .catch( reject )
-      })
-      .catch( reject )
-    })
-    .catch( reject )
-  })
-}
-
-
-
-
-
 processRats = function ( ratData, rescueDrills, dispatchDrills ) {
   winston.info( 'Processing rats' )
 
@@ -141,7 +81,8 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
           dispatch: false,
           rescue: false
         },
-        joined: moment( new Date( ratDatum[0] ) || new Date ),
+        joined: new Date( ratDatum[0] ) || new Date,
+        platform: 'pc',
         rescues: []
       }
 
@@ -162,17 +103,29 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
       }
 
       if ( rat.CMDRname ) {
-        rats.push( rat )
+        rats.push( new Promise( function ( resolve, reject ) {
+          Rat.find({
+            CMDRname: rat.CMDRname,
+            platform: rat.platform
+          })
+          .then( function ( rats ) {
+            if ( !rats.length ) {
+              new Rat( rat )
+              .save()
+              .then( resolve )
+              .catch( reject )
+            } else {
+              resolve()
+            }
+          })
+          .catch( reject )
+        }))
       }
     })
 
-    Rat.collection.insert( rats, function ( error, rats ) {
-      if ( error ) {
-        return reject( error )
-      }
-
-      resolve()
-    })
+    Promise.all( rats )
+    .then( resolve )
+    .catch( reject )
   })
 }
 
@@ -193,29 +146,21 @@ processRescues = function ( rescuesData ) {
 
       rescue = {
         archive: true,
-        createdAt: moment( new Date( rescueDatum[0] ) ),
+        createdAt: new Date( rescueDatum[0] ),
         notes: rescueDatum[4],
         open: false,
         rats: [],
-        tempRats: [rescueDatum[1]],
+        unidentifiedRats: [rescueDatum[1]],
         successful: rescueDatum[3].toLowerCase() === 'successful' ? true : false,
         system: rescueDatum[2]
       }
 
-      rescues.push( Rescue.create( rescue ) )
+      rescues.push( new Rescue( rescue ).save() )
     })
 
     Promise.all( rescues )
     .then( resolve )
     .catch( reject )
-
-//    Rescue.collection.insert( rescues, function ( error ) {
-//      if ( error ) {
-//        return reject( error )
-//      }
-//
-//      resolve ()
-//    })
   })
 }
 
@@ -302,49 +247,39 @@ Promise.all( downloads )
     promises = []
 
     processRats( rats, rescueDrills, dispatchDrills )
-    .then( processRescues( rescues ) )
     .then( function () {
-      var promises
-
-      promises = []
-
-      promises.push( Rat.count({}) )
-      promises.push( Rescue.count({}) )
-
+      return processRescues( rescues )
+    })
+    .then( function () {
       Promise.all( promises )
-      .then( function ( results ) {
-        var newRatCount, newRescuesCount, oldRatCount, oldRescuesCount
+      .then( function () {
+        var promises
 
-        newRatCount = rats.length
-        newRescuesCount = rescues.length
-        oldRatCount = results[0]
-        oldRescuesCount = results[1]
+        promises = []
 
-        linkModels()
-        .then( function ( counts ) {
+        promises.push( Rat.count({}) )
+        promises.push( Rescue.count({}) )
+
+        Promise.all( promises )
+        .then( function ( results ) {
+          var newRatCount, newRescuesCount, oldRatCount, oldRescuesCount
+
+          newRatCount = rats.length
+          newRescuesCount = rescues.length
+          oldRatCount = results[0]
+          oldRescuesCount = results[1]
+
           winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
           winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
-          winston.info( 'Linked', counts.rescues, 'rescues to', counts.rats, 'rats' )
 
           mongoose.disconnect()
-
-        }).catch( function( error ) {
-            winston.error( error )
-            mongoose.disconnect()
         })
+        .catch( winston.error )
       })
-      .catch( function ( error ) {
-        winston.error( error )
-      })
+      .catch( winston.error )
     })
-    .catch( function ( error ) {
-      winston.error( error )
-    })
+    .catch( winston.error )
   })
-  .catch( function ( error ) {
-    winston.error( error )
-  })
+  .catch( winston.error )
 })
-.catch( function ( error ) {
-  winston.error( error )
-})
+.catch( winston.error )

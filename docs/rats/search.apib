@@ -1,0 +1,24 @@
+## Search Rats [GET /rats/{?platform,drilled.rescue}]
+
+Search records of rats by matching fields
+
+Scope: public
+
++ Parameters
+  + id: `56a8c2bc9b884b56e9cfe8ba` (string, optional) - Return records where the ID matches
+  + archive: `true` (boolean, optional) - Return records of rats that are archived
+  + CMDRname: `Trezy` (string, optional) - Return records where the in-game username of this rat matches
+  + createdAt: `2015-07-15T22%3A00%3A00.000Z` (string, optional) - Return records where the created date of the rat matches
+  + drilled.dispatch: `true` (boolean, optional) - Return records of rats that are drilled for dispatching
+  + drilled.rescue: `true` (boolean, optional) - Return records of rats that are drilled for rescuing
+  + gamertag: `Trezy` (string, optional) - Return records of rats with a matching gamertag
+  + lastModified: `2016-01-26T20%3A22%3A47.643Z` (string, optional) - Return records where the last modified date matches
+  + joined: `2015-07-15T22%3A00%3A00.000Z` (string, optional) - Return records where the join date of the rat matches
+  + nickname: `Trezy` (string, optional) - Return records where the IRC nickname of the rat matches
+  + platform: `pc` (string, optional) - Return records where the platform of the rat matches
+
++ Response 200 (application/json)
+  + Attributes
+    + links (Link) - Links
+    + meta (Meta) - Statistics on the current result
+    + data (array[Rat]) - A list of rats

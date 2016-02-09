@@ -1,0 +1,17 @@
+## User Registration [POST /register]
+
+Register a new user with the API
+
+Scope: public
+
++ Request (application/json)
+  + Attributes
+    + email: `surly.badger@fuelrats.com` (string, required) - The email of the new user
+    + password: `P455w0rd` (string, required) - The password of the new user
+    + CMDRname: `Surly Badger` (string) - The CMDRname of the user's PC **Elite: Dangerous** character
+    + gamertag: `DerryBear` (string) - The CMDRname of the user's Xbox One **Elite: Dangerous** character
+
++ Response 201 (application/json)
+  + Attributes
+    + links (Link) - Links
+    + data (User) - Information about the new user

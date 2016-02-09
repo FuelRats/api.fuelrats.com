@@ -23,51 +23,71 @@ exports.get = function ( request, response ) {
 
 
 
-exports.post = function ( request, response ) {
-  var finds, ratData
+exports.post = function ( request, response, next ) {
+  var CMDRfind, gamertagFind, promises, ratData
 
-  finds = []
+  promises = []
 
   user = new User({
-    email: request.body.email
+    email: request.body.email.trim()
   })
 
   if ( request.body.CMDRname ) {
-    finds.push( Rat.find({
-      CMDRname: request.body.CMDRname
-    }))
+    CMDRfind = Rat.findOne({
+      CMDRname: request.body.CMDRname.trim()
+    })
+
+    CMDRfind.then( function ( rat ) {
+      var ratCreate
+
+      if ( rat ) {
+        user.CMDRs.push( rat._id )
+      } else {
+        ratCreate = Rat.create({
+          CMDRname: request.body.CMDRname.trim()
+        })
+
+        ratCreate.then( function ( rat ) {
+          user.CMDRs.push( rat._id )
+        })
+
+        promises.push( ratCreate )
+      }
+    })
+
+    promises.push( CMDRfind )
   }
 
   if ( request.body.gamertag ) {
-    finds.push( Rat.find({
-      CMDRname: request.body.gamertag,
+    gamertagFind = Rat.findOne({
+      CMDRname: request.body.gamertag.trim(),
       platform: 'xb'
-    }))
+    })
+
+    gamertagFind.then( function ( rat ) {
+      var ratCreate
+
+      if ( rat ) {
+        user.CMDRs.push( rat._id )
+      } else {
+        ratCreate = Rat.create({
+          CMDRname: request.body.gamertag.trim(),
+          platform: 'xb'
+        })
+
+        ratCreate.then( function ( rat ) {
+          user.CMDRs.push( rat._id )
+        })
+
+        promises.push( ratCreate )
+      }
+    })
+
+    promises.push( gamertagFind )
   }
 
-  Promise.all( finds )
-  .then( function ( results ) {
-    if ( results.length ) {
-      results.forEach( function ( result, index, results ) {
-        if ( result.length ) {
-          user.CMDRs.push( result[0] )
-        }
-      })
-    }
-
-    if ( request.body.CMDRname && _.findWhere( user.CMDRs, { CMDRname: request.body.CMDRname } ) ) {
-      user.CMDRs.push( new Rat({
-        CMDRname: request.body.CMDRname
-      }))
-    }
-
-    if ( request.body.gamertag && _.findWhere( user.CMDRs, { CMDRname: request.body.gamertag } ) ) {
-      user.CMDRs.push( new Rat({
-        CMDRname: request.body.gamertag,
-        platform: 'xb'
-      }))
-    }
-
+  Promise.all( promises )
+  .then( function () {
     User.register( user, request.body.password, function ( error, user ) {
       var auth, saves
 
@@ -79,12 +99,9 @@ exports.post = function ( request, response ) {
       }
 
       user.CMDRs.forEach( function ( CMDR, index, CMDRs ) {
-        if ( CMDR._id ) {
+        if ( CMDR.archive ) {
           CMDR.archive = false
           saves.push( CMDR.save() )
-
-        } else {
-          saves.push( Rat.create( CMDR ) )
         }
       })
 
@@ -93,32 +110,20 @@ exports.post = function ( request, response ) {
         auth = passport.authenticate( 'local' )
 
         auth( request, response, function () {
-          var referer, responseModel, status
-
-          responseModel = {
-            links: {
-              self: request.originalUrl
-            }
-          }
+          var referer, status
 
           if ( error ) {
-            responseModel.errors = []
-            responseModel.errors.push( error )
-            status = 400
+            response.model.errors = []
+            response.model.errors.push( error )
+            response.status( 400 )
 
           } else {
             user.rat = rat
-            responseModel.data = user
-            status = 200
+            response.model.data = user
+            response.status( 200 )
           }
 
-          if ( referer = request.get( 'Referer' ) ) {
-            response.redirect( '/welcome' )
-
-          } else {
-            response.status( status )
-            response.json( responseModel )
-          }
+          next()
         })
       })
       .catch( function ( error ) {

@@ -1,14 +1,29 @@
-var moment, mongoose, RatSchema, Rescue, Schema, User, winston
+var _,
+    linkRescues,
+    moment,
+    mongoose,
+    normalizePlatform,
+    RatSchema,
+    Rescue,
+    Schema,
+    updateRescueCount,
+    updateTimestamps,
+    winston
 
+_ = require( 'underscore' )
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
-mongoosastic = require( 'mongoosastic' )
 winston = require( 'winston' )
 
+mongoose.Promise = global.Promise
+
 Rescue = require( './rescue' )
-User = require( './user' )
 
 Schema = mongoose.Schema
+
+
+
+
 
 RatSchema = new Schema({
   archive: {
@@ -19,7 +34,7 @@ RatSchema = new Schema({
     type: String
   },
   createdAt: {
-    type: 'Moment'
+    type: Date
   },
   data: {
     default: {},
@@ -39,15 +54,12 @@ RatSchema = new Schema({
       }
     }
   },
-  gamertag: {
-    type: String
-  },
   lastModified: {
-    type: 'Moment'
+    type: Date
   },
   joined: {
     default: Date.now(),
-    type: 'Moment'
+    type: Date
   },
   nicknames: {
     type: [String]
@@ -66,6 +78,11 @@ RatSchema = new Schema({
       ref: 'Rescue'
     }]
   },
+  rescueCount: {
+    default: 0,
+    index: true,
+    type: Number
+  },
   user: {
     type: Schema.Types.ObjectId,
     ref: 'User'
@@ -74,35 +91,81 @@ RatSchema = new Schema({
   versionKey: false
 })
 
-RatSchema.pre( 'save', function ( next ) {
+
+
+
+
+linkRescues = function ( next ) {
+  var rat
+
+  rat = this
+
+  rat.rescues = rat.rescues || []
+
+  mongoose.models.Rescue.update({
+    unidentifiedRats: rat.CMDRname
+  }, {
+    $pull: {
+      unidentifiedRats: rat.CMDRname
+    },
+    $push: {
+      rats: rat._id
+    }
+  })
+  .then( function () {
+    mongoose.models.Rescue.find({
+      unidentifiedRats: rat.CMDRname
+    })
+    .then( function ( rescues ) {
+      rescues.forEach( function ( rescue, index, rescues ) {
+        this.rescues.push( rescue._id )
+      })
+
+      next()
+    })
+    .catch( next )
+  })
+}
+
+normalizePlatform = function ( next ) {
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
+  next()
+}
+
+updateTimestamps = function ( next ) {
   var timestamp
 
-  // Dealing with timestamps
-  timestamp = moment()
+  timestamp = new Date()
+
+  if ( !this.open ) {
+    this.active = false
+  }
 
   if ( this.isNew ) {
     this.createdAt = this.createdAt || timestamp
-    this.joined = this.joined || timestamp
   }
 
   this.lastModified = timestamp
 
-  // Dealing with platforms
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
-
   next()
-})
+}
 
-//RatSchema.post( 'init', function ( doc ) {
-//  doc.createdAt = doc.createdAt.valueOf()
-//  doc.lastModified = doc.lastModified.valueOf()
-//})
+
+
+
+
+RatSchema.pre( 'save', updateTimestamps )
+RatSchema.pre( 'save', normalizePlatform )
+RatSchema.pre( 'save', linkRescues )
+
+RatSchema.pre( 'update', updateTimestamps )
 
 RatSchema.set( 'toJSON', {
   virtuals: true
 })
 
-RatSchema.plugin( mongoosastic )
+RatSchema.plugin( require( 'mongoosastic' ) )
 
 if ( mongoose.models.Rat ) {
   module.exports = mongoose.model( 'Rat' )

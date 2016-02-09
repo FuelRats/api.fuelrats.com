@@ -1,13 +1,28 @@
-var moment, mongoose, Rat, RescueSchema, Schema, winston
+var _,
+    linkRats,
+    moment,
+    mongoose,
+    normalizePlatform,
+    Rat,
+    RescueSchema,
+    Schema,
+    updateTimestamps,
+    winston
 
+_ = require( 'underscore' )
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
-mongoosastic = require( 'mongoosastic' )
 winston = require( 'winston' )
+
+mongoose.Promise = global.Promise
 
 Rat = require( './rat' )
 
 Schema = mongoose.Schema
+
+
+
+
 
 RescueSchema = new Schema({
   active: {
@@ -34,14 +49,20 @@ RescueSchema = new Schema({
     type: Boolean
   },
   createdAt: {
-    type: 'Moment'
+    type: Date
   },
   epic: {
     default: false,
     type: Boolean
   },
+  firstLimpet: {
+    type: {
+      type: Schema.Types.ObjectId,
+      ref: 'Rat'
+    }
+  },
   lastModified: {
-    type: 'Moment'
+    type: Date
   },
   open: {
     default: true,
@@ -73,7 +94,8 @@ RescueSchema = new Schema({
       ref: 'Rat'
     }]
   },
-  tempRats: {
+  unidentifiedRats: {
+    default: [],
     type: [{
       type: String
     }]
@@ -88,11 +110,67 @@ RescueSchema = new Schema({
   versionKey: false
 })
 
-RescueSchema.pre( 'save', function ( next ) {
+
+
+
+
+linkRats = function ( next ) {
+  var finds, rescue, updates
+
+  finds = []
+  rescue = this
+  updates = []
+
+  rescue.rats = rescue.rats || []
+  rescue.unidentifiedRats = rescue.unidentifiedRats || []
+
+  rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
+    var find
+
+    updates.push( mongoose.models.Rat.update({
+      CMDRname: rat
+    }, {
+      $inc: {
+        rescueCount: 1
+      },
+      $push: {
+        rescues: rescue._id
+      }
+    }))
+
+    find = mongoose.models.Rat.findOne({
+      CMDRname: rat
+    })
+
+    find.then( function ( rat ) {
+      if ( rat ) {
+        rescue.rats.push( rat._id )
+        rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, rat.CMDRname )
+      }
+    })
+
+    finds.push( find )
+  })
+
+  Promise.all( updates )
+  .then( function () {
+    Promise.all( finds )
+    .then( next )
+    .catch( next )
+  })
+  .catch( next )
+}
+
+normalizePlatform = function ( next ) {
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
+  next()
+}
+
+updateTimestamps = function ( next ) {
   var timestamp
 
-  // Dealing with timestamps
-  timestamp = moment()
+  timestamp = new Date()
 
   if ( !this.open ) {
     this.active = false
@@ -104,22 +182,24 @@ RescueSchema.pre( 'save', function ( next ) {
 
   this.lastModified = timestamp
 
-  // Dealing with platforms
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
-
   next()
-})
+}
 
-//RescueSchema.post( 'init', function ( doc ) {
-//  doc.createdAt = doc.createdAt.valueOf()
-//  doc.lastModified = doc.lastModified.valueOf()
-//})
+
+
+
+
+RescueSchema.pre( 'save', updateTimestamps )
+RescueSchema.pre( 'save', normalizePlatform )
+RescueSchema.pre( 'save', linkRats )
+
+RescueSchema.pre( 'update', updateTimestamps )
 
 RescueSchema.set( 'toJSON', {
   virtuals: true
 })
 
-RescueSchema.plugin( mongoosastic )
+RescueSchema.plugin( require( 'mongoosastic' ) )
 
 if ( mongoose.models.Rescue ) {
   module.exports = mongoose.model( 'Rescue' )

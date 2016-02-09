@@ -1,0 +1,21 @@
+## Rescue (object)
+
++ id: `56a78141f9fbac397a27ab3e` (number) - The ID for this rescue
++ active: `true` (boolean) - This rescue is currently active
++ archive: `false` (boolean) - This rescue is archived
++ client: (Client, required) - The client being rescued
++ codeRed: (boolean) - Whether this case is a code-red/case-red
++ createdAt: `2015-07-15T22:00:00.000Z` (string, required) - The timestamp for when this entry was created
++ epic: `false` (boolean) - Whether this case is nominated as epic
++ lastModified: `2016-01-26T20:22:47.643Z` (string, required) - The timestamp for when this entry was last modified
++ open: `true` (boolean) - Whether this case is currently open
++ notes: `Instancing problems, 2 jumps to client unsuccessful, met in SC and jumped together to normal space. Worked.` (string) - Any eventual notes about this rescued
++ platform: `pc` (string) - The platform the client is on
++ quotes: `RATSIGNAL HYDRAE SECTOR ZU-Y B2 PC` (array[string]) - IRC messages captured from the client
++ rats: `Trezy` (array[string], required) - The CMDRnames of the rats that are part of this rescue operation
++ successful: (boolean) - Whether the rescue was successful
++ system: `HYDRAE SECTOR ZU-Y B2` (string) - The system of the client
+
+## Client (object)
++ nicname: `Mogwai` (string, required) - The IRC nickname of the client
++ CMDRname: `Mogwai` (string) - The in-game username of the client

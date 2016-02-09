@@ -1,46 +1,24 @@
-var config, fs, Handlebars, templates;
+var aglio, options, path, winston
 
+aglio = require( 'aglio' )
+path = require( 'path' )
+winston = require( 'winston' )
 
+destination = path.join( __dirname + '/../views/docs.hbs' )
+options = {
+  themeVariables: 'flatly'
+}
+source = path.join( __dirname + '/../docs/index.apib' )
 
+console.log( source )
+console.log( destination )
 
-
-fs = require( 'fs' );
-Handlebars = require( 'handlebars' );
-
-Handlebars.templates = {};
-config = require( '../config.json' )
-extension = 'hbs';
-
-
-
-
-
-fs.readdirSync( config.templatesFolder ).forEach( function ( templatePath ) {
-  var templateName;
-
-  if ( templatePath.substring( templatePath.length, templatePath.length - extension.length ) === extension ) {
-    templateName = templatePath.substr( 0, templatePath.length - extension.length - 1 );
-
-    if ( !Handlebars.templates[templateName] ) {
-      Handlebars.templates[templateName] = Handlebars.compile( fs.readFileSync( config.templatesFolder + templatePath ).toString( 'utf-8' ) );
-    }
+aglio.renderFile( source, destination, options, function ( error, warnings ) {
+  if ( error ) {
+    return winston.error( error )
   }
-});
 
-fs.readdirSync( config.templatesFolder + config.partialsFolder ).forEach( function ( templatePath ) {
-  var templateName;
-
-  if ( templatePath.substring( templatePath.length, templatePath.length - extension.length ) === extension ) {
-    templateName = templatePath.substr( 0, templatePath.length - extension.length - 1 );
-
-    Handlebars.registerPartial( templateName, fs.readFileSync( config.templatesFolder + config.partialsFolder + templatePath ).toString( 'utf-8' ) );
+  if ( warnings ) {
+    winston.warn( warnings )
   }
-});
-
-console.log( Handlebars.templates );
-
-
-
-
-
-return;
+})

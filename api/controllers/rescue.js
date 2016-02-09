@@ -1,11 +1,14 @@
-var _, Rescue, rescue, save, winston
+var _, ErrorModels, handleError, mongoose, Rat, Rescue, rescue, save, winston
 
 
 
 
 
 _ = require( 'underscore' )
+mongoose = require( 'mongoose' )
 winston = require( 'winston' )
+
+Rat = require( '../models/rat' )
 Rescue = require( '../models/rescue' )
 ErrorModels = require( '../errors' )
 
@@ -13,104 +16,134 @@ ErrorModels = require( '../errors' )
 
 
 
+// SHARED FUNCTIONS
+// =============================================================================
+handleError = function ( error ) {
+  errorTypes = Object.keys( error.errors )
+
+  console.error( errorTypes )
+
+  for ( var i = 0; i < errorTypes.length; i++ ) {
+    var errorModel, errorType
+
+    errorType = errorTypes[i]
+    error = error.errors[errorType].properties
+
+    if ( error.type === 'required' ) {
+      errorModel = ErrorModels['missing_required_field']
+    }
+
+    errorModel.detail = 'You\'re missing the required field: ' + error.path
+
+    response.model.errors.push( errorModel )
+  }
+}
+
+
+
+
+
 // GET
 // =============================================================================
-exports.get = function ( request, response ) {
-  var filter, id, query, responseModel
+exports.get = function ( request, response, next ) {
+  var filter, query
 
-  responseModel = {
-    links: {
-      self: request.originalUrl
+  filter = {}
+  query = {}
+
+  filter.size = parseInt( request.body.limit ) || 25
+  delete request.body.limit
+
+  filter.from = parseInt( request.body.offset ) || 0
+  delete request.body.offset
+
+  for ( var key in request.body ) {
+    if ( key === 'q' ) {
+      query.query_string = {
+        query: request.body.q
+      }
+    } else {
+      if ( !query.bool ) {
+        query.bool = {
+          should: []
+        }
+      }
+
+      term = {}
+      term[key] = {
+        query: request.body[key],
+        fuzziness: 'auto'
+      }
+      query.bool.should.push( { match: term } )
     }
   }
 
-  if ( id = request.params.id ) {
-    Rescue
-    .findById( id )
-    .exec( function ( error, rescue ) {
-      var status
-
-      if ( error ) {
-        responseModel.errors = []
-        responseModel.errors.push( error )
-        status = 400
-
-      } else {
-        responseModel.data = rescue
-        status = 200
-      }
-
-      response.status( status )
-      response.json( responseModel )
-    })
-
-  } else {
-    filter = {}
-    query = {}
-    responseModel = {
-      links: {
-        self: request.originalUrl
-      }
-    }
-
-    filter.size = parseInt( request.body.limit ) || 25
-    delete request.body.limit
-
-    filter.from = parseInt( request.body.offset ) || 0
-    delete request.body.offset
-
-    for ( var key in request.body ) {
-      if ( key === 'q' ) {
-        query.query_string = {
-          query: request.body.q
-        }
-      } else {
-        if ( !query.bool ) {
-          query.bool = {
-            should: []
-          }
-        }
-
-        term = {}
-        term[key] = {
-          query: request.body[key],
-          fuzziness: 'auto'
-        }
-        query.bool.should.push( { match: term } )
-      }
-    }
-
-    if ( !Object.keys( query ).length ) {
-      query.match_all = {}
-    }
-
-    Rescue.search( query, filter, function ( error, data ) {
-      if ( error ) {
-        responseModel.errors = []
-        responseModel.errors.push( error )
-        status = 400
-
-      } else {
-        responseModel.meta = {
-          count: data.hits.hits.length,
-          limit: filter.size,
-          offset: filter.from,
-          total: data.hits.total
-        }
-        responseModel.data = []
-
-        data.hits.hits.forEach( function ( hit, index, hits ) {
-          hit._source._id = hit._id
-          hit._source.score = hit._score
-          responseModel.data.push( hit._source )
-        })
-        status = 200
-      }
-
-      response.status( status )
-      response.json( responseModel )
-    })
+  if ( !Object.keys( query ).length ) {
+    query.match_all = {}
   }
+
+  Rescue.search( query, filter, function ( error, data ) {
+    if ( error ) {
+      response.model.errors.push( error )
+      response.status( 400 )
+
+    } else {
+      response.model.meta = {
+        count: data.hits.hits.length,
+        limit: filter.size,
+        offset: filter.from,
+        total: data.hits.total
+      }
+
+      response.model.data = []
+
+      data.hits.hits.forEach( function ( rescue, index, rescues ) {
+        var rescueToPopulate, rescueFind
+
+        rescue._source._id = rescue._id
+        rescue._source.score = rescue._score
+
+        response.model.data.push( rescue._source )
+      })
+
+      response.status( 200 )
+    }
+
+    next()
+  })
+}
+
+
+
+
+
+// GET (by ID)
+// =============================================================================
+exports.getById = function ( request, response, next ) {
+  var id
+
+  response.model.meta.params = _.extend( response.model.meta.params, request.params )
+  console.log( response.model.meta.params )
+
+  id = request.params.id
+
+  Rescue
+  .findById( id )
+  .populate( 'rats' )
+  .exec( function ( error, rescue ) {
+    var status
+
+    if ( error ) {
+      response.model.errors.push( error )
+      response.status( 400 )
+
+    } else {
+      response.model.data = rescue
+      response.status( 200 )
+    }
+
+    next()
+  })
 }
 
 
@@ -119,55 +152,94 @@ exports.get = function ( request, response ) {
 
 // POST
 // =============================================================================
-exports.post = function ( request, response ) {
-  var responseModel
+exports.post = function ( request, response, next ) {
+  var finds, firstLimpetFind
 
-  responseModel = {
-    links: {
-      self: request.originalUrl
-    }
+  finds = []
+
+  // Validate and update rats
+  if ( typeof request.body.rats === 'string' ) {
+    request.body.rats = request.body.rats.split( ',' )
   }
 
-  Rescue.create( request.body, function ( error, rescue ) {
-    var errors, errorTypes, status
+  request.body.unidentifiedRats = []
 
-    if ( error ) {
-      errorTypes = Object.keys( error.errors )
-      responseModel.errors = []
+  request.body.rats.forEach( function ( rat, index, rats ) {
+    var find, CMDRname
 
-      for ( var i = 0; i < errorTypes.length; i++ ) {
-        var error, errorModel, errorType
+    if ( typeof rat === 'string' ) {
+      if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
+        CMDRname = rat.trim()
 
-        errorType = errorTypes[i]
-        error = error.errors[errorType].properties
+        request.body.rats = _.without( request.body.rats, CMDRname )
 
-        if ( error.type === 'required' ) {
-          errorModel = ErrorModels['missing_required_field']
-        }
+        find = Rat.findOne({
+          CMDRname: CMDRname
+        })
 
-        errorModel.detail = 'You\'re missing the required field: ' + error.path
+        find.then( function ( rat ) {
+          if ( rat ) {
+            request.body.rats.push( rat._id )
+          } else {
+            request.body.unidentifiedRats.push( CMDRname )
+          }
+        })
 
-        responseModel.errors.push( errorModel )
+        finds.push( find )
       }
 
-      winston.error( error )
-      status = 400
-
-    } else {
-      responseModel.data = rescue
-      status = 201
-    }
-
-    if ( referer = request.get( 'Referer' ) ) {
-      response.redirect( '/login' )
-
-    } else {
-      response.status( status )
-      response.json( responseModel )
+    } else if ( typeof rat === 'object' && rat._id ) {
+      request.body.rats.push( rat._id )
     }
   })
 
-  return rescue
+  // Validate and update firstLimpet
+  if ( typeof request.body.firstLimpet === 'string' ) {
+    if ( !mongoose.Types.ObjectId.isValid( request.body.firstLimpet ) ) {
+      firstLimpetFind = Rat.findOne({
+        CMDRname: request.body.firstLimpet.trim()
+      })
+
+      firstLimpetFind.then( function ( rat ) {
+        if ( rat ) {
+          request.body.firstLimpet = rat._id
+        }
+      })
+
+      finds.push( firstLimpetFind )
+    }
+
+  } else if ( typeof request.body.firstLimpet === 'object' && request.body.firstLimpet._id ) {
+    request.body.firstLimpet = request.body.firstLimpet._id
+  }
+
+  Promise.all( finds )
+  .then( function () {
+    console.log( request.body )
+
+    Rescue.create( request.body, function ( error, rescue ) {
+      var errors, errorTypes, status
+
+      if ( error ) {
+        response.model.errors.push( error )
+        response.status( 400 )
+
+      } else {
+        response.model.data = rescue
+        response.status( 201 )
+      }
+
+      next()
+    })
+  })
+
+//    if ( referer = request.get( 'Referer' ) ) {
+//      response.redirect( '/login' )
+//
+//    } else {
+//      response.status( status )
+//      response.json( response.model )
+//    }
 }
 
 
@@ -176,74 +248,54 @@ exports.post = function ( request, response ) {
 
 // PUT
 // =============================================================================
-exports.put = function ( request, response ) {
-  var responseModel, status
+exports.put = function ( request, response, next ) {
+  var status
 
-  responseModel = {
-    links: {
-      self: request.originalUrl
-    }
-  }
+  response.model.meta.params = _.extend( response.model.meta.params, request.params )
 
   if ( id = request.params.id ) {
     Rescue.findById( id, function ( error, rescue ) {
       if ( error ) {
-        responseModel.errors = responseModel.errors || []
-        responseModel.errors.push( error )
+        response.model.errors.push( error )
         response.status( 400 )
-        return response.json( responseModel )
+
+        next()
 
       } else if ( !rescue ) {
-        return response.status( 404 ).send()
-      }
+        response.model.errors.push( ErrorModels.not_found )
+        response.status( 404 )
 
-      for ( var key in request.body ) {
-        if ( key === 'client' ) {
-          _.extend( rescue.client, request.body[key] )
-        } else {
-          rescue[key] = request.body[key]
+        next()
+
+      } else {
+        for ( var key in request.body ) {
+          if ( key === 'client' ) {
+            _.extend( rescue.client, request.body[key] )
+          } else {
+            rescue[key] = request.body[key]
+          }
         }
-      }
 
-//      rescue.increment()
-      rescue.save( function ( error, rescue ) {
-        var errors, errorTypes, status
+        rescue.save( function ( error, rescue ) {
+          var errors, errorTypes, status
 
-        if ( error ) {
+          if ( error ) {
+            response.model.errors.push( error )
+            status = 400
 
-          errorTypes = Object.keys( error.errors )
-          responseModel.errors = []
-
-          for ( var i = 0; i < errorTypes.length; i++ ) {
-            var error, errorModel, errorType
-
-            errorType = errorTypes[i]
-            error = error.errors[errorType].properties
-
-            if ( error.type === 'required' ) {
-              errorModel = ErrorModels['missing_required_field']
-            }
-
-            errorModel.detail = 'You\'re missing the required field: ' + error.path
-
-            responseModel.errors.push( errorModel )
+          } else {
+            status = 200
+            response.model.data = rescue
           }
 
-          status = 400
-
-        } else {
-          status = 200
-          responseModel.data = rescue
-        }
-
-        response.status( status )
-        response.json( responseModel )
-      })
+          next()
+        })
+      }
     })
   } else {
+    response.model.errors.push( ErrorModels.missing_required_field )
     response.status( 400 )
-    response.send()
-  }
 
-  return rescue
+    next()
+  }
 }
