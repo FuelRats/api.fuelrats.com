@@ -24,7 +24,6 @@ exports.editRescue = function ( request, response ) {
       }
     })
 
-//    response.render( 'rescue-edit', rescue )
     response.render( 'rescue-edit' )
   })
 }
@@ -73,7 +72,7 @@ exports.listRescues = function ( request, response ) {
     renderVars.totalPages = Math.ceil( data.hits.total / filter.size )
 
     if ( renderVars.page < renderVars.totalPages ) {
-      renderVars.nextPage = request.params.page + 1
+      renderVars.nextPage = parseInt( request.params.page ) + 1
     }
 
     response.render( 'rescue-list', renderVars )
