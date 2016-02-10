@@ -51,10 +51,11 @@ exports.listRescues = function ( request, response ) {
   }
 
   filter = {
-    from: ( request.params.page - 1 ) * 25,
-    size: 25,
+    size: 100,
     sort: 'createdAt:desc'
   }
+
+  filter.from = ( request.params.page - 1 ) * filter.size,
 
   query = {
     match_all: {}
