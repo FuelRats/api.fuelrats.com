@@ -116,7 +116,7 @@ RescueSchema = new Schema({
 
 linkRats = function ( next ) {
   var finds, rescue, updates
-
+  
   finds = []
   rescue = this
   updates = []
@@ -126,7 +126,6 @@ linkRats = function ( next ) {
 
   rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
     var find
-
     updates.push( mongoose.models.Rat.update({
       CMDRname: rat
     }, {
@@ -142,10 +141,10 @@ linkRats = function ( next ) {
       CMDRname: rat
     })
 
-    find.then( function ( rat ) {
-      if ( rat ) {
-        rescue.rats.push( rat._id )
-        rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, rat.CMDRname )
+    find.then( function ( _rat ) {
+      if ( _rat ) {
+        rescue.rats.push( _rat._id )
+        rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, _rat.CMDRname )
       }
     })
 
@@ -186,13 +185,48 @@ updateTimestamps = function ( next ) {
 }
 
 
+sanitizeInput = function ( next ) {
+    var rescue = this
+    
+    if(rescue.system)
+        rescue.system = rescue.system.trim()
+    
+    if(rescue.client) 
+    {
+        if(rescue.client.CMDRname)
+            rescue.client.CMDRname = rescue.client.CMDRname.trim()
+        if(rescue.client.nickname)
+            rescue.client.nickname = rescue.client.nickname.trim()
+    }
+    
+    if(rescue.unidentifiedRats)
+    {
+        for(var i = 0; i < rescue.unidentifiedRats.length; i++)
+        {
+            rescue.unidentifiedRats[i] = rescue.unidentifiedRats[i].trim()
+        }
+    }
+    
+    if(rescue.quotes)
+    {
+        for(var i = 0; i < rescue.quotes.length; i++)
+        {
+            rescue.quotes[i] = rescue.quotes[i].trim()
+        }
+    }
+    
+    if(rescue.name)
+        rescue.name = rescue.name.trim()
+    next()
+}
 
 
-
+RescueSchema.pre( 'save', sanitizeInput )
 RescueSchema.pre( 'save', updateTimestamps )
 RescueSchema.pre( 'save', normalizePlatform )
 RescueSchema.pre( 'save', linkRats )
 
+RescueSchema.pre( 'update', sanitizeInput )
 RescueSchema.pre( 'update', updateTimestamps )
 
 RescueSchema.set( 'toJSON', {
