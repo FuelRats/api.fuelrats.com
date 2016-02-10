@@ -30,7 +30,7 @@ Rat = require( '../api/models/rat' )
 Rescue = require( '../api/models/rescue' )
 
 mongoose.Promise = global.Promise
-mongoose.set( 'debug', true )
+mongoose.set( 'debug', false )
 
 // Google Sheet URLs
 spreadsheets = {
@@ -85,17 +85,17 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
         platform: 'pc',
         rescues: []
       }
-
-      if ( dispatchDrill = _.findWhere( dispatchDrills, { 3: ratDatum[2] } ) ) {
-        rat.drilled.dispatch = dispatchDrill[4].toLowerCase() === 'pass'
+    
+      if ( dispatchDrill = _.findWhere( dispatchDrills, { 3: ratDatum[2], 4: 'Pass' } ) ) {
+        rat.drilled.dispatch = true;
       }
 
-      if ( rescueDrill = _.findWhere( rescueDrills, { 3: ratDatum[2] } ) ) {
-        rat.drilled.rescue = rescueDrill[4].toLowerCase() === 'pass'
+      if ( rescueDrill = _.findWhere( rescueDrills, { 3: ratDatum[2], 4: 'Pass' } ) ) {
+        rat.drilled.rescue = true
       }
 
       if ( ratDatum[1] === 'CMDR' || ratDatum[1] === 'GameTag' ) {
-        rat.CMDRname = ratDatum[2]
+        rat.CMDRname = ratDatum[2].trim()
       }
 
       if ( ratDatum[1] === 'GameTag' ) {
@@ -122,6 +122,8 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
         }))
       }
     })
+    
+    winston.info('Importing %d rats!', rats.length)
 
     Promise.all( rats )
     .then( resolve )
@@ -147,24 +149,60 @@ processRescues = function ( rescuesData ) {
       rescue = {
         archive: true,
         createdAt: new Date( rescueDatum[0] ),
-        notes: rescueDatum[4],
+        notes: rescueDatum[4].trim(),
         open: false,
         rats: [],
-        unidentifiedRats: [rescueDatum[1]],
+        unidentifiedRats: [rescueDatum[1].trim()],
         successful: rescueDatum[3].toLowerCase() === 'successful' ? true : false,
-        system: rescueDatum[2]
+        system: rescueDatum[2].trim()
       }
 
       rescues.push( new Rescue( rescue ).save() )
     })
-
+    winston.info('Importing %d rescues!', rescues.length)
     Promise.all( rescues )
     .then( resolve )
     .catch( reject )
   })
 }
 
+linkRatsAndRescues = function() {
+    
+    winston.info('Linking rescues and rats together, forever')
+    
+    var links = [];
+    mongoose.models.Rescue.find({'unidentifiedRats.0': { '$exists': true }}, function (err, rescues) {
+        if(err) return console.error(err);
+        console.log(rescues);
+        rescues.forEach(function( rescue, index, rescues) {
+            rescue.unidentifiedRats.forEach(function(rat, index, rats) {
+                
+                        var nrat = {
+                            archive: true,
+                            drilled: {
+                              dispatch: false,
+                              rescue: false
+                            },
+                            joined: new Date,
+                            platform: 'pc',
+                            rescues: [],
+                            CMDRname: rat
+                          }
+                        console.log(nrat);
+                        var r = new Rat(nrat).save(function(err, nrat) {
+                            rescue.rats.push(nrat._id);
+                            rescue.unidentifiedRats = _.without(rescue.unidentifiedRats, rat)
+                            return nrat;
+                        })
+                        console.log(r);
+                        
+                })
+            })
 
+        })
+    winston.info('Linking %d cases', links.length)
+    
+}
 
 
 
@@ -179,7 +217,7 @@ removeArchives = function removeArchives ( models ) {
     models.forEach( function ( model, index, models ) {
       promises.push( model.remove( { archive: true } ) )
     })
-
+    winston.info('Removing %d archived models!', promises.length)
     Promise.all( promises )
     .then( resolve )
     .catch( reject )
@@ -238,6 +276,9 @@ Promise.all( downloads )
 
   rats.shift()
   rescues.shift()
+  
+  dispatchDrills.shift()
+  rescueDrills.shift()
 
   // Clear out the archives
   removeArchives( [ Rat, Rescue ] )
@@ -253,6 +294,11 @@ Promise.all( downloads )
     .then( function () {
       Promise.all( promises )
       .then( function () {
+          
+            mongoose.set( 'debug', true )
+            //linkRatsAndRescues()
+            mongoose.set( 'debug', false )
+          
         var promises
 
         promises = []

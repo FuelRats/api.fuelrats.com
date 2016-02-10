@@ -151,14 +151,23 @@ updateTimestamps = function ( next ) {
   next()
 }
 
+sanitizeInput = function ( next ) {
+    var rat = this
+    if(rat && rat.CMDRname)
+        rat.CMDRname = rat.CMDRname.trim()
+    
+    next()
+}
 
 
 
 
+RatSchema.pre( 'save', sanitizeInput )
 RatSchema.pre( 'save', updateTimestamps )
 RatSchema.pre( 'save', normalizePlatform )
 RatSchema.pre( 'save', linkRescues )
 
+RatSchema.pre( 'update', sanitizeInput )
 RatSchema.pre( 'update', updateTimestamps )
 
 RatSchema.set( 'toJSON', {
