@@ -164,53 +164,57 @@ exports.post = function ( request, response, next ) {
 
   request.body.unidentifiedRats = []
 
-  request.body.rats.forEach( function ( rat, index, rats ) {
-    var find, CMDRname
+  if ( request.body.rats ) {
+    request.body.rats.forEach( function ( rat, index, rats ) {
+      var find, CMDRname
 
-    if ( typeof rat === 'string' ) {
-      if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
-        CMDRname = rat.trim()
+      if ( typeof rat === 'string' ) {
+        if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
+          CMDRname = rat.trim()
 
-        request.body.rats = _.without( request.body.rats, CMDRname )
+          request.body.rats = _.without( request.body.rats, CMDRname )
 
-        find = Rat.findOne({
-          CMDRname: CMDRname
+          find = Rat.findOne({
+            CMDRname: CMDRname
+          })
+
+          find.then( function ( rat ) {
+            if ( rat ) {
+              request.body.rats.push( rat._id )
+            } else {
+              request.body.unidentifiedRats.push( CMDRname )
+            }
+          })
+
+          finds.push( find )
+        }
+
+      } else if ( typeof rat === 'object' && rat._id ) {
+        request.body.rats.push( rat._id )
+      }
+    })
+  }
+
+  // Validate and update firstLimpet
+  if ( request.body.firstLimpet ) {
+    if ( typeof request.body.firstLimpet === 'string' ) {
+      if ( !mongoose.Types.ObjectId.isValid( request.body.firstLimpet ) ) {
+        firstLimpetFind = Rat.findOne({
+          CMDRname: request.body.firstLimpet.trim()
         })
 
-        find.then( function ( rat ) {
+        firstLimpetFind.then( function ( rat ) {
           if ( rat ) {
-            request.body.rats.push( rat._id )
-          } else {
-            request.body.unidentifiedRats.push( CMDRname )
+            request.body.firstLimpet = rat._id
           }
         })
 
-        finds.push( find )
+        finds.push( firstLimpetFind )
       }
 
-    } else if ( typeof rat === 'object' && rat._id ) {
-      request.body.rats.push( rat._id )
+    } else if ( typeof request.body.firstLimpet === 'object' && request.body.firstLimpet._id ) {
+      request.body.firstLimpet = request.body.firstLimpet._id
     }
-  })
-
-  // Validate and update firstLimpet
-  if ( typeof request.body.firstLimpet === 'string' ) {
-    if ( !mongoose.Types.ObjectId.isValid( request.body.firstLimpet ) ) {
-      firstLimpetFind = Rat.findOne({
-        CMDRname: request.body.firstLimpet.trim()
-      })
-
-      firstLimpetFind.then( function ( rat ) {
-        if ( rat ) {
-          request.body.firstLimpet = rat._id
-        }
-      })
-
-      finds.push( firstLimpetFind )
-    }
-
-  } else if ( typeof request.body.firstLimpet === 'object' && request.body.firstLimpet._id ) {
-    request.body.firstLimpet = request.body.firstLimpet._id
   }
 
   Promise.all( finds )

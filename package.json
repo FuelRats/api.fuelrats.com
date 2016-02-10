@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "grunt api",
-    "import": "node bin/import",
+    "import": "grunt import",
     "test": "grunt test"
   },
   "license": "MIT",
@@ -38,7 +38,6 @@
     "moment": "^2.11.1",
     "mongoosastic": "^3.6.0",
     "mongoose": "^4.3.6",
-    "node-dev": "^2.7.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^4.0.0",

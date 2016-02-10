@@ -15,21 +15,17 @@ Rescue = require( '../models/rescue' )
 // EDIT
 // =============================================================================
 exports.editRescue = function ( request, response ) {
-//  if ( request.isUnauthenticated() ) {
-//    response.redirect( '/login' )
-//  } else {
-    Rescue.findById( request.params.id )
-    .populate( 'rats firstLimpet' )
-    .then( function ( rescue ) {
-      rescue.rats.forEach( function ( rat, index, rats ) {
-        if ( rat.CMDRname === rescue.firstLimpet.CMDRname ) {
-          rat.firstLimpet = true
-        }
-      })
-
-      response.render( 'rescue-edit', rescue )
+  Rescue.findById( request.params.id )
+  .populate( 'rats firstLimpet' )
+  .then( function ( rescue ) {
+    rescue.rats.forEach( function ( rat, index, rats ) {
+      if ( rat.CMDRname === rescue.firstLimpet.CMDRname ) {
+        rat.firstLimpet = true
+      }
     })
-//  }
+
+    response.render( 'rescue-edit' )
+  })
 }
 
 
@@ -39,18 +35,25 @@ exports.editRescue = function ( request, response ) {
 // LIST
 // =============================================================================
 exports.listRescues = function ( request, response ) {
-  var filter, query, rescues
+  var filter, query, renderVars, rescues
 
-//  if ( request.isUnauthenticated() ) {
-//    response.redirect( '/login' )
-//  } else {
-//  }
+  rescues = []
+  renderVars = {}
 
-  request.params.page = request.params.page || 0
+  if ( !request.params.page || request.params.page < 1 ) {
+    request.params.page = 1
+  }
+
+  renderVars.page = request.params.page
+
+  if ( request.params.page > 1 ) {
+    renderVars.previousPage = request.params.page - 1
+  }
 
   filter = {
-    offset: request.params.page * 25,
-    size: 25
+    from: ( request.params.page - 1 ) * 25,
+    size: 25,
+    sort: 'createdAt:desc'
   }
 
   query = {
@@ -58,13 +61,21 @@ exports.listRescues = function ( request, response ) {
   }
 
   Rescue.search( query, filter, function ( error, data ) {
-    data.hits.hits.forEach( function ( rescue, index, rescues ) {
+    data.hits.hits.forEach( function ( rescue, index ) {
       rescue._source._id = rescue._id
-
       rescues.push( rescue._source )
     })
 
-    response.render( 'rescue-list', rescues )
+    renderVars.count = rescues.length
+    renderVars.rescues = rescues
+    renderVars.total = data.hits.total
+    renderVars.totalPages = Math.ceil( data.hits.total / filter.size )
+
+    if ( renderVars.page < renderVars.totalPages ) {
+      renderVars.nextPage = parseInt( request.params.page ) + 1
+    }
+
+    response.render( 'rescue-list', renderVars )
   })
 }
 

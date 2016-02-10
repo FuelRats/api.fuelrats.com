@@ -281,10 +281,10 @@ router.get( '/paperwork', paperwork.get )
 router.get( '/register', register.get )
 router.get( '/welcome', welcome.get )
 
-router.get( '/rescue/:id', rescueAdmin.viewRescue )
-router.get( '/admin/rescues', rescueAdmin.listRescues )
-router.get( '/admin/rescues/:page', rescueAdmin.listRescues )
-router.get( '/admin/rescue/:id', rescueAdmin.editRescue )
+router.get( '/rescues/view/:id', rescueAdmin.viewRescue )
+router.get( '/rescues/edit/:id', rescueAdmin.editRescue )
+router.get( '/rescues/list', rescueAdmin.listRescues )
+router.get( '/rescues/list/:page', rescueAdmin.listRescues )
 
 // Register routes
 app.use( express.static( __dirname + '/static' ) )
