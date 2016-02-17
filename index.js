@@ -36,6 +36,7 @@ var _,
     sslHostName,
     sslPort,
     version,
+    websocket,
     welcome,
     winston,
     ws
@@ -90,6 +91,7 @@ register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
 rescueAdmin = require( './api/controllers/rescueAdmin' )
 version = require( './api/controllers/version' )
+websocket = require( './api/websocket' )
 welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
@@ -313,19 +315,20 @@ app.use( function ( request, response, next ) {
 
 socket = new ws({ server: httpServer })
 
+websocket.socket = socket
+
 socket.on( 'connection', function ( client ) {
   client.send( JSON.stringify({
-    data: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.',
-    type: 'welcome'
+    meta: {
+      action: 'welcome'
+    },
+    data: {
+      message: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.'
+    }
   }))
 
   client.on( 'message', function ( data ) {
-    data = JSON.parse( data )
-    winston.info( data )
-    client.send( JSON.stringify({
-      data: data,
-      type: 'test'
-    }))
+    websocket.received(client, data)
   })
 })
 
@@ -337,9 +340,9 @@ socket.on( 'connection', function ( client ) {
 // =============================================================================
 
 if ( config.ssl ) {
-    
+
     var firstRequestSent = false
-    
+
   module.exports = lex.create({
     approveRegistration: function ( hostname, callback ) {
       callback( null, {
@@ -365,7 +368,7 @@ if ( config.ssl ) {
         if( !firstRequestSent ) {
             winston.info( 'Starting the Fuel Rats API' )
             winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
-            
+
             // Really, I shouldn't have to do this, but first request _always_ fails.
             request('https://' + sslHostName + ':' + sslPort + '/welcome', function() {
                 winston.info( 'Firing initial request to generate certificates')
