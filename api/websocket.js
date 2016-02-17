@@ -29,6 +29,7 @@ exports.received = function (client, requestString) {
 
   try {
     request = JSON.parse(requestString)
+
     winston.info(request)
 
     requestHasValidAction = false
@@ -68,7 +69,7 @@ exports.received = function (client, requestString) {
       exports.error(client, { action: null }, ['Missing action parameter'])
     }
   } catch (ex) {
-    if ( request.hasOwnProperty('action') ) {
+    if ( request && request.hasOwnProperty('action') ) {
       if ( typeof request.action == 'string' ) {
         exports.error(client, { action: request.action }, [ex.message])
         return
