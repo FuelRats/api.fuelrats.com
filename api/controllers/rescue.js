@@ -129,7 +129,7 @@ exports.view = function ( query ) {
 
     Rescue.search( dbQuery, filter, function ( error, queryData ) {
       if ( error ) {
-        reject( error )
+        reject( { error: error, meta: {} } )
 
       } else {
         var meta = {
@@ -150,7 +150,7 @@ exports.view = function ( query ) {
           data.push( rescue._source )
         })
 
-        resolve( data, meta )
+        resolve( { data: data, meta: meta } )
       }
     })
   })
@@ -245,10 +245,10 @@ exports.create = function( query ) {
         var errors
 
         if ( error ) {
-          reject( error )
+          reject( { error: error, meta: {} } )
 
         } else {
-          resolve ( data )
+          resolve ( { data: data, meta: {} } )
         }
       })
     })
@@ -282,10 +282,10 @@ exports.update = function( query, changes ) {
     if ( query.id ) {
       Rescue.findById( query.id, function ( error, rescue ) {
         if ( error ) {
-          reject( error )
+          reject( { error: error, meta: {} } )
 
         } else if ( !rescue ) {
-          reject( ErrorModels.not_found )
+          reject( { error: ErrorModels.not_found, meta: {} } )
 
         } else {
           for ( var key in changes ) {
@@ -300,10 +300,10 @@ exports.update = function( query, changes ) {
             var errors
 
             if ( error ) {
-              reject( error )
+              reject( { error: error, meta: {} } )
 
             } else {
-              resolve( data )
+              resolve( { data: data, meta: {} } )
             }
           })
         }
