@@ -39,77 +39,18 @@ handleError = function ( error ) {
   }
 }
 
-
-
-
-
 // GET
 // =============================================================================
 exports.get = function ( request, response, next ) {
-  var filter, query
 
-  filter = {}
-  query = {}
-
-  filter.size = parseInt( request.body.limit ) || 25
-  delete request.body.limit
-
-  filter.from = parseInt( request.body.offset ) || 0
-  delete request.body.offset
-
-  for ( var key in request.body ) {
-    if ( key === 'q' ) {
-      query.query_string = {
-        query: request.body.q
-      }
-    } else {
-      if ( !query.bool ) {
-        query.bool = {
-          should: []
-        }
-      }
-
-      term = {}
-      term[key] = {
-        query: request.body[key],
-        fuzziness: 'auto'
-      }
-      query.bool.should.push( { match: term } )
-    }
-  }
-
-  if ( !Object.keys( query ).length ) {
-    query.match_all = {}
-  }
-
-  Rescue.search( query, filter, function ( error, data ) {
-    if ( error ) {
-      response.model.errors.push( error )
-      response.status( 400 )
-
-    } else {
-      response.model.meta = {
-        count: data.hits.hits.length,
-        limit: filter.size,
-        offset: filter.from,
-        total: data.hits.total
-      }
-
-      response.model.data = []
-
-      data.hits.hits.forEach( function ( rescue, index, rescues ) {
-        var rescueToPopulate, rescueFind
-
-        rescue._source._id = rescue._id
-        rescue._source.score = rescue._score
-
-        response.model.data.push( rescue._source )
-      })
-
-      response.status( 200 )
-    }
-
+  exports.view( request.body ).then( function( data, meta ) {
+    response.model.data = data
+    response.model.meta = meta
+    response.status = 400
     next()
+  }, function( error ) {
+    response.model.errors.push( error )
+    response.status( 400 )
   })
 }
 
@@ -147,106 +88,172 @@ exports.getById = function ( request, response, next ) {
 }
 
 
+exports.view = function ( query ) {
+  console.log(query)
+  return new Promise(function (resolve, reject) {
+    var filter
+
+    filter = {}
+    dbQuery = {}
+
+    filter.size = parseInt( query.limit ) || 25
+    delete query.limit
+
+    filter.from = parseInt( query.offset ) || 0
+    delete query.offset
+
+    for ( var key in query ) {
+      if ( key === 'q' ) {
+        dbQuery.query_string = {
+          query: request.body.q
+        }
+      } else {
+        if ( !dbQuery.bool ) {
+          dbQuery.bool = {
+            should: []
+          }
+        }
+
+        term = {}
+        term[key] = {
+          query: query[key],
+          fuzziness: 'auto'
+        }
+        dbQuery.bool.should.push( { match: term } )
+      }
+    }
+
+    if ( !Object.keys( dbQuery ).length ) {
+      dbQuery.match_all = {}
+    }
+
+    Rescue.search( dbQuery, filter, function ( error, queryData ) {
+      if ( error ) {
+        reject( error )
+
+      } else {
+        var meta = {
+          count: queryData.hits.hits.length,
+          limit: filter.size,
+          offset: filter.from,
+          total: queryData.hits.total
+        }
+
+        var data = []
+
+        queryData.hits.hits.forEach( function ( rescue, index, rescues ) {
+          var rescueToPopulate, rescueFind
+
+          rescue._source._id = rescue._id
+          rescue._source.score = rescue._score
+
+          data.push( rescue._source )
+        })
+
+        resolve( data, meta )
+      }
+    })
+  })
+}
 
 
 
 // POST
 // =============================================================================
 exports.post = function ( request, response, next ) {
-  var finds, firstLimpetFind
+  exports.create( response.body ).then(function( data ) {
+    response.model.data = rescue
+    response.status( 201 )
+    next()
+  }, function( error ) {
+    response.model.errors.push( error )
+    response.status( 400 )
+    next()
+  })
+}
 
-  finds = []
+exports.create = function( query ) {
+  return new Promise(function(resolve, reject) {
+    var finds, firstLimpetFind
 
-  // Validate and update rats
-  if ( typeof request.body.rats === 'string' ) {
-    request.body.rats = request.body.rats.split( ',' )
-  }
+    finds = []
 
-  request.body.unidentifiedRats = []
+    // Validate and update rats
+    if ( typeof query.rats === 'string' ) {
+      query.rats = query.rats.split( ',' )
+    }
 
-  if ( request.body.rats ) {
-    request.body.rats.forEach( function ( rat, index, rats ) {
-      var find, CMDRname
+    query.unidentifiedRats = []
 
-      if ( typeof rat === 'string' ) {
-        if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
-          CMDRname = rat.trim()
+    if ( query.rats ) {
+      query.rats.forEach( function ( rat, index, rats ) {
+        var find, CMDRname
 
-          request.body.rats = _.without( request.body.rats, CMDRname )
+        if ( typeof rat === 'string' ) {
+          if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
+            CMDRname = rat.trim()
 
-          find = Rat.findOne({
-            CMDRname: CMDRname
+            query.rats = _.without( query.rats, CMDRname )
+
+            find = Rat.findOne({
+              CMDRname: CMDRname
+            })
+
+            find.then( function ( rat ) {
+              if ( rat ) {
+                query.rats.push( rat._id )
+              } else {
+                query.unidentifiedRats.push( CMDRname )
+              }
+            })
+
+            finds.push( find )
+          }
+
+        } else if ( typeof rat === 'object' && rat._id ) {
+          query.rats.push( rat._id )
+        }
+      })
+    }
+
+    // Validate and update firstLimpet
+    if ( query.firstLimpet ) {
+      if ( typeof query.firstLimpet === 'string' ) {
+        if ( !mongoose.Types.ObjectId.isValid( query.firstLimpet ) ) {
+          firstLimpetFind = Rat.findOne({
+            CMDRname: query.firstLimpet.trim()
           })
 
-          find.then( function ( rat ) {
+          firstLimpetFind.then( function ( rat ) {
             if ( rat ) {
-              request.body.rats.push( rat._id )
-            } else {
-              request.body.unidentifiedRats.push( CMDRname )
+              query.firstLimpet = rat._id
             }
           })
 
-          finds.push( find )
+          finds.push( firstLimpetFind )
         }
 
-      } else if ( typeof rat === 'object' && rat._id ) {
-        request.body.rats.push( rat._id )
+      } else if ( typeof query.firstLimpet === 'object' && query.firstLimpet._id ) {
+        query.firstLimpet = query.firstLimpet._id
       }
-    })
-  }
-
-  // Validate and update firstLimpet
-  if ( request.body.firstLimpet ) {
-    if ( typeof request.body.firstLimpet === 'string' ) {
-      if ( !mongoose.Types.ObjectId.isValid( request.body.firstLimpet ) ) {
-        firstLimpetFind = Rat.findOne({
-          CMDRname: request.body.firstLimpet.trim()
-        })
-
-        firstLimpetFind.then( function ( rat ) {
-          if ( rat ) {
-            request.body.firstLimpet = rat._id
-          }
-        })
-
-        finds.push( firstLimpetFind )
-      }
-
-    } else if ( typeof request.body.firstLimpet === 'object' && request.body.firstLimpet._id ) {
-      request.body.firstLimpet = request.body.firstLimpet._id
     }
-  }
 
-  Promise.all( finds )
-  .then( function () {
-    console.log( request.body )
+    Promise.all( finds )
+    .then( function () {
 
-    Rescue.create( request.body, function ( error, rescue ) {
-      var errors, errorTypes, status
+      Rescue.create( query, function ( error, rescue ) {
+        var errors
 
-      if ( error ) {
-        response.model.errors.push( error )
-        response.status( 400 )
+        if ( error ) {
+          reject( error )
 
-      } else {
-        response.model.data = rescue
-        response.status( 201 )
-      }
-
-      next()
+        } else {
+          resolve ( data )
+        }
+      })
     })
   })
-
-//    if ( referer = request.get( 'Referer' ) ) {
-//      response.redirect( '/login' )
-//
-//    } else {
-//      response.status( status )
-//      response.json( response.model )
-//    }
 }
-
-
 
 
 
@@ -257,49 +264,50 @@ exports.put = function ( request, response, next ) {
 
   response.model.meta.params = _.extend( response.model.meta.params, request.params )
 
-  if ( id = request.params.id ) {
-    Rescue.findById( id, function ( error, rescue ) {
-      if ( error ) {
-        response.model.errors.push( error )
-        response.status( 400 )
-
-        next()
-
-      } else if ( !rescue ) {
-        response.model.errors.push( ErrorModels.not_found )
-        response.status( 404 )
-
-        next()
-
-      } else {
-        for ( var key in request.body ) {
-          if ( key === 'client' ) {
-            _.extend( rescue.client, request.body[key] )
-          } else {
-            rescue[key] = request.body[key]
-          }
-        }
-
-        rescue.save( function ( error, rescue ) {
-          var errors, errorTypes, status
-
-          if ( error ) {
-            response.model.errors.push( error )
-            status = 400
-
-          } else {
-            status = 200
-            response.model.data = rescue
-          }
-
-          next()
-        })
-      }
-    })
-  } else {
-    response.model.errors.push( ErrorModels.missing_required_field )
-    response.status( 400 )
-
+  exports.update( request.params, request.body ).then(function( data ) {
+    response.model.data = data
+    response.status( 201 )
     next()
-  }
+  }, function( error ) {
+    response.model.errors.push( error )
+
+    var status = error.code || 400
+    response.status( status )
+    next()
+  })
+}
+
+exports.update = function( query, changes ) {
+  return new Promise(function(resolve, reject) {
+    if ( query.id ) {
+      Rescue.findById( query.id, function ( error, rescue ) {
+        if ( error ) {
+          reject( error )
+
+        } else if ( !rescue ) {
+          reject( ErrorModels.not_found )
+
+        } else {
+          for ( var key in changes ) {
+            if ( key === 'client' ) {
+              _.extend( rescue.client, changes[key] )
+            } else {
+              rescue[key] = changes[key]
+            }
+          }
+
+          rescue.save( function ( error, rescue ) {
+            var errors
+
+            if ( error ) {
+              reject( error )
+
+            } else {
+              resolve( data )
+            }
+          })
+        }
+      })
+    }
+  })
 }

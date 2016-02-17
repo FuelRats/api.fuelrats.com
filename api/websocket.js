@@ -16,7 +16,6 @@ _ = require( 'underscore' )
 var APIControllers = {
   login: login,
   logout: logout,
-  paperwork: paperwork,
   rat: rat,
   register: register,
   rescue: rescue,
@@ -52,9 +51,10 @@ exports.received = function (client, requestString) {
 
           console.log(query)
 
-          controller[method].call( query ).then(function() {
-            console.log("success")
-          }, function(error) {
+          controller[method].call( this, query ).then(function( response, meta ) {
+            meta.action = request.action
+            exports.send(client, meta, response)
+          }, function( error ) {
             console.log(error)
           })
         } else {
