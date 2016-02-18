@@ -54,6 +54,7 @@ exports.get = function ( request, response, next ) {
   }, function( error ) {
     response.model.errors.push( error.error )
     response.status( 400 )
+    next()
   })
 }
 
@@ -163,11 +164,13 @@ exports.view = function ( query ) {
 // POST
 // =============================================================================
 exports.post = function ( request, response, next ) {
-  exports.create( response.body ).then(function( data ) {
-    response.model.data = rescue
+  exports.create( request.body ).then(function( res ) {
+    console.log('done')
+    response.model.data = res.data
     response.status( 201 )
     next()
   }, function( error ) {
+    console.log('erroring')
     response.model.errors.push( error )
     response.status( 400 )
     next()
@@ -176,16 +179,19 @@ exports.post = function ( request, response, next ) {
 
 exports.create = function( query ) {
   return new Promise(function(resolve, reject) {
+    console.log('0')
     var finds, firstLimpetFind
 
     finds = []
 
+    console.log(query)
     // Validate and update rats
     if ( typeof query.rats === 'string' ) {
       query.rats = query.rats.split( ',' )
     }
 
     query.unidentifiedRats = []
+
 
     if ( query.rats ) {
       query.rats.forEach( function ( rat, index, rats ) {
@@ -239,7 +245,7 @@ exports.create = function( query ) {
         query.firstLimpet = query.firstLimpet._id
       }
     }
-
+    console.log(finds)
     Promise.all( finds )
     .then( function () {
 
@@ -250,7 +256,7 @@ exports.create = function( query ) {
           reject( { error: error, meta: {} } )
 
         } else {
-          resolve ( { data: data, meta: {} } )
+          resolve ( { data: rescue, meta: {} } )
         }
       })
     })
