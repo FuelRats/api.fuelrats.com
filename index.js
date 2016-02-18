@@ -318,6 +318,7 @@ socket = new ws({ server: httpServer })
 websocket.socket = socket
 
 socket.on( 'connection', function ( client ) {
+  client.subscribedStreams = []
   client.send( JSON.stringify({
     meta: {
       action: 'welcome'
