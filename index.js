@@ -13,6 +13,7 @@ var _,
     http,
     httpServer,
     io,
+    leaderboard,
     lex,
     LocalStrategy,
     logger,
@@ -85,6 +86,7 @@ docs = require( './api/controllers/docs' )
 login = require( './api/controllers/login' )
 logout = require( './api/controllers/logout' )
 paperwork = require( './api/controllers/paperwork' )
+leaderboard = require( './api/controllers/leaderboard' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
@@ -276,6 +278,7 @@ router.get( '/search/rats', rat.get )
 router.get( '/version', version.get )
 
 router.get( '/docs', docs.get )
+router.get( '/leaderboard', leaderboard.get )
 router.get( '/login', login.get )
 router.get( '/paperwork', paperwork.get )
 router.get( '/register', register.get )
