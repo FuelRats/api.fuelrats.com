@@ -116,7 +116,7 @@ RescueSchema = new Schema({
 
 linkRats = function ( next ) {
   var finds, rescue, updates
-  
+
   finds = []
   rescue = this
   updates = []
@@ -187,18 +187,18 @@ updateTimestamps = function ( next ) {
 
 sanitizeInput = function ( next ) {
     var rescue = this
-    
+
     if(rescue.system)
         rescue.system = rescue.system.trim()
-    
-    if(rescue.client) 
+
+    if(rescue.client)
     {
         if(rescue.client.CMDRname)
             rescue.client.CMDRname = rescue.client.CMDRname.trim()
         if(rescue.client.nickname)
             rescue.client.nickname = rescue.client.nickname.trim()
     }
-    
+
     if(rescue.unidentifiedRats)
     {
         for(var i = 0; i < rescue.unidentifiedRats.length; i++)
@@ -206,7 +206,7 @@ sanitizeInput = function ( next ) {
             rescue.unidentifiedRats[i] = rescue.unidentifiedRats[i].trim()
         }
     }
-    
+
     if(rescue.quotes)
     {
         for(var i = 0; i < rescue.quotes.length; i++)
@@ -214,7 +214,7 @@ sanitizeInput = function ( next ) {
             rescue.quotes[i] = rescue.quotes[i].trim()
         }
     }
-    
+
     if(rescue.name)
         rescue.name = rescue.name.trim()
     next()
@@ -240,3 +240,5 @@ if ( mongoose.models.Rescue ) {
 } else {
   module.exports = mongoose.model( 'Rescue', RescueSchema )
 }
+
+module.exports.synchronize()
