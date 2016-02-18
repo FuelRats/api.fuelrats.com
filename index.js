@@ -187,8 +187,8 @@ app.set( 'x-powered-by', false )
 hostName = config.hostname
 sslHostName = config.sslHostname
 
-port = process.env.PORT || config.port
-sslPort = process.env.SSL_PORT || config.sslPort
+port = config.port || process.env.PORT
+sslPort = config.sslPort || process.env.SSL_PORT
 
 passport.use( User.createStrategy() )
 passport.serializeUser( User.serializeUser() )
@@ -337,9 +337,9 @@ socket.on( 'connection', function ( client ) {
 // =============================================================================
 
 if ( config.ssl ) {
-    
+
     var firstRequestSent = false
-    
+
   module.exports = lex.create({
     approveRegistration: function ( hostname, callback ) {
       callback( null, {
@@ -365,7 +365,7 @@ if ( config.ssl ) {
         if( !firstRequestSent ) {
             winston.info( 'Starting the Fuel Rats API' )
             winston.info( 'Listening for requests on ports ' + port + ' and ' + sslPort + '...' )
-            
+
             // Really, I shouldn't have to do this, but first request _always_ fails.
             request('https://' + sslHostName + ':' + sslPort + '/welcome', function() {
                 winston.info( 'Firing initial request to generate certificates')
