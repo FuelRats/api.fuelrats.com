@@ -4,11 +4,7 @@ winston = require( 'winston' )
 ErrorModels = require( './errors' )
 
 // Import controllers
-login = require( './controllers/login' )
-logout = require( './controllers/logout' )
-paperwork = require( './controllers/paperwork' )
 rat = require( './controllers/rat' )
-register = require( './controllers/register' )
 rescue = require( './controllers/rescue' )
 stream = require( './controllers/stream' )
 version = require( './controllers/version' )

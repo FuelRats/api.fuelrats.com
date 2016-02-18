@@ -89,7 +89,6 @@ exports.getById = function ( request, response, next ) {
 
 
 exports.view = function ( query ) {
-  console.log(query)
   return new Promise(function (resolve, reject) {
     var filter
 
