@@ -43,13 +43,16 @@ handleError = function ( error ) {
 // =============================================================================
 exports.get = function ( request, response, next ) {
 
-  exports.view( request.body ).then( function( data, meta ) {
+  exports.view( request.body ).then( function( res ) {
+    var data = res.data
+    var meta = res.meta
+
     response.model.data = data
     response.model.meta = meta
     response.status = 400
     next()
   }, function( error ) {
-    response.model.errors.push( error )
+    response.model.errors.push( error.error )
     response.status( 400 )
   })
 }
