@@ -189,8 +189,8 @@ app.set( 'x-powered-by', false )
 hostName = config.hostname
 sslHostName = config.sslHostname
 
-port = process.env.PORT || config.port
-sslPort = process.env.SSL_PORT || config.sslPort
+port = config.port || process.env.PORT
+sslPort = config.sslPort || process.env.SSL_PORT
 
 passport.use( User.createStrategy() )
 passport.serializeUser( User.serializeUser() )
