@@ -155,7 +155,7 @@ sanitizeInput = function ( next ) {
     var rat = this
     if(rat && rat.CMDRname)
         rat.CMDRname = rat.CMDRname.trim()
-    
+
     next()
 }
 
@@ -181,3 +181,5 @@ if ( mongoose.models.Rat ) {
 } else {
   module.exports = mongoose.model( 'Rat', RatSchema )
 }
+
+module.exports.synchronize()
