@@ -24,5 +24,19 @@
     "detail": "Resource not found",
     "status": "Not Found",
     "title": "Resource not found"
+  },
+
+  "invalid_parameter": {
+    "code": 400,
+    "detail": "",
+    "status": "Bad Request",
+    "title": "Invalid Parameter"
+  },
+
+  "server_error": {
+    "code": 500,
+    "detail": "",
+    "status": "Internal Server Error",
+    "title": "Server Error"
   }
 }

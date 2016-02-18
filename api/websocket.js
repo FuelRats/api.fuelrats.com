@@ -1,6 +1,7 @@
-var winston, badge, docs, login, logout, paperwork, rat, register, rescue, rescueAdmin, version, websocket, welcome, _
+var winston, badge, docs, login, logout, paperwork, rat, register, rescue, rescueAdmin, version, websocket, welcome, _, ErrorModels
 
 winston = require( 'winston' )
+ErrorModels = require( './errors' )
 
 // Import controllers
 login = require( './controllers/login' )
@@ -48,7 +49,7 @@ exports.received = function (client, requestString) {
       if ( APIControllers.hasOwnProperty(namespace) ) {
         controller = APIControllers[namespace]
         method = requestSections[1].toLowerCase()
-        if (method) {
+        if (method && controller[method]) {
           var query = _.clone( request )
           delete query.action
 
@@ -62,14 +63,18 @@ exports.received = function (client, requestString) {
             var error = response.error
             var meta = response.meta
 
-            exports.error(client, meta, error)
+            exports.error(client, meta, [error])
           })
         } else {
-          exports.error(client, { action: request.action }, ['Invalid action parameter'])
+          var error = ErrorModels.invalid_parameter
+          error.detail = 'action'
+          exports.error(client, { action: request.action }, [error])
         }
       } else {
         if (!request.applicationId || request.applicationId.length === 0) {
-          exports.error(client, { action: request.action }, ['Invalid application ID'])
+          var error = ErrorModels.invalid_parameter
+          error.detail = 'applicationId'
+          exports.error(client, { action: request.action }, [error])
         }
 
         var callbackMeta = {
@@ -93,13 +98,16 @@ exports.received = function (client, requestString) {
       }
 
     } else {
-      exports.error(client, { action: null }, ['Missing action parameter'])
+      var error = ErrorModels.missing_required_field
+      error.detail = 'action'
+      exports.error(client, { action: null }, [error])
     }
   } catch (ex) {
-    console.log(ex)
     if ( request && request.hasOwnProperty('action') ) {
       if ( typeof request.action == 'string' ) {
-        exports.error(client, { action: request.action }, [ex.message])
+        var error = ErrorModels.server_error
+        error.detail = ex.message
+        exports.error(client, { action: request.action }, [error])
         return
       }
     }
