@@ -307,7 +307,7 @@ exports.update = function( query, changes ) {
             }
           }
 
-          rescue.save( function ( error, rescue ) {
+          rescue.save( function ( error, data ) {
             var errors
 
             if ( error ) {
