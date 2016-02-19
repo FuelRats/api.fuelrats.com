@@ -5,17 +5,20 @@ winston = require( 'winston' )
 
 ErrorModels = require( '../errors' )
 
-exports.subscribe = function( query, client ) {
+exports.subscribe = function( data, client, query ) {
   return new Promise(function(resolve, reject) {
     var applicationId, meta
 
     meta = {}
+
+    console.log(query)
 
     if (query.applicationId && query.applicationId.length > 0) {
       applicationId = query.applicationId
 
       if (client.subscribedStreams.indexOf(applicationId) === -1) {
         client.subscribedStreams.push(applicationId)
+        console.log('resolving')
         resolve({ data: client.subscribedStreams, meta: meta })
       } else {
         reject( { error: 'Already subscribed to this stream', meta: {} })
@@ -26,7 +29,7 @@ exports.subscribe = function( query, client ) {
   })
 }
 
-exports.unsubscribe = function( query, client ) {
+exports.unsubscribe = function( data, client, query ) {
   return new Promise(function(resolve, reject) {
     var applicationId, meta, positionInSubscribeList
 
