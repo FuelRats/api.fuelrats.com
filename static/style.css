@@ -101,3 +101,22 @@ table th:nth-child(4) {
     opacity: 1;
   }
 }
+
+/******************************************************************************\
+  Leaderboard
+\******************************************************************************/
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+.x.axis path {
+  display: none;
+}
