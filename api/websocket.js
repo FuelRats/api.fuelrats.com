@@ -74,6 +74,7 @@ exports.received = function (client, requestString) {
           var error = ErrorModels.invalid_parameter
           error.detail = 'applicationId'
           exports.error(client, { action: request.action }, [error])
+          return
         }
 
         var callbackMeta = {
