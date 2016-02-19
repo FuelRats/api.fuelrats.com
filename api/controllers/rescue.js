@@ -43,7 +43,7 @@ handleError = function ( error ) {
 // =============================================================================
 exports.get = function ( request, response, next ) {
 
-  exports.view( request.body ).then( function( res ) {
+  exports.read( request.body ).then( function( res ) {
     var data = res.data
     var meta = res.meta
 
@@ -92,7 +92,7 @@ exports.getById = function ( request, response, next ) {
 }
 
 
-exports.view = function ( query ) {
+exports.read = function ( query ) {
   return new Promise(function (resolve, reject) {
     var filter
 
