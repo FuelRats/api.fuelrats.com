@@ -1,62 +1,31 @@
-var _, ErrorModels, handleError, mongoose, Rat, Rescue, rescue, save, winston
+'use strict';
 
+let _ = require('underscore');
+let mongoose = require('mongoose');
 
+let Rat = require('../models/rat');
+let Rescue = require('../models/rescue');
+let ErrorModels = require('../errors');
 
-
-
-_ = require( 'underscore' )
-mongoose = require( 'mongoose' )
-winston = require( 'winston' )
-
-Rat = require( '../models/rat' )
-Rescue = require( '../models/rescue' )
-ErrorModels = require( '../errors' )
-
-
-
-
-
-// SHARED FUNCTIONS
-// =============================================================================
-handleError = function ( error ) {
-  errorTypes = Object.keys( error.errors )
-
-  console.error( errorTypes )
-
-  for ( var i = 0; i < errorTypes.length; i++ ) {
-    var errorModel, errorType
-
-    errorType = errorTypes[i]
-    error = error.errors[errorType].properties
-
-    if ( error.type === 'required' ) {
-      errorModel = ErrorModels['missing_required_field']
-    }
-
-    errorModel.detail = 'You\'re missing the required field: ' + error.path
-
-    response.model.errors.push( errorModel )
-  }
-}
 
 // GET
 // =============================================================================
 exports.get = function ( request, response, next ) {
 
-  exports.read( request.body ).then( function( res ) {
-    var data = res.data
-    var meta = res.meta
+    exports.read( request.body ).then( function( res ) {
+        let data = res.data;
+        let meta = res.meta;
 
-    response.model.data = data
-    response.model.meta = meta
-    response.status = 400
-    next()
-  }, function( error ) {
-    response.model.errors.push( error.error )
-    response.status( 400 )
-    next()
-  })
-}
+        response.model.data = data;
+        response.model.meta = meta;
+        response.status = 400;
+        next();
+    }, function (error) {
+        response.model.errors.push(error.error);
+        response.status(400);
+        next();
+    });
+};
 
 
 
@@ -65,260 +34,218 @@ exports.get = function ( request, response, next ) {
 // GET (by ID)
 // =============================================================================
 exports.getById = function ( request, response, next ) {
-  var id
+    response.model.meta.params = _.extend(response.model.meta.params, request.params);
+    let id = request.params.id;
 
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
-  console.log( response.model.meta.params )
-
-  id = request.params.id
-
-  Rescue
-  .findById( id )
-  .populate( 'rats' )
-  .exec( function ( error, rescue ) {
-    var status
-
-    if ( error ) {
-      response.model.errors.push( error )
-      response.status( 400 )
-
-    } else {
-      response.model.data = rescue
-      response.status( 200 )
-    }
-
-    next()
-  })
-}
-
-
-exports.read = function ( query ) {
-  return new Promise(function (resolve, reject) {
-    var filter
-
-    filter = {}
-    dbQuery = {}
-
-    filter.size = parseInt( query.limit ) || 25
-    delete query.limit
-
-    filter.from = parseInt( query.offset ) || 0
-    delete query.offset
-
-    for ( var key in query ) {
-      if ( key === 'q' ) {
-        dbQuery.query_string = {
-          query: request.body.q
-        }
-      } else {
-        if ( !dbQuery.bool ) {
-          dbQuery.bool = {
-            should: []
-          }
+    Rescue.findById(id).populate('rats').exec(function (error, rescue) {
+        if (error) {
+            response.model.errors.push(error);
+            response.status(400);
+        } else {
+            response.model.data = rescue;
+            response.status(200);
         }
 
-        term = {}
-        term[key] = {
-          query: query[key],
-          fuzziness: 'auto'
+        next();
+    });
+};
+
+
+exports.read = function (query) {
+    return new Promise(function (resolve, reject) {
+        let filter = {};
+        let dbQuery = {};
+
+        filter.size = parseInt( query.limit ) || 25;
+        delete query.limit;
+
+        filter.from = parseInt( query.offset ) || 0;
+        delete query.offset;
+
+        for (var key in query) {
+            if (key === 'q') {
+                dbQuery.query_string = {
+                    query: query.body.q
+                };
+            } else {
+                if ( !dbQuery.bool ) {
+                    dbQuery.bool = {
+                        should: []
+                    };
+                }
+
+                let term = {};
+                term[key] = {
+                    query: query[key],
+                    fuzziness: 'auto'
+                };
+                dbQuery.bool.should.push({ match: term });
+            }
         }
-        dbQuery.bool.should.push( { match: term } )
-      }
-    }
 
-    if ( !Object.keys( dbQuery ).length ) {
-      dbQuery.match_all = {}
-    }
-
-    Rescue.search( dbQuery, filter, function ( error, queryData ) {
-      if ( error ) {
-        var errorObj = ErrorModels.server_error
-        errorObj.detail = error
-        reject( { error: errorObj, meta: {} } )
-
-      } else {
-        var meta = {
-          count: queryData.hits.hits.length,
-          limit: filter.size,
-          offset: filter.from,
-          total: queryData.hits.total
+        if ( !Object.keys( dbQuery ).length ) {
+            dbQuery.match_all = {};
         }
 
-        var data = []
+        Rescue.search( dbQuery, filter, function (error, queryData) {
+            if (error) {
+                let errorObj = ErrorModels.server_error;
+                errorObj.detail = error;
+                reject({ error: errorObj, meta: {} });
+            } else {
+                let meta = {
+                    count: queryData.hits.hits.length,
+                    limit: filter.size,
+                    offset: filter.from,
+                    total: queryData.hits.total
+                };
 
-        queryData.hits.hits.forEach( function ( rescue, index, rescues ) {
-          var rescueToPopulate, rescueFind
+                let data = [];
 
-          rescue._source._id = rescue._id
-          rescue._source.score = rescue._score
+                queryData.hits.hits.forEach( function (rescue) {
+                    rescue._source._id = rescue._id;
+                    rescue._source.score = rescue._score;
+                    data.push(rescue._source);
+                });
 
-          data.push( rescue._source )
-        })
-
-        resolve( { data: data, meta: meta } )
-      }
-    })
-  })
-}
+                resolve({ data: data, meta: meta });
+            }
+        });
+    });
+};
 
 
 
 // POST
 // =============================================================================
-exports.post = function ( request, response, next ) {
-  exports.create( request.body ).then(function( res ) {
-    console.log('done')
-    response.model.data = res.data
-    response.status( 201 )
-    next()
-  }, function( error ) {
-    console.log('erroring')
-    response.model.errors.push( error )
-    response.status( 400 )
-    next()
-  })
-}
+exports.post = function (request, response, next) {
+    exports.create( request.body ).then(function( res ) {
+        response.model.data = res.data;
+        response.status(201);
+        next();
+    }, function( error ) {
+        response.model.errors.push(error);
+        response.status(400);
+        next();
+    });
+};
 
 exports.create = function( query ) {
-  return new Promise(function(resolve, reject) {
-    console.log('0')
-    var finds, firstLimpetFind
+    return new Promise(function(resolve, reject) {
+        let finds = [];
 
-    finds = []
-
-    console.log(query)
-    // Validate and update rats
-    if ( typeof query.rats === 'string' ) {
-      query.rats = query.rats.split( ',' )
-    }
-
-    query.unidentifiedRats = []
-
-
-    if ( query.rats ) {
-      query.rats.forEach( function ( rat, index, rats ) {
-        var find, CMDRname
-
-        if ( typeof rat === 'string' ) {
-          if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
-            CMDRname = rat.trim()
-
-            query.rats = _.without( query.rats, CMDRname )
-
-            find = Rat.findOne({
-              CMDRname: CMDRname
-            })
-
-            find.then( function ( rat ) {
-              if ( rat ) {
-                query.rats.push( rat._id )
-              } else {
-                query.unidentifiedRats.push( CMDRname )
-              }
-            })
-
-            finds.push( find )
-          }
-
-        } else if ( typeof rat === 'object' && rat._id ) {
-          query.rats.push( rat._id )
+        if (typeof query.rats === 'string') {
+            query.rats = query.rats.split(',');
         }
-      })
-    }
 
-    // Validate and update firstLimpet
-    if ( query.firstLimpet ) {
-      if ( typeof query.firstLimpet === 'string' ) {
-        if ( !mongoose.Types.ObjectId.isValid( query.firstLimpet ) ) {
-          firstLimpetFind = Rat.findOne({
-            CMDRname: query.firstLimpet.trim()
-          })
+        query.unidentifiedRats = [];
 
-          firstLimpetFind.then( function ( rat ) {
-            if ( rat ) {
-              query.firstLimpet = rat._id
+
+        if (query.rats) {
+            query.rats.forEach(function (rat) {
+                if (typeof rat === 'string') {
+                    if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
+                        let CMDRname = rat.trim();
+                        query.rats = _.without(query.rats, CMDRname);
+                        find = Rat.findOne({
+                            CMDRname: CMDRname
+                        });
+
+                        find.then(function (rat) {
+                            if (rat) {
+                                query.rats.push(rat._id);
+                            } else {
+                                query.unidentifiedRats.push(CMDRname);
+                            }
+                        });
+
+                        finds.push(find);
+                    }
+                } else if ( typeof rat === 'object' && rat._id ) {
+                    query.rats.push(rat._id);
+                }
+            });
+        }
+
+        // Validate and update firstLimpet
+        if (query.firstLimpet) {
+            if (typeof query.firstLimpet === 'string') {
+                if (!mongoose.Types.ObjectId.isValid( query.firstLimpet )) {
+                    let firstLimpetFind = Rat.findOne({
+                        CMDRname: query.firstLimpet.trim()
+                    });
+
+                    firstLimpetFind.then(function (rat) {
+                        if (rat) {
+                            query.firstLimpet = rat._id;
+                        }
+                    });
+                    finds.push(firstLimpetFind);
+                }
+            } else if ( typeof query.firstLimpet === 'object' && query.firstLimpet._id ) {
+                query.firstLimpet = query.firstLimpet._id;
             }
-          })
-
-          finds.push( firstLimpetFind )
         }
-
-      } else if ( typeof query.firstLimpet === 'object' && query.firstLimpet._id ) {
-        query.firstLimpet = query.firstLimpet._id
-      }
-    }
-    Promise.all( finds )
-    .then( function () {
-
-      Rescue.create( query, function ( error, rescue ) {
-        var errors
-
-        if ( error ) {
-          var errorObj = ErrorModels.server_error
-          errorObj.detail = error
-          reject( { error: errorObj, meta: {} } )
-
-        } else {
-          resolve ( { data: rescue, meta: {} } )
-        }
-      })
-    })
-  })
-}
+        Promise.all(finds).then( function () {
+            Rescue.create( query, function (error, rescue) {
+                if (error) {
+                    let errorObj = ErrorModels.server_error;
+                    errorObj.detail = error;
+                    reject({ error: errorObj, meta: {} });
+                } else {
+                    resolve ({ data: rescue, meta: {} });
+                }
+            });
+        });
+    });
+};
 
 
 
 // PUT
 // =============================================================================
-exports.put = function ( request, response, next ) {
-  var status
+exports.put = function (request, response, next) {
+    response.model.meta.params = _.extend(response.model.meta.params, request.params);
 
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
+    exports.update(request.params, request.body).then(function (data) {
+        response.model.data = data.data;
+        response.status(201);
+        next();
+    }, function (error) {
+        response.model.errors.push(error);
 
-  exports.update( request.params, request.body ).then(function( data ) {
-    response.model.data = data.data
-    response.status( 201 )
-    next()
-  }, function( error ) {
-    response.model.errors.push( error )
+        var status = error.code || 400;
+        response.status(status);
+        next();
+    });
+};
 
-    var status = error.code || 400
-    response.status( status )
-    next()
-  })
-}
+exports.update = function (query, changes) {
+    return new Promise(function (resolve, reject) {
+        if (query.id) {
+            Rescue.findById(query.id, function (error, rescue) {
+                if (error) {
+                    reject({ error: error, meta: {} });
+                } else if (!rescue) {
+                    reject({ error: ErrorModels.not_found, meta: {} });
+                } else {
+                    for ( var key in changes) {
+                        if (key === 'client') {
+                            _.extend(rescue.client, changes[key]);
+                        } else {
+                            rescue[key] = changes[key];
+                        }
+                    }
 
-exports.update = function( query, changes ) {
-  return new Promise(function(resolve, reject) {
-    if ( query.id ) {
-      Rescue.findById( query.id, function ( error, rescue ) {
-        if ( error ) {
-          reject( { error: error, meta: {} } )
-
-        } else if ( !rescue ) {
-          reject( { error: ErrorModels.not_found, meta: {} } )
-
-        } else {
-          for ( var key in changes ) {
-            if ( key === 'client' ) {
-              _.extend( rescue.client, changes[key] )
-            } else {
-              rescue[key] = changes[key]
-            }
-          }
-
-          rescue.save( function ( error, data ) {
-            var errors
-
-            if ( error ) {
-              reject( { error: error, meta: {} } )
-
-            } else {
-              resolve( { data: data, meta: {} } )
-            }
-          })
+                    rescue.save(function (error, data) {
+                        if (error) {
+                            reject({ error: error, meta: {} });
+                        } else {
+                            resolve({ data: data, meta: {} });
+                        }
+                    });
+                }
+            });
         }
-      })
-    }
-  })
-}
+    });
+};
