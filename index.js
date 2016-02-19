@@ -33,6 +33,7 @@ var _,
     rescue,
     request,
     router,
+    statistics,
     socket,
     sslHostName,
     sslPort,
@@ -91,6 +92,7 @@ rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
 rescueAdmin = require( './api/controllers/rescueAdmin' )
+statistics = require( './api/controllers/statistics' )
 version = require( './api/controllers/version' )
 welcome = require( './api/controllers/welcome' )
 
@@ -288,6 +290,9 @@ router.get( '/rescues/view/:id', rescueAdmin.viewRescue )
 router.get( '/rescues/edit/:id', rescueAdmin.editRescue )
 router.get( '/rescues/list', rescueAdmin.listRescues )
 router.get( '/rescues/list/:page', rescueAdmin.listRescues )
+
+
+router.get( '/statistics', statistics.get )
 
 // Register routes
 app.use( express.static( __dirname + '/static' ) )
