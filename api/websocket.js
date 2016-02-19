@@ -32,8 +32,6 @@ retrieveCaseInsensitiveProperty = function(propertyName, obj) {
     return prop.toLowerCase()
   })
 
-  console.log(caseInsensitivePropertyMap)
-
   indexOfProperty = caseInsensitivePropertyMap.indexOf(propertyName)
 
   if (indexOfProperty !== -1) {
@@ -45,7 +43,7 @@ retrieveCaseInsensitiveProperty = function(propertyName, obj) {
 exports.socket = null
 
 exports.received = function (client, requestString) {
-  var controller, requestHasValidAction, requestHadActionField, request, requestSections, namespace, method, call, error, applicationId, action, data
+  var controller, requestHasValidAction, requestHadActionField, request, requestSections, namespace, method, call, error, applicationId, action, data, requestMeta
 
   try {
     request = JSON.parse(requestString)
@@ -56,6 +54,9 @@ exports.received = function (client, requestString) {
     requestHadActionField = false
     action = retrieveCaseInsensitiveProperty("action", request)
     data = retrieveCaseInsensitiveProperty("data", request)
+    requestMeta = retrieveCaseInsensitiveProperty("meta", request)
+    if (!requestMeta) requestMeta = {}
+    if (!data) data = {}
 
     if ( action ) {
       requestHadActionField = true
@@ -76,13 +77,13 @@ exports.received = function (client, requestString) {
 
           controller[method].call( null, data, client, query ).then(function( response ) {
             var data = response.data
-            var meta = response.meta
+            var meta = _.extend( requestMeta, response.meta )
             meta.action = action
 
             exports.send(client, meta, data);
           }, function( response ) {
             var error = response.error
-            var meta = response.meta
+            var meta = _.extend( requestMeta, response.meta )
             meta.action = action
 
             exports.error(client, meta, [error])
@@ -101,18 +102,18 @@ exports.received = function (client, requestString) {
           return
         }
 
-        var callbackMeta = {
+        var callbackMeta = _.extend(requestMeta, {
           action: 'stream:broadcast',
           originalAction: action,
           applicationId: applicationId
-        }
+        })
 
         exports.send(client, callbackMeta, data)
 
-        var meta = {
+        var meta = _.extend( requestMeta, {
           action: action,
           applicationId: applicationId
-        }
+        } )
 
         var clients = exports.socket.clients.filter(function (cl) {
           return cl.subscribedStreams.indexOf(applicationId) !== -1 && cl !== client
@@ -127,8 +128,11 @@ exports.received = function (client, requestString) {
       } else {
         error = ErrorModels.missing_required_field
       }
+
+      var meta = _.extend( requestMeta, { action: 'unknown' } )
+
       error.detail = 'action'
-      exports.error(client, { action: 'unknown' }, [error])
+      exports.error(client, meta, [error])
     }
   } catch (ex) {
     console.log(ex.stack)
@@ -136,13 +140,19 @@ exports.received = function (client, requestString) {
       if ( typeof action == 'string' ) {
         error = ErrorModels.server_error
         error.detail = ex.message
-        exports.error(client, { action: action }, [error])
+
+        var meta = _.extend( requestMeta, { action: action } )
+
+        exports.error(client, meta, [error])
         return
       }
     }
     error = ErrorModels.server_error
     error.detail = ex.message
-    exports.error(client, { action: 'unknown' }, [error])
+
+    var meta = _.extend( requestMeta, { action: 'unknown' } )
+
+    exports.error(client, meta, [error])
   }
 }
 
