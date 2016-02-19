@@ -51,7 +51,7 @@ exports.received = function (client, requestString) {
           var query = _.clone( request )
           delete query.action
 
-          controller[method].call( null, query, client ).then(function( response ) {
+          controller[method].call( null, query.data, client ).then(function( response ) {
             var data = response.data
             var meta = response.meta
             meta.action = request.action
