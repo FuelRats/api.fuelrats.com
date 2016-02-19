@@ -21,10 +21,31 @@ var APIControllers = {
   version: version
 }
 
+retrieveCaseInsensitiveProperty = function(propertyName, obj) {
+  var indexOfProperty, caseInsensitivePropertyMap
+
+  if (!obj) return null
+
+  propertyName = propertyName.toLowerCase()
+
+  caseInsensitivePropertyMap = Object.keys(obj).map(function(prop){
+    return prop.toLowerCase()
+  })
+
+  console.log(caseInsensitivePropertyMap)
+
+  indexOfProperty = caseInsensitivePropertyMap.indexOf(propertyName)
+
+  if (indexOfProperty !== -1) {
+    return obj[Object.keys(obj)[indexOfProperty]]
+  }
+  return null
+}
+
 exports.socket = null
 
 exports.received = function (client, requestString) {
-  var controller, requestHasValidAction, requestHadActionField, request, requestSections, namespace, method, call, error
+  var controller, requestHasValidAction, requestHadActionField, request, requestSections, namespace, method, call, error, applicationId, action, data
 
   try {
     request = JSON.parse(requestString)
@@ -33,15 +54,18 @@ exports.received = function (client, requestString) {
 
     requestHasValidAction = false
     requestHadActionField = false
-    if ( request.hasOwnProperty('action') ) {
+    action = retrieveCaseInsensitiveProperty("action", request)
+    data = retrieveCaseInsensitiveProperty("data", request)
+
+    if ( action ) {
       requestHadActionField = true
-      if ( typeof request.action == 'string' ) {
-        requestHasValidAction = request.action.length > 2 && request.action.includes(':')
+      if ( typeof action == 'string' ) {
+        requestHasValidAction = action.length > 2 && action.includes(':')
       }
     }
 
     if ( requestHasValidAction === true ) {
-      requestSections = request.action.split(':')
+      requestSections = action.split(':')
       namespace = requestSections[0].toLowerCase()
 
       if ( APIControllers.hasOwnProperty(namespace) ) {
@@ -49,52 +73,52 @@ exports.received = function (client, requestString) {
         method = requestSections[1].toLowerCase()
         if (method && controller[method]) {
           var query = _.clone( request )
-          delete query.action
 
-          controller[method].call( null, query.data, client, query ).then(function( response ) {
+          controller[method].call( null, data, client, query ).then(function( response ) {
             var data = response.data
             var meta = response.meta
-            meta.action = request.action
+            meta.action = action
 
             exports.send(client, meta, data);
           }, function( response ) {
             var error = response.error
             var meta = response.meta
-            meta.action = request.action
+            meta.action = action
 
             exports.error(client, meta, [error])
           })
         } else {
           var error = ErrorModels.invalid_parameter
           error.detail = 'action'
-          exports.error(client, { action: request.action }, [error])
+          exports.error(client, { action: action }, [error])
         }
       } else {
-        if (!request.applicationId || request.applicationId.length === 0) {
-          var error = ErrorModels.invalid_parameter
+        applicationId = retrieveCaseInsensitiveProperty("applicationId", request)
+        if (!applicationId || applicationId.length === 0) {
+          error = ErrorModels.invalid_parameter
           error.detail = 'applicationId'
-          exports.error(client, { action: request.action }, [error])
+          exports.error(client, { action: action }, [error])
           return
         }
 
         var callbackMeta = {
           action: 'stream:broadcast',
-          originalAction: request.action,
-          applicationId: request.applicationId
+          originalAction: action,
+          applicationId: applicationId
         }
 
-        exports.send(client, callbackMeta, request.data)
+        exports.send(client, callbackMeta, data)
 
         var meta = {
-          action: request.action,
-          applicationId: request.applicationId
+          action: action,
+          applicationId: applicationId
         }
 
         var clients = exports.socket.clients.filter(function (cl) {
-          return cl.subscribedStreams.indexOf(request.applicationId) !== -1 && cl !== client
+          return cl.subscribedStreams.indexOf(applicationId) !== -1 && cl !== client
         })
 
-        exports.broadcast(clients, meta, request.data)
+        exports.broadcast(clients, meta, data)
       }
 
     } else {
@@ -108,11 +132,11 @@ exports.received = function (client, requestString) {
     }
   } catch (ex) {
     console.log(ex.stack)
-    if ( request && request.hasOwnProperty('action') ) {
-      if ( typeof request.action == 'string' ) {
+    if ( request && action ) {
+      if ( typeof action == 'string' ) {
         error = ErrorModels.server_error
         error.detail = ex.message
-        exports.error(client, { action: request.action }, [error])
+        exports.error(client, { action: action }, [error])
         return
       }
     }
