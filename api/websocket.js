@@ -14,9 +14,9 @@ _ = require( 'underscore' )
 var APIControllers = {
   login: login,
   logout: logout,
-  rat: rat,
+  rats: rat,
   register: register,
-  rescue: rescue,
+  rescues: rescue,
   stream: stream,
   version: version
 }
