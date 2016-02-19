@@ -60,6 +60,7 @@ exports.received = function (client, requestString) {
           }, function( response ) {
             var error = response.error
             var meta = response.meta
+            meta.action = request.action
 
             exports.error(client, meta, [error])
           })
@@ -102,18 +103,21 @@ exports.received = function (client, requestString) {
         error = ErrorModels.missing_required_field
       }
       error.detail = 'action'
-      exports.error(client, { action: null }, [error])
+      exports.error(client, { action: 'unknown' }, [error])
     }
   } catch (ex) {
+    console.log(ex.stack)
     if ( request && request.hasOwnProperty('action') ) {
       if ( typeof request.action == 'string' ) {
-        var error = ErrorModels.server_error
+        error = ErrorModels.server_error
         error.detail = ex.message
         exports.error(client, { action: request.action }, [error])
         return
       }
     }
-    exports.error(client, { action: null }, [ex.message])
+    error = ErrorModels.server_error
+    error.detail = ex.message
+    exports.error(client, { action: 'unknown' }, [error])
   }
 }
 

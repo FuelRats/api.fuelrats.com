@@ -132,7 +132,9 @@ exports.read = function ( query ) {
 
     Rescue.search( dbQuery, filter, function ( error, queryData ) {
       if ( error ) {
-        reject( { error: error, meta: {} } )
+        var errorObj = ErrorModels.server_error
+        errorObj.detail = error
+        reject( { error: errorObj, meta: {} } )
 
       } else {
         var meta = {
@@ -245,7 +247,6 @@ exports.create = function( query ) {
         query.firstLimpet = query.firstLimpet._id
       }
     }
-    console.log(finds)
     Promise.all( finds )
     .then( function () {
 
@@ -253,7 +254,9 @@ exports.create = function( query ) {
         var errors
 
         if ( error ) {
-          reject( { error: error, meta: {} } )
+          var errorObj = ErrorModels.server_error
+          errorObj.detail = error
+          reject( { error: errorObj, meta: {} } )
 
         } else {
           resolve ( { data: rescue, meta: {} } )
