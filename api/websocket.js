@@ -24,7 +24,7 @@ var APIControllers = {
 exports.socket = null
 
 exports.received = function (client, requestString) {
-  var controller, requestHasValidAction, request, requestSections, namespace, method, call
+  var controller, requestHasValidAction, requestHadActionField, request, requestSections, namespace, method, call, error
 
   try {
     request = JSON.parse(requestString)
@@ -32,7 +32,9 @@ exports.received = function (client, requestString) {
     winston.info(request)
 
     requestHasValidAction = false
+    requestHadActionField = false
     if ( request.hasOwnProperty('action') ) {
+      requestHadActionField = true
       if ( typeof request.action == 'string' ) {
         requestHasValidAction = request.action.length > 2 && request.action.includes(':')
       }
@@ -94,7 +96,11 @@ exports.received = function (client, requestString) {
       }
 
     } else {
-      var error = ErrorModels.missing_required_field
+      if (requestHadActionField) {
+        error = ErrorModels.invalid_parameter
+      } else {
+        error = ErrorModels.missing_required_field
+      }
       error.detail = 'action'
       exports.error(client, { action: null }, [error])
     }
