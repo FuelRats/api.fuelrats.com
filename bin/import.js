@@ -153,11 +153,14 @@ processRescues = function ( rescuesData ) {
       var rescue
 
       rescue = {
+        client: {},
         archive: true,
         createdAt: new Date( rescueDatum[0] ),
         notes: rescueDatum[4].trim(),
         open: false,
         rats: [],
+        name: null,
+        firstLimpet: null,
         unidentifiedRats: [rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()],
         successful: rescueDatum[3].toLowerCase() === 'successful' ? true : false,
         system: rescueDatum[2].trim()
@@ -189,48 +192,6 @@ processRescues = function ( rescuesData ) {
   })
 }
 
-linkRatsAndRescues = function() {
-    
-    winston.info('Linking rescues and rats together, forever')
-    return new Promise(function(resolve, reject) {
-    var links = [];
-    /*links.push(Rescue.find({'unidentifiedRats.0': { $exists: true }}, function (err, rescues) {
-        if(err) return console.error(err);
-        winston.info('Found %d rescues that need fixing', rescues.length);
-        var linkedRescue = [];
-        rescues.forEach(function( rescue, index, rescues) {
-            rescue.unidentifiedRats.forEach(function(rat, index, rats) {
-                linkedRescue.push(Rat.findOneAndUpdate(
-                    { CMDRname: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim() },
-                    {   
-                        $set: { 
-                            CMDRname: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(), 
-                            archive: true, 
-                            nicknames: [],
-                            platform: rescue.platform,
-                            drilled: {
-                                dispatch: false,
-                                rescue: false
-                            }
-                        },   
-                        $inc: { rescueCount: 1 },   
-                        $push: { rescues: rescue._id } 
-                    }, 
-                    { upsert: true }
-                ));
-            });
-        })
-        Promise.all(linkedRescue);
-    }));*/
-    Promise.all(links)
-    .then( resolve )
-    .catch( reject )
-    })
-    
-}
-
-
-
 removeArchives = function removeArchives ( models ) {
   winston.info( 'Removing archives' )
 
@@ -260,7 +221,6 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
 
   spreadsheet = spreadsheets[name]
   url = 'https://docs.google.com/spreadsheets/d/' + spreadsheet.workbookId + '/export?gid=' + spreadsheet.sheetId + '&format=csv'
-
   downloads.push( new Promise( function ( resolve, reject ) {
     download()
     .get( url )
@@ -290,6 +250,7 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
 
 Promise.all( downloads )
 .then( function () {
+    console.log('Clearing archives')
   var dispatchDrills, promises, rats, removals, rescues, rescueDrills, epicRescueRats
 
   promises = []
@@ -309,6 +270,7 @@ Promise.all( downloads )
   epicRescueRats.shift();
 
   // Clear out the archives
+    
   removeArchives( [ Rat, Rescue ] )
   .then( function () {
     var promises
@@ -322,9 +284,7 @@ Promise.all( downloads )
     .then( function () {
       Promise.all( promises )
       .then( function () {
-          
-       linkRatsAndRescues().then(function() {
-          
+
             var promises
 
             promises = []
@@ -348,8 +308,7 @@ Promise.all( downloads )
         
             })
             .catch( winston.error )
-        })
-        .catch( winston.error )
+        
       })
       .catch( winston.error )
     })

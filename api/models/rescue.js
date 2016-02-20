@@ -244,4 +244,4 @@ if ( mongoose.models.Rescue ) {
   module.exports = mongoose.model( 'Rescue', RescueSchema )
 }
 
-module.exports.synchronize()
+//module.exports.synchronize()

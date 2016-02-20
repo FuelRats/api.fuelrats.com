@@ -62,7 +62,10 @@ RatSchema = new Schema({
     type: Date
   },
   nicknames: {
-    type: [String]
+    default: [],
+    type: [{
+      type: String
+    }]
   },
   platform: {
     default: 'pc',
@@ -184,4 +187,4 @@ if ( mongoose.models.Rat ) {
   module.exports = mongoose.model( 'Rat', RatSchema )
 }
 
-module.exports.synchronize()
+//module.exports.synchronize()
