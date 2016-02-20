@@ -12,7 +12,7 @@ let ErrorModels = require('../errors');
 // =============================================================================
 exports.get = function ( request, response, next ) {
 
-    exports.read( request.body ).then( function( res ) {
+    exports.read(request.query).then( function( res ) {
         let data = res.data;
         let meta = res.meta;
 
@@ -53,6 +53,7 @@ exports.getById = function ( request, response, next ) {
 
 exports.read = function (query) {
     return new Promise(function (resolve, reject) {
+        console.log(query);
         let filter = {};
         let dbQuery = {};
 
@@ -63,24 +64,18 @@ exports.read = function (query) {
         delete query.offset;
 
         for (var key in query) {
-            if (key === 'q') {
-                dbQuery.query_string = {
-                    query: query.body.q
+            if ( !dbQuery.bool ) {
+                dbQuery.bool = {
+                    should: []
                 };
-            } else {
-                if ( !dbQuery.bool ) {
-                    dbQuery.bool = {
-                        should: []
-                    };
-                }
-
-                let term = {};
-                term[key] = {
-                    query: query[key],
-                    fuzziness: 'auto'
-                };
-                dbQuery.bool.should.push({ match: term });
             }
+
+            let term = {};
+            term[key] = {
+                query: query[key],
+                fuzziness: 'auto'
+            };
+            dbQuery.bool.should.push({ match: term });
         }
 
         if ( !Object.keys( dbQuery ).length ) {
