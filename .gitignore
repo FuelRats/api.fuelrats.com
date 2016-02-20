@@ -108,3 +108,5 @@ $RECYCLE.BIN/
 *.lnk
 
 views/docs.hbs
+
+.eslintrc.json

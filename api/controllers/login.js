@@ -17,7 +17,7 @@ Rescue = require( '../models/rescue' )
 
 exports.get = function ( request, response ) {
   if ( request.isUnauthenticated() ) {
-    response.render( 'login' )
+    response.render('login', request.query);
   } else {
     response.redirect( '/welcome' )
   }

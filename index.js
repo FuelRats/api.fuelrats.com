@@ -2,6 +2,7 @@ var _,
     app,
     badge,
     bodyParser,
+    change_password,
     config,
     cookieParser,
     cors,
@@ -25,6 +26,7 @@ var _,
     port,
     Rat,
     rat,
+    reset,
     register,
     Rescue,
     rescue,
@@ -74,12 +76,14 @@ User = require( './api/models/user' )
 
 // Import controllers
 badge = require( './api/controllers/badge' )
+change_password = require( './api/controllers/change_password' )
 docs = require( './api/controllers/docs' )
 login = require( './api/controllers/login' )
 logout = require( './api/controllers/logout' )
 paperwork = require( './api/controllers/paperwork' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
+reset = require( './api/controllers/reset' )
 rescue = require( './api/controllers/rescue' )
 rescueAdmin = require( './api/controllers/rescueAdmin' )
 version = require( './api/controllers/version' )
@@ -247,6 +251,8 @@ router.get( '/badge/:rat', badge.get )
 router.post( '/register', register.post )
 
 router.post( '/login', passport.authenticate( 'local' ), login.post )
+router.post( '/reset', reset.post )
+router.post( '/change_password', change_password.post )
 
 router.get( '/logout', logout.post )
 router.post( '/logout', logout.post )
@@ -268,6 +274,8 @@ router.get( '/version', version.get )
 
 router.get( '/docs', docs.get )
 router.get( '/login', login.get )
+router.get( '/reset', reset.get )
+router.get( '/change_password', change_password.get )
 router.get( '/paperwork', paperwork.get )
 router.get( '/register', register.get )
 router.get( '/welcome', welcome.get )

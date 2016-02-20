@@ -15,7 +15,9 @@ modelProperties = {
       type: Schema.Types.ObjectId,
       ref: 'Rat'
     }]
-  }
+  },
+  resetToken: String,
+  resetTokenExpire: Date
 };
 
 UserSchema = new Schema( modelProperties );
