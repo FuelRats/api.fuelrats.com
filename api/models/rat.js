@@ -101,12 +101,12 @@ linkRescues = function ( next ) {
   rat = this
 
   rat.rescues = rat.rescues || []
-
+  
   mongoose.models.Rescue.update({
-    unidentifiedRats: rat.CMDRname
+    unidentifiedRats: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
   }, {
     $pull: {
-      unidentifiedRats: rat.CMDRname
+      unidentifiedRats: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
     },
     $push: {
       rats: rat._id
@@ -114,13 +114,16 @@ linkRescues = function ( next ) {
   })
   .then( function () {
     mongoose.models.Rescue.find({
-      unidentifiedRats: rat.CMDRname
+      rats: rat._id
     })
     .then( function ( rescues ) {
       rescues.forEach( function ( rescue, index, rescues ) {
         this.rescues.push( rescue._id )
       })
-
+      if(this.rescues)
+        this.rescueCount = this.rescues.length;
+    else
+        this.rescueCount = 0;
       next()
     })
     .catch( next )
@@ -154,8 +157,7 @@ updateTimestamps = function ( next ) {
 sanitizeInput = function ( next ) {
     var rat = this
     if(rat && rat.CMDRname)
-        rat.CMDRname = rat.CMDRname.trim()
-
+        rat.CMDRname = rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
     next()
 }
 
