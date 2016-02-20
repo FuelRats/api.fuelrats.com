@@ -17,7 +17,9 @@ UserSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: 'Rat'
     }]
-  }
+  },
+  resetToken: String,
+  resetTokenExpire: Date
 })
 
 autopopulate = function ( next ) {
