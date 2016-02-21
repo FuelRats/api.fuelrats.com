@@ -1,7 +1,8 @@
-var _, winston, ErrorModels
+var _, winston, ErrorModels, websocket
 
 _ = require( 'underscore' )
 winston = require( 'winston' )
+websocket = require( '../websocket' )
 
 ErrorModels = require( '../errors' )
 
@@ -11,10 +12,9 @@ exports.subscribe = function( data, client, query ) {
 
     meta = {}
 
-    console.log(query)
+    applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query);
 
-    if (query.applicationId && query.applicationId.length > 0) {
-      applicationId = query.applicationId
+    if (applicationId && applicationId.length > 0) {
 
       if (client.subscribedStreams.indexOf(applicationId) === -1) {
         client.subscribedStreams.push(applicationId)
@@ -35,8 +35,9 @@ exports.unsubscribe = function( data, client, query ) {
 
     meta = {}
 
-    if (query.applicationId && query.applicationId.length > 0) {
-      applicationId = query.applicationId
+    applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query);
+
+    if (applicationId && applicationId.length > 0) {
 
       positionInSubscribeList = client.subscribedStreams.indexOf(applicationId)
       if (positionInSubscribeList !== -1) {

@@ -1,4 +1,4 @@
-var winston, badge, docs, login, logout, paperwork, rat, register, rescue, rescueAdmin, version, websocket, welcome, _, ErrorModels
+var winston, badge, docs, login, logout, paperwork, rat, register, rescue, rescueAdmin, version, welcome, _, ErrorModels
 
 winston = require( 'winston' )
 ErrorModels = require( './errors' )
@@ -8,7 +8,6 @@ rat = require( './controllers/rat' )
 rescue = require( './controllers/rescue' )
 stream = require( './controllers/stream' )
 version = require( './controllers/version' )
-websocket = require( './websocket' )
 _ = require( 'underscore' )
 
 var APIControllers = {
@@ -21,7 +20,7 @@ var APIControllers = {
   version: version
 }
 
-retrieveCaseInsensitiveProperty = function(propertyName, obj) {
+exports.retrieveCaseInsensitiveProperty = function(propertyName, obj) {
   var indexOfProperty, caseInsensitivePropertyMap
 
   if (!obj) return null
@@ -52,9 +51,9 @@ exports.received = function (client, requestString) {
 
     requestHasValidAction = false
     requestHadActionField = false
-    action = retrieveCaseInsensitiveProperty("action", request)
-    data = retrieveCaseInsensitiveProperty("data", request)
-    requestMeta = retrieveCaseInsensitiveProperty("meta", request)
+    action = exports.retrieveCaseInsensitiveProperty("action", request)
+    data = exports.retrieveCaseInsensitiveProperty("data", request)
+    requestMeta = exports.retrieveCaseInsensitiveProperty("meta", request)
     if (!requestMeta) requestMeta = {}
     if (!data) data = {}
 
@@ -94,7 +93,7 @@ exports.received = function (client, requestString) {
           exports.error(client, { action: action }, [error])
         }
       } else {
-        applicationId = retrieveCaseInsensitiveProperty("applicationId", request)
+        applicationId = exports.retrieveCaseInsensitiveProperty("applicationId", request)
         if (!applicationId || applicationId.length === 0) {
           error = ErrorModels.invalid_parameter
           error.detail = 'applicationId'
@@ -141,8 +140,7 @@ exports.received = function (client, requestString) {
         error = ErrorModels.server_error
         error.detail = ex.message
 
-        var meta = _.extend( requestMeta, { action: action } )
-        console.log(meta);
+        var meta = _.extend( requestMeta, { action: action } );
 
         exports.error(client, meta, [error])
         return
