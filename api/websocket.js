@@ -135,13 +135,14 @@ exports.received = function (client, requestString) {
       exports.error(client, meta, [error])
     }
   } catch (ex) {
-    console.log(ex.stack)
+    if (!requestMeta) requestMeta = {};
     if ( request && action ) {
       if ( typeof action == 'string' ) {
         error = ErrorModels.server_error
         error.detail = ex.message
 
         var meta = _.extend( requestMeta, { action: action } )
+        console.log(meta);
 
         exports.error(client, meta, [error])
         return
