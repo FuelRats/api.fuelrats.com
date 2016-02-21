@@ -6,6 +6,7 @@ let ErrorModels = require('./errors');
 let rat = require('./controllers/rat');
 let rescue = require('./controllers/rescue');
 let stream = require('./controllers/stream');
+let user = require('./controllers/user');
 let version = require('./controllers/version');
 let _ = require('underscore');
 
@@ -13,6 +14,7 @@ var APIControllers = {
     rats: rat,
     rescues: rescue,
     stream: stream,
+    users: user,
     version: version
 };
 
@@ -134,6 +136,7 @@ exports.received = function(client, requestString) {
             exports.error(client, meta, [error]);
         }
     } catch (ex) {
+        console.log(ex);
         if (!requestMeta) requestMeta = {};
         if (request && action) {
             if (typeof action == 'string') {

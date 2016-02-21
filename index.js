@@ -35,6 +35,7 @@ var _,
     socket,
     sslHostName,
     sslPort,
+    user,
     version,
     websocket,
     welcome,
@@ -90,6 +91,7 @@ rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
 rescue = require( './api/controllers/rescue' )
 rescueAdmin = require( './api/controllers/rescueAdmin' )
+user = require( './api/controllers/user' )
 version = require( './api/controllers/version' )
 websocket = require( './api/websocket' )
 welcome = require( './api/controllers/welcome' )
@@ -271,6 +273,9 @@ router.get( '/rescues', rescue.get )
 router.post( '/rescues', rescue.post )
 router.get( '/rescues/:id', rescue.getById )
 router.put( '/rescues/:id', rescue.put )
+
+router.get( '/users', user.get )
+router.get( '/users/:id', user.getById )
 
 router.get( '/search/rescues', rescue.get )
 router.get( '/search/rats', rat.get )

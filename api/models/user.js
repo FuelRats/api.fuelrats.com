@@ -35,8 +35,12 @@ UserSchema.methods.toJSON = function () {
   return obj
 }
 
+UserSchema.plugin( require( 'mongoosastic' ) )
+
 UserSchema.plugin( require( 'passport-local-mongoose' ), {
   usernameField: 'email'
 })
 
 module.exports = mongoose.model( 'User', UserSchema )
+
+module.exports.synchronize();
