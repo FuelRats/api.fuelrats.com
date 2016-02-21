@@ -53,7 +53,6 @@ exports.getById = function ( request, response, next ) {
 
 exports.read = function (query) {
     return new Promise(function (resolve, reject) {
-        console.log(query);
         let filter = {};
         let dbQuery = {};
 
@@ -215,28 +214,34 @@ exports.put = function (request, response, next) {
     });
 };
 
-exports.update = function (query, changes) {
+exports.update = function (data, client, query) {
     return new Promise(function (resolve, reject) {
         if (query.id) {
-            Rescue.findById(query.id, function (error, rescue) {
+            Rescue.findById(query.id, function(error, rescue) {
                 if (error) {
-                    reject({ error: error, meta: {} });
+                    let errorModel = ErrorModels.server_error;
+                    errorModel.detail = error;
+                    reject({ error: errorModel, meta: {}});
                 } else if (!rescue) {
-                    reject({ error: ErrorModels.not_found, meta: {} });
+                    let errorModel = ErrorModels.not_found;
+                    errorModel.detail = query.id;
+                    reject({ error: errorModel, meta: {}});
                 } else {
-                    for ( var key in changes) {
+                    for (var key in data) {
                         if (key === 'client') {
-                            _.extend(rescue.client, changes[key]);
+                            _.extend(rescue.client, data);
                         } else {
-                            rescue[key] = changes[key];
+                            rescue[key] = data[key];
                         }
                     }
 
-                    rescue.save(function (error, data) {
+                    rescue.save(function(error, rescue) {
                         if (error) {
-                            reject({ error: error, meta: {} });
+                            let errorModel = ErrorModels.server_error;
+                            errorModel.detail = error;
+                            reject({ error: errorModel, meta: {}});
                         } else {
-                            resolve({ data: data, meta: {} });
+                            resolve({ data: rescue, meta: {} });
                         }
                     });
                 }
