@@ -6,6 +6,7 @@ let mongoose = require('mongoose');
 let Rat = require('../models/rat');
 let Rescue = require('../models/rescue');
 let ErrorModels = require('../errors');
+let websocket = require('../websocket');
 
 
 // GET
@@ -124,7 +125,7 @@ exports.post = function (request, response, next) {
     });
 };
 
-exports.create = function( query ) {
+exports.create = function( query, root, client, socket ) {
     return new Promise(function(resolve, reject) {
         let finds = [];
 
@@ -187,6 +188,10 @@ exports.create = function( query ) {
                     errorObj.detail = error;
                     reject({ error: errorObj, meta: {} });
                 } else {
+                    let allClientsExcludingSelf = socket.clients.filter(function(cl) {
+                        return cl !== client;
+                    });
+                    websocket.broadcast(allClientsExcludingSelf, { action: 'rescue:created' }, rescue);
                     resolve ({ data: rescue, meta: {} });
                 }
             });
@@ -214,7 +219,7 @@ exports.put = function (request, response, next) {
     });
 };
 
-exports.update = function (data, client, query) {
+exports.update = function (data, client, query, socket) {
     return new Promise(function (resolve, reject) {
         if (query.id) {
             Rescue.findById(query.id, function(error, rescue) {
@@ -241,6 +246,10 @@ exports.update = function (data, client, query) {
                             errorModel.detail = error;
                             reject({ error: errorModel, meta: {}});
                         } else {
+                            let allClientsExcludingSelf = socket.clients.filter(function(cl) {
+                                return cl !== client;
+                            });
+                            websocket.broadcast(allClientsExcludingSelf, { action: 'rescue:updated' }, rescue);
                             resolve({ data: rescue, meta: {} });
                         }
                     });

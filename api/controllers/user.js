@@ -45,7 +45,6 @@ exports.getById = function(request, response, next) {
 
 exports.read = function(query) {
     return new Promise(function(resolve, reject) {
-        console.log('attempting read');
         let filter = {};
         let dbQuery = {};
 
@@ -82,11 +81,8 @@ exports.read = function(query) {
             dbQuery.match_all = {};
         }
 
-        console.log('making search');
         User.search(dbQuery, filter, function(error, dbData) {
-            console.log('done');
             if (error) {
-                console.log('error');
                 let errorObj = ErrorModels.server_error;
                 errorObj.detail = error;
                 reject({
@@ -95,7 +91,6 @@ exports.read = function(query) {
                 });
 
             } else {
-                console.log('success');
                 let meta = {
                     count: dbData.hits.hits.length,
                     limit: filter.size,

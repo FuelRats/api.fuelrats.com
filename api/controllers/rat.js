@@ -3,6 +3,7 @@
 let _ = require('underscore');
 let Rat = require('../models/rat');
 let ErrorModels = require('../errors');
+let websocket = require('../websocket');
 
 // GET
 // =============================================================================
@@ -134,7 +135,7 @@ exports.post = function(request, response, next) {
 };
 
 
-exports.create = function(query) {
+exports.create = function(query, root, client, socket) {
     return new Promise(function(resolve, reject) {
         Rat.create(query, function(error, rat) {
             if (error) {
@@ -155,6 +156,10 @@ exports.create = function(query) {
                     }
                 }
             } else {
+                let allClientsExcludingSelf = socket.clients.filter(function(cl) {
+                    return cl !== client;
+                });
+                websocket.broadcast(allClientsExcludingSelf, { action: 'rat:created' }, rat);
                 resolve({ data: rat, meta: {} });
             }
         });
@@ -180,7 +185,7 @@ exports.put = function(request, response, next) {
     });
 };
 
-exports.update = function (data, client, query) {
+exports.update = function (data, client, query, socket) {
     return new Promise(function (resolve, reject) {
         if (query.id) {
             Rat.findById(query.id, function(error, rat) {
@@ -207,6 +212,10 @@ exports.update = function (data, client, query) {
                             errorModel.detail = error;
                             reject({ error: errorModel, meta: {}});
                         } else {
+                            let allClientsExcludingSelf = socket.clients.filter(function(cl) {
+                                return cl !== client;
+                            });
+                            websocket.broadcast(allClientsExcludingSelf, { action: 'rat:updated' }, rat);
                             resolve({ data: rat, meta: {} });
                         }
                     });
