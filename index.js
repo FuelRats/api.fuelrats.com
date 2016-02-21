@@ -37,7 +37,9 @@ var _,
     socket,
     sslHostName,
     sslPort,
+    user,
     version,
+    websocket,
     welcome,
     winston,
     ws
@@ -93,7 +95,9 @@ register = require( './api/controllers/register' )
 reset = require( './api/controllers/reset' )
 rescue = require( './api/controllers/rescue' )
 rescueAdmin = require( './api/controllers/rescueAdmin' )
+user = require( './api/controllers/user' )
 version = require( './api/controllers/version' )
+websocket = require( './api/websocket' )
 welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
@@ -276,6 +280,9 @@ router.post( '/rescues', rescue.post )
 router.get( '/rescues/:id', rescue.getById )
 router.put( '/rescues/:id', rescue.put )
 
+router.get( '/users', user.get )
+router.get( '/users/:id', user.getById )
+
 router.get( '/search/rescues', rescue.get )
 router.get( '/search/rats', rat.get )
 
@@ -321,19 +328,27 @@ app.use( function ( request, response, next ) {
 
 socket = new ws({ server: httpServer })
 
+websocket.socket = socket
+
 socket.on( 'connection', function ( client ) {
+  client.subscribedStreams = []
+  winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress}`);
   client.send( JSON.stringify({
-    data: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.',
-    type: 'welcome'
+    meta: {
+      action: 'welcome'
+    },
+    data: {
+      message: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.'
+    }
   }))
 
+  client.on( 'close', function () {
+      winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress} closed`);
+  })
+
   client.on( 'message', function ( data ) {
-    data = JSON.parse( data )
-    winston.info( data )
-    client.send( JSON.stringify({
-      data: data,
-      type: 'test'
-    }))
+    winston.info(`${Date()} Websocket message received from ${client._socket.remoteAddress}`);
+    websocket.received(client, data)
   })
 })
 

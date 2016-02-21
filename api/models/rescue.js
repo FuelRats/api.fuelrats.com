@@ -104,6 +104,7 @@ RescueSchema = new Schema({
     type: Boolean
   },
   system: {
+    default: '',
     type: String
   }
 }, {
