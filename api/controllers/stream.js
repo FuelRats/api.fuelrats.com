@@ -1,53 +1,62 @@
-var _, winston, ErrorModels, websocket
+'use strict';
 
-_ = require( 'underscore' )
-winston = require( 'winston' )
-websocket = require( '../websocket' )
+let websocket = require('../websocket');
+let ErrorModels = require('../errors');
 
-ErrorModels = require( '../errors' )
+exports.subscribe = function(data, client, query) {
+    return new Promise(function(resolve, reject) {
+        let meta = {};
 
-exports.subscribe = function( data, client, query ) {
-  return new Promise(function(resolve, reject) {
-    var applicationId, meta
+        let applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query);
 
-    meta = {}
+        if (applicationId && applicationId.length > 0) {
 
-    applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query);
+            if (client.subscribedStreams.indexOf(applicationId) === -1) {
+                client.subscribedStreams.push(applicationId);
+                resolve({
+                    data: client.subscribedStreams,
+                    meta: meta
+                });
+            } else {
+                reject({
+                    error: 'Already subscribed to this stream',
+                    meta: {}
+                });
+            }
+        } else {
+            reject({
+                error: 'Invalid application ID',
+                meta: {}
+            });
+        }
+    });
+};
 
-    if (applicationId && applicationId.length > 0) {
+exports.unsubscribe = function(data, client, query) {
+    return new Promise(function(resolve, reject) {
+        let meta = {};
 
-      if (client.subscribedStreams.indexOf(applicationId) === -1) {
-        client.subscribedStreams.push(applicationId)
-        console.log('resolving')
-        resolve({ data: client.subscribedStreams, meta: meta })
-      } else {
-        reject( { error: 'Already subscribed to this stream', meta: {} })
-      }
-    } else {
-      reject({ error: 'Invalid application ID', meta: {} })
-    }
-  })
-}
+        let applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query);
 
-exports.unsubscribe = function( data, client, query ) {
-  return new Promise(function(resolve, reject) {
-    var applicationId, meta, positionInSubscribeList
-
-    meta = {}
-
-    applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query);
-
-    if (applicationId && applicationId.length > 0) {
-
-      positionInSubscribeList = client.subscribedStreams.indexOf(applicationId)
-      if (positionInSubscribeList !== -1) {
-        client.subscribedStreams.splice(positionInSubscribeList, 1)
-        resolve({ data: client.subscribedStreams, meta: meta })
-      } else {
-        reject( { error: 'Not subscribed to this stream', meta: {} })
-      }
-    } else {
-      reject({ error: 'Invalid application ID', meta: {} })
-    }
-  })
-}
+        if (applicationId && applicationId.length > 0) {
+            let positionInSubscribeList = client.subscribedStreams.indexOf(applicationId);
+            if (positionInSubscribeList !== -1) {
+                client.subscribedStreams.splice(positionInSubscribeList, 1);
+                resolve({
+                    data: client.subscribedStreams,
+                    meta: meta
+                });
+            } else {
+                reject({
+                    error: 'Not subscribed to this stream',
+                    meta: {}
+                });
+            }
+        } else {
+            reject({
+                error: 'Invalid application ID',
+                meta: {}
+            });
+        }
+    });
+};
