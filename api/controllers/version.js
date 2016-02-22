@@ -1,28 +1,30 @@
-'use strict'
-let gitrev = require('git-rev')
+var gitrev
+
+gitrev = require('git-rev')
 
 exports.get = function (request, response) {
-  exports.view(request.body).then(function (data) {
+  exports.view( request.body ).then( function( data, meta ) {
     status = 200
     response.status(status)
     response.json(data)
   })
 }
 
-exports.view = function () {
-  return new Promise(function (resolve) {
-    gitrev.long(function (githash) {
-      let serverVersion = process.env.npm_package_version
+exports.view = function ( query ) {
+  return new Promise(function (resolve, reject) {
+    var responseModel
 
-      let data = {
+    gitrev.long(function (githash) {
+      var status, serverVersion
+
+      serverVersion = process.env.npm_package_version
+
+      var data = {
         version: serverVersion,
         commit: githash
       }
 
-      resolve({
-        data: data,
-        meta: {}
-      })
+      resolve({ data: data, meta: {} })
     })
   })
 }
