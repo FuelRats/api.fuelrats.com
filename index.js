@@ -2,6 +2,7 @@ var _,
     app,
     badge,
     bodyParser,
+    change_password,
     config,
     cookieParser,
     cors,
@@ -28,6 +29,7 @@ var _,
     port,
     Rat,
     rat,
+    reset,
     register,
     Rescue,
     rescue,
@@ -37,7 +39,9 @@ var _,
     socket,
     sslHostName,
     sslPort,
+    user,
     version,
+    websocket,
     welcome,
     winston,
     ws
@@ -83,6 +87,7 @@ User = require( './api/models/user' )
 
 // Import controllers
 badge = require( './api/controllers/badge' )
+change_password = require( './api/controllers/change_password' )
 docs = require( './api/controllers/docs' )
 login = require( './api/controllers/login' )
 logout = require( './api/controllers/logout' )
@@ -90,10 +95,13 @@ paperwork = require( './api/controllers/paperwork' )
 leaderboard = require( './api/controllers/leaderboard' )
 rat = require( './api/controllers/rat' )
 register = require( './api/controllers/register' )
+reset = require( './api/controllers/reset' )
 rescue = require( './api/controllers/rescue' )
 rescueAdmin = require( './api/controllers/rescueAdmin' )
 statistics = require( './api/controllers/statistics' )
+user = require( './api/controllers/user' )
 version = require( './api/controllers/version' )
+websocket = require( './api/websocket' )
 welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
@@ -260,6 +268,8 @@ router.get( '/badge/:rat', badge.get )
 router.post( '/register', register.post )
 
 router.post( '/login', passport.authenticate( 'local' ), login.post )
+router.post( '/reset', reset.post )
+router.post( '/change_password', change_password.post )
 
 router.get( '/logout', logout.post )
 router.post( '/logout', logout.post )
@@ -274,6 +284,9 @@ router.post( '/rescues', rescue.post )
 router.get( '/rescues/:id', rescue.getById )
 router.put( '/rescues/:id', rescue.put )
 
+router.get( '/users', user.get )
+router.get( '/users/:id', user.getById )
+
 router.get( '/search/rescues', rescue.get )
 router.get( '/search/rats', rat.get )
 
@@ -282,6 +295,8 @@ router.get( '/version', version.get )
 router.get( '/docs', docs.get )
 router.get( '/leaderboard', leaderboard.get )
 router.get( '/login', login.get )
+router.get( '/reset', reset.get )
+router.get( '/change_password', change_password.get )
 router.get( '/paperwork', paperwork.get )
 router.get( '/register', register.get )
 router.get( '/welcome', welcome.get )
@@ -321,19 +336,27 @@ app.use( function ( request, response, next ) {
 
 socket = new ws({ server: httpServer })
 
+websocket.socket = socket
+
 socket.on( 'connection', function ( client ) {
+  client.subscribedStreams = []
+  winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress}`);
   client.send( JSON.stringify({
-    data: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.',
-    type: 'welcome'
+    meta: {
+      action: 'welcome'
+    },
+    data: {
+      message: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.'
+    }
   }))
 
+  client.on( 'close', function () {
+      winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress} closed`);
+  })
+
   client.on( 'message', function ( data ) {
-    data = JSON.parse( data )
-    winston.info( data )
-    client.send( JSON.stringify({
-      data: data,
-      type: 'test'
-    }))
+    winston.info(`${Date()} Websocket message received from ${client._socket.remoteAddress}`);
+    websocket.received(client, data)
   })
 })
 

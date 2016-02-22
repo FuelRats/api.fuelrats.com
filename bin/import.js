@@ -8,8 +8,10 @@ var _,
     mongoose,
     processRats,
     processRescues,
+    linkRatsAndRescues,
     Rat,
     ratSheet,
+    Rescue,
     removeArchives,
     winston
 
@@ -49,6 +51,10 @@ spreadsheets = {
   dispatchDrilledRats: {
     workbookId: '1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y-ZzmYHo6yzE',
     sheetId: '84232353'
+  },
+  epicRescues: {
+    workbookId: '1SUm4Ls-pHTDwmCobyrLFp1FGWv2_Dtbda99nXjEuo9M',
+    sheetId: '498743399'
   }
 }
 
@@ -95,7 +101,7 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
       }
 
       if ( ratDatum[1] === 'CMDR' || ratDatum[1] === 'GameTag' ) {
-        rat.CMDRname = ratDatum[2].trim()
+        rat.CMDRname = ratDatum[2].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
       }
 
       if ( ratDatum[1] === 'GameTag' ) {
@@ -147,64 +153,44 @@ processRescues = function ( rescuesData ) {
       var rescue
 
       rescue = {
+        client: {},
         archive: true,
         createdAt: new Date( rescueDatum[0] ),
         notes: rescueDatum[4].trim(),
         open: false,
         rats: [],
-        unidentifiedRats: [rescueDatum[1].trim()],
+        name: null,
+        firstLimpet: null,
+        unidentifiedRats: [rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()],
         successful: rescueDatum[3].toLowerCase() === 'successful' ? true : false,
         system: rescueDatum[2].trim()
       }
+      
+       rescues.push(mongoose.models.Rat.findOneAndUpdate(
+        { CMDRname: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim() },
+        {   
+            $set: { 
+                CMDRname: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(), 
+                archive: true,
+                platform: rescue.platform,
+                drilled: {
+                  dispatch: false,
+                  rescue: false
+                },
+                joined: new Date( rescueDatum[0] ) || new Date,
+                rescues: []
+            }
+        }, 
+        { upsert: true }
+      ));
 
       rescues.push( new Rescue( rescue ).save() )
     })
-    winston.info('Importing %d rescues!', rescues.length)
     Promise.all( rescues )
     .then( resolve )
     .catch( reject )
   })
 }
-
-linkRatsAndRescues = function() {
-    
-    winston.info('Linking rescues and rats together, forever')
-    
-    var links = [];
-    mongoose.models.Rescue.find({'unidentifiedRats.0': { '$exists': true }}, function (err, rescues) {
-        if(err) return console.error(err);
-        console.log(rescues);
-        rescues.forEach(function( rescue, index, rescues) {
-            rescue.unidentifiedRats.forEach(function(rat, index, rats) {
-                
-                        var nrat = {
-                            archive: true,
-                            drilled: {
-                              dispatch: false,
-                              rescue: false
-                            },
-                            joined: new Date,
-                            platform: 'pc',
-                            rescues: [],
-                            CMDRname: rat
-                          }
-                        console.log(nrat);
-                        var r = new Rat(nrat).save(function(err, nrat) {
-                            rescue.rats.push(nrat._id);
-                            rescue.unidentifiedRats = _.without(rescue.unidentifiedRats, rat)
-                            return nrat;
-                        })
-                        console.log(r);
-                        
-                })
-            })
-
-        })
-    winston.info('Linking %d cases', links.length)
-    
-}
-
-
 
 removeArchives = function removeArchives ( models ) {
   winston.info( 'Removing archives' )
@@ -235,7 +221,6 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
 
   spreadsheet = spreadsheets[name]
   url = 'https://docs.google.com/spreadsheets/d/' + spreadsheet.workbookId + '/export?gid=' + spreadsheet.sheetId + '&format=csv'
-
   downloads.push( new Promise( function ( resolve, reject ) {
     download()
     .get( url )
@@ -265,7 +250,8 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
 
 Promise.all( downloads )
 .then( function () {
-  var dispatchDrills, promises, rats, removals, rescues, rescueDrills
+    console.log('Clearing archives')
+  var dispatchDrills, promises, rats, removals, rescues, rescueDrills, epicRescueRats
 
   promises = []
 
@@ -273,14 +259,18 @@ Promise.all( downloads )
   rats = spreadsheets.rats.data
   rescues = spreadsheets.rescues.data
   rescueDrills = spreadsheets.rescueDrilledRats.data
+  epicRescueRats = spreadsheets.epicRescues.data;
 
   rats.shift()
   rescues.shift()
   
   dispatchDrills.shift()
   rescueDrills.shift()
+  
+  epicRescueRats.shift();
 
   // Clear out the archives
+    
   removeArchives( [ Rat, Rescue ] )
   .then( function () {
     var promises
@@ -294,33 +284,31 @@ Promise.all( downloads )
     .then( function () {
       Promise.all( promises )
       .then( function () {
-          
-            mongoose.set( 'debug', true )
-            //linkRatsAndRescues()
-            mongoose.set( 'debug', false )
-          
-        var promises
 
-        promises = []
+            var promises
 
-        promises.push( Rat.count({}) )
-        promises.push( Rescue.count({}) )
+            promises = []
 
-        Promise.all( promises )
-        .then( function ( results ) {
-          var newRatCount, newRescuesCount, oldRatCount, oldRescuesCount
+            promises.push( Rat.count({}) )
+            promises.push( Rescue.count({}) )
 
-          newRatCount = rats.length
-          newRescuesCount = rescues.length
-          oldRatCount = results[0]
-          oldRescuesCount = results[1]
+            Promise.all( promises )
+            .then( function ( results ) {
+                var newRatCount, newRescuesCount, oldRatCount, oldRescuesCount
 
-          winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
-          winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
+                newRatCount = rats.length
+                newRescuesCount = rescues.length
+                oldRatCount = results[0]
+                oldRescuesCount = results[1]
 
-          mongoose.disconnect()
-        })
-        .catch( winston.error )
+                winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
+                winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
+
+                mongoose.disconnect()
+        
+            })
+            .catch( winston.error )
+        
       })
       .catch( winston.error )
     })
