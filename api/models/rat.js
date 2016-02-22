@@ -95,7 +95,7 @@ RatSchema = new Schema({
 })
 
 
-
+RatSchema.index({ CMDRname: 'text' })
 
 
 linkRescues = function ( next ) {
@@ -105,9 +105,16 @@ linkRescues = function ( next ) {
 
   rat.rescues = rat.rescues || []
   
-  mongoose.models.Rescue.update({
-    unidentifiedRats: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
-  }, {
+  mongoose.models.Rescue.update({ 
+            $text: { 
+                $search: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+            }
+        }, {
+    $set: {
+      platform: rat.platform
+    },
     $pull: {
       unidentifiedRats: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
     },
@@ -124,14 +131,16 @@ linkRescues = function ( next ) {
         this.rescues.push( rescue._id )
       })
       if(this.rescues)
-        this.rescueCount = this.rescues.length;
+        this.rescueCount = this.rescues.length
     else
-        this.rescueCount = 0;
+    this.rescueCount = 0
       next()
     })
     .catch( next )
   })
 }
+
+
 
 normalizePlatform = function ( next ) {
   this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
