@@ -113,7 +113,7 @@ RescueSchema = new Schema({
 })
 
 
-
+RescueSchema.index({ unidentifiedRats: 'text' })
 
 
 linkRats = function ( next ) {
@@ -129,9 +129,13 @@ linkRats = function ( next ) {
   rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
     var find
         
-    updates.push( mongoose.models.Rat.update({
-      CMDRname: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
-    }, {
+    updates.push( mongoose.models.Rat.update({ 
+            $text: { 
+                $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+            }
+        }, {
       $inc: {
         rescueCount: 1
       },
@@ -140,15 +144,21 @@ linkRats = function ( next ) {
       }
     }))
 
-    find = mongoose.models.Rat.findOne({
-      CMDRname: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
-    })
+    find = mongoose.models.Rat.findOne({ 
+            $text: { 
+                $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+            }
+        })
 
     find.then( function ( _rat ) {
       if ( _rat ) {
         rescue.rats.push( _rat._id )
         rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, _rat.CMDRname )
-        rescue.platform = _rat.platform;
+        if(_rat.platform && _rat.platform != null) {
+          rescue.platform = _rat.platform
+        }
       }
     })
 
@@ -190,38 +200,33 @@ updateTimestamps = function ( next ) {
 
 
 sanitizeInput = function ( next ) {
-    var rescue = this
+  var rescue = this
 
-    if(rescue.system)
-        rescue.system = rescue.system.trim()
+  if(rescue.system)
+    rescue.system = rescue.system.trim()
 
-    if(rescue.client)
-    {
-        if(rescue.client.CMDRname)
-            rescue.client.CMDRname = rescue.client.CMDRname.trim()
-        if(rescue.client.nickname)
-            rescue.client.nickname = rescue.client.nickname.trim()
+  if(rescue.client) {
+    if(rescue.client.CMDRname)
+      rescue.client.CMDRname = rescue.client.CMDRname.trim()
+    if(rescue.client.nickname)
+      rescue.client.nickname = rescue.client.nickname.trim()
+  }
+
+  if(rescue.unidentifiedRats) {
+    for(var i = 0; i < rescue.unidentifiedRats.length; i++) {
+      rescue.unidentifiedRats[i] = rescue.unidentifiedRats[i].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
     }
+  }
 
-    if(rescue.unidentifiedRats)
-    {
-        for(var i = 0; i < rescue.unidentifiedRats.length; i++)
-        {
-            rescue.unidentifiedRats[i] = rescue.unidentifiedRats[i].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
-        }
+  if(rescue.quotes) {
+    for(var i = 0; i < rescue.quotes.length; i++) {
+      rescue.quotes[i] = rescue.quotes[i].trim()
     }
+  }
 
-    if(rescue.quotes)
-    {
-        for(var i = 0; i < rescue.quotes.length; i++)
-        {
-            rescue.quotes[i] = rescue.quotes[i].trim()
-        }
-    }
-
-    if(rescue.name)
-        rescue.name = rescue.name.trim()
-    next()
+  if(rescue.name)
+    rescue.name = rescue.name.trim()
+  next()
 }
 
 

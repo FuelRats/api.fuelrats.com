@@ -1,226 +1,243 @@
-'use strict';
+'use strict'
 
-let _ = require('underscore');
-let Rat = require('../models/rat');
-let ErrorModels = require('../errors');
-let websocket = require('../websocket');
+let _ = require('underscore')
+let Rat = require('../models/rat')
+let ErrorModels = require('../errors')
+let websocket = require('../websocket')
 
 // GET
 // =============================================================================
-exports.get = function(request, response, next) {
-    exports.read(request.body).then(function(res) {
-        let data = res.data;
-        let meta = res.meta;
+exports.get = function (request, response, next) {
+  exports.read(request.body).then(function (res) {
+    let data = res.data
+    let meta = res.meta
 
-        response.model.data = data;
-        response.model.meta = meta;
-        response.status = 400;
-        next();
-    }, function(error) {
-        response.model.errors.push(error.error);
-        response.status(400);
-    });
-};
-
-
-
+    response.model.data = data
+    response.model.meta = meta
+    response.status = 400
+    next()
+  }, function (error) {
+    response.model.errors.push(error.error)
+    response.status(400)
+  })
+}
 
 // GET (by ID)
 // =============================================================================
-exports.getById = function(request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params);
+exports.getById = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    let id = request.params.id;
+  let id = request.params.id
 
-    Rat.findById(id).populate('rescues').exec(function(error, rat) {
-        if (error) {
-            response.model.errors.push(error);
-            response.status(400);
+  Rat.findById(id).populate('rescues').exec(function (error, rat) {
+    if (error) {
+      response.model.errors.push(error)
+      response.status(400)
 
-        } else {
-            response.model.data = rat;
-            response.status(200);
+    } else {
+      response.model.data = rat
+      response.status(200)
+    }
+
+    next()
+  })
+}
+
+exports.read = function (query) {
+  return new Promise(function (resolve, reject) {
+    let filter = {}
+    let dbQuery = {}
+
+    filter.size = parseInt(query.limit) || 25
+    delete query.limit
+
+    filter.from = parseInt(query.offset) || 0
+    delete query.offset
+
+    for (let key in query) {
+      if (key === 'q') {
+        dbQuery.query_string = {
+          query: query.q
+        }
+      } else {
+        if (!dbQuery.bool) {
+          dbQuery.bool = {
+            should: []
+          }
         }
 
-        next();
-    });
-};
-
-
-exports.read = function(query) {
-    return new Promise(function(resolve, reject) {
-        let filter = {};
-        let dbQuery = {};
-
-        filter.size = parseInt(query.limit) || 25;
-        delete query.limit;
-
-        filter.from = parseInt(query.offset) || 0;
-        delete query.offset;
-
-        for (var key in query) {
-            if (key === 'q') {
-                dbQuery.query_string = {
-                    query: query.q
-                };
-            } else {
-                if (!dbQuery.bool) {
-                    dbQuery.bool = {
-                        should: []
-                    };
-                }
-
-                let term = {};
-                term[key] = {
-                    query: query[key],
-                    fuzziness: 'auto'
-                };
-                dbQuery.bool.should.push({
-                    match: term
-                });
-            }
+        let term = {}
+        term[key] = {
+          query: query[key],
+          fuzziness: 'auto'
         }
+        dbQuery.bool.should.push({
+          match: term
+        })
+      }
+    }
 
-        if (!Object.keys(dbQuery).length) {
-            dbQuery.match_all = {};
+    if (!Object.keys(dbQuery).length) {
+      dbQuery.match_all = {}
+    }
+
+    Rat.search(dbQuery, filter, function (error, dbData) {
+      if (error) {
+        let errorObj = ErrorModels.server_error
+        errorObj.detail = error
+        reject({
+          error: errorObj,
+          meta: {}
+        })
+
+      } else {
+        let meta = {
+          count: dbData.hits.hits.length,
+          limit: filter.size,
+          offset: filter.from,
+          total: dbData.hits.total
         }
+        let data = []
 
-        Rat.search(dbQuery, filter, function(error, dbData) {
-            if (error) {
-                let errorObj = ErrorModels.server_error;
-                errorObj.detail = error;
-                reject({
-                    error: errorObj,
-                    meta: {}
-                });
+        dbData.hits.hits.forEach(function (rat) {
+          rat._source._id = rat._id
+          rat._source.score = rat._score
 
-            } else {
-                let meta = {
-                    count: dbData.hits.hits.length,
-                    limit: filter.size,
-                    offset: filter.from,
-                    total: dbData.hits.total
-                };
-                let data = [];
+          data.push(rat._source)
+        })
 
-                dbData.hits.hits.forEach(function(rat) {
-                    rat._source._id = rat._id;
-                    rat._source.score = rat._score;
-
-                    data.push(rat._source);
-                });
-
-                resolve({
-                    data: data,
-                    meta: meta
-                });
-            }
-        });
-    });
-};
-
+        resolve({
+          data: data,
+          meta: meta
+        })
+      }
+    })
+  })
+}
 
 // POST
 // =============================================================================
-exports.post = function(request, response, next) {
-    exports.create( request.body ).then(function( res ) {
-        response.model.data = res.data;
-        response.status(201);
-        next();
-    }, function( error ) {
-        response.model.errors.push(error.error);
-        response.status(400);
-        next();
-    });
-};
+exports.post = function (request, response, next) {
+  exports.create(request.body).then(function (res) {
+    response.model.data = res.data
+    response.status(201)
+    next()
+  }, function (error) {
+    response.model.errors.push(error.error)
+    response.status(400)
+    next()
+  })
+}
 
+exports.create = function (query, root, client, socket) {
+  return new Promise(function (resolve, reject) {
+    Rat.create(query, function (error, rat) {
+      if (error) {
+        let errorTypes = Object.keys(error.errors)
 
-exports.create = function(query, root, client, socket) {
-    return new Promise(function(resolve, reject) {
-        Rat.create(query, function(error, rat) {
-            if (error) {
-                let errorTypes = Object.keys(error.errors);
+        for (let errorType of errorTypes) {
+          error = error.errors[errorType].properties
 
-                for (var i = 0; i < errorTypes.length; i++) {
-                    let errorType = errorTypes[i];
-                    error = error.errors[errorType].properties;
-
-                    if (error.type === 'required') {
-                        let errorModel = ErrorModels.missing_required_field;
-                        errorModel.detail = error.path;
-                        reject({ error: errorModel, meta: {} });
-                    } else {
-                        let errorModel = ErrorModels.server_error;
-                        errorModel.detail = error.path;
-                        reject({ error: errorModel, meta: {} });
-                    }
-                }
-            } else {
-                let allClientsExcludingSelf = socket.clients.filter(function(cl) {
-                    return cl !== client;
-                });
-                websocket.broadcast(allClientsExcludingSelf, { action: 'rat:created' }, rat);
-                resolve({ data: rat, meta: {} });
-            }
-        });
-    });
-};
-
+          if (error.type === 'required') {
+            let errorModel = ErrorModels.missing_required_field
+            errorModel.detail = error.path
+            reject({
+              error: errorModel,
+              meta: {}
+            })
+          } else {
+            let errorModel = ErrorModels.server_error
+            errorModel.detail = error.path
+            reject({
+              error: errorModel,
+              meta: {}
+            })
+          }
+        }
+      } else {
+        let allClientsExcludingSelf = socket.clients.filter(function (cl) {
+          return cl !== client
+        })
+        websocket.broadcast(allClientsExcludingSelf, {
+          action: 'rat:created'
+        }, rat)
+        resolve({
+          data: rat,
+          meta: {}
+        })
+      }
+    })
+  })
+}
 
 // PUT
 // =============================================================================
-exports.put = function(request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params);
+exports.put = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    exports.update(request.body, null, request.params).then(function (data) {
-        response.model.data = data.data;
-        response.status(201);
-        next();
-    }, function (error) {
-        response.model.errors.push(error.error);
+  exports.update(request.body, null, request.params).then(function (data) {
+    response.model.data = data.data
+    response.status(201)
+    next()
+  }, function (error) {
+    response.model.errors.push(error.error)
 
-        var status = error.error.code || 400;
-        response.status(status);
-        next();
-    });
-};
+    let status = error.error.code || 400
+    response.status(status)
+    next()
+  })
+}
 
 exports.update = function (data, client, query, socket) {
-    return new Promise(function (resolve, reject) {
-        if (query.id) {
-            Rat.findById(query.id, function(error, rat) {
-                if (error) {
-                    let errorModel = ErrorModels.server_error;
-                    errorModel.detail = error;
-                    reject({ error: errorModel, meta: {}});
-                } else if (!rat) {
-                    let errorModel = ErrorModels.not_found;
-                    errorModel.detail = query.id;
-                    reject({ error: errorModel, meta: {}});
-                } else {
-                    for (var key in data) {
-                        if (key === 'client') {
-                            _.extend(rat.client, data);
-                        } else {
-                            rat[key] = data[key];
-                        }
-                    }
+  return new Promise(function (resolve, reject) {
+    if (query.id) {
+      Rat.findById(query.id, function (error, rat) {
+        if (error) {
+          let errorModel = ErrorModels.server_error
+          errorModel.detail = error
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else if (!rat) {
+          let errorModel = ErrorModels.not_found
+          errorModel.detail = query.id
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else {
+          for (let key in data) {
+            if (key === 'client') {
+              _.extend(rat.client, data)
+            } else {
+              rat[key] = data[key]
+            }
+          }
 
-                    rat.save(function(error, rat) {
-                        if (error) {
-                            let errorModel = ErrorModels.server_error;
-                            errorModel.detail = error;
-                            reject({ error: errorModel, meta: {}});
-                        } else {
-                            let allClientsExcludingSelf = socket.clients.filter(function(cl) {
-                                return cl !== client;
-                            });
-                            websocket.broadcast(allClientsExcludingSelf, { action: 'rat:updated' }, rat);
-                            resolve({ data: rat, meta: {} });
-                        }
-                    });
-                }
-            });
+          rat.save(function (error, rat) {
+            if (error) {
+              let errorModel = ErrorModels.server_error
+              errorModel.detail = error
+              reject({
+                error: errorModel,
+                meta: {}
+              })
+            } else {
+              let allClientsExcludingSelf = socket.clients.filter(function (cl) {
+                return cl !== client
+              })
+              websocket.broadcast(allClientsExcludingSelf, {
+                action: 'rat:updated'
+              }, rat)
+              resolve({
+                data: rat,
+                meta: {}
+              })
+            }
+          })
         }
-    });
-};
+      })
+    }
+  })
+}

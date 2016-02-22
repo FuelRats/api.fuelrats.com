@@ -315,7 +315,6 @@ app.use( '/', router )
 app.use( '/api', router )
 
 httpServer = http.Server( app )
-//=======
 // Send the response
 app.use( function ( request, response, next ) {
   if ( response.model.errors.length ) {

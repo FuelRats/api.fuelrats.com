@@ -157,6 +157,7 @@ processRescues = function ( rescuesData ) {
         archive: true,
         createdAt: new Date( rescueDatum[0] ),
         notes: rescueDatum[4].trim(),
+        platform: 'pc',
         open: false,
         rats: [],
         name: null,
@@ -167,12 +168,17 @@ processRescues = function ( rescuesData ) {
       }
       
        rescues.push(mongoose.models.Rat.findOneAndUpdate(
-        { CMDRname: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim() },
+        { 
+            $text: { 
+                $search: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+            }
+        },
         {   
             $set: { 
                 CMDRname: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(), 
                 archive: true,
-                platform: rescue.platform,
                 drilled: {
                   dispatch: false,
                   rescue: false
@@ -250,7 +256,6 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
 
 Promise.all( downloads )
 .then( function () {
-    console.log('Clearing archives')
   var dispatchDrills, promises, rats, removals, rescues, rescueDrills, epicRescueRats
 
   promises = []
