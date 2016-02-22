@@ -101,7 +101,7 @@ websocket = require( './api/websocket' )
 welcome = require( './api/controllers/welcome' )
 
 // Connect to MongoDB
-mongoose.connect( 'mongodb://localhost/fuelrats' )
+mongoose.connect( 'mongodb://' + config.mongo.hostname + ':' + config.mongo.port + '/' + config.mongo.database )
 
 options = {
   logging: true,
@@ -193,10 +193,10 @@ app.set( 'json spaces', 2 )
 app.set( 'x-powered-by', false )
 
 hostName = config.hostname
-sslHostName = config.sslHostname
+sslHostName = config.ssl.hostname
 
 port = config.port || process.env.PORT
-sslPort = config.sslPort || process.env.SSL_PORT
+sslPort = config.ssl.port || process.env.SSL_PORT
 
 passport.use( User.createStrategy() )
 passport.serializeUser( User.serializeUser() )
@@ -359,7 +359,7 @@ socket.on( 'connection', function ( client ) {
 // START THE SERVER
 // =============================================================================
 
-if ( config.ssl ) {
+if ( config.ssl.enabled ) {
 
     var firstRequestSent = false
 

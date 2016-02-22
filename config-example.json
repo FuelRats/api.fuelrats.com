@@ -2,7 +2,14 @@
   "hostname": "localhost",
   "port": 8080,
   "secretSauce": "Your secret goes here!",
-  "ssl": true,
-  "sslHostname": "localhost",
-  "sslPort": 4443
+  "mongo": {
+    "database": "fuelrats",
+    "hostname": "localhost",
+    "port": 27017
+  },
+  "ssl": {
+    "enabled": true,
+    "hostname": "localhost",
+    "port": 4443
+  }
 }
