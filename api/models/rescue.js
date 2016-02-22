@@ -75,10 +75,11 @@ RescueSchema = new Schema({
     type: String
   },
   platform: {
-    default: 'pc',
+    default: 'unknown',
     enum: [
       'pc',
-      'xb'
+      'xb',
+      'unknown'
     ],
     type: String
   },
