@@ -1,9 +1,5 @@
-var path, Rat
+'use strict'
 
-path = require( 'path' )
-
-
-
-exports.get = function ( request, response ) {
-  response.render( 'leaderboard' )
+exports.get = function (request, response) {
+  response.render('leaderboard')
 }
