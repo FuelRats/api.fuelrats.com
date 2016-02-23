@@ -9,7 +9,7 @@ function generateRescueGraph () {
   d3.json('/statistics', function (error, json) {
     var x, y, xAxis, yAxis, margin, height, width, colour, svg, rescue, legend, data
 
-    data = json.data
+    data = json.data[0]
 
     if (!error) {
       margin = {
