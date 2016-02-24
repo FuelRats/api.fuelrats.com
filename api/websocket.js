@@ -114,7 +114,7 @@ exports.received = function (client, requestString) {
         })
 
         let clients = exports.socket.clients.filter(function (cl) {
-          return cl.subscribedStreams.indexOf(applicationId) !== -1 && cl !== client
+          return cl.subscribedStreams.indexOf(applicationId) !== -1 && cl.clientId !== client.clientId
         })
 
         exports.broadcast(clients, meta, data)

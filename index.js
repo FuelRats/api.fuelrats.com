@@ -37,6 +37,7 @@ var _,
     socket,
     sslHostName,
     sslPort,
+    uid,
     user,
     version,
     websocket,
@@ -69,6 +70,7 @@ path = require( 'path' )
 LocalStrategy = require( 'passport-local' ).Strategy
 winston = require( 'winston' )
 request = require( 'request' );
+uid = require( 'uid-safe' )
 ws = require( 'ws' ).Server
 
 // Import config
@@ -332,6 +334,7 @@ websocket.socket = socket
 
 socket.on( 'connection', function ( client ) {
   client.subscribedStreams = []
+  client.clientId = uid.sync(16)
   winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress}`);
   client.send( JSON.stringify({
     meta: {

@@ -191,7 +191,7 @@ exports.create = function (query, root, client) {
           })
         } else {
           let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-            return cl !== client
+            return cl.clientId !== client.clientId
           })
           websocket.broadcast(allClientsExcludingSelf, {
             action: 'rescue:created'
@@ -261,7 +261,7 @@ exports.update = function (data, client, query) {
               })
             } else {
               let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-                return cl !== client
+                return cl.clientId !== client.clientId
               })
               websocket.broadcast(allClientsExcludingSelf, {
                 action: 'rescue:updated'
