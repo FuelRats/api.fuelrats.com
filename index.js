@@ -335,8 +335,8 @@ websocket.socket = socket
 socket.on( 'connection', function ( client ) {
   client.subscribedStreams = []
   client.clientId = uid.sync(16)
-  winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress}`);
-  client.send( JSON.stringify({
+  winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress} assigned unique identifier ${client.clientId}`)
+  client.send(JSON.stringify({
     meta: {
       action: 'welcome'
     },
@@ -346,11 +346,11 @@ socket.on( 'connection', function ( client ) {
   }))
 
   client.on( 'close', function () {
-      winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress} closed`);
+      winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress} with ID ${client.uniqueID} closed`)
   })
 
   client.on( 'message', function ( data ) {
-    winston.info(`${Date()} Websocket message received from ${client._socket.remoteAddress}`);
+    winston.info(`${Date()} Websocket message received from ${client._socket.remoteAddress} ID ${client.uniqueID}`)
     websocket.received(client, data)
   })
 })
