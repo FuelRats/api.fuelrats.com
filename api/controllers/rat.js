@@ -129,7 +129,7 @@ exports.post = function (request, response, next) {
   })
 }
 
-exports.create = function (query, root, client) {
+exports.create = function (query, client) {
   return new Promise(function (resolve, reject) {
     Rat.create(query, function (error, rat) {
       if (error) {
