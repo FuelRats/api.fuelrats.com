@@ -125,7 +125,7 @@ exports.post = function (request, response, next) {
   })
 }
 
-exports.create = function (query, root, client, socket) {
+exports.create = function (query, root, client) {
   return new Promise(function (resolve, reject) {
     let finds = []
 
@@ -190,7 +190,7 @@ exports.create = function (query, root, client, socket) {
             meta: {}
           })
         } else {
-          let allClientsExcludingSelf = socket.clients.filter(function (cl) {
+          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
             return cl !== client
           })
           websocket.broadcast(allClientsExcludingSelf, {
@@ -224,7 +224,7 @@ exports.put = function (request, response, next) {
   })
 }
 
-exports.update = function (data, client, query, socket) {
+exports.update = function (data, client, query) {
   return new Promise(function (resolve, reject) {
     if (query.id) {
       Rescue.findById(query.id, function (error, rescue) {
@@ -260,7 +260,7 @@ exports.update = function (data, client, query, socket) {
                 meta: {}
               })
             } else {
-              let allClientsExcludingSelf = socket.clients.filter(function (cl) {
+              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
                 return cl !== client
               })
               websocket.broadcast(allClientsExcludingSelf, {

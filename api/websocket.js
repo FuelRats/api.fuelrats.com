@@ -69,7 +69,7 @@ exports.received = function (client, requestString) {
         if (method && controller[method]) {
           let query = _.clone(request)
 
-          controller[method].call(null, data, client, query, exports.socket).then(function (response) {
+          controller[method].call(null, data, client, query).then(function (response) {
             let data = response.data
             let meta = _.extend(requestMeta, response.meta)
             meta.action = action
