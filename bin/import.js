@@ -67,7 +67,7 @@ downloads = []
 mongoose.connect( 'mongodb://localhost/fuelrats' )
 
 
-
+mongoose.set('debug', true)
 
 
 processRats = function ( ratData, rescueDrills, dispatchDrills ) {

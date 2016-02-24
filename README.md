@@ -28,7 +28,7 @@ Once Vagrant finishes doing its thing you should be able to hit the API at `http
 So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
 
 1. [`nvm`](https://github.com/creationix/nvm)
-1. [`MongoDB v2.6.5+`](https://www.mongodb.com/)
+1. [`MongoDB v3.2+`](https://www.mongodb.com/)
 1. [`Elasticsearch v2.0.0+`](https://www.elastic.co/)
   * Java
 
