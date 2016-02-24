@@ -1,36 +1,39 @@
-$( function () {
+'use strict'
+
+/* global Backbone, _ */
+
+$(function () {
   var form
 
-  form = document.querySelector( 'form' )
+  form = document.querySelector('form')
 
-  form.addEventListener( 'submit', function ( event ) {
+  form.addEventListener('submit', function (event) {
     var Rescue, rescue
 
     event.preventDefault()
 
     Rescue = Backbone.Model.extend({
       url: 'rescues',
-      parse: function ( response ) {
+      parse: function (response) {
         return response.data
       }
     })
 
     rescue = new Rescue
 
-    _.forEach( document.querySelectorAll( 'input, textarea' ), function ( element, index, elements ) {
-      if ( element.getAttribute( 'type' ) === 'radio' || element.getAttribute( 'type' ) === 'checkbox' ) {
-        if ( !element.checked ) {
+    _.forEach(document.querySelectorAll('input, textarea'), function (element) {
+      if (element.getAttribute('type') === 'radio' || element.getAttribute('type') === 'checkbox') {
+        if (!element.checked) {
           return
         }
       }
 
-      rescue.set( element.getAttribute( 'name' ), element.value )
+      rescue.set(element.getAttribute('name'), element.value)
     })
 
-    rescue.save( {}, {
-      success: function ( model ) {
+    rescue.save({}, {
+      success: function (model) {
         window.location.href = '/rescue/' + model.id
-        console.log( 'model:', model )
       }
     })
   })

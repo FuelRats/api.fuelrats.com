@@ -1,19 +1,15 @@
-$( function () {
-  var DetailsView, form, RatAdderView, Rescue, rescue, yepNopeCollection
+'use strict'
 
-  yepNopeCollection = [
-    {
-      value: false,
-      label: 'No'
-    },
-    {
-      value: true,
-      label: 'Yes'
-    }
-  ]
+/* global Backbone, _, Messenger, Handlebars, Marionette */
 
-
-
+$(function () {
+  let yepNopeCollection = [{
+    value: false,
+    label: 'No'
+  }, {
+    value: true,
+    label: 'Yes'
+  }]
 
   Messenger.options = {
     extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-left',
@@ -25,33 +21,31 @@ $( function () {
     theme: 'air'
   }
 
-
-
-
-
-  Rescue = Backbone.Model.extend({
+  let Rescue = Backbone.Model.extend({
     idAttribute: '_id',
 
     initialize: function () {
-      this.on( 'sync', function ( model, response, options ) {
-        this.set( response.data )
-      }, this )
+      this.on('sync', function (model, response) {
+        this.set(response.data)
+      }, this)
     },
 
     urlRoot: '/rescues',
 
-    parse: function ( response ) {
+    parse: function (response) {
       var rats
 
       rats = new Backbone.Collection
 
-      if ( response.data.rats ) {
-        rats.add( response.data.rats )
+      if (response.data.rats) {
+        rats.add(response.data.rats)
       }
 
-      if ( response.data.unidentifiedRats ) {
-        response.data.unidentifiedRats.forEach( function ( rat ) {
-          rats.add( { CMDRname: rat } )
+      if (response.data.unidentifiedRats) {
+        response.data.unidentifiedRats.forEach(function (rat) {
+          rats.add({
+            CMDRname: rat
+          })
         })
       }
 
@@ -61,17 +55,15 @@ $( function () {
     },
 
     toJSON: function () {
-      var rats, rescue
-
-      rescue = _.clone( this.attributes )
+      let rescue = _.clone(this.attributes)
       rescue.rats = []
       rescue.unidentifiedRats = []
 
-      this.get( 'rats' ).forEach( function ( rat, index, rats ) {
-        if ( rat.id ) {
-          rescue.rats.push( rat.id )
+      this.get('rats').forEach(function (rat) {
+        if (rat.id) {
+          rescue.rats.push(rat.id)
         } else {
-          rescue.unidentifiedRats.push( rat.get( 'CMDRname' ) )
+          rescue.unidentifiedRats.push(rat.get('CMDRname'))
         }
       })
 
@@ -79,15 +71,13 @@ $( function () {
     }
   })
 
-
-
-
-
-  RatAdderView = Marionette.ItemView.extend({
+  let RatAdderView = Marionette.ItemView.extend({
     addRat: function () {
-      if ( this.ui.addRatInput.val() ) {
-        rescue.get( 'rats' ).add( { CMDRname: this.ui.addRatInput.val() } )
-        this.ui.addRatInput.val( '' )
+      if (this.ui.addRatInput.val()) {
+        rescue.get('rats').add({
+          CMDRname: this.ui.addRatInput.val()
+        })
+        this.ui.addRatInput.val('')
       }
     },
 
@@ -105,11 +95,7 @@ $( function () {
     }
   })
 
-
-
-
-
-  RatListItemView = Marionette.ItemView.extend({
+  let RatListItemView = Marionette.ItemView.extend({
     className: 'list-group-item',
 
     events: {
@@ -117,24 +103,24 @@ $( function () {
     },
 
     onRemove: function () {
-      this.trigger( 'remove' )
+      this.trigger('remove')
     },
 
     tagName: 'li',
 
     template: Handlebars.compile(
       '<div class="row">' +
-        '<div class="col-md-8">' +
-          '{{ CMDRname }}' +
-        '</div>' +
+      '<div class="col-md-8">' +
+      '{{ CMDRname }}' +
+      '</div>' +
 
-        '<div class="col-md-4 text-right">' +
-          '<div class="btn-group">' +
-            '<button type="button" class="btn btn-sm btn-danger remove">' +
-              'Remove' +
-            '</button>' +
-          '</div>' +
-        '</div>' +
+      '<div class="col-md-4 text-right">' +
+      '<div class="btn-group">' +
+      '<button type="button" class="btn btn-sm btn-danger remove">' +
+      'Remove' +
+      '</button>' +
+      '</div>' +
+      '</div>' +
       '</div>'
     ),
 
@@ -143,11 +129,7 @@ $( function () {
     }
   })
 
-
-
-
-
-  RatListView = Marionette.CollectionView.extend({
+  let RatListView = Marionette.CollectionView.extend({
     childView: RatListItemView,
 
     el: '.rat-list',
@@ -156,35 +138,31 @@ $( function () {
       'remove': 'onChildRemove'
     },
 
-    onChildRemove: function ( options ) {
-      this.collection.remove( options.model )
+    onChildRemove: function (options) {
+      this.collection.remove(options.model)
     }
   })
 
-
-
-
-
-  DetailsView = Marionette.ItemView.extend({
+  let DetailsView = Marionette.ItemView.extend({
     bindings: {
       '[name=active]': {
         observe: 'active',
         selectOptions: {
           collection: yepNopeCollection
-        },
+        }
       },
       '[name=codeRed]': {
         observe: 'codeRed',
         selectOptions: {
           collection: yepNopeCollection
-        },
+        }
       },
       '[name=notes]': 'notes',
       '[name=open]': {
         observe: 'open',
         selectOptions: {
           collection: yepNopeCollection
-        },
+        }
       },
       '[name=platform]': 'platform',
       '[name=system]': 'system'
@@ -199,12 +177,8 @@ $( function () {
     template: false
   })
 
-
-
-
-
-  rescue = new Rescue({
-    _id: location.pathname.replace( '/rescues/edit/', '' )
+  let rescue = new Rescue({
+    _id: location.pathname.replace('/rescues/edit/', '')
   })
 
   rescue.fetch({
@@ -216,21 +190,21 @@ $( function () {
       new RatAdderView().render()
 
       new RatListView({
-        collection: rescue.get( 'rats' )
+        collection: rescue.get('rats')
       }).render()
     }
   })
 
-  $( 'form' ).submit( function ( event ) {
+  $('form').submit(function (event) {
     event.preventDefault()
 
-    rescue.save( null, {
+    rescue.save(null, {
       success: function () {
-        Messenger().success( 'Saved' )
+        Messenger().success('Saved')
       },
 
       error: function () {
-        Messenger().error( 'Ruh-roh... something went wrong. :-(' )
+        Messenger().error('Ruh-roh... something went wrong. :-(')
       }
     })
   })
