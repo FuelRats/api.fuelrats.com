@@ -3,24 +3,29 @@
 /* global _, Backbone, moment */
 
 let renderBadge = function renderBadge (rat) {
-  var rescueCount, ui
 
   // Prevent performance loss from multiple accesses by caching references to DOM elements
-  ui = {
-    badge: document.querySelector('#badge'),
-    codeRed: document.querySelector('#codeRed'),
-    crown1: document.querySelector('#crown1'),
-    crown2: document.querySelector('#crown2'),
-    dispatch: document.querySelector('#dispatch'),
-    firstYear: document.querySelector('#firstYear'),
-    rescue1: document.querySelector('#rescues1'),
-    rescue2: document.querySelector('#rescues2'),
-    rescue3: document.querySelector('#rescues3'),
-    rescue4: document.querySelector('#rescues4')
-  }
+  let uiElements = [
+    'badge',
+    'codeRed',
+    'crown1',
+    'crown2',
+    'dispatch',
+    'firstYear',
+    'recsues1',
+    'rescues2',
+    'rescues3',
+    'rescues4'
+  ]
+
+  let ui = {}
+
+  uiElements.forEach(function (uiElement) {
+    ui[uiElement] = document.getElementById(uiElement)
+  })
 
   // Count the rat's rescues so we can conditionally remove rescue elements from the badge
-  rescueCount = rat.get('rescues').length
+  let rescueCount = rat.get('rescues').length
 
   if (rescueCount < 1000) {
     ui.crown2.classList.add('hidden')
