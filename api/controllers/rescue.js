@@ -211,7 +211,7 @@ exports.create = function (query, client) {
 exports.put = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-  exports.update(request.params, request.body).then(function (data) {
+  exports.update(request.body, null, request.params).then(function (data) {
     response.model.data = data.data
     response.status(201)
     next()
