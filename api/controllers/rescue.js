@@ -114,7 +114,7 @@ exports.read = function (query) {
 // POST
 // =============================================================================
 exports.post = function (request, response, next) {
-  exports.create(request.body).then(function (res) {
+  exports.create(request.body, {}).then(function (res) {
     response.model.data = res.data
     response.status(201)
     next()
@@ -211,7 +211,7 @@ exports.create = function (query, client) {
 exports.put = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-  exports.update(request.body, null, request.params).then(function (data) {
+  exports.update(request.body, {}, request.params).then(function (data) {
     response.model.data = data.data
     response.status(201)
     next()
