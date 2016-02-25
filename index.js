@@ -346,11 +346,11 @@ socket.on( 'connection', function ( client ) {
   }))
 
   client.on( 'close', function () {
-      winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress} with ID ${client.uniqueID} closed`)
+      winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress} with ID ${client.clientId} closed`)
   })
 
   client.on( 'message', function ( data ) {
-    winston.info(`${Date()} Websocket message received from ${client._socket.remoteAddress} ID ${client.uniqueID}`)
+    winston.info(`${Date()} Websocket message received from ${client._socket.remoteAddress} ID ${client.clientId}`)
     websocket.received(client, data)
   })
 })
