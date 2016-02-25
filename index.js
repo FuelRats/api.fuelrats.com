@@ -338,7 +338,8 @@ socket.on( 'connection', function ( client ) {
   winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress} assigned unique identifier ${client.clientId}`)
   client.send(JSON.stringify({
     meta: {
-      action: 'welcome'
+      action: 'welcome',
+      id: client.clientId
     },
     data: {
       message: 'Welcome to the Fuel Rats API. You can check out the docs at /docs because @xlexi is awesome.'

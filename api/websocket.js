@@ -103,7 +103,8 @@ exports.received = function (client, requestString) {
         let callbackMeta = _.extend(requestMeta, {
           action: 'stream:broadcast',
           originalAction: action,
-          applicationId: applicationId
+          applicationId: applicationId,
+          id: client.clientId
         })
 
         exports.send(client, callbackMeta, data)
@@ -129,7 +130,8 @@ exports.received = function (client, requestString) {
       }
 
       let meta = _.extend(requestMeta, {
-        action: 'unknown'
+        action: 'unknown',
+        id: client.clientId
       })
 
       error.detail = 'action'
@@ -144,7 +146,8 @@ exports.received = function (client, requestString) {
         error.detail = ex.message
 
         let meta = _.extend(requestMeta, {
-          action: action
+          action: action,
+          id: client.clientId
         })
 
         exports.error(client, meta, [error])
@@ -155,7 +158,8 @@ exports.received = function (client, requestString) {
     error.detail = ex.message
 
     let meta = _.extend(requestMeta, {
-      action: 'unknown'
+      action: 'unknown',
+      id: client.clientId
     })
 
     exports.error(client, meta, [error])
