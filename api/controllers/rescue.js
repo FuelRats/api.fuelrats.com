@@ -8,6 +8,70 @@ let Rescue = require('../models/rescue')
 let ErrorModels = require('../errors')
 let websocket = require('../websocket')
 
+// ASSIGN
+// =============================================================================
+exports.assign = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let rescueId = request.params.rescueId
+  let ratId = request.params.ratId
+
+  console.log('Assigning', ratId, 'to', rescueId)
+
+  let update = {
+    $push: {
+      rats: ratId
+    }
+  }
+
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
+}
+
+// UNASSIGN
+// =============================================================================
+exports.unassign = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let rescueId = request.params.rescueId
+  let ratId = request.params.ratId
+
+  console.log('Unassigning', ratId, 'from', rescueId)
+
+  let update = {
+    $pull: {
+      rats: ratId
+    }
+  }
+
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
+}
+
 // GET
 // =============================================================================
 exports.get = function (request, response, next) {
@@ -46,6 +110,8 @@ exports.getById = function (request, response, next) {
   })
 }
 
+// READ
+// =============================================================================
 exports.read = function (query) {
   return new Promise(function (resolve, reject) {
     let filter = {}
@@ -125,6 +191,8 @@ exports.post = function (request, response, next) {
   })
 }
 
+// CREATE
+// =============================================================================
 exports.create = function (query, client) {
   return new Promise(function (resolve, reject) {
     let finds = []
@@ -224,6 +292,8 @@ exports.put = function (request, response, next) {
   })
 }
 
+// UPDATE
+// =============================================================================
 exports.update = function (data, client, query) {
   return new Promise(function (resolve, reject) {
     if (query.id) {
