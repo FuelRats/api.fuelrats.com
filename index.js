@@ -235,11 +235,16 @@ app.use( function ( request, response, next ) {
 // Add logging
 if ( options.logging || options.test ) {
   app.use( function ( request, response, next ) {
+    var censoredParams = _.clone(response.model.meta.params)
+    if (censoredParams.password) {
+      censoredParams.password = '**********'
+    }
+
     winston.info( '' )
     winston.info( 'TIMESTAMP:', Date.now() )
     winston.info( 'ENDPOINT:', request.originalUrl )
     winston.info( 'METHOD:', request.method )
-    winston.info( 'DATA:', response.model.meta.params )
+    winston.info( 'DATA:', censoredParams )
     next()
   })
 }
