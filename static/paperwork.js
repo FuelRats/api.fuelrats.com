@@ -3,17 +3,19 @@
 /* global Backbone, _, Bloodhound */
 
 $(function () {
-  let form = document.querySelector('form')
+  var form, arrivedRatsField, firstLimpetField, engine
+  form = document.querySelector('form')
 
-  let arrivedRatsField = document.getElementById('rats')
-  let firstLimpetField = document.getElementById('firstLimpet')
+  arrivedRatsField = document.getElementById('rats')
+  firstLimpetField = document.getElementById('firstLimpet')
 
-  let engine = new Bloodhound({
+  engine = new Bloodhound({
     remote: {
       url: '/rats?CMDRname=%QUERY',
       wildcard: '%QUERY',
       filter: function (data) {
-        let results = data.data.map(function (obj) {
+        var results
+        results = data.data.map(function (obj) {
           return { rat: obj.CMDRname, id: obj._id }
         })
         return results

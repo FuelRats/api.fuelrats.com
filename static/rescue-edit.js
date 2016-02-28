@@ -3,7 +3,9 @@
 /* global Backbone, _, Messenger, Handlebars, Marionette */
 
 $(function () {
-  let yepNopeCollection = [{
+  var yepNopeCollection, Rescue, rescue, RatAdderView, RatListItemView, RatListView, DetailsView
+
+  yepNopeCollection = [{
     value: false,
     label: 'No'
   }, {
@@ -21,7 +23,7 @@ $(function () {
     theme: 'air'
   }
 
-  let Rescue = Backbone.Model.extend({
+  Rescue = Backbone.Model.extend({
     idAttribute: '_id',
 
     initialize: function () {
@@ -55,7 +57,7 @@ $(function () {
     },
 
     toJSON: function () {
-      let rescue = _.clone(this.attributes)
+      rescue = _.clone(this.attributes)
       rescue.rats = []
       rescue.unidentifiedRats = []
 
@@ -71,7 +73,7 @@ $(function () {
     }
   })
 
-  let RatAdderView = Marionette.ItemView.extend({
+  RatAdderView = Marionette.ItemView.extend({
     addRat: function () {
       if (this.ui.addRatInput.val()) {
         rescue.get('rats').add({
@@ -95,7 +97,7 @@ $(function () {
     }
   })
 
-  let RatListItemView = Marionette.ItemView.extend({
+  RatListItemView = Marionette.ItemView.extend({
     className: 'list-group-item',
 
     events: {
@@ -129,7 +131,7 @@ $(function () {
     }
   })
 
-  let RatListView = Marionette.CollectionView.extend({
+  RatListView = Marionette.CollectionView.extend({
     childView: RatListItemView,
 
     el: '.rat-list',
@@ -143,7 +145,7 @@ $(function () {
     }
   })
 
-  let DetailsView = Marionette.ItemView.extend({
+  DetailsView = Marionette.ItemView.extend({
     bindings: {
       '[name=active]': {
         observe: 'active',
@@ -177,7 +179,7 @@ $(function () {
     template: false
   })
 
-  let rescue = new Rescue({
+  rescue = new Rescue({
     _id: location.pathname.replace('/rescues/edit/', '')
   })
 

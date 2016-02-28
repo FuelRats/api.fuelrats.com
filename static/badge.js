@@ -2,10 +2,12 @@
 
 /* global _, Backbone, moment */
 
-let renderBadge = function renderBadge (rat) {
+var renderBadge, uiElements,rescueCount, ui, Rat, Rescue, Rescues, CMDRname, rat
+
+renderBadge = function renderBadge (rat) {
 
   // Prevent performance loss from multiple accesses by caching references to DOM elements
-  let uiElements = [
+  uiElements = [
     'badge',
     'codeRed',
     'crown1',
@@ -18,14 +20,14 @@ let renderBadge = function renderBadge (rat) {
     'rescues4'
   ]
 
-  let ui = {}
+  ui = {}
 
   uiElements.forEach(function (uiElement) {
     ui[uiElement] = document.getElementById(uiElement)
   })
 
   // Count the rat's rescues so we can conditionally remove rescue elements from the badge
-  let rescueCount = rat.get('rescues').length
+  rescueCount = rat.get('rescues').length
 
   if (rescueCount < 1000) {
     ui.crown2.classList.add('hidden')
@@ -85,7 +87,7 @@ let renderBadge = function renderBadge (rat) {
   ui.badge.classList.add('focusIn')
 }
 
-let Rat = Backbone.Model.extend({
+Rat = Backbone.Model.extend({
   defaults: {
     CMDRname: null,
     drilled: {
@@ -100,7 +102,8 @@ let Rat = Backbone.Model.extend({
   },
   url: '/api/rats',
   initialize: function () {
-    let rescues = new Rescues
+    var rescues
+    rescues = new Rescues
 
     this.once('sync', () => {
       this.set('joined', moment(this.get('joined')))
@@ -116,11 +119,11 @@ let Rat = Backbone.Model.extend({
   }
 })
 
-let Rescue = Backbone.Model.extend({
+Rescue = Backbone.Model.extend({
   defaults: {}
 })
 
-let Rescues = Backbone.Collection.extend({
+Rescues = Backbone.Collection.extend({
   model: Rescue,
   parse: function (response) {
     return response.data
@@ -128,9 +131,9 @@ let Rescues = Backbone.Collection.extend({
   url: '/api/rescues'
 })
 
-let CMDRname = location.pathname.replace('/', '').split('/')[1]
+CMDRname = location.pathname.replace('/', '').split('/')[1]
 
-let rat = new Rat
+rat = new Rat
 
 rat.fetch({
   data: $.param({
