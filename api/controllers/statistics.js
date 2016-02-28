@@ -3,7 +3,12 @@
 let Rescue = require('../models/rescue')
 
 exports.get = function (request, response, next) {
-  getOverallRescueCount().then(function (values) {
+  let operations = []
+
+  operations.push(getOverallRescueCount())
+  operations.push(getPopularSystemsCount())
+
+  Promise.all(operations).then(function (values) {
     response.model.data = values
     response.status(200)
     next()
@@ -31,7 +36,6 @@ let groupByDateAggregator = {
     }
   }
 }
-
 
 let getOverallRescueCount = function () {
   return new Promise(function (resolve, reject) {
@@ -68,4 +72,19 @@ let getOverallRescueCount = function () {
       reject(errors)
     })
   })
+}
+
+let getPopularSystemsCount = function () {
+  return Rescue.aggregate([
+    {
+      '$group': {
+        _id: '$system',
+        count: { '$sum': 1 }
+      }
+    }, {
+      '$sort': { count: -1 }
+    }, {
+      '$limit' : 25
+    }
+  ]).exec()
 }
