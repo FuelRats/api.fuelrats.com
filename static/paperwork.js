@@ -3,11 +3,12 @@
 /* global Backbone, _, Bloodhound */
 
 $(function () {
-  var form, arrivedRatsField, firstLimpetField, engine
+  var form, arrivedRatsField, firstLimpetField, engine, systemField, systemEngine
   form = document.querySelector('form')
 
   arrivedRatsField = document.getElementById('rats')
   firstLimpetField = document.getElementById('firstLimpet')
+  systemField      = document.getElementById('system')
 
   engine = new Bloodhound({
     remote: {
@@ -53,6 +54,29 @@ $(function () {
     maxTags: 1,
     itemValue: 'id',
     itemText: 'rat'
+  })
+
+  systemEngine = new Bloodhound({
+    remote: {
+      url: 'http://www.edsm.net/api-v1/systems?systemName=%QUERY',
+      wildcard: '%QUERY',
+      filter: function (data) {
+        var results
+        results = data.map(function (obj) {
+          return obj.name
+        })
+        return results
+      }
+    },
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace
+  })
+
+  systemEngine.initialize()
+
+  $(systemField).typeahead(null, {
+    name: 'systems',
+    source: systemEngine.ttAdapter()
   })
 
   form.addEventListener('submit', function (event) {
