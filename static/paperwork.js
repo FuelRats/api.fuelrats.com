@@ -110,7 +110,7 @@ $(function () {
 
     rescue.save({}, {
       success: function (model) {
-        window.location.href = '/rescues/' + model.id
+        window.location.href = '/rescues/view/' + model.id
       }
     })
   })
