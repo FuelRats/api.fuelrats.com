@@ -1,11 +1,57 @@
 'use strict'
 
-/* global Backbone, _ */
+/* global Backbone, _, Bloodhound */
 
 $(function () {
-  var form
+  let form = document.querySelector('form')
 
-  form = document.querySelector('form')
+  let arrivedRatsField = document.getElementById('rats')
+  let firstLimpetField = document.getElementById('firstLimpet')
+
+  let engine = new Bloodhound({
+    remote: {
+      url: '/rats?CMDRname=%QUERY',
+      wildcard: '%QUERY',
+      filter: function (data) {
+        let results = data.data.map(function (obj) {
+          return { rat: obj.CMDRname, id: obj._id }
+        })
+        return results
+      }
+    },
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace
+  })
+
+  engine.initialize()
+
+  $(arrivedRatsField).tagsinput({
+    typeaheadjs: {
+      name: 'rats',
+      displayKey: 'rat',
+      source: engine.ttAdapter()
+    },
+    freeInput: false,
+    confirmKeys: [13, 44],
+    trimValue: true,
+    maxTags: 10,
+    itemValue: 'id',
+    itemText: 'rat'
+  })
+
+  $(firstLimpetField).tagsinput({
+    typeaheadjs: {
+      name: 'firstLimpet',
+      displayKey: 'rat',
+      source: engine.ttAdapter()
+    },
+    freeInput: false,
+    confirmKeys: [13, 44],
+    trimValue: true,
+    maxTags: 1,
+    itemValue: 'id',
+    itemText: 'rat'
+  })
 
   form.addEventListener('submit', function (event) {
     var Rescue, rescue
@@ -28,12 +74,17 @@ $(function () {
         }
       }
 
-      rescue.set(element.getAttribute('name'), element.value)
+      if (element.getAttribute('name') === 'rats') {
+        rescue.set(element.getAttribute('name'), element.value.split(','))
+      } else {
+        rescue.set(element.getAttribute('name'), element.value)
+      }
+
     })
 
     rescue.save({}, {
       success: function (model) {
-        window.location.href = '/rescue/' + model.id
+        window.location.href = '/rescues/' + model.id
       }
     })
   })
