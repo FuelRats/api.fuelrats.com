@@ -1,13 +1,29 @@
-var moment, mongoose, RatSchema, Rescue, Schema, User, winston
+var _,
+    linkRescues,
+    moment,
+    mongoose,
+    normalizePlatform,
+    RatSchema,
+    Rescue,
+    Schema,
+    updateRescueCount,
+    updateTimestamps,
+    winston
 
+_ = require( 'underscore' )
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 winston = require( 'winston' )
 
+mongoose.Promise = global.Promise
+
 Rescue = require( './rescue' )
-User = require( './user' )
 
 Schema = mongoose.Schema
+
+
+
+
 
 RatSchema = new Schema({
   archive: {
@@ -38,9 +54,6 @@ RatSchema = new Schema({
       }
     }
   },
-  gamertag: {
-    type: String
-  },
   lastModified: {
     type: Date
   },
@@ -49,7 +62,10 @@ RatSchema = new Schema({
     type: Date
   },
   nicknames: {
-    type: [String]
+    default: [],
+    type: [{
+      type: String
+    }]
   },
   platform: {
     default: 'pc',
@@ -65,6 +81,11 @@ RatSchema = new Schema({
       ref: 'Rescue'
     }]
   },
+  rescueCount: {
+    default: 0,
+    index: true,
+    type: Number
+  },
   user: {
     type: Schema.Types.ObjectId,
     ref: 'User'
@@ -73,24 +94,95 @@ RatSchema = new Schema({
   versionKey: false
 })
 
-RatSchema.pre( 'save', function ( next ) {
+
+RatSchema.index({ CMDRname: 'text' })
+
+
+linkRescues = function ( next ) {
+  var rat
+
+  rat = this
+
+  rat.rescues = rat.rescues || []
+  
+  mongoose.models.Rescue.update({ 
+            $text: { 
+                $search: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+            }
+        }, {
+    $set: {
+      platform: rat.platform
+    },
+    $pull: {
+      unidentifiedRats: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
+    },
+    $push: {
+      rats: rat._id
+    }
+  })
+  .then( function () {
+    mongoose.models.Rescue.find({
+      rats: rat._id
+    })
+    .then( function ( rescues ) {
+      rescues.forEach( function ( rescue, index, rescues ) {
+        this.rescues.push( rescue._id )
+      })
+      if(this.rescues)
+        this.rescueCount = this.rescues.length
+    else
+    this.rescueCount = 0
+      next()
+    })
+    .catch( next )
+  })
+}
+
+
+
+normalizePlatform = function ( next ) {
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
+  next()
+}
+
+updateTimestamps = function ( next ) {
   var timestamp
 
-  // Dealing with timestamps
   timestamp = new Date()
+
+  if ( !this.open ) {
+    this.active = false
+  }
 
   if ( this.isNew ) {
     this.createdAt = this.createdAt || timestamp
-    this.joined = this.joined || timestamp
   }
 
   this.lastModified = timestamp
 
-  // Dealing with platforms
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
-
   next()
-})
+}
+
+sanitizeInput = function ( next ) {
+    var rat = this
+    if(rat && rat.CMDRname)
+        rat.CMDRname = rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
+    next()
+}
+
+
+
+
+RatSchema.pre( 'save', sanitizeInput )
+RatSchema.pre( 'save', updateTimestamps )
+RatSchema.pre( 'save', normalizePlatform )
+RatSchema.pre( 'save', linkRescues )
+
+RatSchema.pre( 'update', sanitizeInput )
+RatSchema.pre( 'update', updateTimestamps )
 
 RatSchema.set( 'toJSON', {
   virtuals: true
@@ -103,3 +195,5 @@ if ( mongoose.models.Rat ) {
 } else {
   module.exports = mongoose.model( 'Rat', RatSchema )
 }
+
+//module.exports.synchronize()

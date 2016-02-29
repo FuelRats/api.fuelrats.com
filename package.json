@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "grunt api",
-    "import": "node bin/import && node bin/link",
+    "import": "grunt import",
     "test": "grunt test"
   },
   "license": "MIT",
@@ -21,6 +21,7 @@
     "csv": "^0.4.6",
     "download": "^4.4.3",
     "express": "^4.13.3",
+    "express-force-ssl": "^0.3.0",
     "express-handlebars": "^2.0.1",
     "express-session": "^1.13.0",
     "git-rev": "^0.2.1",
@@ -32,6 +33,7 @@
     "grunt-shell-spawn": "^0.3.10",
     "handlebars": "^4.0.5",
     "kerberos": "0.0.18",
+    "letsencrypt-express": "^1.0.6",
     "load-grunt-config": "^0.19.1",
     "mocha": "^2.3.4",
     "moment": "^2.11.1",
@@ -42,8 +44,10 @@
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^4.0.0",
+    "request": "^2.69.0",
     "supertest": "^1.1.0",
     "time-grunt": "^1.3.0",
+    "uid-safe": "^2.1.0",
     "underscore": "^1.8.3",
     "winston": "^2.1.1",
     "ws": "^1.0.1"

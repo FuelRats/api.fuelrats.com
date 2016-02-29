@@ -1,12 +1,28 @@
-var moment, mongoose, Rat, RescueSchema, Schema, winston
+var _,
+    linkRats,
+    moment,
+    mongoose,
+    normalizePlatform,
+    Rat,
+    RescueSchema,
+    Schema,
+    updateTimestamps,
+    winston
 
+_ = require( 'underscore' )
 moment = require( 'moment' )
 mongoose = require( 'mongoose' )
 winston = require( 'winston' )
 
+mongoose.Promise = global.Promise
+
 Rat = require( './rat' )
 
 Schema = mongoose.Schema
+
+
+
+
 
 RescueSchema = new Schema({
   active: {
@@ -59,10 +75,11 @@ RescueSchema = new Schema({
     type: String
   },
   platform: {
-    default: 'pc',
+    default: 'unknown',
     enum: [
       'pc',
-      'xb'
+      'xb',
+      'unknown'
     ],
     type: String
   },
@@ -88,16 +105,84 @@ RescueSchema = new Schema({
     type: Boolean
   },
   system: {
+    default: '',
     type: String
   }
 }, {
   versionKey: false
 })
 
-RescueSchema.pre( 'save', function ( next ) {
+
+RescueSchema.index({ unidentifiedRats: 'text' })
+
+
+linkRats = function ( next ) {
+  var finds, rescue, updates
+
+  finds = []
+  rescue = this
+  updates = []
+
+  rescue.rats = rescue.rats || []
+  rescue.unidentifiedRats = rescue.unidentifiedRats || []
+
+  rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
+    var find
+        
+    updates.push( mongoose.models.Rat.update({ 
+            $text: { 
+                $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+            }
+        }, {
+      $inc: {
+        rescueCount: 1
+      },
+      $push: {
+        rescues: rescue._id
+      }
+    }))
+
+    find = mongoose.models.Rat.findOne({ 
+            $text: { 
+                $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+            }
+        })
+
+    find.then( function ( _rat ) {
+      if ( _rat ) {
+        rescue.rats.push( _rat._id )
+        rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, _rat.CMDRname )
+        if(_rat.platform && _rat.platform != null) {
+          rescue.platform = _rat.platform
+        }
+      }
+    })
+
+    finds.push( find )
+  })
+
+  Promise.all( updates )
+  .then( function () {
+    Promise.all( finds )
+    .then( next )
+    .catch( next )
+  })
+  .catch( next )
+}
+
+normalizePlatform = function ( next ) {
+  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+
+  next()
+}
+
+updateTimestamps = function ( next ) {
   var timestamp
 
-  // Dealing with timestamps
   timestamp = new Date()
 
   if ( !this.open ) {
@@ -110,11 +195,48 @@ RescueSchema.pre( 'save', function ( next ) {
 
   this.lastModified = timestamp
 
-  // Dealing with platforms
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
-
   next()
-})
+}
+
+
+sanitizeInput = function ( next ) {
+  var rescue = this
+
+  if(rescue.system)
+    rescue.system = rescue.system.trim()
+
+  if(rescue.client) {
+    if(rescue.client.CMDRname)
+      rescue.client.CMDRname = rescue.client.CMDRname.trim()
+    if(rescue.client.nickname)
+      rescue.client.nickname = rescue.client.nickname.trim()
+  }
+
+  if(rescue.unidentifiedRats) {
+    for(var i = 0; i < rescue.unidentifiedRats.length; i++) {
+      rescue.unidentifiedRats[i] = rescue.unidentifiedRats[i].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
+    }
+  }
+
+  if(rescue.quotes) {
+    for(var i = 0; i < rescue.quotes.length; i++) {
+      rescue.quotes[i] = rescue.quotes[i].trim()
+    }
+  }
+
+  if(rescue.name)
+    rescue.name = rescue.name.trim()
+  next()
+}
+
+
+RescueSchema.pre( 'save', sanitizeInput )
+RescueSchema.pre( 'save', updateTimestamps )
+RescueSchema.pre( 'save', normalizePlatform )
+RescueSchema.pre( 'save', linkRats )
+
+RescueSchema.pre( 'update', sanitizeInput )
+RescueSchema.pre( 'update', updateTimestamps )
 
 RescueSchema.set( 'toJSON', {
   virtuals: true
@@ -127,3 +249,5 @@ if ( mongoose.models.Rescue ) {
 } else {
   module.exports = mongoose.model( 'Rescue', RescueSchema )
 }
+
+//module.exports.synchronize()

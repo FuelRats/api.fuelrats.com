@@ -5,7 +5,9 @@ module.exports = {
     ]
   },
 
-  mongo: {
-    cmd: './bin/mongo.sh'
+  import: {
+    args: [
+      './bin/import'
+    ]
   }
 }

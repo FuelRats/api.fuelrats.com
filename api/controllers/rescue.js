@@ -1,301 +1,349 @@
-var _, ErrorModels, handleError, mongoose, Rat, Rescue, rescue, save, winston
+'use strict'
 
+let _ = require('underscore')
+let mongoose = require('mongoose')
 
+let Rat = require('../models/rat')
+let Rescue = require('../models/rescue')
+let ErrorModels = require('../errors')
+let websocket = require('../websocket')
 
-
-
-_ = require( 'underscore' )
-mongoose = require( 'mongoose' )
-winston = require( 'winston' )
-
-Rat = require( '../models/rat' )
-Rescue = require( '../models/rescue' )
-ErrorModels = require( '../errors' )
-
-
-
-
-
-// SHARED FUNCTIONS
+// ASSIGN
 // =============================================================================
-handleError = function ( error ) {
-  errorTypes = Object.keys( error.errors )
+exports.assign = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let rescueId = request.params.rescueId
+  let ratId = request.params.ratId
 
-  console.error( errorTypes )
+  console.log('Assigning', ratId, 'to', rescueId)
 
-  for ( var i = 0; i < errorTypes.length; i++ ) {
-    var errorModel, errorType
-
-    errorType = errorTypes[i]
-    error = error.errors[errorType].properties
-
-    if ( error.type === 'required' ) {
-      errorModel = ErrorModels['missing_required_field']
+  let update = {
+    $push: {
+      rats: ratId
     }
-
-    errorModel.detail = 'You\'re missing the required field: ' + error.path
-
-    response.model.errors.push( errorModel )
   }
+
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
 }
 
+// UNASSIGN
+// =============================================================================
+exports.unassign = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let rescueId = request.params.rescueId
+  let ratId = request.params.ratId
 
+  console.log('Unassigning', ratId, 'from', rescueId)
 
+  let update = {
+    $pull: {
+      rats: ratId
+    }
+  }
 
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
+}
 
 // GET
 // =============================================================================
-exports.get = function ( request, response, next ) {
-  var filter, query
+exports.get = function (request, response, next) {
 
-  filter = {}
-  query = {}
+  exports.read(request.query).then(function (res) {
+    let data = res.data
+    let meta = res.meta
 
-  filter.size = parseInt( request.body.limit ) || 25
-  delete request.body.limit
+    response.model.data = data
+    response.model.meta = meta
+    response.status = 400
+    next()
+  }, function (error) {
+    response.model.errors.push(error.error)
+    response.status(400)
+    next()
+  })
+}
 
-  filter.from = parseInt( request.body.offset ) || 0
-  delete request.body.offset
+// GET (by ID)
+// =============================================================================
+exports.getById = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let id = request.params.id
 
-  for ( var key in request.body ) {
-    if ( key === 'q' ) {
-      query.query_string = {
-        query: request.body.q
-      }
+  Rescue.findById(id).populate('rats').exec(function (error, rescue) {
+    if (error) {
+      response.model.errors.push(error)
+      response.status(400)
     } else {
-      if ( !query.bool ) {
-        query.bool = {
+      response.model.data = rescue
+      response.status(200)
+    }
+
+    next()
+  })
+}
+
+// READ
+// =============================================================================
+exports.read = function (query) {
+  return new Promise(function (resolve, reject) {
+    let filter = {}
+    let dbQuery = {}
+
+    filter.size = parseInt(query.limit) || 25
+    delete query.limit
+
+    filter.from = parseInt(query.offset) || 0
+    delete query.offset
+
+    for (let key in query) {
+      if (!dbQuery.bool) {
+        dbQuery.bool = {
           should: []
         }
       }
 
-      term = {}
+      let term = {}
       term[key] = {
-        query: request.body[key],
+        query: query[key],
         fuzziness: 'auto'
       }
-      query.bool.should.push( { match: term } )
-    }
-  }
-
-  if ( !Object.keys( query ).length ) {
-    query.match_all = {}
-  }
-
-  Rescue.search( query, filter, function ( error, data ) {
-    if ( error ) {
-      response.model.errors.push( error )
-      response.status( 400 )
-
-    } else {
-      response.model.meta = {
-        count: data.hits.hits.length,
-        limit: filter.size,
-        offset: filter.from,
-        total: data.hits.total
-      }
-
-      response.model.data = []
-
-      data.hits.hits.forEach( function ( rescue, index, rescues ) {
-        var rescueToPopulate, rescueFind
-
-        rescue._source._id = rescue._id
-        rescue._source.score = rescue._score
-
-        response.model.data.push( rescue._source )
+      dbQuery.bool.should.push({
+        match: term
       })
-
-      response.status( 200 )
     }
 
-    next()
-  })
-}
-
-
-
-
-
-// GET (by ID)
-// =============================================================================
-exports.getById = function ( request, response, next ) {
-  var id
-
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
-  console.log( response.model.meta.params )
-
-  id = request.params.id
-
-  Rescue
-  .findById( id )
-  .populate( 'rats' )
-  .exec( function ( error, rescue ) {
-    var status
-
-    if ( error ) {
-      response.model.errors.push( error )
-      response.status( 400 )
-
-    } else {
-      response.model.data = rescue
-      response.status( 200 )
+    if (!Object.keys(dbQuery).length) {
+      dbQuery.match_all = {}
     }
 
-    next()
+    Rescue.search(dbQuery, filter, function (error, queryData) {
+      if (error) {
+        let errorObj = ErrorModels.server_error
+        errorObj.detail = error
+        reject({
+          error: errorObj,
+          meta: {}
+        })
+      } else {
+        let meta = {
+          count: queryData.hits.hits.length,
+          limit: filter.size,
+          offset: filter.from,
+          total: queryData.hits.total
+        }
+
+        let data = []
+
+        queryData.hits.hits.forEach(function (rescue) {
+          rescue._source._id = rescue._id
+          rescue._source.score = rescue._score
+          data.push(rescue._source)
+        })
+
+        resolve({
+          data: data,
+          meta: meta
+        })
+      }
+    })
   })
 }
-
-
-
-
 
 // POST
 // =============================================================================
-exports.post = function ( request, response, next ) {
-  var finds, firstLimpetFind
-
-  finds = []
-
-  // Validate and update rats
-  if ( typeof request.body.rats === 'string' ) {
-    request.body.rats = request.body.rats.split( ',' )
-  }
-
-  request.body.unidentifiedRats = []
-
-  request.body.rats.forEach( function ( rat, index, rats ) {
-    var find, CMDRname
-
-    if ( typeof rat === 'string' ) {
-      if ( !mongoose.Types.ObjectId.isValid( rat ) ) {
-        CMDRname = rat
-
-        request.body.rats = _.without( request.body.rats, CMDRname )
-
-        find = Rat.findOne({
-          CMDRname: CMDRname
-        })
-
-        find.then( function ( rat ) {
-          if ( rat ) {
-            request.body.rats.push( rat._id )
-          } else {
-            request.body.unidentifiedRats.push( CMDRname )
-          }
-        })
-
-        finds.push( find )
-      }
-
-    } else if ( typeof rat === 'object' && rat._id ) {
-      request.body.rats.push( rat._id )
-    }
+exports.post = function (request, response, next) {
+  exports.create(request.body, {}).then(function (res) {
+    response.model.data = res.data
+    response.status(201)
+    next()
+  }, function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
   })
-
-  // Validate and update firstLimpet
-  if ( typeof request.body.firstLimpet === 'string' ) {
-    if ( !mongoose.Types.ObjectId.isValid( request.body.firstLimpet ) ) {
-      firstLimpetFind = Rat.findOne({
-        CMDRname: request.body.firstLimpet
-      })
-
-      firstLimpetFind.then( function ( rat ) {
-        if ( rat ) {
-          request.body.firstLimpet = rat._id
-        }
-      })
-
-      finds.push( firstLimpetFind )
-    }
-
-  } else if ( typeof request.body.firstLimpet === 'object' && request.body.firstLimpet._id ) {
-    request.body.firstLimpet = request.body.firstLimpet._id
-  }
-
-  Promise.all( finds )
-  .then( function () {
-    console.log( request.body )
-
-    Rescue.create( request.body, function ( error, rescue ) {
-      var errors, errorTypes, status
-
-      if ( error ) {
-        response.model.errors.push( error )
-        response.status( 400 )
-
-      } else {
-        response.model.data = rescue
-        response.status( 201 )
-      }
-
-      next()
-    })
-  })
-
-//    if ( referer = request.get( 'Referer' ) ) {
-//      response.redirect( '/login' )
-//
-//    } else {
-//      response.status( status )
-//      response.json( response.model )
-//    }
 }
 
+// CREATE
+// =============================================================================
+exports.create = function (query, client) {
+  return new Promise(function (resolve, reject) {
+    let finds = []
 
+    if (typeof query.rats === 'string') {
+      query.rats = query.rats.split(',')
+    }
 
+    query.unidentifiedRats = []
 
+    if (query.rats) {
+      query.rats.forEach(function (rat) {
+        if (typeof rat === 'string') {
+          if (!mongoose.Types.ObjectId.isValid(rat)) {
+            let CMDRname = rat.trim()
+            query.rats = _.without(query.rats, CMDRname)
+            find = Rat.findOne({
+              CMDRname: CMDRname
+            })
+
+            find.then(function (rat) {
+              if (rat) {
+                query.rats.push(rat._id)
+              } else {
+                query.unidentifiedRats.push(CMDRname)
+              }
+            })
+
+            finds.push(find)
+          }
+        } else if (typeof rat === 'object' && rat._id) {
+          query.rats.push(rat._id)
+        }
+      })
+    }
+
+    // Validate and update firstLimpet
+    if (query.firstLimpet) {
+      if (typeof query.firstLimpet === 'string') {
+        if (!mongoose.Types.ObjectId.isValid(query.firstLimpet)) {
+          let firstLimpetFind = Rat.findOne({
+            CMDRname: query.firstLimpet.trim()
+          })
+
+          firstLimpetFind.then(function (rat) {
+            if (rat) {
+              query.firstLimpet = rat._id
+            }
+          })
+          finds.push(firstLimpetFind)
+        }
+      } else if (typeof query.firstLimpet === 'object' && query.firstLimpet._id) {
+        query.firstLimpet = query.firstLimpet._id
+      }
+    }
+    Promise.all(finds).then(function () {
+      Rescue.create(query, function (error, rescue) {
+        if (error) {
+          let errorObj = ErrorModels.server_error
+          errorObj.detail = error
+          reject({
+            error: errorObj,
+            meta: {}
+          })
+        } else {
+          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+            return cl.clientId !== client.clientId
+          })
+          websocket.broadcast(allClientsExcludingSelf, {
+            action: 'rescue:created'
+          }, rescue)
+          resolve({
+            data: rescue,
+            meta: {}
+          })
+        }
+      })
+    })
+  })
+}
 
 // PUT
 // =============================================================================
-exports.put = function ( request, response, next ) {
-  var status
+exports.put = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
-
-  if ( id = request.params.id ) {
-    Rescue.findById( id, function ( error, rescue ) {
-      if ( error ) {
-        response.model.errors.push( error )
-        response.status( 400 )
-
-        next()
-
-      } else if ( !rescue ) {
-        response.model.errors.push( ErrorModels.not_found )
-        response.status( 404 )
-
-        next()
-
-      } else {
-        for ( var key in request.body ) {
-          if ( key === 'client' ) {
-            _.extend( rescue.client, request.body[key] )
-          } else {
-            rescue[key] = request.body[key]
-          }
-        }
-
-        rescue.save( function ( error, rescue ) {
-          var errors, errorTypes, status
-
-          if ( error ) {
-            response.model.errors.push( error )
-            status = 400
-
-          } else {
-            status = 200
-            response.model.data = rescue
-          }
-
-          next()
-        })
-      }
-    })
-  } else {
-    response.model.errors.push( ErrorModels.missing_required_field )
-    response.status( 400 )
-
+  exports.update(request.body, {}, request.params).then(function (data) {
+    response.model.data = data.data
+    response.status(201)
     next()
-  }
+  }, function (error) {
+    response.model.errors.push(error)
+
+    let status = error.code || 400
+    response.status(status)
+    next()
+  })
+}
+
+// UPDATE
+// =============================================================================
+exports.update = function (data, client, query) {
+  return new Promise(function (resolve, reject) {
+    if (query.id) {
+      Rescue.findById(query.id, function (error, rescue) {
+        if (error) {
+          let errorModel = ErrorModels.server_error
+          errorModel.detail = error
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else if (!rescue) {
+          let errorModel = ErrorModels.not_found
+          errorModel.detail = query.id
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else {
+          for (let key in data) {
+            if (key === 'client') {
+              _.extend(rescue.client, data)
+            } else {
+              rescue[key] = data[key]
+            }
+          }
+
+          rescue.save(function (error, rescue) {
+            if (error) {
+              let errorModel = ErrorModels.server_error
+              errorModel.detail = error
+              reject({
+                error: errorModel,
+                meta: {}
+              })
+            } else {
+              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                return cl.clientId !== client.clientId
+              })
+              websocket.broadcast(allClientsExcludingSelf, {
+                action: 'rescue:updated'
+              }, rescue)
+              resolve({
+                data: rescue,
+                meta: {}
+              })
+            }
+          })
+        }
+      })
+    }
+  })
 }

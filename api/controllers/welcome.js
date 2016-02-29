@@ -1,69 +1,58 @@
-var _, moment, path, Rat, Rescue, winston
+'use strict'
+
+var _, moment, winston
+
+_ = require('underscore')
+moment = require('moment')
+winston = require('winston')
 
 
-
-
-
-_ = require( 'underscore' )
-moment = require( 'moment' )
-path = require( 'path' )
-winston = require( 'winston' )
-
-Rat = require( '../models/rat' )
-Rescue = require( '../models/rescue' )
-
-
-
-
-
-exports.get = function ( request, response ) {
-  if ( request.isUnauthenticated() ) {
-    response.redirect( '/login' )
+exports.get = function (request, response) {
+  if (request.isUnauthenticated()) {
+    response.redirect('/login')
 
   } else {
-    request.user.populate( 'CMDRs', function( error ) {
+    request.user.populate('CMDRs', function (error) {
       var rescueFinds
 
       rescueFinds = []
 
-      if ( error ) {
-        return winston.error( error )
+      if (error) {
+        return winston.error(error)
       }
 
-      request.user.CMDRs.forEach( function ( CMDR, index, CMDRs ) {
-        rescueFinds.push( new Promise( function ( resolve, reject ) {
-          CMDR.populate( 'rescues', function ( error, rescues ) {
-            if ( error ) {
-              return reject( error )
+      request.user.CMDRs.forEach(function (CMDR) {
+        rescueFinds.push(new Promise(function (resolve, reject) {
+          CMDR.populate('rescues', function (error, rescues) {
+            if (error) {
+              return reject(error)
             }
 
-            CMDR.rescues.forEach( function ( rescue, index, rescues ) {
-              console.log( 'createdAt', rescue.createdAt )
-              console.log( 'lastModified', rescue.lastModified )
-              rescue.createdAt = moment( rescue.createdAt )
-              rescue.lastModified = moment( rescue.lastModified )
+            CMDR.rescues.forEach(function (rescue) {
+              rescue.createdAt = moment(rescue.createdAt)
+              rescue.lastModified = moment(rescue.lastModified)
             })
 
-            CMDR.rescues = _.sortBy( CMDR.rescues, 'createdAt' ).reverse()
+            CMDR.rescues = _.sortBy(CMDR.rescues, 'createdAt').reverse()
 
-            resolve( rescues )
+            resolve(rescues)
           })
         }))
       })
 
-      Promise.all( rescueFinds )
-      .then( function () {
-        request.user.rescues = []
+      Promise.all(rescueFinds)
+        .then(function () {
+          request.user.rescues = []
 
-        request.user.CMDRs.forEach( function ( CMDR, index, CMDRs ) {
-          _.union( request.user, CMDR.rescues )
+          request.user.CMDRs.forEach(function (CMDR) {
+            _.union(request.user, CMDR.rescues)
+          })
+
+          response.render('welcome', request.user)
         })
-
-        response.render( 'welcome', request.user )
-      })
-      .catch( function ( error ) {
-        winston.error( error )
-      })
+        .catch(function (error) {
+          winston.error(error)
+        })
     })
   }
 }
