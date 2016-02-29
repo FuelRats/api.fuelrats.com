@@ -85,6 +85,7 @@ $(function () {
     if (e.isDefaultPrevented()) {
       console.log('default prevented')
     } else {
+      e.preventDefault()
       Rescue = Backbone.Model.extend({
         url: 'rescues',
         parse: function (response) {
@@ -112,7 +113,7 @@ $(function () {
       rescue.save({}, {
         success: function (model) {
           console.log(model)
-          //window.location.href = '/rescues/view/' + model.id
+          window.location.href = '/rescues/view/' + model.id
         },
         error: function (error) {
           console.log(error)
