@@ -11,6 +11,7 @@ let express = require('express')
 let expressHandlebars = require('express-handlebars')
 let expressSession = require('express-session')
 let fs = require('fs')
+let forceSSL = require('express-force-ssl')
 let http = require('http')
 let lex = require('letsencrypt-express').testing()
 let moment = require('moment')
@@ -133,6 +134,9 @@ app.use(expressSession({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
+if (config.ssl) {
+  app.use(forceSSL)
+}
 
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
