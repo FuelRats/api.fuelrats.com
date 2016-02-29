@@ -42,6 +42,10 @@ $(function () {
     itemText: 'rat'
   })
 
+  $(arrivedRatsField).change(function () {
+    $(form).bootstrapValidator('revalidateField', 'rats')
+  })
+
   $(firstLimpetField).tagsinput({
     typeaheadjs: {
       name: 'firstLimpet',
@@ -54,6 +58,10 @@ $(function () {
     maxTags: 1,
     itemValue: 'id',
     itemText: 'rat'
+  })
+
+  $(firstLimpetField).change(function () {
+    $(form).bootstrapValidator('revalidateField', 'firstLimpet')
   })
 
   systemEngine = new Bloodhound({
@@ -79,43 +87,71 @@ $(function () {
     source: systemEngine.ttAdapter()
   })
 
-  $(form).validator().on('submit', function (e) {
-    var Rescue, rescue
+  $(systemField).change(function () {
+    $(form).bootstrapValidator('revalidateField', 'system')
+  })
 
-    if (!e.isDefaultPrevented()) {
-      e.preventDefault()
-      Rescue = Backbone.Model.extend({
-        url: 'rescues',
-        parse: function (response) {
-          return response.data
-        }
-      })
 
-      rescue = new Rescue
-
-      _.forEach(document.querySelectorAll('input, textarea'), function (element) {
-        if (element.getAttribute('type') === 'radio' || element.getAttribute('type') === 'checkbox') {
-          if (!element.checked) {
-            return
+  $(form).bootstrapValidator({
+    excluded: ':disabled',
+    fields: {
+      rats: {
+        validators: {
+          notEmpty: {
+            message: 'Please enter at least one rat into the field'
           }
         }
-
-        if (element.getAttribute('name') === 'rats') {
-          rescue.set(element.getAttribute('name'), element.value.split(','))
-        } else {
-          rescue.set(element.getAttribute('name'), element.value)
+      },
+      firstLimpet: {
+        validators: {
+          notEmpty: {
+            message: 'Please enter at least one rat into the field'
+          }
         }
-
-      })
-
-      rescue.save({}, {
-        success: function (model) {
-          window.location.href = '/rescues/view/' + model.id
-        },
-        error: function (error) {
-          window.alert(error)
+      },
+      system: {
+        validators: {
+          notEmpty: {
+            message: 'Please enter the star system to continue'
+          }
         }
-      })
+      }
     }
+  }).on('success.form.bv', function (e) {
+    var rescue, Rescue
+
+    e.preventDefault()
+    Rescue = Backbone.Model.extend({
+      url: 'rescues',
+      parse: function (response) {
+        return response.data
+      }
+    })
+
+    rescue = new Rescue
+
+    _.forEach(document.querySelectorAll('input, textarea'), function (element) {
+      if (element.getAttribute('type') === 'radio' || element.getAttribute('type') === 'checkbox') {
+        if (!element.checked) {
+          return
+        }
+      }
+
+      if (element.getAttribute('name') === 'rats') {
+        rescue.set(element.getAttribute('name'), element.value.split(','))
+      } else {
+        rescue.set(element.getAttribute('name'), element.value)
+      }
+
+    })
+
+    rescue.save({}, {
+      success: function (model) {
+        window.location.href = '/rescues/view/' + model.id
+      },
+      error: function (error) {
+        JSON.stringify(error.errors)
+      }
+    })
   })
 })

@@ -10,12 +10,12 @@
 
     <div class="form-group">
       <label for="rats">Who arrived for the rescue?</label>
-      <input type="text" name="rats" id="rats" class="form-control" value="{{ rat.CMDRname }}" data-minlength="3" data-error="At least one rat needs to be entered into this field" required>
+      <input type="text" name="rats" id="rats" class="form-control" value="{{ rat.CMDRname }}" required>
     </div>
 
     <div class="form-group">
       <label for="firstLimpet">Who fired the first limpet?</label>
-      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}">
+      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}" required>
     </div>
 
     <div class="form-group">
@@ -38,7 +38,7 @@
     <div class="form-group">
       <label for="system">Where did it happen?</label>
       <small>In what star system did the rescue took place? (put "n/a" if not applicable)</small>
-      <input type="text" name="system" id="system" class="form-control" data-minlength="3" data-error="The system name needs to be a minimum of 3 characters" required autofocus>
+      <input type="text" name="system" id="system" class="form-control" required autofocus>
     </div>
 
     <div class="form-group">
