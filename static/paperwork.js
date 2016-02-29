@@ -82,9 +82,7 @@ $(function () {
   $(form).validator().on('submit', function (e) {
     var Rescue, rescue
 
-    if (e.isDefaultPrevented()) {
-      console.log('default prevented')
-    } else {
+    if (!e.isDefaultPrevented()) {
       e.preventDefault()
       Rescue = Backbone.Model.extend({
         url: 'rescues',
@@ -112,11 +110,10 @@ $(function () {
 
       rescue.save({}, {
         success: function (model) {
-          console.log(model)
           window.location.href = '/rescues/view/' + model.id
         },
         error: function (error) {
-          console.log(error)
+          window.alert(error)
         }
       })
     }
