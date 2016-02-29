@@ -44,5 +44,3 @@ UserSchema.plugin( require( 'passport-local-mongoose' ), {
 })
 
 module.exports = mongoose.model( 'User', UserSchema )
-
-module.exports.synchronize();
