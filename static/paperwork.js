@@ -79,39 +79,45 @@ $(function () {
     source: systemEngine.ttAdapter()
   })
 
-  form.addEventListener('submit', function (event) {
+  $(form).validator().on('submit', function (e) {
     var Rescue, rescue
 
-    event.preventDefault()
-
-    Rescue = Backbone.Model.extend({
-      url: 'rescues',
-      parse: function (response) {
-        return response.data
-      }
-    })
-
-    rescue = new Rescue
-
-    _.forEach(document.querySelectorAll('input, textarea'), function (element) {
-      if (element.getAttribute('type') === 'radio' || element.getAttribute('type') === 'checkbox') {
-        if (!element.checked) {
-          return
+    if (e.isDefaultPrevented()) {
+      console.log('default prevented')
+    } else {
+      Rescue = Backbone.Model.extend({
+        url: 'rescues',
+        parse: function (response) {
+          return response.data
         }
-      }
+      })
 
-      if (element.getAttribute('name') === 'rats') {
-        rescue.set(element.getAttribute('name'), element.value.split(','))
-      } else {
-        rescue.set(element.getAttribute('name'), element.value)
-      }
+      rescue = new Rescue
 
-    })
+      _.forEach(document.querySelectorAll('input, textarea'), function (element) {
+        if (element.getAttribute('type') === 'radio' || element.getAttribute('type') === 'checkbox') {
+          if (!element.checked) {
+            return
+          }
+        }
 
-    rescue.save({}, {
-      success: function (model) {
-        window.location.href = '/rescues/view/' + model.id
-      }
-    })
+        if (element.getAttribute('name') === 'rats') {
+          rescue.set(element.getAttribute('name'), element.value.split(','))
+        } else {
+          rescue.set(element.getAttribute('name'), element.value)
+        }
+
+      })
+
+      rescue.save({}, {
+        success: function (model) {
+          console.log(model)
+          //window.location.href = '/rescues/view/' + model.id
+        },
+        error: function (error) {
+          console.log(error)
+        }
+      })
+    }
   })
 })
