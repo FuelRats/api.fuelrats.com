@@ -1,44 +1,71 @@
 $(function () {
-  var BarStackView, statistics, StatisticsView, statisticsView
+  var StatisticsView, statisticsView
 
-  BarStackView = Marionette.ItemView.extend({
-    initialize: function () {
-//      console.log( 'foo' )
-//      console.log( this.model )
-    },
-
-    tagName: 'g',
-
-    template: function (model) {
-
-
-      return Handlebars.compile(
-        '<rect width="15" class="success-bar"></rect>'
-      )
-    }
-  })
-
-  StatisticsView = Marionette.CompositeView.extend({
-    childView: BarStackView,
-
-    childViewContainer: '.data',
-
+  StatisticsView = Marionette.LayoutView.extend({
     el: '.statistics',
 
     initialize: function () {
-      this.collection.fetch({
-        success: this.render
+      $(window).on('resize', this.render)
+      this.listenTo(this.model, 'change', this.render)
+      this.listenTo(this.model, 'sync', this.render)
+
+      this.model.fetch()
+    },
+
+    onRender: function () {
+      var chart, data, width, x, y
+
+      data= this.model.get('rescuesByDate').toJSON()
+      height = this.$el.height()
+      barWidth = this.$el.width() / data.length
+      y = d3.scale.linear()
+      y.domain([0, d3.max(data, function (data) {
+        return data.failure + data.success
+      })])
+      y.range([0, height])
+
+      chart = d3.select('.rescuesByDate')
+
+      bar = chart.selectAll('g')
+      .data(data)
+      .enter()
+      .append('g')
+      .attr('transform', function (data, index) {
+        return 'translate(' + (index * barWidth) + ',0)'
       })
+
+      bar
+      .append('rect')
+      .attr('class', 'success-bar')
+      .attr('height', function (data) {
+        return y(data.success)
+      })
+      .attr('width', barWidth)
+      .attr('y', function (data, index) {
+        return height - y(data.success)
+      })
+
+//      .selectAll('rect')
+//      .data(data)
+//      .enter()
+//      .append('rect')
+//      .attr('class', 'success-bar')
+//      .attr('transform', function (data, index) {
+//        return 'translate(' + (index * barWidth) + ',' + (height - y(data.success)) + ')'
+//      })
+//      .style('width', barWidth)
+//      .style('height', function (data) {
+//        return y(data.success) + 'px'
+//      })
     },
 
     template: Handlebars.compile(
-      '<g class="header"></g>' +
-      '<g class="data"></g>' +
-      '<g class="footer"></g>'
+      '<svg class="rescuesByDate"></svg>' +
+      '<svg class="rescuesBySystem"></svg>'
     )
   })
 
-  new StatisticsView({
-    collection: new StatisticsCollection
+  statisticsView = new StatisticsView({
+    model: new StatisticsModel
   })
 })
