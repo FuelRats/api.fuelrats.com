@@ -130,6 +130,7 @@ exports.post = function ( request, response, next ) {
 
             } else {
               user.rat = rat
+              user.password = null
               response.model.data = user
               response.status(200)
             }
