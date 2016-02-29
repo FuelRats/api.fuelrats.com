@@ -134,7 +134,7 @@ app.use(expressSession({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-if (config.ssl) {
+if (config.ssl.enabled) {
   app.use(forceSSL)
 }
 
