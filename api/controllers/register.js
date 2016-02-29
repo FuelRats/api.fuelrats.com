@@ -113,14 +113,26 @@ exports.post = function ( request, response, next ) {
           var referer, status
 
           if ( error ) {
+            referer = request.get('Referer')
+            if (referer) {
+              response.redirect('/login?registrationError=1')
+
+            } else {
             response.model.errors = []
             response.model.errors.push( error )
             response.status( 400 )
+            }
 
           } else {
-            user.rat = rat
-            response.model.data = user
-            response.status( 200 )
+            referer = request.get('Referer')
+            if (referer) {
+              response.redirect('/welcome')
+
+            } else {
+              user.rat = rat
+              response.model.data = user
+              response.status(200)
+            }
           }
 
           next()
