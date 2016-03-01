@@ -1,5 +1,5 @@
 <div class="container-fluid">
-  <form action="/rescues" method="post">
+  <form id="paperwork" action="/rescues" method="post">
     <div class="form-group">
       <p>This is how you report a rescue or loss for the Fuel Rats leaderboard.</p>
 
@@ -10,8 +10,7 @@
 
     <div class="form-group">
       <label for="rats">Who arrived for the rescue?</label>
-      <input type="text" name="rats" id="rats" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}" required>
-      <small class="text-muted">Comma separated</small>
+      <input type="text" name="rats" id="rats" class="form-control" value="{{ rat.CMDRname }}" required>
     </div>
 
     <div class="form-group">
@@ -39,7 +38,7 @@
     <div class="form-group">
       <label for="system">Where did it happen?</label>
       <small>In what star system did the rescue took place? (put "n/a" if not applicable)</small>
-      <input type="text" name="system" id="system" class="form-control" autofocus required>
+      <input type="text" name="system" id="system" class="form-control" required autofocus>
     </div>
 
     <div class="form-group">

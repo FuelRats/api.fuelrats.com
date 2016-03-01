@@ -1,17 +1,126 @@
 'use strict'
 
-/* global Backbone, _ */
+/* global Backbone, _, Bloodhound */
 
 $(function () {
-  var form
-
+  var form, arrivedRatsField, firstLimpetField, engine, systemField, systemEngine
   form = document.querySelector('form')
 
-  form.addEventListener('submit', function (event) {
-    var Rescue, rescue
+  arrivedRatsField = document.getElementById('rats')
+  firstLimpetField = document.getElementById('firstLimpet')
+  systemField      = document.getElementById('system')
 
-    event.preventDefault()
+  engine = new Bloodhound({
+    remote: {
+      url: '/rats?CMDRname=%QUERY',
+      wildcard: '%QUERY',
+      filter: function (data) {
+        var results
+        results = data.data.map(function (obj) {
+          return { rat: obj.CMDRname, id: obj._id }
+        })
+        return results
+      }
+    },
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace
+  })
 
+  engine.initialize()
+
+  $(arrivedRatsField).tagsinput({
+    typeaheadjs: {
+      name: 'rats',
+      displayKey: 'rat',
+      source: engine.ttAdapter()
+    },
+    freeInput: false,
+    confirmKeys: [13, 44],
+    trimValue: true,
+    maxTags: 10,
+    itemValue: 'id',
+    itemText: 'rat'
+  })
+
+  $(arrivedRatsField).change(function () {
+    $(form).bootstrapValidator('revalidateField', 'rats')
+  })
+
+  $(firstLimpetField).tagsinput({
+    typeaheadjs: {
+      name: 'firstLimpet',
+      displayKey: 'rat',
+      source: engine.ttAdapter()
+    },
+    freeInput: false,
+    confirmKeys: [13, 44],
+    trimValue: true,
+    maxTags: 1,
+    itemValue: 'id',
+    itemText: 'rat'
+  })
+
+  $(firstLimpetField).change(function () {
+    $(form).bootstrapValidator('revalidateField', 'firstLimpet')
+  })
+
+  systemEngine = new Bloodhound({
+    remote: {
+      url: 'http://www.edsm.net/api-v1/systems?systemName=%QUERY',
+      wildcard: '%QUERY',
+      filter: function (data) {
+        var results
+        results = data.map(function (obj) {
+          return obj.name
+        })
+        return results
+      }
+    },
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace
+  })
+
+  systemEngine.initialize()
+
+  $(systemField).typeahead(null, {
+    name: 'systems',
+    source: systemEngine.ttAdapter()
+  })
+
+  $(systemField).change(function () {
+    $(form).bootstrapValidator('revalidateField', 'system')
+  })
+
+
+  $(form).bootstrapValidator({
+    excluded: ':disabled',
+    fields: {
+      rats: {
+        validators: {
+          notEmpty: {
+            message: 'Please enter at least one rat into the field'
+          }
+        }
+      },
+      firstLimpet: {
+        validators: {
+          notEmpty: {
+            message: 'Please enter at least one rat into the field'
+          }
+        }
+      },
+      system: {
+        validators: {
+          notEmpty: {
+            message: 'Please enter the star system to continue'
+          }
+        }
+      }
+    }
+  }).on('success.form.bv', function (e) {
+    var rescue, Rescue
+
+    e.preventDefault()
     Rescue = Backbone.Model.extend({
       url: 'rescues',
       parse: function (response) {
@@ -28,12 +137,20 @@ $(function () {
         }
       }
 
-      rescue.set(element.getAttribute('name'), element.value)
+      if (element.getAttribute('name') === 'rats') {
+        rescue.set(element.getAttribute('name'), element.value.split(','))
+      } else {
+        rescue.set(element.getAttribute('name'), element.value)
+      }
+
     })
 
     rescue.save({}, {
       success: function (model) {
-        window.location.href = '/rescue/' + model.id
+        window.location.href = '/rescues/view/' + model.id
+      },
+      error: function (error) {
+        JSON.stringify(error.errors)
       }
     })
   })
