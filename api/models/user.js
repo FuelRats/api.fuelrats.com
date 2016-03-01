@@ -34,6 +34,8 @@ UserSchema.methods.toJSON = function () {
   obj = this.toObject()
   delete obj.hash
   delete obj.salt
+  delete obj.resetToken
+  delete obj.resetTokenExpire
   return obj
 }
 
