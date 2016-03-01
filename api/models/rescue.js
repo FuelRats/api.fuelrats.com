@@ -3,6 +3,7 @@ var _,
     moment,
     mongoose,
     normalizePlatform,
+    Quote,
     Rat,
     RescueSchema,
     Schema,
@@ -16,6 +17,7 @@ winston = require( 'winston' )
 
 mongoose.Promise = global.Promise
 
+Quote = require( './quote' )
 Rat = require( './rat' )
 
 Schema = mongoose.Schema
@@ -85,7 +87,8 @@ RescueSchema = new Schema({
   },
   quotes: {
     type: [{
-      type: String
+      type: Schema.Types.ObjectId,
+      ref: 'Quote'
     }]
   },
   rats: {
@@ -128,9 +131,9 @@ linkRats = function ( next ) {
 
   rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
     var find
-        
-    updates.push( mongoose.models.Rat.update({ 
-            $text: { 
+
+    updates.push( mongoose.models.Rat.update({
+            $text: {
                 $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
                 $caseSensitive: false,
                 $diacriticSensitive: false
@@ -144,8 +147,8 @@ linkRats = function ( next ) {
       }
     }))
 
-    find = mongoose.models.Rat.findOne({ 
-            $text: { 
+    find = mongoose.models.Rat.findOne({
+            $text: {
                 $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
                 $caseSensitive: false,
                 $diacriticSensitive: false

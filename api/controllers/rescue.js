@@ -15,8 +15,6 @@ exports.assign = function (request, response, next) {
   let rescueId = request.params.rescueId
   let ratId = request.params.ratId
 
-  console.log('Assigning', ratId, 'to', rescueId)
-
   let update = {
     $push: {
       rats: ratId
@@ -47,13 +45,42 @@ exports.unassign = function (request, response, next) {
   let rescueId = request.params.rescueId
   let ratId = request.params.ratId
 
-  console.log('Unassigning', ratId, 'from', rescueId)
-
   let update = {
     $pull: {
       rats: ratId
     }
   }
+
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
+}
+
+// ADD QUOTE
+// =============================================================================
+exports.addQuote = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let id = request.params.id
+
+  let update = {
+    $push: {
+      quotes: quote
+    }
+  }
+
+  console.log( request.body )
 
   let options = {
     new: true
@@ -105,6 +132,8 @@ exports.getById = function (request, response, next) {
       response.model.data = rescue
       response.status(200)
     }
+
+    console.log(rescue.quotes)
 
     next()
   })
