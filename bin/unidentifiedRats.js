@@ -13,25 +13,9 @@ Rescue.find({ unidentifiedRats: { '$exists': true, '$not': {'$size': 0}}  }).exe
   winston.info('Found ' + rescues.length + ' rescues with unidentified rats')
   rescues.forEach(function (rescue) {
     rescue.unidentifiedRats.forEach(function (unidentifiedRat) {
-      Rat.findOne({ CMDRname: { $regex: new RegExp('^' + unidentifiedRat.toLowerCase(), 'i') } }).exec().then(function (rat) {
+      Rat.findOne({ CMDRname: { $regex: new RegExp('^' + unidentifiedRat, 'i') } }).exec().then(function (rat) {
         if (!rat) {
-          Rat.create({
-            CMDRname: unidentifiedRat
-          }, function (ratCreateErr, createdRat) {
-            if (ratCreateErr) {
-              winston.error(ratCreateErr)
-            } else {
-              rescue.rats.push(createdRat)
-              rescue.unidentifiedRats.splice(rescue.unidentifiedRats.indexOf(unidentifiedRat), 1)
-              rescue.save(function (err) {
-                if (err) {
-                  winston.error(err)
-                } else {
-                  winston.info('Creating rat ' + unidentifiedRat + ' and adding to rescue')
-                }
-              })
-            }
-          })
+          winston.info('Unable to find rat for ' + unidentifiedRat)
         } else {
           rescue.rats.push(rat)
           rescue.unidentifiedRats.splice(rescue.unidentifiedRats.indexOf(unidentifiedRat), 1)
