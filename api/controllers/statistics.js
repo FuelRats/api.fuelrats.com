@@ -41,7 +41,7 @@ let getOverallRescueCount = function () {
   return new Promise(function (resolve, reject) {
     Rescue.aggregate([
       groupByDateAggregator
-    ]).limit(10).exec().then(function (objs) {
+    ]).exec().then(function (objs) {
       let organisedCollection = []
       for (let obj of objs) {
         let date = Date.parse(`${obj._id.year}-${obj._id.month}-${obj._id.day}`)
