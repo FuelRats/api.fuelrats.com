@@ -104,9 +104,9 @@ linkRescues = function ( next ) {
   rat = this
 
   rat.rescues = rat.rescues || []
-  
-  mongoose.models.Rescue.update({ 
-            $text: { 
+
+  mongoose.models.Rescue.update({
+            $text: {
                 $search: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
                 $caseSensitive: false,
                 $diacriticSensitive: false
@@ -128,7 +128,7 @@ linkRescues = function ( next ) {
     })
     .then( function ( rescues ) {
       rescues.forEach( function ( rescue, index, rescues ) {
-        this.rescues.push( rescue._id )
+        //this.rescues.push( rescue._id )
       })
       if(this.rescues)
         this.rescueCount = this.rescues.length
