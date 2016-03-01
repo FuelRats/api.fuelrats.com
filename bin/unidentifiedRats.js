@@ -13,6 +13,10 @@ Rescue.find({ unidentifiedRats: { '$exists': true, '$not': {'$size': 0}}  }).exe
   winston.info('Found ' + rescues.length + ' rescues with unidentified rats')
   rescues.forEach(function (rescue) {
     rescue.unidentifiedRats.forEach(function (unidentifiedRat) {
+      unidentifiedRat = unidentifiedRat.trim()
+      if (unidentifiedRat.indexOf('CMDR ') === 0) {
+        unidentifiedRat = unidentifiedRat.substring(5)
+      }
       Rat.findOne({ CMDRname: { $regex: new RegExp('^' + unidentifiedRat.trim(), 'i') } }).exec().then(function (rat) {
         if (!rat) {
           winston.info('Unable to find rat for ' + unidentifiedRat)
