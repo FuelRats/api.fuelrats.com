@@ -27,7 +27,7 @@ StatisticsView = Marionette.LayoutView.extend({
         yAxis
 
     margin = {
-      bottom: 50,
+      bottom: 60,
       left: 40,
       right: 30,
       top: 20
@@ -56,7 +56,7 @@ StatisticsView = Marionette.LayoutView.extend({
     }))
     x.rangeBands([0, width])
     xAxis = d3.svg.axis()
-    xAxis.tickFormat(d3.time.format('%x'))
+    xAxis.tickFormat(d3.time.format('%d %b, %Y'))
     xAxis.scale(x)
     xAxis.orient('bottom')
     chart.append('g')
@@ -64,14 +64,14 @@ StatisticsView = Marionette.LayoutView.extend({
     .attr('transform', 'translate(' + margin.left + ',' + (height + margin.top) + ')')
     .call(xAxis)
     .selectAll('text')
-    .attr('transform', 'rotate(-45)')
+    .attr('transform', 'rotate(-90)')
     .style('text-anchor', 'end')
 
     y = d3.scale.linear()
     y.domain([0, d3.max(data, function (data) {
       return data.failure + data.success
     })])
-    y.range([0, height])
+    y.range([height, 0])
     yAxis = d3.svg.axis()
     yAxis.scale(y)
     yAxis.orient('left')
@@ -108,11 +108,11 @@ StatisticsView = Marionette.LayoutView.extend({
     .append('rect')
     .attr('class', 'failure-bar')
     .attr('height', function (data) {
-      return y(data.failure)
+      return height - y(data.failure)
     })
     .attr('width', barWidth)
     .attr('y', function (data, index) {
-      return height - y(data.failure)
+      return y(data.failure)
     })
 
     // Create success bar
@@ -120,11 +120,11 @@ StatisticsView = Marionette.LayoutView.extend({
     .append('rect')
     .attr('class', 'success-bar')
     .attr('height', function (data) {
-      return y(data.success)
+      return height - y(data.success)
     })
     .attr('width', barWidth)
     .attr('y', function (data, index) {
-      return height - y(data.success) - y(data.failure)
+      return y(data.success) - (height - y(data.failure))
     })
   },
 
