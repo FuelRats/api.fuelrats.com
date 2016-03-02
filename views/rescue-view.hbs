@@ -8,16 +8,17 @@
         <dd class="col-sm-10">
           {{#if codeRed}}
             <span class="text-danger">CODE RED</span>
-          {{elseif open}}
+          {{/if}}
+          {{#if open}}
             Open
             {{#if active}}
               and active
             {{else}}
               and inactive
             {{/if}}
-          {{else}}
-            Closed
-          {{/if}}
+        {{else}}
+          Closed
+        {{/if}}
         </dd>
 
         <dt class="col-sm-2">Platform:</dt>
