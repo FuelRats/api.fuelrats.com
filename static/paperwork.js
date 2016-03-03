@@ -60,10 +60,6 @@ $(function () {
     itemText: 'rat'
   })
 
-  $(firstLimpetField).change(function () {
-    $(form).bootstrapValidator('revalidateField', 'firstLimpet')
-  })
-
   systemEngine = new Bloodhound({
     remote: {
       url: 'http://www.edsm.net/api-v1/systems?systemName=%QUERY',
@@ -96,13 +92,6 @@ $(function () {
     excluded: ':disabled',
     fields: {
       rats: {
-        validators: {
-          notEmpty: {
-            message: 'Please enter at least one rat into the field'
-          }
-        }
-      },
-      firstLimpet: {
         validators: {
           notEmpty: {
             message: 'Please enter at least one rat into the field'
