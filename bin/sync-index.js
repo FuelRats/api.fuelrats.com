@@ -36,18 +36,3 @@ rescueStream.on('error', function (error) {
 rescueStream.on('close', function () {
   console.log('Finished syncing Rescues')
 })
-
-winston.info('Syncing User')
-User.synchronize()
-let userStream = User.synchronize()
-userStream.on('data', function (error, doc) {
-  count++
-})
-userStream.on('error', function (error) {
-  console.error(error)
-})
-userStream.on('close', function () {
-  console.log('Finished syncing Users')
-})
-
-winston.info('Index sync complete')

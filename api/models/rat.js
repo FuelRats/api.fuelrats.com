@@ -114,12 +114,12 @@ let linkRescues = function (next) {
       rats: rat._id
     }).then(function (rescues) {
       rescues.forEach(function (rescue) {
-        this.rescues.push(rescue._id)
+        rat.rescues.push(rescue._id)
       })
-      if (this.rescues) {
-        this.rescueCount = this.rescues.length
+      if (rat.rescues) {
+        rat.rescueCount = rat.rescues.length
       } else {
-        this.rescueCount = 0
+        rat.rescueCount = 0
       }
       next()
     }).catch(next)
