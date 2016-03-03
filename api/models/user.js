@@ -1,14 +1,11 @@
-var autopopulate, mongoose, Rat, Schema, UserSchema
-
-mongoose = require( 'mongoose' )
+'use strict'
+let mongoose = require('mongoose')
 
 mongoose.Promise = global.Promise
 
-Rat = require( './rat' )
+let Schema = mongoose.Schema
 
-Schema = mongoose.Schema
-
-UserSchema = new Schema({
+let UserSchema = new Schema({
   email: String,
   password: String,
   CMDRs: {
@@ -22,16 +19,16 @@ UserSchema = new Schema({
   resetTokenExpire: Date
 })
 
-autopopulate = function ( next ) {
-  this.populate( 'CMDRs' )
+let autopopulate = function (next) {
+  this.populate('CMDRs')
   next()
 }
 
-UserSchema.pre( 'find', autopopulate)
-UserSchema.pre( 'findOne', autopopulate)
+UserSchema.pre('find', autopopulate)
+UserSchema.pre('findOne', autopopulate)
 
 UserSchema.methods.toJSON = function () {
-  obj = this.toObject()
+  let obj = this.toObject()
   delete obj.hash
   delete obj.salt
   delete obj.resetToken
@@ -39,10 +36,8 @@ UserSchema.methods.toJSON = function () {
   return obj
 }
 
-UserSchema.plugin( require( 'mongoosastic' ) )
-
-UserSchema.plugin( require( 'passport-local-mongoose' ), {
+UserSchema.plugin(require('passport-local-mongoose'), {
   usernameField: 'email'
 })
 
-module.exports = mongoose.model( 'User', UserSchema )
+module.exports = mongoose.model('User', UserSchema)
