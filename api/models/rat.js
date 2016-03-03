@@ -1,31 +1,16 @@
-var _,
-    linkRescues,
-    moment,
-    mongoose,
-    normalizePlatform,
-    RatSchema,
-    Rescue,
-    Schema,
-    updateRescueCount,
-    updateTimestamps,
-    winston
+'use strict'
 
-_ = require( 'underscore' )
-moment = require( 'moment' )
-mongoose = require( 'mongoose' )
-winston = require( 'winston' )
+let mongoose = require('mongoose')
 
 mongoose.Promise = global.Promise
 
-Rescue = require( './rescue' )
 
-Schema = mongoose.Schema
-
+let Schema = mongoose.Schema
 
 
 
 
-RatSchema = new Schema({
+let RatSchema = new Schema({
   archive: {
     default: false,
     type: Boolean
@@ -95,10 +80,12 @@ RatSchema = new Schema({
 })
 
 
-RatSchema.index({ CMDRname: 'text' })
+RatSchema.index({
+  CMDRname: 'text'
+})
 
 
-linkRescues = function ( next ) {
+let linkRescues = function (next) {
   var rat
 
   rat = this
@@ -106,12 +93,12 @@ linkRescues = function ( next ) {
   rat.rescues = rat.rescues || []
 
   mongoose.models.Rescue.update({
-            $text: {
-                $search: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
-                $caseSensitive: false,
-                $diacriticSensitive: false
-            }
-        }, {
+    $text: {
+      $search: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+      $caseSensitive: false,
+      $diacriticSensitive: false
+    }
+  }, {
     $set: {
       platform: rat.platform
     },
@@ -122,42 +109,39 @@ linkRescues = function ( next ) {
       rats: rat._id
     }
   })
-  .then( function () {
+  .then(function () {
     mongoose.models.Rescue.find({
       rats: rat._id
-    })
-    .then( function ( rescues ) {
-      rescues.forEach( function ( rescue, index, rescues ) {
+    }).then(function (rescues) {
+      rescues.forEach(function (rescue) {
         //this.rescues.push( rescue._id )
       })
-      if(this.rescues)
+      if (this.rescues) {
         this.rescueCount = this.rescues.length
-    else
-    this.rescueCount = 0
+      } else {
+        this.rescueCount = 0
+      }
       next()
-    })
-    .catch( next )
+    }).catch(next)
   })
 }
 
 
 
-normalizePlatform = function ( next ) {
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+let normalizePlatform = function (next) {
+  this.platform = this.platform.toLowerCase().replace(/^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb')
 
   next()
 }
 
-updateTimestamps = function ( next ) {
-  var timestamp
+let updateTimestamps = function (next) {
+  let timestamp = new Date()
 
-  timestamp = new Date()
-
-  if ( !this.open ) {
+  if (!this.open) {
     this.active = false
   }
 
-  if ( this.isNew ) {
+  if (this.isNew) {
     this.createdAt = this.createdAt || timestamp
   }
 
@@ -166,34 +150,33 @@ updateTimestamps = function ( next ) {
   next()
 }
 
-sanitizeInput = function ( next ) {
-    var rat = this
-    if(rat && rat.CMDRname)
-        rat.CMDRname = rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
-    next()
+let sanitizeInput = function (next) {
+  let rat = this
+  if (rat && rat.CMDRname) {
+    rat.CMDRname = rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
+  }
+  next()
 }
 
 
 
 
-RatSchema.pre( 'save', sanitizeInput )
-RatSchema.pre( 'save', updateTimestamps )
-RatSchema.pre( 'save', normalizePlatform )
-RatSchema.pre( 'save', linkRescues )
+RatSchema.pre('save', sanitizeInput)
+RatSchema.pre('save', updateTimestamps)
+RatSchema.pre('save', normalizePlatform)
+RatSchema.pre('save', linkRescues)
 
-RatSchema.pre( 'update', sanitizeInput )
-RatSchema.pre( 'update', updateTimestamps )
+RatSchema.pre('update', sanitizeInput)
+RatSchema.pre('update', updateTimestamps)
 
-RatSchema.set( 'toJSON', {
+RatSchema.set('toJSON', {
   virtuals: true
 })
 
-RatSchema.plugin( require( 'mongoosastic' ) )
+RatSchema.plugin(require('mongoosastic'))
 
-if ( mongoose.models.Rat ) {
-  module.exports = mongoose.model( 'Rat' )
+if (mongoose.models.Rat) {
+  module.exports = mongoose.model('Rat')
 } else {
-  module.exports = mongoose.model( 'Rat', RatSchema )
+  module.exports = mongoose.model('Rat', RatSchema)
 }
-
-//module.exports.synchronize()
