@@ -90,7 +90,7 @@ let linkRescues = function (next) {
 
   rat = this
 
-  rat.rescues = rat.rescues || []
+  rat.rescues = []
 
   mongoose.models.Rescue.update({
     $text: {
