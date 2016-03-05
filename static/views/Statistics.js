@@ -15,6 +15,8 @@ StatisticsView = Marionette.LayoutView.extend({
     var barWidth,
         chart,
         data,
+        dataContainer,
+        dataWidth,
         elHeight,
         elWidth,
         height,
@@ -36,36 +38,44 @@ StatisticsView = Marionette.LayoutView.extend({
     elHeight = this.$el.height()
     elWidth = this.$el.width()
     height = elHeight - margin.top - margin.bottom
-    width = elWidth - margin.left - margin.right
-    barWidth = width / data.length
-    minBarWidth = 20
+    width = elWidth
+    dataWidth = width - margin.left - margin.right
+    barWidth = dataWidth / data.length
+    minBarWidth = 15
 
-    if(barWidth < minBarWidth) {
+    if (barWidth < minBarWidth) {
       barWidth = minBarWidth
-      width = (barWidth * data.length) - margin.left - margin.right
+      width = (barWidth * data.length) + margin.left + margin.right
+      dataWidth = width - margin.left - margin.right
     }
-    console.log(barWidth)
 
     chart = d3.select('.rescuesByDate')
     chart.attr('height', elHeight)
     chart.attr('width', width)
 
-    x = d3.scale.ordinal()
-    x.domain(data.map(function(data) {
-      return data.date
-    }))
-    x.rangeBands([0, width])
+    x = d3.time.scale()
+    x.domain([
+      _.max(data, function (item) {
+        return item.date
+      }).date,
+      _.min(data, function (item) {
+        return item.date
+      }).date
+    ])
+    x.range([0, width - margin.right])
     xAxis = d3.svg.axis()
-    xAxis.tickFormat(d3.time.format('%d %b, %Y'))
     xAxis.scale(x)
     xAxis.orient('bottom')
     chart.append('g')
     .attr('class', 'x axis')
-    .attr('transform', 'translate(' + margin.left + ',' + (height + margin.top) + ')')
+    .attr('transform', 'translate(0,' + (height + margin.top) + ')')
     .call(xAxis)
     .selectAll('text')
-    .attr('transform', 'rotate(-90)')
-    .style('text-anchor', 'end')
+    .attr('x', 9)
+    .attr('y', 0)
+    .attr('dy', '.35em')
+    .attr('transform', 'rotate(90)')
+    .style('text-anchor', 'start')
 
     y = d3.scale.linear()
     y.domain([0, d3.max(data, function (data) {
@@ -87,7 +97,8 @@ StatisticsView = Marionette.LayoutView.extend({
     .text('Rescues')
 
     // Create main data container
-    bar = chart.append('g')
+    dataContainer = chart.append('g')
+    .attr('width', dataWidth)
     .attr('class', 'data')
     .attr('transform', function (data, index) {
       return 'translate(' + margin.left + ',' + margin.top + ')'
@@ -101,6 +112,17 @@ StatisticsView = Marionette.LayoutView.extend({
     .append('g')
     .attr('transform', function (data, index) {
       return 'translate(' + (index * barWidth) + ',0)'
+    })
+    .attr('data-placement', 'bottom')
+    .attr('data-toggle', 'tooltip')
+    .attr('title', function (data) {
+      var date, failure, success
+
+      date = d3.time.format('%d %b, %Y')(data.date) + '\n'
+      failure = data.failure + ' Failed\n'
+      success = data.success + ' Successful\n'
+
+      return date + success + failure
     })
 
     // Create failure bar
@@ -126,6 +148,8 @@ StatisticsView = Marionette.LayoutView.extend({
     .attr('y', function (data, index) {
       return y(data.success) - (height - y(data.failure))
     })
+
+    $('[data-toggle="tooltip"]').tooltip()
   },
 
   template: Handlebars.compile(
