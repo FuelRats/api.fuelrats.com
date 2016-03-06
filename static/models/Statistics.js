@@ -7,7 +7,7 @@ StatisticsModel = BaseModel.extend({
     this.set('rescuesBySystem', new Backbone.Collection)
 
     this.get('rescuesByDate').comparator = function (model) {
-      return -model.get('date')
+      return model.get('date')
     }
     this.get('leaderboard').comparator = function (model) {
       return -model.get('rescues')
