@@ -72,10 +72,10 @@ RescuesByDateView = Marionette.ItemView.extend({
     // Build the X axis
     x = d3.time.scale()
     x.domain([
-      _.max(data, function (item) {
+      _.min(data, function (item) {
         return item.date
       }).date,
-      _.min(data, function (item) {
+      _.max(data, function (item) {
         return item.date
       }).date
     ])
@@ -150,7 +150,7 @@ RescuesByDateView = Marionette.ItemView.extend({
     // Append the X axis
     chart.append('g')
     .attr('class', 'x axis')
-    .attr('transform', 'translate(0,' + (dataHeight + margin.top) + ')')
+    .attr('transform', 'translate(' + margin.left + ',' + (dataHeight + margin.top) + ')')
     .call(xAxis)
     .selectAll('text')
     .attr('x', 9)
