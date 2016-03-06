@@ -118,7 +118,7 @@ exports.read = function (query) {
 // POST
 // =============================================================================
 exports.post = function (request, response, next) {
-  exports.create(request.body).then(function (res) {
+  exports.create(request.body, {}).then(function (res) {
     response.model.data = res.data
     response.status(201)
     next()
@@ -129,7 +129,7 @@ exports.post = function (request, response, next) {
   })
 }
 
-exports.create = function (query, root, client, socket) {
+exports.create = function (query, client) {
   return new Promise(function (resolve, reject) {
     Rat.create(query, function (error, rat) {
       if (error) {
@@ -155,8 +155,8 @@ exports.create = function (query, root, client, socket) {
           }
         }
       } else {
-        let allClientsExcludingSelf = socket.clients.filter(function (cl) {
-          return cl !== client
+        let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+          return cl.clientId !== client.clientId
         })
         websocket.broadcast(allClientsExcludingSelf, {
           action: 'rat:created'
@@ -175,7 +175,7 @@ exports.create = function (query, root, client, socket) {
 exports.put = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-  exports.update(request.body, null, request.params).then(function (data) {
+  exports.update(request.body, {}, request.params).then(function (data) {
     response.model.data = data.data
     response.status(201)
     next()
@@ -188,7 +188,7 @@ exports.put = function (request, response, next) {
   })
 }
 
-exports.update = function (data, client, query, socket) {
+exports.update = function (data, client, query) {
   return new Promise(function (resolve, reject) {
     if (query.id) {
       Rat.findById(query.id, function (error, rat) {
@@ -224,8 +224,8 @@ exports.update = function (data, client, query, socket) {
                 meta: {}
               })
             } else {
-              let allClientsExcludingSelf = socket.clients.filter(function (cl) {
-                return cl !== client
+              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                return cl.clientId !== client.clientId
               })
               websocket.broadcast(allClientsExcludingSelf, {
                 action: 'rat:updated'

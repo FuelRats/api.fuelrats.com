@@ -1,22 +1,24 @@
 <div class="container-fluid">
-  <form action="/rescues" method="post">
+  <form id="paperwork" action="/rescues" method="post">
     <div class="form-group">
       <p>This is how you report a rescue or loss for the Fuel Rats leaderboard.</p>
 
       <p>Only the Rat performing the rescue (or a designate) should file this report! Please do not double-report rescues.</p>
 
-      <p>The rescue is credited to the Fuel Rat that fired the limpet that got to the client first. You can put "assist" in the notes, but there is only one limpet that got there first; we do it Highlander-style.</p>
+    </div>
+
+    <div class="alert alert-info" role="alert">
+      Can't find your rat name? <a target="_blank" href="http://1drv.ms/1TNcpVw" class="alert-link">Report a problem</a>
     </div>
 
     <div class="form-group">
       <label for="rats">Who arrived for the rescue?</label>
-      <input type="text" name="rats" id="rats" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}" required>
-      <small class="text-muted">Comma separated</small>
+      <input type="text" name="rats" id="rats" class="form-control" value="{{ rat.CMDRname }}" required>
     </div>
 
     <div class="form-group">
       <label for="firstLimpet">Who fired the first limpet?</label>
-      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}" required>
+      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}">
     </div>
 
     <div class="form-group">
@@ -39,7 +41,7 @@
     <div class="form-group">
       <label for="system">Where did it happen?</label>
       <small>In what star system did the rescue took place? (put "n/a" if not applicable)</small>
-      <input type="text" name="system" id="system" class="form-control" autofocus required>
+      <input type="text" name="system" id="system" class="form-control" required autofocus>
     </div>
 
     <div class="form-group">

@@ -8,6 +8,97 @@ let Rescue = require('../models/rescue')
 let ErrorModels = require('../errors')
 let websocket = require('../websocket')
 
+// ASSIGN
+// =============================================================================
+exports.assign = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let rescueId = request.params.rescueId
+  let ratId = request.params.ratId
+
+  let update = {
+    $push: {
+      rats: ratId
+    }
+  }
+
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
+}
+
+// UNASSIGN
+// =============================================================================
+exports.unassign = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let rescueId = request.params.rescueId
+  let ratId = request.params.ratId
+
+  let update = {
+    $pull: {
+      rats: ratId
+    }
+  }
+
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
+}
+
+// ADD QUOTE
+// =============================================================================
+exports.addQuote = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  let id = request.params.id
+
+  let update = {
+    $push: {
+      quotes: quote
+    }
+  }
+
+  console.log( request.body )
+
+  let options = {
+    new: true
+  }
+
+  Rescue.findByIdAndUpdate(rescueId, update, options)
+  .then(function (rescue) {
+    response.model.data = rescue
+    response.status(200)
+    next()
+  })
+  .catch(function (error) {
+    response.model.errors.push(error)
+    response.status(400)
+    next()
+  })
+}
+
 // GET
 // =============================================================================
 exports.get = function (request, response, next) {
@@ -42,10 +133,14 @@ exports.getById = function (request, response, next) {
       response.status(200)
     }
 
+    console.log(rescue.quotes)
+
     next()
   })
 }
 
+// READ
+// =============================================================================
 exports.read = function (query) {
   return new Promise(function (resolve, reject) {
     let filter = {}
@@ -114,7 +209,7 @@ exports.read = function (query) {
 // POST
 // =============================================================================
 exports.post = function (request, response, next) {
-  exports.create(request.body).then(function (res) {
+  exports.create(request.body, {}).then(function (res) {
     response.model.data = res.data
     response.status(201)
     next()
@@ -125,7 +220,9 @@ exports.post = function (request, response, next) {
   })
 }
 
-exports.create = function (query, root, client, socket) {
+// CREATE
+// =============================================================================
+exports.create = function (query, client) {
   return new Promise(function (resolve, reject) {
     let finds = []
 
@@ -175,6 +272,8 @@ exports.create = function (query, root, client, socket) {
             }
           })
           finds.push(firstLimpetFind)
+        } else {
+          query.firstLimpet =  mongoose.Types.ObjectId(query.firstLimpet)
         }
       } else if (typeof query.firstLimpet === 'object' && query.firstLimpet._id) {
         query.firstLimpet = query.firstLimpet._id
@@ -190,8 +289,8 @@ exports.create = function (query, root, client, socket) {
             meta: {}
           })
         } else {
-          let allClientsExcludingSelf = socket.clients.filter(function (cl) {
-            return cl !== client
+          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+            return cl.clientId !== client.clientId
           })
           websocket.broadcast(allClientsExcludingSelf, {
             action: 'rescue:created'
@@ -211,7 +310,7 @@ exports.create = function (query, root, client, socket) {
 exports.put = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-  exports.update(request.params, request.body).then(function (data) {
+  exports.update(request.body, {}, request.params).then(function (data) {
     response.model.data = data.data
     response.status(201)
     next()
@@ -224,7 +323,9 @@ exports.put = function (request, response, next) {
   })
 }
 
-exports.update = function (data, client, query, socket) {
+// UPDATE
+// =============================================================================
+exports.update = function (data, client, query) {
   return new Promise(function (resolve, reject) {
     if (query.id) {
       Rescue.findById(query.id, function (error, rescue) {
@@ -260,8 +361,8 @@ exports.update = function (data, client, query, socket) {
                 meta: {}
               })
             } else {
-              let allClientsExcludingSelf = socket.clients.filter(function (cl) {
-                return cl !== client
+              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                return cl.clientId !== client.clientId
               })
               websocket.broadcast(allClientsExcludingSelf, {
                 action: 'rescue:updated'

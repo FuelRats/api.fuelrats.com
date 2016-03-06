@@ -9,10 +9,8 @@ let ErrorModels = require('../errors')
 exports.get = function (request, response, next) {
   exports.read(request.body).then(function (res) {
     let data = res.data
-    let meta = res.meta
 
     response.model.data = data
-    response.model.meta = meta
     response.status = 400
     next()
   }, function (error) {
@@ -44,43 +42,7 @@ exports.getById = function (request, response, next) {
 
 exports.read = function (query) {
   return new Promise(function (resolve, reject) {
-    let filter = {}
-    let dbQuery = {}
-
-    filter.size = parseInt(query.limit) || 25
-    delete query.limit
-
-    filter.from = parseInt(query.offset) || 0
-    delete query.offset
-
-    for (let key in query) {
-      if (key === 'q') {
-        dbQuery.query_string = {
-          query: query.q
-        }
-      } else {
-        if (!dbQuery.bool) {
-          dbQuery.bool = {
-            should: []
-          }
-        }
-
-        let term = {}
-        term[key] = {
-          query: query[key],
-          fuzziness: 'auto'
-        }
-        dbQuery.bool.should.push({
-          match: term
-        })
-      }
-    }
-
-    if (!Object.keys(dbQuery).length) {
-      dbQuery.match_all = {}
-    }
-
-    User.search(dbQuery, filter, function (error, dbData) {
+    User.find(query, function (error, dbData) {
       if (error) {
         let errorObj = ErrorModels.server_error
         errorObj.detail = error
@@ -90,24 +52,9 @@ exports.read = function (query) {
         })
 
       } else {
-        let meta = {
-          count: dbData.hits.hits.length,
-          limit: filter.size,
-          offset: filter.from,
-          total: dbData.hits.total
-        }
-        let data = []
-
-        dbData.hits.hits.forEach(function (user) {
-          user._source._id = user._id
-          user._source.score = user._score
-
-          data.push(user._source)
-        })
-
         resolve({
-          data: data,
-          meta: meta
+          data: dbData,
+          meta: {}
         })
       }
     })

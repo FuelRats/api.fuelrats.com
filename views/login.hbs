@@ -33,6 +33,10 @@
         <h1>Register</h1>
       </div>
 
+      {{#if registrationError}}
+        <div class="alert alert-warning" role="alert">An error occured during registration.</div>
+      {{/if}}
+
       <div class="form-group">
         <label for="CMDRname">CMDR Name</label>
         <div class="dropdown">

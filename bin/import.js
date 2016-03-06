@@ -67,9 +67,6 @@ downloads = []
 mongoose.connect( 'mongodb://localhost/fuelrats' )
 
 
-
-
-
 processRats = function ( ratData, rescueDrills, dispatchDrills ) {
   winston.info( 'Processing rats' )
 
@@ -91,7 +88,7 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
         platform: 'pc',
         rescues: []
       }
-    
+
       if ( dispatchDrill = _.findWhere( dispatchDrills, { 3: ratDatum[2], 4: 'Pass' } ) ) {
         rat.drilled.dispatch = true;
       }
@@ -128,7 +125,7 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
         }))
       }
     })
-    
+
     winston.info('Importing %d rats!', rats.length)
 
     Promise.all( rats )
@@ -166,18 +163,18 @@ processRescues = function ( rescuesData ) {
         successful: rescueDatum[3].toLowerCase() === 'successful' ? true : false,
         system: rescueDatum[2].trim()
       }
-      
+
        rescues.push(mongoose.models.Rat.findOneAndUpdate(
-        { 
-            $text: { 
+        {
+            $text: {
                 $search: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
                 $caseSensitive: false,
                 $diacriticSensitive: false
             }
         },
-        {   
-            $set: { 
-                CMDRname: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(), 
+        {
+            $set: {
+                CMDRname: rescueDatum[1].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
                 archive: true,
                 drilled: {
                   dispatch: false,
@@ -186,7 +183,7 @@ processRescues = function ( rescuesData ) {
                 joined: new Date( rescueDatum[0] ) || new Date,
                 rescues: []
             }
-        }, 
+        },
         { upsert: true }
       ));
 
@@ -268,14 +265,14 @@ Promise.all( downloads )
 
   rats.shift()
   rescues.shift()
-  
+
   dispatchDrills.shift()
   rescueDrills.shift()
-  
+
   epicRescueRats.shift();
 
   // Clear out the archives
-    
+
   removeArchives( [ Rat, Rescue ] )
   .then( function () {
     var promises
@@ -310,10 +307,10 @@ Promise.all( downloads )
                 winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
 
                 mongoose.disconnect()
-        
+
             })
             .catch( winston.error )
-        
+
       })
       .catch( winston.error )
     })
