@@ -42,6 +42,10 @@ $(function () {
     itemText: 'rat'
   })
 
+  $(arrivedRatsField).tagsinput('input').blur(function () {
+    $('.tt-selectable').trigger('click')
+  })
+
   $(arrivedRatsField).change(function () {
     $(form).bootstrapValidator('revalidateField', 'rats')
   })
@@ -58,6 +62,10 @@ $(function () {
     maxTags: 1,
     itemValue: 'id',
     itemText: 'rat'
+  })
+
+  $(firstLimpetField).tagsinput('input').blur(function () {
+    $('.tt-selectable').trigger('click')
   })
 
   systemEngine = new Bloodhound({
