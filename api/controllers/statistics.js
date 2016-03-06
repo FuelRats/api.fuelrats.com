@@ -1,5 +1,6 @@
 'use strict'
 
+let Rat = require('../models/rat')
 let Rescue = require('../models/rescue')
 
 exports.get = function (request, response, next) {
@@ -7,6 +8,7 @@ exports.get = function (request, response, next) {
 
   operations.push(getOverallRescueCount())
   operations.push(getPopularSystemsCount())
+  operations.push(getLeaderboardRats())
 
   Promise.all(operations).then(function (values) {
     response.model.data = values
@@ -18,7 +20,7 @@ exports.get = function (request, response, next) {
 }
 
 let groupByDateAggregator = {
-  '$group': {
+  $group: {
     _id: {
       month: {
         $month: '$createdAt'
@@ -77,14 +79,45 @@ let getOverallRescueCount = function () {
 let getPopularSystemsCount = function () {
   return Rescue.aggregate([
     {
-      '$group': {
+      $group: {
         _id: '$system',
-        count: { '$sum': 1 }
+        count: {
+          $sum: 1
+        }
       }
     }, {
-      '$sort': { count: -1 }
+      $sort: {
+        count: -1
+      }
     }, {
-      '$limit' : 25
+      $limit : 25
+    }
+  ]).exec()
+}
+
+
+let getLeaderboardRats = function () {
+  return Rat.aggregate([
+    {
+      $match: {
+        rescueCount: {
+          $gte: 10
+        }
+      }
+    },
+    {
+      $sort: {
+        rescueCount: -1
+      }
+    },
+    {
+      $project: {
+        CMDRname: 1,
+        platform: 1,
+        rescues: {
+          $size: '$rescues'
+        }
+      }
     }
   ]).exec()
 }

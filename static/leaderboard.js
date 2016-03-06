@@ -6,14 +6,20 @@ $(function () {
 
     initialize: function () {
       this.listenTo(this.model, 'sync', this.render)
-      this.model.fetch()
+      this.model.fetch({
+        success: function (model, response, xhr) {
+          console.log(response)
+        }
+      })
     },
 
     onRender: function () {
       this.getRegion('rescuesByDate').show(new RescuesByDateView({
         collection: this.model.get('rescuesByDate')
       }))
-      this.getRegion('leaderboard').show(new LeaderboardView)
+      this.getRegion('leaderboard').show(new LeaderboardView({
+        collection: this.model.get('leaderboard')
+      }))
     },
 
     regions: {

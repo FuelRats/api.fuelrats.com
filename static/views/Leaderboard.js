@@ -1,9 +1,18 @@
 var LeaderboardView, RatView
 
-RatView = Marionette.ItemView.extend()
+RatView = Marionette.ItemView.extend({
+  tagName: 'tr',
+
+  template: Handlebars.compile(
+    '<td>{{CMDRname}}</td>' +
+    '<td>{{rescues}}</td>'
+  )
+})
 
 LeaderboardView = Marionette.CompositeView.extend({
   childView: RatView,
+
+  childViewContainer: 'tbody',
 
   className: 'card',
 
@@ -20,6 +29,15 @@ LeaderboardView = Marionette.CompositeView.extend({
     '<div class="card-header">' +
       'Leaderboard' +
     '</div>' +
-    '<table id="leaderboard"></table>'
+    '<table id="leaderboard" class="table table-hover table-striped">' +
+      '<thead>' +
+        '<tr>' +
+          '<th>CMDR</th>' +
+          '<th>Rescues</th>' +
+        '</tr>' +
+      '</thead>' +
+      '<tbody>' +
+      '</tbody>' +
+    '</table>'
   )
 })
