@@ -1,7 +1,7 @@
 $(function () {
-  var View
+  var StatisticsView
 
-  View = Marionette.LayoutView.extend({
+  StatisticsView = Marionette.LayoutView.extend({
     el: 'body',
 
     initialize: function () {
@@ -41,7 +41,7 @@ $(function () {
     )
   })
 
-  new View({
+  new StatisticsView({
     model: new StatisticsModel
   })
 })
