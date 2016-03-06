@@ -272,6 +272,8 @@ exports.create = function (query, client) {
             }
           })
           finds.push(firstLimpetFind)
+        } else {
+          query.firstLimpet =  mongoose.Types.ObjectId(query.firstLimpet)
         }
       } else if (typeof query.firstLimpet === 'object' && query.firstLimpet._id) {
         query.firstLimpet = query.firstLimpet._id
