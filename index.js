@@ -1,4 +1,5 @@
 'use strict'
+
 // IMPORT
 // =============================================================================
 
@@ -36,6 +37,7 @@ let User = require('./api/models/user')
 let badge = require('./api/controllers/badge')
 let change_password = require('./api/controllers/change_password')
 let docs = require('./api/controllers/docs')
+let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
 let logout = require('./api/controllers/logout')
 let paperwork = require('./api/controllers/paperwork')
@@ -44,6 +46,7 @@ let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
 let rescue = require('./api/controllers/rescue')
 let rescueAdmin = require('./api/controllers/rescueAdmin')
+let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user')
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
@@ -222,6 +225,7 @@ router.get('/search/rats', rat.get)
 router.get('/version', version.get)
 
 router.get('/docs', docs.get)
+router.get('/leaderboard', leaderboard.get)
 router.get('/login', login.get)
 router.get('/reset', reset.get)
 router.get('/change_password', change_password.get)
@@ -233,6 +237,9 @@ router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', rescueAdmin.editRescue)
 router.get('/rescues/list', rescueAdmin.listRescues)
 router.get('/rescues/list/:page', rescueAdmin.listRescues)
+
+
+router.get( '/statistics', statistics.get )
 
 // Register routes
 app.use(express.static(__dirname + '/static'))
