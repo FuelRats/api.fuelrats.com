@@ -106,17 +106,41 @@ let getLeaderboardRats = function () {
       }
     },
     {
-      $sort: {
-        rescueCount: -1
+      $unwind: {
+        path: '$rescues'
+      }
+    },
+    {
+      $group: {
+        _id: {
+          CMDRname: '$CMDRname',
+          platform: '$platform'
+        },
+        rescues: {
+          $sum: {
+            $cond: [{$eq: ['$rescues.successful', true]}, 1, 0]
+          }
+        }
       }
     },
     {
       $project: {
-        CMDRname: 1,
-        platform: 1,
-        rescues: {
-          $size: '$rescues'
-        }
+        _id: 0,
+        CMDRname: '$_id.CMDRname',
+        platform: '$_id.platform',
+        rescues: 1
+      }
+    },
+//    {
+//      $match: {
+//        rescues: {
+//          $gte: 10
+//        }
+//      }
+//    },
+    {
+      $sort: {
+        rescues: -1
       }
     }
   ]).exec()

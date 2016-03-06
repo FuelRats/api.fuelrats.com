@@ -8,7 +8,7 @@ $(function () {
       this.listenTo(this.model, 'sync', this.render)
       this.model.fetch({
         success: function (model, response, xhr) {
-          console.log(response)
+          console.log(response.data[2][0])
         }
       })
     },
@@ -31,13 +31,27 @@ $(function () {
     template: Handlebars.compile(
       '<div class="container-fluid">' +
         '<div class="row">' +
-          '<div id="rescues-by-date-container" class="col-md-6"></div>' +
-          '<div id="rescues-by-system-container" class="col-md-6"></div>' +
-        '</div>' +
-        '<div class="row">' +
-          '<div id="leaderboard-container" class="col-md-12"></div>' +
+          '<div id="leaderboard-container" class="col-md-4">' +
+          '</div>' +
+          '<div class="col-md-8">' +
+            '<div class="row">' +
+              '<div id="rescues-by-date-container" class="col-md-12"></div>' +
+            '</div>' +
+            '<div class="row">' +
+              '<div id="rescues-by-system-container" class="col-md-12"></div>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
       '</div>'
+//      '<div class="container-fluid">' +
+//        '<div class="row">' +
+//          '<div id="rescues-by-date-container" class="col-md-6"></div>' +
+//          '<div id="rescues-by-system-container" class="col-md-6"></div>' +
+//        '</div>' +
+//        '<div class="row">' +
+//          '<div id="leaderboard-container" class="col-md-12"></div>' +
+//        '</div>' +
+//      '</div>'
     )
   })
 

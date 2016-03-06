@@ -20,6 +20,7 @@ RescuesByDateView = Marionette.ItemView.extend({
         chart,
         data,
         dataContainer,
+        dataHeight,
         dataWidth,
         elHeight,
         elWidth,
@@ -41,13 +42,15 @@ RescuesByDateView = Marionette.ItemView.extend({
       top: 20
     }
     minBarWidth = 15
+    minHeight = 300
 
     // Computed
     data = this.collection.toJSON()
     elHeight = this.$el.parent().height()
     elWidth = this.$el.parent().width()
-    height = elHeight - margin.top - margin.bottom
+    height = elHeight
     width = elWidth
+    dataHeight = height - margin.bottom - margin.top
     dataWidth = width - margin.left - margin.right
     barWidth = (dataWidth / data.length) - barMargin
 
@@ -57,8 +60,13 @@ RescuesByDateView = Marionette.ItemView.extend({
 //      dataWidth = width - margin.left - margin.right
 //    }
 
+    if (height < minHeight) {
+      height = minHeight
+      dataHeight = height - margin.bottom - margin.top
+    }
+
     chart = d3.select('#rescues-by-date')
-    chart.attr('height', elHeight)
+    chart.attr('height', height)
     chart.attr('width', width)
 
     // Build the X axis
@@ -81,7 +89,7 @@ RescuesByDateView = Marionette.ItemView.extend({
     y.domain([0, d3.max(data, function (data) {
       return data.failure + data.success
     })])
-    y.range([height, 0])
+    y.range([dataHeight, 0])
     yAxis = d3.svg.axis()
     yAxis.scale(y)
     .orient('left')
@@ -120,7 +128,7 @@ RescuesByDateView = Marionette.ItemView.extend({
     .append('rect')
     .attr('class', 'failure-bar')
     .attr('height', function (data) {
-      return height - y(data.failure)
+      return dataHeight - y(data.failure)
     })
     .attr('width', barWidth)
     .attr('y', function (data, index) {
@@ -132,17 +140,17 @@ RescuesByDateView = Marionette.ItemView.extend({
     .append('rect')
     .attr('class', 'success-bar')
     .attr('height', function (data) {
-      return height - y(data.success)
+      return dataHeight - y(data.success)
     })
     .attr('width', barWidth)
     .attr('y', function (data, index) {
-      return y(data.success) - (height - y(data.failure))
+      return y(data.success) - (dataHeight - y(data.failure))
     })
 
     // Append the X axis
     chart.append('g')
     .attr('class', 'x axis')
-    .attr('transform', 'translate(0,' + (height + margin.top) + ')')
+    .attr('transform', 'translate(0,' + (dataHeight + margin.top) + ')')
     .call(xAxis)
     .selectAll('text')
     .attr('x', 9)
