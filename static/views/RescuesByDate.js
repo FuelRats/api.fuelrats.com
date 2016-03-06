@@ -1,17 +1,13 @@
-var StatisticsView
+var RescuesByDateView
 
-StatisticsView = Marionette.LayoutView.extend({
-  el: '.statistics',
+RescuesByDateView = Marionette.ItemView.extend({
+  className: 'card',
 
-  initialize: function () {
+  initialize: function (options) {
     $(window).on('resize', this.render)
-    this.listenTo(this.model, 'change', this.render)
-    this.listenTo(this.model, 'sync', this.render)
-
-    this.model.fetch()
   },
 
-  onRender: function () {
+  onAttach: function () {
     var barWidth,
         chart,
         data,
@@ -28,31 +24,36 @@ StatisticsView = Marionette.LayoutView.extend({
         y,
         yAxis
 
+    // Defaults
+    barMargin = 1
     margin = {
       bottom: 60,
       left: 40,
       right: 30,
       top: 20
     }
-    data = this.model.get('rescuesByDate').toJSON()
-    elHeight = this.$el.height()
-    elWidth = this.$el.width()
+    minBarWidth = 15
+
+    // Computed
+    data = this.collection.toJSON()
+    elHeight = this.$el.parent().height()
+    elWidth = this.$el.parent().width()
     height = elHeight - margin.top - margin.bottom
     width = elWidth
     dataWidth = width - margin.left - margin.right
-    barWidth = dataWidth / data.length
-    minBarWidth = 15
+    barWidth = (dataWidth / data.length) - barMargin
 
-    if (barWidth < minBarWidth) {
-      barWidth = minBarWidth
-      width = (barWidth * data.length) + margin.left + margin.right
-      dataWidth = width - margin.left - margin.right
-    }
+//    if (barWidth < minBarWidth) {
+//      barWidth = minBarWidth
+//      width = ((barWidth + barMargin) * data.length) + margin.left + margin.right
+//      dataWidth = width - margin.left - margin.right
+//    }
 
-    chart = d3.select('.rescuesByDate')
+    chart = d3.select('#rescues-by-date')
     chart.attr('height', elHeight)
     chart.attr('width', width)
 
+    // Build the X axis
     x = d3.time.scale()
     x.domain([
       _.max(data, function (item) {
@@ -62,21 +63,12 @@ StatisticsView = Marionette.LayoutView.extend({
         return item.date
       }).date
     ])
-    x.range([0, width - margin.right])
+    x.rangeRound([0, dataWidth])
     xAxis = d3.svg.axis()
     xAxis.scale(x)
-    xAxis.orient('bottom')
-    chart.append('g')
-    .attr('class', 'x axis')
-    .attr('transform', 'translate(0,' + (height + margin.top) + ')')
-    .call(xAxis)
-    .selectAll('text')
-    .attr('x', 9)
-    .attr('y', 0)
-    .attr('dy', '.35em')
-    .attr('transform', 'rotate(90)')
-    .style('text-anchor', 'start')
+    .orient('bottom')
 
+    // Build the Y axis
     y = d3.scale.linear()
     y.domain([0, d3.max(data, function (data) {
       return data.failure + data.success
@@ -84,17 +76,8 @@ StatisticsView = Marionette.LayoutView.extend({
     y.range([height, 0])
     yAxis = d3.svg.axis()
     yAxis.scale(y)
-    yAxis.orient('left')
-    chart.append('g')
-    .attr('class', 'y axis')
-    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-    .call(yAxis)
-    .append('text')
-    .attr('transform', 'rotate(-90)')
-    .attr('y', 6)
-    .attr('dy', '.71em')
-    .style('text-anchor', 'end')
-    .text('Rescues')
+    .orient('left')
+    .tickSize(-dataWidth)
 
     // Create main data container
     dataContainer = chart.append('g')
@@ -110,19 +93,18 @@ StatisticsView = Marionette.LayoutView.extend({
     .data(data)
     .enter()
     .append('g')
+    .attr('class', 'data-stack')
     .attr('transform', function (data, index) {
-      return 'translate(' + (index * barWidth) + ',0)'
+      return 'translate(' + ((index * barWidth) + (index * barMargin)) + ',0)'
     })
     .attr('data-placement', 'bottom')
     .attr('data-toggle', 'tooltip')
     .attr('title', function (data) {
       var date, failure, success
 
-      date = d3.time.format('%d %b, %Y')(data.date) + '\n'
-      failure = data.failure + ' Failed\n'
-      success = data.success + ' Successful\n'
-
-      return date + success + failure
+      return d3.time.format('%d %b, %Y')(data.date) + '\n' +
+        data.success + ' Successful\n' +
+        data.failure + ' Failed\n'
     })
 
     // Create failure bar
@@ -149,10 +131,39 @@ StatisticsView = Marionette.LayoutView.extend({
       return y(data.success) - (height - y(data.failure))
     })
 
+    // Append the X axis
+    chart.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + (height + margin.top) + ')')
+    .call(xAxis)
+    .selectAll('text')
+    .attr('x', 9)
+    .attr('y', 0)
+    .attr('dy', '.35em')
+    .attr('transform', 'rotate(90)')
+    .style('text-anchor', 'start')
+
+    // Append the Y axis
+    chart.append('g')
+    .attr('class', 'y axis')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+    .call(yAxis)
+    .append('text')
+    .attr('transform', 'rotate(90)')
+    .attr('y', -6)
+    .attr('x', 2)
+    .style('text-anchor', 'start')
+    .text('Rescues')
+
     $('[data-toggle="tooltip"]').tooltip()
   },
 
+  tagName: 'div',
+
   template: Handlebars.compile(
-    '<svg class="rescuesByDate"></svg>'
+    '<div class="card-header">' +
+      'Rescues over time' +
+    '</div>' +
+    '<svg id="rescues-by-date"></svg>'
   )
 })

@@ -7,8 +7,7 @@
     font-size: 14px;
   }
 
-  .statistics {
-    height: 40rem;
+  #rescues-by-date-container {
     overflow: auto;
 
     /* Because fuck scroll bars */
@@ -16,33 +15,42 @@
     padding-bottom: 20px;
   }
 
+  .axis line,
+  .axis path {
+    shape-rendering: crispEdges;
+  }
+
+  .axis path {
+    display: none;
+  }
+
   .axis text {
     font-family: sans-serif;
     font-size: 10px;
   }
 
-  .axis line,
-  .axis path {
-    fill: none;
-    stroke: black;
+  .y.axis line {
     shape-rendering: crispEdges;
-  }
-
-  .x.axis line,
-  .x.axis path {
-    display: none;
+    stroke-opacity: 0.1;
   }
 
   .failure-bar {
-    fill: red;
+    fill: #563d7c;
   }
 
   .success-bar {
-    fill: green;
+    fill: #5bc0de;
+  }
+
+  .data-stack:hover .failure-bar {
+    fill: #685586;
+  }
+
+  .data-stack:hover .success-bar {
+    fill: #31b0d5;
   }
 </style>
 
 <div class="statistics"></div>
 
-<script src="//d3js.org/d3.v3.min.js"></script>
 <script src="leaderboard.js"></script>
