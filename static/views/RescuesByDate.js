@@ -45,7 +45,7 @@ RescuesByDateView = Marionette.ItemView.extend({
     minHeight = 300
 
     // Computed
-    data = this.collection.toJSON()
+    data = this.collection.toJSON().reverse()
     elHeight = this.$el.parent().height()
     elWidth = this.$el.parent().width()
     height = elHeight
@@ -72,10 +72,10 @@ RescuesByDateView = Marionette.ItemView.extend({
     // Build the X axis
     x = d3.time.scale()
     x.domain([
-      _.max(data, function (item) {
+      _.min(data, function (item) {
         return item.date
       }).date,
-      _.min(data, function (item) {
+      _.max(data, function (item) {
         return item.date
       }).date
     ])
@@ -154,7 +154,6 @@ RescuesByDateView = Marionette.ItemView.extend({
     .call(xAxis)
     .selectAll('text')
     .attr('x', 9)
-    .attr('y', 0)
     .attr('dy', '.35em')
     .attr('transform', 'rotate(90)')
     .style('text-anchor', 'start')
