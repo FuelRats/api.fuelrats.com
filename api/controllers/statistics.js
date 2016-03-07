@@ -87,14 +87,18 @@ let getPopularSystemsCount = function () {
       }
     },
     {
+      $match: {
+        count: {
+          $gte: 10
+        }
+      }
+    },
+    {
       $project: {
         _id: 0,
         name: '$_id',
         count: 1
       }
-    },
-    {
-      $limit : 200
     }
   ]).exec()
 }
@@ -109,32 +113,6 @@ let getLeaderboardRats = function () {
         }
       }
     },
-//    {
-//      $unwind: {
-//        path: '$rescues'
-//      }
-//    },
-//    {
-//      $group: {
-//        _id: {
-//          CMDRname: '$CMDRname',
-//          platform: '$platform'
-//        },
-//        rescues: {
-//          $sum: {
-//            $cond: [{$eq: ['$rescues.successful', true]}, 1, 0]
-//          }
-//        }
-//      }
-//    },
-//    {
-//      $project: {
-//        _id: 0,
-//        CMDRname: '$_id.CMDRname',
-//        platform: '$_id.platform',
-//        rescues: 1
-//      }
-//    },
     {
       $project: {
         CMDRname: 1,
