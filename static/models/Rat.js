@@ -1,3 +1,3 @@
-var RescueModel
+var RatModel
 
-RescueModel = BaseModel.extend({})
+RatModel = BaseModel.extend({})
