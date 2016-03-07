@@ -85,12 +85,16 @@ let getPopularSystemsCount = function () {
           $sum: 1
         }
       }
-    }, {
-      $sort: {
-        count: -1
+    },
+    {
+      $project: {
+        _id: 0,
+        name: '$_id',
+        count: 1
       }
-    }, {
-      $limit : 25
+    },
+    {
+      $limit : 200
     }
   ]).exec()
 }

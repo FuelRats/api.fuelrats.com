@@ -1,6 +1,13 @@
 /******************************************************************************\
   Framework
 \******************************************************************************/
+html {
+  font-size: 10px;
+}
+
+body {
+  font-size: 14px;
+}
 
 body > .navbar {
   margin-bottom: 1rem;
@@ -106,24 +113,9 @@ table th:nth-child(4) {
   }
 }
 
-/******************************************************************************\
-  Leaderboard
-\******************************************************************************/
 
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
 
-.bar {
-  fill: steelblue;
-}
 
-.x.axis path {
-  display: none;
-}
 
 /******************************************************************************\
   Typeahead
@@ -167,4 +159,63 @@ table th:nth-child(4) {
 
 .tt-suggestion p {
   margin: 0;
+}
+
+
+
+
+
+/******************************************************************************\
+  Leaderboard
+\******************************************************************************/
+
+svg text {
+  font-family: sans-serif;
+  font-size: 10px;
+}
+
+#rescues-by-date-container,
+#rescues-by-system-container{
+  overflow: auto;
+
+  /* Because fuck scroll bars */
+  overflow-y: hidden;
+  padding-bottom: 20px;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis path {
+  display: none;
+}
+
+.axis text {
+  font-family: sans-serif;
+  font-size: 10px;
+}
+
+.y.axis line {
+  shape-rendering: crispEdges;
+  stroke-opacity: 0.1;
+}
+
+.failure-bar {
+  fill: #563d7c;
+}
+
+.success-bar {
+  fill: #5bc0de;
+}
+
+.data-stack:hover .failure-bar {
+  fill: #685586;
+}
+
+.data-stack:hover .success-bar {
+  fill: #31b0d5;
 }

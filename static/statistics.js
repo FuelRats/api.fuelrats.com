@@ -17,6 +17,9 @@ $(function () {
       this.getRegion('rescuesByDate').show(new RescuesByDateView({
         collection: this.model.get('rescuesByDate')
       }))
+      this.getRegion('rescuesBySystem').show(new RescuesBySystemView({
+        collection: this.model.get('rescuesBySystem')
+      }))
       this.getRegion('leaderboard').show(new LeaderboardView({
         collection: this.model.get('leaderboard')
       }))

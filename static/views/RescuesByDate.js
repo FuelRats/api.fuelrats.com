@@ -16,7 +16,8 @@ RescuesByDateView = Marionette.ItemView.extend({
   },
 
   renderChart: function () {
-    var barWidth,
+    var $svg,
+        barWidth,
         chart,
         data,
         dataContainer,
@@ -38,16 +39,17 @@ RescuesByDateView = Marionette.ItemView.extend({
     margin = {
       bottom: 60,
       left: 40,
-      right: 30,
+      right: 20,
       top: 20
     }
     minBarWidth = 15
     minHeight = 300
 
     // Computed
+    $svg = this.$el.find('svg')
     data = this.collection.toJSON()
-    elHeight = this.$el.parent().height()
-    elWidth = this.$el.parent().width()
+    elHeight = $svg.parent().height()
+    elWidth = $svg.parent().width()
     height = elHeight
     width = elWidth
     dataHeight = height - margin.bottom - margin.top
