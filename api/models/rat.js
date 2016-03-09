@@ -39,6 +39,14 @@ let RatSchema = new Schema({
       }
     }
   },
+  failedAssistCount: {
+    default: 0,
+    type: Number
+  },
+  failedRescueCount: {
+    default: 0,
+    type: Number
+  },
   lastModified: {
     type: Date
   },
@@ -69,6 +77,14 @@ let RatSchema = new Schema({
   rescueCount: {
     default: 0,
     index: true,
+    type: Number
+  },
+  successfulAssistCount: {
+    default: 0,
+    type: Number
+  },
+  successfulRescueCount: {
+    default: 0,
     type: Number
   },
   user: {
