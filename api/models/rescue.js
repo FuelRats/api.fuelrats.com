@@ -232,6 +232,14 @@ sanitizeInput = function ( next ) {
   next()
 }
 
+let synchronize = function (rescue) {
+  rescue.index(function (error, response) {
+    if (error) {
+      winston.error(error)
+    }
+  })
+}
+
 
 RescueSchema.pre( 'save', sanitizeInput )
 RescueSchema.pre( 'save', updateTimestamps )
@@ -240,6 +248,10 @@ RescueSchema.pre( 'save', linkRats )
 
 RescueSchema.pre( 'update', sanitizeInput )
 RescueSchema.pre( 'update', updateTimestamps )
+
+RescueSchema.post('save', synchronize)
+
+RescueSchema.post('update', synchronize)
 
 RescueSchema.set( 'toJSON', {
   virtuals: true

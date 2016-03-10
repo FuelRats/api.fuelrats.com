@@ -158,6 +158,14 @@ let sanitizeInput = function (next) {
   next()
 }
 
+let synchronize = function (rescue) {
+  rescue.index(function (error, response) {
+    if (error) {
+      winston.error(error)
+    }
+  })
+}
+
 
 
 
@@ -168,6 +176,10 @@ RatSchema.pre('save', linkRescues)
 
 RatSchema.pre('update', sanitizeInput)
 RatSchema.pre('update', updateTimestamps)
+
+RatSchema.pre('save', synchronize)
+
+RatSchema.pre('update', synchronize)
 
 RatSchema.set('toJSON', {
   virtuals: true
