@@ -152,8 +152,6 @@ RatSchema.pre('save', normalizePlatform)
 RatSchema.pre('update', sanitizeInput)
 RatSchema.pre('update', updateTimestamps)
 
-RatSchema.pre('save', synchronize)
-
 RatSchema.pre('update', synchronize)
 
 RatSchema.set('toJSON', {
