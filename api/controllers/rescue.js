@@ -80,8 +80,6 @@ exports.addQuote = function (request, response, next) {
     }
   }
 
-  console.log( request.body )
-
   let options = {
     new: true
   }
@@ -133,8 +131,6 @@ exports.getById = function (request, response, next) {
       response.status(200)
     }
 
-    console.log(rescue.quotes)
-
     next()
   })
 }
@@ -143,7 +139,9 @@ exports.getById = function (request, response, next) {
 // =============================================================================
 exports.read = function (query) {
   return new Promise(function (resolve, reject) {
-    let filter = {}
+    let filter = {
+      sort: 'createdAt:desc'
+    }
     let dbQuery = {}
 
     filter.size = parseInt(query.limit) || 25
@@ -230,8 +228,6 @@ exports.create = function (query, client) {
       query.rats = query.rats.split(',')
     }
 
-    query.unidentifiedRats = []
-
     if (query.rats) {
       query.rats.forEach(function (rat) {
         if (typeof rat === 'string') {
@@ -239,14 +235,16 @@ exports.create = function (query, client) {
             let CMDRname = rat.trim()
             query.rats = _.without(query.rats, CMDRname)
             find = Rat.findOne({
-              CMDRname: CMDRname
+              $text: {
+                $search: CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+                $caseSensitive: false,
+                $diacriticSensitive: false
+              }
             })
 
             find.then(function (rat) {
               if (rat) {
                 query.rats.push(rat._id)
-              } else {
-                query.unidentifiedRats.push(CMDRname)
               }
             })
 
@@ -263,7 +261,11 @@ exports.create = function (query, client) {
       if (typeof query.firstLimpet === 'string') {
         if (!mongoose.Types.ObjectId.isValid(query.firstLimpet)) {
           let firstLimpetFind = Rat.findOne({
-            CMDRname: query.firstLimpet.trim()
+            $text: {
+              $search: CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+              $caseSensitive: false,
+              $diacriticSensitive: false
+            }
           })
 
           firstLimpetFind.then(function (rat) {
@@ -279,6 +281,7 @@ exports.create = function (query, client) {
         query.firstLimpet = query.firstLimpet._id
       }
     }
+
     Promise.all(finds).then(function () {
       Rescue.create(query, function (error, rescue) {
         if (error) {
