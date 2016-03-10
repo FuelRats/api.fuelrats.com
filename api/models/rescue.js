@@ -48,10 +48,8 @@ let RescueSchema = new Schema({
     type: Boolean
   },
   firstLimpet: {
-    type: {
-      type: Schema.Types.ObjectId,
-      ref: 'Rat'
-    }
+    type: Schema.Types.ObjectId,
+    ref: 'Rat'
   },
   lastModified: {
     type: Date
@@ -117,58 +115,49 @@ RescueSchema.index({
 
 
 
-let checkRat = function (rat) {
-
-}
-
 let linkRats = function (next) {
   let finds = []
   let rescue = this
   let updates = []
+  let increment = {}
 
   rescue.rats = rescue.rats || []
-  rescue.unidentifiedRats = rescue.unidentifiedRats || []
 
-  rescue.unidentifiedRats.forEach(function (rat, index, rats) {
-    updates.push(mongoose.models.Rat.update(
-      {
-        $text: {
-          $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
-          $caseSensitive: false,
-          $diacriticSensitive: false
-        }
+  rescue.rats.forEach(function (rat, index, rats) {
+    if (rescue.successful) {
+      increment.successfulAssistCount = 1
+    } else {
+      increment.failedAssistCount = 1
+    }
+
+    updates.push(mongoose.models.Rat.findByIdAndUpdate(rat, {
+      $inc: {
+        successfulAssistCount: 1,
+        rescueCount: 1
       },
-      {
-        $inc: {
-          successfulAssistCount: 1,
-          rescueCount: 1
-        },
-        $push: {
-          rescues: rescue._id
-        }
+      $push: {
+        rescues: rescue._id
       }
-    ))
-
-    let find = mongoose.models.Rat.findOne({
-      $text: {
-        $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
-        $caseSensitive: false,
-        $diacriticSensitive: false
-      }
-    })
-
-    find.then(function (_rat) {
-      if (_rat) {
-        rescue.rats.push(_rat._id)
-        rescue.unidentifiedRats = _.without(rescue.unidentifiedRats, _rat.CMDRname)
-        if (_rat.platform && _rat.platform != null) {
-          rescue.platform = _rat.platform
-        }
-      }
-    })
-
-    finds.push(find)
+    }))
   })
+
+  if (rescue.firstLimpet) {
+    if (rescue.successful) {
+      increment.successfulRescueCount = 1
+    } else {
+      increment.failedRescueCount = 1
+    }
+
+    updates.push(mongoose.models.Rat.findByIdAndUpdate(rescue.firstLimpet, {
+      $inc: {
+        successfulRescueCount: 1,
+        rescueCount: 1
+      },
+      $push: {
+        rescues: rescue._id
+      }
+    }))
+  }
 
   Promise.all(updates)
   .then(function () {
