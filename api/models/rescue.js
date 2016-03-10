@@ -116,12 +116,15 @@ RescueSchema.index({
 
 
 let linkRats = function (next) {
-  let finds = []
   let rescue = this
   let updates = []
   let increment = {}
 
   rescue.rats = rescue.rats || []
+
+  rescue.rats = _.reject(rescue.rats, function (rat) {
+    return rat.toString() === rescue.firstLimpet.toString()
+  })
 
   rescue.rats.forEach(function (rat, index, rats) {
     if (rescue.successful) {
@@ -160,11 +163,7 @@ let linkRats = function (next) {
   }
 
   Promise.all(updates)
-  .then(function () {
-    Promise.all(finds)
-    .then(next)
-    .catch(next)
-  })
+  .then(next)
   .catch(next)
 }
 
@@ -244,8 +243,6 @@ RescueSchema.pre('save', linkRats)
 
 RescueSchema.pre('update', sanitizeInput)
 RescueSchema.pre('update', updateTimestamps)
-
-RescueSchema.post('save', synchronize)
 
 RescueSchema.post('update', synchronize)
 
