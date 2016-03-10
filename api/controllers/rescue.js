@@ -179,6 +179,7 @@ exports.read = function (query) {
           error: errorObj,
           meta: {}
         })
+
       } else {
         let meta = {
           count: queryData.hits.hits.length,
@@ -192,6 +193,7 @@ exports.read = function (query) {
         queryData.hits.hits.forEach(function (rescue) {
           rescue._source._id = rescue._id
           rescue._source.score = rescue._score
+
           data.push(rescue._source)
         })
 

@@ -15,7 +15,7 @@ exports.get = function (request, response, next) {
     response.status(200)
     next()
   }, function (errors) {
-    console.log(errors)
+    winston.error(errors)
   })
 }
 

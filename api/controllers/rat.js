@@ -45,7 +45,9 @@ exports.getById = function (request, response, next) {
 
 exports.read = function (query) {
   return new Promise(function (resolve, reject) {
-    let filter = {}
+    let filter = {
+      sort: 'createdAt:desc'
+    }
     let dbQuery = {}
 
     filter.size = parseInt(query.limit) || 25
