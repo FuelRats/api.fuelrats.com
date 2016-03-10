@@ -4,8 +4,8 @@ let mongoose = require('mongoose')
 
 mongoose.Promise = global.Promise
 
-
 let Schema = mongoose.Schema
+
 
 
 
@@ -95,52 +95,11 @@ let RatSchema = new Schema({
   versionKey: false
 })
 
-
 RatSchema.index({
   CMDRname: 'text'
 })
 
 
-let linkRescues = function (next) {
-  var rat
-
-  rat = this
-
-  rat.rescues = rat.rescues || []
-
-  mongoose.models.Rescue.update({
-    $text: {
-      $search: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
-      $caseSensitive: false,
-      $diacriticSensitive: false
-    }
-  }, {
-    $set: {
-      platform: rat.platform
-    },
-    $pull: {
-      unidentifiedRats: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
-    },
-    $push: {
-      rats: rat._id
-    }
-  })
-  .then(function () {
-    mongoose.models.Rescue.find({
-      rats: rat._id
-    }).then(function (rescues) {
-      rescues.forEach(function (rescue) {
-        rat.rescues.push(rescue._id)
-      })
-      if (rat.rescues) {
-        rat.rescueCount = rat.rescues.length
-      } else {
-        rat.rescueCount = 0
-      }
-      next()
-    }).catch(next)
-  })
-}
 
 
 
@@ -185,10 +144,10 @@ let synchronize = function (rescue) {
 
 
 
+
 RatSchema.pre('save', sanitizeInput)
 RatSchema.pre('save', updateTimestamps)
 RatSchema.pre('save', normalizePlatform)
-RatSchema.pre('save', linkRescues)
 
 RatSchema.pre('update', sanitizeInput)
 RatSchema.pre('update', updateTimestamps)
