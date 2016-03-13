@@ -26,20 +26,6 @@ let RatSchema = new Schema({
     default: {},
     type: Schema.Types.Mixed
   },
-  drilled: {
-    default: {
-      dispatch: false,
-      rescue: false
-    },
-    type: {
-      dispatch: {
-        type: Boolean
-      },
-      rescue: {
-        type: Boolean
-      }
-    }
-  },
   lastModified: {
     type: Date
   },
