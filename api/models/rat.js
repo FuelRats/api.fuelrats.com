@@ -164,15 +164,15 @@ RatSchema.pre('save', linkRescues)
 RatSchema.pre('update', sanitizeInput)
 RatSchema.pre('update', updateTimestamps)
 
+RatSchema.plugin(require('mongoosastic'))
+
 RatSchema.post('save', indexSchema)
 
-RatSchema.post('update', indexSchema)
 
 RatSchema.set('toJSON', {
   virtuals: true
 })
 
-RatSchema.plugin(require('mongoosastic'))
 
 if (mongoose.models.Rat) {
   module.exports = mongoose.model('Rat')
