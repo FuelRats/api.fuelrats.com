@@ -3,6 +3,7 @@
 let _ = require('underscore')
 let mongoose = require('mongoose')
 let winston = require('winston')
+let Rat = require('./rat')
 
 mongoose.Promise = global.Promise
 
@@ -113,6 +114,7 @@ let linkRats = function (next) {
   updates = []
 
   rescue.rats = rescue.rats || []
+
   rescue.unidentifiedRats = rescue.unidentifiedRats || []
 
   rescue.unidentifiedRats.forEach(function (rat) {
@@ -224,14 +226,20 @@ let sanitizeInput = function (next) {
   next()
 }
 
-let synchronize = function (rescue) {
-  rescue.index(function (error) {
-    if (error) {
-      winston.error(error)
-    }
-  })
+let indexSchema = function (rescue) {
+  rescue.index(function () {})
+  for (let ratId of rescue.rats) {
+    Rat.findById(ratId, function (err, rat) {
+      if (err) {
+        winston.error(err)
+      } else {
+        if (rat) {
+          rat.save()
+        }
+      }
+    })
+  }
 }
-
 
 RescueSchema.pre('save', sanitizeInput)
 RescueSchema.pre('save', updateTimestamps)
@@ -241,15 +249,14 @@ RescueSchema.pre('save', linkRats)
 RescueSchema.pre('update', sanitizeInput)
 RescueSchema.pre('update', updateTimestamps)
 
-RescueSchema.post('save', synchronize)
+RescueSchema.plugin(require('mongoosastic'))
 
-RescueSchema.post('update', synchronize)
+RescueSchema.post('save', indexSchema)
 
 RescueSchema.set('toJSON', {
   virtuals: true
 })
 
-RescueSchema.plugin(require('mongoosastic'))
 
 if (mongoose.models.Rescue) {
   module.exports = mongoose.model('Rescue')
