@@ -5,12 +5,12 @@ module.exports = {
 
     return {
       client: {
-        CMDRname: 'CMDR ' + randomName,
+        CMDRname: randomName,
         nickname: randomName
       },
       codeRed: !!Math.round(Math.random()), // Randomly decide if this is a code red
       system: 'Eravate',
-      platform: Math.round(Math.random()) ? 'PC' : 'XB' // Randomly decide if the client is PC or Xbox
+      platform: Math.round(Math.random()) ? 'pc' : 'xb' // Randomly decide if the client is PC or Xbox
     }
   },
 
