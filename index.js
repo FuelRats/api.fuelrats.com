@@ -60,6 +60,9 @@ let options = {
   test: false
 }
 
+if (process.env.CONTINOUS_INTEGRATION) {
+  options.logging = false
+}
 
 
 // Parse command line arguments
