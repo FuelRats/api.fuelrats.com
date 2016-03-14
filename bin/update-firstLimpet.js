@@ -9,11 +9,16 @@ let Rescue = require('../api/models/rescue')
 
 mongoose.connect('mongodb://localhost/fuelrats')
 
-let rescueFind = Rescue.find()
-
 console.log('Loading rescues...')
 
-rescueFind.populate('rescues')
+Rescue.find({
+  firstLimpet: {
+    $exists: false
+  },
+  rats: {
+    $exists: true
+  }
+})
 .exec()
 .then(function (rescues) {
   let saves = []
@@ -21,21 +26,20 @@ rescueFind.populate('rescues')
   console.log('Updating rescues...')
 
   rescues.forEach(function (rescue, index) {
-    let hasFirstLimpet = !!rescue.firstLimpet
-
-    if (rescue.rats.length && !hasFirstLimpet) {
-      console.log('before', rescue)
+    console.log(rescue)
+    if (rescue.rats.length) {
       rescue.firstLimpet = rescue.rats.shift()
-      console.log('after', rescue)
-      console.log('')
+
       saves.push(rescue.save())
     }
   })
 
   Promise.all(saves)
-  .then(function () {
-    console.log('Done.')
-    mongoose.disconnect()
+  .then(function (results) {
+    console.log('rescues', rescues.length)
+    console.log('results', results.length)
+    console.log('Done')
+//    mongoose.disconnect()
   })
   .catch(function (error) {
     console.error(error)

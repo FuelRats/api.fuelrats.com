@@ -104,14 +104,6 @@ let RescueSchema = new Schema({
 
 
 
-RescueSchema.index({
-  unidentifiedRats: 'text'
-})
-
-
-
-
-
 let linkRats = function (next) {
   let rescue = this
   let updates = []
@@ -135,7 +127,7 @@ let linkRats = function (next) {
         successfulAssistCount: 1,
         rescueCount: 1
       },
-      $push: {
+      $addToSet: {
         rescues: rescue._id
       }
     }))
@@ -153,7 +145,7 @@ let linkRats = function (next) {
         successfulRescueCount: 1,
         rescueCount: 1
       },
-      $push: {
+      $addToSet: {
         rescues: rescue._id
       }
     }))

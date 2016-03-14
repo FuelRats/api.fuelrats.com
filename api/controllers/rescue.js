@@ -16,7 +16,7 @@ exports.assign = function (request, response, next) {
   let ratId = request.params.ratId
 
   let update = {
-    $push: {
+    $addToSet: {
       rats: ratId
     }
   }
@@ -75,7 +75,7 @@ exports.addQuote = function (request, response, next) {
   let id = request.params.id
 
   let update = {
-    $push: {
+    $addToSet: {
       quotes: quote
     }
   }

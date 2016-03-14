@@ -82,10 +82,6 @@ let RatSchema = new Schema({
   versionKey: false
 })
 
-RatSchema.index({
-  CMDRname: 'text'
-})
-
 
 
 
@@ -139,19 +135,17 @@ RatSchema.pre('save', normalizePlatform)
 RatSchema.pre('update', sanitizeInput)
 RatSchema.pre('update', updateTimestamps)
 
-<<<<<<< HEAD
-RatSchema.pre('update', synchronize)
-=======
 RatSchema.plugin(require('mongoosastic'))
 
 RatSchema.post('save', indexSchema)
-
->>>>>>> develop
 
 RatSchema.set('toJSON', {
   virtuals: true
 })
 
+RatSchema.index({
+  CMDRname: 'text'
+})
 
 if (mongoose.models.Rat) {
   module.exports = mongoose.model('Rat')
