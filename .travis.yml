@@ -4,6 +4,8 @@ node_js:
 
 services:
 - mongodb
+- elasticsearch
 
 before_script:
 - npm install -g grunt-cli
+- sleep 10

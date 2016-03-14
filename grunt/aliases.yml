@@ -17,4 +17,5 @@ docs:
 test:
   description: Run the tests
   tasks:
+  - 'express'
   - 'mochaTest'
