@@ -9,3 +9,10 @@ services:
 before_script:
 - npm install -g grunt-cli
 - sleep 10
+
+notifications:
+  irc:
+    channels:
+      - "irc.fuelrats.com#rattech"
+    channel_key: 'whfydaq'
+    nick: TravisCI
