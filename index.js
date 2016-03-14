@@ -262,6 +262,14 @@ app.use(function (request, response) {
   response.send(response.model)
 })
 
+Object.keys(mongoose.models).forEach(function (modelName, index) {
+  let model = mongoose.models[modelName]
+
+  if (model.createMapping) {
+    model.createMapping()
+  }
+})
+
 
 
 
