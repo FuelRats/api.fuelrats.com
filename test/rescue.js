@@ -4,15 +4,15 @@
 
 let chai = require('chai')
 let request = require('supertest')
-let expect = chai.expect
+let assert = chai.assert
 
 let generate = require('./generator')
 
 // Set up globals
 // =============================================================================
 
-let rootUrl = 'http://localhost:8080/api'
-
+let rootUrl = 'http://localhost:8080'
+request = request(rootUrl)
 
 // Before and After hooks
 // =============================================================================
@@ -24,31 +24,29 @@ let rootUrl = 'http://localhost:8080/api'
 // =============================================================================
 
 describe('Rescue Endpoints', function () {
-  describe('POST /api/rescues', function () {
-    var rescue
-
+  describe('POST /rescues', function () {
     // Create a rescue object
-    rescue = generate.randomRescue()
+    let rescue = generate.randomRescue()
 
     it('should create a new rescue', function (done) {
 
-      request.post(rootUrl + '/rescues').send(rescue).expect(201).end(function (error, response) {
+      request.post('/rescues').send(rescue).expect(201).end(function (error, response) {
         if (error) {
           return done(error)
         }
 
         // Make sure there are no errors
-        expect(response.body).to.not.have.property('errors')
+        assert.notProperty(response.body, 'errors')
 
         // Make sure our response is correctly constructed
-        expect(response.body.data).to.be.an('object')
+        assert.isObject(response.body.data)
 
         // Check all of the properties on the returned object
-        expect(response.body.data.client.CMDRname).to.equal(rescue.client.CMDRname)
-        expect(response.body.data.client.nickname).to.equal(rescue.client.nickname)
-        expect(response.body.data.codeRed).to.equal(rescue.codeRed)
-        expect(response.body.data.nearestSystem).to.equal(rescue.nearestSystem)
-        expect(response.body.data.platform).to.equal(rescue.platform)
+        assert.equal(response.body.data.client.CMDRname, rescue.client.CMDRname)
+        assert.equal(response.body.data.client.nickname, rescue.client.nickname)
+        assert.equal(response.body.data.codeRed, rescue.codeRed)
+        assert.equal(response.body.data.system, rescue.system)
+        assert.equal(response.body.data.platform, rescue.platform)
 
         done()
       })
@@ -58,18 +56,18 @@ describe('Rescue Endpoints', function () {
 
 
 
-  describe('GET /api/rescues', function () {
+  describe('GET /rescues', function () {
     it('should return a list of rescues', function (done) {
-      request.get(rootUrl + '/rescues').expect(200).end(function (error, response) {
+      request.get('/rescues').expect(200).end(function (error, response) {
         if (error) {
           return done(error)
         }
 
         // Make sure there are no errors
-        expect(response.body).to.not.have.property('errors')
+        assert.notProperty(response.body, 'errors')
 
         // Make sure our response is correctly constructed
-        expect(response.body.data).to.be.an('array')
+        assert.isArray(response.body.data)
 
         done(error)
       })
@@ -77,37 +75,37 @@ describe('Rescue Endpoints', function () {
   })
 
 
-  describe('GET /api/rescues/:id', function () {
+  describe('GET /rescues/:id', function () {
     // Create a rescue object
     let rescue = generate.randomRescue()
 
     // Create a new rescue to test against
     before(function (done) {
-      request.post(rootUrl + '/rescues').send(rescue).end(function (error, response) {
+      request.post('/rescues').send(rescue).end(function (error, response) {
         if (error) {
           return done(error)
         }
 
-        rescue.id = response.body.data.id
+        rescue.id = response.body.data._id
 
         done()
       })
     })
 
     it('should return a rescue', function (done) {
-      request.get(rootUrl + '/rescues/' + rescue.id).expect(200).end(function (error, response) {
+      request.get('/rescues/' + rescue.id).expect(200).end(function (error, response) {
         if (error) {
           return done(error)
         }
 
         // Make sure there are no errors
-        expect(response.body).to.not.have.property('errors')
+        assert.notProperty(response.body, 'errors')
 
         // Make sure our response is correctly constructed
-        expect(response.body.data).to.be.an('object')
+        assert.isObject(response.body.data)
 
         // Make sure our response has the right data
-        expect(response.body.data.id).to.equal(rescue.id)
+        assert.equal(response.body.data.id, rescue.id)
 
         done()
       })
@@ -117,12 +115,12 @@ describe('Rescue Endpoints', function () {
 
 
 
-  describe('PUT /api/rescues/:id', function () {
+  describe('PUT /rescues/:id', function () {
     let rescue
 
     // Create a new rescue to test against
     before(function (done) {
-      request.post(rootUrl + '/rescues').send(generate.randomRescue()).end(function (error, response) {
+      request.post('/rescues').send(generate.randomRescue()).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -134,7 +132,7 @@ describe('Rescue Endpoints', function () {
     })
 
     it('should update a rescue', function (done) {
-      request.put(rootUrl + '/rescues/' + rescue.id).send({
+      request.put('/rescues/' + rescue.id).send({
         nickname: 'Edited Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
       }).expect(200).end(function (error) {
         if (error) {

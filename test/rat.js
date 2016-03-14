@@ -3,8 +3,8 @@
 // =============================================================================
 
 let chai = require('chai')
+let assert = chai.assert
 let request = require('supertest')
-let expect = chai.expect
 
 let generate = require('./generator')
 
@@ -14,7 +14,8 @@ let generate = require('./generator')
 // Set up globals
 // =============================================================================
 
-let rootUrl = 'http://localhost:8080/api'
+let rootUrl = 'http://localhost:8080'
+request = request(rootUrl)
 
 
 // Before and After hooks
@@ -25,52 +26,50 @@ let rootUrl = 'http://localhost:8080/api'
 // =============================================================================
 
 describe('Rat Endpoints', function () {
-  describe('POST /api/rats', function () {
+  describe('POST /rats', function () {
     // Create a rat object
     let rat = generate.randomRat()
 
     it('should create a new rat', function (done) {
 
-      request.post(rootUrl + '/rats').send(rat).end(function (error, response) {
+      request.post('/rats').send(rat).end(function (error, response) {
         if (error) {
           return done(error)
         }
 
         // Make sure the POST succeeded
-        expect(response.status).to.equal(201)
+        assert.equal(response.status, 201)
 
         // Make sure there are no errors
-        expect(response.body).to.not.have.property('errors')
+        assert.notProperty(response.body, 'errors')
 
         // Make sure our response is correctly constructed
-        expect(response.body.data).to.be.an('object')
+        assert.isObject(response.body.data)
 
         // Check all of the properties on the returned object
-        expect(response.body.data.CMDRname).to.equal(rat.CMDRname)
-        expect(response.body.data.gamertag).to.equal(rat.gamertag)
-        expect(response.body.data.drilled).to.equal(rat.drilled)
-        expect(response.body.data.nickname).to.equal(rat.nickname)
+        assert.equal(response.body.data.CMDRname, rat.CMDRname)
+        assert.deepEqual(response.body.data.nicknames, rat.nicknames)
 
         done()
       })
     })
   })
 
-  describe('GET /api/rats', function () {
+  describe('GET /rats', function () {
     it('should return a list of rats', function (done) {
-      request.get(rootUrl + '/rats').end(function (error, response) {
+      request.get('/rats').end(function (error, response) {
         if (error) {
           return done(error)
         }
 
         // Make sure the GET succeeded
-        expect(response.status).to.equal(200)
+        assert.equal(response.status, 200)
 
         // Make sure there are no errors
-        expect(response.body).to.not.have.property('errors')
+        assert.notProperty(response.body, 'errors')
 
         // Make sure our response is correctly constructed
-        expect(response.body.data).to.be.an('array')
+        assert.isArray(response.body.data)
 
         done(error)
       })
@@ -83,54 +82,49 @@ describe('Rat Endpoints', function () {
 
     // Create a new rat to test against
     before(function (done) {
-      request
-        .post(rootUrl + '/rats')
-        .send(rat)
-        .end(function (error, response) {
-          if (error) {
-            return done(error)
-          }
+      request.post('/rats').send(rat).end(function (error, response) {
+        if (error) {
+          return done(error)
+        }
 
-          rat.id = response.body.data.id
+        rat.id = response.body.data.id
 
-          done()
-        })
+        done()
+      })
     })
 
     it('should return a rat', function (done) {
-      request
-        .get(rootUrl + '/rats/' + rat.id)
-        .end(function (error, response) {
-          if (error) {
-            return done(error)
-          }
+      request.get('/rats/' + rat.id).end(function (error, response) {
+        if (error) {
+          return done(error)
+        }
 
-          // Make sure the request succeeded
-          expect(response.status).to.equal(200)
+        // Make sure the request succeeded
+        assert.equal(response.status, 200)
 
-          // Make sure there are no errors
-          expect(response.body).to.not.have.property('errors')
+        // Make sure there are no errors
+        assert.notProperty(response.body, 'errors')
 
-          // Make sure our response is correctly constructed
-          expect(response.body.data).to.be.an('object')
+        // Make sure our response is correctly constructed
+        assert.isObject(response.body.data)
 
-          // Make sure our response has the right data
-          expect(response.body.data.id).to.equal(rat.id)
+        // Make sure our response has the right data
+        assert.equal(response.body.data.id, rat.id)
 
-          done()
-        })
+        done()
+      })
     })
   })
 
 
 
 
-  describe('PUT /api/rats/:id', function () {
+  describe('PUT /rats/:id', function () {
     var rat
 
     // Create a new rat to test against
     before(function (done) {
-      request.post(rootUrl + '/rats').send(generate.randomRat()).end(function (error, response) {
+      request.post('/rats').send(generate.randomRat()).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -142,7 +136,7 @@ describe('Rat Endpoints', function () {
     })
 
     it('should update a rat', function (done) {
-      request.put(rootUrl + '/rats/' + rat.id).send({
+      request.put('/rats/' + rat.id).send({
         nickname: 'Edited Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
       }).end(function (error, response) {
         if (error) {
@@ -150,7 +144,7 @@ describe('Rat Endpoints', function () {
         }
 
         // Make sure the POST succeeded
-        expect(response.status).to.equal(200)
+        assert.equal(response.status, 200)
 
         done()
       })

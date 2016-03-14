@@ -20,10 +20,8 @@ module.exports = {
     randomName = (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
 
     return {
-      CMDRname: 'CMDR Test Rat ' + randomName,
-      gamertag: 'Gamertag Test Rat ' + randomName,
-      drilled: !!Math.round(Math.random()), // Randomly decide if this rat has been drilled
-      nickname: randomName
+      CMDRname: 'Test Rat ' + randomName,
+      nicknames: [randomName]
     }
   }
 }
