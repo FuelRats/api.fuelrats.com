@@ -1,7 +1,6 @@
 api:
   description: Start the api
   tasks:
-  - 'docs'
   - 'express'
   - 'watch'
 
