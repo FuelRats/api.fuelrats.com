@@ -1,29 +1,17 @@
-var app, chai, expect, generate, request, rootUrl, request;
-
-
-
-
-
+'use strict'
 // Imports
 // =============================================================================
 
-chai = require( 'chai' );
-request = require( 'supertest' );
-expect = chai.expect;
+let chai = require('chai')
+let request = require('supertest')
+let expect = chai.expect
 
-generate = require( './generator' );
-
-
-
-
+let generate = require('./generator')
 
 // Set up globals
 // =============================================================================
 
-rootUrl = 'http://localhost:8080/api';
-
-
-
+let rootUrl = 'http://localhost:8080/api'
 
 
 // Before and After hooks
@@ -32,163 +20,129 @@ rootUrl = 'http://localhost:8080/api';
 
 
 
-
 // PULL THE LEVER!
 // =============================================================================
 
-describe( 'Rescue Endpoints', function () {
-  describe( 'POST /api/rescues', function () {
-    var rescue;
+describe('Rescue Endpoints', function () {
+  describe('POST /api/rescues', function () {
+    var rescue
 
     // Create a rescue object
-    rescue = generate.randomRescue();
+    rescue = generate.randomRescue()
 
-    it( 'should create a new rescue', function ( done ) {
+    it('should create a new rescue', function (done) {
 
-      request
-      .post( rootUrl + '/rescues' )
-      .send( rescue )
-      .expect( 201 )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+      request.post(rootUrl + '/rescues').send(rescue).expect(201).end(function (error, response) {
+        if (error) {
+          return done(error)
         }
 
         // Make sure there are no errors
-        expect( response.body ).to.not.have.property( 'errors' );
+        expect(response.body).to.not.have.property('errors')
 
         // Make sure our response is correctly constructed
-        expect( response.body.data ).to.be.an( 'object' );
+        expect(response.body.data).to.be.an('object')
 
         // Check all of the properties on the returned object
-        expect( response.body.data.client.CMDRname ).to.equal( rescue.client.CMDRname );
-        expect( response.body.data.client.nickname ).to.equal( rescue.client.nickname );
-        expect( response.body.data.codeRed ).to.equal( rescue.codeRed );
-        expect( response.body.data.nearestSystem ).to.equal( rescue.nearestSystem );
-        expect( response.body.data.platform ).to.equal( rescue.platform );
+        expect(response.body.data.client.CMDRname).to.equal(rescue.client.CMDRname)
+        expect(response.body.data.client.nickname).to.equal(rescue.client.nickname)
+        expect(response.body.data.codeRed).to.equal(rescue.codeRed)
+        expect(response.body.data.nearestSystem).to.equal(rescue.nearestSystem)
+        expect(response.body.data.platform).to.equal(rescue.platform)
 
-        done();
-      });
-    });
-  });
-
-
+        done()
+      })
+    })
+  })
 
 
 
-  describe( 'GET /api/rescues', function () {
 
-    it( 'should return a list of rescues', function ( done ) {
-      request
-      .get( rootUrl + '/rescues' )
-      .expect( 200 )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+  describe('GET /api/rescues', function () {
+    it('should return a list of rescues', function (done) {
+      request.get(rootUrl + '/rescues').expect(200).end(function (error, response) {
+        if (error) {
+          return done(error)
         }
 
         // Make sure there are no errors
-        expect( response.body ).to.not.have.property( 'errors' );
+        expect(response.body).to.not.have.property('errors')
 
         // Make sure our response is correctly constructed
-        expect( response.body.data ).to.be.an( 'array' );
+        expect(response.body.data).to.be.an('array')
 
-        done( error );
-      });
-    });
-  });
-
-
+        done(error)
+      })
+    })
+  })
 
 
-
-
-
-
-
-  describe( 'GET /api/rescues/:id', function () {
-
-    var rescue;
-
+  describe('GET /api/rescues/:id', function () {
     // Create a rescue object
-    rescue = generate.randomRescue();
+    let rescue = generate.randomRescue()
 
     // Create a new rescue to test against
-    before( function ( done ) {
-      request
-      .post( rootUrl + '/rescues' )
-      .send( rescue )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+    before(function (done) {
+      request.post(rootUrl + '/rescues').send(rescue).end(function (error, response) {
+        if (error) {
+          return done(error)
         }
 
-        rescue.id = response.body.data.id;
+        rescue.id = response.body.data.id
 
-        done();
-      });
-    });
+        done()
+      })
+    })
 
-    it( 'should return a rescue', function ( done ) {
-      request
-      .get( rootUrl + '/rescues/' + rescue.id )
-      .expect( 200 )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+    it('should return a rescue', function (done) {
+      request.get(rootUrl + '/rescues/' + rescue.id).expect(200).end(function (error, response) {
+        if (error) {
+          return done(error)
         }
 
         // Make sure there are no errors
-        expect( response.body ).to.not.have.property( 'errors' );
+        expect(response.body).to.not.have.property('errors')
 
         // Make sure our response is correctly constructed
-        expect( response.body.data ).to.be.an( 'object' );
+        expect(response.body.data).to.be.an('object')
 
         // Make sure our response has the right data
-        expect( response.body.data.id ).to.equal( rescue.id );
+        expect(response.body.data.id).to.equal(rescue.id)
 
-        done();
-      });
-    });
-  });
-
-
+        done()
+      })
+    })
+  })
 
 
 
-  describe( 'PUT /api/rescues/:id', function () {
-    var rescue;
+
+  describe('PUT /api/rescues/:id', function () {
+    let rescue
 
     // Create a new rescue to test against
-    before( function ( done ) {
-      request
-      .post( rootUrl + '/rescues' )
-      .send( generate.randomRescue() )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+    before(function (done) {
+      request.post(rootUrl + '/rescues').send(generate.randomRescue()).end(function (error, response) {
+        if (error) {
+          return done(error)
         }
 
-        rescue = response.body.data;
+        rescue = response.body.data
 
-        done();
-      });
-    });
-
-    it( 'should update a rescue', function ( done ) {
-      request
-      .put( rootUrl + '/rescues/' + rescue.id )
-      .send({
-        nickname: 'Edited Test Client ' + ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 )
+        done()
       })
-      .expect( 200 )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+    })
+
+    it('should update a rescue', function (done) {
+      request.put(rootUrl + '/rescues/' + rescue.id).send({
+        nickname: 'Edited Test Client ' + (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
+      }).expect(200).end(function (error) {
+        if (error) {
+          return done(error)
         }
 
-        done();
-      });
-    });
-  });
-});
+        done()
+      })
+    })
+  })
+})
