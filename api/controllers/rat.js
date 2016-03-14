@@ -14,7 +14,7 @@ exports.get = function (request, response, next) {
 
     response.model.data = data
     response.model.meta = meta
-    response.status = 400
+    response.status = 200
     next()
   }, function (error) {
     response.model.errors.push(error.error)
@@ -177,7 +177,7 @@ exports.put = function (request, response, next) {
 
   exports.update(request.body, {}, request.params).then(function (data) {
     response.model.data = data.data
-    response.status(201)
+    response.status(200)
     next()
   }, function (error) {
     response.model.errors.push(error.error)
