@@ -15,6 +15,20 @@ let UserSchema = new Schema({
       ref: 'Rat'
     }]
   },
+  drilled: {
+    default: {
+      dispatch: false,
+      rescue: false
+    },
+    type: {
+      dispatch: {
+        type: Boolean
+      },
+      rescue: {
+        type: Boolean
+      }
+    }
+  },
   resetToken: String,
   resetTokenExpire: Date
 })

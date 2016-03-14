@@ -1,14 +1,11 @@
 'use strict'
 
 let _ = require('underscore')
-let moment = require('moment')
 let mongoose = require('mongoose')
 let winston = require('winston')
+let Rat = require('./rat')
 
 mongoose.Promise = global.Promise
-
-let Quote = require('./quote')
-let Rat = require('./rat')
 
 let Schema = mongoose.Schema
 
@@ -197,10 +194,11 @@ let sanitizeInput = function (next) {
   }
 
   if (rescue.client) {
-    if (rescue.client.CMDRname) {
+    if(rescue.client.CMDRname) {
       rescue.client.CMDRname = rescue.client.CMDRname.trim()
     }
-    if (rescue.client.nickname) {
+
+    if(rescue.client.nickname) {
       rescue.client.nickname = rescue.client.nickname.trim()
     }
   }
@@ -224,17 +222,20 @@ let sanitizeInput = function (next) {
   next()
 }
 
-let synchronize = function (rescue) {
-  rescue.index(function (error, response) {
-    if (error) {
-      winston.error(error)
-    }
-  })
+let indexSchema = function (rescue) {
+  rescue.index(function () {})
+  for (let ratId of rescue.rats) {
+    Rat.findById(ratId, function (err, rat) {
+      if (err) {
+        winston.error(err)
+      } else {
+        if (rat) {
+          rat.save()
+        }
+      }
+    })
+  }
 }
-
-
-
-
 
 RescueSchema.pre('save', sanitizeInput)
 RescueSchema.pre('save', updateTimestamps)
@@ -244,13 +245,13 @@ RescueSchema.pre('save', linkRats)
 RescueSchema.pre('update', sanitizeInput)
 RescueSchema.pre('update', updateTimestamps)
 
-RescueSchema.post('update', synchronize)
+RescueSchema.plugin(require('mongoosastic'))
+
+RescueSchema.post('save', indexSchema)
 
 RescueSchema.set('toJSON', {
   virtuals: true
 })
-
-RescueSchema.plugin(require('mongoosastic'))
 
 if (mongoose.models.Rescue) {
   module.exports = mongoose.model('Rescue')

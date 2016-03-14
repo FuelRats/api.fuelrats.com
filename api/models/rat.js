@@ -1,6 +1,7 @@
 'use strict'
 
 let mongoose = require('mongoose')
+let winston = require('winston')
 
 mongoose.Promise = global.Promise
 
@@ -24,20 +25,6 @@ let RatSchema = new Schema({
   data: {
     default: {},
     type: Schema.Types.Mixed
-  },
-  drilled: {
-    default: {
-      dispatch: false,
-      rescue: false
-    },
-    type: {
-      dispatch: {
-        type: Boolean
-      },
-      rescue: {
-        type: Boolean
-      }
-    }
   },
   failedAssistCount: {
     default: 0,
@@ -133,8 +120,8 @@ let sanitizeInput = function (next) {
   next()
 }
 
-let synchronize = function (rescue) {
-  rescue.index(function (error, response) {
+let indexSchema = function (rat) {
+  rat.index(function (error) {
     if (error) {
       winston.error(error)
     }
@@ -152,13 +139,19 @@ RatSchema.pre('save', normalizePlatform)
 RatSchema.pre('update', sanitizeInput)
 RatSchema.pre('update', updateTimestamps)
 
+<<<<<<< HEAD
 RatSchema.pre('update', synchronize)
+=======
+RatSchema.plugin(require('mongoosastic'))
+
+RatSchema.post('save', indexSchema)
+
+>>>>>>> develop
 
 RatSchema.set('toJSON', {
   virtuals: true
 })
 
-RatSchema.plugin(require('mongoosastic'))
 
 if (mongoose.models.Rat) {
   module.exports = mongoose.model('Rat')
