@@ -14,3 +14,8 @@ docs:
   description: Build the docs
   tasks:
   - 'run:docs'
+
+test:
+  description: Run the tests
+  tasks:
+  - 'mochaTest'
