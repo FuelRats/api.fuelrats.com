@@ -17,5 +17,6 @@ docs:
 test:
   description: Run the tests
   tasks:
+  - 'run:mapIndex'
   - 'express'
   - 'mochaTest'

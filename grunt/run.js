@@ -9,5 +9,11 @@ module.exports = {
     args: [
       './bin/import'
     ]
+  },
+
+  mapIndex: {
+    args: [
+      './bin/sync-index'
+    ]
   }
 }
