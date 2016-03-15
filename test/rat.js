@@ -32,7 +32,7 @@ describe('Rat Endpoints', function () {
 
     it('should create a new rat', function (done) {
 
-      request.post('/rats').send(rat).end(function (error, response) {
+      request.post('/rats').send(rat).expect(201).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -82,7 +82,7 @@ describe('Rat Endpoints', function () {
 
     // Create a new rat to test against
     before(function (done) {
-      request.post('/rats').send(rat).end(function (error, response) {
+      request.post('/rats').send(rat).expect(201).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -124,7 +124,7 @@ describe('Rat Endpoints', function () {
 
     // Create a new rat to test against
     before(function (done) {
-      request.post('/rats').send(generate.randomRat()).end(function (error, response) {
+      request.post('/rats').send(generate.randomRat()).expect(201).end(function (error, response) {
         if (error) {
           return done(error)
         }
