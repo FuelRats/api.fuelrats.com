@@ -8,7 +8,7 @@
     "port": 27017
   },
   "ssl": {
-    "enabled": true,
+    "enabled": false,
     "hostname": "localhost",
     "port": 4443
   }
