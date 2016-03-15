@@ -25,6 +25,7 @@ request = request(rootUrl)
 
 describe('Rescue Endpoints', function () {
   describe('POST /rescues', function () {
+    this.timeout(5000)
     // Create a rescue object
     let rescue = generate.randomRescue()
 
@@ -57,6 +58,7 @@ describe('Rescue Endpoints', function () {
 
 
   describe('GET /rescues', function () {
+    this.timeout(5000)
     it('should return a list of rescues', function (done) {
       request.get('/rescues').expect(200).end(function (error, response) {
         if (error) {
@@ -76,6 +78,7 @@ describe('Rescue Endpoints', function () {
 
 
   describe('GET /rescues/:id', function () {
+    this.timeout(5000)
     // Create a rescue object
     let rescue = generate.randomRescue()
 
@@ -116,6 +119,7 @@ describe('Rescue Endpoints', function () {
 
 
   describe('PUT /rescues/:id', function () {
+    this.timeout(5000)
     let rescue
 
     // Create a new rescue to test against

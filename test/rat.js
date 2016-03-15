@@ -27,6 +27,8 @@ request = request(rootUrl)
 
 describe('Rat Endpoints', function () {
   describe('POST /rats', function () {
+    this.timeout(5000)
+
     // Create a rat object
     let rat = generate.randomRat()
 
@@ -56,6 +58,7 @@ describe('Rat Endpoints', function () {
   })
 
   describe('GET /rats', function () {
+    this.timeout(5000)
     it('should return a list of rats', function (done) {
       request.get('/rats').end(function (error, response) {
         if (error) {
@@ -77,6 +80,7 @@ describe('Rat Endpoints', function () {
   })
 
   describe('GET /api/rats/:id', function () {
+    this.timeout(5000)
     // Create a rat object
     let rat = generate.randomRat()
 
@@ -120,6 +124,7 @@ describe('Rat Endpoints', function () {
 
 
   describe('PUT /rats/:id', function () {
+    this.timeout(5000)
     var rat
 
     // Create a new rat to test against
