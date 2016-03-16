@@ -238,6 +238,10 @@ exports.update = function (data, client, query) {
           })
         }
       })
+    } else {
+      let error = ErrorModels.missing_required_field
+      error.detail = 'id'
+      reject({ error: error, meta: {} })
     }
   })
 }
