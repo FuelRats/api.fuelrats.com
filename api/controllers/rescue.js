@@ -346,7 +346,7 @@ exports.update = function (data, client, query) {
         } else {
           for (let key in data) {
             if (key === 'client') {
-              _.extend(rescue.client, data)
+              _.extend(rescue.client, data.client)
             } else {
               rescue[key] = data[key]
             }
