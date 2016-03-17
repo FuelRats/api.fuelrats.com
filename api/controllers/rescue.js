@@ -351,7 +351,7 @@ exports.update = function (data, client, query) {
         } else {
           for (let key in data) {
             if (key === 'client') {
-              _.extend(rescue.client, data)
+              _.extend(rescue.client, data.client)
             } else {
               rescue[key] = data[key]
             }
@@ -380,6 +380,10 @@ exports.update = function (data, client, query) {
           })
         }
       })
+    } else {
+      let error = ErrorModels.missing_required_field
+      error.detail = 'id'
+      reject({ error: error, meta: {} })
     }
   })
 }
