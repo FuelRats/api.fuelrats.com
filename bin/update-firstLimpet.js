@@ -26,20 +26,20 @@ Rescue.find({
   console.log('Updating rescues...')
 
   rescues.forEach(function (rescue, index) {
-    console.log(rescue)
     if (rescue.rats.length) {
-      rescue.firstLimpet = rescue.rats.shift()
-
-      saves.push(rescue.save())
+      saves.push(Rescue.findByIdAndUpdate(rescue._id, {
+        $set: {
+          firstLimpet: rescue.rats.shift(),
+          rats: rescue.rats
+        }
+      }))
     }
   })
 
   Promise.all(saves)
   .then(function (results) {
-    console.log('rescues', rescues.length)
-    console.log('results', results.length)
-    console.log('Done')
-//    mongoose.disconnect()
+    console.log('Updated ' + results.length + ' rescues')
+    mongoose.disconnect()
   })
   .catch(function (error) {
     console.error(error)
