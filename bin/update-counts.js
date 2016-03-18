@@ -20,7 +20,7 @@ Rat.update({}, {
   }
 })
 .then(function () {
-  console.log(  'Loading rescues...')
+  console.log('Loading rescues...')
 
   Rescue.find()
   .exec()
@@ -30,23 +30,27 @@ Rat.update({}, {
     console.log('Updating rat rescue counts...')
 
     rescues.forEach(function (rescue, index) {
-      console.log('Updating ' + rescue._id)
-
-      let updates = {}
+      let updates = []
 
       if (rescue.firstLimpet) {
         if (rescue.successful) {
-          updates[rescue.firstLimpet] = {
-            $inc: {
-              successfulRescueCount: 1
+          updates.push({
+            id: rescue.firstLimpet,
+            update: {
+              $inc: {
+                successfulRescueCount: 1
+              }
             }
-          }
+          })
         } else {
-          updates[rescue.firstLimpet] = {
-            $inc: {
-              failedRescueCount: 1
+          updates.push({
+            id: rescue.firstLimpet,
+            update: {
+              $inc: {
+                failedRescueCount: 1
+              }
             }
-          }
+          })
         }
       }
 
@@ -57,23 +61,29 @@ Rat.update({}, {
           }
 
           if (rescue.successful) {
-            updates[rescue.firstLimpet] = {
-              $inc: {
-                successfulAssistCount: 1
+            updates.push({
+              id: rat,
+              update: {
+                $inc: {
+                  successfulAssistCount: 1
+                }
               }
-            }
+            })
           } else {
-            updates[rescue.firstLimpet] = {
-              $inc: {
-                failedAssistCount: 1
+            updates.push({
+              id: rat,
+              update: {
+                $inc: {
+                  failedAssistCount: 1
+                }
               }
-            }
+            })
           }
         })
       }
 
-      Object.keys(updates).forEach(function (id, index) {
-        saves.push(Rat.findByIdAndUpdate(id, updates[id]))
+      updates.forEach(function (update) {
+        saves.push(Rat.findByIdAndUpdate(update.id, update.update))
       })
     })
 
