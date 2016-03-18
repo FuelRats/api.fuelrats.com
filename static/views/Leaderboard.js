@@ -5,7 +5,7 @@ RatView = Marionette.ItemView.extend({
 
   template: Handlebars.compile(
     '<td>{{CMDRname}}</td>' +
-    '<td>{{rescues}}</td>'
+    '<td>{{successfulRescueCount}}</td>'
   )
 })
 
