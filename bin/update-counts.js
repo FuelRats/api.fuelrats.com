@@ -13,6 +13,7 @@ console.log('Zeroing out rat rescue counts...')
 
 Rat.update({}, {
   $set: {
+    rescueCount: 0,
     failedAssistCount: 0,
     failedRescueCount: 0,
     successfulAssistCount: 0,
