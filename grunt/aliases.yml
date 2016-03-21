@@ -1,7 +1,6 @@
 api:
   description: Start the api
   tasks:
-  - 'docs'
   - 'express'
   - 'watch'
 
@@ -14,3 +13,10 @@ docs:
   description: Build the docs
   tasks:
   - 'run:docs'
+
+test:
+  description: Run the tests
+  tasks:
+  - 'run:syncDatabase'
+  - 'express'
+  - 'mochaTest'

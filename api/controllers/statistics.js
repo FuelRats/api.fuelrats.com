@@ -15,7 +15,7 @@ exports.get = function (request, response, next) {
     response.status(200)
     next()
   }, function (errors) {
-    console.log(errors)
+    winston.error(errors)
   })
 }
 
@@ -108,7 +108,7 @@ let getLeaderboardRats = function () {
   return Rat.aggregate([
     {
       $match: {
-        rescueCount: {
+        successfulRescueCount: {
           $gte: 10
         }
       }
@@ -116,15 +116,16 @@ let getLeaderboardRats = function () {
     {
       $project: {
         CMDRname: 1,
+        failedAssistCount: 1,
+        failedRescueCount: 1,
         platform: 1,
-        rescues: {
-          $size: '$rescues'
-        }
+        successfulAssistCount: 1,
+        successfulRescueCount: 1
       }
     },
     {
       $sort: {
-        rescues: -1
+        successfulRescueCount: -1
       }
     }
   ]).exec()

@@ -60,6 +60,9 @@ let options = {
   test: false
 }
 
+if (process.env.CONTINOUS_INTEGRATION) {
+  options.logging = false
+}
 
 
 // Parse command line arguments
@@ -257,6 +260,14 @@ app.use(function (request, response) {
   }
 
   response.send(response.model)
+})
+
+Object.keys(mongoose.models).forEach(function (modelName, index) {
+  let model = mongoose.models[modelName]
+
+  if (model.createMapping) {
+    model.createMapping()
+  }
 })
 
 
