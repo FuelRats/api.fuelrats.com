@@ -14,7 +14,7 @@ exports.get = function (request, response, next) {
 
     response.model.data = data
     response.model.meta = meta
-    response.status = 200
+    response.status = 400
     next()
   }, function (error) {
     response.model.errors.push(error.error)
@@ -45,9 +45,7 @@ exports.getById = function (request, response, next) {
 
 exports.read = function (query) {
   return new Promise(function (resolve, reject) {
-    let filter = {
-      sort: 'createdAt:desc'
-    }
+    let filter = {}
     let dbQuery = {}
 
     filter.size = parseInt(query.limit) || 25
@@ -179,7 +177,7 @@ exports.put = function (request, response, next) {
 
   exports.update(request.body, {}, request.params).then(function (data) {
     response.model.data = data.data
-    response.status(200)
+    response.status(201)
     next()
   }, function (error) {
     response.model.errors.push(error.error)
@@ -240,10 +238,6 @@ exports.update = function (data, client, query) {
           })
         }
       })
-    } else {
-      let error = ErrorModels.missing_required_field
-      error.detail = 'id'
-      reject({ error: error, meta: {} })
     }
   })
 }

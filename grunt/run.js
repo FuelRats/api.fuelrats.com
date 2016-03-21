@@ -9,11 +9,5 @@ module.exports = {
     args: [
       './bin/import'
     ]
-  },
-
-  syncDatabase: {
-    args: [
-      './bin/sync-index'
-    ]
   }
 }

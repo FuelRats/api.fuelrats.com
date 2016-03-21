@@ -5,8 +5,8 @@ let winston = require('winston')
 
 mongoose.Promise = global.Promise
 
-let Schema = mongoose.Schema
 
+let Schema = mongoose.Schema
 
 
 
@@ -25,14 +25,6 @@ let RatSchema = new Schema({
   data: {
     default: {},
     type: Schema.Types.Mixed
-  },
-  failedAssistCount: {
-    default: 0,
-    type: Number
-  },
-  failedRescueCount: {
-    default: 0,
-    type: Number
   },
   lastModified: {
     type: Date
@@ -66,14 +58,6 @@ let RatSchema = new Schema({
     index: true,
     type: Number
   },
-  successfulAssistCount: {
-    default: 0,
-    type: Number
-  },
-  successfulRescueCount: {
-    default: 0,
-    type: Number
-  },
   user: {
     type: Schema.Types.ObjectId,
     ref: 'User'
@@ -83,6 +67,51 @@ let RatSchema = new Schema({
 })
 
 
+RatSchema.index({
+  CMDRname: 'text'
+})
+
+
+let linkRescues = function (next) {
+  var rat
+
+  rat = this
+
+  rat.rescues = []
+
+  mongoose.models.Rescue.update({
+    $text: {
+      $search: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+      $caseSensitive: false,
+      $diacriticSensitive: false
+    }
+  }, {
+    $set: {
+      platform: rat.platform
+    },
+    $pull: {
+      unidentifiedRats: rat.CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
+    },
+    $push: {
+      rats: rat._id
+    }
+  })
+  .then(function () {
+    mongoose.models.Rescue.find({
+      rats: rat._id
+    }).then(function (rescues) {
+      rescues.forEach(function (rescue) {
+        rat.rescues.push(rescue._id)
+      })
+      if (rat.rescues) {
+        rat.rescueCount = rat.rescues.length
+      } else {
+        rat.rescueCount = 0
+      }
+      next()
+    }).catch(next)
+  })
+}
 
 
 
@@ -127,10 +156,10 @@ let indexSchema = function (rat) {
 
 
 
-
 RatSchema.pre('save', sanitizeInput)
 RatSchema.pre('save', updateTimestamps)
 RatSchema.pre('save', normalizePlatform)
+RatSchema.pre('save', linkRescues)
 
 RatSchema.pre('update', sanitizeInput)
 RatSchema.pre('update', updateTimestamps)
@@ -139,13 +168,11 @@ RatSchema.plugin(require('mongoosastic'))
 
 RatSchema.post('save', indexSchema)
 
+
 RatSchema.set('toJSON', {
   virtuals: true
 })
 
-RatSchema.index({
-  CMDRname: 'text'
-})
 
 if (mongoose.models.Rat) {
   module.exports = mongoose.model('Rat')

@@ -16,7 +16,7 @@ exports.assign = function (request, response, next) {
   let ratId = request.params.ratId
 
   let update = {
-    $addToSet: {
+    $push: {
       rats: ratId
     }
   }
@@ -75,10 +75,12 @@ exports.addQuote = function (request, response, next) {
   let id = request.params.id
 
   let update = {
-    $addToSet: {
+    $push: {
       quotes: quote
     }
   }
+
+  console.log( request.body )
 
   let options = {
     new: true
@@ -107,7 +109,7 @@ exports.get = function (request, response, next) {
 
     response.model.data = data
     response.model.meta = meta
-    response.status = 200
+    response.status = 400
     next()
   }, function (error) {
     response.model.errors.push(error.error)
@@ -131,6 +133,8 @@ exports.getById = function (request, response, next) {
       response.status(200)
     }
 
+    console.log(rescue.quotes)
+
     next()
   })
 }
@@ -139,9 +143,7 @@ exports.getById = function (request, response, next) {
 // =============================================================================
 exports.read = function (query) {
   return new Promise(function (resolve, reject) {
-    let filter = {
-      sort: 'createdAt:desc'
-    }
+    let filter = {}
     let dbQuery = {}
 
     filter.size = parseInt(query.limit) || 25
@@ -179,7 +181,6 @@ exports.read = function (query) {
           error: errorObj,
           meta: {}
         })
-
       } else {
         let meta = {
           count: queryData.hits.hits.length,
@@ -193,7 +194,6 @@ exports.read = function (query) {
         queryData.hits.hits.forEach(function (rescue) {
           rescue._source._id = rescue._id
           rescue._source.score = rescue._score
-
           data.push(rescue._source)
         })
 
@@ -230,6 +230,8 @@ exports.create = function (query, client) {
       query.rats = query.rats.split(',')
     }
 
+    query.unidentifiedRats = []
+
     if (query.rats) {
       query.rats.forEach(function (rat) {
         if (typeof rat === 'string') {
@@ -237,16 +239,14 @@ exports.create = function (query, client) {
             let CMDRname = rat.trim()
             query.rats = _.without(query.rats, CMDRname)
             find = Rat.findOne({
-              $text: {
-                $search: CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
-                $caseSensitive: false,
-                $diacriticSensitive: false
-              }
+              CMDRname: CMDRname
             })
 
             find.then(function (rat) {
               if (rat) {
                 query.rats.push(rat._id)
+              } else {
+                query.unidentifiedRats.push(CMDRname)
               }
             })
 
@@ -263,11 +263,7 @@ exports.create = function (query, client) {
       if (typeof query.firstLimpet === 'string') {
         if (!mongoose.Types.ObjectId.isValid(query.firstLimpet)) {
           let firstLimpetFind = Rat.findOne({
-            $text: {
-              $search: CMDRname.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
-              $caseSensitive: false,
-              $diacriticSensitive: false
-            }
+            CMDRname: query.firstLimpet.trim()
           })
 
           firstLimpetFind.then(function (rat) {
@@ -283,7 +279,6 @@ exports.create = function (query, client) {
         query.firstLimpet = query.firstLimpet._id
       }
     }
-
     Promise.all(finds).then(function () {
       Rescue.create(query, function (error, rescue) {
         if (error) {
@@ -317,7 +312,7 @@ exports.put = function (request, response, next) {
 
   exports.update(request.body, {}, request.params).then(function (data) {
     response.model.data = data.data
-    response.status(200)
+    response.status(201)
     next()
   }, function (error) {
     response.model.errors.push(error)
@@ -351,7 +346,7 @@ exports.update = function (data, client, query) {
         } else {
           for (let key in data) {
             if (key === 'client') {
-              _.extend(rescue.client, data.client)
+              _.extend(rescue.client, data)
             } else {
               rescue[key] = data[key]
             }
@@ -380,10 +375,6 @@ exports.update = function (data, client, query) {
           })
         }
       })
-    } else {
-      let error = ErrorModels.missing_required_field
-      error.detail = 'id'
-      reject({ error: error, meta: {} })
     }
   })
 }

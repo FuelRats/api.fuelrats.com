@@ -45,8 +45,10 @@ let RescueSchema = new Schema({
     type: Boolean
   },
   firstLimpet: {
-    type: Schema.Types.ObjectId,
-    ref: 'Rat'
+    type: {
+      type: Schema.Types.ObjectId,
+      ref: 'Rat'
+    }
   },
   lastModified: {
     type: Date
@@ -101,47 +103,65 @@ let RescueSchema = new Schema({
 })
 
 
-
+RescueSchema.index({ unidentifiedRats: 'text' })
 
 
 let linkRats = function (next) {
-  let rescue = this
-  let updates = []
-  let countPrefix = rescue.successful ? 'successful' : 'failed'
-  let assistUpdate = {
-    $inc: {
-      rescueCount: 1
-    },
-    $addToSet: {
-      rescues: rescue._id
-    }
-  }
-  let firstLimpetUpdate = {
-    $inc: {
-      rescueCount: 1
-    },
-    $addToSet: {
-      rescues: rescue._id
-    }
-  }
+  var finds, rescue, updates
 
-  assistUpdate.$inc[countPrefix + 'AssistCount'] = 1
-  firstLimpetUpdate.$inc[countPrefix + 'RescueCount'] = 1
+  finds = []
+  rescue = this
+  updates = []
 
   rescue.rats = rescue.rats || []
 
-  rescue.rats = _.reject(rescue.rats, function (rat) {
-    return rat.toString() === rescue.firstLimpet.toString()
-  })
+  rescue.unidentifiedRats = rescue.unidentifiedRats || []
 
-  rescue.rats.forEach(function (rat, index, rats) {
-    updates.push(mongoose.models.Rat.findByIdAndUpdate(rat, assistUpdate))
-  })
+  rescue.unidentifiedRats.forEach(function (rat) {
+    var find
 
-  updates.push(mongoose.models.Rat.findByIdAndUpdate(rescue.firstLimpet, firstLimpetUpdate))
+    updates.push(mongoose.models.Rat.update({
+      $text: {
+        $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+        $caseSensitive: false,
+        $diacriticSensitive: false
+      }
+    }, {
+      $inc: {
+        rescueCount: 1
+      },
+      $push: {
+        rescues: rescue._id
+      }
+    }))
+
+    find = mongoose.models.Rat.findOne({
+      $text: {
+        $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+        $caseSensitive: false,
+        $diacriticSensitive: false
+      }
+    })
+
+    find.then(function (_rat) {
+      if (_rat) {
+        rescue.rats.push(_rat._id)
+        rescue.unidentifiedRats = _.without(rescue.unidentifiedRats, _rat.CMDRname)
+        if(_rat.platform && _rat.platform != null) {
+          rescue.platform = _rat.platform
+        }
+      }
+    })
+
+    finds.push(find)
+  })
 
   Promise.all(updates)
-  .then(next)
+  .then(function () {
+    Promise.all(finds)
+    .then(next)
+    .catch(next)
+  })
   .catch(next)
 }
 
@@ -152,7 +172,9 @@ let normalizePlatform = function (next) {
 }
 
 let updateTimestamps = function (next) {
-  let timestamp = new Date()
+  var timestamp
+
+  timestamp = new Date()
 
   if (!this.open) {
     this.active = false
@@ -167,8 +189,9 @@ let updateTimestamps = function (next) {
   next()
 }
 
+
 let sanitizeInput = function (next) {
-  let rescue = this
+  var rescue = this
 
   if (rescue.system) {
     rescue.system = rescue.system.trim()
@@ -184,14 +207,14 @@ let sanitizeInput = function (next) {
     }
   }
 
-  if (rescue.unidentifiedRats) {
+  if(rescue.unidentifiedRats) {
     for (let i = 0; i < rescue.unidentifiedRats.length; i++) {
       rescue.unidentifiedRats[i] = rescue.unidentifiedRats[i].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
     }
   }
 
-  if (rescue.quotes) {
-    for(let i = 0; i < rescue.quotes.length; i++) {
+  if(rescue.quotes) {
+    for (let i = 0; i < rescue.quotes.length; i++) {
       rescue.quotes[i] = rescue.quotes[i].trim()
     }
   }
@@ -233,6 +256,7 @@ RescueSchema.post('save', indexSchema)
 RescueSchema.set('toJSON', {
   virtuals: true
 })
+
 
 if (mongoose.models.Rescue) {
   module.exports = mongoose.model('Rescue')
