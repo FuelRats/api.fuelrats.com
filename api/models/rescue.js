@@ -107,7 +107,29 @@ let RescueSchema = new Schema({
 let linkRats = function (next) {
   let rescue = this
   let updates = []
-  let increment = {}
+  let countPrefix = rescue.successful ? 'successful' : 'failed'
+  let assistUpdate = {
+    $inc: {
+      rescueCount: 1
+    },
+    $addToSet: {
+      rescues: rescue._id
+    }
+  }
+  let firstLimpetUpdate = {
+    $inc: {
+      rescueCount: 1
+    },
+    $addToSet: {
+      rescues: rescue._id
+    }
+  }
+
+  assistUpdate.$inc[countPrefix + 'AssistCount'] = 1
+  firstLimpetUpdate.$inc[countPrefix + 'RescueCount'] = 1
+
+  console.log('assistUpdate', assistUpdate)
+  console.log('firstLimpetUpdate', firstLimpetUpdate)
 
   rescue.rats = rescue.rats || []
 
@@ -116,40 +138,12 @@ let linkRats = function (next) {
   })
 
   rescue.rats.forEach(function (rat, index, rats) {
-    if (rescue.successful) {
-      increment.successfulAssistCount = 1
-    } else {
-      increment.failedAssistCount = 1
-    }
-
-    updates.push(mongoose.models.Rat.findByIdAndUpdate(rat, {
-      $inc: {
-        successfulAssistCount: 1,
-        rescueCount: 1
-      },
-      $addToSet: {
-        rescues: rescue._id
-      }
-    }))
+    console.log('Updating', rat)
+    updates.push(mongoose.models.Rat.findByIdAndUpdate(rat, assistUpdate))
   })
 
-  if (rescue.firstLimpet) {
-    if (rescue.successful) {
-      increment.successfulRescueCount = 1
-    } else {
-      increment.failedRescueCount = 1
-    }
-
-    updates.push(mongoose.models.Rat.findByIdAndUpdate(rescue.firstLimpet, {
-      $inc: {
-        successfulRescueCount: 1,
-        rescueCount: 1
-      },
-      $addToSet: {
-        rescues: rescue._id
-      }
-    }))
-  }
+  console.log('Updating', rescue.firstLimpet)
+  updates.push(mongoose.models.Rat.findByIdAndUpdate(rescue.firstLimpet, firstLimpetUpdate))
 
   Promise.all(updates)
   .then(next)
