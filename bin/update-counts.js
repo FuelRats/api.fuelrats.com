@@ -2,10 +2,12 @@
 
 let _ = require('underscore')
 let mongoose = require('mongoose')
+let ProgressBar = require('progress')
 let winston = require('winston')
 
 let Rat = require('../api/models/rat')
 let Rescue = require('../api/models/rescue')
+let updateBar
 
 mongoose.connect('mongodb://localhost/fuelrats')
 
@@ -30,6 +32,10 @@ Rat.update({}, {
     let saves = []
 
     console.log('Updating rat rescue counts...')
+    updateBar = new ProgressBar('[:bar] :percent :etas', {
+      total: rescues.length,
+      width: 40
+    })
 
     rescues.forEach(function (rescue, index) {
       let updates = []
@@ -85,7 +91,13 @@ Rat.update({}, {
       }
 
       updates.forEach(function (update) {
-        saves.push(Rat.findByIdAndUpdate(update.id, update.update))
+        let ratUpdate = Rat.findByIdAndUpdate(update.id, update.update)
+
+        ratUpdate.then(function () {
+          updateBar.tick()
+        })
+
+        saves.push(ratUpdate)
       })
     })
 
