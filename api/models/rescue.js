@@ -128,9 +128,6 @@ let linkRats = function (next) {
   assistUpdate.$inc[countPrefix + 'AssistCount'] = 1
   firstLimpetUpdate.$inc[countPrefix + 'RescueCount'] = 1
 
-  console.log('assistUpdate', assistUpdate)
-  console.log('firstLimpetUpdate', firstLimpetUpdate)
-
   rescue.rats = rescue.rats || []
 
   rescue.rats = _.reject(rescue.rats, function (rat) {
@@ -138,11 +135,9 @@ let linkRats = function (next) {
   })
 
   rescue.rats.forEach(function (rat, index, rats) {
-    console.log('Updating', rat)
     updates.push(mongoose.models.Rat.findByIdAndUpdate(rat, assistUpdate))
   })
 
-  console.log('Updating', rescue.firstLimpet)
   updates.push(mongoose.models.Rat.findByIdAndUpdate(rescue.firstLimpet, firstLimpetUpdate))
 
   Promise.all(updates)
