@@ -18,6 +18,8 @@ Rat.update({}, {
     successfulAssistCount: 0,
     successfulRescueCount: 0
   }
+}, {
+  multi: true
 })
 .then(function () {
   console.log('Loading rescues...')
