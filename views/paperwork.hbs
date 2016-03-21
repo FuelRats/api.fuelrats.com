@@ -12,13 +12,19 @@
     </div>
 
     <div class="form-group">
-      <label for="rats">Who arrived for the rescue?</label>
+      <label for="firstLimpet">Who fired the first limpet?</label>
+      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}">
+    </div>
+
+    <div class="form-group">
+      <label for="rats">Who else arrived for the rescue?</label>
       <input type="text" name="rats" id="rats" class="form-control" value="{{ rat.CMDRname }}" required>
     </div>
 
     <div class="form-group">
-      <label for="firstLimpet">Who fired the first limpet?</label>
-      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}">
+      <label for="system">Where did it happen?</label>
+      <small>In what star system did the rescue took place? (put "n/a" if not applicable)</small>
+      <input type="text" name="system" id="system" class="form-control" required autofocus>
     </div>
 
     <div class="form-group">
@@ -36,12 +42,6 @@
           Xbox One
         </label>
       </div>
-    </div>
-
-    <div class="form-group">
-      <label for="system">Where did it happen?</label>
-      <small>In what star system did the rescue took place? (put "n/a" if not applicable)</small>
-      <input type="text" name="system" id="system" class="form-control" required autofocus>
     </div>
 
     <div class="form-group">
