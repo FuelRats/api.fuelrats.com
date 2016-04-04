@@ -35,6 +35,16 @@ let UserSchema = new Schema({
       }
     }
   },
+  group: {
+    default: 'normal',
+    enum: [
+      'normal',
+      'overseer',
+      'moderator',
+      'admin'
+    ],
+    type: String
+  },
   resetToken: String,
   resetTokenExpire: Date
 })
