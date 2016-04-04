@@ -213,6 +213,7 @@ router.get('/rescues', rescue.get)
 router.post('/rescues', rescue.post)
 router.get('/rescues/:id', rescue.getById)
 router.put('/rescues/:id', rescue.put)
+router.put('/rescues/:id/addquote', rescue.putAddQuote)
 router.put('/rescues/:rescueId/assign/:ratId', rescue.assign)
 router.put('/rescues/:rescueId/unassign/:ratId', rescue.unassign)
 

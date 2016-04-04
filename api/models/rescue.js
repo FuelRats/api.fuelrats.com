@@ -73,9 +73,9 @@ let RescueSchema = new Schema({
     type: String
   },
   quotes: {
+    default: [],
     type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Quote'
+      type: String
     }]
   },
   rats: {

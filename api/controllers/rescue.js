@@ -70,32 +70,53 @@ exports.unassign = function (request, response, next) {
 
 // ADD QUOTE
 // =============================================================================
-exports.addQuote = function (request, response, next) {
+exports.putAddQuote = function (request, response, next) {
+  console.log('addquote')
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
-  let id = request.params.id
-
-  let update = {
-    $push: {
-      quotes: quote
-    }
-  }
-
-  console.log( request.body )
-
-  let options = {
-    new: true
-  }
-
-  Rescue.findByIdAndUpdate(rescueId, update, options)
-  .then(function (rescue) {
-    response.model.data = rescue
+  exports.addquote(request.body.quotes, null, request.params).then(function (data) {
+    response.model.data = data
     response.status(200)
     next()
-  })
-  .catch(function (error) {
+  }, function (error) {
     response.model.errors.push(error)
     response.status(400)
-    next()
+  })
+
+}
+
+exports.addquote = function (data, client, query) {
+  console.log(data)
+  return new Promise(function (resolve, reject) {
+    let update = {
+      '$push': {
+        quotes: data
+      }
+    }
+
+    let options = {
+      new: true
+    }
+
+    console.log(query.id)
+    Rescue.findByIdAndUpdate(query.id, update, options, function (err, rescue) {
+      console.log('findbyid')
+      if (err) {
+        console.log(err)
+        reject({ error: err, meta: {} })
+      } else if (!rescue) {
+        console.log('no rescue')
+        reject({ error: '404', meta: {} })
+      } else {
+        console.log('update')
+        let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+          return cl.clientId !== client.clientId
+        })
+        websocket.broadcast(allClientsExcludingSelf, {
+          action: 'rescue:updated'
+        }, rescue)
+        resolve({ data: rescue, meta: {} })
+      }
+    })
   })
 }
 
@@ -132,8 +153,6 @@ exports.getById = function (request, response, next) {
       response.model.data = rescue
       response.status(200)
     }
-
-    console.log(rescue.quotes)
 
     next()
   })
