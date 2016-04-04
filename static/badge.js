@@ -105,17 +105,17 @@ Rat = Backbone.Model.extend({
     var rescues
     rescues = new Rescues
 
-    this.once('sync', () => {
+    this.once('sync', function () {
       this.set('joined', moment(this.get('joined')))
 
       rescues.fetch({
         data: $.param({
           rats: this.CMDRname
         })
-      }).then(() => {
+      }).then(function () {
         this.set('rescues', rescues)
-      })
-    })
+      }.bind(this))
+    }.bind(this))
   }
 })
 
@@ -141,6 +141,6 @@ rat.fetch({
   })
 })
 
-rat.on('sync', () => {
+rat.on('sync', function () {
   renderBadge(rat)
 })
