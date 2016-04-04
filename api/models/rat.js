@@ -33,12 +33,6 @@ let RatSchema = new Schema({
     default: Date.now(),
     type: Date
   },
-  nicknames: {
-    default: [],
-    type: [{
-      type: String
-    }]
-  },
   platform: {
     default: 'pc',
     enum: [

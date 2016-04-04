@@ -15,6 +15,12 @@ let UserSchema = new Schema({
       ref: 'Rat'
     }]
   },
+  nicknames: {
+    default: [],
+    type: [{
+      type: String
+    }]
+  },
   drilled: {
     default: {
       dispatch: false,
