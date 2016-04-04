@@ -33,7 +33,7 @@ exports.get = function (request, response) {
               rescue.lastModified = moment(rescue.lastModified)
 
 
-              if (rescue.firstLimpet.toString() !== CMDR.id) {
+              if (rescue.firstLimpet[0].toString() !== CMDR.id) {
                 rescue.assist = true
               }
             })
