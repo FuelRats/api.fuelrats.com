@@ -45,10 +45,10 @@ let RescueSchema = new Schema({
     type: Boolean
   },
   firstLimpet: {
-    type: {
+    type: [{
       type: Schema.Types.ObjectId,
       ref: 'Rat'
-    }
+    }]
   },
   lastModified: {
     type: Date
@@ -73,9 +73,9 @@ let RescueSchema = new Schema({
     type: String
   },
   quotes: {
+    default: [],
     type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Quote'
+      type: String
     }]
   },
   rats: {

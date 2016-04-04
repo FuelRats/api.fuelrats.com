@@ -15,6 +15,12 @@ let UserSchema = new Schema({
       ref: 'Rat'
     }]
   },
+  nicknames: {
+    default: [],
+    type: [{
+      type: String
+    }]
+  },
   drilled: {
     default: {
       dispatch: false,
@@ -28,6 +34,16 @@ let UserSchema = new Schema({
         type: Boolean
       }
     }
+  },
+  group: {
+    default: 'normal',
+    enum: [
+      'normal',
+      'overseer',
+      'moderator',
+      'admin'
+    ],
+    type: String
   },
   resetToken: String,
   resetTokenExpire: Date
