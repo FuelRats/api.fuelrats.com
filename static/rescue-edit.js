@@ -1,6 +1,6 @@
 'use strict'
 
-/* global Backbone, _, Messenger, Handlebars, Marionette */
+/* global Backbone, _, Handlebars, Marionette */
 
 $(function () {
   var yepNopeCollection, Rescue, rescue, RatAdderView, RatListItemView, RatListView, DetailsView
@@ -12,16 +12,6 @@ $(function () {
     value: true,
     label: 'Yes'
   }]
-
-  Messenger.options = {
-    extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-left',
-    maxMessages: 3,
-    messageDefaults: {
-      retry: false,
-      showCloseButton: true
-    },
-    theme: 'air'
-  }
 
   Rescue = Backbone.Model.extend({
     idAttribute: '_id',
@@ -202,11 +192,9 @@ $(function () {
 
     rescue.save(null, {
       success: function () {
-        Messenger().success('Saved')
       },
 
       error: function () {
-        Messenger().error('Ruh-roh... something went wrong. :-(')
       }
     })
   })
