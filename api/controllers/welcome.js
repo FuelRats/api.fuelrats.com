@@ -31,6 +31,11 @@ exports.get = function (request, response) {
             CMDR.rescues.forEach(function (rescue) {
               rescue.createdAt = moment(rescue.createdAt)
               rescue.lastModified = moment(rescue.lastModified)
+
+
+              if (rescue.firstLimpet.toString() !== CMDR.id) {
+                rescue.assist = true
+              }
             })
 
             CMDR.rescues = _.sortBy(CMDR.rescues, 'createdAt').reverse()

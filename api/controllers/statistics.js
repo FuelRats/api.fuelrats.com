@@ -108,7 +108,7 @@ let getLeaderboardRats = function () {
   return Rat.aggregate([
     {
       $match: {
-        rescueCount: {
+        successfulRescueCount: {
           $gte: 10
         }
       }
@@ -117,14 +117,12 @@ let getLeaderboardRats = function () {
       $project: {
         CMDRname: 1,
         platform: 1,
-        rescues: {
-          $size: '$rescues'
-        }
+        successfulRescueCount: 1
       }
     },
     {
       $sort: {
-        rescues: -1
+        successfulRescueCount: -1
       }
     }
   ]).exec()
