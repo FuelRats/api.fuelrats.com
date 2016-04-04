@@ -71,7 +71,6 @@ exports.unassign = function (request, response, next) {
 // ADD QUOTE
 // =============================================================================
 exports.putAddQuote = function (request, response, next) {
-  console.log('addquote')
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
   exports.addquote(request.body.quotes, null, request.params).then(function (data) {
     response.model.data = data
@@ -85,7 +84,6 @@ exports.putAddQuote = function (request, response, next) {
 }
 
 exports.addquote = function (data, client, query) {
-  console.log(data)
   return new Promise(function (resolve, reject) {
     let update = {
       '$push': {
@@ -97,17 +95,12 @@ exports.addquote = function (data, client, query) {
       new: true
     }
 
-    console.log(query.id)
     Rescue.findByIdAndUpdate(query.id, update, options, function (err, rescue) {
-      console.log('findbyid')
       if (err) {
-        console.log(err)
         reject({ error: err, meta: {} })
       } else if (!rescue) {
-        console.log('no rescue')
         reject({ error: '404', meta: {} })
       } else {
-        console.log('update')
         let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
           return cl.clientId !== client.clientId
         })
