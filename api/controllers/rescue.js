@@ -10,61 +10,71 @@ let websocket = require('../websocket')
 
 // ASSIGN
 // =============================================================================
-exports.assign = function (request, response, next) {
+exports.putAssign = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
-  let rescueId = request.params.rescueId
-  let ratId = request.params.ratId
 
-  let update = {
-    $push: {
-      rats: ratId
-    }
-  }
-
-  let options = {
-    new: true
-  }
-
-  Rescue.findByIdAndUpdate(rescueId, update, options)
-  .then(function (rescue) {
-    response.model.data = rescue
+  exports.assign(request.params, null, request.params).then(function (data) {
+    response.model.data = data.data
     response.status(200)
     next()
-  })
-  .catch(function (error) {
-    response.model.errors.push(error)
+  }, function (error) {
+    response.model.errors.push(error.error)
     response.status(400)
-    next()
+  })
+}
+
+exports.assign = function (data, client, query) {
+  return new Promise(function (resolve, reject) {
+    let update = {
+      $addToSet: {
+        rats: data.ratId
+      }
+    }
+
+    let options = {
+      new: true
+    }
+
+    Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
+      resolve({ data: rescue, meta: {} })
+    }).catch(function (error) {
+      reject({ error: error, meta: {} })
+    })
   })
 }
 
 // UNASSIGN
 // =============================================================================
-exports.unassign = function (request, response, next) {
+exports.putUnassign = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
-  let rescueId = request.params.rescueId
-  let ratId = request.params.ratId
 
-  let update = {
-    $pull: {
-      rats: ratId
-    }
-  }
-
-  let options = {
-    new: true
-  }
-
-  Rescue.findByIdAndUpdate(rescueId, update, options)
-  .then(function (rescue) {
-    response.model.data = rescue
+  exports.unassign(request.params, null, request.params).then(function (data) {
+    response.model.data = data.data
     response.status(200)
     next()
-  })
-  .catch(function (error) {
-    response.model.errors.push(error)
+  }, function (error) {
+    response.model.errors.push(error.error)
     response.status(400)
-    next()
+  })
+}
+
+exports.unassign = function (data, client, query) {
+  return new Promise(function (resolve, reject) {
+    let update = {
+      $pull: {
+        rats: data.ratId
+      }
+    }
+
+    let options = {
+      new: true
+    }
+
+    Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
+      resolve({ data: rescue, meta: {} })
+    }).catch(function (error) {
+      reject({ error: error, meta: {} })
+    })
   })
 }
 
@@ -73,11 +83,11 @@ exports.unassign = function (request, response, next) {
 exports.putAddQuote = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
   exports.addquote(request.body.quotes, null, request.params).then(function (data) {
-    response.model.data = data
+    response.model.data = data.data
     response.status(200)
     next()
   }, function (error) {
-    response.model.errors.push(error)
+    response.model.errors.push(error.error)
     response.status(400)
   })
 
