@@ -7,6 +7,7 @@ let Rat = require('../models/rat')
 let Rescue = require('../models/rescue')
 let ErrorModels = require('../errors')
 let websocket = require('../websocket')
+let Permission = require('../permission')
 
 // ASSIGN
 // =============================================================================

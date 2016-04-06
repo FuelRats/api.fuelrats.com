@@ -1,18 +1,23 @@
 'use strict'
 
+let ErrorModels = require('./errors')
+
 const permissions = {
   normal: [
     'rescue.create',
-    'rat.create'
+    'rat.*.self',
+    'client.*.self'
   ],
   overseer: [
+    'client.*.self',
     'rescue.create',
-    'rescue.edit',
-    'rat.create',
-    'rat.edit',
+    'rescue.update',
+    'rat.update',
+    'rat.update',
     'drill.*'
   ],
   moderator: [
+    'client.*.self',
     'rescue.*',
     'rat.*',
     'drill.*'
@@ -24,16 +29,32 @@ const permissions = {
 
 class Permission {
   static require (permission, user) {
+    return new Promise(function (resolve, reject) {
+      if (Permission.granted(permission, user)) {
+        resolve()
+      } else {
+        let error = Permission.permissionError(permission)
+        reject(error)
+      }
+    })
+  }
+
+  static granted (permission, user) {
     let userLevel = user.group
     let hasPermission = false
+    permission = permission.split('.')
 
     for (let currentPermission of permissions[userLevel]) {
-      permission = permission.split('.')
+      currentPermission = currentPermission.split('.')
       let currentNodeIndex = 0
 
       while (currentNodeIndex < permission.length) {
-        if (permission[currentNodeIndex] === '*') {
-          currentNodeIndex = (permission.length - 1)
+        if (currentPermission[currentNodeIndex] === '*') {
+          if (currentNodeIndex === currentPermission.length) {
+            currentNodeIndex = permission.length
+          } else {
+            currentNodeIndex += 1
+          }
         }
         if (permission[currentNodeIndex] !== currentPermission[currentNodeIndex]) {
           break
@@ -42,13 +63,25 @@ class Permission {
         currentNodeIndex += 1
       }
 
-      if (currentNodeIndex === (permission.length - 1)) {
+      if (currentNodeIndex === permission.length) {
         hasPermission = true
         break
       }
     }
     return hasPermission
   }
+
+  static authenticationError (permission) {
+    let error = ErrorModels.not_authenticated
+    error.detail = permission
+    return error
+  }
+
+  static permissionError (permission) {
+    let error = ErrorModels.no_permission
+    error.detail = permission
+    return error
+  }
 }
 
-exports = Permission
+module.exports = Permission

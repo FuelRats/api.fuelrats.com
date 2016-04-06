@@ -4,6 +4,7 @@ let _ = require('underscore')
 let Rat = require('../models/rat')
 let ErrorModels = require('../errors')
 let websocket = require('../websocket')
+let Permission = require('../permission')
 
 // GET
 // =============================================================================
@@ -118,7 +119,7 @@ exports.read = function (query) {
 // POST
 // =============================================================================
 exports.post = function (request, response, next) {
-  exports.create(request.body, {}).then(function (res) {
+  exports.create(request.body, request).then(function (res) {
     response.model.data = res.data
     response.status(201)
     next()
@@ -129,44 +130,54 @@ exports.post = function (request, response, next) {
   })
 }
 
-exports.create = function (query, client) {
+exports.create = function (query, connection) {
   return new Promise(function (resolve, reject) {
-    Rat.create(query, function (error, rat) {
-      if (error) {
-        let errorTypes = Object.keys(error.errors)
+    if (connection.isUnauthenticated()) {
+      let error = Permission.authenticationError('rat.create')
+      reject({ error: error })
+    }
 
-        for (let errorType of errorTypes) {
-          error = error.errors[errorType].properties
+    Permission.require('rat.create', connection.user).then(function () {
+      Rat.create(query, function (error, rat) {
+        if (error) {
+          let errorTypes = Object.keys(error.errors)
 
-          if (error.type === 'required') {
-            let errorModel = ErrorModels.missing_required_field
-            errorModel.detail = error.path
-            reject({
-              error: errorModel,
-              meta: {}
-            })
-          } else {
-            let errorModel = ErrorModels.server_error
-            errorModel.detail = error.path
-            reject({
-              error: errorModel,
-              meta: {}
-            })
+          for (let errorType of errorTypes) {
+            error = error.errors[errorType].properties
+
+            if (error.type === 'required') {
+              let errorModel = ErrorModels.missing_required_field
+              errorModel.detail = error.path
+              reject({
+                error: errorModel,
+                meta: {}
+              })
+            } else {
+              let errorModel = ErrorModels.server_error
+              errorModel.detail = error.path
+              reject({
+                error: errorModel,
+                meta: {}
+              })
+            }
           }
+        } else {
+          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+            return cl.clientId !== connection.clientId
+          })
+          websocket.broadcast(allClientsExcludingSelf, {
+            action: 'rat:created'
+          }, rat)
+          resolve({
+            data: rat,
+            meta: {}
+          })
         }
-      } else {
-        let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-          return cl.clientId !== client.clientId
-        })
-        websocket.broadcast(allClientsExcludingSelf, {
-          action: 'rat:created'
-        }, rat)
-        resolve({
-          data: rat,
-          meta: {}
-        })
-      }
+      })
+    }, function (err) {
+      reject({ error: err })
     })
+
   })
 }
 
@@ -175,7 +186,7 @@ exports.create = function (query, client) {
 exports.put = function (request, response, next) {
   response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-  exports.update(request.body, {}, request.params).then(function (data) {
+  exports.update(request.body, request, request.params).then(function (data) {
     response.model.data = data.data
     response.status(201)
     next()
@@ -188,56 +199,65 @@ exports.put = function (request, response, next) {
   })
 }
 
-exports.update = function (data, client, query) {
+exports.update = function (data, connection, query) {
   return new Promise(function (resolve, reject) {
-    if (query.id) {
-      Rat.findById(query.id, function (error, rat) {
-        if (error) {
-          let errorModel = ErrorModels.server_error
-          errorModel.detail = error
-          reject({
-            error: errorModel,
-            meta: {}
-          })
-        } else if (!rat) {
-          let errorModel = ErrorModels.not_found
-          errorModel.detail = query.id
-          reject({
-            error: errorModel,
-            meta: {}
-          })
-        } else {
-          for (let key in data) {
-            if (key === 'client') {
-              _.extend(rat.client, data)
-            } else {
-              rat[key] = data[key]
-            }
-          }
-
-          rat.save(function (error, rat) {
-            if (error) {
-              let errorModel = ErrorModels.server_error
-              errorModel.detail = error
-              reject({
-                error: errorModel,
-                meta: {}
-              })
-            } else {
-              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-                return cl.clientId !== client.clientId
-              })
-              websocket.broadcast(allClientsExcludingSelf, {
-                action: 'rat:updated'
-              }, rat)
-              resolve({
-                data: rat,
-                meta: {}
-              })
-            }
-          })
-        }
-      })
+    if (connection.isUnauthenticated()) {
+      let error = Permission.authenticationError('rat.update')
+      reject({ error: error })
     }
+
+    Permission.require('rat.update', connection.user).then(function (data) {
+      if (query.id) {
+        Rat.findById(query.id, function (error, rat) {
+          if (error) {
+            let errorModel = ErrorModels.server_error
+            errorModel.detail = error
+            reject({
+              error: errorModel,
+              meta: {}
+            })
+          } else if (!rat) {
+            let errorModel = ErrorModels.not_found
+            errorModel.detail = query.id
+            reject({
+              error: errorModel,
+              meta: {}
+            })
+          } else {
+            for (let key in data) {
+              if (key === 'client') {
+                _.extend(rat.client, data)
+              } else {
+                rat[key] = data[key]
+              }
+            }
+
+            rat.save(function (error, rat) {
+              if (error) {
+                let errorModel = ErrorModels.server_error
+                errorModel.detail = error
+                reject({
+                  error: errorModel,
+                  meta: {}
+                })
+              } else {
+                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  return cl.clientId !== connection.clientId
+                })
+                websocket.broadcast(allClientsExcludingSelf, {
+                  action: 'rat:updated'
+                }, rat)
+                resolve({
+                  data: rat,
+                  meta: {}
+                })
+              }
+            })
+          }
+        })
+      }
+    }, function (error) {
+      reject({ error: error })
+    })
   })
 }
