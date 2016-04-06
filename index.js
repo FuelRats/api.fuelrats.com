@@ -124,13 +124,13 @@ app.use(passport.session())
 app.set('json spaces', 2)
 app.set('x-powered-by', false)
 
-let hostName = config.hostname
 let sslHostName = config.ssl.hostname
 
 let port = config.port || process.env.PORT
 let sslPort = config.ssl.port || process.env.SSL_PORT
 
 passport.use(User.createStrategy())
+// passport.use(Client.createStrategy())
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
 
@@ -144,6 +144,13 @@ app.use(passport.session())
 if (config.ssl.enabled) {
   app.use(forceSSL)
 }
+
+app.use(function (req, res, next) {
+  if (req.path != '/login' && req.session.returnTo) {
+    delete req.session.returnTo
+  }
+  next()
+})
 
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
@@ -201,7 +208,7 @@ router.get('/badge/:rat', badge.get)
 
 router.post('/register', register.post)
 
-router.post('/login', passport.authenticate('local'), login.post)
+router.post('/login', passport.authenticate('local', { successReturnToOrRedirect: '/welcome' }), login.post)
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
 
@@ -222,13 +229,13 @@ router.put('/rescues/:id/assign/:ratId', rescue.putAssign)
 router.put('/rescues/:id/unassign/:ratId', rescue.putUnassign)
 
 router.get('/users', user.get)
-//router.get('/users/:id', user.getById)
-//router.put('/users/:id', user.put)
-//router.post('/users', user.post)
+// router.get('/users/:id', user.getById)
+// router.put('/users/:id', user.put)
+// router.post('/users', user.post)
 
 router.get('/clients', client.httpGet)
-//router.get('/clients/:id', client.getById)
-//router.put('/clients/:id', client.put)
+// router.get('/clients/:id', client.getById)
+// router.put('/clients/:id', client.put)
 router.post('/clients', client.httpPost)
 
 router.get('/search/rescues', rescue.get)
@@ -251,11 +258,11 @@ router.get('/rescues/list', rescueAdmin.listRescues)
 router.get('/rescues/list/:page', rescueAdmin.listRescues)
 
 router.route('/oauth2/authorise')
-  .get(oauth2.authorization)
+  .get(auth.isAuthenticated, oauth2.authorization)
   .post(auth.isAuthenticated, oauth2.decision)
 
 // Create endpoint handlers for oauth2 token
-router.route('/oauth2/token').post(auth.isAuthenticated, oauth2.token)
+router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 
 router.get('/statistics', statistics.get)

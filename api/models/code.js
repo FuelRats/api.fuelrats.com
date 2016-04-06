@@ -7,22 +7,18 @@ let Schema = mongoose.Schema
 
 let CodeSchema = new Schema({
   value: {
-    type: String,
-    required: true
+    type: String
   },
   redirectUri: {
-    type: String,
-    required: true
+    type: String
   },
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   client: {
     type: Schema.Types.ObjectId,
-    ref: 'Client',
-    required: true
+    ref: 'Client'
   }
 })
 
