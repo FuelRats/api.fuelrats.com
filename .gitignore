@@ -110,3 +110,5 @@ $RECYCLE.BIN/
 views/docs.hbs
 
 .eslintrc.json
+
+static/style.min.css

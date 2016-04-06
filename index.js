@@ -32,14 +32,18 @@ if (fs.existsSync('./config.json')) {
 
 // Import models
 let User = require('./api/models/user')
+require('./api/models/client')
 
 // Import controllers
+let auth = require('./api/controllers/auth')
 let badge = require('./api/controllers/badge')
 let change_password = require('./api/controllers/change_password')
+let client = require('./api/controllers/client')
 let docs = require('./api/controllers/docs')
 let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
 let logout = require('./api/controllers/logout')
+let oauth2 = require('./api/controllers/oauth2')
 let paperwork = require('./api/controllers/paperwork')
 let rat = require('./api/controllers/rat')
 let register = require('./api/controllers/register')
@@ -218,7 +222,14 @@ router.put('/rescues/:id/assign/:ratId', rescue.putAssign)
 router.put('/rescues/:id/unassign/:ratId', rescue.putUnassign)
 
 router.get('/users', user.get)
-router.get('/users/:id', user.getById)
+//router.get('/users/:id', user.getById)
+//router.put('/users/:id', user.put)
+//router.post('/users', user.post)
+
+router.get('/clients', client.httpGet)
+//router.get('/clients/:id', client.getById)
+//router.put('/clients/:id', client.put)
+router.post('/clients', client.httpPost)
 
 router.get('/search/rescues', rescue.get)
 router.get('/search/rats', rat.get)
@@ -239,8 +250,15 @@ router.get('/rescues/edit/:id', rescueAdmin.editRescue)
 router.get('/rescues/list', rescueAdmin.listRescues)
 router.get('/rescues/list/:page', rescueAdmin.listRescues)
 
+router.route('/oauth2/authorise')
+  .get(oauth2.authorization)
+  .post(auth.isAuthenticated, oauth2.decision)
 
-router.get( '/statistics', statistics.get )
+// Create endpoint handlers for oauth2 token
+router.route('/oauth2/token').post(auth.isAuthenticated, oauth2.token)
+
+
+router.get('/statistics', statistics.get)
 
 // Register routes
 app.use(express.static(__dirname + '/static'))
