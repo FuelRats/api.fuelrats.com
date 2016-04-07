@@ -14,15 +14,18 @@ class ClientController {
       }
 
       query = _.extend(query, { user: connection.user })
-
-      Client.find(query, function (err, clients) {
-        if (err) {
-          let error = ErrorModels.server_error
-          error.detail = err
-          reject({ error: error })
-        } else {
-          resolve({ data: clients })
-        }
+      Permission.require('client.create.self', connection.user).then(function () {
+        Client.find(query, function (err, clients) {
+          if (err) {
+            let error = ErrorModels.server_error
+            error.detail = err
+            reject({ error: error })
+          } else {
+            resolve({ data: clients })
+          }
+        })
+      }, function (error) {
+        reject ({ error: error })
       })
     })
   }
@@ -59,7 +62,7 @@ class ClientController {
     })
   }
 
-  static update (data, cconnection, query) {
+  static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
 
     })
