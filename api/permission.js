@@ -45,15 +45,19 @@ class Permission {
     permission = permission.split('.')
 
     for (let currentPermission of permissions[userLevel]) {
+      console.log(currentPermission, permission)
       currentPermission = currentPermission.split('.')
       let currentNodeIndex = 0
 
       while (currentNodeIndex < permission.length) {
         if (currentPermission[currentNodeIndex] === '*') {
+          console.log(currentNodeIndex, currentPermission.length, permission.length)
           if (currentNodeIndex === currentPermission.length) {
+            console.log('currentpermissionlength')
             currentNodeIndex = permission.length
-          } else {
+          } else if (currentNodeIndex !== permission.length - 1) {
             currentNodeIndex += 1
+            continue
           }
         }
         if (permission[currentNodeIndex] !== currentPermission[currentNodeIndex]) {

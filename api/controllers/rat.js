@@ -205,25 +205,31 @@ exports.update = function (data, connection, query) {
       let error = Permission.authenticationError('rat.update')
       reject({ error: error })
     }
+    if (query.id) {
+      Rat.findById(query.id, function (error, rat) {
+        if (error) {
+          let errorModel = ErrorModels.server_error
+          errorModel.detail = error
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else if (!rat) {
+          let errorModel = ErrorModels.not_found
+          errorModel.detail = query.id
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else {
+          let requiredPermission = 'rat.update'
+          for (let cmdr of connection.user.CMDRs) {
+            if (cmdr.id === rat.id) {
+              requiredPermission = 'rat.update.self'
+            }
+          }
 
-    Permission.require('rat.update', connection.user).then(function (data) {
-      if (query.id) {
-        Rat.findById(query.id, function (error, rat) {
-          if (error) {
-            let errorModel = ErrorModels.server_error
-            errorModel.detail = error
-            reject({
-              error: errorModel,
-              meta: {}
-            })
-          } else if (!rat) {
-            let errorModel = ErrorModels.not_found
-            errorModel.detail = query.id
-            reject({
-              error: errorModel,
-              meta: {}
-            })
-          } else {
+          Permission.require(requiredPermission, connection.user).then(function (data) {
             for (let key in data) {
               if (key === 'client') {
                 _.extend(rat.client, data)
@@ -253,11 +259,11 @@ exports.update = function (data, connection, query) {
                 })
               }
             })
-          }
-        })
-      }
-    }, function (error) {
-      reject({ error: error })
-    })
+          }, function (error) {
+            reject({ error: error })
+          })
+        }
+      })
+    }
   })
 }
