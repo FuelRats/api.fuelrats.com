@@ -145,13 +145,6 @@ if (config.ssl.enabled) {
   app.use(forceSSL)
 }
 
-app.use(function (req, res, next) {
-  if (req.path != '/login' && req.session.returnTo) {
-    delete req.session.returnTo
-  }
-  next()
-})
-
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
   request.body = _.extend(request.query, request.body)
@@ -208,7 +201,7 @@ router.get('/badge/:rat', badge.get)
 
 router.post('/register', register.post)
 
-router.post('/login', passport.authenticate('local', { successReturnToOrRedirect: '/welcome' }), login.post)
+router.post('/login', passport.authenticate('local'), login.post)
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
 

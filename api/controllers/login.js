@@ -16,17 +16,15 @@ Rescue = require( '../models/rescue' )
 
 
 exports.get = function ( request, response ) {
-  console.log('test')
   if ( request.isUnauthenticated() ) {
-    console.log('unauthenticated')
     response.render('login', request.query)
   } else {
-    console.log('SESSION')
     console.log(request.session)
     if (request.session.returnTo) {
       response.redirect(request.session.returnTo)
+      delete request.session.returnTo
     } else {
-      response.redirect( '/welcome' )
+      response.redirect('/welcome')
     }
   }
 }
