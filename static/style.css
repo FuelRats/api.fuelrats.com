@@ -44,6 +44,31 @@ table td {
   margin-bottom: 30px;
 }
 
+div[data-pgroup]::after {
+  color: #fff;
+  margin-left: 3px;
+  margin-top: -2px;
+  font-size: 75%;
+  padding: 2px;
+  background: #3b5998;
+  content: 'rat';
+}
+
+div[data-pgroup='admin']::after {
+  background: #ff4444;
+  content: 'admin';
+}
+
+div[data-pgroup='moderator']::after {
+  background: #775cab;
+  content: 'moderator';
+}
+
+div[data-pgroup='overseer']::after {
+  background: #327e65;
+  content: 'overseer';
+}
+
 /******************************************************************************\
   Badge Editor
 \******************************************************************************/
