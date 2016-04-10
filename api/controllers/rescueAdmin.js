@@ -12,22 +12,22 @@ let Permission = require('../permission')
 // =============================================================================
 exports.editRescue = function (request, response) {
   Permission.require('rescue.edit', request.user).then(function () {
+    Rescue.findById(request.params.id)
+    .populate('rats firstLimpet')
+    .then(function (rescue) {
+      rescue.rats.forEach(function (rat) {
+        if (rat.CMDRname === rescue.firstLimpet.CMDRname) {
+          rat.firstLimpet = true
+        }
+      })
 
-  }, function (permission) {
-
-  })
-
-  Rescue.findById(request.params.id)
-  .populate('rats firstLimpet')
-  .then(function (rescue) {
-    rescue.rats.forEach(function (rat) {
-      if (rat.CMDRname === rescue.firstLimpet.CMDRname) {
-        rat.firstLimpet = true
-      }
+      response.render('rescue-edit')
     })
-
-    response.render('rescue-edit')
+  }, function () {
+    response.render('errors/403')
   })
+
+
 }
 
 
