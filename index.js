@@ -246,9 +246,9 @@ router.get('/register', register.get)
 router.get('/welcome', welcome.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
-router.get('/rescues/edit/:id', rescueAdmin.editRescue)
-router.get('/rescues/list', rescueAdmin.listRescues)
-router.get('/rescues/list/:page', rescueAdmin.listRescues)
+router.get('/rescues/edit/:id', auth.isAuthenticated, rescueAdmin.editRescue)
+router.get('/rescues/list', auth.isAuthenticated, rescueAdmin.listRescues)
+router.get('/rescues/list/:page', auth.isAuthenticated, rescueAdmin.listRescues)
 
 router.route('/oauth2/authorise')
   .get(auth.isAuthenticated, oauth2.authorization)
