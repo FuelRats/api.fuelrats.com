@@ -1,82 +1,83 @@
-var _, Rescue, save, winston
+'use strict'
 
-
-
-
-
-_ = require( 'underscore' )
-winston = require( 'winston' )
-Rescue = require( '../models/rescue' )
-
+let _ = require('underscore')
+let winston = require('winston')
+let Rescue = require('../models/rescue')
+let Permission = require('../permission')
 
 
 
 
 // EDIT
 // =============================================================================
-exports.editRescue = function ( request, response ) {
-  Rescue.findById( request.params.id )
-  .populate( 'rats firstLimpet' )
-  .then( function ( rescue ) {
-    rescue.rats.forEach( function ( rat, index, rats ) {
-      if ( rat.CMDRname === rescue.firstLimpet.CMDRname ) {
-        rat.firstLimpet = true
-      }
+exports.editRescue = function (request, response) {
+  Permission.require('rescue.edit', request.user).then(function () {
+    Rescue.findById(request.params.id)
+    .populate('rats firstLimpet')
+    .then(function (rescue) {
+      rescue.rats.forEach(function (rat) {
+        if (rat.CMDRname === rescue.firstLimpet.CMDRname) {
+          rat.firstLimpet = true
+        }
+      })
+
+      response.render('rescue-edit')
     })
-
-    response.render( 'rescue-edit' )
+  }, function () {
+    response.render('errors/403')
   })
+
+
 }
-
-
-
 
 
 // LIST
 // =============================================================================
-exports.listRescues = function ( request, response ) {
-  var filter, query, renderVars, rescues
+exports.listRescues = function (request, response) {
+  Permission.require('admin.read', request.user).then(function () {
+    let rescues = []
+    let renderVars = {}
 
-  rescues = []
-  renderVars = {}
-
-  if ( !request.params.page || request.params.page < 1 ) {
-    request.params.page = 1
-  }
-
-  renderVars.page = request.params.page
-
-  if ( request.params.page > 1 ) {
-    renderVars.previousPage = request.params.page - 1
-  }
-
-  filter = {
-    size: 100,
-    sort: 'createdAt:desc'
-  }
-
-  filter.from = ( request.params.page - 1 ) * filter.size,
-
-  query = {
-    match_all: {}
-  }
-
-  Rescue.search( query, filter, function ( error, data ) {
-    data.hits.hits.forEach( function ( rescue, index ) {
-      rescue._source._id = rescue._id
-      rescues.push( rescue._source )
-    })
-
-    renderVars.count = rescues.length
-    renderVars.rescues = rescues
-    renderVars.total = data.hits.total
-    renderVars.totalPages = Math.ceil( data.hits.total / filter.size )
-
-    if ( renderVars.page < renderVars.totalPages ) {
-      renderVars.nextPage = parseInt( request.params.page ) + 1
+    if (!request.params.page || request.params.page < 1) {
+      request.params.page = 1
     }
 
-    response.render( 'rescue-list', renderVars )
+    renderVars.page = request.params.page
+
+    if (request.params.page > 1) {
+      renderVars.previousPage = request.params.page - 1
+    }
+
+    let filter = {
+      size: 100,
+      sort: 'createdAt:desc'
+    }
+
+    filter.from = (request.params.page - 1) * filter.size
+
+    let query = {
+      match_all: {}
+    }
+
+    Rescue.search(query, filter, function (error, data) {
+      data.hits.hits.forEach(function (rescue) {
+        rescue._source._id = rescue._id
+        rescues.push(rescue._source)
+      })
+
+      renderVars.count = rescues.length
+      renderVars.rescues = rescues
+      renderVars.total = data.hits.total
+      renderVars.totalPages = Math.ceil(data.hits.total / filter.size)
+
+      if (renderVars.page < renderVars.totalPages) {
+        renderVars.nextPage = parseInt(request.params.page) + 1
+      }
+
+      response.render('rescue-list', renderVars)
+    })
+  }, function () {
+    response.render('errors/403')
   })
 }
 
@@ -86,16 +87,16 @@ exports.listRescues = function ( request, response ) {
 
 // VIEW
 // =============================================================================
-exports.viewRescue = function ( request, response ) {
-  Rescue.findById( request.params.id )
-  .populate( 'rats firstLimpet' )
-  .then( function ( rescue ) {
-    rescue.rats.forEach( function ( rat, index, rats ) {
-      if ( rat.CMDRname === rescue.firstLimpet.CMDRname ) {
+exports.viewRescue = function (request, response) {
+  Rescue.findById(request.params.id)
+  .populate('rats firstLimpet')
+  .then(function (rescue) {
+    rescue.rats.forEach(function (rat) {
+      if (rat.CMDRname === rescue.firstLimpet.CMDRname) {
         rat.firstLimpet = true
       }
     })
 
-    response.render( 'rescue-view', rescue )
+    response.render('rescue-view', rescue)
   })
 }
