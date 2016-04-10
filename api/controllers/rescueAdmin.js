@@ -28,10 +28,8 @@ exports.editRescue = function (request, response) {
 // LIST
 // =============================================================================
 exports.listRescues = function (request, response) {
-  var filter, query, renderVars, rescues
-
-  rescues = []
-  renderVars = {}
+  let rescues = []
+  let renderVars = {}
 
   if (!request.params.page || request.params.page < 1) {
     request.params.page = 1
@@ -43,14 +41,14 @@ exports.listRescues = function (request, response) {
     renderVars.previousPage = request.params.page - 1
   }
 
-  filter = {
+  let filter = {
     size: 100,
     sort: 'createdAt:desc'
   }
 
-  filter.from = (request.params.page - 1) * filter.size,
+  filter.from = (request.params.page - 1) * filter.size
 
-  query = {
+  let query = {
     match_all: {}
   }
 
