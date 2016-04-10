@@ -5,18 +5,22 @@ let ErrorModels = require('./errors')
 const permissions = {
   normal: [
     'rescue.create',
+    'rescue.read',
     'rat.*.self',
     'client.*.self'
   ],
   overseer: [
     'client.*.self',
+    'rescue.read',
     'rescue.create',
     'rescue.update',
+    'rat.read',
     'rat.update',
-    'rat.update',
-    'drill.*'
+    'drill.*',
+    'admin.read'
   ],
   moderator: [
+    'admin.read',
     'client.*.self',
     'rescue.*',
     'rat.*',
@@ -45,15 +49,12 @@ class Permission {
     permission = permission.split('.')
 
     for (let currentPermission of permissions[userLevel]) {
-      console.log(currentPermission, permission)
       currentPermission = currentPermission.split('.')
       let currentNodeIndex = 0
 
       while (currentNodeIndex < permission.length) {
         if (currentPermission[currentNodeIndex] === '*') {
-          console.log(currentNodeIndex, currentPermission.length, permission.length)
           if (currentNodeIndex === currentPermission.length) {
-            console.log('currentpermissionlength')
             currentNodeIndex = permission.length
           } else if (currentNodeIndex !== permission.length - 1) {
             currentNodeIndex += 1

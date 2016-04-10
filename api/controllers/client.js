@@ -64,13 +64,19 @@ class ClientController {
 
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
-
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('client.update')
+        reject({ error: error })
+      }
     })
   }
 
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
-
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('client.delete.self')
+        reject({ error: error })
+      }
     })
   }
 
