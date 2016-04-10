@@ -19,6 +19,13 @@
     "title": "Not Authenticated"
   },
 
+  "no_permission": {
+    "code": 403,
+    "detail": "User does not have the required permission to perform that action",
+    "status": "Forbidden",
+    "title": "Missing Required Permissions"
+  },
+
   "not_found": {
     "code": 404,
     "detail": "Resource not found",

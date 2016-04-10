@@ -3,10 +3,12 @@
 \******************************************************************************/
 html {
   font-size: 10px;
+  min-height: 100%;
 }
 
 body {
   font-size: 14px;
+  min-height: 100%;
 }
 
 body > .navbar {
@@ -26,7 +28,21 @@ table td {
   display: block !important;
 }
 
+.Aligner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+}
 
+.logo {
+  margin: auto;
+  display:block;
+  width: 250px;
+  height: auto;
+  margin-bottom: 30px;
+}
 
 /******************************************************************************\
   Badge Editor

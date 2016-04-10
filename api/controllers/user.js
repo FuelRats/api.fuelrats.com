@@ -3,6 +3,7 @@
 let _ = require('underscore')
 let User = require('../models/user')
 let ErrorModels = require('../errors')
+let Permission = require('../permission')
 
 // GET
 // =============================================================================
