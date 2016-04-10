@@ -54,9 +54,10 @@ class Permission {
 
       while (currentNodeIndex < permission.length) {
         if (currentPermission[currentNodeIndex] === '*') {
-          if (currentNodeIndex === currentPermission.length) {
+          if (currentNodeIndex === permission.length - 2) {
             currentNodeIndex = permission.length
-          } else if (currentNodeIndex !== permission.length - 1) {
+            hasPermission = true
+          } else {
             currentNodeIndex += 1
             continue
           }
