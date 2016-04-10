@@ -1,28 +1,28 @@
-var gitrev
-
-gitrev = require('git-rev')
+'use strict'
+let gitrev = require('git-rev')
 
 exports.get = function (request, response) {
-  var responseModel
-
-  responseModel = {
-    links: {
-      self: request.originalUrl
-    }
-  }
-
-  gitrev.long(function (githash) {
-    var status, serverVersion
-
-    serverVersion = process.env.npm_package_version
-
-    responseModel.data = {
-      version: serverVersion,
-      commit: githash
-    }
-
+  exports.view(request.body).then(function (data) {
     status = 200
     response.status(status)
-    response.json(responseModel)
+    response.json(data)
+  })
+}
+
+exports.view = function () {
+  return new Promise(function (resolve) {
+    gitrev.long(function (githash) {
+      let serverVersion = process.env.npm_package_version
+
+      let data = {
+        version: serverVersion,
+        commit: githash
+      }
+
+      resolve({
+        data: data,
+        meta: {}
+      })
+    })
   })
 }

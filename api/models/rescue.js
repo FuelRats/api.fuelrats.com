@@ -1,30 +1,19 @@
-var _,
-    linkRats,
-    moment,
-    mongoose,
-    normalizePlatform,
-    Rat,
-    RescueSchema,
-    Schema,
-    updateTimestamps,
-    winston
+'use strict'
 
-_ = require( 'underscore' )
-moment = require( 'moment' )
-mongoose = require( 'mongoose' )
-winston = require( 'winston' )
+let _ = require('underscore')
+let mongoose = require('mongoose')
+let winston = require('winston')
+let Rat = require('./rat')
 
 mongoose.Promise = global.Promise
 
-Rat = require( './rat' )
-
-Schema = mongoose.Schema
+let Schema = mongoose.Schema
 
 
 
 
 
-RescueSchema = new Schema({
+let RescueSchema = new Schema({
   active: {
     default: true,
     type: Boolean
@@ -56,10 +45,10 @@ RescueSchema = new Schema({
     type: Boolean
   },
   firstLimpet: {
-    type: {
+    type: [{
       type: Schema.Types.ObjectId,
       ref: 'Rat'
-    }
+    }]
   },
   lastModified: {
     type: Date
@@ -75,14 +64,16 @@ RescueSchema = new Schema({
     type: String
   },
   platform: {
-    default: 'pc',
+    default: 'unknown',
     enum: [
       'pc',
-      'xb'
+      'xb',
+      'unknown'
     ],
     type: String
   },
   quotes: {
+    default: [],
     type: [{
       type: String
     }]
@@ -104,6 +95,7 @@ RescueSchema = new Schema({
     type: Boolean
   },
   system: {
+    default: '',
     type: String
   }
 }, {
@@ -111,10 +103,10 @@ RescueSchema = new Schema({
 })
 
 
+RescueSchema.index({ unidentifiedRats: 'text' })
 
 
-
-linkRats = function ( next ) {
+let linkRats = function (next) {
   var finds, rescue, updates
 
   finds = []
@@ -122,13 +114,18 @@ linkRats = function ( next ) {
   updates = []
 
   rescue.rats = rescue.rats || []
+
   rescue.unidentifiedRats = rescue.unidentifiedRats || []
 
-  rescue.unidentifiedRats.forEach( function ( rat, index, rats ) {
+  rescue.unidentifiedRats.forEach(function (rat) {
     var find
 
-    updates.push( mongoose.models.Rat.update({
-      CMDRname: rat
+    updates.push(mongoose.models.Rat.update({
+      $text: {
+        $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+        $caseSensitive: false,
+        $diacriticSensitive: false
+      }
     }, {
       $inc: {
         rescueCount: 1
@@ -139,44 +136,51 @@ linkRats = function ( next ) {
     }))
 
     find = mongoose.models.Rat.findOne({
-      CMDRname: rat
-    })
-
-    find.then( function ( rat ) {
-      if ( rat ) {
-        rescue.rats.push( rat._id )
-        rescue.unidentifiedRats = _.without( rescue.unidentifiedRats, rat.CMDRname )
+      $text: {
+        $search: rat.replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim(),
+        $caseSensitive: false,
+        $diacriticSensitive: false
       }
     })
 
-    finds.push( find )
+    find.then(function (_rat) {
+      if (_rat) {
+        rescue.rats.push(_rat._id)
+        rescue.unidentifiedRats = _.without(rescue.unidentifiedRats, _rat.CMDRname)
+        if(_rat.platform && _rat.platform != null) {
+          rescue.platform = _rat.platform
+        }
+      }
+    })
+
+    finds.push(find)
   })
 
-  Promise.all( updates )
-  .then( function () {
-    Promise.all( finds )
-    .then( next )
-    .catch( next )
+  Promise.all(updates)
+  .then(function () {
+    Promise.all(finds)
+    .then(next)
+    .catch(next)
   })
-  .catch( next )
+  .catch(next)
 }
 
-normalizePlatform = function ( next ) {
-  this.platform = this.platform.toLowerCase().replace( /^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb' )
+let normalizePlatform = function (next) {
+  this.platform = this.platform.toLowerCase().replace(/^xb\s*1|xbox|xbox1|xbone|xbox\s*one$/g, 'xb')
 
   next()
 }
 
-updateTimestamps = function ( next ) {
+let updateTimestamps = function (next) {
   var timestamp
 
   timestamp = new Date()
 
-  if ( !this.open ) {
+  if (!this.open) {
     this.active = false
   }
 
-  if ( this.isNew ) {
+  if (this.isNew) {
     this.createdAt = this.createdAt || timestamp
   }
 
@@ -186,23 +190,76 @@ updateTimestamps = function ( next ) {
 }
 
 
+let sanitizeInput = function (next) {
+  var rescue = this
 
+  if (rescue.system) {
+    rescue.system = rescue.system.trim()
+  }
 
+  if (rescue.client) {
+    if(rescue.client.CMDRname) {
+      rescue.client.CMDRname = rescue.client.CMDRname.trim()
+    }
 
-RescueSchema.pre( 'save', updateTimestamps )
-RescueSchema.pre( 'save', normalizePlatform )
-RescueSchema.pre( 'save', linkRats )
+    if(rescue.client.nickname) {
+      rescue.client.nickname = rescue.client.nickname.trim()
+    }
+  }
 
-RescueSchema.pre( 'update', updateTimestamps )
+  if(rescue.unidentifiedRats) {
+    for (let i = 0; i < rescue.unidentifiedRats.length; i++) {
+      rescue.unidentifiedRats[i] = rescue.unidentifiedRats[i].replace(/cmdr /i, '').replace(/\s\s+/g, ' ').trim()
+    }
+  }
 
-RescueSchema.set( 'toJSON', {
+  if(rescue.quotes) {
+    for (let i = 0; i < rescue.quotes.length; i++) {
+      rescue.quotes[i] = rescue.quotes[i].trim()
+    }
+  }
+
+  if (rescue.name) {
+    rescue.name = rescue.name.trim()
+  }
+
+  next()
+}
+
+let indexSchema = function (rescue) {
+  rescue.index(function () {})
+  for (let ratId of rescue.rats) {
+    Rat.findById(ratId, function (err, rat) {
+      if (err) {
+        winston.error(err)
+      } else {
+        if (rat) {
+          rat.save()
+        }
+      }
+    })
+  }
+}
+
+RescueSchema.pre('save', sanitizeInput)
+RescueSchema.pre('save', updateTimestamps)
+RescueSchema.pre('save', normalizePlatform)
+RescueSchema.pre('save', linkRats)
+
+RescueSchema.pre('update', sanitizeInput)
+RescueSchema.pre('update', updateTimestamps)
+
+RescueSchema.plugin(require('mongoosastic'))
+
+RescueSchema.post('save', indexSchema)
+
+RescueSchema.set('toJSON', {
   virtuals: true
 })
 
-RescueSchema.plugin( require( 'mongoosastic' ) )
 
-if ( mongoose.models.Rescue ) {
-  module.exports = mongoose.model( 'Rescue' )
+if (mongoose.models.Rescue) {
+  module.exports = mongoose.model('Rescue')
 } else {
-  module.exports = mongoose.model( 'Rescue', RescueSchema )
+  module.exports = mongoose.model('Rescue', RescueSchema)
 }

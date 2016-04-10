@@ -1,256 +1,269 @@
-var _, ErrorModels, Rat, rat, Rescue, save, winston
+'use strict'
 
-
-
-
-
-_ = require( 'underscore' )
-winston = require( 'winston' )
-Rat = require( '../models/rat' )
-Rescue = require( '../models/rescue' )
-ErrorModels = require( '../errors' )
-
-
-
-
+let _ = require('underscore')
+let Rat = require('../models/rat')
+let ErrorModels = require('../errors')
+let websocket = require('../websocket')
+let Permission = require('../permission')
 
 // GET
 // =============================================================================
-exports.get = function ( request, response, next ) {
-  var filter, query
+exports.get = function (request, response, next) {
+  exports.read(request.body).then(function (res) {
+    let data = res.data
+    let meta = res.meta
 
-  filter = {}
-  query = {}
-
-  filter.size = parseInt( request.body.limit ) || 25
-  delete request.body.limit
-
-  filter.from = parseInt( request.body.offset ) || 0
-  delete request.body.offset
-
-  for ( var key in request.body ) {
-    if ( key === 'q' ) {
-      query.query_string = {
-        query: request.body.q
-      }
-    } else {
-      if ( !query.bool ) {
-        query.bool = {
-          should: []
-        }
-      }
-
-      term = {}
-      term[key] = {
-        query: request.body[key],
-        fuzziness: 'auto'
-      }
-      query.bool.should.push( { match: term } )
-    }
-  }
-
-  if ( !Object.keys( query ).length ) {
-    query.match_all = {}
-  }
-
-  Rat.search( query, filter, function ( error, data ) {
-    var rescueFinds
-
-    rescueFinds = []
-
-    if ( error ) {
-      response.model.errors.push( error )
-      response.status( 400 )
-
-    } else {
-      response.model.meta = {
-        count: data.hits.hits.length,
-        limit: filter.size,
-        offset: filter.from,
-        total: data.hits.total
-      }
-      response.model.data = []
-
-      data.hits.hits.forEach( function ( rat, index, rats ) {
-        var ratToPopulate, rescueFind
-
-        rat._source._id = rat._id
-        rat._source.score = rat._score
-
-//        rescueFind = Rescue.find({
-//          platform: rat._source.platform,
-//          rats: rat._source.CMDRname
-//        })
-
-        response.model.data.push( rat._source )
-
-//        rescueFind.then( function ( rescues ) {
-//          rat._source.rescues = rescues
-//        })
-
-        rescueFinds.push( rescueFind )
-      })
-
-      response.status( 200 )
-    }
-
-//    Promise.all( rescueFinds )
-//    .then( next )
+    response.model.data = data
+    response.model.meta = meta
+    response.status = 400
     next()
+  }, function (error) {
+    response.model.errors.push(error.error)
+    response.status(400)
   })
 }
-
-
-
-
 
 // GET (by ID)
 // =============================================================================
-exports.getById = function ( request, response, next ) {
-  var id
+exports.getById = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
-  console.log( response.model.meta.params )
+  let id = request.params.id
 
-  id = request.params.id
-
-  Rat
-  .findById( id )
-  .populate( 'rescues' )
-  .exec( function ( error, rat ) {
-    var status
-
-    if ( error ) {
-      response.model.errors.push( error )
-      response.status( 400 )
+  Rat.findById(id).populate('rescues').exec(function (error, rat) {
+    if (error) {
+      response.model.errors.push(error)
+      response.status(400)
 
     } else {
       response.model.data = rat
-      response.status( 200 )
+      response.status(200)
     }
 
     next()
   })
 }
 
+exports.read = function (query) {
+  return new Promise(function (resolve, reject) {
+    let filter = {}
+    let dbQuery = {}
 
+    filter.size = parseInt(query.limit) || 25
+    delete query.limit
 
+    filter.from = parseInt(query.offset) || 0
+    delete query.offset
 
-
-// POST
-// =============================================================================
-exports.post = function ( request, response, next ) {
-  Rat.create( request.body, function ( error, rat ) {
-    var errors, errorTypes, status
-
-    if ( error ) {
-      errorTypes = Object.keys( error.errors )
-
-      for ( var i = 0; i < errorTypes.length; i++ ) {
-        var error, errorModel, errorType
-
-        errorType = errorTypes[i]
-        error = error.errors[errorType].properties
-
-        if ( error.type === 'required' ) {
-          errorModel = ErrorModels['missing_required_field']
+    for (let key in query) {
+      if (key === 'q') {
+        dbQuery.query_string = {
+          query: query.q
+        }
+      } else {
+        if (!dbQuery.bool) {
+          dbQuery.bool = {
+            should: []
+          }
         }
 
-        errorModel.detail = 'You\'re missing the required field: ' + error.path
-
-        response.model.errors.push( errorModel )
+        let term = {}
+        term[key] = {
+          query: query[key],
+          fuzziness: 'auto'
+        }
+        dbQuery.bool.should.push({
+          match: term
+        })
       }
-
-      winston.error( error )
-      response.status( 400 )
-
-    } else {
-      response.model.data = rat
-      response.status( 201 )
     }
 
-    next()
+    if (!Object.keys(dbQuery).length) {
+      dbQuery.match_all = {}
+    }
 
-//    if ( referer = request.get( 'Referer' ) ) {
-//      response.redirect( '/login' )
-//
-//    } else {
-//      response.status( status )
-//      response.json( response.model )
-//    }
-  })
-}
-
-
-
-
-
-// PUT
-// =============================================================================
-exports.put = function ( request, response, next ) {
-  var status
-
-  response.model.meta.params = _.extend( response.model.meta.params, request.params )
-
-  if ( id = request.params.id ) {
-    Rat.findById( id, function ( error, rat ) {
-      if ( error ) {
-        response.model.errors.push( error )
-        response.status( 400 )
-
-        next()
-
-      } else if ( !rat ) {
-        response.model.errors.push( ErrorModels.not_found )
-        response.status( 404 )
-
-        next()
+    Rat.search(dbQuery, filter, function (error, dbData) {
+      if (error) {
+        let errorObj = ErrorModels.server_error
+        errorObj.detail = error
+        reject({
+          error: errorObj,
+          meta: {}
+        })
 
       } else {
-        for ( var key in request.body ) {
-          if ( key === 'client' ) {
-            _.extend( rat.client, request.body[key] )
-          } else {
-            rat[key] = request.body[key]
-          }
+        let meta = {
+          count: dbData.hits.hits.length,
+          limit: filter.size,
+          offset: filter.from,
+          total: dbData.hits.total
         }
+        let data = []
 
-        rat.save( function ( error, rat ) {
-          var errors, errorTypes, status
+        dbData.hits.hits.forEach(function (rat) {
+          rat._source._id = rat._id
+          rat._source.score = rat._score
 
-          if ( error ) {
-            errorTypes = Object.keys( error.errors )
+          data.push(rat._source)
+        })
 
-            for ( var i = 0; i < errorTypes.length; i++ ) {
-              var error, errorModel, errorType
-
-              errorType = errorTypes[i]
-              error = error.errors[errorType].properties
-
-              if ( error.type === 'required' ) {
-                errorModel = ErrorModels['missing_required_field']
-              }
-
-              errorModel.detail = 'You\'re missing the required field: ' + error.path
-
-              response.model.errors.push( errorModel )
-            }
-
-            status = 400
-
-          } else {
-            status = 200
-            response.model.data = rat
-          }
-
-          next()
+        resolve({
+          data: data,
+          meta: meta
         })
       }
     })
-  } else {
-    response.model.errors.push( ErrorModels.missing_required_field )
-    response.status( 400 )
+  })
+}
 
+// POST
+// =============================================================================
+exports.post = function (request, response, next) {
+  exports.create(request.body, request).then(function (res) {
+    response.model.data = res.data
+    response.status(201)
     next()
-  }
+  }, function (error) {
+    response.model.errors.push(error.error)
+    response.status(400)
+    next()
+  })
+}
+
+exports.create = function (query, connection) {
+  return new Promise(function (resolve, reject) {
+    if (connection.isUnauthenticated()) {
+      let error = Permission.authenticationError('rat.create')
+      reject({ error: error })
+    }
+
+    Permission.require('rat.create', connection.user).then(function () {
+      Rat.create(query, function (error, rat) {
+        if (error) {
+          let errorTypes = Object.keys(error.errors)
+
+          for (let errorType of errorTypes) {
+            error = error.errors[errorType].properties
+
+            if (error.type === 'required') {
+              let errorModel = ErrorModels.missing_required_field
+              errorModel.detail = error.path
+              reject({
+                error: errorModel,
+                meta: {}
+              })
+            } else {
+              let errorModel = ErrorModels.server_error
+              errorModel.detail = error.path
+              reject({
+                error: errorModel,
+                meta: {}
+              })
+            }
+          }
+        } else {
+          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+            return cl.clientId !== connection.clientId
+          })
+          websocket.broadcast(allClientsExcludingSelf, {
+            action: 'rat:created'
+          }, rat)
+          resolve({
+            data: rat,
+            meta: {}
+          })
+        }
+      })
+    }, function (err) {
+      reject({ error: err })
+    })
+
+  })
+}
+
+// PUT
+// =============================================================================
+exports.put = function (request, response, next) {
+  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+
+  exports.update(request.body, request, request.params).then(function (data) {
+    response.model.data = data.data
+    response.status(201)
+    next()
+  }, function (error) {
+    response.model.errors.push(error.error)
+
+    let status = error.error.code || 400
+    response.status(status)
+    next()
+  })
+}
+
+exports.update = function (data, connection, query) {
+  return new Promise(function (resolve, reject) {
+    if (connection.isUnauthenticated()) {
+      let error = Permission.authenticationError('rat.update')
+      reject({ error: error })
+    }
+    if (query.id) {
+      Rat.findById(query.id, function (error, rat) {
+        if (error) {
+          let errorModel = ErrorModels.server_error
+          errorModel.detail = error
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else if (!rat) {
+          let errorModel = ErrorModels.not_found
+          errorModel.detail = query.id
+          reject({
+            error: errorModel,
+            meta: {}
+          })
+        } else {
+          let requiredPermission = 'rat.update'
+          for (let cmdr of connection.user.CMDRs) {
+            if (cmdr.id === rat.id) {
+              requiredPermission = 'rat.update.self'
+            }
+          }
+
+          Permission.require(requiredPermission, connection.user).then(function (data) {
+            for (let key in data) {
+              if (key === 'client') {
+                _.extend(rat.client, data)
+              } else {
+                rat[key] = data[key]
+              }
+            }
+
+            rat.save(function (error, rat) {
+              if (error) {
+                let errorModel = ErrorModels.server_error
+                errorModel.detail = error
+                reject({
+                  error: errorModel,
+                  meta: {}
+                })
+              } else {
+                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  return cl.clientId !== connection.clientId
+                })
+                websocket.broadcast(allClientsExcludingSelf, {
+                  action: 'rat:updated'
+                }, rat)
+                resolve({
+                  data: rat,
+                  meta: {}
+                })
+              }
+            })
+          }, function (error) {
+            reject({ error: error })
+          })
+        }
+      })
+    }
+  })
 }

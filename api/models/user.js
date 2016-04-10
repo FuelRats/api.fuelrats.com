@@ -1,14 +1,11 @@
-var autopopulate, mongoose, Rat, Schema, UserSchema
-
-mongoose = require( 'mongoose' )
+'use strict'
+let mongoose = require('mongoose')
 
 mongoose.Promise = global.Promise
 
-Rat = require( './rat' )
+let Schema = mongoose.Schema
 
-Schema = mongoose.Schema
-
-UserSchema = new Schema({
+let UserSchema = new Schema({
   email: String,
   password: String,
   CMDRs: {
@@ -17,26 +14,60 @@ UserSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: 'Rat'
     }]
-  }
+  },
+  nicknames: {
+    default: [],
+    type: [{
+      type: String
+    }]
+  },
+  drilled: {
+    default: {
+      dispatch: false,
+      rescue: false
+    },
+    type: {
+      dispatch: {
+        type: Boolean
+      },
+      rescue: {
+        type: Boolean
+      }
+    }
+  },
+  group: {
+    default: 'normal',
+    enum: [
+      'normal',
+      'overseer',
+      'moderator',
+      'admin'
+    ],
+    type: String
+  },
+  resetToken: String,
+  resetTokenExpire: Date
 })
 
-autopopulate = function ( next ) {
-  this.populate( 'CMDRs' )
+let autopopulate = function (next) {
+  this.populate('CMDRs')
   next()
 }
 
-UserSchema.pre( 'find', autopopulate)
-UserSchema.pre( 'findOne', autopopulate)
+UserSchema.pre('find', autopopulate)
+UserSchema.pre('findOne', autopopulate)
 
 UserSchema.methods.toJSON = function () {
-  obj = this.toObject()
+  let obj = this.toObject()
   delete obj.hash
   delete obj.salt
+  delete obj.resetToken
+  delete obj.resetTokenExpire
   return obj
 }
 
-UserSchema.plugin( require( 'passport-local-mongoose' ), {
+UserSchema.plugin(require('passport-local-mongoose'), {
   usernameField: 'email'
 })
 
-module.exports = mongoose.model( 'User', UserSchema )
+module.exports = mongoose.model('User', UserSchema)

@@ -1,6 +1,8 @@
 api:
   description: Start the api
   tasks:
+  - 'cssmin:production'
+  - 'uglify:production'
   - 'docs'
   - 'express'
   - 'watch'

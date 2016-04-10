@@ -1,80 +1,90 @@
+'use strict'
 
-var CMDRname, Rat, rat, Rescue, Rescues, rescues, renderBadge
+/* global _, Backbone, moment */
 
-renderBadge = function renderBadge ( rat, rescues ) {
-  var rescueCount, ui
+var renderBadge, uiElements,rescueCount, ui, Rat, Rescue, Rescues, CMDRname, rat
+
+renderBadge = function renderBadge (rat) {
 
   // Prevent performance loss from multiple accesses by caching references to DOM elements
-  ui = {
-    badge: document.querySelector( '#badge' ),
-    codeRed: document.querySelector( '#codeRed' ),
-    crown1: document.querySelector( '#crown1' ),
-    crown2: document.querySelector( '#crown2' ),
-    dispatch: document.querySelector( '#dispatch' ),
-    firstYear: document.querySelector( '#firstYear' ),
-    rescue1: document.querySelector( '#rescues1' ),
-    rescue2: document.querySelector( '#rescues2' ),
-    rescue3: document.querySelector( '#rescues3' ),
-    rescue4: document.querySelector( '#rescues4' )
-  }
+  uiElements = [
+    'badge',
+    'codeRed',
+    'crown1',
+    'crown2',
+    'dispatch',
+    'firstYear',
+    'recsues1',
+    'rescues2',
+    'rescues3',
+    'rescues4'
+  ]
+
+  ui = {}
+
+  uiElements.forEach(function (uiElement) {
+    ui[uiElement] = document.getElementById(uiElement)
+  })
 
   // Count the rat's rescues so we can conditionally remove rescue elements from the badge
-  rescueCount = rat.get( 'rescues' ).length
+  rescueCount = rat.get('rescues').length
 
-  if ( rescueCount < 1000 ) {
-    ui.crown2.classList.add( 'hidden' )
+  if (rescueCount < 1000) {
+    ui.crown2.classList.add('hidden')
   } else {
-    ui.crown2.classList.remove( 'hidden' )
+    ui.crown2.classList.remove('hidden')
   }
 
-  if ( rescueCount < 500 ) {
-    ui.crown1.classList.add( 'hidden' )
+  if (rescueCount < 500) {
+    ui.crown1.classList.add('hidden')
   } else {
-    ui.crown1.classList.remove( 'hidden' )
+    ui.crown1.classList.remove('hidden')
   }
 
-  if ( rescueCount < 400 ) {
-    ui.rescue4.classList.add( 'hidden' )
+  if (rescueCount < 400) {
+    ui.rescue4.classList.add('hidden')
   } else {
-    ui.rescue4.classList.remove( 'hidden' )
+    ui.rescue4.classList.remove('hidden')
   }
 
-  if ( rescueCount < 200 ) {
-    ui.rescue2.classList.add( 'hidden' )
-    ui.rescue3.classList.add( 'hidden' )
+  if (rescueCount < 200) {
+    ui.rescue2.classList.add('hidden')
+    ui.rescue3.classList.add('hidden')
   } else {
-    ui.rescue2.classList.remove( 'hidden' )
-    ui.rescue3.classList.remove( 'hidden' )
+    ui.rescue2.classList.remove('hidden')
+    ui.rescue3.classList.remove('hidden')
   }
 
-  if ( rescueCount < 100 || ( 199 < rescueCount && rescueCount < 300 ) ) {
-    ui.rescue1.classList.add( 'hidden' )
+  if (rescueCount < 100 || (199 < rescueCount && rescueCount < 300)) {
+    ui.rescue1.classList.add('hidden')
   } else {
-    ui.rescue1.classList.remove( 'hidden' )
+    ui.rescue1.classList.remove('hidden')
   }
 
   // Check if the rat has been dispatch drilled
-  if ( !rat.get( 'drilled' ).dispatch ) {
-    ui.dispatch.classList.add( 'hidden' )
+  if (!rat.get('drilled').dispatch) {
+    ui.dispatch.classList.add('hidden')
   } else {
-    ui.dispatch.classList.remove( 'hidden' )
+    ui.dispatch.classList.remove('hidden')
   }
 
   // Check if the rat has ever been on a code red rescue
-  if ( !_.findWhere( rat.get( 'rescues' ), { codeRed: true } ) ) {
-    ui.codeRed.classList.add( 'hidden' )
+  if (!_.findWhere(rat.get('rescues'), {
+    codeRed: true
+  })) {
+    ui.codeRed.classList.add('hidden')
   } else {
-    ui.codeRed.classList.remove( 'hidden' )
+    ui.codeRed.classList.remove('hidden')
   }
 
-  if ( rat.get( 'joined' ).isAfter( '2015' ) ) {
-    ui.firstYear.classList.add( 'hidden' )
+  if (rat.get('joined').isAfter('2015')) {
+    ui.firstYear.classList.add('hidden')
   } else {
-    ui.firstYear.classList.remove( 'hidden' )
+    ui.firstYear.classList.remove('hidden')
   }
 
   // We're done processing, time to show the badge!
-  ui.badge.classList.add( 'focusIn' )
+  ui.badge.classList.add('focusIn')
 }
 
 Rat = Backbone.Model.extend({
@@ -87,22 +97,25 @@ Rat = Backbone.Model.extend({
     joined: 0,
     rescues: []
   },
-  parse: function ( response ) {
+  parse: function (response) {
     return response.data[0]
   },
   url: '/api/rats',
   initialize: function () {
+    var rescues
     rescues = new Rescues
 
-    this.once( 'sync', ( model, response, jqxhr ) => {
-      this.set( 'joined', moment( this.get( 'joined' ) ) )
+    this.once('sync', function () {
+      this.set('joined', moment(this.get('joined')))
 
-      rescues
-      .fetch( { data: $.param( { rats: this.CMDRname } ) } )
-      .then( ( response, status, xhr ) => {
-        this.set( 'rescues', rescues )
-      })
-    })
+      rescues.fetch({
+        data: $.param({
+          rats: this.CMDRname
+        })
+      }).then(function () {
+        this.set('rescues', rescues)
+      }.bind(this))
+    }.bind(this))
   }
 })
 
@@ -112,18 +125,22 @@ Rescue = Backbone.Model.extend({
 
 Rescues = Backbone.Collection.extend({
   model: Rescue,
-  parse: function ( response ) {
+  parse: function (response) {
     return response.data
   },
   url: '/api/rescues'
 })
 
-CMDRname = location.pathname.replace( '/', '' ).split( '/' )[1]
+CMDRname = location.pathname.replace('/', '').split('/')[1]
 
 rat = new Rat
 
-rat.fetch( { data: $.param( { CMDRname: CMDRname } ) } )
+rat.fetch({
+  data: $.param({
+    CMDRname: CMDRname
+  })
+})
 
-rat.on( 'sync', () => {
-  renderBadge( rat )
+rat.on('sync', function () {
+  renderBadge(rat)
 })
