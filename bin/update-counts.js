@@ -36,9 +36,15 @@ Rat.update({}, {
       let updates = []
 
       if (rescue.firstLimpet) {
+        let firstLimpet;
+        if (rescue.firstLimpet[0]) {
+          firstLimpet = rescue.firstLimpet
+        } else {
+          firstLimpet = rescue.firstLimpet
+        }
         if (rescue.successful) {
           updates.push({
-            id: rescue.firstLimpet,
+            id: firstLimpet,
             update: {
               $inc: {
                 successfulRescueCount: 1
@@ -47,7 +53,7 @@ Rat.update({}, {
           })
         } else {
           updates.push({
-            id: rescue.firstLimpet,
+            id: firstLimpet,
             update: {
               $inc: {
                 failedRescueCount: 1
