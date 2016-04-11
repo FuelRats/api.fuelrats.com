@@ -36,9 +36,9 @@ Rat.update({}, {
       let updates = []
 
       if (rescue.firstLimpet && rescue.firstLimpet !== '') {
-        let firstLimpet;
+        let firstLimpet
         if (rescue.firstLimpet[0]) {
-          firstLimpet = rescue.firstLimpet
+          firstLimpet = rescue.firstLimpet[0]
         } else {
           firstLimpet = rescue.firstLimpet
         }
