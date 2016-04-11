@@ -52,6 +52,26 @@ let RatSchema = new Schema({
     index: true,
     type: Number
   },
+  successfulRescueCount: {
+    default: 0,
+    index: true,
+    type: Number
+  },
+  successfulAssistCount: {
+    default: 0,
+    index: true,
+    type: Number
+  },
+  failedRescueCount: {
+    default: 0,
+    index: true,
+    type: Number
+  },
+  failedAssistCount: {
+    default: 0,
+    index: true,
+    type: Number
+  },
   user: {
     type: Schema.Types.ObjectId,
     ref: 'User'

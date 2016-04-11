@@ -15,7 +15,7 @@ exports.get = function (request, response, next) {
     response.status(200)
     next()
   }, function (errors) {
-    console.log(errors)
+    winston.error(errors)
   })
 }
 
@@ -116,7 +116,10 @@ let getLeaderboardRats = function () {
     {
       $project: {
         CMDRname: 1,
+        failedAssistCount: 1,
+        failedRescueCount: 1,
         platform: 1,
+        successfulAssistCount: 1,
         successfulRescueCount: 1
       }
     },
