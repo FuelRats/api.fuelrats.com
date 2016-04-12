@@ -35,7 +35,6 @@ winston.info('Syncing Rescue')
 Rescue.synchronize()
 let rescueStream = Rescue.synchronize()
 rescueStream.on('data', function (error, doc) {
-  count++
 })
 rescueStream.on('error', function (error) {
   console.error(error)

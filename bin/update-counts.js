@@ -25,7 +25,7 @@ Rat.update({}, {
 .then(function () {
   console.log('Loading rescues...')
 
-  Rescue.find()
+  Rescue.find({ rescueCount: 0 })
   .exec()
   .then(function (rescues) {
     let saves = []
@@ -36,6 +36,7 @@ Rat.update({}, {
       let updates = []
 
       if (rescue.firstLimpet && rescue.firstLimpet !== '') {
+
         let firstLimpet
         if (rescue.firstLimpet[0]) {
           firstLimpet = rescue.firstLimpet[0]
@@ -44,7 +45,7 @@ Rat.update({}, {
         }
         if (rescue.successful) {
           updates.push({
-            id: firstLimpet,
+            id: firstLimpet._id,
             update: {
               $inc: {
                 successfulRescueCount: 1
@@ -53,7 +54,7 @@ Rat.update({}, {
           })
         } else {
           updates.push({
-            id: firstLimpet,
+            id: firstLimpet._id,
             update: {
               $inc: {
                 failedRescueCount: 1
@@ -71,7 +72,7 @@ Rat.update({}, {
 
           if (rescue.successful) {
             updates.push({
-              id: rat,
+              id: rat._id,
               update: {
                 $inc: {
                   successfulAssistCount: 1
@@ -80,7 +81,7 @@ Rat.update({}, {
             })
           } else {
             updates.push({
-              id: rat,
+              id: rat._id,
               update: {
                 $inc: {
                   failedAssistCount: 1
