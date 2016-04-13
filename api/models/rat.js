@@ -114,7 +114,6 @@ let linkRescues = function (next) {
     mongoose.models.Rescue.find({
       rats: rat._id
     }).then(function (rescues) {
-      console.log(rat.rescues)
       rat.successfulRescueCount = 0
       rat.successfulAssistCount = 0
       rat.failedRescueCount = 0
@@ -123,7 +122,14 @@ let linkRescues = function (next) {
       rescues.forEach(function (rescue) {
         rat.rescues.push(rescue._id)
 
+        let firstLimpet
         if (rescue.firstLimpet[0]) {
+          firstLimpet = rescue.firstLimpet[0]
+        } else {
+          firstLimpet = rescue.firstLimpet
+        }
+
+        if (rat._id.equals(firstLimpet)) {
           if (rescue.successful === true) {
             rat.successfulRescueCount += 1
           } else {
