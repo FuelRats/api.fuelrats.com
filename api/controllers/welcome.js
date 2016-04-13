@@ -32,7 +32,14 @@ exports.get = function (request, response) {
               rescue.createdAt = moment(rescue.createdAt)
               rescue.lastModified = moment(rescue.lastModified)
 
-              if (rescue.firstLimpet[0] && rescue.firstLimpet[0].toString() !== CMDR.id) {
+              let firstLimpet
+              if (rescue.firstLimpet[0]) {
+                firstLimpet = rescue.firstLimpet[0]
+              } else {
+                firstLimpet = rescue.firstLimpet
+              }
+
+              if (CMDR._id.equals(firstLimpet) === false) {
                 rescue.assist = true
               }
             })
