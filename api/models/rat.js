@@ -114,14 +114,37 @@ let linkRescues = function (next) {
     mongoose.models.Rescue.find({
       rats: rat._id
     }).then(function (rescues) {
+      rat.successfulRescueCount = 0
+      rat.successfulAssistCount = 0
+      rat.failedRescueCount = 0
+      rat.failedAssistCount = 0
+
       rescues.forEach(function (rescue) {
         rat.rescues.push(rescue._id)
+
+        let firstLimpet
+        if (rescue.firstLimpet[0]) {
+          firstLimpet = rescue.firstLimpet[0]
+        } else {
+          firstLimpet = rescue.firstLimpet
+        }
+
+        if (rat._id.equals(firstLimpet)) {
+          if (rescue.successful === true) {
+            rat.successfulRescueCount += 1
+          } else {
+            rat.failedRescueCount += 1
+          }
+        } else {
+          if (rescue.successful === true) {
+            rat.successfulAssistCount += 1
+          } else {
+            rat.failedAssistCount += 1
+          }
+        }
       })
-      if (rat.rescues) {
-        rat.rescueCount = rat.rescues.length
-      } else {
-        rat.rescueCount = 0
-      }
+
+      console.log(rat.rescues.length)
       next()
     }).catch(next)
   })

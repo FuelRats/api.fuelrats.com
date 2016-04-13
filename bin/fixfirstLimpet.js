@@ -35,20 +35,27 @@ Rescue.find({ firstLimpet: { '$exists': false }, successful: true}).exec().then(
   winston.error(error)
 })
 
-Rescue.find({ rats: { '$empty': true }, successful: true}).exec().then(function (rescues) {
+Rescue.find({ rats: { '$size': 0 } }).exec().then(function (rescues) {
   winston.info('Found ' + rescues.length + ' rescues with no rats')
   rescues.forEach(function (rescue) {
     if (rescue.firstLimpet) {
+      let firstLimpet;
+      if (rescue.firstLimpet[0]) {
+        firstLimpet = rescue.firstLimpet[0]
+      } else {
+        firstLimpet = rescue.firstLimpet
+      }
+
       Rat.findById(rescue.firstLimpet[0]).exec().then(function (rat) {
         if (!rat) {
-          winston.info('Rat reference ' + rescue.firstLimpet[0] + ' does not exist')
+          winston.info('Rat reference ' + firstLimpet + ' does not exist')
         } else {
           rescue.rats.push(rat)
           rescue.save(function (err) {
             if (err) {
               winston.error(err)
             } else {
-              winston.info('Set rat ' + rescue.firstLimpet[0] + ', as rat')
+              winston.info('Set rat ' + firstLimpet + ', as rat')
             }
           })
         }
