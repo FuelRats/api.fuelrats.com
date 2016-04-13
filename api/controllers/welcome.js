@@ -33,7 +33,7 @@ exports.get = function (request, response) {
               rescue.lastModified = moment(rescue.lastModified)
 
               let firstLimpet
-              if (rescue.firstLimpet[0]) {
+              if (rescue.firstLimpet && rescue.firstLimpet[0]) {
                 firstLimpet = rescue.firstLimpet[0]
               } else {
                 firstLimpet = rescue.firstLimpet
