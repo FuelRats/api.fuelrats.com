@@ -20,7 +20,7 @@ generate = require( './generator' );
 // Set up globals
 // =============================================================================
 
-rootUrl = 'http://localhost:8080/api';
+rootUrl = 'http://localhost:8080';
 
 
 
