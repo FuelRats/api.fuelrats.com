@@ -1,6 +1,6 @@
-var LeaderboardView, RatView
+'use strict'
 
-RatView = Marionette.ItemView.extend({
+let RatView = Marionette.ItemView.extend({
   tagName: 'tr',
 
   template: Handlebars.compile(
@@ -9,7 +9,7 @@ RatView = Marionette.ItemView.extend({
   )
 })
 
-LeaderboardView = Marionette.CompositeView.extend({
+Marionette.CompositeView.extend({
   childView: RatView,
 
   childViewContainer: 'tbody',
