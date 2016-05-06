@@ -7,6 +7,7 @@
 let _ = require('underscore')
 let bodyParser = require('body-parser')
 let cors = require('cors')
+let compression = require('compression')
 let cookieParser = require('cookie-parser')
 let express = require('express')
 let expressHandlebars = require('express-handlebars')
@@ -111,6 +112,7 @@ app.engine('.hbs', expressHandlebars({
 app.set('view engine', '.hbs')
 
 app.use(cors())
+app.use(compression())
 app.use(bodyParser.urlencoded({
   extended: true
 }))
