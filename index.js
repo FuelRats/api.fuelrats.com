@@ -104,7 +104,7 @@ app.engine('.hbs', expressHandlebars({
       if (moment().diff(context, 'days') < 7) {
         return context.fromNow()
       } else {
-        return context.add(1286, 'years').format(block.hash.format || 'MMM Do, YYYY')
+        return context.add(1286, 'years').format(block.hash.format || 'YYYY-MMM-Do')
       }
     }
   }
