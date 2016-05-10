@@ -1,3 +1,12 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title>Fuel rats Paperwork</title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
 <div class="container-fluid">
   <form id="paperwork" action="/rescues" method="post">
     <div class="form-group">
@@ -88,5 +97,13 @@
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 </div>
+{% endblock %}
 
+{% block resources %}
+{% parent %}
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.1/css/bootstrapValidator.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.1/js/bootstrapValidator.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+<script src="/bootstrap-tagsinput.js"></script>
 <script src="paperwork.js"></script>
+{% endblock %}

@@ -1,3 +1,12 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title>Welcome</title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
 <nav class="navbar navbar-light bg-faded">
   <div class="navbar-brand" data-pgroup="{{ group }}">Welcome, {{ email }}</div>
 
@@ -19,15 +28,15 @@
         <div class="card-block">
 <!--        <ul class="list-group list-group-flush rat-list">-->
           <ul class="nav nav-stacked rat-list">
-            {{#each CMDRs}}
+            {% for CMDR in CMDRs %}
   <!--            <li class="list-group-item">-->
               <li class="nav-item">
-                <a class="nav-link active" href="#rescues-{{ _id }}">
-                  {{ CMDRname }}
-                  <span class="label label-pill label-default">{{ platform }}</span>
+                <a class="nav-link active" href="#rescues-{{ CMDR._id }}">
+                  {{ CMDR.CMDRname }}
+                  <span class="label label-pill label-default">{{ CMDR.platform }}</span>
                 </a>
               </li>
-            {{/each}}
+            {% endfor %}
           </ul>
         </div>
 
@@ -41,14 +50,14 @@
     </div>
 
     <div class="col-md-9">
-      {{#each CMDRs}}
-        <h2 id="rescues-{{ _id }}">
+      {% for CMDR in CMDRs %}
+        <h2 id="rescues-{{ CMDR._id }}">
           {{ CMDRname }}
-          <small class="text-muted pull-xs-right">{{ rescues.length }} rescues</small>
+          <small class="text-muted pull-xs-right">{{ CMDR.rescues.length }} rescues</small>
         </h2>
         <hr>
 
-        {{#if rescues}}
+        {% if CMDR.rescues %}
           <table class="table table-bordered table-striped table-hover">
             <thead class="thead-default">
               <tr>
@@ -60,30 +69,35 @@
             </thead>
 
             <tbody>
-              {{#each rescues}}
+              {% for rescue in CMDR.rescues %}
                 <tr>
-                  <td>{{ dateFormat createdAt }}</td>
-                  <td class="{{#if successful}} table-success {{ else }} table-danger {{/if}}">
-                    {{#if successful}}
-                      {{#if assist}}
+                  <td>{{ rescue.createdAt|eliteDate() }}</td>
+                  <td class="{% if rescue.successful %} table-success {% else %} table-danger {% endif %}">
+                    {% if rescue.successful %}
+                      {% if rescue.assist %}
                         Success (Assist)
-                      {{ else }}
+                      {% else %}
                         Success
-                      {{/if}}
-                    {{ else }}
+                      {% endif %}
+                    {% else %}
                       Failure
-                    {{/if}}
+                    {% endif %}
                   </td>
-                  <td>{{ system }}</td>
-                  <!--<td>{{ notes }}</td>-->
+                  <td>{{ rescue.system }}</td>
+                  <!--<td>{{ rescue.notes }}</td>-->
                 </tr>
-              {{/each}}
+              {% endfor %}
             </tbody>
           </table>
-        {{else}}
-          No rescues found for {{ CMDRname }}
-        {{/if}}
-      {{/each}}
+        {% else %}
+          No rescues found for {{ CMDR.CMDRname }}
+        {% endif %}
+      {% endfor %}
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block resources %}
+{% parent %}
+{% endblock %}

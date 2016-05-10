@@ -88,7 +88,7 @@ exports.authorization = [
     })
   }),
   function (req, res) {
-    res.render('authorise', { transactionId: req.oauth2.transactionID, user: req.user, client: req.oauth2.client })
+    res.render('authorise.swig', { transactionId: req.oauth2.transactionID, user: req.user, client: req.oauth2.client })
   }
 ]
 

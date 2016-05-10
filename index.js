@@ -10,7 +10,6 @@ let cors = require('cors')
 let compression = require('compression')
 let cookieParser = require('cookie-parser')
 let express = require('express')
-let expressHandlebars = require('express-handlebars')
 let expressSession = require('express-session')
 let fs = require('fs')
 let forceSSL = require('express-force-ssl')
@@ -21,6 +20,7 @@ let mongoose = require('mongoose')
 let passport = require('passport')
 let winston = require('winston')
 let request = require('request')
+let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
 
@@ -94,22 +94,18 @@ if (process.argv) {
 
 let app = express()
 
-app.engine('.hbs', expressHandlebars({
-  defaultLayout: 'main',
-  extname: '.hbs',
-  helpers: {
-    dateFormat: function (context, block) {
-      context = moment(new Date(context))
+app.engine('.swig', swig.renderFile)
+app.set('views', __dirname + '/views')
+app.set('view cache', false)
 
-      if (moment().diff(context, 'days') < 7) {
-        return context.fromNow()
-      } else {
-        return context.add(1286, 'years').format(block.hash.format || 'YYYY-MMM-Do')
-      }
-    }
+swig.setFilter('eliteDate', function (date, args) {
+  let context = moment(date)
+  if (moment().diff(context, 'days') < 7) {
+    return context.fromNow()
+  } else {
+    return context.add(1286, 'years').format(args || 'YYYY-MM-DD')
   }
-}))
-app.set('view engine', '.hbs')
+})
 
 app.use(cors())
 app.use(compression())

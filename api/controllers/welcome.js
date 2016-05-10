@@ -59,7 +59,7 @@ exports.get = function (request, response) {
             _.union(request.user, CMDR.rescues)
           })
 
-          response.render('welcome', request.user)
+          response.render('welcome.swig', request.user)
         })
         .catch(function (error) {
           winston.error(error)

@@ -1,3 +1,12 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title>{{client.name}}</b> is requesting full access to your FuelRats account</title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
 <div class="Aligner">
   <div class="Aligner-item">
     <img src="http://www.fuelrats.com/wp-content/uploads/2015/07/ratsticker-1024x1024.jpg" alt="FuelRats Logo" class="logo">
@@ -15,3 +24,5 @@
     </form>
   </div>
 </div>
+
+{% endblock %}

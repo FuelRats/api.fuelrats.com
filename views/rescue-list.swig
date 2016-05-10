@@ -1,3 +1,13 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title>Rescue List</title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
+
 <div class="container-fluid">
   <h1 class="page-header">
     Rescues
@@ -11,12 +21,12 @@
     <div class="col-md-12">
       <nav>
         <ul class="pager">
-          {{#if previousPage}}
+          {% if previousPage %}
             <li class="pager-prev"><a href="/rescues/list/{{ previousPage }}">Previous Page</a></li>
-          {{/if}}
-          {{#if nextPage}}
+          {% endif %}
+          {% if nextPage %}
             <li class="pager-next"><a href="/rescues/list/{{ nextPage }}">Next Page</a></li>
-          {{/if}}
+          {% endIf %}
         </ul>
       </nav>
     </div>
@@ -35,24 +45,24 @@
         </thead>
 
         <tbody>
-          {{#each rescues}}
+          {% for rescue in rescues %}
             <tr>
-              <td>{{ dateFormat createdAt }}</td>
-              <td>{{ system }}</td>
-              <td>{{ firstLimpet.CMDRname }}</td>
-              <td>{{ codeRed }}</td>
-              <td>{{ successful }}</td>
+              <td>{{ rescue.createdAt|eliteDate('Y-m-d') }}</td>
+              <td>{{ rescue.system }}</td>
+              <td>{{ rescue.firstLimpet.CMDRname }}</td>
+              <td>{{ rescue.codeRed }}</td>
+              <td>{{ rescue.successful }}</td>
               <td>
                 <div class="btn-group">
-                  <a class="btn btn-sm btn-primary" href="/rescues/edit/{{ _id }}">Edit</a>
+                  <a class="btn btn-sm btn-primary" href="/rescues/edit/{{ rescue._id }}">Edit</a>
                   <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown"></button>
                   <div class="dropdown-menu">
-                    <a class="btn btn-sm btn-primary" href="/rescues/edit/{{ _id }}">Edit</a>
+                    <a class="btn btn-sm btn-primary" href="/rescues/edit/{{ rescue._id }}">Edit</a>
                   </div>
                 </div>
               </td>
             </tr>
-          {{/each}}
+          {% endfor %}
         </tbody>
       </table>
     </div>
@@ -60,14 +70,15 @@
     <div class="col-md-12">
       <nav>
         <ul class="pager">
-          {{#if previousPage}}
+          {% if previousPage %}
             <li class="pager-prev"><a href="/rescues/list/{{ previousPage }}">Previous Page</a></li>
-          {{/if}}
-          {{#if nextPage}}
+          {% endif %}
+          {% if nextPage %}
             <li class="pager-next"><a href="/rescues/list/{{ nextPage }}">Next Page</a></li>
-          {{/if}}
+          {% endif %}
         </ul>
       </nav>
     </div>
   </div>
 </div>
+{% endblock %}

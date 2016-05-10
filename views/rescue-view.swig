@@ -1,3 +1,12 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title>View Rescue</title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
 <div class="container-fluid">
   <h1 class="page-header">Rescue</h1>
 
@@ -6,19 +15,19 @@
       <dl class="dl-horizontal row">
         <dt class="col-sm-2">Status:</dt>
         <dd class="col-sm-10">
-          {{#if codeRed}}
+          {% if codeRed %}
             <span class="text-danger">CODE RED</span>
-          {{/if}}
-          {{#if open}}
+          {% endif %}
+          {% if open %}
             Open
-            {{#if active}}
+            {% if active %}
               and active
-            {{else}}
+            {% else %}
               and inactive
-            {{/if}}
-        {{else}}
+            {% endif %}
+        {% else %}
           Closed
-        {{/if}}
+        {% endif %}
         </dd>
 
         <dt class="col-sm-2">Platform:</dt>
@@ -44,25 +53,23 @@
         </div>
 
         <ul class="list-group list-group-flush">
-          {{#each rats}}
+          {% for rat in rats %}
             <li class="list-group-item">
-              {{ CMDRname }}
+              {{ rat.CMDRname }}
 
-              {{#if firstLimpet}}
+              {% if rat.firstLimpet %}
                 <span class="label label-pilllabel-primary">First Limpet</span>
-              {{/if}}
+              {% endif %}
             </li>
-          {{/each}}
-          {{#each unidentifiedRats}}
+          {% endfor %}
+          {% for unidentifiedRat in unidentifiedRats %}
             <li class="list-group-item">
-              {{ this }}
-              {{#if firstLimpet}}
-                <span class="label label-pilllabel-primary">First Limpet</span>
-              {{/if}}
+              {{ unidentifiedRat }}
             </li>
-          {{/each}}
+          {% endfor %}
         </ul>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}

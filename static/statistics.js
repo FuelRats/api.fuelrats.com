@@ -2,7 +2,7 @@ $(function () {
   var StatisticsView
 
   StatisticsView = Marionette.LayoutView.extend({
-    el: 'body',
+    el: '#leaderboard',
 
     initialize: function () {
       this.listenTo(this.model, 'sync', this.render)

@@ -21,10 +21,10 @@ exports.editRescue = function (request, response) {
         }
       })
 
-      response.render('rescue-edit')
+      response.render('rescue-edit.swig')
     })
   }, function () {
-    response.render('errors/403')
+    response.render('errors/403.swig')
   })
 
 

@@ -1,3 +1,13 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title>Login</title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
+
 <div class="container-fluid">
   <div class="row">
     <form action="/login" method="post" class="col-md-6">
@@ -7,13 +17,13 @@
 
 
       <div class="form-group">
-        {{#if reset_sent}}
+        {% if reset_sent %}
           <div class="alert alert-success" role="alert">A link to reset your password will be sent to your email address and should appear within 10 minutes</div>
-        {{/if}}
+        {% endif %}
 
-        {{#if password_changed}}
+        {% if password_changed %}
           <div class="alert alert-success" role="alert">Your password has been changed, you may now login with your new credentials.</div>
-        {{/if}}
+        {% endif %}
 
         <label for="email">Email</label>
         <input type="email" name="email" id="email" class="form-control" autocomplete="off" required>
@@ -33,9 +43,9 @@
         <h1>Register</h1>
       </div>
 
-      {{#if registrationError}}
+      {% if registrationError %}
         <div class="alert alert-warning" role="alert">An error occured during registration.</div>
-      {{/if}}
+      {% endif %}
 
       <div class="form-group">
         <label for="CMDRname">CMDR Name</label>
@@ -63,3 +73,5 @@
     </form>
   </div>
 </div>
+
+{% endblock %}

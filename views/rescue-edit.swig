@@ -1,3 +1,13 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title></title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
+
 <div class="container-fluid">
   <h1 class="page-header">Rescue</h1>
 
@@ -80,9 +90,9 @@
 
           <ul class="list-group list-group-flush rat-list"></ul>
 <!--
-          {{#if firstLimpet}}
+          {% if firstLimpet %}
             <span class="label label-pill label-primary">First Limpet</span>
-          {{/if}}
+          {% endif %}
 -->
 
           <div class="card-footer form-inline rat-adder">
@@ -102,5 +112,9 @@
     </div>
   </form>
 </div>
+{% endblock %}
 
+{% block resources %}
+{% parent %}
 <script src="/rescue-edit.js"></script>
+{% endblock %}

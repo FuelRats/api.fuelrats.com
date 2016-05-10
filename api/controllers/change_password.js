@@ -13,7 +13,7 @@ exports.get = function (request, response) {
         resetToken: request.query.token
     }).then(function (user) {
         if (user && user.resetTokenExpire.getTime() > Date.now()) {
-            response.render('change_password', request.query);
+            response.render('change_password.swig', request.query);
         } else {
             response.redirect('/reset?expired=1');
         }

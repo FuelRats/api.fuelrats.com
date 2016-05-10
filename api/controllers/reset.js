@@ -10,7 +10,7 @@ let uid = require('uid-safe');
 
 
 exports.get = function (request, response) {
-    response.render('reset', request.query);
+    response.render('reset.swig', request.query);
 };
 
 let getPlainTextEmailVersion = function(emaillink) {
@@ -41,7 +41,7 @@ exports.post = function (request, response, next) {
                 } else {
                     let emailLink = 'http://' + request.headers.host + '/change_password?token=' + resetToken;
 
-                    response.render('reset-email', {emaillink: emailLink}, function(err, emailHTML) {
+                    response.render('reset-email.swig', {emaillink: emailLink}, function(err, emailHTML) {
                         let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net');
                         var mailOptions = {
                             from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',

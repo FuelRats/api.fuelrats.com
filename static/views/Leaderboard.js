@@ -1,6 +1,6 @@
 'use strict'
 
-let RatView = Marionette.ItemView.extend({
+var RatView = Marionette.ItemView.extend({
   tagName: 'tr',
 
   template: Handlebars.compile(
@@ -9,7 +9,7 @@ let RatView = Marionette.ItemView.extend({
   )
 })
 
-Marionette.CompositeView.extend({
+var LeaderboardView = Marionette.CompositeView.extend({
   childView: RatView,
 
   childViewContainer: 'tbody',

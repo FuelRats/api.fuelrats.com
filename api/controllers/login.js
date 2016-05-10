@@ -17,7 +17,7 @@ Rescue = require( '../models/rescue' )
 
 exports.get = function ( request, response ) {
   if ( request.isUnauthenticated() ) {
-    response.render('login', request.query)
+    response.render('login.swig', request.query)
   } else {
     console.log(request.session)
     if (request.session.returnTo) {
