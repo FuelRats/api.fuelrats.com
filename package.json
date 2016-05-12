@@ -19,6 +19,7 @@
     "cookie-parser": "^1.4.1",
     "cors": "^2.7.1",
     "csv": "^0.4.6",
+    "d3": "^3.5.17",
     "download": "^4.4.3",
     "express": "^4.13.3",
     "express-force-ssl": "^0.3.0",
