@@ -71,7 +71,7 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
           return callback(err)
         }
 
-        callback(null, token)
+        callback(null, token.value)
       })
     })
   })
