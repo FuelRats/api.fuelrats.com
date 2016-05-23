@@ -227,7 +227,7 @@ router.get('/users', user.get)
 // router.put('/users/:id', user.put)
 // router.post('/users', user.post)
 
-router.get('/clients', client.httpGet)
+router.get('/clients', auth.isAuthenticated, client.httpGet)
 // router.get('/clients/:id', client.getById)
 // router.put('/clients/:id', client.put)
 router.post('/clients', client.httpPost)
