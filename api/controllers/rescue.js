@@ -158,25 +158,21 @@ class Controller {
     })
   }
 
-  static update (data, client, query) {
+  static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
+      // Modifying a rescue requires an authenticated user
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('rescue.update')
+        reject({ error: error })
+        return
+      }
+
       if (query.id) {
-        Rescue.findById(query.id, function (error, rescue) {
-          if (error) {
-            let errorModel = ErrorModels.server_error
-            errorModel.detail = error
-            reject({
-              error: errorModel,
-              meta: {}
-            })
-          } else if (!rescue) {
-            let errorModel = ErrorModels.not_found
-            errorModel.detail = query.id
-            reject({
-              error: errorModel,
-              meta: {}
-            })
-          } else {
+        retrieveRescueById(query.id).then(function (rescue) {
+          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+
+          Permission.require(permission, connection.user).then(function () {
             for (let key in data) {
               if (key === 'client') {
                 _.extend(rescue.client, data)
@@ -195,7 +191,7 @@ class Controller {
                 })
               } else {
                 let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-                  return cl.clientId !== client.clientId
+                  return cl.clientId !== connection.clientId
                 })
                 websocket.broadcast(allClientsExcludingSelf, {
                   action: 'rescue:updated'
@@ -206,7 +202,16 @@ class Controller {
                 })
               }
             })
-          }
+          }, function (err) {
+            reject({ error: err })
+          })
+        }, function () {
+          let errorModel = ErrorModels.not_found
+          errorModel.detail = query.id
+          reject({
+            error: errorModel,
+            meta: {}
+          })
         })
       }
     })
@@ -216,73 +221,133 @@ class Controller {
 
   }
 
-  static assign (data, client, query) {
+  static assign (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      let update = {
-        $addToSet: {
-          rats: data.ratId
-        }
+      // Modifying a rescue requires an authenticated user
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('rescue.update')
+        reject({ error: error })
+        return
       }
 
-      let options = {
-        new: true
-      }
+      if (query.id) {
+        retrieveRescueById(query.id).then(function (rescue) {
+          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
 
-      Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
-        resolve({ data: rescue, meta: {} })
-      }).catch(function (error) {
-        reject({ error: error, meta: {} })
-      })
-    })
-  }
+          Permission.require(permission, connection.user).then(function () {
+            let update = {
+              $addToSet: {
+                rats: data.ratId
+              }
+            }
 
-  static unassign (data, client, query) {
-    return new Promise(function (resolve, reject) {
-      let update = {
-        $pull: {
-          rats: data.ratId
-        }
-      }
+            let options = {
+              new: true
+            }
 
-      let options = {
-        new: true
-      }
+            Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
+              resolve({ data: rescue, meta: {} })
+            }).catch(function (error) {
+              reject({ error: error, meta: {} })
+            })
+          }, function () {
 
-      Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
-        resolve({ data: rescue, meta: {} })
-      }).catch(function (error) {
-        reject({ error: error, meta: {} })
-      })
-    })
-  }
-
-  static addquote (data, client, query) {
-    return new Promise(function (resolve, reject) {
-      let update = {
-        '$push': {
-          quotes: data
-        }
-      }
-
-      let options = {
-        new: true
-      }
-
-      Rescue.findByIdAndUpdate(query.id, update, options, function (err, rescue) {
-        if (err) {
-          reject({ error: err, meta: {} })
-        } else if (!rescue) {
-          reject({ error: '404', meta: {} })
-        } else {
-          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-            return cl.clientId !== client.clientId
           })
-          websocket.broadcast(allClientsExcludingSelf, {
-            action: 'rescue:updated'
-          }, rescue)
-          resolve({ data: rescue, meta: {} })
-        }
-      })
+        }, function () {
+
+        })
+      }
+    })
+  }
+
+  static unassign (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      // Modifying a rescue requires an authenticated user
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('rescue.update')
+        reject({ error: error })
+        return
+      }
+
+      if (query.id) {
+        retrieveRescueById(query.id).then(function (rescue) {
+          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+
+          Permission.require(permission, connection.user).then(function () {
+            let update = {
+              $pull: {
+                rats: data.ratId
+              }
+            }
+
+            let options = {
+              new: true
+            }
+
+            Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
+              resolve({ data: rescue, meta: {} })
+            }).catch(function (error) {
+              reject({ error: error, meta: {} })
+            })
+          }, function () {
+
+          })
+        }, function () {
+
+        })
+      }
+    })
+  }
+
+  static addquote (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      // Modifying a rescue requires an authenticated user
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('rescue.update')
+        reject({ error: error })
+        return
+      }
+
+      if (query.id) {
+        retrieveRescueById(query.id).then(function (rescue) {
+          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+
+          Permission.require(permission, connection.user).then(function () {
+            let update = {
+              '$push': {
+                quotes: data
+              }
+            }
+
+            let options = {
+              new: true
+            }
+
+            Rescue.findByIdAndUpdate(query.id, update, options, function (err, rescue) {
+              if (err) {
+                reject({ error: err, meta: {} })
+              } else if (!rescue) {
+                reject({ error: '404', meta: {} })
+              } else {
+                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  return cl.clientId !== connection.clientId
+                })
+                websocket.broadcast(allClientsExcludingSelf, {
+                  action: 'rescue:updated'
+                }, rescue)
+                resolve({ data: rescue, meta: {} })
+              }
+            })
+          }, function () {
+
+          })
+        }, function () {
+
+        })
+      }
     })
   }
 }
@@ -390,6 +455,31 @@ class HTTP {
   static delete (request, response, next) {
 
   }
+}
+
+function retrieveRescueById (id) {
+  return new Promise(function (resolve, reject) {
+    Rescue.findById(id).populate('rats').exec(function (error, rescue) {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(rescue)
+      }
+    })
+  })
+}
+
+function userEntitledToRescueAccess (rescue, user) {
+  if (rescue.open === true) {
+    return true
+  }
+
+  for (let CMDR of user.CMDRs) {
+    if (rescue.rats.includes(CMDR)) {
+      return true
+    }
+  }
+  return false
 }
 
 module.exports = { Controller, HTTP }
