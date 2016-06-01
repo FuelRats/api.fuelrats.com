@@ -4,7 +4,7 @@ let ErrorModels = require('./errors')
 
 // Import controllers
 let rat = require('./controllers/rat')
-let rescue = require('./controllers/rescue')
+let rescue = require('./controllers/rescue').Controller
 let stream = require('./controllers/stream')
 let user = require('./controllers/user')
 let version = require('./controllers/version')
