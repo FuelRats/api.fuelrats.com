@@ -133,11 +133,11 @@ exports.post = function (request, response, next) {
 exports.create = function (query, connection) {
   return new Promise(function (resolve, reject) {
     if (connection.isUnauthenticated()) {
-      let error = Permission.authenticationError('rat.create')
+      let error = Permission.authenticationError('self.rat.create')
       reject({ error: error })
     }
 
-    Permission.require('rat.create', connection.user).then(function () {
+    Permission.require('self.rat.create', connection.user).then(function () {
       Rat.create(query, function (error, rat) {
         if (error) {
           let errorTypes = Object.keys(error.errors)
@@ -225,7 +225,7 @@ exports.update = function (data, connection, query) {
           let requiredPermission = 'rat.update'
           for (let cmdr of connection.user.CMDRs) {
             if (cmdr.id === rat.id) {
-              requiredPermission = 'rat.update.self'
+              requiredPermission = 'self.rat.update'
             }
           }
 

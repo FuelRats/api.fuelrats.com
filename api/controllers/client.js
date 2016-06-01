@@ -9,12 +9,12 @@ class ClientController {
   static read (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('client.read.self')
+        let error = Permission.authenticationError('self.client.read')
         reject({ error: error })
       }
 
       query = _.extend(query, { user: connection.user })
-      Permission.require('client.create.self', connection.user).then(function () {
+      Permission.require('self.client.read', connection.user).then(function () {
         Client.find(query, function (err, clients) {
           if (err) {
             let error = ErrorModels.server_error
@@ -33,11 +33,11 @@ class ClientController {
   static create (data, connection) {
     return new Promise(function (resolve, reject) {
       if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('client.read.self')
+        let error = Permission.authenticationError('self.client.create')
         reject({ error: error })
       }
 
-      Permission.require('client.create.self', connection.user).then(function () {
+      Permission.require('self.client.create', connection.user).then(function () {
         let secret = crypto.randomBytes(24).toString('hex')
 
         let client = new Client({
@@ -74,7 +74,7 @@ class ClientController {
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('client.delete.self')
+        let error = Permission.authenticationError('client.delete')
         reject({ error: error })
       }
     })

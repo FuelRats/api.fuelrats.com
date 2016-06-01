@@ -6,11 +6,10 @@ const permissions = {
   normal: [
     'rescue.create',
     'rescue.read',
-    'rat.*.self',
-    'client.*.self'
+    'self.*'
   ],
   overseer: [
-    'client.*.self',
+    'self.*',
     'rescue.read',
     'rescue.create',
     'rescue.update',
@@ -20,8 +19,8 @@ const permissions = {
     'admin.read'
   ],
   moderator: [
+    'self.*',
     'admin.read',
-    'client.*.self',
     'rescue.*',
     'rat.*',
     'drill.*'
@@ -57,9 +56,6 @@ class Permission {
           if (currentNodeIndex === permission.length - 2) {
             currentNodeIndex = permission.length
             hasPermission = true
-          } else {
-            currentNodeIndex += 1
-            continue
           }
         }
         if (permission[currentNodeIndex] !== currentPermission[currentNodeIndex]) {
@@ -67,11 +63,6 @@ class Permission {
         }
 
         currentNodeIndex += 1
-      }
-
-      if (currentNodeIndex === permission.length) {
-        hasPermission = true
-        break
       }
     }
     return hasPermission
