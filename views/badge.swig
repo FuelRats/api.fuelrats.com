@@ -1,3 +1,16 @@
+{% extends 'layouts/main.swig' %}
+
+{% block head %}
+{% parent %}
+<title></title>
+{% endblock %}
+
+{% block body %}
+{% parent %}
+{% endblock %}
+
+{% block resources %}
+{% endblock %}
 <svg id="badge" class="animated" viewBox="-93.3 -146.2 664.8 965.7">
   <path id="core" class="animated" d="M226.2,512.1c-4.9-2.3-7.5-5.4-9.4-11.4c-0.9-2.9-4.6-8.2-8.6-12.6c-3.9-4.2-9.2-10.4-11.9-13.9
       c-4.4-5.7-5.6-6.5-11.8-7.8c-3.8-0.8-14.5-1.4-23.9-1.4c-25.5,0-24.1-2,2.1-3.1c12.4-0.5,23.2-1.3,24-1.9c2.9-1.8-0.9-6.1-6.5-7.5
