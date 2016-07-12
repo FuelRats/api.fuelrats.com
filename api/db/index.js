@@ -19,7 +19,10 @@ Rescue.belongsToMany(Rat, {
     unique: false
   }
 })
-Rescue.belongsTo(Rat, { as: 'firstLimpet' })
+
+Rescue.belongsTo(Rat, {
+  as: 'firstLimpet'
+})
 
 module.exports = {
   db: db,

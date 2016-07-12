@@ -130,11 +130,6 @@ let sslHostName = config.ssl.hostname
 let port = config.port || process.env.PORT
 let sslPort = config.ssl.port || process.env.SSL_PORT
 
-passport.use(User.createStrategy())
-// passport.use(Client.createStrategy())
-passport.serializeUser(User.serializeUser())
-passport.deserializeUser(User.deserializeUser())
-
 app.use(expressSession({
   secret: config.secretSauce,
   resave: false,
@@ -218,7 +213,7 @@ router.get('/rescues', rescue.get)
 router.post('/rescues', rescue.post)
 router.get('/rescues/:id', rescue.getById)
 router.put('/rescues/:id', rescue.put)
-router.put('/rescues/:id/addquote', rescue.addQuote)
+router.put('/rescues/:id/addquote', rescue.addquote)
 router.put('/rescues/:id/assign/:ratId', rescue.assign)
 router.put('/rescues/:id/unassign/:ratId', rescue.unassign)
 

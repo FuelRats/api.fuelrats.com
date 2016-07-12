@@ -1,10 +1,14 @@
 'use strict'
 
 let _ = require('underscore')
+let db = require('../db').db
+let Rat = require('../db').Rat
+let Rescue = require('../db').Rescue
+
 let mongoose = require('mongoose')
 
-let Rat = require('../models/rat')
-let Rescue = require('../models/rescue')
+let MongoRat = require('../models/rat')
+let MongoRescue = require('../models/rescue')
 let ErrorModels = require('../errors')
 let websocket = require('../websocket')
 let Permission = require('../permission')
@@ -12,65 +16,58 @@ let Permission = require('../permission')
 class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
-      let filter = {}
-      let dbQuery = {}
-
-      filter.size = parseInt(query.limit) || 25
+      let limit = parseInt(query.limit) || 25
       delete query.limit
 
-      filter.from = parseInt(query.offset) || 0
+      let offset = parseInt(query.offset) || 0
       delete query.offset
 
-      for (let key in query) {
-        if (!dbQuery.bool) {
-          dbQuery.bool = {
-            should: []
+      let dbQuery = {
+        where: query,
+        limit: limit,
+        offset: offset,
+        include: [
+          {
+            model: Rat,
+            as: 'rats',
+            required: true
           }
+        ]
+      }
+
+      Rescue.findAndCountAll(dbQuery).then(function (result) {
+        let meta = {
+          count: result.rows.length,
+          limit: limit,
+          offset: offset,
+          total: result.count
         }
 
-        let term = {}
-        term[key] = {
-          query: query[key],
-          fuzziness: 'auto'
-        }
-        dbQuery.bool.should.push({
-          match: term
+        /* For backwards compatibility reasons we return only the list of rat
+        foreign keys, not their objects */
+        let rescues = result.rows.map(function (rescueInstance) {
+          let rescue = rescueInstance.toJSON()
+          let reducedRats = rescue.rats.map(function (rat) {
+            return rat.id
+          })
+          rescue.rats = reducedRats
+
+          rescue.firstLimpet = rescue.firstLimpetId
+          delete rescue.firstLimpetId
+          return rescue
         })
-      }
 
-      if (!Object.keys(dbQuery).length) {
-        dbQuery.match_all = {}
-      }
-
-      Rescue.search(dbQuery, filter, function (error, queryData) {
-        if (error) {
-          let errorObj = ErrorModels.server_error
-          errorObj.detail = error
-          reject({
-            error: errorObj,
-            meta: {}
-          })
-        } else {
-          let meta = {
-            count: queryData.hits.hits.length,
-            limit: filter.size,
-            offset: filter.from,
-            total: queryData.hits.total
-          }
-
-          let data = []
-
-          queryData.hits.hits.forEach(function (rescue) {
-            rescue._source._id = rescue._id
-            rescue._source.score = rescue._score
-            data.push(rescue._source)
-          })
-
-          resolve({
-            data: data,
-            meta: meta
-          })
-        }
+        resolve({
+          data: rescues,
+          meta: meta
+        })
+      }).catch(function (error) {
+        let errorObj = ErrorModels.server_error
+        errorObj.detail = error
+        reject({
+          error: errorObj,
+          meta: {}
+        })
       })
     })
   }
@@ -83,7 +80,7 @@ class Controller {
         query.rats = query.rats.split(',')
       }
 
-      query.unidentifiedRats = []
+      query.unidentifiedMongoRats = []
 
       if (query.rats) {
         query.rats.forEach(function (rat) {
@@ -91,7 +88,7 @@ class Controller {
             if (!mongoose.Types.ObjectId.isValid(rat)) {
               let CMDRname = rat.trim()
               query.rats = _.without(query.rats, CMDRname)
-              let find = Rat.findOne({
+              let find = MongoRat.findOne({
                 CMDRname: CMDRname
               })
 
@@ -99,7 +96,7 @@ class Controller {
                 if (rat) {
                   query.rats.push(rat._id)
                 } else {
-                  query.unidentifiedRats.push(CMDRname)
+                  query.unidentifiedMongoRats.push(CMDRname)
                 }
               })
 
@@ -115,7 +112,7 @@ class Controller {
       if (query.firstLimpet) {
         if (typeof query.firstLimpet === 'string') {
           if (!mongoose.Types.ObjectId.isValid(query.firstLimpet)) {
-            let firstLimpetFind = Rat.findOne({
+            let firstLimpetFind = MongoRat.findOne({
               CMDRname: query.firstLimpet.trim()
             })
 
@@ -133,7 +130,7 @@ class Controller {
         }
       }
       Promise.all(finds).then(function () {
-        Rescue.create(query, function (error, rescue) {
+        MongoRescue.create(query, function (error, rescue) {
           if (error) {
             let errorObj = ErrorModels.server_error
             errorObj.detail = error
@@ -168,9 +165,9 @@ class Controller {
       }
 
       if (query.id) {
-        retrieveRescueById(query.id).then(function (rescue) {
+        retrieveMongoRescueById(query.id).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
 
           Permission.require(permission, connection.user).then(function () {
             for (let key in data) {
@@ -231,9 +228,9 @@ class Controller {
       }
 
       if (query.id) {
-        retrieveRescueById(query.id).then(function (rescue) {
+        retrieveMongoRescueById(query.id).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
 
           Permission.require(permission, connection.user).then(function () {
             let update = {
@@ -246,7 +243,7 @@ class Controller {
               new: true
             }
 
-            Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
+            MongoRescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
               resolve({ data: rescue, meta: {} })
             }).catch(function (error) {
               reject({ error: error, meta: {} })
@@ -271,9 +268,9 @@ class Controller {
       }
 
       if (query.id) {
-        retrieveRescueById(query.id).then(function (rescue) {
+        retrieveMongoRescueById(query.id).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
 
           Permission.require(permission, connection.user).then(function () {
             let update = {
@@ -286,7 +283,7 @@ class Controller {
               new: true
             }
 
-            Rescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
+            MongoRescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
               resolve({ data: rescue, meta: {} })
             }).catch(function (error) {
               reject({ error: error, meta: {} })
@@ -311,9 +308,9 @@ class Controller {
       }
 
       if (query.id) {
-        retrieveRescueById(query.id).then(function (rescue) {
+        retrieveMongoRescueById(query.id).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
 
           Permission.require(permission, connection.user).then(function () {
             let update = {
@@ -326,7 +323,7 @@ class Controller {
               new: true
             }
 
-            Rescue.findByIdAndUpdate(query.id, update, options, function (err, rescue) {
+            MongoRescue.findByIdAndUpdate(query.id, update, options, function (err, rescue) {
               if (err) {
                 reject({ error: err, meta: {} })
               } else if (!rescue) {
@@ -411,7 +408,7 @@ class HTTP {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
     let id = request.params.id
 
-    Rescue.findById(id).populate('rats').exec(function (error, rescue) {
+    MongoRescue.findById(id).populate('rats').exec(function (error, rescue) {
       if (error) {
         response.model.errors.push(error)
         response.status(400)
@@ -457,9 +454,9 @@ class HTTP {
   }
 }
 
-function retrieveRescueById (id) {
+function retrieveMongoRescueById (id) {
   return new Promise(function (resolve, reject) {
-    Rescue.findById(id).populate('rats').exec(function (error, rescue) {
+    MongoRescue.findById(id).populate('rats').exec(function (error, rescue) {
       if (error) {
         reject(error)
       } else {
@@ -469,7 +466,7 @@ function retrieveRescueById (id) {
   })
 }
 
-function userEntitledToRescueAccess (rescue, user) {
+function userEntitledToMongoRescueAccess (rescue, user) {
   if (rescue.open === true) {
     return true
   }
