@@ -91,18 +91,7 @@ class Controller {
           }
 
           Promise.all(associations).then(function () {
-            Rescue.findOne({
-              where: {
-                id: rescue.id
-              },
-              include: [
-                {
-                  model: Rat,
-                  as: 'rats',
-                  required: true
-                }
-              ]
-            }).then(function (rescueInstance) {
+            findRescueWithRats{ id: rescue.id }).then(function (rescueInstance) {
               let rescue = convertRescueToAPIResult(rescueInstance)
 
               resolve({
@@ -114,7 +103,12 @@ class Controller {
         })
 
       }).catch(function (error) {
-        console.log(error)
+        let errorModel = ErrorModels.server_error
+        errorModel.detail = error
+        reject({
+          error: errorModel,
+          meta: {}
+        })
       })
     })
   }
@@ -443,7 +437,7 @@ function userEntitledToMongoRescueAccess (rescue, user) {
   return false
 }
 
-function convertRescueToAPIResult(rescueInstance) {
+function convertRescueToAPIResult (rescueInstance) {
   let rescue = rescueInstance.toJSON()
   let reducedRats = rescue.rats.map(function (rat) {
     return rat.id
@@ -453,6 +447,19 @@ function convertRescueToAPIResult(rescueInstance) {
   rescue.firstLimpet = rescue.firstLimpetId
   delete rescue.firstLimpetId
   return rescue
+}
+
+function findRescueWithRats (where) {
+  return Rescue.findOne({
+    where: where,
+    include: [
+      {
+        model: Rat,
+        as: 'rats',
+        required: true
+      }
+    ]
+  })
 }
 
 module.exports = { Controller, HTTP }
