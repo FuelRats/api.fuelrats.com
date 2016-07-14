@@ -43,14 +43,7 @@ class Controller {
         /* For backwards compatibility reasons we return only the list of rat
         foreign keys, not their objects */
         let rescues = result.rows.map(function (rescueInstance) {
-          let rescue = rescueInstance.toJSON()
-          let reducedRats = rescue.rats.map(function (rat) {
-            return rat.id
-          })
-          rescue.rats = reducedRats
-
-          rescue.firstLimpet = rescue.firstLimpetId
-          delete rescue.firstLimpetId
+          let rescue = convertRescueToAPIResult(rescueInstance)
           return rescue
         })
 
@@ -110,14 +103,7 @@ class Controller {
                 }
               ]
             }).then(function (rescueInstance) {
-              let rescue = rescueInstance.toJSON()
-              let reducedRats = rescue.rats.map(function (rat) {
-                return rat.id
-              })
-              rescue.rats = reducedRats
-
-              rescue.firstLimpet = rescue.firstLimpetId
-              delete rescue.firstLimpetId
+              let rescue = convertRescueToAPIResult(rescueInstance)
 
               resolve({
                 data: rescue,
@@ -455,6 +441,18 @@ function userEntitledToMongoRescueAccess (rescue, user) {
     }
   }
   return false
+}
+
+function convertRescueToAPIResult(rescueInstance) {
+  let rescue = rescueInstance.toJSON()
+  let reducedRats = rescue.rats.map(function (rat) {
+    return rat.id
+  })
+  rescue.rats = reducedRats
+
+  rescue.firstLimpet = rescue.firstLimpetId
+  delete rescue.firstLimpetId
+  return rescue
 }
 
 module.exports = { Controller, HTTP }
