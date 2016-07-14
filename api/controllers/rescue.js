@@ -203,7 +203,6 @@ class Controller {
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
         reject({ error: error })
-        return
       }
 
       if (query.id) {
@@ -243,6 +242,8 @@ class Controller {
         }, function (error) {
           reject({ error: Errors.throw('server_error', error), meta: {} })
         })
+      } else {
+        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
       }
     })
   }
