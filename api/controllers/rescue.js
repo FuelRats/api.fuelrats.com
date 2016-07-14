@@ -101,12 +101,25 @@ class Controller {
                 action: 'rescue:created'
               }, rescue)
 
-
               resolve({
                 data: rescue,
                 meta: {}
               })
             })
+          }).catch(function (error) {
+            let errorModel = ErrorModels.server_error
+            errorModel.detail = error
+            reject({
+              error: errorModel,
+              meta: {}
+            })
+          })
+        }).catch(function (error) {
+          let errorModel = ErrorModels.server_error
+          errorModel.detail = error
+          reject({
+            error: errorModel,
+            meta: {}
           })
         })
 
