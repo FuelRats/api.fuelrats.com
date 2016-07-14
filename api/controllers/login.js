@@ -1,25 +1,9 @@
-var _, path, Rat, Rescue, winston
+'use strict'
 
-
-
-
-
-_ = require( 'underscore' )
-path = require( 'path' )
-winston = require( 'winston' )
-
-Rat = require( '../models/rat' )
-Rescue = require( '../models/rescue' )
-
-
-
-
-
-exports.get = function ( request, response ) {
-  if ( request.isUnauthenticated() ) {
+exports.get = function (request, response) {
+  if (request.isUnauthenticated()) {
     response.render('login.swig', request.query)
   } else {
-    console.log(request.session)
     if (request.session.returnTo) {
       response.redirect(request.session.returnTo)
       delete request.session.returnTo
@@ -33,36 +17,15 @@ exports.get = function ( request, response ) {
 
 
 
-exports.post = function ( request, response ) {
-  var referer, responseModel
+exports.post = function (request, response, next) {
+  let user = request.user
 
-  responseModel = {
-    links: {
-      self: request.originalUrl
-    }
+  if (request.get('Referer')) {
+    response.redirect('/login')
+
+  } else {
+    response.status(200)
+    response.model.data = user
+    next()
   }
-
-  Rat.findById( request.user.rat )
-  .exec( function ( error, rat ) {
-    var status
-
-    if ( error ) {
-      responseModel.errors = []
-      responseModel.errors.push( error )
-      status = 400
-
-    } else {
-      request.user.rat = rat
-      responseModel.data = request.user
-      status = 200
-    }
-
-    if ( referer = request.get( 'Referer' ) ) {
-      response.redirect( '/login' )
-
-    } else {
-      response.status( status )
-      response.json( responseModel )
-    }
-  })
 }
