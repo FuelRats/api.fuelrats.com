@@ -62,7 +62,7 @@ class Controller {
     })
   }
 
-  static create (query) {
+  static create (query, connection) {
     return new Promise(function (resolve, reject) {
       let ratIds = query.rats
       delete query.rats
@@ -91,8 +91,16 @@ class Controller {
           }
 
           Promise.all(associations).then(function () {
-            findRescueWithRats{ id: rescue.id }).then(function (rescueInstance) {
+            findRescueWithRats({ id: rescue.id }).then(function (rescueInstance) {
               let rescue = convertRescueToAPIResult(rescueInstance)
+
+              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                return cl.clientId !== connection.clientId
+              })
+              websocket.broadcast(allClientsExcludingSelf, {
+                action: 'rescue:created'
+              }, rescue)
+
 
               resolve({
                 data: rescue,
