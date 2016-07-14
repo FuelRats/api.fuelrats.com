@@ -47,7 +47,8 @@ module.exports = function (sequelize, DataTypes) {
     },
     quotes: {
       type: DataTypes.ARRAY(DataTypes.STRING),
-      allowNull: false
+      allowNull: false,
+      defaultValue: []
     },
     successful: {
       type: DataTypes.BOOLEAN,
