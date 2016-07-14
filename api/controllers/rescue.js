@@ -207,31 +207,41 @@ class Controller {
       }
 
       if (query.id) {
-        retrieveMongoRescueById(query.id).then(function (rescue) {
+        findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = getRescuePermissionType(rescue, connection.user)
 
           Permission.require(permission, connection.user).then(function () {
-            let update = {
-              $addToSet: {
-                rats: data.ratId
-              }
-            }
+            Rat.findById(data.ratId).then(function (rat) {
+              rescue.addRat(rat).then(function () {
+                findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                  let rescue = convertRescueToAPIResult(rescueInstance)
 
-            let options = {
-              new: true
-            }
+                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                    return cl.clientId !== connection.clientId
+                  })
+                  websocket.broadcast(allClientsExcludingSelf, {
+                    action: 'rescue:updated'
+                  }, rescue)
 
-            MongoRescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
-              resolve({ data: rescue, meta: {} })
+                  resolve({
+                    data: rescue,
+                    meta: {}
+                  })
+                }).catch(function (error) {
+                  reject({ error: getError('server_error', error), meta: {} })
+                })
+              }).catch(function (error) {
+                reject({ error: getError('server_error', error), meta: {} })
+              })
             }).catch(function (error) {
-              reject({ error: error, meta: {} })
+              reject({ error: getError('server_error', error), meta: {} })
             })
-          }, function () {
-
+          }, function (error) {
+            reject({ error: error })
           })
-        }, function () {
-
+        }, function (error) {
+          reject({ error: getError('server_error', error), meta: {} })
         })
       }
     })
@@ -445,6 +455,10 @@ function retrieveMongoRescueById (id) {
   })
 }
 
+function getRescuePermissionType (rescue, user) {
+  return userEntitledToMongoRescueAccess(rescue, user) ? 'self.rescue.update' : 'rescue.update'
+}
+
 function userEntitledToMongoRescueAccess (rescue, user) {
   if (rescue.open === true) {
     return true
@@ -481,6 +495,12 @@ function findRescueWithRats (where) {
       }
     ]
   })
+}
+
+function getError (type, details) {
+  let errorModel = ErrorModels[type]
+  errorModel.detail = details
+  return errorModel
 }
 
 module.exports = { Controller, HTTP }
