@@ -41,7 +41,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: ''
     },
     platform: {
-      type: DataTypes.ENUM('xb', 'pc'),
+      type: DataTypes.ENUM('xb', 'pc', 'unknown'),
       allowNull: true,
       defaultValue: 'pc'
     },
