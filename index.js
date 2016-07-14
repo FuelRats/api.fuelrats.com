@@ -32,7 +32,7 @@ if (fs.existsSync('./config.json')) {
 }
 
 // Import models
-let User = require('./api/models/user')
+let User = require('./api/db').User
 require('./api/models/client')
 
 // Import controllers
@@ -121,6 +121,19 @@ app.use(expressSession({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
+passport.use(auth.LocalStrategy)
+
+passport.serializeUser(function (user, done) {
+  done(null, user.id)
+})
+
+passport.deserializeUser(function (id, done) {
+  User.findById(id).then(function (user) {
+    done(null, user)
+  }).catch(function () {
+    done(null, false)
+  })
+})
 
 app.set('json spaces', 2)
 app.set('x-powered-by', false)

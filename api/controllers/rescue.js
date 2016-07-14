@@ -137,6 +137,7 @@ class Controller {
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
       // Modifying a rescue requires an authenticated user
+      console.log(connection.isUnauthenticated())
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
         reject({ error: error })
@@ -202,7 +203,8 @@ class Controller {
       // Modifying a rescue requires an authenticated user
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
-        reject({ error: error })
+        reject({ error: error, meta: {} })
+        return
       }
 
       if (query.id) {
@@ -343,13 +345,14 @@ class HTTP {
   static assign (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    Controller.assign(request.params, null, request.params).then(function (data) {
+    Controller.assign(request.params, request, request.params).then(function (data) {
       response.model.data = data.data
       response.status(200)
       next()
-    }, function (error) {
+    }).catch(function (error) {
       response.model.errors.push(error.error)
-      response.status(400)
+      response.status(error.error.code)
+      next()
     })
   }
 
@@ -387,9 +390,9 @@ class HTTP {
       response.model.meta = meta
       response.status = 400
       next()
-    }, function (error) {
+    }).catch(function (error) {
       response.model.errors.push(error.error)
-      response.status(400)
+      response.status(error.error.code)
       next()
     })
   }
@@ -426,7 +429,7 @@ class HTTP {
   static put (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    Controller.update(request.body, {}, request.params).then(function (data) {
+    Controller.update(request.body, request, request.params).then(function (data) {
       response.model.data = data.data
       response.status(201)
       next()

@@ -8,27 +8,27 @@ let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
 
-passport.use(
-  new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password',
-    session: false
-  },
-  function (email, password, done) {
-    User.findOne({ where: { email: { $iLike: email }}}).then(function (user) {
-      crypto.pbkdf2(password, user.salt, 25000, 512, 'sha256', function (err, hashRaw) {
-        let hash = new Buffer(hashRaw, 'binary').toString('hex')
-        if (user.password === hash) {
-          done(null, user)
-        } else {
-          done(null, false)
-        }
-      })
-    }).catch(function () {
-      done(null, false)
+exports.LocalStrategy = new LocalStrategy({
+  usernameField: 'email',
+  passwordField: 'password',
+  session: false
+},
+function (email, password, done) {
+  User.findOne({ where: { email: { $iLike: email }}}).then(function (user) {
+    crypto.pbkdf2(password, user.salt, 25000, 512, 'sha256', function (err, hashRaw) {
+      let hash = new Buffer(hashRaw, 'binary').toString('hex')
+      if (user.password === hash) {
+        done(null, user)
+      } else {
+        done(null, false)
+      }
     })
-  }
-))
+  }).catch(function () {
+    done(null, false)
+  })
+})
+
+passport.use(exports.LocalStrategy)
 
 passport.use('client-basic', new BasicStrategy(
   function (username, password, callback) {
