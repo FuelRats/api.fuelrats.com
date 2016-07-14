@@ -433,11 +433,9 @@ class HTTP {
       response.model.data = data.data
       response.status(201)
       next()
-    }, function (error) {
+    }).catch(function (error) {
       response.model.errors.push(error)
-
-      let status = error.code || 400
-      response.status(status)
+      response.status(error.error.code)
       next()
     })
   }
