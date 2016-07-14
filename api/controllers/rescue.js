@@ -6,7 +6,7 @@ let Rescue = require('../db').Rescue
 
 
 let MongoRescue = require('../models/rescue')
-let ErrorModels = require('../errors')
+let Errors = require('../errors')
 let websocket = require('../websocket')
 let Permission = require('../permission')
 
@@ -52,7 +52,7 @@ class Controller {
           meta: meta
         })
       }).catch(function (error) {
-        let errorObj = ErrorModels.server_error
+        let errorObj = Errors.server_error
         errorObj.detail = error
         reject({
           error: errorObj,
@@ -107,7 +107,7 @@ class Controller {
               })
             })
           }).catch(function (error) {
-            let errorModel = ErrorModels.server_error
+            let errorModel = Errors.server_error
             errorModel.detail = error
             reject({
               error: errorModel,
@@ -115,7 +115,7 @@ class Controller {
             })
           })
         }).catch(function (error) {
-          let errorModel = ErrorModels.server_error
+          let errorModel = Errors.server_error
           errorModel.detail = error
           reject({
             error: errorModel,
@@ -124,7 +124,7 @@ class Controller {
         })
 
       }).catch(function (error) {
-        let errorModel = ErrorModels.server_error
+        let errorModel = Errors.server_error
         errorModel.detail = error
         reject({
           error: errorModel,
@@ -159,7 +159,7 @@ class Controller {
 
             rescue.save(function (error, rescue) {
               if (error) {
-                let errorModel = ErrorModels.server_error
+                let errorModel = Errors.server_error
                 errorModel.detail = error
                 reject({
                   error: errorModel,
@@ -182,7 +182,7 @@ class Controller {
             reject({ error: err })
           })
         }, function () {
-          let errorModel = ErrorModels.not_found
+          let errorModel = Errors.not_found
           errorModel.detail = query.id
           reject({
             error: errorModel,
@@ -229,19 +229,19 @@ class Controller {
                     meta: {}
                   })
                 }).catch(function (error) {
-                  reject({ error: getError('server_error', error), meta: {} })
+                  reject({ error: Errors.throw('server_error', error), meta: {} })
                 })
               }).catch(function (error) {
-                reject({ error: getError('server_error', error), meta: {} })
+                reject({ error: Errors.throw('server_error', error), meta: {} })
               })
             }).catch(function (error) {
-              reject({ error: getError('server_error', error), meta: {} })
+              reject({ error: Errors.throw('server_error', error), meta: {} })
             })
           }, function (error) {
             reject({ error: error })
           })
         }, function (error) {
-          reject({ error: getError('server_error', error), meta: {} })
+          reject({ error: Errors.throw('server_error', error), meta: {} })
         })
       }
     })
@@ -495,12 +495,6 @@ function findRescueWithRats (where) {
       }
     ]
   })
-}
-
-function getError (type, details) {
-  let errorModel = ErrorModels[type]
-  errorModel.detail = details
-  return errorModel
 }
 
 module.exports = { Controller, HTTP }
