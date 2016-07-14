@@ -255,37 +255,49 @@ class Controller {
       // Modifying a rescue requires an authenticated user
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
-        reject({ error: error })
+        reject({ error: error, meta: {} })
         return
       }
 
       if (query.id) {
-        retrieveMongoRescueById(query.id).then(function (rescue) {
+        findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = getRescuePermissionType(rescue, connection.user)
 
           Permission.require(permission, connection.user).then(function () {
-            let update = {
-              $pull: {
-                rats: data.ratId
-              }
-            }
+            Rat.findById(data.ratId).then(function (rat) {
+              rescue.removeRat(rat).then(function () {
+                findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                  let rescue = convertRescueToAPIResult(rescueInstance)
 
-            let options = {
-              new: true
-            }
+                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                    return cl.clientId !== connection.clientId
+                  })
+                  websocket.broadcast(allClientsExcludingSelf, {
+                    action: 'rescue:updated'
+                  }, rescue)
 
-            MongoRescue.findByIdAndUpdate(query.id, update, options).then(function (rescue) {
-              resolve({ data: rescue, meta: {} })
+                  resolve({
+                    data: rescue,
+                    meta: {}
+                  })
+                }).catch(function (error) {
+                  reject({ error: Errors.throw('server_error', error), meta: {} })
+                })
+              }).catch(function (error) {
+                reject({ error: Errors.throw('server_error', error), meta: {} })
+              })
             }).catch(function (error) {
-              reject({ error: error, meta: {} })
+              reject({ error: Errors.throw('server_error', error), meta: {} })
             })
-          }, function () {
-
+          }, function (error) {
+            reject({ error: error })
           })
-        }, function () {
-
+        }, function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
         })
+      } else {
+        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
       }
     })
   }
@@ -359,13 +371,13 @@ class HTTP {
   static unassign (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    Controller.unassign(request.params, null, request.params).then(function (data) {
+    Controller.unassign(request.params, request, request.params).then(function (data) {
       response.model.data = data.data
       response.status(200)
       next()
-    }, function (error) {
+    }).catch(function (error) {
       response.model.errors.push(error.error)
-      response.status(400)
+      response.status(error.error.code)
     })
   }
 
