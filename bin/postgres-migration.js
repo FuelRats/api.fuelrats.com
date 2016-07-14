@@ -71,7 +71,7 @@ function migrateUsers () {
 }
 
 function migrateRescues () {
-  mongoRescue.find({}) .exec().then(function (mongoRescues) {
+  mongoRescue.find({}).exec().then(function (mongoRescues) {
     for (let mongoRescue of mongoRescues) {
       (function (mongoRescue) {
         Rescue.create({

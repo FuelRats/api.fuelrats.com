@@ -1,13 +1,10 @@
 'use strict'
 
 let _ = require('underscore')
-let db = require('../db').db
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
 
-let mongoose = require('mongoose')
 
-let MongoRat = require('../models/rat')
 let MongoRescue = require('../models/rescue')
 let ErrorModels = require('../errors')
 let websocket = require('../websocket')
@@ -72,85 +69,66 @@ class Controller {
     })
   }
 
-  static create (query, client) {
+  static create (query) {
     return new Promise(function (resolve, reject) {
-      let finds = []
+      let ratIds = query.rats
+      delete query.rats
+      let firstLimpet = query.firstLimpet
+      delete query.firstLimpet
 
-      if (typeof query.rats === 'string') {
-        query.rats = query.rats.split(',')
-      }
+      Rescue.create(query).then(function (rescue) {
+        let getRatOperations = []
 
-      query.unidentifiedMongoRats = []
-
-      if (query.rats) {
-        query.rats.forEach(function (rat) {
-          if (typeof rat === 'string') {
-            if (!mongoose.Types.ObjectId.isValid(rat)) {
-              let CMDRname = rat.trim()
-              query.rats = _.without(query.rats, CMDRname)
-              let find = MongoRat.findOne({
-                CMDRname: CMDRname
-              })
-
-              find.then(function (rat) {
-                if (rat) {
-                  query.rats.push(rat._id)
-                } else {
-                  query.unidentifiedMongoRats.push(CMDRname)
-                }
-              })
-
-              finds.push(find)
-            }
-          } else if (typeof rat === 'object' && rat._id) {
-            query.rats.push(rat._id)
+        if (ratIds) {
+          for (let ratId of ratIds) {
+            getRatOperations.push(Rat.findById(ratId))
           }
-        })
-      }
-
-      // Validate and update firstLimpet
-      if (query.firstLimpet) {
-        if (typeof query.firstLimpet === 'string') {
-          if (!mongoose.Types.ObjectId.isValid(query.firstLimpet)) {
-            let firstLimpetFind = MongoRat.findOne({
-              CMDRname: query.firstLimpet.trim()
-            })
-
-            firstLimpetFind.then(function (rat) {
-              if (rat) {
-                query.firstLimpet = rat._id
-              }
-            })
-            finds.push(firstLimpetFind)
-          } else {
-            query.firstLimpet =  mongoose.Types.ObjectId(query.firstLimpet)
-          }
-        } else if (typeof query.firstLimpet === 'object' && query.firstLimpet._id) {
-          query.firstLimpet = query.firstLimpet._id
         }
-      }
-      Promise.all(finds).then(function () {
-        MongoRescue.create(query, function (error, rescue) {
-          if (error) {
-            let errorObj = ErrorModels.server_error
-            errorObj.detail = error
-            reject({
-              error: errorObj,
-              meta: {}
-            })
-          } else {
-            let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-              return cl.clientId !== client.clientId
-            })
-            websocket.broadcast(allClientsExcludingSelf, {
-              action: 'rescue:created'
-            }, rescue)
-            resolve({
-              data: rescue,
-              meta: {}
-            })
+
+        Promise.all(getRatOperations).then(function (rats) {
+          let associations = []
+          for (let rat of rats) {
+            associations.push(rescue.addRat(rat))
+
+            if (firstLimpet) {
+              if (rat.id === firstLimpet) {
+                associations.push(rescue.setFirstLimpet(rat))
+              }
+            }
           }
+
+          Promise.all(associations).then(function () {
+            Rescue.findOne({
+              where: {
+                id: rescue.id
+              },
+              include: [
+                {
+                  model: Rat,
+                  as: 'rats',
+                  required: true
+                }
+              ]
+            }).then(function (rescueInstance) {
+              let rescue = rescueInstance.toJSON()
+              let reducedRats = rescue.rats.map(function (rat) {
+                return rat.id
+              })
+              rescue.rats = reducedRats
+
+              rescue.firstLimpet = rescue.firstLimpetId
+              delete rescue.firstLimpetId
+
+              resolve({
+                data: rescue,
+                meta: {}
+              })
+            })
+          })
         })
+
+      }).catch(function (error) {
+        console.log(error)
       })
     })
   }
