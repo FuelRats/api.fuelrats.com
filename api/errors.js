@@ -62,3 +62,5 @@ let errors = {
     return errorModel
   }
 }
+
+module.exports = errors

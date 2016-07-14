@@ -1,6 +1,6 @@
 'use strict'
 
-let ErrorModels = require('./errors')
+let Errors = require('./errors')
 
 const permissions = {
   normal: [
@@ -69,15 +69,11 @@ class Permission {
   }
 
   static authenticationError (permission) {
-    let error = ErrorModels.not_authenticated
-    error.detail = permission
-    return error
+    return Errors.throw('not_authenticated', permission)
   }
 
   static permissionError (permission) {
-    let error = ErrorModels.no_permission
-    error.detail = permission
-    return error
+    return Errors.throw('no_permission', permission)
   }
 }
 
