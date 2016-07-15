@@ -4,8 +4,6 @@ let _ = require('underscore')
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
 
-
-let MongoRescue = require('../models/rescue')
 let Errors = require('../errors')
 let websocket = require('../websocket')
 let Permission = require('../permission')
@@ -198,8 +196,30 @@ class Controller {
     })
   }
 
-  static delete () {
+  static delete (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      // Modifying a rescue requires an authenticated user
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('rescue.delete')
+        reject({ error: error, meta: {} })
+        return
+      }
 
+      if (query.id) {
+        Permission.require('rescue.delete', connection.user).then(function () {
+          Rescue.findById(query.id).then(function (rescue) {
+            rescue.destroy()
+            resolve({ data: null, meta: {} })
+          }).catch(function (error) {
+            reject({ error: Errors.throw('server_error', error), meta: {} })
+          })
+        }).catch(function (error) {
+          reject({ error: error })
+        })
+      } else {
+        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
+      }
+    })
   }
 
   static assign (data, connection, query) {
@@ -457,8 +477,17 @@ class HTTP {
     })
   }
 
-  static delete () {
+  static delete (request, response, next) {
+    response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
+    Controller.delete(request.body, request, request.params).then(function () {
+      response.status(204)
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(error.error.code)
+      next()
+    })
   }
 }
 
