@@ -33,6 +33,7 @@ if (fs.existsSync('./config.json')) {
 
 // Import models
 let User = require('./api/db').User
+let Rat = require('./api/db').Rat
 require('./api/models/client')
 
 // Import controllers
@@ -128,7 +129,22 @@ passport.serializeUser(function (user, done) {
 })
 
 passport.deserializeUser(function (id, done) {
-  User.findById(id).then(function (user) {
+  User.findOne({
+    where: { id: id },
+    include: [
+      {
+        model: Rat,
+        as: 'rats',
+        required: true
+      }
+    ]
+  }).then(function (userInstance) {
+    let user = userInstance.toJSON()
+    let reducedRats = user.rats.map(function (rat) {
+      return rat.id
+    })
+    user.CMDRs = reducedRats
+    delete user.rats
     done(null, user)
   }).catch(function () {
     done(null, false)
