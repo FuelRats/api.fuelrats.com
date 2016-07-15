@@ -137,7 +137,6 @@ class Controller {
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
       // Modifying a rescue requires an authenticated user
-      console.log(connection.isUnauthenticated())
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
         reject({ error: error })
@@ -194,7 +193,7 @@ class Controller {
     })
   }
 
-  static delete (query) {
+  static delete () {
 
   }
 
@@ -307,47 +306,48 @@ class Controller {
       // Modifying a rescue requires an authenticated user
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
-        reject({ error: error })
+        reject({ error: error, meta: {} })
         return
       }
 
       if (query.id) {
-        retrieveMongoRescueById(query.id).then(function (rescue) {
+        findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = getRescuePermissionType(rescue, connection.user)
 
           Permission.require(permission, connection.user).then(function () {
-            let update = {
-              '$push': {
-                quotes: data
-              }
-            }
+            let updatedQuotes = rescue.quotes.concat(data)
+            Rescue.update(
+              {
+                quotes: updatedQuotes
+              }, {
+                where: { id: rescue.id }
+              }).then(function () {
+                findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                  let rescue = convertRescueToAPIResult(rescueInstance)
 
-            let options = {
-              new: true
-            }
-
-            MongoRescue.findByIdAndUpdate(query.id, update, options, function (err, rescue) {
-              if (err) {
-                reject({ error: err, meta: {} })
-              } else if (!rescue) {
-                reject({ error: '404', meta: {} })
-              } else {
-                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-                  return cl.clientId !== connection.clientId
+                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                    return cl.clientId !== connection.clientId
+                  })
+                  websocket.broadcast(allClientsExcludingSelf, {
+                    action: 'rescue:updated'
+                  }, rescue)
+                  resolve({ data: rescue, meta: {} })
+                }).catch(function (error) {
+                  reject({ error: Errors.throw('server_error', error), meta: {} })
                 })
-                websocket.broadcast(allClientsExcludingSelf, {
-                  action: 'rescue:updated'
-                }, rescue)
-                resolve({ data: rescue, meta: {} })
+              }).catch(function (error) {
+                reject({ error: Errors.throw('server_error', error), meta: {} })
               }
-            })
-          }, function () {
-
+            )
+          }, function (error) {
+            reject({ error: error })
           })
-        }, function () {
-
+        }, function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
         })
+      } else {
+        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
       }
     })
   }
@@ -378,18 +378,20 @@ class HTTP {
     }).catch(function (error) {
       response.model.errors.push(error.error)
       response.status(error.error.code)
+      next()
     })
   }
 
   static addquote (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
-    Controller.addquote(request.body.quotes, null, request.params).then(function (data) {
+    Controller.addquote(request.body.quotes, request, request.params).then(function (data) {
       response.model.data = data.data
       response.status(200)
       next()
     }, function (error) {
       response.model.errors.push(error.error)
-      response.status(400)
+      response.status(error.error.code)
+      next()
     })
   }
 
@@ -452,7 +454,7 @@ class HTTP {
     })
   }
 
-  static delete (request, response, next) {
+  static delete () {
 
   }
 }
