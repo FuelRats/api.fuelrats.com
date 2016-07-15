@@ -60,7 +60,7 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
 
 
       let token = new Token({
-        value: crypto.randomBytes(256).toString('hex'),
+        value: crypto.randomBytes(32).toString('hex'),
         client: client,
         user: authCode.user
       })
