@@ -420,15 +420,13 @@ class HTTP {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
     let id = request.params.id
 
-    MongoRescue.findById(id).populate('rats').exec(function (error, rescue) {
-      if (error) {
-        response.model.errors.push(error)
-        response.status(400)
-      } else {
-        response.model.data = rescue
-        response.status(200)
-      }
-
+    findRescueWithRats({ id: id }).then(function (rescueInstance) {
+      response.model.data = convertRescueToAPIResult(rescueInstance)
+      response.status(200)
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(400)
       next()
     })
   }
