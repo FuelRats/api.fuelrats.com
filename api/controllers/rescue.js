@@ -139,56 +139,61 @@ class Controller {
       // Modifying a rescue requires an authenticated user
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
-        reject({ error: error })
+        reject({ error: error, meta: {} })
         return
       }
 
       if (query.id) {
-        retrieveMongoRescueById(query.id).then(function (rescue) {
+        findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
-          let permission = userEntitledToMongoRescueAccess(rescue, connection.user) ? 'self.rescue.update' : 'rescue.update'
+          let permission = getRescuePermissionType(rescue, connection.user)
 
           Permission.require(permission, connection.user).then(function () {
-            for (let key in data) {
-              if (key === 'client') {
-                _.extend(rescue.client, data)
-              } else {
-                rescue[key] = data[key]
+            let updates = []
+
+            if (data.rats) {
+              for (let ratId in data.rats) {
+                updates.push(rescue.addRat(ratId))
               }
+              delete data.rats
             }
 
-            rescue.save(function (error, rescue) {
-              if (error) {
-                let errorModel = Errors.server_error
-                errorModel.detail = error
-                reject({
-                  error: errorModel,
-                  meta: {}
-                })
-              } else {
+            if (data.firstLimpet) {
+              updates.push(rescue.setFirstLimpet(data.firstLimpet))
+              delete data.firstLimpet
+            }
+
+            if (Object.keys(data).length > 0) {
+              updates.push(Rescue.update(data, {
+                where: { id: rescue.id }
+              }))
+            }
+
+            Promise.all(updates).then(function () {
+              findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                let rescue = convertRescueToAPIResult(rescueInstance)
+
                 let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
                   return cl.clientId !== connection.clientId
                 })
                 websocket.broadcast(allClientsExcludingSelf, {
                   action: 'rescue:updated'
                 }, rescue)
-                resolve({
-                  data: rescue,
-                  meta: {}
-                })
-              }
+                resolve({ data: rescue, meta: {} })
+              }).catch(function (error) {
+                reject({ error: Errors.throw('server_error', error), meta: {} })
+              })
+            }).catch(function (error) {
+              reject({ error: Errors.throw('server_error', error), meta: {} })
             })
-          }, function (err) {
-            reject({ error: err })
+          }, function (error) {
+            reject({ error: error })
           })
-        }, function () {
-          let errorModel = Errors.not_found
-          errorModel.detail = query.id
-          reject({
-            error: errorModel,
-            meta: {}
-          })
+        }, function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
         })
+      } else {
+        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
       }
     })
   }
@@ -459,33 +464,17 @@ class HTTP {
   }
 }
 
-function retrieveMongoRescueById (id) {
-  return new Promise(function (resolve, reject) {
-    MongoRescue.findById(id).populate('rats').exec(function (error, rescue) {
-      if (error) {
-        reject(error)
-      } else {
-        resolve(rescue)
-      }
-    })
-  })
-}
-
 function getRescuePermissionType (rescue, user) {
-  return userEntitledToMongoRescueAccess(rescue, user) ? 'self.rescue.update' : 'rescue.update'
-}
-
-function userEntitledToMongoRescueAccess (rescue, user) {
   if (rescue.open === true) {
-    return true
+    return 'self.rescue.update'
   }
 
   for (let CMDR of user.CMDRs) {
     if (rescue.rats.includes(CMDR)) {
-      return true
+      return 'self.rescue.update'
     }
   }
-  return false
+  return 'rescue.update'
 }
 
 function convertRescueToAPIResult (rescueInstance) {
