@@ -48,15 +48,16 @@
       {% endif %}
 
       <div class="form-group">
-        <label for="CMDRname">CMDR Name</label>
+        <label for="CMDRname">CMDR Name / Gamertag</label>
         <div class="dropdown">
           <input type="text" name="CMDRname" id="CMDRname" data-autocomplete="CMDRname" class="form-control">
         </div>
       </div>
 
       <div class="form-group">
-        <label for="gamertag">Xbox Gamertag</label>
-        <input type="text" name="gamertag" id="gamertag" data-autocomplete="CMDRname" class="form-control">
+        <label for="platform">Platform</label>
+        <input type="radio" name="platform" id="platform_pc" class="form-control" value="pc" checked> PC
+        <input type="radio" name="platform" id="platform_xb" class="form-control" value="xb"> Xbox
       </div>
 
       <div class="form-group">

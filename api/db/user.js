@@ -17,7 +17,7 @@ module.exports = function (sequelize, DataTypes) {
     },
     salt: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     },
     nicknames: {
       type: DataTypes.ARRAY(DataTypes.STRING),

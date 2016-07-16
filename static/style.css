@@ -23,6 +23,11 @@ table td {
   white-space: nowrap;
 }
 
+input[type='radio'] {
+  width: auto !important;
+  display: inline-block !important;
+}
+
 .form-group > .twitter-typeahead,
 .bootstrap-tagsinput {
   display: block !important;

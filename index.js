@@ -32,6 +32,7 @@ if (fs.existsSync('./config.json')) {
 }
 
 // Import models
+let db = require('./api/db').db
 let User = require('./api/db').User
 let Rat = require('./api/db').Rat
 require('./api/models/client')
@@ -57,6 +58,8 @@ let user = require('./api/controllers/user')
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
 let welcome = require('./api/controllers/welcome')
+
+db.sync()
 
 // Connect to MongoDB
 mongoose.connect('mongodb://' + config.mongo.hostname + ':' + config.mongo.port + '/' + config.mongo.database)

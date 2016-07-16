@@ -15,6 +15,11 @@ exports.LocalStrategy = new LocalStrategy({
 },
 function (email, password, done) {
   User.findOne({ where: { email: { $iLike: email }}}).then(function (user) {
+    if (!user) {
+      done(null, false)
+      return
+    }
+
     crypto.pbkdf2(password, user.salt, 25000, 512, 'sha256', function (err, hashRaw) {
       let hash = new Buffer(hashRaw, 'binary').toString('hex')
       if (user.password === hash) {

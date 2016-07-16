@@ -13,6 +13,7 @@
   "license": "MIT",
   "main": "api/index.js",
   "dependencies": {
+    "bcrypt": "^0.8.7",
     "body-parser": "^1.14.2",
     "chai": "^3.4.1",
     "compression": "^1.6.1",
