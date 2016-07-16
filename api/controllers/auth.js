@@ -7,6 +7,7 @@ let BearerStrategy = require('passport-http-bearer').Strategy
 let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
+let bcrypt = require('bcrypt')
 
 exports.LocalStrategy = new LocalStrategy({
   usernameField: 'email',
@@ -20,14 +21,39 @@ function (email, password, done) {
       return
     }
 
-    crypto.pbkdf2(password, user.salt, 25000, 512, 'sha256', function (err, hashRaw) {
-      let hash = new Buffer(hashRaw, 'binary').toString('hex')
-      if (user.password === hash) {
-        done(null, user)
-      } else {
-        done(null, false)
-      }
-    })
+    if (user.salt) {
+      crypto.pbkdf2(password, user.salt, 25000, 512, 'sha256', function (err, hashRaw) {
+        let hash = new Buffer(hashRaw, 'binary').toString('hex')
+        if (user.password === hash) {
+          // Legacy password system migration
+          bcrypt.hash(password, 16, function (error, convertedPassword) {
+            if (error) {
+              done(null, user)
+              return
+            }
+
+            User.update({
+              password: convertedPassword,
+              salt: null
+            }).then(function () {
+              done(null, user)
+            }).catch(function () {
+              done(null, user)
+            })
+          })
+        } else {
+          done(null, false)
+        }
+      })
+    } else {
+      bcrypt.compare(password, user.password, function (err, res) {
+        if (err || res === false) {
+          done(null, false)
+        } else {
+          done(null, user)
+        }
+      })
+    }
   }).catch(function () {
     done(null, false)
   })
