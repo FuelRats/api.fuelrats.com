@@ -250,9 +250,10 @@ router.put('/rescues/:id/assign/:ratId', rescue.assign)
 router.put('/rescues/:id/unassign/:ratId', rescue.unassign)
 
 router.get('/users', user.get)
-// router.get('/users/:id', user.getById)
-// router.put('/users/:id', user.put)
-// router.post('/users', user.post)
+router.get('/users/:id', user.getById)
+router.put('/users/:id', user.put)
+router.post('/users', user.post)
+router.delete('/users/:id', user.delete)
 
 router.get('/clients', auth.isAuthenticated, client.httpGet)
 // router.get('/clients/:id', client.getById)
