@@ -35,6 +35,8 @@ function (email, password, done) {
             User.update({
               password: convertedPassword,
               salt: null
+            }, {
+              id: user.id
             }).then(function () {
               done(null, user)
             }).catch(function () {
