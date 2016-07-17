@@ -50,7 +50,7 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
       return callback(null, false)
     }
 
-    if (client.id !== auth.client.id) {
+    if (client.id !== auth.clientId) {
       return callback(null, false)
     }
 
@@ -65,14 +65,13 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
     }).then(function (token) {
       let associations = []
       associations.push(token.setClient(client))
-      associations.push(token.setUser(client.user))
+      associations.push(token.setUser(client.userId))
 
       Promise.all(associations).then(function () {
         callback(null, token.value)
       }).catch(function (error) {
         callback(error)
       })
-      callback(null, token.value)
     })
   }).catch(function (error) {
     callback(error)
