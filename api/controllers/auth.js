@@ -80,8 +80,8 @@ passport.use('client-basic', new BasicStrategy(
           callback(null, client)
         }
       })
-    }).catch(function () {
-      callback(null, false)
+    }).catch(function (error) {
+      callback(error)
     })
   }
 ))
@@ -94,8 +94,11 @@ passport.use(new BearerStrategy(
         callback(null, false)
         return
       }
-
-      callback(null, token.userId, { scope: '*' })
+      User.findById(token.userId).then(function (user) {
+        callback(null, user, { scope: '*' })
+      }).catch(function (error) {
+        callback(error)
+      })
     }).catch(function () {
       callback(null, false)
     })
