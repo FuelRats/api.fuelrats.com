@@ -39,7 +39,7 @@ function (email, password, done) {
               password: convertedPassword,
               salt: null
             }, {
-              id: user.id
+              where: { id: user.id }
             }).then(function () {
               done(null, apiUser)
             }).catch(function () {
