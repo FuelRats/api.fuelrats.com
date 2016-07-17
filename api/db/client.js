@@ -7,6 +7,10 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     secret: {
       type: DataTypes.STRING(1024),
       allowNull: false
