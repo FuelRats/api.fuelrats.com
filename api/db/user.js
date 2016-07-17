@@ -21,7 +21,8 @@ module.exports = function (sequelize, DataTypes) {
     },
     nicknames: {
       type: DataTypes.ARRAY(DataTypes.STRING),
-      allowNull: true
+      allowNull: true,
+      defaultValue: []
     },
     drilled: {
       type: DataTypes.BOOLEAN,
@@ -37,14 +38,6 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.ENUM('normal', 'overseer', 'moderator', 'admin'),
       allowNull: false,
       defaultValue: 'normal'
-    },
-    resetToken: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    resetTokenExpire: {
-      type: DataTypes.DATE,
-      allowNull: true
     }
   }, {
     classMethods: {

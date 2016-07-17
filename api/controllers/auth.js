@@ -1,12 +1,12 @@
 'use strict'
-let Client = require('../models/client')
-let Token = require('../models/token')
 let passport = require('passport')
 let BasicStrategy = require('passport-http').BasicStrategy
 let BearerStrategy = require('passport-http-bearer').Strategy
 let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
+let Token = require('../db').Token
+let Client = require('../db').Client
 let bcrypt = require('bcrypt')
 
 exports.LocalStrategy = new LocalStrategy({
@@ -62,17 +62,21 @@ function (email, password, done) {
 passport.use(exports.LocalStrategy)
 
 passport.use('client-basic', new BasicStrategy(
-  function (username, password, callback) {
-    Client.findOne({ name: username }, function (err, client) {
-      if (err) {
-        return callback(err)
-      }
-
+  function (username, secret, callback) {
+    Client.findOne({ name: username }).then(function (client) {
       if (!client) {
-        return callback(null, false)
+        callback(null, false)
       }
 
-      client.authenticate(password, callback)
+      bcrypt.compare(secret, client.secret, function (err, res) {
+        if (err || res === false) {
+          callback(null, false)
+        } else {
+          callback(null, client)
+        }
+      })
+    }).catch(function () {
+      callback(null, false)
     })
   }
 ))
@@ -80,16 +84,15 @@ passport.use('client-basic', new BasicStrategy(
 
 passport.use(new BearerStrategy(
   function (accessToken, callback) {
-    Token.findOne({value: accessToken }, function (err, token) {
-      if (err) {
-        return callback(err)
-      }
-
+    Token.findOne({ value: accessToken }).then(function (token) {
       if (!token) {
-        return callback(null, false)
+        callback(null, false)
+        return
       }
 
-      callback(null, token.user, { scope: '*' })
+      callback(null, token.userId, { scope: '*' })
+    }).catch(function () {
+      callback(null, false)
     })
   }
 ))

@@ -2,9 +2,9 @@
 
 let oauth2orize = require('oauth2orize')
 let crypto = require('crypto')
-let Client = require('../models/client')
-let Token = require('../models/token')
-let Code = require('../models/code')
+let Token = require('../db').Token
+let Client = require('../db').Client
+let Code = require('../db').Code
 
 let server = oauth2orize.createServer()
 
@@ -13,78 +13,84 @@ server.serializeClient(function (client, callback) {
 })
 
 server.deserializeClient(function (id, callback) {
-  Client.findOne({ name: id }, function (err, client) {
-    if (err) {
-      return callback(err)
+  Client.findOne({ name: id }).then(function (client) {
+    if (!client) {
+      callback(null, false)
+      return
     }
-    return callback(null, client)
+
+    callback(null, client)
+  }).catch(function (error) {
+    callback(error)
   })
 })
 
 server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, callback) {
-  let code = new Code({
+  Code.create({
     value: crypto.randomBytes(24).toString('hex'),
-    client: client,
-    redirectUri: redirectUri,
-    user: user
-  })
+    redirectUri: redirectUri
+  }).then(function (code) {
+    let associations = []
+    associations.push(code.setClient(client))
+    associations.push(code.setUser(user))
 
-  code.save(function (err) {
-    if (err) {
-      return callback(err)
-    }
-
-    callback(null, code.value)
+    Promise.all(associations).then(function () {
+      callback(null, code.value)
+    }).catch(function (error) {
+      callback(error)
+    })
+  }).catch(function (error) {
+    callback(error)
   })
 }))
 
 server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, callback) {
-  Code.findOne({ value: code }, function (err, authCode) {
-    if (err) {
-      return callback(err)
-    }
-    if (authCode === undefined) {
-      return callback(null, false)
-    }
-    if (client.name !== authCode.client.name) {
-      return callback(null, false)
-    }
-    if (redirectUri !== authCode.redirectUri) {
+  Code.findOne({ value: code }).then(function (auth) {
+    if (!auth) {
       return callback(null, false)
     }
 
-    authCode.remove(function (err) {
-      if(err) {
-        return callback(err)
-      }
+    if (client.name !== auth.client.name) {
+      return callback(null, false)
+    }
 
+    if (redirectUri !== auth.redirectUri) {
+      return callback(null, false)
+    }
 
-      let token = new Token({
-        value: crypto.randomBytes(32).toString('hex'),
-        client: client,
-        user: authCode.user
-      })
+    auth.destroy()
 
-      // Save the access token and check for errors
-      token.save(function (err) {
-        if (err) {
-          return callback(err)
-        }
+    Token.create({
+      value: crypto.randomBytes(32).toString('hex')
+    }).then(function (token) {
+      let associations = []
+      associations.push(token.setClient(client))
+      associations.push(token.setUser(client.user))
 
+      Promise.all(associations).then(function () {
         callback(null, token.value)
+      }).catch(function (error) {
+        callback(error)
       })
+      callback(null, token.value)
     })
+  }).catch(function (error) {
+    callback(error)
   })
 }))
+
 
 exports.authorization = [
   server.authorization(function (clientId, redirectUri, callback) {
 
-    Client.findOne({ name: clientId }, function (err, client) {
-      if (err) {
-        return callback(err)
+    Client.findOne({ name: clientId }).then(function (client) {
+      if (!client) {
+        return callback(null, false)
       }
-      return callback(null, client, redirectUri)
+
+      callback(null, client, redirectUri)
+    }).catch(function (error) {
+      return callback(error)
     })
   }),
   function (req, res) {
