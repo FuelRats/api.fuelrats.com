@@ -75,9 +75,9 @@ class Controller {
           Client.create({
             name: data.name,
             secret: hash
-          }).then(function (client) {
-            client.setUser(connection.user.id).then(function () {
-              let client = convertClientToAPIResult(client)
+          }).then(function (clientInstance) {
+            clientInstance.setUser(connection.user.id).then(function () {
+              let client = convertClientToAPIResult(clientInstance)
 
               resolve({
                 data: client,
@@ -181,8 +181,8 @@ class HTTP {
 
 function convertClientToAPIResult (clientInstance) {
   let client = clientInstance.toJSON()
-  client.user = client.UserId
-  delete client.UserId
+  client.user = client.userId
+  delete client.userId
   delete client.secret
 
   return client
