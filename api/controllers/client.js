@@ -26,7 +26,7 @@ class Controller {
           delete query.user
         }
 
-        Client.findAll({
+        Client.findAndCountAll({
           where: query,
           limit: limit,
           offset: offset
