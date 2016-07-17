@@ -13,7 +13,7 @@ server.serializeClient(function (client, callback) {
 })
 
 server.deserializeClient(function (id, callback) {
-  Client.findOne({ name: id }).then(function (client) {
+  Client.findOne({ id: id }).then(function (client) {
     if (!client) {
       callback(null, false)
       return
@@ -83,7 +83,7 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
 exports.authorization = [
   server.authorization(function (clientId, redirectUri, callback) {
 
-    Client.findOne({ name: clientId }).then(function (client) {
+    Client.findOne({ id: clientId }).then(function (client) {
       if (!client) {
         return callback(null, false)
       }

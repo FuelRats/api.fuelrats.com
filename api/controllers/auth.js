@@ -68,7 +68,7 @@ passport.use(exports.LocalStrategy)
 
 passport.use('client-basic', new BasicStrategy(
   function (username, secret, callback) {
-    Client.findOne({ name: username }).then(function (client) {
+    Client.findOne({ id: username }).then(function (client) {
       if (!client) {
         callback(null, false)
       }
