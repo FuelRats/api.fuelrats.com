@@ -78,6 +78,7 @@ class Controller {
           }).then(function (clientInstance) {
             clientInstance.setUser(connection.user.id).then(function () {
               let client = convertClientToAPIResult(clientInstance)
+              client.secret = secret
 
               resolve({
                 data: client,
