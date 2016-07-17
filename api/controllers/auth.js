@@ -5,6 +5,7 @@ let BearerStrategy = require('passport-http-bearer').Strategy
 let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
+let Rat = require('../db').Rat
 let Token = require('../db').Token
 let Client = require('../db').Client
 let bcrypt = require('bcrypt')
@@ -15,7 +16,7 @@ exports.LocalStrategy = new LocalStrategy({
   session: false
 },
 function (email, password, done) {
-  User.findOne({ where: { email: { $iLike: email }}}).then(function (user) {
+  findUserWithRats({ email: { $iLike: email }}).then(function (user) {
     if (!user) {
       done(null, false)
       return
@@ -32,15 +33,17 @@ function (email, password, done) {
               return
             }
 
+            let apiUser = convertUserToAPIResult(user)
+
             User.update({
               password: convertedPassword,
               salt: null
             }, {
               id: user.id
             }).then(function () {
-              done(null, user)
+              done(null, apiUser)
             }).catch(function () {
-              done(null, user)
+              done(null, false)
             })
           })
         } else {
@@ -52,7 +55,7 @@ function (email, password, done) {
         if (err || res === false) {
           done(null, false)
         } else {
-          done(null, user)
+          done(null, convertUserToAPIResult(user))
         }
       })
     }
@@ -108,4 +111,30 @@ exports.isAuthenticated = function (req, res, next) {
     req.session.returnTo = req.originalUrl || req.url
     return passport.authenticate('bearer', { session : true, failureRedirect: '/login' })(req, res, next)
   }
+}
+
+function findUserWithRats (where) {
+  return User.findOne({
+    where: where,
+    include: [
+      {
+        model: Rat,
+        as: 'rats',
+        required: true
+      }
+    ]
+  })
+}
+
+function convertUserToAPIResult (userInstance) {
+  let user = userInstance.toJSON()
+  let reducedRats = user.rats.map(function (rat) {
+    return rat.id
+  })
+  user.CMDRs = reducedRats
+  delete user.rats
+  delete user.salt
+  delete user.password
+
+  return user
 }
