@@ -9,7 +9,7 @@ let Code = require('../db').Code
 let server = oauth2orize.createServer()
 
 server.serializeClient(function (client, callback) {
-  return callback(null, client.name)
+  return callback(null, client.id)
 })
 
 server.deserializeClient(function (id, callback) {
@@ -32,7 +32,7 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
   }).then(function (code) {
     let associations = []
     associations.push(code.setClient(client))
-    associations.push(code.setUser(user))
+    associations.push(code.setUser(user.id))
 
     Promise.all(associations).then(function () {
       callback(null, code.value)
@@ -50,7 +50,7 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
       return callback(null, false)
     }
 
-    if (client.name !== auth.client.name) {
+    if (client.id !== auth.client.id) {
       return callback(null, false)
     }
 
