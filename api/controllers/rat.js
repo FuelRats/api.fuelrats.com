@@ -1,269 +1,241 @@
 'use strict'
 
 let _ = require('underscore')
-let Rat = require('../models/rat')
-let ErrorModels = require('../errors')
+let Rat = require('../db').Rat
+
+let Errors = require('../errors')
 let websocket = require('../websocket')
 let Permission = require('../permission')
 
-// GET
-// =============================================================================
-exports.get = function (request, response, next) {
-  exports.read(request.body).then(function (res) {
-    let data = res.data
-    let meta = res.meta
+class Controller {
+  static read (query) {
+    return new Promise(function (resolve, reject) {
+      let limit = parseInt(query.limit) || 25
+      delete query.limit
 
-    response.model.data = data
-    response.model.meta = meta
-    response.status = 400
-    next()
-  }, function (error) {
-    response.model.errors.push(error.error)
-    response.status(400)
-  })
-}
+      let offset = parseInt(query.offset) || 0
+      delete query.offset
 
-// GET (by ID)
-// =============================================================================
-exports.getById = function (request, response, next) {
-  response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-  let id = request.params.id
-
-  Rat.findById(id).populate('rescues').exec(function (error, rat) {
-    if (error) {
-      response.model.errors.push(error)
-      response.status(400)
-
-    } else {
-      response.model.data = rat
-      response.status(200)
-    }
-
-    next()
-  })
-}
-
-exports.read = function (query) {
-  return new Promise(function (resolve, reject) {
-    let filter = {}
-    let dbQuery = {}
-
-    filter.size = parseInt(query.limit) || 25
-    delete query.limit
-
-    filter.from = parseInt(query.offset) || 0
-    delete query.offset
-
-    for (let key in query) {
-      if (key === 'q') {
-        dbQuery.query_string = {
-          query: query.q
-        }
-      } else {
-        if (!dbQuery.bool) {
-          dbQuery.bool = {
-            should: []
-          }
-        }
-
-        let term = {}
-        term[key] = {
-          query: query[key],
-          fuzziness: 'auto'
-        }
-        dbQuery.bool.should.push({
-          match: term
-        })
+      let dbQuery = {
+        where: query,
+        limit: limit,
+        offset: offset
       }
-    }
 
-    if (!Object.keys(dbQuery).length) {
-      dbQuery.match_all = {}
-    }
+      Rat.findAndCountAll(dbQuery).then(function (result) {
+        let meta = {
+          count: result.rows.length,
+          limit: limit,
+          offset: offset,
+          total: result.count
+        }
 
-    Rat.search(dbQuery, filter, function (error, dbData) {
-      if (error) {
-        let errorObj = ErrorModels.server_error
+        let rats = result.rows.map(function (ratInstance) {
+          let rat = convertRatToAPIResult(ratInstance)
+          return rat
+        })
+
+        resolve({
+          data: rats,
+          meta: meta
+        })
+      }).catch(function (error) {
+        let errorObj = Errors.server_error
         errorObj.detail = error
         reject({
           error: errorObj,
           meta: {}
         })
-
-      } else {
-        let meta = {
-          count: dbData.hits.hits.length,
-          limit: filter.size,
-          offset: filter.from,
-          total: dbData.hits.total
-        }
-        let data = []
-
-        dbData.hits.hits.forEach(function (rat) {
-          rat._source._id = rat._id
-          rat._source.score = rat._score
-
-          data.push(rat._source)
-        })
-
-        resolve({
-          data: data,
-          meta: meta
-        })
-      }
+      })
     })
-  })
-}
+  }
 
-// POST
-// =============================================================================
-exports.post = function (request, response, next) {
-  exports.create(request.body, request).then(function (res) {
-    response.model.data = res.data
-    response.status(201)
-    next()
-  }, function (error) {
-    response.model.errors.push(error.error)
-    response.status(400)
-    next()
-  })
-}
+  static create (query, connection) {
+    return new Promise(function (resolve, reject) {
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('self.rat.create')
+        reject({ error: error, meta: {} })
+        return
+      }
 
-exports.create = function (query, connection) {
-  return new Promise(function (resolve, reject) {
-    if (connection.isUnauthenticated()) {
-      let error = Permission.authenticationError('self.rat.create')
-      reject({ error: error })
-    }
+      Rat.create(query).then(function (ratInstance) {
+        ratInstance.setUser(connection.user.id).then(function () {
+          let rat = convertRatToAPIResult(ratInstance)
 
-    Permission.require('self.rat.create', connection.user).then(function () {
-      Rat.create(query, function (error, rat) {
-        if (error) {
-          let errorTypes = Object.keys(error.errors)
-
-          for (let errorType of errorTypes) {
-            error = error.errors[errorType].properties
-
-            if (error.type === 'required') {
-              let errorModel = ErrorModels.missing_required_field
-              errorModel.detail = error.path
-              reject({
-                error: errorModel,
-                meta: {}
-              })
-            } else {
-              let errorModel = ErrorModels.server_error
-              errorModel.detail = error.path
-              reject({
-                error: errorModel,
-                meta: {}
-              })
-            }
-          }
-        } else {
           let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
             return cl.clientId !== connection.clientId
           })
           websocket.broadcast(allClientsExcludingSelf, {
             action: 'rat:created'
           }, rat)
+
           resolve({
             data: rat,
             meta: {}
           })
-        }
+        }).catch(function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
+        })
+      }).catch(function (error) {
+        let errorModel = Errors.server_error
+        errorModel.detail = error
+        reject({
+          error: errorModel,
+          meta: {}
+        })
       })
-    }, function (err) {
-      reject({ error: err })
     })
+  }
 
-  })
-}
+  static update (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      // Modifying a rescue requires an authenticated user
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('self.rat.update')
+        reject({ error: error, meta: {} })
+        return
+      }
 
-// PUT
-// =============================================================================
-exports.put = function (request, response, next) {
-  response.model.meta.params = _.extend(response.model.meta.params, request.params)
+      if (query.id) {
+        Rat.findOne({ id: query.id }).then(function (rat) {
+          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+          let permission = getRatPermissionType(rat, connection.user)
 
-  exports.update(request.body, request, request.params).then(function (data) {
-    response.model.data = data.data
-    response.status(201)
-    next()
-  }, function (error) {
-    response.model.errors.push(error.error)
+          Permission.require(permission, connection.user).then(function () {
+            Rat.update(data, {
+              where: { id: rat.id }
+            }).then(function (ratInstance) {
+              let rat = convertRatToAPIResult(ratInstance)
 
-    let status = error.error.code || 400
-    response.status(status)
-    next()
-  })
-}
-
-exports.update = function (data, connection, query) {
-  return new Promise(function (resolve, reject) {
-    if (connection.isUnauthenticated()) {
-      let error = Permission.authenticationError('rat.update')
-      reject({ error: error })
-    }
-    if (query.id) {
-      Rat.findById(query.id, function (error, rat) {
-        if (error) {
-          let errorModel = ErrorModels.server_error
-          errorModel.detail = error
-          reject({
-            error: errorModel,
-            meta: {}
-          })
-        } else if (!rat) {
-          let errorModel = ErrorModels.not_found
-          errorModel.detail = query.id
-          reject({
-            error: errorModel,
-            meta: {}
-          })
-        } else {
-          let requiredPermission = 'rat.update'
-          for (let cmdr of connection.user.CMDRs) {
-            if (cmdr.id === rat.id) {
-              requiredPermission = 'self.rat.update'
-            }
-          }
-
-          Permission.require(requiredPermission, connection.user).then(function (data) {
-            for (let key in data) {
-              if (key === 'client') {
-                _.extend(rat.client, data)
-              } else {
-                rat[key] = data[key]
-              }
-            }
-
-            rat.save(function (error, rat) {
-              if (error) {
-                let errorModel = ErrorModels.server_error
-                errorModel.detail = error
-                reject({
-                  error: errorModel,
-                  meta: {}
-                })
-              } else {
-                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-                  return cl.clientId !== connection.clientId
-                })
-                websocket.broadcast(allClientsExcludingSelf, {
-                  action: 'rat:updated'
-                }, rat)
-                resolve({
-                  data: rat,
-                  meta: {}
-                })
-              }
+              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                return cl.clientId !== connection.clientId
+              })
+              websocket.broadcast(allClientsExcludingSelf, {
+                action: 'rat:updated'
+              }, rat)
+              resolve({ data: rat, meta: {} })
+            }).catch(function (error) {
+              reject({ error: Errors.throw('server_error', error), meta: {} })
             })
           }, function (error) {
             reject({ error: error })
           })
-        }
-      })
-    }
-  })
+        }, function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
+        })
+      } else {
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+      }
+    })
+  }
+
+  static delete (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      // Modifying a rescue requires an authenticated user
+      if (connection.isUnauthenticated()) {
+        let error = Permission.authenticationError('rat.delete')
+        reject({ error: error, meta: {} })
+        return
+      }
+
+      if (query.id) {
+        Permission.require('rat.delete', connection.user).then(function () {
+          Rat.findById(query.id).then(function (rat) {
+            rat.destroy()
+            resolve({ data: null, meta: {} })
+          }).catch(function (error) {
+            reject({ error: Errors.throw('server_error', error), meta: {} })
+          })
+        }).catch(function (error) {
+          reject({ error: error })
+        })
+      } else {
+        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
+      }
+    })
+  }
 }
+
+class HTTP {
+  static get (request, response, next) {
+    Controller.read(request.query).then(function (res) {
+      let data = res.data
+      let meta = res.meta
+
+      response.model.data = data
+      response.model.meta = meta
+      response.status = 400
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error.error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+
+  static getById (request, response, next) {
+    response.model.meta.params = _.extend(response.model.meta.params, request.params)
+    let id = request.params.id
+
+    Rat.findById(id).then(function (ratInstance) {
+      response.model.data = convertRatToAPIResult(ratInstance)
+      response.status(200)
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(400)
+      next()
+    })
+  }
+
+  static post (request, response, next) {
+    Controller.create(request.body, {}).then(function (res) {
+      response.model.data = res.data
+      response.status(201)
+      next()
+    }, function (error) {
+      response.model.errors.push(error)
+      response.status(400)
+      next()
+    })
+  }
+
+  static put (request, response, next) {
+    response.model.meta.params = _.extend(response.model.meta.params, request.params)
+
+    Controller.update(request.body, request, request.params).then(function (data) {
+      response.model.data = data.data
+      response.status(201)
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+
+  static delete (request, response, next) {
+    response.model.meta.params = _.extend(response.model.meta.params, request.params)
+
+    Controller.delete(request.body, request, request.params).then(function () {
+      response.status(204)
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+}
+
+function getRatPermissionType (rat, user) {
+  return user.CMDRs.indexOf(rat.id) !== -1 ? 'self.rat.update' : 'rat.update'
+}
+
+function convertRatToAPIResult (ratInstance) {
+  let rat = ratInstance.toJSON()
+  delete rat.UserId
+  return rat
+}
+
+module.exports = { Controller, HTTP }
