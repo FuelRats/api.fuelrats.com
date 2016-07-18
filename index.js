@@ -16,7 +16,6 @@ let forceSSL = require('express-force-ssl')
 let http = require('http')
 let lex = require('letsencrypt-express').testing()
 let moment = require('moment')
-let mongoose = require('mongoose')
 let passport = require('passport')
 let winston = require('winston')
 let request = require('request')
@@ -61,8 +60,6 @@ let welcome = require('./api/controllers/welcome')
 
 db.sync()
 
-// Connect to MongoDB
-mongoose.connect('mongodb://' + config.mongo.hostname + ':' + config.mongo.port + '/' + config.mongo.database)
 
 let options = {
   logging: true,
@@ -250,11 +247,11 @@ router.put('/rescues/:id/addquote', rescue.addquote)
 router.put('/rescues/:id/assign/:ratId', rescue.assign)
 router.put('/rescues/:id/unassign/:ratId', rescue.unassign)
 
-router.get('/users', user.get)
-router.get('/users/:id', user.getById)
-router.put('/users/:id', user.put)
-router.post('/users', user.post)
-router.delete('/users/:id', user.delete)
+router.get('/users', auth.isAuthenticated, user.get)
+router.get('/users/:id', auth.isAuthenticated, user.getById)
+router.put('/users/:id', auth.isAuthenticated, user.put)
+router.post('/users', auth.isAuthenticated, user.post)
+router.delete('/users/:id', auth.isAuthenticated, user.delete)
 
 router.get('/clients', auth.isAuthenticated, client.get)
 router.put('/clients/:id', auth.isAuthenticated, client.put)
@@ -307,17 +304,6 @@ app.use(function (request, response) {
 
   response.send(response.model)
 })
-
-Object.keys(mongoose.models).forEach(function (modelName, index) {
-  let model = mongoose.models[modelName]
-
-  if (model.createMapping) {
-    model.createMapping()
-  }
-})
-
-
-
 
 // SOCKET
 // =============================================================================

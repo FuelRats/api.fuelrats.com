@@ -41,8 +41,6 @@
     "load-grunt-config": "^0.19.1",
     "mocha": "^2.3.4",
     "moment": "^2.11.2",
-    "mongoosastic": "^4.0.2",
-    "mongoose": "^4.3.6",
     "node-dev": "^2.7.1",
     "nodemailer": "^2.2.0",
     "oauth2orize": "^1.2.2",
