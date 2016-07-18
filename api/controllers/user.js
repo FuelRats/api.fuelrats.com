@@ -72,19 +72,19 @@ class Controller {
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('rescue.update')
+        let error = Permission.authenticationError('user.update')
         reject({ error: error, meta: {} })
         return
       }
 
       if (query.id) {
         findUserWithRats({ id: query.id }).then(function (user) {
-          let permission = connection.user.id === query.id ? 'self.rescue.edit' : 'rescue.edit'
+          let permission = connection.user.id === query.id ? 'self.user.edit' : 'user.edit'
           Permission.require(permission, connection.user).then(function () {
             let updates = []
 
             if (data.CMDRs) {
-              for (let ratId in data.CMDRs) {
+              for (let ratId of data.CMDRs) {
                 updates.push(user.addRat(ratId))
               }
               delete data.rats
