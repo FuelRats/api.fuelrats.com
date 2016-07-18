@@ -127,12 +127,7 @@ exports.isAuthenticated = function (req, res, next) {
           return next(error)
         }
       }
-      req.logIn(user, function (err) {
-        if (err) {
-          return next(err)
-        }
-        return next(null, user)
-      })
+      next()
     })(req, res, next)
   }
 }
