@@ -134,12 +134,6 @@ class Controller {
 
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('rescue.update')
-        reject({ error: error, meta: {} })
-        return
-      }
-
       if (query.id) {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
@@ -203,13 +197,6 @@ class Controller {
 
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      // Modifying a rescue requires an authenticated user
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('rescue.delete')
-        reject({ error: error, meta: {} })
-        return
-      }
-
       if (query.id) {
         Permission.require('rescue.delete', connection.user).then(function () {
           Rescue.findById(query.id).then(function (rescue) {
@@ -222,20 +209,13 @@ class Controller {
           reject({ error: error })
         })
       } else {
-        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
       }
     })
   }
 
   static assign (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      // Modifying a rescue requires an authenticated user
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('rescue.update')
-        reject({ error: error, meta: {} })
-        return
-      }
-
       if (query.id) {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
@@ -274,20 +254,13 @@ class Controller {
           reject({ error: Errors.throw('server_error', error), meta: {} })
         })
       } else {
-        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
       }
     })
   }
 
   static unassign (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      // Modifying a rescue requires an authenticated user
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('rescue.update')
-        reject({ error: error, meta: {} })
-        return
-      }
-
       if (query.id) {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
@@ -326,20 +299,13 @@ class Controller {
           reject({ error: Errors.throw('server_error', error), meta: {} })
         })
       } else {
-        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
       }
     })
   }
 
   static addquote (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      // Modifying a rescue requires an authenticated user
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('rescue.update')
-        reject({ error: error, meta: {} })
-        return
-      }
-
       if (query.id) {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
@@ -377,7 +343,7 @@ class Controller {
           reject({ error: Errors.throw('server_error', error), meta: {} })
         })
       } else {
-        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
       }
     })
   }
@@ -445,15 +411,17 @@ class HTTP {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
     let id = request.params.id
 
-    findRescueWithRats({ id: id }).then(function (rescueInstance) {
-      response.model.data = convertRescueToAPIResult(rescueInstance)
-      response.status(200)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(400)
-      next()
-    })
+    if (id) {
+      findRescueWithRats({ id: id }).then(function (rescueInstance) {
+        response.model.data = convertRescueToAPIResult(rescueInstance)
+        response.status(200)
+        next()
+      }).catch(function (error) {
+        response.model.errors.push(error)
+        response.status(400)
+        next()
+      })
+    }
   }
 
   static post (request, response, next) {

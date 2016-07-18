@@ -7,58 +7,48 @@ let Rat = require('../db').Rat
 let Errors = require('../errors')
 
 class Controller {
-  static read (query, connection) {
+  static read (query) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('user.read')
-        reject({ error: error, meta: {} })
-        return
+      let limit = parseInt(query.limit) || 25
+      delete query.limit
+
+      let offset = parseInt(query.offset) || 0
+      delete query.offset
+
+      let dbQuery = {
+        where: query,
+        limit: limit,
+        offset: offset,
+        include: [
+          {
+            model: Rat,
+            as: 'rats',
+            required: true
+          }
+        ]
       }
 
-      Permission.require('user.read', connection.user).then(function () {
-        let limit = parseInt(query.limit) || 25
-        delete query.limit
-
-        let offset = parseInt(query.offset) || 0
-        delete query.offset
-
-        let dbQuery = {
-          where: query,
+      User.findAndCountAll(dbQuery).then(function (result) {
+        let meta = {
+          count: result.rows.length,
           limit: limit,
           offset: offset,
-          include: [
-            {
-              model: Rat,
-              as: 'rats',
-              required: true
-            }
-          ]
+          total: result.count
         }
 
-        User.findAndCountAll(dbQuery).then(function (result) {
-          let meta = {
-            count: result.rows.length,
-            limit: limit,
-            offset: offset,
-            total: result.count
-          }
+        /* For backwards compatibility reasons we return only the list of rat
+        foreign keys, not their objects */
+        let users = result.rows.map(function (userInstance) {
+          let user = convertUserToAPIResult(userInstance)
+          return user
+        })
 
-          /* For backwards compatibility reasons we return only the list of rat
-          foreign keys, not their objects */
-          let users = result.rows.map(function (userInstance) {
-            let user = convertUserToAPIResult(userInstance)
-            return user
-          })
-
-          resolve({
-            data: users,
-            meta: meta
-          })
-        }).catch(function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+        resolve({
+          data: users,
+          meta: meta
         })
       }).catch(function (error) {
-        reject({ error: error, meta: {} })
+        reject({ error: Errors.throw('server_error', error), meta: {} })
       })
     })
   }
@@ -71,12 +61,6 @@ class Controller {
 
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('user.update')
-        reject({ error: error, meta: {} })
-        return
-      }
-
       if (query.id) {
         findUserWithRats({ id: query.id }).then(function (user) {
           let permission = connection.user.id === query.id ? 'self.user.edit' : 'user.edit'
@@ -127,15 +111,11 @@ class Controller {
       }
 
       if (query.id) {
-        Permission.require('rescue.delete', connection.user).then(function () {
-          User.findById(query.id).then(function (rescue) {
-            rescue.destroy()
-            resolve({ data: null, meta: {} })
-          }).catch(function (error) {
-            reject({ error: Errors.throw('server_error', error), meta: {} })
-          })
+        User.findById(query.id).then(function (rescue) {
+          rescue.destroy()
+          resolve({ data: null, meta: {} })
         }).catch(function (error) {
-          reject({ error: error })
+          reject({ error: Errors.throw('server_error', error), meta: {} })
         })
       } else {
         reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
@@ -162,33 +142,19 @@ class HTTP {
   static getById (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
     let id = request.params.id
-
-    if (request.isUnauthenticated()) {
-      response.model.errors.push(Permission.authenticationError('user.delete'))
-      response.status(403)
-      next()
-      return
-    }
-
     if (id) {
-      Permission.require('user.read', request.user).then(function () {
-        findUserWithRats({ id: id }).then(function (userInstance) {
-          if (!userInstance) {
-            response.model.errors.push(Errors.throw('not_found', 'id'))
-            response.status(404)
-            next()
-            return
-          }
+      findUserWithRats({ id: id }).then(function (userInstance) {
+        if (!userInstance) {
+          response.model.errors.push(Errors.throw('not_found', 'id'))
+          response.status(404)
+          next()
+          return
+        }
 
-          let user = convertUserToAPIResult(userInstance)
-          response.model.data = user
-          response.status(200)
-          next()
-        }).catch(function (error) {
-          response.model.errors.push(Errors.throw('server_error', error))
-          response.status(500)
-          next()
-        })
+        let user = convertUserToAPIResult(userInstance)
+        response.model.data = user
+        response.status(200)
+        next()
       }).catch(function (error) {
         response.model.errors.push(Errors.throw('server_error', error))
         response.status(500)

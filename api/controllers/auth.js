@@ -9,6 +9,7 @@ let Rat = require('../db').Rat
 let Token = require('../db').Token
 let Client = require('../db').Client
 let bcrypt = require('bcrypt')
+let Permission = require('../permission')
 
 exports.LocalStrategy = new LocalStrategy({
   usernameField: 'email',
@@ -111,8 +112,28 @@ exports.isAuthenticated = function (req, res, next) {
   if (req.isUnauthenticated() === false) {
     return next()
   } else {
-    req.session.returnTo = req.originalUrl || req.url
-    return passport.authenticate('bearer', { session : false })(req, res, next)
+    passport.authenticate('bearer', { session : false }, function (err, user) {
+      if (err) {
+        return next(err)
+      }
+      if (!user) {
+        if (req.referer) {
+          req.session.returnTo = req.originalUrl || req.url
+          return res.redirect('/login')
+        } else {
+          let error = Permission.authenticationError('rescue.update')
+          res.model.errors.push(error)
+          res.status(error.code)
+          return next(error)
+        }
+      }
+      req.logIn(user, function (err) {
+        if (err) {
+          return next(err)
+        }
+        return next(null, user)
+      })
+    })(req, res, next)
   }
 }
 

@@ -9,90 +9,72 @@ let bcrypt = require('bcrypt')
 class Controller {
   static read (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('self.client.read')
-        reject({ error: error })
+      let limit = parseInt(query.limit) || 25
+      delete query.limit
+
+      let offset = parseInt(query.offset) || 0
+      delete query.offset
+
+      if (query.user) {
+        query.UserId = query.user
+        delete query.user
       }
 
-      Permission.require('client.read', connection.user).then(function () {
-        let limit = parseInt(query.limit) || 25
-        delete query.limit
-
-        let offset = parseInt(query.offset) || 0
-        delete query.offset
-
-        if (query.user) {
-          query.UserId = query.user
-          delete query.user
+      Client.findAndCountAll({
+        where: query,
+        limit: limit,
+        offset: offset
+      }).then(function (result) {
+        let meta = {
+          count: result.rows.length,
+          limit: limit,
+          offset: offset,
+          total: result.count
         }
 
-        Client.findAndCountAll({
-          where: query,
-          limit: limit,
-          offset: offset
-        }).then(function (result) {
-          let meta = {
-            count: result.rows.length,
-            limit: limit,
-            offset: offset,
-            total: result.count
-          }
-
-          let clients = result.rows.map(function (clientInstance) {
-            let client = convertClientToAPIResult(clientInstance)
-            return client
-          })
-
-          resolve({
-            data: clients,
-            meta: meta
-          })
-        }).catch(function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+        let clients = result.rows.map(function (clientInstance) {
+          let client = convertClientToAPIResult(clientInstance)
+          return client
         })
-      }, function (error) {
-        reject ({ error: error })
+
+        resolve({
+          data: clients,
+          meta: meta
+        })
+      }).catch(function (error) {
+        reject({ error: Errors.throw('server_error', error), meta: {} })
       })
     })
   }
 
   static create (data, connection) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('self.client.create')
-        reject({ error: error })
-      }
+      let secret = crypto.randomBytes(24).toString('hex')
 
-      Permission.require('self.client.create', connection.user).then(function () {
-        let secret = crypto.randomBytes(24).toString('hex')
+      bcrypt.hash(secret, 16, function (error, hash) {
+        if (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
+          return
+        }
 
-        bcrypt.hash(secret, 16, function (error, hash) {
-          if (error) {
-            reject({ error: Errors.throw('server_error', error), meta: {} })
-            return
-          }
+        Client.create({
+          name: data.name,
+          secret: hash
+        }).then(function (clientInstance) {
+          clientInstance.setUser(connection.user.id).then(function () {
+            let client = convertClientToAPIResult(clientInstance)
+            client.secret = secret
 
-          Client.create({
-            name: data.name,
-            secret: hash
-          }).then(function (clientInstance) {
-            clientInstance.setUser(connection.user.id).then(function () {
-              let client = convertClientToAPIResult(clientInstance)
-              client.secret = secret
-
-              resolve({
-                data: client,
-                meta: {}
-              })
-            }).catch(function (error) {
-              reject({ error: Errors.throw('server_error', error), meta: {} })
+            resolve({
+              data: client,
+              meta: {}
             })
           }).catch(function (error) {
             reject({ error: Errors.throw('server_error', error), meta: {} })
           })
+        }).catch(function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
         })
-      }, function (error) {
-        reject ({ error: error })
       })
     })
   }
@@ -105,12 +87,6 @@ class Controller {
 
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('client.delete')
-        reject({ error: error, meta: {} })
-        return
-      }
-
       if (query.id) {
         Permission.require('client.delete', connection.user).then(function () {
           Client.findById(query.id).then(function (client) {

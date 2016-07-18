@@ -42,6 +42,19 @@ class Permission {
     })
   }
 
+  static required (permission) {
+    return function (req, res, next) {
+      if (Permission.granted(permission, req.user)) {
+        return next()
+      } else {
+        let error = Permission.permissionError(permission)
+        res.model.errors.push(error)
+        res.status(error.code)
+        return next()
+      }
+    }
+  }
+
   static granted (permission, user) {
     let userLevel = user.group
     let hasPermission = false
