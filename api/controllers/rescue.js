@@ -134,7 +134,6 @@ class Controller {
 
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      // Modifying a rescue requires an authenticated user
       if (connection.isUnauthenticated()) {
         let error = Permission.authenticationError('rescue.update')
         reject({ error: error, meta: {} })
@@ -145,19 +144,19 @@ class Controller {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
           let permission = getRescuePermissionType(rescue, connection.user)
-
           Permission.require(permission, connection.user).then(function () {
             let updates = []
 
             if (data.rats) {
-              for (let ratId in data.rats) {
+              for (let ratId of data.rats) {
                 updates.push(rescue.addRat(ratId))
               }
               delete data.rats
             }
 
             if (data.firstLimpet) {
-              updates.push(rescue.setFirstLimpet(data.firstLimpet))
+              let firstLimpet = data.firstLimpet
+              updates.push(rescue.setFirstLimpet(firstLimpet))
               delete data.firstLimpet
             }
 
@@ -177,6 +176,12 @@ class Controller {
                 websocket.broadcast(allClientsExcludingSelf, {
                   action: 'rescue:updated'
                 }, rescue)
+
+                resolve({
+                  data: rescue,
+                  meta: {}
+                })
+
                 resolve({ data: rescue, meta: {} })
               }).catch(function (error) {
                 reject({ error: Errors.throw('server_error', error), meta: {} })
@@ -191,7 +196,7 @@ class Controller {
           reject({ error: Errors.throw('server_error', error), meta: {} })
         })
       } else {
-        reject({ error: Errors.throw('bad_request', 'Missing rescue id'), meta: {} })
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
       }
     })
   }
