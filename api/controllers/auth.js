@@ -112,11 +112,8 @@ exports.isAuthenticated = function (req, res, next) {
   if (req.isUnauthenticated() === false) {
     return next()
   } else {
-    passport.authenticate('bearer', { session : false }, function (err, user) {
-      if (err) {
-        return next(err)
-      }
-      if (!user) {
+    passport.authenticate('bearer', { session : false }, function (req, res, next) {
+      if (!req.user) {
         if (req.referer) {
           req.session.returnTo = req.originalUrl || req.url
           return res.redirect('/login')
