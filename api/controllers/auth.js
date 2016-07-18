@@ -112,7 +112,7 @@ exports.isAuthenticated = function (req, res, next) {
     return next()
   } else {
     req.session.returnTo = req.originalUrl || req.url
-    return passport.authenticate('bearer', { session : true, failureRedirect: '/login' })(req, res, next)
+    return passport.authenticate('bearer', { session : false })(req, res, next)
   }
 }
 
