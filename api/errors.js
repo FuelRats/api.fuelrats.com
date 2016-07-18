@@ -58,7 +58,9 @@ let errors = {
 
   throw: function (type, detail) {
     let errorModel = errors[type]
-    errorModel.detail = detail
+    if (detail) {
+      errorModel.detail = detail
+    }
     return errorModel
   }
 }

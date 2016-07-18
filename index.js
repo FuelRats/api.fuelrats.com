@@ -304,6 +304,16 @@ app.use(function (request, response) {
   response.send(response.model)
 })
 
+/* Because express.js is stupid and uses the method signature to distinguish between
+normal middleware and error middleware, we have to silence eslint complaining about
+the unused error */
+/* eslint-disable no-unused-vars */
+app.use(function (err, req, res, next) {
+  /* eslint-enable no-unused-vars */
+  delete res.model.data
+  res.send(res.model)
+})
+
 // SOCKET
 // =============================================================================
 

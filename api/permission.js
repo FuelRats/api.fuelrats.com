@@ -79,7 +79,11 @@ class Permission {
   }
 
   static authenticationError (permission) {
-    return Errors.throw('not_authenticated', permission)
+    if (permission) {
+      return Errors.throw('not_authenticated', permission)
+    } else {
+      return Errors.throw('not_authenticated')
+    }
   }
 
   static permissionError (permission) {
