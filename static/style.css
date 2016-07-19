@@ -23,6 +23,11 @@ table td {
   white-space: nowrap;
 }
 
+.lbBadge {
+  height: 2rem;
+  width: auto;
+}
+
 input[type='radio'] {
   width: auto !important;
   display: inline-block !important;

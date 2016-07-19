@@ -223,7 +223,7 @@ let router = express.Router()
 // ROUTES
 // =============================================================================
 
-router.get('/badge/:rat', badge.get)
+router.get('/badge', badge.get)
 
 router.post('/register', register.post)
 
@@ -284,7 +284,7 @@ router.route('/oauth2/authorise')
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 
-router.get('/statistics', statistics.get)
+//router.get('/statistics', statistics.get)
 
 // Register routes
 app.use(express.static(__dirname + '/static'))

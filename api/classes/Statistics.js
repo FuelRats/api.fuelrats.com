@@ -1,70 +1,96 @@
 'use strict'
-let Rat = require('../models/rat')
-let Rescue = require('../models/rescue')
+let Rescue = require('../db').Rescue
+let Rat = require('../db').Rat
+let User = require('../db').User
+let db = require('../db').db
+
 
 class Statistics {
-  static getLeaderboardRats (from) {
-    from = from || 0
-    return Rat.aggregate([
-      {
-        $match: {
-          successfulRescueCount: {
-            $gte: 1
-          }
-        }
-      },
-      {
-        $project: {
-          CMDRname: 1,
-          failedAssistCount: 1,
-          failedRescueCount: 1,
-          platform: 1,
-          successfulAssistCount: 1,
-          successfulRescueCount: 1
-        }
-      },
-      {
-        $sort: {
-          successfulRescueCount: -1
-        }
-      },
-      {
-        $skip: from
-      },
-      {
-        $limit: 50
+  static getLeaderboardRats () {
+    return new Promise(function (resolve, reject) {
+      try {
+        Rat.findAll({
+          where: {},
+          include: [{
+            model: Rescue,
+            attributes: [],
+            where: {
+              successful: true
+            },
+            required: true
+          }],
+          attributes: [
+            'id',
+            [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
+            [db.fn('bool_or', db.col('epic')), 'epic'],
+            [db.fn('bool_or', db.col('codeRed')), 'codeRed'],
+            'CMDRname',
+            'joined'
+          ],
+          group: ['Rat.id'],
+          order: [[db.fn('COUNT', 'Rescue.id'), 'DESC']]
+        }).then(function (ratInstances) {
+          let rats = ratInstances.map(function (ratInstance) {
+            let rat = ratInstance.toJSON()
+            let pips = Math.floor(rat.rescueCount / 100)
+            rat.pips = pips > 4 ? 4 : pips
+            return rat
+          })
+          resolve(rats)
+        }).catch(function (error) {
+          reject()
+        })
+      } catch(ex) {
+        reject()
       }
-    ]).exec()
+    })
   }
 
   static getPopularSystemsCount () {
-    return Rescue.aggregate([
-      {
-        $group: {
-          _id: '$system',
-          count: {
-            $sum: 1
-          }
-        }
-      },
-      {
-        $match: {
-          count: {
-            $gte: 10
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          name: '$_id',
-          count: 1
-        }
-      }
-    ]).exec()
+    return new Promise(function (resolve, reject) {
+      Rescue.findAll({
+        where: {},
+        attributes: [
+          'system',
+          [db.fn('COUNT', 'system'), 'count']
+        ],
+        group: ['system'],
+        order: [[db.fn('COUNT', 'system'), 'DESC']],
+        limit: 50
+      }).then(function (systemInstances) {
+        let systems = systemInstances.map(function (systemInstance) {
+          let system = systemInstance.toJSON()
+          return system
+        })
+        resolve(systems)
+      })
+    }).catch(function (error) {
+    })
   }
 
   static getTotalStatistics () {
+    return new Promise(function (resolve, reject) {
+      Rescue.findAll({
+        where: {},
+        attributes: [
+          [db.fn('date_trunc', 'day', db.col('createdAt')), 'date'],
+          [db.fn('SUM', db.cast(db.col('successful'), 'INTEGER')), 'successCount'],
+          [db.fn('COUNT', 'id'), 'total']
+        ],
+        group: [db.fn('date_trunc', 'day', db.col('createdAt'))],
+        order: [[db.fn('date_trunc', 'day', db.col('createdAt')), 'DESC']]
+      }).then(function (rescueDaysInstances) {
+        let rescueDays = rescueDaysInstances.map(function (rescueDaysInstance) {
+          let rescueDay = rescueDaysInstance.toJSON()
+          return rescueDay
+        })
+        resolve(rescueDays)
+      }).catch(function (error) {
+      })
+    })
+  }
+
+  static getTotalStatistics2 () {
     return Rescue.aggregate([
       {
         $project: {
