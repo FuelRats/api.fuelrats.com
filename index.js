@@ -14,12 +14,10 @@ let expressSession = require('express-session')
 let fs = require('fs')
 let forceSSL = require('express-force-ssl')
 let http = require('http')
-let lex = require('letsencrypt-express').testing()
 let moment = require('moment')
 let passport = require('passport')
 let Permission = require('./api/permission')
 let winston = require('winston')
-let request = require('request')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
@@ -55,7 +53,6 @@ let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
 let rescue = require('./api/controllers/rescue').HTTP
 let rescueAdmin = require('./api/controllers/rescueAdmin')
-let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
@@ -157,10 +154,7 @@ passport.deserializeUser(function (id, done) {
 app.set('json spaces', 2)
 app.set('x-powered-by', false)
 
-let sslHostName = config.ssl.hostname
-
 let port = config.port || process.env.PORT
-let sslPort = config.ssl.port || process.env.SSL_PORT
 
 app.use(expressSession({
   secret: config.secretSauce,
@@ -286,8 +280,6 @@ router.route('/oauth2/authorise')
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 
-//router.get('/statistics', statistics.get)
-
 // Register routes
 app.use(express.static(__dirname + '/static'))
 app.use('/', router)
@@ -379,52 +371,9 @@ socket.on('connection', function (client) {
 
 // START THE SERVER
 // =============================================================================
-
-if (config.ssl.enabled) {
-
-  let firstRequestSent = false
-
-  module.exports = lex.create({
-    approveRegistration: function (hostname, callback) {
-      callback(null, {
-        domains: [hostname],
-        email: 'tre@trezy.com',
-        agreeTos: true
-      })
-    },
-    onRequest: app
-  }).listen(
-    // Non SSL options
-    [{
-      port: port
-    }],
-
-    // SSL options
-    [{
-      port: sslPort
-    }],
-
-    function () {
-      if (!module.parent) {
-        if (!firstRequestSent) {
-          winston.info('Starting the Fuel Rats API')
-          winston.info('Listening for requests on ports ' + port + ' and ' + sslPort + '...')
-
-          // Really, I shouldn't have to do this, but first request _always_ fails.
-          request('https://' + sslHostName + ':' + sslPort + '/welcome', function () {
-            winston.info('Firing initial request to generate certificates')
-          })
-          firstRequestSent = true
-        }
-      }
-    }
-  )
-
-} else {
-  module.exports = httpServer.listen(port, function () {
-    if (!module.parent) {
-      winston.info('Starting the Fuel Rats API')
-      winston.info('Listening for requests on port ' + port + '...')
-    }
-  })
-}
+module.exports = httpServer.listen(port, function () {
+  if (!module.parent) {
+    winston.info('Starting the Fuel Rats API')
+    winston.info('Listening for requests on port ' + port + '...')
+  }
+})
