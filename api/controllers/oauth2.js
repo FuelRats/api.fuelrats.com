@@ -81,7 +81,6 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
 
 exports.authorization = [
   server.authorization(function (clientId, redirectUri, callback) {
-
     Client.findOne({ id: clientId }).then(function (client) {
       if (!client) {
         return callback(null, false)

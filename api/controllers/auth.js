@@ -108,25 +108,27 @@ passport.use(new BearerStrategy(
 
 exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })
 exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
-exports.isAuthenticated = function (req, res, next) {
-  if (req.isUnauthenticated() === false) {
-    return next()
-  } else {
-    passport.authenticate('bearer', { session : false }, function (error, user) {
-      if (!user) {
-        if (req.referer) {
-          req.session.returnTo = req.originalUrl || req.url
-          return res.redirect('/login')
-        } else {
-          let error = Permission.authenticationError()
-          res.model.errors.push(error)
-          res.status(error.code)
-          return next(error)
+exports.isAuthenticated = function (isUserFacing) {
+  return function (req, res, next) {
+    if (req.isUnauthenticated() === false) {
+      return next()
+    } else {
+      passport.authenticate('bearer', { session : false }, function (error, user) {
+        if (!user) {
+          if (!isUserFacing) {
+            let error = Permission.authenticationError()
+            res.model.errors.push(error)
+            res.status(error.code)
+            return next(error)
+          } else {
+            req.session.returnTo = req.originalUrl || req.url
+            return res.redirect('/login')
+          }
         }
-      }
-      req.user = user
-      next()
-    })(req, res, next)
+        req.user = user
+        next()
+      })(req, res, next)
+    }
   }
 }
 
