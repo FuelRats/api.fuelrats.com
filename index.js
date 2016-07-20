@@ -289,7 +289,7 @@ let httpServer = http.Server(app)
 
   // Send the response
 app.use(function (request, response) {
-  if (response.model.errors.length > 0) {
+  if (response.model.errors.length) {
     if (!request.referer) {
       delete response.model.data
       response.send(response.model)
@@ -308,18 +308,20 @@ app.use(function (request, response) {
           break
       }
     }
-  } else if (response.model.data.length > 0) {
+  } else {
     delete response.model.errors
     response.send(response.model)
+  }
+})
+
+app.get('*', function (request, response) {
+  if (!request.referer) {
+    response.status(404)
+    response.render('errors/404', { path: request.path })
   } else {
-    if (!request.referer) {
-      response.status(404)
-      response.render('errors/404', { path: request.path })
-    } else {
-      delete response.model.data
-      response.model.errors = Error.throw('not_found', request.path)
-      response.send(response.model)
-    }
+    delete response.model.data
+    response.model.errors = Error.throw('not_found', request.path)
+    response.send(response.model)
   }
 })
 
