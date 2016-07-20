@@ -119,6 +119,7 @@ exports.isAuthenticated = function (isUserFacing) {
             let error = Permission.authenticationError()
             res.model.errors.push(error)
             res.status(error.code)
+
             return next(error)
           } else {
             req.session.returnTo = req.originalUrl || req.url

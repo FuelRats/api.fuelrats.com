@@ -298,8 +298,24 @@ let httpServer = http.Server(app)
   // Send the response
 app.use(function (request, response) {
   if (response.model.errors.length > 0) {
-    delete response.model.data
-    response.send(response.model)
+    if (!request.referer) {
+      delete response.model.data
+      response.send(response.model)
+    } else {
+      switch (response.status) {
+        case 403:
+          response.render('errors/403', { error: response.model.errors })
+          break
+
+        case 503:
+          response.render('errors/503', { error: response.model.errors })
+          break
+
+        default:
+          response.render('errors/500', { error: response.model.errors })
+          break
+      }
+    }
   } else if (response.model.data.length > 0) {
     delete response.model.errors
     response.send(response.model)
