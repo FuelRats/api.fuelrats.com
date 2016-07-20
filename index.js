@@ -31,6 +31,8 @@ if (fs.existsSync('./config.json')) {
   _.extend(config, require('./config'))
 }
 
+let Error = require('./api/errors')
+
 // Import models
 let db = require('./api/db').db
 let User = require('./api/db').User
@@ -238,7 +240,7 @@ router.get('/rats', rat.get)
 router.post('/rats', rat.post)
 router.get('/rats/:id', rat.getById)
 router.put('/rats/:id', auth.isAuthenticated(false), rat.put)
-router.delete('/rats/:id', auth.isAuthenticated(false), Permission.required('rat.delete'), rat.delete)
+router.delete('/rats/:id', auth.isAuthenticated(false), Permission.required('rat.delete', false), rat.delete)
 
 router.get('/rescues', rescue.get)
 router.post('/rescues', auth.isAuthenticated(false), rescue.post)
@@ -247,18 +249,18 @@ router.put('/rescues/:id', auth.isAuthenticated(false), rescue.put)
 router.put('/rescues/:id/addquote', auth.isAuthenticated(false), rescue.addquote)
 router.put('/rescues/:id/assign/:ratId', auth.isAuthenticated(false), rescue.assign)
 router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), rescue.unassign)
-router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), Permission.required('rescue.delete'), rescue.unassign)
+router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), Permission.required('rescue.delete', false), rescue.unassign)
 
-router.get('/users', auth.isAuthenticated(false), Permission.required('user.read'), user.get)
-router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read'), user.getById)
+router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
+router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read', false), user.getById)
 router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
-router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete'), user.delete)
+router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
-router.get('/clients', auth.isAuthenticated(false), Permission.required('client.read'), client.get)
-router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('client.update'), client.put)
-router.post('/clients', auth.isAuthenticated(false), Permission.required('self.client.create'), client.post)
-router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete'), client.delete)
+router.get('/clients', auth.isAuthenticated(false), Permission.required('client.read', false), client.get)
+router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('client.update', false), client.put)
+router.post('/clients', auth.isAuthenticated(false), Permission.required('self.client.create', false), client.post)
+router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete', false), client.delete)
 
 router.get('/version', version.get)
 
@@ -272,7 +274,7 @@ router.get('/register', register.get)
 router.get('/welcome', welcome.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
-router.get('/rescues/edit/:id', auth.isAuthenticated(true), rescueAdmin.editRescue)
+router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
 router.get('/rescues/list', auth.isAuthenticated(true), rescueAdmin.listRescues)
 router.get('/rescues/list/:page', auth.isAuthenticated(true), rescueAdmin.listRescues)
 
@@ -295,13 +297,22 @@ let httpServer = http.Server(app)
 
   // Send the response
 app.use(function (request, response) {
-  if (response.model.errors.length) {
+  if (response.model.errors.length > 0) {
     delete response.model.data
-  } else {
+    response.send(response.model)
+  } else if (response.model.data.length > 0) {
     delete response.model.errors
+    response.send(response.model)
+  } else {
+    if (!request.referer) {
+      response.status(404)
+      response.render('errors/404', { path: request.path })
+    } else {
+      delete response.model.data
+      response.model.errors = Error.throw('not_found', request.path)
+      response.send(response.model)
+    }
   }
-
-  response.send(response.model)
 })
 
 /* Because express.js is stupid and uses the method signature to distinguish between

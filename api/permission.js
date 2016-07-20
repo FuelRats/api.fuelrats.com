@@ -42,7 +42,7 @@ class Permission {
     })
   }
 
-  static required (permission) {
+  static required (permission, isUserFacing) {
     return function (req, res, next) {
       if (Permission.granted(permission, req.user)) {
         return next()
@@ -50,6 +50,7 @@ class Permission {
         let error = Permission.permissionError(permission)
         res.model.errors.push(error)
         res.status(error.code)
+        res.isUserFacing = isUserFacing
         return next()
       }
     }
