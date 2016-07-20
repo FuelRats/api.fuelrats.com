@@ -111,12 +111,12 @@ exports.received = function (client, requestString) {
               if (client.user) {
                 if (controller[method].length > 2) {
                   Permission.require(controller[method][2]).then(function () {
-                    callAPIMethod(controller[method], data, client, query, action, requestMeta)
+                    callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
                   }).catch(function (error) {
                     exports.error(client, requestMeta, [error])
                   })
                 }
-                callAPIMethod(controller[method], data, client, query, action, requestMeta)
+                callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
               } else {
                 exports.error(client, requestMeta, [Permission.authenticationError()])
               }
@@ -124,7 +124,7 @@ exports.received = function (client, requestString) {
             }
           }
 
-          callAPIMethod(controller[method], data, client, query, action, requestMeta)
+          callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
         } else {
           exports.error(client, {
             action: action
