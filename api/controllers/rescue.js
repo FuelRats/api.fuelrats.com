@@ -540,7 +540,7 @@ function findRescueWithRats (where) {
       {
         model: Rat,
         as: 'rats',
-        required: true
+        required: false
       }
     ]
   })
