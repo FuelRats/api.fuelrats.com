@@ -57,8 +57,8 @@ module.exports = function (sequelize, DataTypes) {
     },
     system: {
       type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: ''
+      allowNull: true,
+      defaultValue: null
     }
   }, {
     classMethods: {
