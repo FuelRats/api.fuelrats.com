@@ -59,6 +59,11 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: null
+    },
+    unidentifiedRats: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      defaultValue: []
     }
   }, {
     classMethods: {
