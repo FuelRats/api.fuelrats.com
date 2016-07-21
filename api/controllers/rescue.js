@@ -519,10 +519,14 @@ function getRescuePermissionType (rescue, user) {
 
 function convertRescueToAPIResult (rescueInstance) {
   let rescue = rescueInstance.toJSON()
-  let reducedRats = rescue.rats.map(function (rat) {
-    return rat.id
-  })
-  rescue.rats = reducedRats
+  if (rescue.rats) {
+    let reducedRats = rescue.rats.map(function (rat) {
+      return rat.id
+    })
+    rescue.rats = reducedRats
+  } else {
+    rescue.rats = []
+  }
 
   rescue.firstLimpet = rescue.firstLimpetId
   delete rescue.firstLimpetId
