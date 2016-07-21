@@ -90,6 +90,11 @@ class Controller {
 
           Promise.all(associations).then(function () {
             findRescueWithRats({ id: rescue.id }).then(function (rescueInstance) {
+              if (!rescueInstance) {
+                reject({ error: Error.throw('operation_failed', rescue.id), meta: {} })
+                return
+              }
+
               let rescue = convertRescueToAPIResult(rescueInstance)
 
               let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
@@ -136,6 +141,10 @@ class Controller {
     return new Promise(function (resolve, reject) {
       if (query.id) {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
+          if (!rescue) {
+            reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+          }
+
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
           let permission = getRescuePermissionType(rescue, connection.user)
           Permission.require(permission, connection.user).then(function () {
@@ -162,6 +171,11 @@ class Controller {
 
             Promise.all(updates).then(function () {
               findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                if (!rescueInstance) {
+                  reject({ error: Error.throw('operation_failed', rescue.id), meta: {} })
+                  return
+                }
+
                 let rescue = convertRescueToAPIResult(rescueInstance)
 
                 let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
@@ -200,6 +214,10 @@ class Controller {
       if (query.id) {
         Permission.require('rescue.delete', connection.user).then(function () {
           Rescue.findById(query.id).then(function (rescue) {
+            if (!rescue) {
+              reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+              return
+            }
             rescue.destroy()
             resolve({ data: null, meta: {} })
           }).catch(function (error) {
@@ -218,6 +236,10 @@ class Controller {
     return new Promise(function (resolve, reject) {
       if (query.id) {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
+          if (!rescue) {
+            reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+            return
+          }
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
           let permission = getRescuePermissionType(rescue, connection.user)
 
@@ -225,6 +247,10 @@ class Controller {
             Rat.findById(data.ratId).then(function (rat) {
               rescue.addRat(rat).then(function () {
                 findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                  if (!rescueInstance) {
+                    reject({ error: Error.throw('operation_failed', rescue.id), meta: {} })
+                    return
+                  }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
                   let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
@@ -263,6 +289,10 @@ class Controller {
     return new Promise(function (resolve, reject) {
       if (query.id) {
         findRescueWithRats({ id: query.id }).then(function (rescue) {
+          if (!rescue) {
+            reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+            return
+          }
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
           let permission = getRescuePermissionType(rescue, connection.user)
 
@@ -270,6 +300,10 @@ class Controller {
             Rat.findById(data.ratId).then(function (rat) {
               rescue.removeRat(rat).then(function () {
                 findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                  if (!rescueInstance) {
+                    reject({ error: Error.throw('operation_failed', rescue.id), meta: {} })
+                    return
+                  }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
                   let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
@@ -307,7 +341,10 @@ class Controller {
   static addquote (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (query.id) {
-        findRescueWithRats({ id: query.id }).then(function (rescue) {
+        findRescueWithRats({ id: query.id }).then(function (rescue) {if (!rescue) {
+          reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+          return
+        }
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
           let permission = getRescuePermissionType(rescue, connection.user)
 
@@ -320,6 +357,10 @@ class Controller {
                 where: { id: rescue.id }
               }).then(function () {
                 findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
+                  if (!rescueInstance) {
+                    reject({ error: Error.throw('operation_failed', rescue.id), meta: {} })
+                    return
+                  }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
                   let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {

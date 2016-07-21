@@ -49,6 +49,13 @@ let errors = {
     'title': 'Server Error'
   },
 
+  'operation_failed': {
+    'code': 409,
+    'detail': '',
+    'status': 'Conflict',
+    'title': 'Failed to create or update resource due to a conflict'
+  },
+
   'already_exists': {
     'code': 400,
     'detail': '',
