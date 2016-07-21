@@ -16,7 +16,6 @@ class Controller {
 
       let offset = parseInt(query.offset) || 0
       delete query.offset
-
       let dbQuery = {
         where: query,
         limit: limit,
@@ -24,8 +23,7 @@ class Controller {
         include: [
           {
             model: Rat,
-            as: 'rats',
-            required: true
+            as: 'rats'
           }
         ]
       }
@@ -432,6 +430,7 @@ class HTTP {
   }
 
   static get (request, response, next) {
+    console.log(request.query)
     Controller.read(request.query).then(function (res) {
       let data = res.data
       let meta = res.meta

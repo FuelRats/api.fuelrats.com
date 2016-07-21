@@ -22,8 +22,7 @@ class Controller {
         include: [
           {
             model: Rat,
-            as: 'rats',
-            required: true
+            as: 'rats'
           }
         ]
       }
@@ -221,8 +220,7 @@ function findUserWithRats (where) {
     include: [
       {
         model: Rat,
-        as: 'rats',
-        required: true
+        as: 'rats'
       }
     ]
   })
