@@ -13,7 +13,7 @@ server.serializeClient(function (client, callback) {
 })
 
 server.deserializeClient(function (id, callback) {
-  Client.findOne({ id: id }).then(function (client) {
+  Client.findById(id).then(function (client) {
     if (!client) {
       callback(null, false)
       return
@@ -45,7 +45,7 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
 }))
 
 server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, callback) {
-  Code.findOne({ value: code }).then(function (auth) {
+  Code.findOne({ where: { value: code }}).then(function (auth) {
     if (!auth) {
       return callback(null, false)
     }
@@ -81,11 +81,10 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
 
 exports.authorization = [
   server.authorization(function (clientId, redirectUri, callback) {
-    Client.findOne({ id: clientId }).then(function (client) {
+    Client.findById(clientId).then(function (client) {
       if (!client) {
         return callback(null, false)
       }
-
       callback(null, client, redirectUri)
     }).catch(function (error) {
       return callback(error)

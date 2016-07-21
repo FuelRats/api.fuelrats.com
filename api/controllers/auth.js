@@ -69,7 +69,7 @@ passport.use(exports.LocalStrategy)
 
 passport.use('client-basic', new BasicStrategy(
   function (username, secret, callback) {
-    Client.findOne({ id: username }).then(function (client) {
+    Client.findById(username).then(function (client) {
       if (!client) {
         callback(null, false)
       }
@@ -90,7 +90,7 @@ passport.use('client-basic', new BasicStrategy(
 
 passport.use(new BearerStrategy(
   function (accessToken, callback) {
-    Token.findOne({ value: accessToken }).then(function (token) {
+    Token.findOne({ where: { value: accessToken } }).then(function (token) {
       if (!token) {
         callback(null, false)
         return
