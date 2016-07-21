@@ -51,9 +51,9 @@ let errors = {
 
   'operation_failed': {
     'code': 409,
-    'detail': '',
+    'detail': 'Failed to create or update resource due to a conflict',
     'status': 'Conflict',
-    'title': 'Failed to create or update resource due to a conflict'
+    'title': 'Conflict During Operation'
   },
 
   'already_exists': {
