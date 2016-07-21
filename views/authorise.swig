@@ -2,7 +2,7 @@
 
 {% block head %}
 {% parent %}
-<title>{{client.name}}</b> is requesting full access to your FuelRats account</title>
+<title>{{client.name}} is requesting full access to your FuelRats account</title>
 {% endblock %}
 
 {% block body %}
