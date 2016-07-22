@@ -6,10 +6,5 @@
     "database": "fuelrats",
     "hostname": "localhost",
     "port": 27017
-  },
-  "ssl": {
-    "enabled": true,
-    "hostname": "localhost",
-    "port": 4443
   }
 }
