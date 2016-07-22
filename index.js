@@ -200,6 +200,7 @@ if (options.logging || options.test) {
     winston.info('ENDPOINT:', request.originalUrl)
     winston.info('METHOD:', request.method)
     winston.info('DATA:', censoredParams)
+    winston.info('IP:', request.headers['x-forwarded-for'] || request.connection.remoteAddress)
     next()
   })
 }
