@@ -283,9 +283,8 @@ exports.authorization = function (query, client, meta) {
       User.findById(token.userId).then(function (user) {
         client.user = user.toJSON()
 
-        delete user.rats
-        delete user.salt
-        delete user.password
+        delete client.user.salt
+        delete client.user.password
 
         exports.send(client, { action: 'authorization' }, user)
       }).catch(function (error) {
