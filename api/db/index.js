@@ -1,8 +1,10 @@
 'use strict'
 let Sequelize = require('sequelize')
+let config = require('../../config')
 
-let db = new Sequelize('fuelrats', 'alex', 'fuelrats', {
-  host: 'localhost',
+let db = new Sequelize(config.postgres.database, config.postgres.username, config.postgres.password, {
+  host: config.postgres.hostname,
+  port: config.postgres.port,
   dialect: 'postgres'
 })
 
