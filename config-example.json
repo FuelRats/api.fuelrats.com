@@ -2,9 +2,11 @@
   "hostname": "localhost",
   "port": 8080,
   "secretSauce": "Your secret goes here!",
-  "mongo": {
+  "postgres": {
     "database": "fuelrats",
     "hostname": "localhost",
-    "port": 27017
+    "username": "fuelrats",
+    "password": "",
+    "port": 5352
   }
 }
