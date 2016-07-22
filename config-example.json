@@ -1,6 +1,7 @@
 {
   "hostname": "localhost",
   "port": 8080,
+  "proxyEnabled": false,
   "secretSauce": "Your secret goes here!",
   "postgres": {
     "database": "fuelrats",
