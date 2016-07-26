@@ -8,7 +8,7 @@
 {% block body %}
 {% parent %}
 <nav class="navbar navbar-light bg-faded">
-  <div class="navbar-brand" data-pgroup="{{ group }}">Welcome, {{ email }}</div>
+  <div class="navbar-brand">Welcome, {{ user.email }} <span class="label label-pill label-{{ userGroupLabel }}">{{ user.group }}</span></div>
 
   <ul class="nav navbar-nav pull-xs-right">
     <li class="nav-item">
@@ -20,39 +20,74 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-3">
-      <div class="card">
-        <div class="card-header">
-          <strong>Your CMDRs</strong>
-        </div>
-
-        <div class="card-block">
-<!--        <ul class="list-group list-group-flush rat-list">-->
-          <ul class="nav nav-stacked rat-list">
-            {% for CMDR in CMDRs %}
-  <!--            <li class="list-group-item">-->
-              <li class="nav-item">
-                <a class="nav-link active" href="#rescues-{{ CMDR._id }}">
-                  {{ CMDR.CMDRname }}
-                  <span class="label label-pill label-default">{{ CMDR.platform }}</span>
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-
-        <div class="card-footer form-inline rat-adder" hidden>
-          <div class="row">
-            <input type="text" placeholder="Add Rat" class="form-control" data-autocomplete="CMDRname">
-            <button type="button" class="btn btn-primary">Add</button>
+    <div class="card">
+      <div class="card-header">
+        <strong>Your CMDRs</strong>
+      </div>
+      <div class="card-block">
+        <ul class="nav nav-stacked rat-list">
+          {% for CMDR in user.rats %}
+            <li class="nav-item">
+              <a class="nav-link active" href="#rescues-{{ CMDR.id }}">
+                {{ CMDR.CMDRname }}
+                <span class="label label-pill label-default">{{ CMDR.platform }}</span>
+              </a>
+            </li>
+          {% endfor %}
+          {% if user.rats.length == 0 %}
+          <div class="alert alert-info" role="alert">
+            <strong>No CMDRs found</strong><br> You will not be able to file rescues to paperwork in your name unless you create a CMDR.
+          </div>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="card-footer">
+        <div class="input-group">
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-secondary btn-success-outline">Add</button>
+            <button type="button" class="btn btn-secondary btn-warning-outline">Edit</button>
+            <button type="button" class="btn btn-secondary btn-danger-outline">Remove</button>
           </div>
         </div>
       </div>
     </div>
+    <div class="card">
+      <div class="card-header">
+        <strong>IRC Nicknames</strong>
+      </div>
+
+      <div class="card-block">
+        <ul class="nav nav-stacked rat-list">
+          {% for nickname in user.nicknames %}
+            <li class="nav-item">
+              <a class="nav-link active">
+                {{ nickname }}
+              </a>
+            </li>
+          {% endfor %}
+          {% if user.nicknames.length == 0 %}
+          <div class="alert alert-info" role="alert">
+            <strong>No nicknames found</strong><br> You should connect your IRC nicknames so you will be correctly assigned when doing rescues.
+          </div>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="card-footer">
+        <div class="input-group">
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-secondary btn-success-outline">Add</button>
+            <button type="button" class="btn btn-secondary btn-warning-outline" disabled>Edit</button>
+            <button type="button" class="btn btn-secondary btn-danger-outline" disabled>Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
 
     <div class="col-md-9">
-      {% for CMDR in CMDRs %}
-        <h2 id="rescues-{{ CMDR._id }}">
-          {{ CMDRname }}
+      {% for CMDR in user.rats %}
+        <h2 id="rescues-{{ CMDR.id }}">
+          {{ CMDR.CMDRname }}
           <small class="text-muted pull-xs-right">{{ CMDR.rescues.length }} rescues</small>
         </h2>
         <hr>
@@ -64,7 +99,6 @@
                 <th>Date</th>
                 <th>Success/Failure</th>
                 <th>System</th>
-                <!--<th>Notes</th>-->
               </tr>
             </thead>
 
@@ -74,17 +108,16 @@
                   <td>{{ rescue.createdAt|eliteDate() }}</td>
                   <td class="{% if rescue.successful %} table-success {% else %} table-danger {% endif %}">
                     {% if rescue.successful %}
-                      {% if rescue.assist %}
-                        Success (Assist)
-                      {% else %}
+                      {% if rescue.isFirstLimpet %}
                         Success
+                      {% else %}
+                        Success (Assist)
                       {% endif %}
                     {% else %}
                       Failure
                     {% endif %}
                   </td>
                   <td>{{ rescue.system }}</td>
-                  <!--<td>{{ rescue.notes }}</td>-->
                 </tr>
               {% endfor %}
             </tbody>
@@ -100,4 +133,5 @@
 
 {% block resources %}
 {% parent %}
+<script src="paperwork.js" type="application/ecmascript"></script>
 {% endblock %}

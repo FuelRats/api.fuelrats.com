@@ -1,69 +1,72 @@
 'use strict'
+let moment = require('moment')
+let winston = require('winston')
+let User = require('../db').User
+let Rat = require('../db').Rat
+let Rescue = require('../db').Rescue
+let db = require('../db').db
 
-var _, moment, winston
-
-_ = require('underscore')
-moment = require('moment')
-winston = require('winston')
-
+const labels = {
+  'normal': 'default',
+  'overseer': 'info',
+  'moderator': 'warning',
+  'admin': 'danger'
+}
 
 exports.get = function (request, response) {
-  if (request.isUnauthenticated()) {
-    response.redirect('/login')
+  User.findOne({
+    where: {
+      id: request.user.id
+    },
+    attributes: [
+      'id',
+      'email',
+      'nicknames',
+      'drilled',
+      'drilledDispatch',
+      'group'
+    ],
+    include: [{
+      model: Rat,
+      where: {},
+      attributes: [
+        'id',
+        'CMDRname',
+        'platform'
+      ],
+      as: 'rats',
+      include: [{
+        required: false,
+        model: Rescue,
+        as: 'rescues',
+        through: {
+          attributes: []
+        },
+        attributes: [
+          'id',
+          'createdAt',
+          'codeRed',
+          'epic',
+          'open',
+          'notes',
+          'system',
+          'successful',
+          [db.literal('CASE WHEN "rats.rescues"."firstLimpetId" = "rats"."id" THEN TRUE ELSE FALSE END'), 'isFirstLimpet']
+        ]
+      }]
+    }],
+    order: [
+      [
+        { model: Rat, as: 'rats' },
+        { model: Rescue, as: 'rescues' },
+        'createdAt',
+        'DESC'
+      ]
+    ]
+  }).then(function (user) {
 
-  } else {
-    request.user.populate('CMDRs', function (error) {
-      var rescueFinds
-
-      rescueFinds = []
-
-      if (error) {
-        return winston.error(error)
-      }
-
-      request.user.CMDRs.forEach(function (CMDR) {
-        rescueFinds.push(new Promise(function (resolve, reject) {
-          CMDR.populate('rescues', function (error, rescues) {
-            if (error) {
-              return reject(error)
-            }
-
-            CMDR.rescues.forEach(function (rescue) {
-              rescue.createdAt = moment(rescue.createdAt)
-              rescue.lastModified = moment(rescue.lastModified)
-
-              let firstLimpet
-              if (rescue.firstLimpet && rescue.firstLimpet[0]) {
-                firstLimpet = rescue.firstLimpet[0]
-              } else {
-                firstLimpet = rescue.firstLimpet
-              }
-
-              if (CMDR._id.equals(firstLimpet) === false) {
-                rescue.assist = true
-              }
-            })
-
-            CMDR.rescues = _.sortBy(CMDR.rescues, 'createdAt').reverse()
-
-            resolve(rescues)
-          })
-        }))
-      })
-
-      Promise.all(rescueFinds)
-        .then(function () {
-          request.user.rescues = []
-
-          request.user.CMDRs.forEach(function (CMDR) {
-            _.union(request.user, CMDR.rescues)
-          })
-
-          response.render('welcome.swig', request.user)
-        })
-        .catch(function (error) {
-          winston.error(error)
-        })
-    })
-  }
+    response.render('welcome.swig', { user: user.toJSON(), userGroupLabel: labels[user.group] })
+  }).catch(function (error) {
+    console.log(error)
+  })
 }

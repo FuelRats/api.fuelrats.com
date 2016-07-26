@@ -104,7 +104,7 @@ swig.setFilter('eliteDate', function (date, args) {
   if (moment().diff(context, 'days') < 7) {
     return context.fromNow()
   } else {
-    return context.add(1286, 'years').format(args || 'YYYY-MM-DD')
+    return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
   }
 })
 
@@ -163,9 +163,6 @@ app.use(expressSession({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-if (config.ssl.enabled) {
-  app.use(forceSSL)
-}
 
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
@@ -266,7 +263,7 @@ router.get('/reset', reset.get)
 router.get('/change_password', change_password.get)
 router.get('/paperwork', paperwork.get)
 router.get('/register', register.get)
-router.get('/welcome', welcome.get)
+router.get('/welcome', auth.isAuthenticated(true), welcome.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)

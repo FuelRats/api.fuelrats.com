@@ -17,12 +17,24 @@ let Client = db.import(__dirname + '/client')
 let Code = db.import(__dirname + '/code')
 let Token = db.import(__dirname + '/token')
 
+Rat.belongsTo(User, {
+  as: 'user',
+  foreignKey: 'UserId'
+})
 User.hasMany(Rat, { as: 'rats' })
+
+
 Rescue.belongsToMany(Rat, {
   as: 'rats',
   through: {
-    model: RescueRats,
-    unique: false
+    model: RescueRats
+  }
+})
+
+Rat.belongsToMany(Rescue, {
+  as: 'rescues',
+  through: {
+    model: RescueRats
   }
 })
 
