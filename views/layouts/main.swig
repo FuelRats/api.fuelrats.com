@@ -4,8 +4,9 @@
   {% block head %}
   {% endblock %}
 </head>
-<body>
+<body style="margin: 0">
   {% block body %}
+  <iframe src="https://www.fuelrats.com/too-quiet/" style="height: 140px; width: 100%"></iframe>
   {% endblock %}
 
   {% block resources %}

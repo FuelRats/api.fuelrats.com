@@ -9,10 +9,16 @@ html {
 body {
   font-size: 14px;
   min-height: 100%;
+
+  margin: 0 !important;
 }
 
 body > .navbar {
-  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+body > .container-fluid {
+  margin: 2rem;
 }
 
 .btn-group {
