@@ -88,7 +88,10 @@
       {% for CMDR in user.rats %}
         <h2 id="rescues-{{ CMDR.id }}">
           {{ CMDR.CMDRname }}
-          <small class="text-muted pull-xs-right">{{ CMDR.rescues.length }} rescues</small>
+          <small class="text-right" style="font-size: 70%">{{ CMDR.firstLimpetCount }} successful</small>
+          <small class="text-right" style="font-size: 70%">{{ CMDR.assistCount }} assists</small>
+          <small class="text-right" style="font-size: 70%">{{ CMDR.failureCount }} failures</small>
+          <small style="font-size: 70%" class="text-muted pull-xs-right text-right">({{ CMDR.successRate}}% success)</small>
         </h2>
         <hr>
 
@@ -106,14 +109,16 @@
               {% for rescue in CMDR.rescues %}
                 <tr>
                   <td>{{ rescue.createdAt|eliteDate() }}</td>
-                  <td class="{% if rescue.successful %} table-success {% else %} table-danger {% endif %}">
                     {% if rescue.successful %}
                       {% if rescue.isFirstLimpet %}
+                      <td class="table-success">
                         Success
                       {% else %}
+                      <td class="table-info">
                         Success (Assist)
                       {% endif %}
                     {% else %}
+                    <td class="table-danger">
                       Failure
                     {% endif %}
                   </td>

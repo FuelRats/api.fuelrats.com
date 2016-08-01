@@ -34,6 +34,10 @@ table td {
   width: auto;
 }
 
+.navbar-brand span.label.label-pill {
+  margin-top: -5px;
+}
+
 input[type='radio'] {
   width: auto !important;
   display: inline-block !important;

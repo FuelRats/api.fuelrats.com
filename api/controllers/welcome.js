@@ -63,9 +63,31 @@ exports.get = function (request, response) {
         'DESC'
       ]
     ]
-  }).then(function (user) {
+  }).then(function (userInstance) {
+    let user = userInstance.toJSON()
+    for (let rat of user.rats) {
+      let firstLimpetCount = 0
+      let assistCount = 0
+      let failureCount = 0
 
-    response.render('welcome.swig', { user: user.toJSON(), userGroupLabel: labels[user.group] })
+      for (let rescue of rat.rescues) {
+        if (rescue.successful === true) {
+          if (rescue.isFirstLimpet === true) {
+            firstLimpetCount += 1
+          } else {
+            assistCount += 1
+          }
+        } else {
+          failureCount += 1
+        }
+      }
+
+      rat.firstLimpetCount = firstLimpetCount
+      rat.assistCount = assistCount
+      rat.failureCount = failureCount
+      rat.successRate = ((firstLimpetCount + assistCount) / rat.rescues.length * 100).toFixed(2)
+    }
+    response.render('welcome.swig', { user: user, userGroupLabel: labels[user.group] })
   }).catch(function (error) {
     console.log(error)
   })
