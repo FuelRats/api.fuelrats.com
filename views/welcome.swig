@@ -107,7 +107,7 @@
 
             <tbody>
               {% for rescue in CMDR.rescues %}
-                <tr>
+                <tr title="{{ rescue.notes }}">
                   <td>{{ rescue.createdAt|eliteDate() }}</td>
                     {% if rescue.successful %}
                       {% if rescue.isFirstLimpet %}
