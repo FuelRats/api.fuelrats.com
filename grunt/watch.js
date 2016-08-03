@@ -1,13 +1,4 @@
 module.exports = {
-  docs: {
-    files: [
-      'docs/**/*.apib'
-    ],
-    tasks: [
-      'docs'
-    ]
-  },
-
   express: {
     files: [
       'index.js',
