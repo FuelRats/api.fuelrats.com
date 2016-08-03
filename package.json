@@ -13,7 +13,14 @@
   "license": "MIT",
   "main": "api/index.js",
   "dependencies": {
+<<<<<<< HEAD
     "bcrypt": "^0.8.7",
+=======
+    "babel-core": "^6.11.4",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-runtime": "^6.11.6",
+>>>>>>> develop
     "body-parser": "^1.14.2",
     "chai": "^3.4.1",
     "compression": "^1.6.1",
@@ -29,6 +36,7 @@
     "express-session": "^1.13.0",
     "git-rev": "^0.2.1",
     "grunt": "^0.4.5",
+    "grunt-babel": "^6.0.0",
     "grunt-contrib-cssmin": "^1.0.1",
     "grunt-contrib-uglify": "^1.0.1",
     "grunt-contrib-watch": "^0.6.1",

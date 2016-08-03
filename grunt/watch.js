@@ -19,5 +19,15 @@ module.exports = {
     tasks: [
       'express:dev'
     ]
-  }
+  },
+
+  frontendJS: {
+    files: ['src/**/*.js']
+  },
+  options: {
+    spawn: false
+  },
+  tasks: [
+    'babel'
+  ]
 }
