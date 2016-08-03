@@ -13,12 +13,9 @@ module.exports = {
   },
 
   frontendJS: {
-    files: ['src/**/*.js']
+    files: ['src/**/*.js'],
+    tasks: [
+      'buildJS'
+    ]
   },
-  options: {
-    spawn: false
-  },
-  tasks: [
-    'babel'
-  ]
 }

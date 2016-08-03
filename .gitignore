@@ -5,11 +5,7 @@ test/bundle.js
 config.json
 npm-debug.log.*
 views/docs.hbs
-
-static/app.js
-static/app.js.map
-static/script.min.js
-
+js/
 
 # Created by https://www.gitignore.io
 
