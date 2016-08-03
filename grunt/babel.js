@@ -3,9 +3,13 @@ module.exports = {
     presets: ['es2015'],
     sourceMap: true
   },
+
   dist: {
-    files: {
-      'static/app.js': 'src/app.js'
-    }
+    files: [{
+      cwd: 'src/',
+      dest: 'js/',
+      expand: true,
+      src: ['**/*.js']
+    }]
   }
 }
