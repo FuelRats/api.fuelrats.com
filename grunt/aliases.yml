@@ -2,10 +2,14 @@ api:
   description: Start the api
   tasks:
   - 'cssmin:production'
+  - 'buildJS'
   - 'uglify:production'
-  - 'docs'
   - 'express'
   - 'watch'
+
+buildJS:
+  tasks:
+  - 'babel'
 
 default:
   description: Default Grunt task
