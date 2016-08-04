@@ -125,7 +125,7 @@ class Controller {
 
 class HTTP {
   static get (request, response, next) {
-    Controller.read(request.params, request).then(function (res) {
+    Controller.read(request.query, request).then(function (res) {
       let data = res.data
 
       response.model.data = data
