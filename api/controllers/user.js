@@ -15,6 +15,9 @@ class Controller {
       let offset = parseInt(query.offset) || 0
       delete query.offset
 
+      if (query.nicknames) {
+        query.nicknames = { $contains: [query.nicknames] }
+      }
       let dbQuery = {
         where: query,
         limit: limit,
@@ -26,6 +29,8 @@ class Controller {
           }
         ]
       }
+
+      console.log(dbQuery)
 
       User.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
