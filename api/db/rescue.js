@@ -66,6 +66,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: []
     }
   }, {
+    paranoid: true,
     classMethods: {
       associate: function (models) {
         Rescue.belongsToMany(models.Rat, { as: 'rats', through: 'RescueRats' })

@@ -40,6 +40,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: 'normal'
     }
   }, {
+    paranoid: true,
     classMethods: {
       associate: function (models) {
         User.hasMany(models.Rat, { as: 'rats' })

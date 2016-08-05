@@ -25,6 +25,8 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: 'pc'
     }
+  }, {
+    paranoid: true
   })
 
   return Rat
