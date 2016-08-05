@@ -121,6 +121,14 @@ class Controller {
       if (query.id) {
         Rat.findById(query.id).then(function (rat) {
           rat.destroy()
+
+          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+            return cl.clientId !== connection.clientId
+          })
+          websocket.broadcast(allClientsExcludingSelf, {
+            action: 'rat:deleted'
+          }, convertRatToAPIResult(rat))
+
           resolve({ data: null, meta: {} })
         }).catch(function (error) {
           reject({ error: Errors.throw('server_error', error), meta: {} })

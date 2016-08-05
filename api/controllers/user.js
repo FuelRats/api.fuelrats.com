@@ -30,8 +30,6 @@ class Controller {
         ]
       }
 
-      console.log(dbQuery)
-
       User.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
           count: result.rows.length,
