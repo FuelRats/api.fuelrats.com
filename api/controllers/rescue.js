@@ -16,10 +16,19 @@ class Controller {
 
       let offset = parseInt(query.offset) || 0
       delete query.offset
+
+      let order = parseInt(query.order) || 'createdAt'
+      delete query.order
+      let direction = query.direction || 'ASC'
+      delete query.direction
+
       let dbQuery = {
         where: query,
         limit: limit,
         offset: offset,
+        order: [
+          [order, direction]
+        ],
         include: [
           {
             model: Rat,
