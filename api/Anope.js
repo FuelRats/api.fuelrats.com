@@ -1,10 +1,14 @@
 'use strict'
 
 let xmlrpc = require('homematic-xmlrpc')
+let sslRootCAs = require('ssl-root-cas/latest')
+  .addFile(__dirname + '/../ca/lets-encrypt-x1-cross-signed.pem')
+  .addFile(__dirname + '/../ca/lets-encrypt-x2-cross-signed.pem')
+  .addFile(__dirname + '/../ca/lets-encrypt-x3-cross-signed.pem')
+  .addFile(__dirname + '/../ca/lets-encrypt-x4-cross-signed.pem')
+sslRootCAs.inject()
 
 const client = xmlrpc.createSecureClient('https://irc.eu.fuelrats.com:6080/xmlrpc')
-
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
 
 class Anope {
   static authenticate (nickname, password) {
@@ -154,5 +158,11 @@ class IRCUserInfo {
     }
   }
 }
+
+Anope.info('xlexious').then(function (result) {
+  console.log(result)
+}).catch(function (error) {
+  console.log(error)
+})
 
 module.exports = Anope
