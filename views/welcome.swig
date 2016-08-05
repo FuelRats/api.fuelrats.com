@@ -88,10 +88,14 @@
       {% for CMDR in user.rats %}
         <h2 id="rescues-{{ CMDR.id }}">
           {{ CMDR.CMDRname }}
+          {% if CMDR.rescues.length > 0 %}
           <small class="text-right" style="font-size: 70%">{{ CMDR.firstLimpetCount }} successful</small>
           <small class="text-right" style="font-size: 70%">{{ CMDR.assistCount }} assists</small>
           <small class="text-right" style="font-size: 70%">{{ CMDR.failureCount }} failures</small>
           <small style="font-size: 70%" class="text-muted pull-xs-right text-right">({{ CMDR.successRate}}% success)</small>
+          {% else %}
+          <small class="text-right" style="font-size: 70%">No Rescues</small>
+          {% endif %}
         </h2>
         <hr>
 
