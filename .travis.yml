@@ -10,7 +10,7 @@ addons:
     - ubuntu-toolchain-r-test
     packages:
     - g++-4.8
-    
+
 node_js:
 - 6.3.1
 
@@ -20,7 +20,7 @@ services:
 before_script:
 - cp config-example.json config.json
 - psql -c 'create database fuelratstest;' -U postgres
-- npm install webpack@1^2.1.0-beta
+- npm install webpack@^2.1.0-beta
 - npm install -g grunt-cli
 - sleep 10
 
