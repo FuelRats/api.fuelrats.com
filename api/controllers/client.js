@@ -125,7 +125,7 @@ class HTTP {
       let data = res.data
 
       response.model.data = data
-      response.status = 200
+      response.status = 201
       next()
     }, function (error) {
       response.model.errors.push(error.error)
