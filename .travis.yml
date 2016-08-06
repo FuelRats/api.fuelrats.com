@@ -5,6 +5,7 @@ env:
   - CXX=g++-4.8
 
 addons:
+  postgresql: "9.5"
   apt:
     sources:
     - ubuntu-toolchain-r-test
@@ -26,6 +27,8 @@ before_script:
 
 notifications:
   irc:
+    on_success: always
+    on_failure: always
     channels:
       - "irc.fuelrats.com#rattech"
     nick: TravisCI
