@@ -45,6 +45,7 @@ let docs = require('./api/controllers/docs')
 let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
 let logout = require('./api/controllers/logout')
+let nicknames = require('./api/controllers/nicknames').HTTP
 let oauth2 = require('./api/controllers/oauth2')
 let paperwork = require('./api/controllers/paperwork')
 let rat = require('./api/controllers/rat').HTTP
@@ -134,7 +135,7 @@ passport.deserializeUser(function (id, done) {
       {
         model: Rat,
         as: 'rats',
-        required: true
+        required: false
       }
     ]
   }).then(function (userInstance) {
@@ -242,11 +243,17 @@ router.put('/rescues/:id/assign/:ratId', auth.isAuthenticated(false), rescue.ass
 router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), rescue.unassign)
 router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), Permission.required('rescue.delete', false), rescue.unassign)
 
+
 router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
 router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read', false), user.getById)
 router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
 router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
+
+router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
+router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
+router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
+router.delete('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.delete)
 
 router.get('/clients', auth.isAuthenticated(false), Permission.required('client.read', false), client.get)
 router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('client.update', false), client.put)

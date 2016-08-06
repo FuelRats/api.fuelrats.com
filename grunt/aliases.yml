@@ -19,4 +19,6 @@ default:
 test:
   description: Run the tests
   tasks:
+  - 'run:createTestUser'
   - 'express'
+  - 'mochaTest'

@@ -92,7 +92,7 @@ class Anope {
           reject(error)
         } else {
           if (data.return.includes('isn&amp;#39;t registered')) {
-            reject(data.return)
+            resolve(null)
           } else {
             resolve(new IRCUserInfo(data.return.split('#xA;')))
           }
@@ -158,11 +158,5 @@ class IRCUserInfo {
     }
   }
 }
-
-Anope.info('xlexious').then(function (result) {
-  console.log(result)
-}).catch(function (error) {
-  console.log(error)
-})
 
 module.exports = Anope

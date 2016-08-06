@@ -1,30 +1,33 @@
+'use strict'
+
 module.exports = {
   randomRescue: function () {
-    var randomName;
-
-    randomName = ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 );
+    let randomName = (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
 
     return {
-      client: {
-        CMDRname: 'CMDR ' + randomName,
-        nickname: randomName,
-      },
-      codeRed: !!Math.round( Math.random() ), // Randomly decide if this is a code red
+      active: true,
+      client: randomName,
+      codeRed: !!Math.round(Math.random()),
+      data: { foo: ['test'] },
+      epic: false,
+      open: true,
+      notes: 'test',
+      platform: Math.round(Math.random()) ? 'pc' : 'xb', // Randomly decide if the client is PC or Xbox
+      quotes: ['test'],
+      successful: !!Math.round(Math.random()),
       system: 'Eravate',
-      platform: Math.round( Math.random() ) ? 'PC' : 'XB' // Randomly decide if the client is PC or Xbox
-    };
+      title: 'Operation Unit Test',
+      unidentifiedRats: ['TestRat']
+    }
   },
 
   randomRat: function () {
-    var randomName;
-
-    randomName = ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 );
+    let randomName = (Date.now() - parseInt((Math.random() * Math.random()) * 1000000)).toString(36)
 
     return {
-      CMDRname: 'CMDR Test Rat ' + randomName,
-      gamertag: 'Gamertag Test Rat ' + randomName,
-      drilled: !!Math.round( Math.random() ), // Randomly decide if this rat has been drilled
-      nickname: randomName,
-    };
+      CMDRname: 'Test Rat ' + randomName,
+      data: { foo: ['test'] },
+      platform: Math.round(Math.random()) ? 'pc' : 'xb' // Randomly decide if the rat is PC or Xbox
+    }
   }
-};
+}
