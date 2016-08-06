@@ -110,7 +110,7 @@ exports.isClientAuthenticated = passport.authenticate('client-basic', { session 
 exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
 exports.isAuthenticated = function (isUserFacing) {
   return function (req, res, next) {
-    if (req.isUnauthenticated() === false) {
+    if (req.user) {
       return next()
     } else {
       passport.authenticate('bearer', { session : false }, function (error, user) {
@@ -140,7 +140,7 @@ function findUserWithRats (where) {
       {
         model: Rat,
         as: 'rats',
-        required: true
+        required: false
       }
     ]
   })
