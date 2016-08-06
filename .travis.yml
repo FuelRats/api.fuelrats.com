@@ -11,6 +11,7 @@ services:
 before_script:
 - cp config-example.json config.json
 - psql -c 'create database fuelratstest;' -U postgres
+- npm install webpack@1^2.1.0-beta
 - npm install -g grunt-cli
 - sleep 10
 
