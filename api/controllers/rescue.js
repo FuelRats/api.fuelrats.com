@@ -16,10 +16,19 @@ class Controller {
 
       let offset = parseInt(query.offset) || 0
       delete query.offset
+
+      let order = parseInt(query.order) || 'createdAt'
+      delete query.order
+      let direction = query.direction || 'ASC'
+      delete query.direction
+
       let dbQuery = {
         where: query,
         limit: limit,
         offset: offset,
+        order: [
+          [order, direction]
+        ],
         include: [
           {
             model: Rat,
@@ -216,6 +225,14 @@ class Controller {
               return
             }
             rescue.destroy()
+
+            let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+              return cl.clientId !== connection.clientId
+            })
+            websocket.broadcast(allClientsExcludingSelf, {
+              action: 'rescue:deleted'
+            }, convertRescueToAPIResult(rescue))
+
             resolve({ data: null, meta: {} })
           }).catch(function (error) {
             reject({ error: Errors.throw('server_error', error), meta: {} })
@@ -430,7 +447,6 @@ class HTTP {
   }
 
   static get (request, response, next) {
-    console.log(request.query)
     Controller.read(request.query).then(function (res) {
       let data = res.data
       let meta = res.meta

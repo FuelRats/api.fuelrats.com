@@ -15,6 +15,9 @@ class Controller {
       let offset = parseInt(query.offset) || 0
       delete query.offset
 
+      if (query.nicknames) {
+        query.nicknames = { $contains: [query.nicknames] }
+      }
       let dbQuery = {
         where: query,
         limit: limit,
@@ -125,7 +128,7 @@ class Controller {
 
 class HTTP {
   static get (request, response, next) {
-    Controller.read(request.params, request).then(function (res) {
+    Controller.read(request.query, request).then(function (res) {
       let data = res.data
 
       response.model.data = data
