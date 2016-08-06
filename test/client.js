@@ -18,7 +18,7 @@ let cookie
 
 describe('Login Test', function () {
   it('should create user session for valid user', function (done) {
-    this.timeout(5000)
+    this.timeout(10000)
     request.post('/login')
       .set('Accept','application/json')
       .send({'email': 'support@fuelrats.com', 'password': 'testuser'})
@@ -50,7 +50,7 @@ describe('Client Endpoints', function () {
     }
 
     it('should create a new client', function (done) {
-      this.timeout(5000)
+      this.timeout(10000)
       request.post('/clients')
       .set('Cookie', cookie)
       .send(client)
