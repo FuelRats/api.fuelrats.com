@@ -87,6 +87,7 @@ class Controller {
 
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
+      console.log(query)
       if (query.id) {
         Permission.require('client.delete', connection.user).then(function () {
           Client.findById(query.id).then(function (client) {
@@ -125,7 +126,7 @@ class HTTP {
       let data = res.data
 
       response.model.data = data
-      response.status = 200
+      response.status(201)
       next()
     }, function (error) {
       response.model.errors.push(error.error)
@@ -142,11 +143,11 @@ class HTTP {
   }
 
   static delete (request, response, next) {
-    Controller.delete(request.body, request, request.query).then(function (res) {
+    Controller.delete(request.body, request, request.params).then(function (res) {
       let data = res.data
 
       response.model.data = data
-      response.status = 200
+      response.status(204)
       next()
     }, function (error) {
       response.model.errors.push(error.error)

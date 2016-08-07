@@ -9,5 +9,14 @@
     "username": "fuelrats",
     "password": "",
     "port": 5352
+  },
+  "test": {
+    "postgres": {
+      "database": "fuelratstest",
+      "hostname": "localhost",
+      "username": "postgres",
+      "password": "",
+      "port": 5432
+    }
   }
 }

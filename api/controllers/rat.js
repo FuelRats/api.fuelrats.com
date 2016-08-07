@@ -90,17 +90,18 @@ class Controller {
 
           Permission.require(permission, connection.user).then(function () {
             Rat.update(data, {
-              where: { id: rat.id }
-            }).then(function (ratInstance) {
-              let rat = convertRatToAPIResult(ratInstance)
-
-              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
-                return cl.clientId !== connection.clientId
+              where: { id: query.id }
+            }).then(function () {
+              Rat.findOne({ id: query.id }).then(function (ratInstance) {
+                let newRat = convertRatToAPIResult(ratInstance)
+                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  return cl.clientId !== connection.clientId
+                })
+                websocket.broadcast(allClientsExcludingSelf, {
+                  action: 'rat:updated'
+                }, newRat)
+                resolve({ data: newRat, meta: {} })
               })
-              websocket.broadcast(allClientsExcludingSelf, {
-                action: 'rat:updated'
-              }, rat)
-              resolve({ data: rat, meta: {} })
             }).catch(function (error) {
               reject({ error: Errors.throw('server_error', error), meta: {} })
             })
@@ -179,13 +180,13 @@ class HTTP {
   }
 
   static post (request, response, next) {
-    Controller.create(request.body, {}).then(function (res) {
+    Controller.create(request.body, request).then(function (res) {
       response.model.data = res.data
       response.status(201)
       next()
     }, function (error) {
       response.model.errors.push(error)
-      response.status(400)
+      response.status(error.error.code)
       next()
     })
   }

@@ -2,6 +2,11 @@
 let Sequelize = require('sequelize')
 let config = require('../../config')
 
+if (process.env.NODE_ENV === 'testing') {
+  config = config.test
+}
+
+
 let db = new Sequelize(config.postgres.database, config.postgres.username, config.postgres.password, {
   host: config.postgres.hostname,
   port: config.postgres.port,

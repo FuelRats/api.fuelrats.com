@@ -5,7 +5,6 @@
 let chai = require('chai')
 let request = require('supertest')
 let assert = chai.assert
-let generator = require('./generator')
 
 // Set up globals
 // =============================================================================
@@ -42,18 +41,19 @@ describe('Login Test', function () {
 
 // PULL THE LEVER!
 // =============================================================================
-let generatedRat
 
-describe('Rat Endpoints', function () {
-  describe('POST /rats', function () {
+describe('Client Endpoints', function () {
+  describe('POST /clients', function () {
     // Create a rescue object
-    let rat = generator.randomRat()
+    let client = {
+      name: 'Unit Test Client'
+    }
 
-    it('should create a new rat', function (done) {
-      this.timeout(5000)
-      request.post('/rats')
+    it('should create a new client', function (done) {
+      this.timeout(10000)
+      request.post('/clients')
       .set('Cookie', cookie)
-      .send(rat)
+      .send(client)
       .expect(201).end(function (error, response) {
         if (error) {
           return done(error)
@@ -66,20 +66,22 @@ describe('Rat Endpoints', function () {
         assert.isObject(response.body.data)
 
         // Check all of the properties on the returned object
-        assert.equal(response.body.data.CMDRname, rat.CMDRname)
-        assert.deepEqual(response.body.data.data, rat.data)
-        assert.equal(response.body.data.platform, rat.platform)
-
-        generatedRat = response.body.data
+        assert.equal(response.body.data.name, client.name)
+        assert.typeOf(response.body.data.id, 'string')
+        assert.lengthOf(response.body.data.id, 36)
+        assert.typeOf(response.body.data.secret, 'string')
+        assert.lengthOf(response.body.data.secret, 48)
         done()
       })
     })
   })
 
-  describe('GET /rats', function () {
+  let clientId
 
-    it('should retrieve a rat matching the one we created', function (done) {
-      request.get('/rats?CMDRname=' + generatedRat.CMDRname)
+  describe('GET /clients', function () {
+
+    it('should retrieve a collection of clients', function (done) {
+      request.get('/clients?name=Unit%20Test%20Client')
       .set('Cookie', cookie).send()
       .expect(200).end(function (error, response) {
         if (error) {
@@ -92,57 +94,17 @@ describe('Rat Endpoints', function () {
         // Make sure our response is correctly constructed
         assert.isArray(response.body.data)
 
-        // Check all of the properties on the returned object
-        assert.equal(response.body.data[0].id, generatedRat.id)
-        assert.equal(response.body.data[0].CMDRname, generatedRat.CMDRname)
-        assert.deepEqual(response.body.data[0].data, generatedRat.data)
-        assert.equal(response.body.data[0].platform, generatedRat.platform)
+        assert.equal(response.body.data[0].name, 'Unit Test Client')
+        clientId = response.body.data[0].id
         done()
       })
     })
   })
 
-  describe('PUT /rats', function () {
-    // Create a rescue object
-    let rat = generator.randomRat()
-    console.log('')
-    console.log('new CMDR ' + rat.CMDRname)
-    console.log('')
+  describe('DELETE /clients', function () {
 
-    it('should modify the rat', function (done) {
-      this.timeout(5000)
-      request.put('/rats/' + generatedRat.id)
-      .set('Cookie', cookie)
-      .send(rat)
-      .expect(201).end(function (error, response) {
-        if (error) {
-          return done(error)
-        }
-
-        // Make sure there are no errors
-        assert.notProperty(response.body, 'errors')
-
-        // Make sure our response is correctly constructed
-        assert.isObject(response.body.data)
-
-        // Check all of the properties on the returned object
-        console.log('')
-        console.log('received CMDR ' + response.body.data.CMDRname)
-        console.log('')
-        assert.equal(response.body.data.CMDRname, rat.CMDRname)
-        assert.deepEqual(response.body.data.data, rat.data)
-        assert.equal(response.body.data.platform, rat.platform)
-
-        generatedRat = response.body.data
-        done()
-      })
-    })
-  })
-
-  describe('DELETE /rats', function () {
-
-    it('should delete the rat', function (done) {
-      request.delete('/rats/' + generatedRat.id)
+    it('should retrieve a collection of clients', function (done) {
+      request.delete('/clients/' + clientId)
       .set('Cookie', cookie).send()
       .expect(204).end(function (error, response) {
         if (error) {
