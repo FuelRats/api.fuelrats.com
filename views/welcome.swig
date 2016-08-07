@@ -75,9 +75,9 @@
       <div class="card-footer">
         <div class="input-group">
           <div class="btn-group" role="group" aria-label="Basic example">
-            <button type="button" class="btn btn-secondary btn-success-outline">Add</button>
-            <button type="button" class="btn btn-secondary btn-warning-outline" disabled>Edit</button>
-            <button type="button" class="btn btn-secondary btn-danger-outline" disabled>Remove</button>
+            <button type="button" class="btn btn-secondary btn-success-outline" id="addNicknameButton">Add</button>
+            <button type="button" class="btn btn-secondary btn-warning-outline" id="editNicknameButton" disabled>Edit</button>
+            <button type="button" class="btn btn-secondary btn-danger-outline" id="deleteNicknamebutton" disabled>Remove</button>
           </div>
         </div>
       </div>
@@ -142,5 +142,5 @@
 
 {% block resources %}
 {% parent %}
-<script src="paperwork.js" type="application/ecmascript"></script>
+<script src="js/profile.js" type="application/ecmascript"></script>
 {% endblock %}
