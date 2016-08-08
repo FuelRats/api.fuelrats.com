@@ -18,7 +18,7 @@ class Controller {
           return
         }
 
-        resolve({ meta: {}, data: info })
+        resolve({ meta: {}, data: anopeInfoToAPIResult(info, connection.user.group) })
       }).catch(function (error) {
         reject({ meta: {}, error: Errors.throw('server_error', error) })
       })
@@ -81,7 +81,6 @@ class Controller {
   }
 
   static delete (data, connection, query) {
-
   }
 }
 
@@ -142,6 +141,18 @@ class HTTP {
       next()
     })
   }
+}
+
+
+function anopeInfoToAPIResult (result, group) {
+  if (group !== 'admin') {
+    if (result.vhost) {
+      result.hostmask = result.vhost
+      delete result.vhost
+    }
+    delete result.email
+  }
+  return result
 }
 
 module.exports = { HTTP: HTTP, Controller: Controller }
