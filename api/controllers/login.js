@@ -2,7 +2,6 @@
 let Action = require('../db').Action
 
 exports.get = function (request, response) {
-  console.log(request.query.error_login)
   if (request.isUnauthenticated()) {
     response.render('login.swig', request.query)
   } else {
@@ -30,7 +29,7 @@ exports.post = function (request, response, next) {
 
   if (request.get('Referer')) {
     request.session.errorCode = 401 // This could signify that the login has failed
-    response.redirect('/login?error_login')
+    response.redirect('/login?error_login=1')
 
   } else {
     response.status(200)
