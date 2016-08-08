@@ -17,7 +17,7 @@ class Anope {
         if (error) {
           reject(error)
         } else {
-          if (data.result === 'success' && data.account != null) {
+          if (data.result === 'Success' && data.account != null) {
             resolve(data.account)
           } else {
             reject(data)

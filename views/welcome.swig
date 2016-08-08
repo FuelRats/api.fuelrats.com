@@ -3,6 +3,8 @@
 {% block head %}
 {% parent %}
 <title>Welcome</title>
+
+{% include 'components/addNickname.swig' %}
 {% endblock %}
 
 {% block body %}
@@ -45,8 +47,13 @@
         <div class="input-group">
           <div class="btn-group" role="group" aria-label="Basic example">
             <button type="button" class="btn btn-secondary btn-success-outline">Add</button>
+              {% if user.rats.length > 0 %}
             <button type="button" class="btn btn-secondary btn-warning-outline">Edit</button>
             <button type="button" class="btn btn-secondary btn-danger-outline">Remove</button>
+            {% else %}
+          <button type="button" class="btn btn-secondary btn-warning-outline" disabled>Edit</button>
+          <button type="button" class="btn btn-secondary btn-danger-outline" disabled>Remove</button>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -76,8 +83,11 @@
         <div class="input-group">
           <div class="btn-group" role="group" aria-label="Basic example">
             <button type="button" class="btn btn-secondary btn-success-outline" id="addNicknameButton">Add</button>
-            <button type="button" class="btn btn-secondary btn-warning-outline" id="editNicknameButton" disabled>Edit</button>
-            <button type="button" class="btn btn-secondary btn-danger-outline" id="deleteNicknamebutton" disabled>Remove</button>
+            {% if user.nicknames.length > 0 %}
+            <button type="button" class="btn btn-secondary btn-danger-outline" id="removeNicknameButton">Remove</button>
+            {% else %}
+            <button type="button" class="btn btn-secondary btn-danger-outline" id="removeNicknameButton" disabled>Remove</button>
+            {% endif %}
           </div>
         </div>
       </div>

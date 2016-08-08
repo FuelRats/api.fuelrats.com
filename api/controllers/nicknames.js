@@ -2,6 +2,7 @@
 let _ = require('underscore')
 let Anope = require('../Anope')
 let Errors = require('../errors')
+let User = require('../db').User
 
 class Controller {
   static info (data, connection, query) {
@@ -24,7 +25,7 @@ class Controller {
     })
   }
 
-  static register (data, connection, query) {
+  static register (data, connection) {
     return new Promise(function (resolve, reject) {
       let fields = ['nickname', 'password', 'email']
 
@@ -36,15 +37,47 @@ class Controller {
       }
 
       Anope.register(data.nickname, data.password, data.email).then(function (nickname) {
-        
+        let nicknames = connection.user.nicknames
+        nicknames.push(nickname)
+        User.update({ nicknames: nicknames }, {
+          where: { id: connection.user.id }
+        }).then(function () {
+          resolve({ meta: {}, data: data.nickname })
+        }).catch(function (error) {
+          reject({ meta: {}, error: Errors.throw('server_error', error) })
+        })
       }).catch(function (error) {
-
+        reject({ meta: {}, error: Errors.throw('server_error', error) })
       })
     })
   }
 
-  static connect (data, connection, query) {
+  static connect (data, connection) {
+    return new Promise(function (resolve, reject) {
+      let fields = ['nickname', 'password']
 
+      for (let field of fields) {
+        if (!data[field]) {
+          reject({ meta: {}, error: Errors.throw('missing_required_field', field) })
+          return
+        }
+      }
+
+      Anope.authenticate(data.nickname, data.password).then(function () {
+        let nicknames = connection.user.nicknames
+        nicknames.push(data.nickname)
+
+        User.update({ nicknames: nicknames }, {
+          where: { id: connection.user.id }
+        }).then(function () {
+          resolve({ meta: {}, data: data.nickname })
+        }).catch(function (error) {
+          reject({ meta: {}, error: Errors.throw('server_error', error) })
+        })
+      }).catch(function () {
+        reject({ meta: {}, error: Errors.throw('no_permission') })
+      })
+    })
   }
 
   static delete (data, connection, query) {
@@ -56,7 +89,7 @@ class HTTP {
   static get (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    Controller.read(request.body, request, request.query).then(function (res) {
+    Controller.info(request.body, request, request.query).then(function (res) {
       let data = res.data
 
       response.model.data = data
@@ -72,7 +105,7 @@ class HTTP {
   static post (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    Controller.create(request.body, request, request.query).then(function (res) {
+    Controller.register(request.body, request, request.query).then(function (res) {
       response.model.data = res.data
       response.status(201)
       next()
@@ -86,7 +119,7 @@ class HTTP {
   static put (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    Controller.update(request.body, request, request.query).then(function (data) {
+    Controller.connect(request.body, request, request.query).then(function (data) {
       response.model.data = data.data
       response.status(201)
       next()
