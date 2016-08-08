@@ -4,7 +4,7 @@ api:
   - 'cssmin:production'
   - 'buildJS'
   - 'uglify:production'
-  - 'express'
+  - 'express:dev'
   - 'watch'
 
 buildJS:
@@ -20,5 +20,5 @@ test:
   description: Run the tests
   tasks:
   - 'run:createTestUser'
-  - 'express-test'
+  - 'express:test'
   - 'mochaTest'
