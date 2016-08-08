@@ -11,6 +11,8 @@
 
 [Vagrant](vagrantup.com) allows us to run a local virtual machine clone of our production environment with ease. Make sure you have Vagrant installed (Check out [this article](https://servercheck.in/blog/running-ansible-within-windows) if you're on Windows), then run:
 
+Please make note that you need a 64-bit system for this to work.
+
     vagrant up
 
 Vagrant will do everything we need:

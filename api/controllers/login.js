@@ -25,8 +25,10 @@ exports.get = function (request, response) {
 
 exports.post = function (request, response, next) {
   let user = request.user
+  request.session.userIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress
 
   if (request.get('Referer')) {
+    request.session.errorCode = 401 // This could signify that the login has failed
     response.redirect('/login')
 
   } else {
