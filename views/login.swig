@@ -26,7 +26,7 @@
         {% endif %}
 
         {% if error_login %}
-        
+          <div class="alert alert-warning" role="alert">Wrong username or password.</div>
         {% endif %}
 
         <label for="email">Email</label>
