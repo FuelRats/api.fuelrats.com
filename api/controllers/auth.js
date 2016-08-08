@@ -19,7 +19,7 @@ exports.LocalStrategy = new LocalStrategy({
 function (email, password, done) {
   findUserWithRats({ email: { $iLike: email }}).then(function (user) {
     if (!user) {
-      done(null, false)
+      done(null, false, { message: 'Incorrect username/email.' })
       return
     }
 
@@ -48,7 +48,7 @@ function (email, password, done) {
             })
           })
         } else {
-          done(null, false)
+          done(null, false, { message: 'Incorrect username or password.' })
         }
       })
     } else {

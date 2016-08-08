@@ -25,6 +25,10 @@
           <div class="alert alert-success" role="alert">Your password has been changed, you may now login with your new credentials.</div>
         {% endif %}
 
+        {% if error_login %}
+          <div class="alert alert-warning" role="alert">Wrong username or password.</div>
+        {% endif %}
+
         <label for="email">Email</label>
         <input type="email" name="email" id="email" class="form-control" autocomplete="off" required>
       </div>
