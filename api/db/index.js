@@ -21,6 +21,7 @@ let Client = db.import(__dirname + '/client')
 
 let Code = db.import(__dirname + '/code')
 let Token = db.import(__dirname + '/token')
+let Action = db.import(__dirname + '/action')
 
 Rat.belongsTo(User, {
   as: 'user',
@@ -56,7 +57,10 @@ Code.belongsTo(Client, { as: 'client' })
 Token.belongsTo(User, { as: 'user' })
 Token.belongsTo(Client, { as: 'client' })
 
+Action.belongsTo(User, { as: 'user' })
+
 module.exports = {
+  Action: Action,
   Client: Client,
   Code: Code,
   db: db,

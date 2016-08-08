@@ -15,7 +15,7 @@ module.exports = {
       port: config.port,
       script: 'index.js',
       output: '(Listening for requests on port)',
-      node_env: 'dev'
+      node_env: 'testing'
     }
   }
 }

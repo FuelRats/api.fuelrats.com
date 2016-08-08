@@ -20,5 +20,5 @@ test:
   description: Run the tests
   tasks:
   - 'run:createTestUser'
-  - 'express'
+  - 'express-test'
   - 'mochaTest'
