@@ -242,7 +242,7 @@ router.put('/rescues/:id', auth.isAuthenticated(false), rescue.put)
 router.put('/rescues/:id/addquote', auth.isAuthenticated(false), rescue.addquote)
 router.put('/rescues/:id/assign/:ratId', auth.isAuthenticated(false), rescue.assign)
 router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), rescue.unassign)
-router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), Permission.required('rescue.delete', false), rescue.unassign)
+router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('rescue.delete', false), rescue.delete)
 
 
 router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
