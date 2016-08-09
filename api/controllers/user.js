@@ -210,6 +210,9 @@ function convertUserToAPIResult (userInstance) {
     return rat.id
   })
   user.CMDRs = reducedRats
+  if (!user.CMDRs) {
+    user.CMDRs = []
+  }
   delete user.rats
   delete user.salt
   delete user.password
