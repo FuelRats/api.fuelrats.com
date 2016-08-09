@@ -524,9 +524,11 @@ function getRescuePermissionType (rescue, user) {
     return 'self.rescue.update'
   }
 
-  for (let CMDR of user.CMDRs) {
-    if (rescue.rats.includes(CMDR)) {
-      return 'self.rescue.update'
+  if (user) {
+    for (let CMDR of user.CMDRs) {
+      if (rescue.rats.includes(CMDR)) {
+        return 'self.rescue.update'
+      }
     }
   }
   return 'rescue.update'
