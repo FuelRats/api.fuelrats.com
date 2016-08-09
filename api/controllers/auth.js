@@ -95,10 +95,25 @@ passport.use(new BearerStrategy(
         callback(null, false)
         return
       }
-      User.findById(token.userId).then(function (user) {
+      User.findOne({
+        where: { id: token.userId },
+        include: [
+          {
+            model: Rat,
+            as: 'rats',
+            required: false
+          }
+        ]
+      }).then(function (userInstance) {
+        let user = userInstance.toJSON()
+        let reducedRats = user.rats.map(function (rat) {
+          return rat.id
+        })
+        user.CMDRs = reducedRats
+        delete user.rats
         callback(null, user, { scope: '*' })
-      }).catch(function (error) {
-        callback(error)
+      }).catch(function () {
+        callback(null, false)
       })
     }).catch(function () {
       callback(null, false)
