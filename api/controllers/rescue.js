@@ -447,7 +447,7 @@ class HTTP {
   }
 
   static get (request, response, next) {
-    Controller.read(request.query).then(function (res) {
+    Controller.read(request.query, request).then(function (res) {
       let data = res.data
       let meta = res.meta
 
@@ -480,7 +480,7 @@ class HTTP {
   }
 
   static post (request, response, next) {
-    Controller.create(request.body, {}).then(function (res) {
+    Controller.create(request.body, request).then(function (res) {
       response.model.data = res.data
       response.status(201)
       next()
