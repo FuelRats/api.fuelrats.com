@@ -10,7 +10,7 @@ module.exports = {
       codeRed: !!Math.round(Math.random()),
       data: { foo: ['test'] },
       epic: false,
-      open: true,
+      open: false,
       notes: 'test',
       platform: Math.round(Math.random()) ? 'pc' : 'xb', // Randomly decide if the client is PC or Xbox
       quotes: ['test'],
