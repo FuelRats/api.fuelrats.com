@@ -30,13 +30,8 @@ Once Vagrant finishes doing its thing you should be able to hit the API at `http
 So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
 
 1. [`nvm`](https://github.com/creationix/nvm)
-1. [`MongoDB v3.2+`](https://www.mongodb.com/)
-1. [`Elasticsearch v2.0.0+`](https://www.elastic.co/)
-  * Java
-
-Next, we need to make sure that MongoDB and Elasticsearch are running before starting the API. We've got a [handy dandy script](bin/mongo.sh) that will start Mongo as a service which should work on both Linux and Mac OS X. If you're on Windows, figure it out yourself.
-
-The easiest way to to get Elasticsearch running is to either executing `elasticsearch` in your terminal or starting it as a service ([Windows](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service-win.html)|[Mac OS X](http://stackoverflow.com/questions/22850247/installing-elasticsearch-on-osx-mavericks/#answer-22855889)|[Linux](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-service.html)).
+1. [`node v6.3.1`](https://nodejs.org/en/)
+1. [`Postgres v9.4`](https://www.postgresql.org/)
 
 Grab the repo:
 
@@ -45,19 +40,28 @@ Grab the repo:
 Install all of the required Node modules:
 
     cd api.fuelrats.com
+    npm install webpack@^2.1.0-beta
+    npm install -g grunt-cli
     npm install
+
+Make sure that you have created the databases required:
+
+    su postgres
+    psql -c 'CREATE DATABASE fuelrats;' -U postgres
+    psql -c 'CREATE DATABASE fuelratsTest;' -U postgres
+    psql -c 'CREATE USER fuelrats;' -U postgres
+    psql -c "ALTER USER fuelrats PASSWORD 'fuelrats';" -U postgres
+    exit
+
+And if you want to use a different username or password, you can use them instead and set the new ones in your `config.json`
 
 Now start the server!
 
     npm run dev
 
-This will ensure that Mongo is running as a service and start the API itself on either port 8080 or whatever port you've set in `config.json`.
+This will ensure that Postgres is running as a service and start the API itself on either port 8080 or whatever port you've set in `config.json`.
 
 ### Common Problems
-
-#### "Error: No Living connections"
-
-Elasticsearch isn't running. Refer to the [Running Without Vagrant](#without-vagrant) section. Elasticsearch also requires Java.
 
 #### "Missing indexes" or an empty object is returned
 
