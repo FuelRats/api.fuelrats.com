@@ -50,6 +50,54 @@ class Controller {
     })
   }
 
+  static autocomplete (query, connection) {
+    return new Promise(function (resolve, reject) {
+      let limit = parseInt(query.limit) || 25
+
+      let offset = parseInt(query.offset) || 0
+
+      let dbQuery = {
+        where: {
+          CMDRname: {
+            $iLike: query.name + '%'
+          }
+        },
+        attributes: [
+          'id',
+          'CMDRname'
+        ],
+        limit: limit,
+        offset: offset
+      }
+
+      Rat.findAndCountAll(dbQuery).then(function (result) {
+        let meta = {
+          count: result.rows.length,
+          limit: limit,
+          offset: offset,
+          total: result.count
+        }
+
+        let rats = result.rows.map(function (ratInstance) {
+          let rat = convertRatToAPIResult(ratInstance)
+          return rat
+        })
+
+        resolve({
+          data: rats,
+          meta: meta
+        })
+      }).catch(function (error) {
+        let errorObj = Errors.server_error
+        errorObj.detail = error
+        reject({
+          error: errorObj,
+          meta: {}
+        })
+      })
+    })
+  }
+
   static create (query, connection) {
     return new Promise(function (resolve, reject) {
       Rat.create(query).then(function (ratInstance) {
@@ -144,6 +192,22 @@ class Controller {
 class HTTP {
   static get (request, response, next) {
     Controller.read(request.query).then(function (res) {
+      let data = res.data
+      let meta = res.meta
+
+      response.model.data = data
+      response.model.meta = meta
+      response.status = 400
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error.error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+
+  static autocomplete (request, response, next) {
+    Controller.autocomplete(request.query).then(function (res) {
       let data = res.data
       let meta = res.meta
 
