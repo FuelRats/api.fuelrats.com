@@ -1,0 +1,30 @@
+---
+- name: Check if Postgres is installed
+  sudo: true
+  command: dpkg-query -W postgresql-9.4
+  register: postgres_check
+  failed_when: postgres_check.rc > 1
+
+- name: Install Postgres if missing
+  sudo: true
+  apt: pkg={{ item }}
+  with_items:
+  - postgres-9.4
+  when: postgres_check.rc == 1
+
+- name: Start Postgres-service
+  sudo: true
+  command: /etc/init.d/postgres start
+  when: postgres_check.rc == 1
+
+- name: Create DBs
+  become: true
+  become_user: postgres
+  become_method: su
+  command: {{ item }}
+  with_items:
+  - psql -c 'CREATE DATABASE fuelrats;' -U postgres
+  - psql -c 'CREATE DATABASE fuelratsTest;' -U postgres
+  - psql -c 'CREATE USER fuelrats;' - U postgres
+  - psql -c "ALTER USER fuelrats PASSWORD 'fuelrats';" -U postgres
+  
