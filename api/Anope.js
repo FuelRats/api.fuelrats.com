@@ -91,7 +91,7 @@ class Anope {
         if (error) {
           reject(error)
         } else {
-          if (data.return.includes('isn&amp;#39;t registered')) {
+          if (data.return.includes('isn&#39;t registered')) {
             resolve(null)
           } else {
             resolve(new IRCUserInfo(data.return.split('#xA;')))
@@ -100,6 +100,67 @@ class Anope {
       })
     })
   }
+
+  static confirm (nickname) {
+    return new Promise(function (resolve, reject) {
+      client.methodCall('command', [['NickServ', 'xlexious', `CONFIRM ${nickname}`]], function (error, data) {
+        if (error) {
+          reject(error)
+        } else {
+          if (data.return.includes('has been confirmed')) {
+            resolve(nickname)
+          } else {
+            reject(data.return)
+          }
+        }
+      })
+    })
+  }
+
+  static setVirtualHost (user, nickname) {
+    return new Promise(function (resolve, reject) {
+      let virtualHost = generateVirtualHost(user)
+
+      if (virtualHost) {
+        client.methodCall('command', [['HostServ', 'xlexious', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
+          if (error) {
+            reject(error)
+          } else {
+            if (/not registered/.test(data.return) === true) {
+              reject(data.return)
+            } else {
+              resolve(virtualHost)
+            }
+          }
+        })
+      } else {
+        reject(null)
+      }
+    })
+  }
+}
+
+function generateVirtualHost (user) {
+  if (user.rats.length > 0) {
+    let rat = IRCSafeName(user.rats[0])
+
+    if (user.group === 'moderator') {
+      return `${rat}.op.fuelrats.com`
+    } else if (user.group === 'overseer') {
+      return `${rat}.overseer.fuelrats.com`
+    } else if (user.drilled === true) {
+      return `${rat}.rat.fuelrats.com`
+    } else {
+      return `${rat}.recruit.fuelrats.com`
+    }
+  }
+  return null
+}
+
+function IRCSafeName (rat) {
+  let ratName = rat.CMDRname
+  ratName = ratName.replace(/[^a-zA-Z0-9_-\s]/g, '')
+  return ratName
 }
 
 class IRCUserInfo {

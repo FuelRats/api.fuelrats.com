@@ -27,22 +27,37 @@ class Controller {
 
   static register (data, connection) {
     return new Promise(function (resolve, reject) {
-      let fields = ['nickname', 'password', 'email']
+      console.log('register')
+      let fields = ['nickname', 'password']
 
+
+      console.log(data)
       for (let field of fields) {
         if (!data[field]) {
+          console.log('rejecting')
           reject({ meta: {}, error: Errors.throw('missing_required_field', field) })
           return
         }
       }
 
-      Anope.register(data.nickname, data.password, data.email).then(function (nickname) {
+      console.log('calling anope')
+      Anope.register(data.nickname, data.password, connection.user.email).then(function (nickname) {
+        console.log('success')
         let nicknames = connection.user.nicknames
         nicknames.push(nickname)
-        User.update({ nicknames: nicknames }, {
-          where: { id: connection.user.id }
-        }).then(function () {
-          resolve({ meta: {}, data: data.nickname })
+
+        Anope.confirm(nickname).then(function () {
+          console.log('confirmed')
+          User.update({ nicknames: nicknames }, {
+            where: { id: connection.user.id }
+          }).then(function () {
+            console.log('updated')
+
+            Anope.setVirtualHost(connection.user, data.nickname)
+            resolve({ meta: {}, data: data.nickname })
+          }).catch(function (error) {
+            reject({ meta: {}, error: Errors.throw('server_error', error) })
+          })
         }).catch(function (error) {
           reject({ meta: {}, error: Errors.throw('server_error', error) })
         })
@@ -81,6 +96,13 @@ class Controller {
   }
 
   static delete (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      if (!query.nickname) {
+        reject({ meta: {}, error: Errors.throw('missing_required_field', query.nickname) })
+      }
+
+
+    })
   }
 }
 
@@ -110,7 +132,7 @@ class HTTP {
       next()
     }, function (error) {
       response.model.errors.push(error)
-      response.status(400)
+      response.status(500)
       next()
     })
   }

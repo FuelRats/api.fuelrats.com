@@ -7,13 +7,13 @@ const removeNicknameButton = document.getElementById('removeNicknameButton')
 const addNicknameDialogTemplate = document.getElementById('addNicknameDialogTemplate')
 const addNicknameCheckTemplate = document.getElementById('addNicknameCheckTemplate')
 const addNicknameAuthTemplate = document.getElementById('addNicknameAuthTemplate')
+const registerNicknameAuthTemplate = document.getElementById('registerNicknameAuthTemplate')
 // const editNicknameDialogTemplate = document.getElementById('editNicknameDialogTemplate')
 // const removeNicknameDialogTemplate = document.getElementById('removeNicknameDialogTemplate')
 
 class Profile {
   constructor () {
     addNicknameButton.addEventListener('click', this.showAddNicknameDialog.bind(this), false)
-    editNicknameButton.addEventListener('click', this.toggleEditNicknameMode.bind(this), false)
     removeNicknameButton.addEventListener('click', this.toggleRemoveNicknameMode.bind(this), false)
   }
 
@@ -55,11 +55,12 @@ class NicknameDialog {
     request.open('GET', '/nicknames/' + nicknameField.value, true)
     request.onload = () => {
       try {
+        this.nickname = nicknameField.value
         let response = JSON.parse(request.responseText)
 
-        if (response.data) {
+        console.log(response.data)
+        if (response.data && response.data !== {}) {
           let authPage = addNicknameAuthTemplate.content.cloneNode(true)
-          this.nickname = nicknameField.value
 
           this.setContents(authPage)
           this.dialogFooter.removeChild(this.addButton)
@@ -73,7 +74,19 @@ class NicknameDialog {
 
           authButton.addEventListener('click', this.authNicknameButtonClicked.bind(this), false)
         } else {
+          let registerPage = registerNicknameAuthTemplate.content.cloneNode(true)
 
+          this.setContents(registerPage)
+          this.dialogFooter.removeChild(this.addButton)
+
+          let registerButton = document.createElement('button')
+          registerButton.setAttribute('type', 'button')
+          registerButton.className = 'btn btn-primary'
+          registerButton.id = 'registerNicknameAuthButton'
+          registerButton.textContent = 'Register'
+          this.dialogFooter.appendChild(registerButton)
+
+          registerButton.addEventListener('click', this.registerNicknameButtonClicked.bind(this), false)
         }
       } catch (err) {
 
@@ -95,6 +108,27 @@ class NicknameDialog {
     request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
     request.onload = () => {
       document.location.reload()
+    }
+
+    request.onerror = () => {
+      console.log(request.responseText)
+
+    }
+
+    request.send(JSON.stringify({
+      nickname: this.nickname,
+      password: passwordField.value
+    }))
+  }
+
+  registerNicknameButtonClicked () {
+    let passwordField = this.dialog.querySelector('#registerNicknamePasswordField')
+
+    let request = new XMLHttpRequest()
+    request.open('POST', '/nicknames/', true)
+    request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+    request.onload = () => {
+      
     }
 
     request.onerror = () => {

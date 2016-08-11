@@ -29,8 +29,8 @@
     <input type="password" class="form-control" id="connectNicknamePasswordField" placeholder="Password">
 </template>
 
-<template id="addNicknameAuthTemplate">
-    <div class="alert alert-success" role="alert">This IRC nickname is available</div>
-    <label for="connectNicknamePasswordField">Password</label>
-    <input type="password" class="form-control" id="connectNicknamePasswordField" placeholder="Password">
+<template id="registerNicknameAuthTemplate">
+    <div class="alert alert-success" role="alert">This IRC nickname is available, please enter the password you want to use with this nickname</div>
+    <label for="registerNicknamePasswordField">Password</label>
+    <input type="password" class="form-control" id="registerNicknamePasswordField" placeholder="Password">
 </template>
