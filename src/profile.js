@@ -128,7 +128,7 @@ class NicknameDialog {
     request.open('POST', '/nicknames/', true)
     request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
     request.onload = () => {
-      
+      document.location.reload()
     }
 
     request.onerror = () => {

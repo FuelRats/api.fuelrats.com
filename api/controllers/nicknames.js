@@ -3,6 +3,8 @@ let _ = require('underscore')
 let Anope = require('../Anope')
 let Errors = require('../errors')
 let User = require('../db').User
+let Rat = require('../db').Rat
+
 
 class Controller {
   static info (data, connection, query) {
@@ -27,33 +29,38 @@ class Controller {
 
   static register (data, connection) {
     return new Promise(function (resolve, reject) {
-      console.log('register')
       let fields = ['nickname', 'password']
 
 
-      console.log(data)
       for (let field of fields) {
         if (!data[field]) {
-          console.log('rejecting')
           reject({ meta: {}, error: Errors.throw('missing_required_field', field) })
           return
         }
       }
 
-      console.log('calling anope')
       Anope.register(data.nickname, data.password, connection.user.email).then(function (nickname) {
-        console.log('success')
         let nicknames = connection.user.nicknames
         nicknames.push(nickname)
 
         Anope.confirm(nickname).then(function () {
-          console.log('confirmed')
           User.update({ nicknames: nicknames }, {
             where: { id: connection.user.id }
           }).then(function () {
-            console.log('updated')
-
-            Anope.setVirtualHost(connection.user, data.nickname)
+            User.findOne({
+              where: { id: connection.user.id },
+              include: [
+                {
+                  model: Rat,
+                  as: 'rats',
+                  required: false
+                }
+              ]
+            }).then(function (user) {
+              Anope.setVirtualHost(user, data.nickname)
+            }).catch(function (error) {
+              reject({ meta: {}, error: Errors.throw('server_error', error) })
+            })
             resolve({ meta: {}, data: data.nickname })
           }).catch(function (error) {
             reject({ meta: {}, error: Errors.throw('server_error', error) })
@@ -85,7 +92,21 @@ class Controller {
         User.update({ nicknames: nicknames }, {
           where: { id: connection.user.id }
         }).then(function () {
-          resolve({ meta: {}, data: data.nickname })
+          User.findOne({
+            where: { id: connection.user.id },
+            include: [
+              {
+                model: Rat,
+                as: 'rats',
+                required: false
+              }
+            ]
+          }).then(function (user) {
+            Anope.setVirtualHost(user, data.nickname)
+            resolve({ meta: {}, data: data.nickname })
+          }).catch(function (error) {
+            reject({ meta: {}, error: Errors.throw('server_error', error) })
+          })
         }).catch(function (error) {
           reject({ meta: {}, error: Errors.throw('server_error', error) })
         })
@@ -101,7 +122,15 @@ class Controller {
         reject({ meta: {}, error: Errors.throw('missing_required_field', query.nickname) })
       }
 
-
+      if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
+        Anope.drop(query.nickname).then(function () {
+          resolve()
+        }).catch(function (error) {
+          reject({ meta: {}, error: Errors.throw('server_error', error) })
+        })
+      } else {
+        reject({ meta: {}, error: Errors.throw('no_permission') })
+      }
     })
   }
 }
