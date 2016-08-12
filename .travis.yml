@@ -30,7 +30,7 @@ notifications:
     on_success: always
     on_failure: always
     channels:
-      - "irc.fuelrats.com#rattech"
+      - "irc.us.fuelrats.com#rattech"
     nick: TravisCI
     template:
           - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{result}"
