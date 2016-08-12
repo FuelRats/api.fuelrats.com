@@ -124,7 +124,18 @@ class Controller {
 
       if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
         Anope.drop(query.nickname).then(function () {
-          resolve()
+          let nicknames = connection.user.nicknames
+          nicknames.splice(nicknames.indexOf(query.nickname), 1)
+
+          User.update({ nicknames: nicknames }, {
+            where: {
+              id: connection.user.id
+            }
+          }).then(function () {
+            resolve()
+          }).catch(function (error) {
+            reject({ meta: {}, error: Errors.throw('server_error', error) })
+          })
         }).catch(function (error) {
           reject({ meta: {}, error: Errors.throw('server_error', error) })
         })

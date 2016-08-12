@@ -71,13 +71,18 @@ class Anope {
 
   static drop (nickname) {
     return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', nickname, `DROP ${nickname}`]], function (error, data) {
+      console.log('calling drop')
+      client.methodCall('command', [['NickServ', 'xlexious', `DROP ${nickname}`]], function (error, data) {
         if (error) {
+          console.log(error)
           reject(error)
         } else {
           if (data.return.includes('has been dropped')) {
+            console.log('dropped')
             resolve(nickname)
           } else {
+            console.log('failed')
+            console.log(data)
             reject(data.return)
           }
         }

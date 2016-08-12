@@ -1,32 +1,29 @@
 'use strict'
 
 const addNicknameButton = document.getElementById('addNicknameButton')
-const editNicknameButton = document.getElementById('editNicknameButton')
-const removeNicknameButton = document.getElementById('removeNicknameButton')
 
 const addNicknameDialogTemplate = document.getElementById('addNicknameDialogTemplate')
 const addNicknameCheckTemplate = document.getElementById('addNicknameCheckTemplate')
 const addNicknameAuthTemplate = document.getElementById('addNicknameAuthTemplate')
 const registerNicknameAuthTemplate = document.getElementById('registerNicknameAuthTemplate')
-// const editNicknameDialogTemplate = document.getElementById('editNicknameDialogTemplate')
-// const removeNicknameDialogTemplate = document.getElementById('removeNicknameDialogTemplate')
+const removeNicknameDialogTemplate = document.getElementById('removeNicknameDialogTemplate')
 
 class Profile {
   constructor () {
     addNicknameButton.addEventListener('click', this.showAddNicknameDialog.bind(this), false)
-    removeNicknameButton.addEventListener('click', this.toggleRemoveNicknameMode.bind(this), false)
+
+    let deleteButtons = document.querySelectorAll('.rat-list .delete')
+    for (let deleteButton of deleteButtons) {
+      deleteButton.addEventListener('click', this.showRemoveNicknameDialog.bind(this), false)
+    }
   }
 
   showAddNicknameDialog () {
     new NicknameDialog()
   }
 
-  toggleEditNicknameMode () {
-
-  }
-
-  toggleRemoveNicknameMode () {
-
+  showRemoveNicknameDialog (event) {
+    new RemoveNicknameDialog(event.target.getAttribute('data-nickname'))
   }
 }
 
@@ -44,8 +41,6 @@ class NicknameDialog {
     this.setContents(initialPage)
 
     jQuery('#addNicknameDialog').modal('show')
-
-
   }
 
   addNicknameButtonClicked () {
@@ -58,7 +53,6 @@ class NicknameDialog {
         this.nickname = nicknameField.value
         let response = JSON.parse(request.responseText)
 
-        console.log(response.data)
         if (response.data && response.data !== {}) {
           let authPage = addNicknameAuthTemplate.content.cloneNode(true)
 
@@ -146,6 +140,36 @@ class NicknameDialog {
     let dialogBody = this.dialog.querySelector('.modal-body')
     clearContentsOfNode(dialogBody)
     dialogBody.appendChild(contents)
+  }
+}
+
+class RemoveNicknameDialog {
+  constructor (nickname) {
+    let dialog = removeNicknameDialogTemplate.content.cloneNode(true)
+    document.body.appendChild(dialog)
+    this.dialog = document.getElementById('removeNicknameDialog')
+
+    this.removeButton = this.dialog.querySelector('#modalRemoveNicknameButton')
+    this.removeButton.addEventListener('click', this.removeNicknameButtonClicked.bind(this), false)
+    this.nickname = nickname
+
+    jQuery('#removeNicknameDialog').modal('show')
+  }
+
+  removeNicknameButtonClicked (event) {
+    let target = event.target
+
+    let request = new XMLHttpRequest()
+    request.open('DELETE', '/nicknames/' + this.nickname, true)
+    request.onload = () => {
+      document.location.reload()
+    }
+
+    request.onerror = () => {
+
+    }
+
+    request.send()
   }
 }
 

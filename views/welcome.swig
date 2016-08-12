@@ -5,6 +5,7 @@
 <title>Welcome</title>
 
 {% include 'components/addNickname.swig' %}
+{% include 'components/removeNickname.swig' %}
 {% endblock %}
 
 {% block body %}
@@ -70,6 +71,7 @@
               <a class="nav-link active">
                 {{ nickname }}
               </a>
+              <img class="delete" data-nickname="{{ nickname }}" src="svg/delete.svg"></img>
             </li>
           {% endfor %}
           {% if user.nicknames.length == 0 %}
@@ -83,11 +85,6 @@
         <div class="input-group">
           <div class="btn-group" role="group" aria-label="Basic example">
             <button type="button" class="btn btn-secondary btn-success-outline" id="addNicknameButton">Add</button>
-            {% if user.nicknames.length > 0 %}
-            <button type="button" class="btn btn-secondary btn-danger-outline" id="removeNicknameButton">Remove</button>
-            {% else %}
-            <button type="button" class="btn btn-secondary btn-danger-outline" id="removeNicknameButton" disabled>Remove</button>
-            {% endif %}
           </div>
         </div>
       </div>
