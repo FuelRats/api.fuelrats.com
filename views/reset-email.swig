@@ -16,6 +16,7 @@
 <div class="email">
   <div>
     <p>Someone requested a password reset to your Fuel Rats account.</p>
+    <p></p>
     <p>
         To reset your password click this link:<br>
         <a href="{{emaillink}}">{{emaillink}}</a>
