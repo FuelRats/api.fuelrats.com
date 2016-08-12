@@ -6,7 +6,7 @@
 </head>
 <body style="margin: 0">
   {% block body %}
-  <iframe src="https://www.fuelrats.com/too-quiet/" style="height: 140px; width: 100%"></iframe>
+  <iframe src="https://www.fuelrats.com/too-quiet/" scrolling="no" style="height: 180px; width: 100%; overflow: hidden;"></iframe>
   {% endblock %}
 
   {% block resources %}
