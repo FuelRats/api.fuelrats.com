@@ -41,6 +41,10 @@ class NicknameDialog {
     this.setContents(initialPage)
 
     jQuery('#addNicknameDialog').modal('show')
+
+    jQuery('#addNicknameDialog').on('hidden', function () {
+      document.body.removeChild(dialog)
+    })
   }
 
   addNicknameButtonClicked () {
@@ -154,6 +158,11 @@ class RemoveNicknameDialog {
     this.nickname = nickname
 
     jQuery('#removeNicknameDialog').modal('show')
+
+
+    jQuery('#removeNicknameDialog').on('hidden', function () {
+      document.body.removeChild(dialog)
+    })
   }
 
   removeNicknameButtonClicked (event) {
