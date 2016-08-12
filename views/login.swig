@@ -60,8 +60,8 @@
 
       <div class="form-group">
         <label for="platform">Platform</label>
-        <input type="radio" name="platform" id="platform_pc" class="form-control" value="pc" checked> PC
-        <input type="radio" name="platform" id="platform_xb" class="form-control" value="xb"> Xbox
+        <label><input type="radio" name="platform" id="platform_pc" class="form-control" value="pc" checked> PC</label>
+        <label><input type="radio" name="platform" id="platform_xb" class="form-control" value="xb"> Xbox</label>
       </div>
 
       <div class="form-group">
