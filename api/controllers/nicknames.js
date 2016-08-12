@@ -92,7 +92,21 @@ class Controller {
         User.update({ nicknames: nicknames }, {
           where: { id: connection.user.id }
         }).then(function () {
-          resolve({ meta: {}, data: data.nickname })
+          User.findOne({
+            where: { id: connection.user.id },
+            include: [
+              {
+                model: Rat,
+                as: 'rats',
+                required: false
+              }
+            ]
+          }).then(function (user) {
+            Anope.setVirtualHost(user, data.nickname)
+            resolve({ meta: {}, data: data.nickname })
+          }).catch(function (error) {
+            reject({ meta: {}, error: Errors.throw('server_error', error) })
+          })
         }).catch(function (error) {
           reject({ meta: {}, error: Errors.throw('server_error', error) })
         })
@@ -108,7 +122,15 @@ class Controller {
         reject({ meta: {}, error: Errors.throw('missing_required_field', query.nickname) })
       }
 
-
+      if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
+        Anope.drop(query.nickname).then(function () {
+          resolve()
+        }).catch(function (error) {
+          reject({ meta: {}, error: Errors.throw('server_error', error) })
+        })
+      } else {
+        reject({ meta: {}, error: Errors.throw('no_permission') })
+      }
     })
   }
 }
