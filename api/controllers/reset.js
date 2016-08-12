@@ -55,7 +55,7 @@ exports.post = function (request, response) {
           let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
           var mailOptions = {
             from: 'Fuel Rats (Do Not Reply) <fuelrats@localecho.net>',
-            to: user.email, // FIXME
+            to: user.email,
             subject: 'Fuel Rats Password Reset Requested',
             text: getPlainTextEmailVersion,
             html: emailHTML
