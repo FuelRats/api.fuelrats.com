@@ -6,7 +6,7 @@
 [![Travis CI Build](http://img.shields.io/travis/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://travis-ci.org/FuelRats/api.fuelrats.com)
 
 ## Setting up
-
+<!--
 ### With Vagrant
 
 [Vagrant](vagrantup.com) allows us to run a local virtual machine clone of our production environment with ease. Make sure you have Vagrant installed (Check out [this article](https://servercheck.in/blog/running-ansible-within-windows) if you're on Windows), then run:
@@ -28,6 +28,9 @@ Once Vagrant finishes doing its thing you should be able to hit the API at `http
 ### Without Vagrant
 
 So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
+-->
+
+So, first of you need to fetch a few things and install. These should be available as packages from you favorite package manager.
 
 1. [`nvm`](https://github.com/creationix/nvm)
 1. [`node v6.3.1`](https://nodejs.org/en/)
