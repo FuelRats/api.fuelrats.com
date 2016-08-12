@@ -54,7 +54,7 @@ exports.post = function (request, response) {
         response.render('reset-email.swig', {emaillink: emailLink}, function (err, emailHTML) {
           let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
           var mailOptions = {
-            from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
+            from: 'Fuel Rats (Do Not Reply) <fuelrats@localecho.net>',
             to: user.email, // FIXME
             subject: 'Fuel Rats Password Reset Requested',
             text: getPlainTextEmailVersion,
