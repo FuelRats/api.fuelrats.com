@@ -229,6 +229,7 @@ router.post('/change_password', change_password.post)
 router.get('/logout', logout.post)
 router.post('/logout', logout.post)
 
+router.get('/autocomplete', rat.autocomplete)
 router.get('/rats', rat.get)
 router.post('/rats', rat.post)
 router.get('/rats/:id', rat.getById)

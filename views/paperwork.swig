@@ -16,7 +16,7 @@
 
     </div>
 
-    <div class="alert alert-info" role="alert">
+    <div class="alert alert-danger" role="alert">
       Can't find your rat name? <a target="_blank" href="http://1drv.ms/1TNcpVw" class="alert-link">Report a problem</a>
     </div>
 
