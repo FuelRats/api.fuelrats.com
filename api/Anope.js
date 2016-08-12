@@ -144,7 +144,9 @@ function generateVirtualHost (user) {
   if (user.rats.length > 0) {
     let rat = IRCSafeName(user.rats[0])
 
-    if (user.group === 'moderator') {
+    if (user.group === 'admin') {
+      return `${rat}.op.fuelrats.com`
+    } else if (user.group === 'moderator') {
       return `${rat}.op.fuelrats.com`
     } else if (user.group === 'overseer') {
       return `${rat}.overseer.fuelrats.com`
