@@ -36,10 +36,10 @@
         <dt class="col-sm-2">System:</dt>
         <dd class="col-sm-10">{{ system }}</dd>
 
-        {{#if quotes}}
+        {% if quotes %}
           <dt class="col-sm-2">Quotes:</dt>
           <dd class="col-sm-10">{{ quotes }}</dd>
-        {{/if}}
+        {% endif %}
 
         <dt class="col-sm-12">Notes:</dt>
         <dd class="col-sm-12">{{ notes }}</dd>

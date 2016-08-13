@@ -2,119 +2,96 @@
 
 {% block head %}
 {% parent %}
-<title></title>
+<title>Fuel rats - Edit Rescue</title>
 {% endblock %}
 
 {% block body %}
 {% parent %}
-
+<meta id="meta-id" name='rescue-id' value="{{ rescue.id }}">
 <div class="container-fluid">
-  <h1 class="page-header">Rescue</h1>
+  <form id="paperwork" action="/rescues" method="put">
+    <div class="form-group">
+      <label for="rats">Who arrived for the rescue?</label>
+      <input type="text" name="rats" id="rats" class="form-control" value="" required>
+    </div>
 
-  <form>
-    <div class="row">
-      <div class="col-md-8 rescue-details">
-        <fieldset class="form-group row">
-          <label for="system" class="form-control-label col-md-2">System</label>
+    <div class="form-group">
+      <label for="firstLimpet">Who fired the first limpet?</label>
+      <input type="text" name="firstLimpet" id="firstLimpet" class="form-control" data-autocomplete="CMDRname" value="{{ rat.CMDRname }}">
+    </div>
 
-          <div class="col-md-10">
-            <input type="text" class="form-control" id="system" name="system">
-          </div>
-        </fieldset>
-
-        <fieldset class="form-group row">
-          <label for="platform" class="form-control-label col-md-2">Platform</label>
-
-          <div class="col-md-10">
-            <div class="radio-inline">
-              <label>
-                <input type="radio" name="platform" value="pc" checked>
-                PC
-              </label>
-            </div>
-
-            <div class="radio-inline">
-              <label>
-                <input type="radio" name="platform" value="xb">
-                Xbox One
-              </label>
-            </div>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-group row">
-          <label for="open" class="form-control-label col-md-2">Open</label>
-
-          <div class="col-md-10">
-            <select class="form-control" id="open" name="open">
-              <option value="true"{{#if open}} selected{{/if}}>Yes</option>
-              <option value="false"{{#unless open}} selected{{/unless}}>No</option>
-            </select>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-group row">
-          <label for="active" class="form-control-label col-md-2">Active</label>
-
-          <div class="col-md-10">
-            <select class="form-control" id="active" name="active">
-              <option value="true"{{#if active}} selected{{/if}}>Yes</option>
-              <option value="false"{{#unless active}} selected{{/unless}}>No</option>
-            </select>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-group row">
-          <label for="codeRed" class="form-control-label col-md-2">Code Red</label>
-
-          <div class="col-md-10">
-            <select class="form-control" id="codeRed" name="codeRed">
-              <option value="true"{{#if codeRed}} selected{{/if}}>Yes</option>
-              <option value="false"{{#unless codeRed}} selected{{/unless}}>No</option>
-            </select>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-group">
-          <label for="notes">Notes</label>
-
-          <textarea class="form-control" rows="10" id="notes" name="notes">{{ notes }}</textarea>
-        </fieldset>
+    <div class="form-group">
+      <label for="successful">What platform was it on?</label>
+      <br>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" id="platform-pc" name="platform" value="pc">
+          PC
+        </label>
       </div>
-
-      <div class="col-md-4 rat-manager">
-        <div class="card">
-          <div class="card-header">
-            <strong>Rats</strong>
-          </div>
-
-          <ul class="list-group list-group-flush rat-list"></ul>
-<!--
-          {% if firstLimpet %}
-            <span class="label label-pill label-primary">First Limpet</span>
-          {% endif %}
--->
-
-          <div class="card-footer form-inline rat-adder">
-            <div class="row">
-              <input type="text" placeholder="Add Rat" class="add-rat form-control" data-autocomplete="CMDRname">
-              <button type="button" class="add-rat btn btn-primary">Add</button>
-            </div>
-          </div>
-        </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" id="platform-xb" name="platform" value="xb">
+          Xbox One
+        </label>
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-12">
-        <button type="submit" class="btn btn-primary pull-right">Save</button>
+    <div class="form-group">
+      <label for="system">Where did it happen?</label>
+      <small>In what star system did the rescue took place? (put "n/a" if not applicable)</small>
+      <input type="text" name="system" id="system" class="form-control" required autofocus>
+    </div>
+
+    <div class="form-group">
+      <label for="successful">Was the rescue successful?</label>
+      <br>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" id="successful-true" name="successful" value="true">
+          Yes
+        </label>
+      </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" id="successful-false" name="successful" value="false">
+          No
+        </label>
       </div>
     </div>
+
+    <div class="form-group">
+      <label for="codeRed">Was it a code red?</label>
+      <br>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" id="cr-true" name="codeRed" value="true">
+          Yes
+        </label>
+      </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" id="cr-false" name="codeRed" value="false">
+          No
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="notes">Notes</label>
+      <textarea name="notes" id="notes" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 </div>
 {% endblock %}
 
 {% block resources %}
 {% parent %}
-<script src="/rescue-edit.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.1/css/bootstrapValidator.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.1/js/bootstrapValidator.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+<script src="/bootstrap-tagsinput.js"></script>
+<script src="/js/rescue-edit.js"></script>
 {% endblock %}

@@ -275,8 +275,6 @@ router.get('/welcome', auth.isAuthenticated(true), welcome.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
-router.get('/rescues/list', auth.isAuthenticated(true), rescueAdmin.listRescues)
-router.get('/rescues/list/:page', auth.isAuthenticated(true), rescueAdmin.listRescues)
 
 router.route('/oauth2/authorise')
   .get(auth.isAuthenticated(true), oauth2.authorization)
@@ -337,7 +335,9 @@ the unused error */
 /* eslint-disable no-unused-vars */
 app.use(function (err, req, res, next) {
   /* eslint-enable no-unused-vars */
-  delete res.model.data
+  if (res.model) {
+    delete res.model.data
+  }
   res.send(res.model)
 })
 

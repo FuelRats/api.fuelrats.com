@@ -11,6 +11,7 @@ let Permission = require('../permission')
 class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
+
       let limit = parseInt(query.limit) || 25
       delete query.limit
 
@@ -447,7 +448,7 @@ class HTTP {
   }
 
   static get (request, response, next) {
-    Controller.read(request.query, request).then(function (res) {
+    Controller.read(query, request).then(function (res) {
       let data = res.data
       let meta = res.meta
 
@@ -467,8 +468,26 @@ class HTTP {
     let id = request.params.id
 
     if (id) {
-      findRescueWithRats({ id: id }).then(function (rescueInstance) {
-        response.model.data = convertRescueToAPIResult(rescueInstance)
+      Rescue.findOne({
+        where: { id: id },
+        include: [
+          {
+            model: Rat,
+            as: 'rats',
+            required: false
+          },
+          {
+            model: Rat,
+            as: 'firstLimpet',
+            required: false
+          }
+        ]
+      }).then(function (rescueInstance) {
+        if (request.query.v === '2') {
+          response.model.data = rescueInstance.toJSON()
+        } else {
+          response.model.data = convertRescueToAPIResult(rescueInstance)
+        }
         response.status(200)
         next()
       }).catch(function (error) {
@@ -524,6 +543,10 @@ function getRescuePermissionType (rescue, user) {
     return 'self.rescue.update'
   }
 
+  if (rescue.createdAt - Date.now() < 3600000) {
+    return 'self.rescue.update'
+  }
+
   if (user) {
     for (let CMDR of user.CMDRs) {
       if (rescue.rats.includes(CMDR)) {
@@ -545,6 +568,7 @@ function convertRescueToAPIResult (rescueInstance) {
     rescue.rats = []
   }
 
+  delete rescue.firstLimpet
   rescue.firstLimpet = rescue.firstLimpetId
   delete rescue.firstLimpetId
   return rescue
@@ -563,4 +587,4 @@ function findRescueWithRats (where) {
   })
 }
 
-module.exports = { Controller, HTTP }
+module.exports = { Controller, HTTP, getRescuePermissionType, findRescueWithRats, convertRescueToAPIResult }
