@@ -133,6 +133,7 @@ class Anope {
   static setVirtualHost (user, nickname) {
     return new Promise(function (resolve, reject) {
       let virtualHost = generateVirtualHost(user)
+      winston.info('Generated Vhost: ' + virtualHost)
 
       if (virtualHost) {
         client.methodCall('command', [['HostServ', 'xlexious', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
@@ -162,7 +163,7 @@ function generateVirtualHost (user) {
 
   if (sortedRats.length > 0) {
 
-    let rat = IRCSafeName(user.rats[0])
+    let rat = IRCSafeName(user.sortedRats[0])
 
     if (user.group === 'admin') {
       return 'netadmin.fuelrats.com'
