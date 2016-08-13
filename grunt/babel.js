@@ -7,7 +7,7 @@ module.exports = {
   dist: {
     files: [{
       cwd: 'src/',
-      dest: 'js/',
+      dest: 'static/js/',
       expand: true,
       src: ['**/*.js']
     }]

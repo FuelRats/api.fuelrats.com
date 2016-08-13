@@ -1,63 +1,76 @@
-'use strict';
+'use strict'
 
-let _ = require('underscore');
-let path = require('path');
-let winston = require('winston');
-let nodemailer = require('nodemailer');
+let nodemailer = require('nodemailer')
 
-let User = require( '../models/user.js');
-let uid = require('uid-safe');
+let User = require('../db').User
+let Reset = require('../db').Reset
+let crypto = require('crypto')
 
 
 exports.get = function (request, response) {
-    response.render('reset.swig', request.query);
-};
+  response.render('reset.swig', request.query)
+}
 
-let getPlainTextEmailVersion = function(emaillink) {
-    let emailText = '';
-    emailText += 'Someone requested a password reset to your FuelRats account.\r\n\r\n';
-    emailText += 'To reset your password  copy this link into your browser:\r\n';
-    emailText += emaillink + '\r\n\r\n';
-    emailText += 'If you ignore this link, your password will not be changed\r\n';
-    emailText += '\r\n\r\n\r\n\r\n';
-    emailText += 'Regards,\r\n';
-    emailText += 'The Fuel Rats\r\n';
-    return emailText;
-};
+let getPlainTextEmailVersion = function (emaillink) {
+  let emailText = ''
+  emailText += 'Someone requested a password reset to your FuelRats account.\r\n\r\n'
+  emailText += 'To reset your password  copy this link into your browser:\r\n'
+  emailText += emaillink + '\r\n\r\n'
+  emailText += 'If you ignore this link, your password will not be changed\r\n'
+  emailText += '\r\n\r\n\r\n\r\n'
+  emailText += 'Regards,\r\n'
+  emailText += 'The Fuel Rats\r\n'
+  return emailText
+}
 
-exports.post = function (request, response, next) {
-    User.findOne({
-        email: request.body.email
-    }).then(function (user) {
-        if (user) {
-            let resetToken = uid.sync(16);
-            user.resetToken = resetToken;
-            user.resetTokenExpire = new Date(Date.now() + 86400000).getTime();
+exports.post = function (request, response) {
+  if (!request.body.email) {
+    response.redirect('/reset?not_found=1')
+  }
 
-            user.save(function (error) {
-                if (error) {
-                    response.status(500);
-                    next();
-                } else {
-                    let emailLink = 'http://' + request.headers.host + '/change_password?token=' + resetToken;
+  User.findOne({ where: {
+    email: { $iLike: request.body.email }
+  }}).then(function (user) {
+    if (!user) {
+      response.redirect('/reset?not_found=1')
+    }
 
-                    response.render('reset-email.swig', {emaillink: emailLink}, function(err, emailHTML) {
-                        let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net');
-                        var mailOptions = {
-                            from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
-                            to: user.email,
-                            subject: 'Fuel Rats Password Reset Requested',
-                            text: getPlainTextEmailVersion,
-                            html: emailHTML
-                        };
-                        transporter.sendMail(mailOptions);
+    Reset.findAll({
+      where: {
+        userId: user.id
+      }
+    }).then(function (resets) {
+      for (let reset of resets) {
+        reset.destroy()
+      }
 
-                        response.redirect('/login?reset_sent=1');
-                    });
-                }
-            });
-        } else {
-            response.redirect('/reset?not_found=1');
-        }
-    });
-};
+      Reset.create({
+        value: crypto.randomBytes(16).toString('hex'),
+        expires:  new Date(Date.now() + 86400000).getTime(),
+        userId: user.id
+      }).then(function (reset) {
+        let emailLink = 'https://' + request.headers.host + '/change_password?token=' + reset.value
+
+        response.render('reset-email.swig', {emaillink: emailLink}, function (err, emailHTML) {
+          let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
+          var mailOptions = {
+            from: 'Fuel Rats (Do Not Reply) <fuelrats@localecho.net>',
+            to: user.email,
+            subject: 'Fuel Rats Password Reset Requested',
+            text: getPlainTextEmailVersion,
+            html: emailHTML
+          }
+          transporter.sendMail(mailOptions)
+
+          response.redirect('/login?reset_sent=1')
+        })
+      }).catch(function (error) {
+
+      })
+    })
+
+
+  }).catch(function (error) {
+
+  })
+}

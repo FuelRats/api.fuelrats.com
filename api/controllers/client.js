@@ -1,87 +1,114 @@
 'use strict'
-let Client = require('../models/client')
-let ErrorModels = require('../errors')
-let Permission = require('../permission')
-let crypto = require('crypto')
-let _ = require('underscore')
 
-class ClientController {
+let Client = require('../db').Client
+let Permission = require('../permission')
+let Errors = require('../errors')
+let crypto = require('crypto')
+let bcrypt = require('bcrypt')
+
+class Controller {
   static read (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('self.client.read')
-        reject({ error: error })
+      let limit = parseInt(query.limit) || 25
+      delete query.limit
+
+      let offset = parseInt(query.offset) || 0
+      delete query.offset
+
+      if (query.user) {
+        query.UserId = query.user
+        delete query.user
       }
 
-      query = _.extend(query, { user: connection.user })
-      Permission.require('self.client.read', connection.user).then(function () {
-        Client.find(query, function (err, clients) {
-          if (err) {
-            let error = ErrorModels.server_error
-            error.detail = err
-            reject({ error: error })
-          } else {
-            resolve({ data: clients })
-          }
+      Client.findAndCountAll({
+        where: query,
+        limit: limit,
+        offset: offset
+      }).then(function (result) {
+        let meta = {
+          count: result.rows.length,
+          limit: limit,
+          offset: offset,
+          total: result.count
+        }
+
+        let clients = result.rows.map(function (clientInstance) {
+          let client = convertClientToAPIResult(clientInstance)
+          return client
         })
-      }, function (error) {
-        reject ({ error: error })
+
+        resolve({
+          data: clients,
+          meta: meta
+        })
+      }).catch(function (error) {
+        reject({ error: Errors.throw('server_error', error), meta: {} })
       })
     })
   }
 
   static create (data, connection) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('self.client.create')
-        reject({ error: error })
-      }
+      let secret = crypto.randomBytes(24).toString('hex')
 
-      Permission.require('self.client.create', connection.user).then(function () {
-        let secret = crypto.randomBytes(24).toString('hex')
+      bcrypt.hash(secret, 16, function (error, hash) {
+        if (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
+          return
+        }
 
-        let client = new Client({
+        Client.create({
           name: data.name,
-          user: connection.user
-        })
+          secret: hash
+        }).then(function (clientInstance) {
+          clientInstance.setUser(connection.user.id).then(function () {
+            let client = convertClientToAPIResult(clientInstance)
+            client.secret = secret
 
-        Client.register(client, secret, function (err, client) {
-          if (err) {
-            let error = ErrorModels.server_error
-            error.detail = err
-            reject({ error: error })
-          } else {
-            let data = client.toJSON()
-            data.secret = secret
-            resolve({ data: data })
-          }
+            resolve({
+              data: client,
+              meta: {}
+            })
+          }).catch(function (error) {
+            reject({ error: Errors.throw('server_error', error), meta: {} })
+          })
+        }).catch(function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
         })
-      }, function (error) {
-        reject ({ error: error })
       })
     })
   }
 
-  static update (data, connection, query) {
+  static update () {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('client.update')
-        reject({ error: error })
-      }
+      reject({ error: Errors.throw('not_implemented', 'client:update is not implemented, please contact the tech rats for changes'), meta: {} })
     })
   }
 
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('client.delete')
-        reject({ error: error })
+      console.log(query)
+      if (query.id) {
+        Permission.require('client.delete', connection.user).then(function () {
+          Client.findById(query.id).then(function (client) {
+            client.destroy()
+            resolve({ data: null, meta: {} })
+          }).catch(function (error) {
+            reject({ error: Errors.throw('server_error', error), meta: {} })
+          })
+        }).catch(function (error) {
+          reject({ error: error })
+        })
+      } else {
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
       }
     })
   }
+}
 
-  static httpGet (request, response, next) {
-    ClientController.read(request.body, request).then(function (res) {
+class HTTP {
+  static get (request, response, next) {
+    Controller.read(request.query, request, request.body).then(function (res) {
       let data = res.data
 
       response.model.data = data
@@ -94,12 +121,33 @@ class ClientController {
     })
   }
 
-  static httpPost (request, response, next) {
-    ClientController.create(request.body, request, request.query).then(function (res) {
+  static post (request, response, next) {
+    Controller.create(request.body, request, request.query).then(function (res) {
       let data = res.data
 
       response.model.data = data
-      response.status = 200
+      response.status(201)
+      next()
+    }, function (error) {
+      response.model.errors.push(error.error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+
+  static put (request, response, next) {
+    let notImplemented = Errors.throw('not_implemented', 'PUT /clients is not implemented, please contact the tech rats for changes')
+    response.model.errors.push(notImplemented)
+    response.status(404)
+    next()
+  }
+
+  static delete (request, response, next) {
+    Controller.delete(request.body, request, request.params).then(function (res) {
+      let data = res.data
+
+      response.model.data = data
+      response.status(204)
       next()
     }, function (error) {
       response.model.errors.push(error.error)
@@ -109,4 +157,13 @@ class ClientController {
   }
 }
 
-module.exports = ClientController
+function convertClientToAPIResult (clientInstance) {
+  let client = clientInstance.toJSON()
+  client.user = client.userId
+  delete client.userId
+  delete client.secret
+
+  return client
+}
+
+module.exports = { Controller, HTTP }

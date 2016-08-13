@@ -12,14 +12,11 @@ let cookieParser = require('cookie-parser')
 let express = require('express')
 let expressSession = require('express-session')
 let fs = require('fs')
-let forceSSL = require('express-force-ssl')
 let http = require('http')
-let lex = require('letsencrypt-express').testing()
 let moment = require('moment')
-let mongoose = require('mongoose')
 let passport = require('passport')
+let Permission = require('./api/permission')
 let winston = require('winston')
-let request = require('request')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
@@ -31,34 +28,38 @@ if (fs.existsSync('./config.json')) {
   _.extend(config, require('./config'))
 }
 
+let Error = require('./api/errors')
+
 // Import models
-let User = require('./api/models/user')
+let db = require('./api/db').db
+let User = require('./api/db').User
+let Rat = require('./api/db').Rat
 require('./api/models/client')
 
 // Import controllers
 let auth = require('./api/controllers/auth')
 let badge = require('./api/controllers/badge')
 let change_password = require('./api/controllers/change_password')
-let client = require('./api/controllers/client')
+let client = require('./api/controllers/client').HTTP
 let docs = require('./api/controllers/docs')
 let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
 let logout = require('./api/controllers/logout')
+let nicknames = require('./api/controllers/nicknames').HTTP
 let oauth2 = require('./api/controllers/oauth2')
 let paperwork = require('./api/controllers/paperwork')
-let rat = require('./api/controllers/rat')
+let rat = require('./api/controllers/rat').HTTP
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
 let rescue = require('./api/controllers/rescue').HTTP
 let rescueAdmin = require('./api/controllers/rescueAdmin')
-let statistics = require('./api/controllers/statistics')
-let user = require('./api/controllers/user')
+let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
 let welcome = require('./api/controllers/welcome')
 
-// Connect to MongoDB
-mongoose.connect('mongodb://' + config.mongo.hostname + ':' + config.mongo.port + '/' + config.mongo.database)
+db.sync()
+
 
 let options = {
   logging: true,
@@ -103,7 +104,7 @@ swig.setFilter('eliteDate', function (date, args) {
   if (moment().diff(context, 'days') < 7) {
     return context.fromNow()
   } else {
-    return context.add(1286, 'years').format(args || 'YYYY-MM-DD')
+    return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
   }
 })
 
@@ -121,19 +122,39 @@ app.use(expressSession({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
+passport.use(auth.LocalStrategy)
+
+passport.serializeUser(function (user, done) {
+  done(null, user.id)
+})
+
+passport.deserializeUser(function (id, done) {
+  User.findOne({
+    where: { id: id },
+    include: [
+      {
+        model: Rat,
+        as: 'rats',
+        required: false
+      }
+    ]
+  }).then(function (userInstance) {
+    let user = userInstance.toJSON()
+    let reducedRats = user.rats.map(function (rat) {
+      return rat.id
+    })
+    user.CMDRs = reducedRats
+    delete user.rats
+    done(null, user)
+  }).catch(function () {
+    done(null, false)
+  })
+})
 
 app.set('json spaces', 2)
 app.set('x-powered-by', false)
 
-let sslHostName = config.ssl.hostname
-
 let port = config.port || process.env.PORT
-let sslPort = config.ssl.port || process.env.SSL_PORT
-
-passport.use(User.createStrategy())
-// passport.use(Client.createStrategy())
-passport.serializeUser(User.serializeUser())
-passport.deserializeUser(User.deserializeUser())
 
 app.use(expressSession({
   secret: config.secretSauce,
@@ -142,9 +163,6 @@ app.use(expressSession({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-if (config.ssl.enabled) {
-  app.use(forceSSL)
-}
 
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
@@ -179,6 +197,8 @@ if (options.logging || options.test) {
     winston.info('ENDPOINT:', request.originalUrl)
     winston.info('METHOD:', request.method)
     winston.info('DATA:', censoredParams)
+    winston.info('IP:', request.headers['X-Forwarded-for'] || request.connection.remoteAddress)
+    request.inet = request.headers['X-Forwarded-for'] || request.connection.remoteAddress
     next()
   })
 }
@@ -198,42 +218,49 @@ let router = express.Router()
 // ROUTES
 // =============================================================================
 
-router.get('/badge/:rat', badge.get)
+router.get('/badge', badge.get)
 
 router.post('/register', register.post)
 
-router.post('/login', passport.authenticate('local'), login.post)
+router.post('/login', passport.authenticate('local', { failureRedirect: '/login?error_login=1' }), login.post)
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
 
 router.get('/logout', logout.post)
 router.post('/logout', logout.post)
 
+router.get('/autocomplete', rat.autocomplete)
 router.get('/rats', rat.get)
 router.post('/rats', rat.post)
 router.get('/rats/:id', rat.getById)
-router.put('/rats/:id', rat.put)
+router.put('/rats/:id', auth.isAuthenticated(false), rat.put)
+router.delete('/rats/:id', auth.isAuthenticated(false), Permission.required('rat.delete', false), rat.delete)
 
 router.get('/rescues', rescue.get)
-router.post('/rescues', rescue.post)
+router.post('/rescues', auth.isAuthenticated(false), rescue.post)
 router.get('/rescues/:id', rescue.getById)
-router.put('/rescues/:id', rescue.put)
-router.put('/rescues/:id/addquote', rescue.addQuote)
-router.put('/rescues/:id/assign/:ratId', rescue.assign)
-router.put('/rescues/:id/unassign/:ratId', rescue.unassign)
+router.put('/rescues/:id', auth.isAuthenticated(false), rescue.put)
+router.put('/rescues/:id/addquote', auth.isAuthenticated(false), rescue.addquote)
+router.put('/rescues/:id/assign/:ratId', auth.isAuthenticated(false), rescue.assign)
+router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), rescue.unassign)
+router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('rescue.delete', false), rescue.delete)
 
-router.get('/users', user.get)
-// router.get('/users/:id', user.getById)
-// router.put('/users/:id', user.put)
-// router.post('/users', user.post)
 
-router.get('/clients', auth.isAuthenticated, client.httpGet)
-// router.get('/clients/:id', client.getById)
-// router.put('/clients/:id', client.put)
-router.post('/clients', client.httpPost)
+router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
+router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read', false), user.getById)
+router.put('/users/:id', auth.isAuthenticated(false), user.put)
+router.post('/users', auth.isAuthenticated(false), user.post)
+router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
-router.get('/search/rescues', rescue.get)
-router.get('/search/rats', rat.get)
+router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
+router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
+router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
+router.delete('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.delete)
+
+router.get('/clients', auth.isAuthenticated(false), Permission.required('client.read', false), client.get)
+router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('client.update', false), client.put)
+router.post('/clients', auth.isAuthenticated(false), Permission.required('self.client.create', false), client.post)
+router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete', false), client.delete)
 
 router.get('/version', version.get)
 
@@ -244,22 +271,18 @@ router.get('/reset', reset.get)
 router.get('/change_password', change_password.get)
 router.get('/paperwork', paperwork.get)
 router.get('/register', register.get)
-router.get('/welcome', welcome.get)
+router.get('/welcome', auth.isAuthenticated(true), welcome.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
-router.get('/rescues/edit/:id', auth.isAuthenticated, rescueAdmin.editRescue)
-router.get('/rescues/list', auth.isAuthenticated, rescueAdmin.listRescues)
-router.get('/rescues/list/:page', auth.isAuthenticated, rescueAdmin.listRescues)
+router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
 
 router.route('/oauth2/authorise')
-  .get(auth.isAuthenticated, oauth2.authorization)
-  .post(auth.isAuthenticated, oauth2.decision)
+  .get(auth.isAuthenticated(true), oauth2.authorization)
+  .post(auth.isAuthenticated(false), oauth2.decision)
 
 // Create endpoint handlers for oauth2 token
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
-
-router.get('/statistics', statistics.get)
 
 // Register routes
 app.use(express.static(__dirname + '/static'))
@@ -271,24 +294,52 @@ let httpServer = http.Server(app)
   // Send the response
 app.use(function (request, response) {
   if (response.model.errors.length) {
-    delete response.model.data
+    if (!request.referer) {
+      delete response.model.data
+      response.send(response.model)
+    } else {
+      switch (response.status) {
+        case 403:
+          response.render('errors/403', { error: response.model.errors })
+          break
+
+        case 503:
+          response.render('errors/503', { error: response.model.errors })
+          break
+
+        default:
+          response.render('errors/500', { error: response.model.errors })
+          break
+      }
+    }
   } else {
     delete response.model.errors
-  }
-
-  response.send(response.model)
-})
-
-Object.keys(mongoose.models).forEach(function (modelName, index) {
-  let model = mongoose.models[modelName]
-
-  if (model.createMapping) {
-    model.createMapping()
+    response.send(response.model)
   }
 })
 
+app.get('*', function (request, response) {
+  if (!request.referer) {
+    response.status(404)
+    response.render('errors/404', { path: request.path })
+  } else {
+    delete response.model.data
+    response.model.errors = Error.throw('not_found', request.path)
+    response.send(response.model)
+  }
+})
 
-
+/* Because express.js is stupid and uses the method signature to distinguish between
+normal middleware and error middleware, we have to silence eslint complaining about
+the unused error */
+/* eslint-disable no-unused-vars */
+app.use(function (err, req, res, next) {
+  /* eslint-enable no-unused-vars */
+  if (res.model) {
+    delete res.model.data
+  }
+  res.send(res.model)
+})
 
 // SOCKET
 // =============================================================================
@@ -328,52 +379,9 @@ socket.on('connection', function (client) {
 
 // START THE SERVER
 // =============================================================================
-
-if (config.ssl.enabled) {
-
-  let firstRequestSent = false
-
-  module.exports = lex.create({
-    approveRegistration: function (hostname, callback) {
-      callback(null, {
-        domains: [hostname],
-        email: 'tre@trezy.com',
-        agreeTos: true
-      })
-    },
-    onRequest: app
-  }).listen(
-    // Non SSL options
-    [{
-      port: port
-    }],
-
-    // SSL options
-    [{
-      port: sslPort
-    }],
-
-    function () {
-      if (!module.parent) {
-        if (!firstRequestSent) {
-          winston.info('Starting the Fuel Rats API')
-          winston.info('Listening for requests on ports ' + port + ' and ' + sslPort + '...')
-
-          // Really, I shouldn't have to do this, but first request _always_ fails.
-          request('https://' + sslHostName + ':' + sslPort + '/welcome', function () {
-            winston.info('Firing initial request to generate certificates')
-          })
-          firstRequestSent = true
-        }
-      }
-    }
-  )
-
-} else {
-  module.exports = httpServer.listen(port, function () {
-    if (!module.parent) {
-      winston.info('Starting the Fuel Rats API')
-      winston.info('Listening for requests on port ' + port + '...')
-    }
-  })
-}
+module.exports = httpServer.listen(port, function () {
+  if (!module.parent) {
+    winston.info('Starting the Fuel Rats API')
+    winston.info('Listening for requests on port ' + port + '...')
+  }
+})

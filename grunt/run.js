@@ -9,5 +9,11 @@ module.exports = {
     args: [
       './bin/sync-index'
     ]
+  },
+
+  createTestUser: {
+    args: [
+      './bin/createTestUser'
+    ]
   }
 }

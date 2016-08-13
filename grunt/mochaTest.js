@@ -4,8 +4,8 @@ module.exports = {
       reporter: 'spec'
     },
     src: [
-      'test/rat.js',
-      'test/rescue.js'
+      'test/client.js',
+      'test/rat.js'
     ]
   }
 }

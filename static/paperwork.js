@@ -12,7 +12,7 @@ $(function () {
 
   engine = new Bloodhound({
     remote: {
-      url: '/rats?CMDRname=%QUERY',
+      url: '/autocomplete?name=%QUERY',
       wildcard: '%QUERY',
       filter: function (data) {
         var results

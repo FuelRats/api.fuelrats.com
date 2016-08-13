@@ -9,10 +9,28 @@ html {
 body {
   font-size: 14px;
   min-height: 100%;
+
+  margin: 0 !important;
+}
+
+.rat-list .delete {
+  float: right;
+  visibility: hidden;
+  height: 24px;
+  width: auto;
+  cursor: pointer;
+}
+
+.rat-list .nav-item:hover .delete {
+  visibility: visible;
 }
 
 body > .navbar {
-  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+body > .container-fluid {
+  margin: 2rem;
 }
 
 .btn-group {
@@ -21,6 +39,20 @@ body > .navbar {
 
 table td {
   white-space: nowrap;
+}
+
+.lbBadge {
+  height: 2rem;
+  width: auto;
+}
+
+.navbar-brand span.label.label-pill {
+  margin-top: -5px;
+}
+
+input[type='radio'] {
+  width: auto !important;
+  display: inline-block !important;
 }
 
 .form-group > .twitter-typeahead,
