@@ -5,16 +5,16 @@ cache:
     - node_modules
 
 sudo: false
-env:
-  - CXX=g++-4.8
+#env:
+#  - CXX=g++-4.8
 
 addons:
   postgresql: "9.4"
   apt:
     sources:
     - ubuntu-toolchain-r-test
-    packages:
-    - g++-4.8
+#    packages:
+#    - g++-4.8
 
 node_js:
 - 6.3.1
@@ -27,7 +27,6 @@ before_script:
 - psql -c 'create database fuelratstest;' -U postgres
 - npm install webpack@^2.1.0-beta
 - npm install -g grunt-cli
-- sleep 10
 
 notifications:
   irc:
