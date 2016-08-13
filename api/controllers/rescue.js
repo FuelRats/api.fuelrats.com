@@ -448,7 +448,7 @@ class HTTP {
   }
 
   static get (request, response, next) {
-    Controller.read(query, request).then(function (res) {
+    Controller.read(request.query, request).then(function (res) {
       let data = res.data
       let meta = res.meta
 
