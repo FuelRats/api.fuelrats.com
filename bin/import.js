@@ -93,7 +93,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
         drillDate: new Date (rescueDatum[0]) || new Date,
       }
 
-      if(!rat.passed) { 
+      if(!rat.passed) {
         return
       }
 
@@ -125,7 +125,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
               let users = uresults.rows.map(function (userInstance) {
                 let usr = userInstance.toJSON()
                 usr.drilled = rat.passed
-                User.update(usr, { where: { id: usr.id }})
+                User.update({ drilled: rat.passed }, { where: { id: usr.id }})
               })
             })
             return rat
@@ -136,7 +136,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
             meta: meta
           })
         })
-      }))      
+      }))
     })
 
     dispatchDrills.forEach( function ( rescueDatum, index, rescueDrillData ) {
@@ -146,7 +146,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
         drillDate: new Date (rescueDatum[0]) || new Date,
       }
 
-      if(!rat.passed) { 
+      if(!rat.passed) {
         return
       }
 
@@ -178,7 +178,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
               let users = uresults.rows.map(function (userInstance) {
                 let usr = userInstance.toJSON()
                 usr.drilledDispatch = rat.passed
-                User.update(usr, { where: { id: usr.id }})
+                User.update({ drilledDispatch: rat.passed }, { where: { id: usr.id }})
               })
             })
             return rat
@@ -189,7 +189,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
             meta: meta
           })
         })
-      }))      
+      }))
     })
 
     /*ratData.forEach( function ( ratDatum, index, ratData ) {
