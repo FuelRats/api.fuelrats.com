@@ -222,7 +222,7 @@ router.get('/badge', badge.get)
 
 router.post('/register', register.post)
 
-router.post('/login', passport.authenticate('local', { failureRedirect: '/login?error_login=1' }), login.post)
+router.post('/login', passport.authenticate('local'), login.post)
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
 
