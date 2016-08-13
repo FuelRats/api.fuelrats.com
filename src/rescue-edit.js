@@ -10,7 +10,7 @@ const platformPC       = document.getElementById('platform-pc')
 const platformXB       = document.getElementById('platform-xb')
 const crtrue           = document.getElementById('cr-true')
 const crfalse          = document.getElementById('cr-false')
-const successfultrue   = document.getElementById('sucessful-true')
+const successfultrue   = document.getElementById('successful-true')
 const successfulfalse  = document.getElementById('successful-false')
 const notesField       = document.getElementById('notes')
 
