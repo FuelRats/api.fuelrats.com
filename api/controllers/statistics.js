@@ -9,6 +9,7 @@ exports.get = function (request, response, next) {
   operations.push(getOverallRescueCount())
   operations.push(getPopularSystemsCount())
   operations.push(getLeaderboardRats())
+  operations.push(getTotalStatistics())
 
   Promise.all(operations).then(function (values) {
     response.model.data = values
@@ -37,6 +38,28 @@ let groupByDateAggregator = {
       $sum: 1
     }
   }
+}
+
+let getTotalStatistics = function () {
+  return Rescue.aggregate([
+    {
+      $project: {
+        successful: {
+          $cond: ['$successful', 1, 0]
+        }
+      }
+    }, {
+      $group: {
+        _id: null,
+        successful: {
+          $sum: '$successful'
+        },
+        total: {
+          $sum: 1
+        }
+      }
+    }
+  ]).exec()
 }
 
 let getOverallRescueCount = function () {

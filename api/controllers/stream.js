@@ -1,7 +1,7 @@
 'use strict'
 
 let websocket = require('../websocket')
-let ErrorModels = require('../errors')
+let Error = require('../errors')
 
 exports.subscribe = function (data, client, query) {
   return new Promise(function (resolve, reject) {
@@ -18,18 +18,14 @@ exports.subscribe = function (data, client, query) {
           meta: meta
         })
       } else {
-        let errorModel = ErrorModels.already_exists
-        errorModel.detail = applicationId
         reject({
-          error: errorModel,
+          error: Error.throw('already_exists', applicationId),
           meta: {}
         })
       }
     } else {
-      let errorModel = ErrorModels.not_found
-      errorModel.detail = applicationId
       reject({
-        error: errorModel,
+        error: Error.throw('not_found', applicationId),
         meta: {}
       })
     }
@@ -51,16 +47,14 @@ exports.unsubscribe = function (data, client, query) {
           meta: meta
         })
       } else {
-        let errorModel = ErrorModels.invalid_parameter
-        errorModel.detail = 'Not subscribed to this stream'
         reject({
-          error: errorModel,
+          error: Error.throw('invalid_parameter', 'Not subscribed to this stream'),
           meta: {}
         })
       }
     } else {
       reject({
-        error: 'Invalid application ID',
+        error: Error.throw('invalid_parameter', 'applicationId'),
         meta: {}
       })
     }

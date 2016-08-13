@@ -2,17 +2,23 @@ api:
   description: Start the api
   tasks:
   - 'cssmin:production'
+  - 'buildJS'
   - 'uglify:production'
-  - 'docs'
-  - 'express'
+  - 'express:dev'
   - 'watch'
+
+buildJS:
+  tasks:
+  - 'babel'
 
 default:
   description: Default Grunt task
   tasks:
   - 'api'
 
-docs:
-  description: Build the docs
+test:
+  description: Run the tests
   tasks:
-  - 'run:docs'
+  - 'run:createTestUser'
+  - 'express:test'
+  - 'mochaTest'

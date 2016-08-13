@@ -2,101 +2,51 @@
 
 let _ = require('underscore')
 let winston = require('winston')
-let Rescue = require('../models/rescue')
 let Permission = require('../permission')
-
-
-
+let Rescue = require('../db').Rescue
+let findRescueWithRats = require('./rescue').findRescueWithRats
+let getRescuePermissionType = require('./rescue').getRescuePermissionType
+let convertRescueToAPIResult = require('./rescue').convertRescueToAPIResult
 
 // EDIT
 // =============================================================================
 exports.editRescue = function (request, response) {
-  Permission.require('rescue.edit', request.user).then(function () {
-    Rescue.findById(request.params.id)
-    .populate('rats firstLimpet')
-    .then(function (rescue) {
-      rescue.rats.forEach(function (rat) {
-        if (rat.CMDRname === rescue.firstLimpet.CMDRname) {
-          rat.firstLimpet = true
-        }
-      })
+  findRescueWithRats({ id: request.params.id }).then(function (rescueInstance) {
+    if (!rescueInstance) {
+      response.render('errors/404.swig')
+    }
 
-      response.render('rescue-edit')
+    let rescue = convertRescueToAPIResult(rescueInstance)
+
+    // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+    let permission = getRescuePermissionType(rescue, request.user)
+
+    Permission.require(permission, request.user).then(function () {
+      response.render('rescue-edit.swig', { rescue: rescue })
+    }, function () {
+      response.render('errors/403.swig')
     })
-  }, function () {
-    response.render('errors/403')
   })
 
 
 }
-
-
-// LIST
-// =============================================================================
-exports.listRescues = function (request, response) {
-  Permission.require('admin.read', request.user).then(function () {
-    let rescues = []
-    let renderVars = {}
-
-    if (!request.params.page || request.params.page < 1) {
-      request.params.page = 1
-    }
-
-    renderVars.page = request.params.page
-
-    if (request.params.page > 1) {
-      renderVars.previousPage = request.params.page - 1
-    }
-
-    let filter = {
-      size: 100,
-      sort: 'createdAt:desc'
-    }
-
-    filter.from = (request.params.page - 1) * filter.size
-
-    let query = {
-      match_all: {}
-    }
-
-    Rescue.search(query, filter, function (error, data) {
-      data.hits.hits.forEach(function (rescue) {
-        rescue._source._id = rescue._id
-        rescues.push(rescue._source)
-      })
-
-      renderVars.count = rescues.length
-      renderVars.rescues = rescues
-      renderVars.total = data.hits.total
-      renderVars.totalPages = Math.ceil(data.hits.total / filter.size)
-
-      if (renderVars.page < renderVars.totalPages) {
-        renderVars.nextPage = parseInt(request.params.page) + 1
-      }
-
-      response.render('rescue-list', renderVars)
-    })
-  }, function () {
-    response.render('errors/403')
-  })
-}
-
-
-
-
 
 // VIEW
 // =============================================================================
-exports.viewRescue = function (request, response) {
-  Rescue.findById(request.params.id)
-  .populate('rats firstLimpet')
-  .then(function (rescue) {
-    rescue.rats.forEach(function (rat) {
-      if (rat.CMDRname === rescue.firstLimpet.CMDRname) {
-        rat.firstLimpet = true
+exports.viewRescue = function (request, response, next) {
+  findRescueWithRats({ id: request.params.id }).then(function (rescueInstance) {
+    try {
+      if (!rescueInstance) {
+        response.render('errors/404.swig')
+        return
       }
-    })
 
-    response.render('rescue-view', rescue)
+      let rescue = convertRescueToAPIResult(rescueInstance)
+      response.render('rescue-view.swig', rescue)
+    } catch (err) {
+      console.log(err)
+    }
+  }).catch(function () {
+    response.render('errors/500.swig')
   })
 }

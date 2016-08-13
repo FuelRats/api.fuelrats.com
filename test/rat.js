@@ -1,201 +1,161 @@
-var app, chai, expect, generate, request, rootUrl, request;
-
-
-
-
-
+'use strict'
 // Imports
 // =============================================================================
 
-chai = require( 'chai' );
-request = require( 'supertest' );
-expect = chai.expect;
-
-generate = require( './generator' );
-
-
-
-
+let chai = require('chai')
+let request = require('supertest')
+let assert = chai.assert
+let generator = require('./generator')
 
 // Set up globals
 // =============================================================================
 
-rootUrl = 'http://localhost:8080/api';
-
-
-
-
+let rootUrl = 'http://localhost:8080'
+request = request(rootUrl)
+let cookie
 
 // Before and After hooks
 // =============================================================================
 
+describe('Login Test', function () {
+  it('should create user session for valid user', function (done) {
+    this.timeout(10000)
+    request.post('/login')
+      .set('Accept','application/json')
+      .send({'email': 'support@fuelrats.com', 'password': 'testuser'})
+      .expect(200)
+      .expect('set-cookie', /connect.sid/)
+      .end(function (err, response) {
+        // Make sure there are no errors
+        assert.notProperty(response.body, 'errors')
 
+        // Make sure our response is correctly constructed
+        assert.isObject(response.body.data)
 
-
+        assert.equal(response.body.data.email, 'support@fuelrats.com')
+        // Save the cookie to use it later to retrieve the session
+        cookie = response.headers['set-cookie']
+        done()
+      })
+  })
+})
 
 // PULL THE LEVER!
 // =============================================================================
+let generatedRat
 
-describe( 'Rat Endpoints', function () {
-  describe( 'POST /api/rats', function () {
-    var rat;
+describe('Rat Endpoints', function () {
+  describe('POST /rats', function () {
+    // Create a rescue object
+    let rat = generator.randomRat()
 
-    // Create a rat object
-    rat = generate.randomRat();
-
-    it( 'should create a new rat', function ( done ) {
-
-      request
-      .post( rootUrl + '/rats' )
-      .send( rat )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+    it('should create a new rat', function (done) {
+      this.timeout(5000)
+      request.post('/rats')
+      .set('Cookie', cookie)
+      .send(rat)
+      .expect(201).end(function (error, response) {
+        if (error) {
+          return done(error)
         }
 
-        // Make sure the POST succeeded
-        expect( response.status ).to.equal( 201 );
-
         // Make sure there are no errors
-        expect( response.body ).to.not.have.property( 'errors' );
+        assert.notProperty(response.body, 'errors')
 
         // Make sure our response is correctly constructed
-        expect( response.body.data ).to.be.an( 'object' );
+        assert.isObject(response.body.data)
 
         // Check all of the properties on the returned object
-        expect( response.body.data.CMDRname ).to.equal( rat.CMDRname );
-        expect( response.body.data.gamertag ).to.equal( rat.gamertag );
-        expect( response.body.data.drilled ).to.equal( rat.drilled );
-        expect( response.body.data.nickname ).to.equal( rat.nickname );
+        assert.equal(response.body.data.CMDRname, rat.CMDRname)
+        assert.deepEqual(response.body.data.data, rat.data)
+        assert.equal(response.body.data.platform, rat.platform)
 
-        done();
-      });
-    });
-  });
-
-
-
-
-
-  describe( 'GET /api/rats', function () {
-
-    it( 'should return a list of rats', function ( done ) {
-      request
-      .get( rootUrl + '/rats' )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
-        }
-
-        // Make sure the GET succeeded
-        expect( response.status ).to.equal( 200 );
-
-        // Make sure there are no errors
-        expect( response.body ).to.not.have.property( 'errors' );
-
-        // Make sure our response is correctly constructed
-        expect( response.body.data ).to.be.an( 'array' );
-
-        done( error );
-      });
-    });
-  });
-
-
-
-
-
-
-
-
-
-  describe( 'GET /api/rats/:id', function () {
-
-    var rat;
-
-    // Create a rat object
-    rat = generate.randomRat();
-
-    // Create a new rat to test against
-    before( function ( done ) {
-      request
-      .post( rootUrl + '/rats' )
-      .send( rat )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
-        }
-
-        rat.id = response.body.data.id;
-
-        done();
-      });
-    });
-
-    it( 'should return a rat', function ( done ) {
-      request
-      .get( rootUrl + '/rats/' + rat.id )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
-        }
-
-        // Make sure the request succeeded
-        expect( response.status ).to.equal( 200 );
-
-        // Make sure there are no errors
-        expect( response.body ).to.not.have.property( 'errors' );
-
-        // Make sure our response is correctly constructed
-        expect( response.body.data ).to.be.an( 'object' );
-
-        // Make sure our response has the right data
-        expect( response.body.data.id ).to.equal( rat.id );
-
-        done();
-      });
-    });
-  });
-
-
-
-
-
-  describe( 'PUT /api/rats/:id', function () {
-    var rat;
-
-    // Create a new rat to test against
-    before( function ( done ) {
-      request
-      .post( rootUrl + '/rats' )
-      .send( generate.randomRat() )
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
-        }
-
-        rat = response.body.data;
-
-        done();
-      });
-    });
-
-    it( 'should update a rat', function ( done ) {
-      request
-      .put( rootUrl + '/rats/' + rat.id )
-      .send({
-        nickname: 'Edited Test Client ' + ( Date.now() - parseInt( ( Math.random() * Math.random() ) * 1000000 ) ).toString( 36 )
+        generatedRat = response.body.data
+        done()
       })
-      .end( function ( error, response ) {
-        if ( error ) {
-          return done( error );
+    })
+  })
+
+  describe('GET /rats', function () {
+
+    it('should retrieve a rat matching the one we created', function (done) {
+      request.get('/rats?CMDRname=' + generatedRat.CMDRname)
+      .set('Cookie', cookie).send()
+      .expect(200).end(function (error, response) {
+        if (error) {
+          return done(error)
         }
 
-        // Make sure the POST succeeded
-        expect( response.status ).to.equal( 200 );
+        // Make sure there are no errors
+        assert.notProperty(response.body, 'errors')
 
-        done();
-      });
-    });
-  });
-});
+        // Make sure our response is correctly constructed
+        assert.isArray(response.body.data)
+
+        // Check all of the properties on the returned object
+        assert.equal(response.body.data[0].id, generatedRat.id)
+        assert.equal(response.body.data[0].CMDRname, generatedRat.CMDRname)
+        assert.deepEqual(response.body.data[0].data, generatedRat.data)
+        assert.equal(response.body.data[0].platform, generatedRat.platform)
+        done()
+      })
+    })
+  })
+
+  describe('PUT /rats', function () {
+    // Create a rescue object
+    let rat = generator.randomRat()
+    console.log('')
+    console.log('new CMDR ' + rat.CMDRname)
+    console.log('')
+
+    it('should modify the rat', function (done) {
+      this.timeout(5000)
+      request.put('/rats/' + generatedRat.id)
+      .set('Cookie', cookie)
+      .send(rat)
+      .expect(201).end(function (error, response) {
+        if (error) {
+          return done(error)
+        }
+
+        // Make sure there are no errors
+        assert.notProperty(response.body, 'errors')
+
+        // Make sure our response is correctly constructed
+        assert.isObject(response.body.data)
+
+        // Check all of the properties on the returned object
+        console.log('')
+        console.log('received CMDR ' + response.body.data.CMDRname)
+        console.log('')
+        assert.equal(response.body.data.CMDRname, rat.CMDRname)
+        assert.deepEqual(response.body.data.data, rat.data)
+        assert.equal(response.body.data.platform, rat.platform)
+
+        generatedRat = response.body.data
+        done()
+      })
+    })
+  })
+
+  describe('DELETE /rats', function () {
+
+    it('should delete the rat', function (done) {
+      request.delete('/rats/' + generatedRat.id)
+      .set('Cookie', cookie).send()
+      .expect(204).end(function (error, response) {
+        if (error) {
+          return done(error)
+        }
+
+        // Make sure there are no errors
+        assert.notProperty(response.body, 'errors')
+
+        // Make sure our response is correctly constructed
+        assert.equal(response.body.data, null)
+        done()
+      })
+    })
+  })
+})

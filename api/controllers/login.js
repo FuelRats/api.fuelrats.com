@@ -1,25 +1,15 @@
-var _, path, Rat, Rescue, winston
+'use strict'
+let Action = require('../db').Action
 
-
-
-
-
-_ = require( 'underscore' )
-path = require( 'path' )
-winston = require( 'winston' )
-
-Rat = require( '../models/rat' )
-Rescue = require( '../models/rescue' )
-
-
-
-
-
-exports.get = function ( request, response ) {
-  if ( request.isUnauthenticated() ) {
-    response.render('login', request.query)
+exports.get = function (request, response) {
+  if (request.isUnauthenticated()) {
+    response.render('login.swig', request.query)
   } else {
-    console.log(request.session)
+    Action.create({
+      inet: request.inet,
+      type: 'login',
+      userId: request.user.id
+    })
     if (request.session.returnTo) {
       response.redirect(request.session.returnTo)
       delete request.session.returnTo
@@ -33,36 +23,17 @@ exports.get = function ( request, response ) {
 
 
 
-exports.post = function ( request, response ) {
-  var referer, responseModel
+exports.post = function (request, response, next) {
+  let user = request.user
+  request.session.userIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress
 
-  responseModel = {
-    links: {
-      self: request.originalUrl
-    }
+  if (request.get('Referer')) {
+    request.session.errorCode = 401 // This could signify that the login has failed
+    response.redirect('/login?error_login=1')
+
+  } else {
+    response.status(200)
+    response.model.data = user
+    next()
   }
-
-  Rat.findById( request.user.rat )
-  .exec( function ( error, rat ) {
-    var status
-
-    if ( error ) {
-      responseModel.errors = []
-      responseModel.errors.push( error )
-      status = 400
-
-    } else {
-      request.user.rat = rat
-      responseModel.data = request.user
-      status = 200
-    }
-
-    if ( referer = request.get( 'Referer' ) ) {
-      response.redirect( '/login' )
-
-    } else {
-      response.status( status )
-      response.json( responseModel )
-    }
-  })
 }

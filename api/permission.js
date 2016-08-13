@@ -1,16 +1,15 @@
 'use strict'
 
-let ErrorModels = require('./errors')
+let Errors = require('./errors')
 
 const permissions = {
   normal: [
     'rescue.create',
     'rescue.read',
-    'rat.*.self',
-    'client.*.self'
+    'self.*'
   ],
   overseer: [
-    'client.*.self',
+    'self.*',
     'rescue.read',
     'rescue.create',
     'rescue.update',
@@ -20,8 +19,8 @@ const permissions = {
     'admin.read'
   ],
   moderator: [
+    'self.*',
     'admin.read',
-    'client.*.self',
     'rescue.*',
     'rat.*',
     'drill.*'
@@ -43,6 +42,20 @@ class Permission {
     })
   }
 
+  static required (permission, isUserFacing) {
+    return function (req, res, next) {
+      if (Permission.granted(permission, req.user)) {
+        return next()
+      } else {
+        let error = Permission.permissionError(permission)
+        res.model.errors.push(error)
+        res.status(error.code)
+        res.isUserFacing = isUserFacing
+        return next()
+      }
+    }
+  }
+
   static granted (permission, user) {
     let userLevel = user.group
     let hasPermission = false
@@ -54,13 +67,7 @@ class Permission {
 
       while (currentNodeIndex < permission.length) {
         if (currentPermission[currentNodeIndex] === '*') {
-          if (currentNodeIndex === permission.length - 2) {
-            currentNodeIndex = permission.length
-            hasPermission = true
-          } else {
-            currentNodeIndex += 1
-            continue
-          }
+          hasPermission = true
         }
         if (permission[currentNodeIndex] !== currentPermission[currentNodeIndex]) {
           break
@@ -68,25 +75,20 @@ class Permission {
 
         currentNodeIndex += 1
       }
-
-      if (currentNodeIndex === permission.length) {
-        hasPermission = true
-        break
-      }
     }
     return hasPermission
   }
 
   static authenticationError (permission) {
-    let error = ErrorModels.not_authenticated
-    error.detail = permission
-    return error
+    if (permission) {
+      return Errors.throw('not_authenticated', permission)
+    } else {
+      return Errors.throw('not_authenticated')
+    }
   }
 
   static permissionError (permission) {
-    let error = ErrorModels.no_permission
-    error.detail = permission
-    return error
+    return Errors.throw('no_permission', permission)
   }
 }
 

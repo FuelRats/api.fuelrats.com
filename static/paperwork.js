@@ -12,7 +12,7 @@ $(function () {
 
   engine = new Bloodhound({
     remote: {
-      url: '/rats?CMDRname=%QUERY',
+      url: '/autocomplete?name=%QUERY',
       wildcard: '%QUERY',
       filter: function (data) {
         var results
@@ -70,7 +70,8 @@ $(function () {
 
   systemEngine = new Bloodhound({
     remote: {
-      url: 'http://www.edsm.net/api-v1/systems?systemName=%QUERY',
+      url: 'http://www.edsm.net/typeahead/systems/query/%QUERY',
+      minLength: 3,
       wildcard: '%QUERY',
       filter: function (data) {
         var results

@@ -14,7 +14,17 @@ module.exports = {
     options: {
       port: config.port,
       script: 'index.js',
-      output: '(Listening for requests on port)'
+      output: '(Listening for requests on port)',
+      node_env: 'dev'
+    }
+  },
+
+  test: {
+    options: {
+      port: config.port,
+      script: 'index.js',
+      output: '(Listening for requests on port)',
+      node_env: 'testing'
     }
   }
 }

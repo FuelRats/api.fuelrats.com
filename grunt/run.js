@@ -1,10 +1,4 @@
 module.exports = {
-  docs: {
-    args: [
-      './bin/compile-docs'
-    ]
-  },
-
   import: {
     args: [
       './bin/import'
@@ -14,6 +8,12 @@ module.exports = {
   syncDatabase: {
     args: [
       './bin/sync-index'
+    ]
+  },
+
+  createTestUser: {
+    args: [
+      './bin/createTestUser'
     ]
   }
 }
