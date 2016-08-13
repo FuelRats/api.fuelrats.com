@@ -33,6 +33,9 @@
         <dt class="col-sm-2">Platform:</dt>
         <dd class="col-sm-10">{{ platform }}</dd>
 
+        <dt class="col-sm-12">Successful:</dt>
+        <dd class="col-sm-12">{{ successful }}</dd>
+
         <dt class="col-sm-2">System:</dt>
         <dd class="col-sm-10">{{ system }}</dd>
 
