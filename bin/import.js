@@ -5,7 +5,6 @@ var _,
     destination,
     filename,
     fs,
-    mongoose,
     processRats,
     processRescues,
     linkRatsAndRescues,
@@ -13,9 +12,9 @@ var _,
     ratSheet,
     Rescue,
     removeArchives,
+    User,
+    util,
     winston
-
-
 
 
 
@@ -24,38 +23,50 @@ _ = require( 'underscore' )
 csv = require( 'csv' )
 download = require( 'download' )
 fs = require( 'fs' )
-mongoose = require( 'mongoose' )
+//mongoose = require( 'seq' )
 winston = require( 'winston' )
 
 // Mongoose Models
-Rat = require( '../api/models/rat' )
-Rescue = require( '../api/models/rescue' )
+Rat = require('../api/db').Rat
+User = require('../api/db').User
 
-mongoose.Promise = global.Promise
-mongoose.set( 'debug', false )
+util = require('util')
 
+
+let logFile = fs.createWriteStream('data/importlog.log', { flags: 'w' })
+
+function logToFile(string) {
+  logFile.write(string + '\n')
+}
+
+
+//mongoose.Promise = global.Promise
+//mongoose.set( 'debug', false )
+//https://docs.google.com/spreadsheets/d/1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y-ZzmYHo6yzE/edit#gid=84232353
 // Google Sheet URLs
 spreadsheets = {
-  rats: {
+  /*rats: {
     workbookId: '1JoTrC3TmBNFkEtU6lWcGhOZkUaRr9YUY24kLA5LQnoc',
     sheetId: '445147052'
   },
   rescues: {
     workbookId: '1JoTrC3TmBNFkEtU6lWcGhOZkUaRr9YUY24kLA5LQnoc',
     sheetId: '1657880365'
-  },
+  },*/
   rescueDrilledRats: {
-    workbookId: '1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y-ZzmYHo6yzE',
-    sheetId: '72806282'
+    //workbookId: '1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y-ZzmYHo6yzE',
+    workbookId: '1m17twk6jn2E9AJ2UrqEjizUYC1tAI9En7CxAEOL_30w',
+    sheetId: '0'
   },
   dispatchDrilledRats: {
-    workbookId: '1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y-ZzmYHo6yzE',
-    sheetId: '84232353'
-  },
+    //workbookId: '1_e0kJcMqjzoDfB2qRPYRIdR3naeEA19Y-ZzmYHo6yzE',
+    workbookId: '1m17twk6jn2E9AJ2UrqEjizUYC1tAI9En7CxAEOL_30w',
+    sheetId: '1076276737'
+  }/*,
   epicRescues: {
     workbookId: '1SUm4Ls-pHTDwmCobyrLFp1FGWv2_Dtbda99nXjEuo9M',
     sheetId: '498743399'
-  }
+  }*/
 }
 
 // Config options
@@ -64,10 +75,10 @@ destinationFolder = 'data'
 // Array to store our download promises in
 downloads = []
 
-mongoose.connect( 'mongodb://localhost/fuelrats' )
+//mongoose.connect( 'mongodb://localhost/fuelrats' )
 
 
-processRats = function ( ratData, rescueDrills, dispatchDrills ) {
+processRats = function ( rescueDrills, dispatchDrills ) {
   winston.info( 'Processing rats' )
 
   return new Promise( function ( resolve, reject ) {
@@ -75,7 +86,113 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
 
     rats = []
 
-    ratData.forEach( function ( ratDatum, index, ratData ) {
+    rescueDrills.forEach( function ( rescueDatum, index, rescueDrillData ) {
+      let rat = {
+        CMDRname: rescueDatum[3].replace(/cmdr /i,'').trim(),
+        passed: rescueDatum[4] == 'Pass',
+        drillDate: new Date (rescueDatum[0]) || new Date,
+      }
+
+      if(!rat.passed) { 
+        return
+      }
+
+      rats.push(new Promise(function (resolve, reject) {
+
+        let query = {
+          where: {
+            CMDRname: rat.CMDRname
+          }
+        }
+        Rat.findAndCountAll(query)
+        .then(function(results) {
+          let meta = {
+            count: results.rows.length,
+            total: results.count
+          }
+
+          if(meta.count == 0) {
+            logToFile(rat.CMDRname)
+          }
+
+          let rats = results.rows.map(function (ratInstance) {
+            let _rat = ratInstance.toJSON()
+            User.findAndCountAll({
+              where: {
+                id: _rat.UserId
+              }
+            }).then(function (uresults) {
+              let users = uresults.rows.map(function (userInstance) {
+                let usr = userInstance.toJSON()
+                usr.drilled = rat.passed
+                User.update(usr, { where: { id: usr.id }})
+              })
+            })
+            return rat
+          })
+
+          resolve({
+            data: rats,
+            meta: meta
+          })
+        })
+      }))      
+    })
+
+    dispatchDrills.forEach( function ( rescueDatum, index, rescueDrillData ) {
+      let rat = {
+        CMDRname: rescueDatum[3].replace(/cmdr /i,'').trim(),
+        passed: rescueDatum[4] == 'Pass',
+        drillDate: new Date (rescueDatum[0]) || new Date,
+      }
+
+      if(!rat.passed) { 
+        return
+      }
+
+      rats.push(new Promise(function (resolve, reject) {
+
+        let query = {
+          where: {
+            CMDRname: rat.CMDRname
+          }
+        }
+        Rat.findAndCountAll(query)
+        .then(function(results) {
+          let meta = {
+            count: results.rows.length,
+            total: results.count
+          }
+
+          if(meta.count == 0) {
+            logToFile(rat.CMDRname)
+          }
+
+          let rats = results.rows.map(function (ratInstance) {
+            let _rat = ratInstance.toJSON()
+            User.findAndCountAll({
+              where: {
+                id: _rat.UserId
+              }
+            }).then(function (uresults) {
+              let users = uresults.rows.map(function (userInstance) {
+                let usr = userInstance.toJSON()
+                usr.drilledDispatch = rat.passed
+                User.update(usr, { where: { id: usr.id }})
+              })
+            })
+            return rat
+          })
+
+          resolve({
+            data: rats,
+            meta: meta
+          })
+        })
+      }))      
+    })
+
+    /*ratData.forEach( function ( ratDatum, index, ratData ) {
       var dispatchDrill, rat, rescueDrill
 
       rat = {
@@ -107,11 +224,18 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
 
       if ( rat.CMDRname ) {
         rats.push( new Promise( function ( resolve, reject ) {
-          Rat.find({
-            CMDRname: rat.CMDRname,
-            platform: rat.platform
-          })
+
+          let dbQuery = {
+            where: {
+              CMDRname: rat.CMDRname,
+              platform: rat.platform
+            }
+          }
+
+          Rat.findAndCountAll(dbQuery)
           .then( function ( rats ) {
+            console.log(rats)
+            return
             if ( !rats.length ) {
               new Rat( rat )
               .save()
@@ -124,7 +248,7 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
           .catch( reject )
         }))
       }
-    })
+    })*/
 
     winston.info('Importing %d rats!', rats.length)
 
@@ -138,7 +262,7 @@ processRats = function ( ratData, rescueDrills, dispatchDrills ) {
 
 
 
-processRescues = function ( rescuesData ) {
+/*processRescues = function ( rescuesData ) {
   winston.info( 'Processing rescues' )
 
   return new Promise( function ( resolve, reject ) {
@@ -193,7 +317,7 @@ processRescues = function ( rescuesData ) {
     .then( resolve )
     .catch( reject )
   })
-}
+}*/
 
 removeArchives = function removeArchives ( models ) {
   winston.info( 'Removing archives' )
@@ -253,36 +377,36 @@ Object.keys( spreadsheets ).forEach( function ( name, index, names ) {
 
 Promise.all( downloads )
 .then( function () {
-  var dispatchDrills, promises, rats, removals, rescues, rescueDrills, epicRescueRats
+  var dispatchDrills, promises, removals, rescueDrills, epicRescueRats
 
   promises = []
 
   dispatchDrills = spreadsheets.dispatchDrilledRats.data
-  rats = spreadsheets.rats.data
-  rescues = spreadsheets.rescues.data
+  //rats = spreadsheets.rats.data
+  //rescues = spreadsheets.rescues.data
   rescueDrills = spreadsheets.rescueDrilledRats.data
-  epicRescueRats = spreadsheets.epicRescues.data;
+  //epicRescueRats = spreadsheets.epicRescues.data;
 
-  rats.shift()
-  rescues.shift()
+  //rats.shift()
+  //rescues.shift()
 
   dispatchDrills.shift()
   rescueDrills.shift()
 
-  epicRescueRats.shift();
+  //epicRescueRats.shift();
 
   // Clear out the archives
-
+/*
   removeArchives( [ Rat, Rescue ] )
   .then( function () {
     var promises
 
     promises = []
-
-    processRats( rats, rescueDrills, dispatchDrills )
-    .then( function () {
+*/
+    processRats( rescueDrills, dispatchDrills )
+    /*.then( function () {
       return processRescues( rescues )
-    })
+    })*/
     .then( function () {
       Promise.all( promises )
       .then( function () {
@@ -306,7 +430,7 @@ Promise.all( downloads )
                 winston.info( 'Created', newRatCount, 'rats,', oldRatCount, 'total' )
                 winston.info( 'Created', newRescuesCount, 'rescues,', oldRescuesCount, 'total' )
 
-                mongoose.disconnect()
+                //mongoose.disconnect()
 
             })
             .catch( winston.error )
@@ -317,5 +441,5 @@ Promise.all( downloads )
     .catch( winston.error )
   })
   .catch( winston.error )
-})
-.catch( winston.error )
+//})
+//.catch( winston.error )
