@@ -1,5 +1,6 @@
 var _,
     csv,
+    Db,
     download,
     downloads,
     destination,
@@ -27,12 +28,13 @@ fs = require( 'fs' )
 winston = require( 'winston' )
 
 // Mongoose Models
+Db = require('../api/db').db
 Rat = require('../api/db').Rat
 User = require('../api/db').User
 
 util = require('util')
 
-
+Db.logging = false
 let logFile = fs.createWriteStream('data/importlog.log', { flags: 'w' })
 
 function logToFile(string) {
@@ -98,10 +100,11 @@ processRats = function ( rescueDrills, dispatchDrills ) {
       }
 
       rats.push(new Promise(function (resolve, reject) {
-
         let query = {
           where: {
-            CMDRname: rat.CMDRname
+            CMDRname: {
+              $iLike: rat.CMDRname
+            }
           }
         }
         Rat.findAndCountAll(query)
@@ -154,7 +157,9 @@ processRats = function ( rescueDrills, dispatchDrills ) {
 
         let query = {
           where: {
-            CMDRname: rat.CMDRname
+            CMDRname: {
+              $iLike: rat.CMDRname
+            }
           }
         }
         Rat.findAndCountAll(query)
