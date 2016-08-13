@@ -146,7 +146,12 @@ class Anope {
 }
 
 function generateVirtualHost (user) {
-  if (user.rats.length > 0) {
+  let sortedRats = user.rats.sort(function (a, b) {
+    return a - b
+  })
+
+  if (sortedRats.length > 0) {
+    
     let rat = IRCSafeName(user.rats[0])
 
     if (user.group === 'admin') {
