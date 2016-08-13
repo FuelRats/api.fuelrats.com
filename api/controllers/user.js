@@ -216,6 +216,7 @@ function convertUserToAPIResult (userInstance) {
   delete user.rats
   delete user.salt
   delete user.password
+  delete user.deletedAt
 
   return user
 }

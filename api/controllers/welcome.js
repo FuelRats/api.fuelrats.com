@@ -64,6 +64,10 @@ exports.get = function (request, response) {
       ]
     ]
   }).then(function (userInstance) {
+    if (!userInstance) {
+      response.render('errors/404.swig')
+    }
+
     let user = userInstance.toJSON()
     for (let rat of user.rats) {
       let firstLimpetCount = 0
