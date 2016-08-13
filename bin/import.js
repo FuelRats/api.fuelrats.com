@@ -13,6 +13,7 @@ var _,
     Rescue,
     removeArchives,
     User,
+    util,
     winston
 
 
@@ -28,6 +29,16 @@ winston = require( 'winston' )
 // Mongoose Models
 Rat = require('../api/db').Rat
 User = require('../api/db').User
+
+util = require('util')
+
+
+let logFile = fs.createWriteStream('data/importlog.log', { flags: 'w' })
+
+function logToFile(string) {
+  logFile.write(string + '\n')
+}
+
 
 //mongoose.Promise = global.Promise
 //mongoose.set( 'debug', false )
@@ -100,6 +111,10 @@ processRats = function ( rescueDrills, dispatchDrills ) {
             total: results.count
           }
 
+          if(meta.count == 0) {
+            logToFile(rat.CMDRname)
+          }
+
           let rats = results.rows.map(function (ratInstance) {
             let _rat = ratInstance.toJSON()
             User.findAndCountAll({
@@ -147,6 +162,10 @@ processRats = function ( rescueDrills, dispatchDrills ) {
           let meta = {
             count: results.rows.length,
             total: results.count
+          }
+
+          if(meta.count == 0) {
+            logToFile(rat.CMDRname)
           }
 
           let rats = results.rows.map(function (ratInstance) {
