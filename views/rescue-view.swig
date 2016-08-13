@@ -8,7 +8,15 @@
 {% block body %}
 {% parent %}
 <div class="container-fluid">
-  <h1 class="page-header">Rescue</h1>
+  {% if title %}
+  <h1 class="page-header">Operation {{ title }}</h1>
+  {% else %}
+    {% if client %}
+    Rescue of {{ client }} in {{system }}
+    {% else %}
+    <h1 class="page-header">Rescue in {{system }}</h1>
+    {% endif %}
+  {% endif %}
 
   <div class="row">
     <div class="col-md-8">
@@ -33,16 +41,33 @@
         <dt class="col-sm-2">Platform:</dt>
         <dd class="col-sm-10">{{ platform }}</dd>
 
+        <dt class="col-sm-12">Successful:</dt>
+        <dd class="col-sm-12">{{ successful }}</dd>
+
         <dt class="col-sm-2">System:</dt>
         <dd class="col-sm-10">{{ system }}</dd>
 
-        {% if quotes %}
-          <dt class="col-sm-2">Quotes:</dt>
-          <dd class="col-sm-10">{{ quotes }}</dd>
+        {% if client %}
+        <dt class="col-sm-2">Client:</dt>
+        <dd class="col-sm-10">{{ client }}</dd>
         {% endif %}
 
         <dt class="col-sm-12">Notes:</dt>
         <dd class="col-sm-12">{{ notes }}</dd>
+
+
+        {% if quotes %}
+          <dt class="col-sm-2">Quotes:</dt>
+          <table class="table table-bordered table-striped">
+            <tbody>
+                {% for quote in quotes %}
+                <tr>
+                  <td>{{ quote }}</td>
+                </tr>
+                {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
       </dl>
     </div>
 

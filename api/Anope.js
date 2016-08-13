@@ -33,7 +33,7 @@ class Anope {
         if (error) {
           reject(error)
         } else {
-          if (/Nickname (\w+) registered/.test(data.return) === true) {
+          if (/Nickname .* registered/.test(data.return) === true) {
             resolve(nickname)
           } else {
             reject(data.return)
