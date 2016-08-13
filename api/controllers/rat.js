@@ -290,6 +290,7 @@ function getRatPermissionType (rat, user) {
 function convertRatToAPIResult (ratInstance) {
   let rat = ratInstance.toJSON()
   delete rat.UserId
+  delete rat.deletedAt
   return rat
 }
 

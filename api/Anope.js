@@ -146,11 +146,16 @@ class Anope {
 }
 
 function generateVirtualHost (user) {
-  if (user.rats.length > 0) {
+  let sortedRats = user.rats.sort(function (a, b) {
+    return a - b
+  })
+
+  if (sortedRats.length > 0) {
+
     let rat = IRCSafeName(user.rats[0])
 
     if (user.group === 'admin') {
-      return `${rat}.admin.fuelrats.com`
+      return 'netadmin.fuelrats.com'
     } else if (user.group === 'moderator') {
       return `${rat}.op.fuelrats.com`
     } else if (user.group === 'overseer') {
