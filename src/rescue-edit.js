@@ -175,7 +175,7 @@ request.onload = () => {
   }
 
   if (rescue.system) {
-    systemField.value = rescue.systemField
+    systemField.value = rescue.system
   }
 
   if (rescue.codeRed === true) {
