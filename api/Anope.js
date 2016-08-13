@@ -1,4 +1,5 @@
 'use strict'
+let winston = require('winston')
 
 let xmlrpc = require('homematic-xmlrpc')
 let sslRootCAs = require('ssl-root-cas/latest')
@@ -15,8 +16,10 @@ class Anope {
     return new Promise(function (resolve, reject) {
       client.methodCall('checkAuthentication', [[nickname, password]], function (error, data) {
         if (error) {
+          winston.error(error)
           reject(error)
         } else {
+          winston.info(data)
           if (data.result === 'Success' && data.account != null) {
             resolve(data.account)
           } else {
@@ -31,8 +34,10 @@ class Anope {
     return new Promise(function (resolve, reject) {
       client.methodCall('command', [['NickServ', nickname, `REGISTER ${password} ${email}`]], function (error, data) {
         if (error) {
+          winston.error(error)
           reject(error)
         } else {
+          winston.info(data)
           if (/Nickname .* registered/.test(data.return) === true) {
             resolve(nickname)
           } else {
@@ -47,8 +52,10 @@ class Anope {
     return new Promise(function (resolve, reject) {
       client.methodCall('command', [['NickServ', account, `GLIST ${account}`]], function (error, data) {
         if (error) {
+          winston.error(error)
           reject(error)
         } else {
+          winston.info(data)
           if (data.return.includes('Password authentication required')) {
             reject(data.return)
           } else {
@@ -71,18 +78,15 @@ class Anope {
 
   static drop (nickname) {
     return new Promise(function (resolve, reject) {
-      console.log('calling drop')
       client.methodCall('command', [['NickServ', 'xlexious', `DROP ${nickname}`]], function (error, data) {
         if (error) {
-          console.log(error)
+          winston.error(error)
           reject(error)
         } else {
+          winston.info(data)
           if (data.return.includes('has been dropped')) {
-            console.log('dropped')
             resolve(nickname)
           } else {
-            console.log('failed')
-            console.log(data)
             reject(data.return)
           }
         }
@@ -94,8 +98,10 @@ class Anope {
     return new Promise(function (resolve, reject) {
       client.methodCall('command', [['NickServ', nickname, `INFO ${nickname}`]], function (error, data) {
         if (error) {
+          winston.error(error)
           reject(error)
         } else {
+          winston.info(data)
           if (data.return.includes('isn&#39;t registered')) {
             resolve(null)
           } else {
@@ -108,12 +114,12 @@ class Anope {
 
   static confirm (nickname) {
     return new Promise(function (resolve, reject) {
-      console.log('CONFIRMING')
       client.methodCall('command', [['NickServ', 'xlexious', `CONFIRM ${nickname}`]], function (error, data) {
-        console.log(error, data)
         if (error) {
+          winston.error(error)
           reject(error)
         } else {
+          winston.info(data)
           if (data.return.includes('has been confirmed')) {
             resolve(nickname)
           } else {
@@ -131,8 +137,10 @@ class Anope {
       if (virtualHost) {
         client.methodCall('command', [['HostServ', 'xlexious', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
           if (error) {
+            winston.error(error)
             reject(error)
           } else {
+            winston.info(data)
             if (/not registered/.test(data.return) === true) {
               reject(data.return)
             } else {
