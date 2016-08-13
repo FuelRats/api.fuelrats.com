@@ -222,7 +222,7 @@ router.get('/badge', badge.get)
 
 router.post('/register', register.post)
 
-router.post('/login', passport.authenticate('local', { failureRedirect: '/login?error_login=1' }), login.post)
+router.post('/login', passport.authenticate('local'), login.post)
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
 
@@ -269,7 +269,7 @@ router.get('/leaderboard', leaderboard.get)
 router.get('/login', login.get)
 router.get('/reset', reset.get)
 router.get('/change_password', change_password.get)
-router.get('/paperwork', paperwork.get)
+router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
 router.get('/register', register.get)
 router.get('/welcome', auth.isAuthenticated(true), welcome.get)
 
