@@ -39,11 +39,11 @@ class Controller {
         }
       }
 
-      Anope.register(data.nickname, data.password, connection.user.email).then(function (nickname) {
+      Anope.register(data.nickname, data.password, connection.user.email).then(function () {
         let nicknames = connection.user.nicknames
-        nicknames.push(nickname)
+        nicknames.push(data.nickname)
 
-        Anope.confirm(nickname).then(function () {
+        Anope.confirm(data.nickname).then(function () {
           User.update({ nicknames: nicknames }, {
             where: { id: connection.user.id }
           }).then(function () {
@@ -58,10 +58,10 @@ class Controller {
               ]
             }).then(function (user) {
               Anope.setVirtualHost(user, data.nickname)
+              resolve({ meta: {}, data: data.nickname })
             }).catch(function (error) {
               reject({ meta: {}, error: Errors.throw('server_error', error) })
             })
-            resolve({ meta: {}, data: data.nickname })
           }).catch(function (error) {
             reject({ meta: {}, error: Errors.throw('server_error', error) })
           })

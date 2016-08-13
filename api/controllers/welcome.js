@@ -34,6 +34,7 @@ exports.get = function (request, response) {
         'CMDRname',
         'platform'
       ],
+      required: false,
       as: 'rats',
       include: [{
         required: false,

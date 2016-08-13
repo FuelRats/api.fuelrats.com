@@ -108,7 +108,9 @@ class Anope {
 
   static confirm (nickname) {
     return new Promise(function (resolve, reject) {
+      console.log('CONFIRMING')
       client.methodCall('command', [['NickServ', 'xlexious', `CONFIRM ${nickname}`]], function (error, data) {
+        console.log(error, data)
         if (error) {
           reject(error)
         } else {

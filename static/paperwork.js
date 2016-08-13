@@ -17,7 +17,7 @@ $(function () {
       filter: function (data) {
         var results
         results = data.data.map(function (obj) {
-          return { rat: obj.CMDRname, id: obj._id }
+          return { rat: obj.CMDRname, id: obj.id }
         })
         return results
       }
