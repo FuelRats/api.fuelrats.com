@@ -571,6 +571,7 @@ function convertRescueToAPIResult (rescueInstance) {
   delete rescue.firstLimpet
   rescue.firstLimpet = rescue.firstLimpetId
   delete rescue.firstLimpetId
+  delete rescue.deletedAt
   return rescue
 }
 
