@@ -108,23 +108,30 @@
 
             <tbody>
               {% for rescue in CMDR.rescues %}
+                <a href="https://api.fuelrats.com/rescues/view/{{ rescue.id }}" target="_blank">
                 <tr title="{{ rescue.notes }}">
                   <td>{{ rescue.createdAt|eliteDate() }}</td>
-                    {% if rescue.successful %}
-                      {% if rescue.isFirstLimpet %}
-                      <td class="table-success">
-                        Success
-                      {% else %}
-                      <td class="table-info">
-                        Success (Assist)
-                      {% endif %}
+                    {% if rescue.open %}
+                    <td class="table-warning">
+                      In Progress
                     {% else %}
-                    <td class="table-danger">
-                      Failure
+                      {% if rescue.successful %}
+                        {% if rescue.isFirstLimpet %}
+                        <td class="table-success">
+                          Success
+                        {% else %}
+                        <td class="table-info">
+                          Success (Assist)
+                        {% endif %}
+                      {% else %}
+                      <td class="table-danger">
+                        Failure
+                      {% endif %}
                     {% endif %}
                   </td>
                   <td>{{ rescue.system }}</td>
                 </tr>
+                </a>
               {% endfor %}
             </tbody>
           </table>
