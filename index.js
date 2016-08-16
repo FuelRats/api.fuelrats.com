@@ -109,6 +109,11 @@ swig.setFilter('eliteDate', function (date, args) {
   }
 })
 
+swig.setFilter('eliteDateNoFormat', function (date, args) {
+  let context = moment(date)
+  return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
+})
+
 app.use(cors())
 app.use(compression())
 app.use(bodyParser.urlencoded({

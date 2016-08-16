@@ -1,7 +1,7 @@
 'use strict'
+let winston = require('winston')
 
 let xmlrpc = require('homematic-xmlrpc')
-let winston = require('winston')
 let sslRootCAs = require('ssl-root-cas/latest')
   .addFile(__dirname + '/../ca/lets-encrypt-x1-cross-signed.pem')
   .addFile(__dirname + '/../ca/lets-encrypt-x2-cross-signed.pem')
@@ -116,8 +116,10 @@ class Anope {
     return new Promise(function (resolve, reject) {
       client.methodCall('command', [['NickServ', 'API', `CONFIRM ${nickname}`]], function (error, data) {
         if (error) {
+          winston.error(error)
           reject(error)
         } else {
+          winston.info(data)
           if (data.return.includes('has been confirmed')) {
             resolve(nickname)
           } else {
@@ -131,6 +133,7 @@ class Anope {
   static setVirtualHost (user, nickname) {
     return new Promise(function (resolve, reject) {
       let virtualHost = generateVirtualHost(user)
+      winston.info('Generated Vhost: ' + virtualHost)
 
       if (virtualHost) {
         client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
@@ -180,8 +183,8 @@ function generateVirtualHost (user) {
 
 function IRCSafeName (rat) {
   let ratName = rat.CMDRname
-  ratName = ratName.replace(/[^a-zA-Z0-9_-\s]/g, '')
-  return ratName
+  ratName = ratName.replace(/[^a-zA-Z0-9\s]/g, '')
+  return ratName.toLowercase()
 }
 
 class IRCUserInfo {

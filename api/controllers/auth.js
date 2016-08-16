@@ -130,6 +130,7 @@ exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false
 exports.isAuthenticated = function (isUserFacing) {
   return function (req, res, next) {
     if (req.user) {
+      req.session.returnTo = null
       return next()
     } else {
       passport.authenticate('bearer', { session : false }, function (error, user) {

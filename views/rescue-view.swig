@@ -12,7 +12,7 @@
   <h1 class="page-header">Operation {{ title }}
   {% else %}
     {% if client %}
-    <h1 class="page-header">Rescue of {{ client }} in {{system }}
+    <h1 class="page-header">Rescue of {{ client }} in {{system }}</h1>
     {% else %}
     <h1 class="page-header">Rescue in {{system }}
     {% endif %}
@@ -92,6 +92,19 @@
         <div class="card-header">
           <strong>Rats</strong>
         </div>
+
+        {% if firstLimpet %}
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            {{ firstLimpet }}
+          </li>
+          {% for unidentifiedRat in unidentifiedRats %}
+            <li class="list-group-item">
+              {{ unidentifiedRat }}
+            </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
 
         <ul class="list-group list-group-flush">
           {% for rat in rats %}

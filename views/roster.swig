@@ -52,7 +52,7 @@
               <td class="table-info">Unknown</td>
               <td class="table-info">Unknown</td>
               {% endif %}
-              <td>{{ rat.joined|eliteDate() }}</td>
+              <td>{{ rat.joined|eliteDateNoFormat() }}</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -68,7 +68,7 @@
 <script>
 $('#roster').DataTable({
   "paging":   false,
-  "order": [[ 3, "asc" ]]
+  "order": [[ 3, "desc" ]]
 });
 </script>
 {% endblock %}
