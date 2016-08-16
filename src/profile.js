@@ -60,7 +60,7 @@ class NicknameDialog {
     let nicknameField = this.dialog.querySelector('#modalAddNicknameField')
 
     let request = new XMLHttpRequest()
-    request.open('GET', '/nicknames/' + nicknameField.value, true)
+    request.open('GET', '/nicknames/' + encodeURIComponent(nicknameField.value), true)
     request.onload = () => {
       try {
         this.nickname = nicknameField.value
