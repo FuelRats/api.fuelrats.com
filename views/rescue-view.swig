@@ -72,6 +72,20 @@
     </div>
 
     <div class="col-md-4">
+      {% if firstLimpet %}
+      <div class="card">
+        <div class="card-header">
+          <strong>First Limpet</strong>
+        </div>
+
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            {{ firstLimpet.CMDRname }}
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+
       <div class="card">
         <div class="card-header">
           <strong>Rats</strong>
@@ -81,12 +95,18 @@
           {% for rat in rats %}
             <li class="list-group-item">
               {{ rat.CMDRname }}
-
-              {% if rat.firstLimpet %}
-                <span class="label label-pilllabel-primary">First Limpet</span>
-              {% endif %}
             </li>
           {% endfor %}
+        </ul>
+      </div>
+
+      {% if unidentifiedRats.length > 0 %}
+      <div class="card">
+        <div class="card-header">
+          <strong>Unidentified Rats</strong>
+        </div>
+
+        <ul class="list-group list-group-flush">
           {% for unidentifiedRat in unidentifiedRats %}
             <li class="list-group-item">
               {{ unidentifiedRat }}
@@ -94,6 +114,7 @@
           {% endfor %}
         </ul>
       </div>
+      {% endif %}
     </div>
   </div>
 </div>
