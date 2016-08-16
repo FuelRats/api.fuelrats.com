@@ -1,7 +1,6 @@
 <!doctype html>
 <head>
   <link rel="stylesheet" href="/style.min.css">
-  <link rel="stylesheet" href="https://www.fuelrats.com/wp-content/themes/sydney-pro-ii/style.css?ver=4.4.4">
   {% block head %}
   {% endblock %}
 </head>
