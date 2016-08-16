@@ -29,6 +29,9 @@ body > .navbar {
   margin-top: 1rem;
 }
 
+body > .container {
+  padding-top: 10rem;
+}
 body > .container-fluid {
   margin: 2rem;
   padding-top: 10rem;

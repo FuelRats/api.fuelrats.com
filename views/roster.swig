@@ -8,11 +8,22 @@
 
 {% block body %}
 {% parent %}
-<div class="container-fluid">
+<div class="container">
+  <h1>Overseers and Rats</h1>
+  <p>As a new rat you will be encouraged to undergo drilling before we unleash you on our clients. There are certain things that must happen when you are drilled <a href="http://www.fuelrats.com/newrat/what-to-expect-on-your-drill/" target="_blank">(see here)</a>. An overseer (listed below) must be present for your drill to be administered and logged. When the overseer is satisfied that you are fully equipped with the knowledge you need he/she will begin the process of adding you to the list of drilled rats. The overseer can put your drill on hold and give you advice before the drill is continued, the overseer can also declare your drill a failure and may suggest that you perform another drill before you go on a live rescue. If your drill has to be halted (depending on the reason) this may result in a drill failure. The same conditions apply for Dispatch drills.</p>
+
+  <h3 style="margin-top: 5rem">Overseers</h3>
+  <p>Absolver | Aguri |  Alec Turner | AlexBrentnall | Anuranium | Arakaij | ArmaDolphins | Beumer | Blood Drunk | Bold Mole | Borbra | Burwellian | Calomiriel | Cpt_Shinobi | CrunchyBaton955 | CurbinBabies | DerryBear | Dewin | Epic23 | Fatalution | Fixiehearts | Fox[Tall-Bird] | FreakierBrandon | Gaaaaaaar | Gridwolf | Ground Stop | Harkon_fry | Hor5ey | iambronco | Jiriakel | Kerenn | Kilo363 | Lansing-Gant | Lapotor | Lazrien | Li Jin | Logan Aigaion | Mangel | Moonprayer | Nathan Burns | Nerixel | NoLifeKing | Orange Sheets | Paul Kavinsky | Pistou | Raptorpilot | Ravenov |  Rebecca Hail | Sky Guy | Stymean | temporalflux | The Division | Tom X | Uvelius Sang | Zatie</p>
+  <p>You can spot an overseer by looking for the standard issue overseer hat</p>
+  <img src="https://www.fuelrats.com/wp-content/uploads/2015/11/Overseer-Hat.jpg" alt="overseer hat">
+
+  <p style="margin-top: 1rem">And our drill damsels look similar to this</p>
+  <img src="http://www.fuelrats.com/wp-content/uploads/2015/11/Drill-Damsels-dress-188x300.jpg" alt="overseer hat">
+
+  <h3 style="margin-top: 5rem">Rats</h3>
   <div class="row">
     <div class="col-md-6">
-      <table class="table table-bordered table-striped table-hover" id="roster">
-        <thead class="thead-default">
+      <table class="table table-bordered table-striped table-hover" id="roster"><thead class="thead-default">
           <tr>
             <th>CMDR</th>
             <th>Drilled</th>
