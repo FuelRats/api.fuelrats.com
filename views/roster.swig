@@ -52,7 +52,7 @@
               <td class="table-info">Unknown</td>
               <td class="table-info">Unknown</td>
               {% endif %}
-              <td>{{ rat.joined|eliteDate() }}</td>
+              <td>{{ rat.joined|eliteDateNoFormat() }}</td>
             </tr>
           {% endfor %}
         </tbody>
