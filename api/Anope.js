@@ -72,7 +72,7 @@ class Anope {
   static drop (nickname) {
     return new Promise(function (resolve, reject) {
       console.log('calling drop')
-      client.methodCall('command', [['NickServ', 'xlexious', `DROP ${nickname}`]], function (error, data) {
+      client.methodCall('command', [['NickServ', 'API', `DROP ${nickname}`]], function (error, data) {
         if (error) {
           console.log(error)
           reject(error)
@@ -109,7 +109,7 @@ class Anope {
   static confirm (nickname) {
     return new Promise(function (resolve, reject) {
       console.log('CONFIRMING')
-      client.methodCall('command', [['NickServ', 'xlexious', `CONFIRM ${nickname}`]], function (error, data) {
+      client.methodCall('command', [['NickServ', 'API', `CONFIRM ${nickname}`]], function (error, data) {
         console.log(error, data)
         if (error) {
           reject(error)
@@ -129,7 +129,7 @@ class Anope {
       let virtualHost = generateVirtualHost(user)
 
       if (virtualHost) {
-        client.methodCall('command', [['HostServ', 'xlexious', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
+        client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
           if (error) {
             reject(error)
           } else {

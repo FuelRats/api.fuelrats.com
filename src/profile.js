@@ -28,7 +28,7 @@ class Profile {
   }
 
   showRemoveNicknameDialog (event) {
-    new RemoveNicknameDialog(event.currentarget.getAttribute('data-nickname'))
+    new RemoveNicknameDialog(event.currentTarget.getAttribute('data-nickname'))
   }
 
   navigateToRescue (event) {
