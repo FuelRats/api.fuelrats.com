@@ -9,6 +9,7 @@
 {% parent %}
 <meta id="meta-id" name='rescue-id' value="{{ rescue.id }}">
 <div class="container-fluid">
+  <h1>Edit Case</h1>
   <form id="paperwork" action="/rescues" method="put">
     <div class="form-group">
       <label for="rats">Who arrived for the rescue?</label>
