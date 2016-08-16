@@ -108,8 +108,7 @@
 
             <tbody>
               {% for rescue in CMDR.rescues %}
-                <a href="https://api.fuelrats.com/rescues/view/{{ rescue.id }}" target="_blank">
-                <tr title="{{ rescue.notes }}">
+                <tr data-rescue="{{ rescue.id }}" title="{{ rescue.notes }}">
                   <td>{{ rescue.createdAt|eliteDate() }}</td>
                     {% if rescue.open %}
                     <td class="table-warning">
@@ -131,7 +130,6 @@
                   </td>
                   <td>{{ rescue.system }}</td>
                 </tr>
-                </a>
               {% endfor %}
             </tbody>
           </table>
