@@ -57,8 +57,11 @@ class Controller {
                 }
               ]
             }).then(function (user) {
-              Anope.setVirtualHost(user, data.nickname)
-              resolve({ meta: {}, data: data.nickname })
+              Anope.setVirtualHost(user, data.nickname).then(function () {
+                resolve({ meta: {}, data: data.nickname })
+              }).catch(function (error) {
+                reject({ meta: {}, error: Errors.throw('server_error', error) })
+              })
             }).catch(function (error) {
               reject({ meta: {}, error: Errors.throw('server_error', error) })
             })
@@ -102,8 +105,11 @@ class Controller {
               }
             ]
           }).then(function (user) {
-            Anope.setVirtualHost(user, data.nickname)
-            resolve({ meta: {}, data: data.nickname })
+            Anope.setVirtualHost(user, data.nickname).then(function () {
+              resolve({ meta: {}, data: data.nickname })
+            }).catch(function (error) {
+              reject({ meta: {}, error: Errors.throw('server_error', error) })
+            })
           }).catch(function (error) {
             reject({ meta: {}, error: Errors.throw('server_error', error) })
           })
