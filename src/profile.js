@@ -12,9 +12,14 @@ class Profile {
   constructor () {
     addNicknameButton.addEventListener('click', this.showAddNicknameDialog.bind(this), false)
 
+    let rescues = document.querySelectorAll('[data-rescue]')
+    for (let rescue = 0; rescue < rescues.length; rescue += 1) {
+      rescues[rescue].addEventListener('click', this.navigateToRescue, false)
+    }
+
     let deleteButtons = document.querySelectorAll('.rat-list .delete')
-    for (let deleteButton of deleteButtons) {
-      deleteButton.addEventListener('click', this.showRemoveNicknameDialog.bind(this), false)
+    for (let deleteButton = 0; deleteButton < deleteButtons.length; deleteButton += 1) {
+      deleteButtons[deleteButton].addEventListener('click', this.showRemoveNicknameDialog.bind(this), false)
     }
   }
 
@@ -23,7 +28,11 @@ class Profile {
   }
 
   showRemoveNicknameDialog (event) {
-    new RemoveNicknameDialog(event.target.getAttribute('data-nickname'))
+    new RemoveNicknameDialog(event.currentTarget.getAttribute('data-nickname'))
+  }
+
+  navigateToRescue (event) {
+    window.location = 'https://api.fuelrats.com/rescues/view/' + event.currentTarget.getAttribute('data-rescue')
   }
 }
 
@@ -51,7 +60,7 @@ class NicknameDialog {
     let nicknameField = this.dialog.querySelector('#modalAddNicknameField')
 
     let request = new XMLHttpRequest()
-    request.open('GET', '/nicknames/' + nicknameField.value, true)
+    request.open('GET', '/nicknames/' + encodeURIComponent(nicknameField.value), true)
     request.onload = () => {
       try {
         this.nickname = nicknameField.value
@@ -109,7 +118,6 @@ class NicknameDialog {
     }
 
     request.onerror = () => {
-      console.log(request.responseText)
 
     }
 
@@ -130,7 +138,6 @@ class NicknameDialog {
     }
 
     request.onerror = () => {
-      console.log(request.responseText)
 
     }
 
@@ -165,9 +172,7 @@ class RemoveNicknameDialog {
     })
   }
 
-  removeNicknameButtonClicked (event) {
-    let target = event.target
-
+  removeNicknameButtonClicked () {
     let request = new XMLHttpRequest()
     request.open('DELETE', '/nicknames/' + this.nickname, true)
     request.onload = () => {

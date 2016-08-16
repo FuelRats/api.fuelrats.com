@@ -78,7 +78,7 @@ class Anope {
 
   static drop (nickname) {
     return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', 'xlexious', `DROP ${nickname}`]], function (error, data) {
+      client.methodCall('command', [['NickServ', 'API', `DROP ${nickname}`]], function (error, data) {
         if (error) {
           winston.error(error)
           reject(error)
@@ -114,7 +114,7 @@ class Anope {
 
   static confirm (nickname) {
     return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', 'xlexious', `CONFIRM ${nickname}`]], function (error, data) {
+      client.methodCall('command', [['NickServ', 'API', `CONFIRM ${nickname}`]], function (error, data) {
         if (error) {
           winston.error(error)
           reject(error)
@@ -136,7 +136,7 @@ class Anope {
       winston.info('Generated Vhost: ' + virtualHost)
 
       if (virtualHost) {
-        client.methodCall('command', [['HostServ', 'xlexious', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
+        client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
           if (error) {
             winston.error(error)
             reject(error)
@@ -161,23 +161,24 @@ function generateVirtualHost (user) {
     return a - b
   })
 
+  let rat
   if (sortedRats.length > 0) {
-
-    let rat = IRCSafeName(user.sortedRats[0])
-
-    if (user.group === 'admin') {
-      return 'netadmin.fuelrats.com'
-    } else if (user.group === 'moderator') {
-      return `${rat}.op.fuelrats.com`
-    } else if (user.group === 'overseer') {
-      return `${rat}.overseer.fuelrats.com`
-    } else if (user.drilled === true) {
-      return `${rat}.rat.fuelrats.com`
-    } else {
-      return `${rat}.recruit.fuelrats.com`
-    }
+    rat = IRCSafeName(user.rats[0])
+  } else {
+    rat = user.id.split('-')[0]
   }
-  return null
+
+  if (user.group === 'admin') {
+    return 'netadmin.fuelrats.com'
+  } else if (user.group === 'moderator') {
+    return `${rat}.op.fuelrats.com`
+  } else if (user.group === 'overseer') {
+    return `${rat}.overseer.fuelrats.com`
+  } else if (user.drilled === true) {
+    return `${rat}.rat.fuelrats.com`
+  } else {
+    return `${rat}.recruit.fuelrats.com`
+  }
 }
 
 function IRCSafeName (rat) {

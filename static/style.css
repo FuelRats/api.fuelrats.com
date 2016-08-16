@@ -31,6 +31,7 @@ body > .navbar {
 
 body > .container-fluid {
   margin: 2rem;
+  padding-top: 10rem;
 }
 
 .btn-group {
@@ -39,6 +40,10 @@ body > .container-fluid {
 
 table td {
   white-space: nowrap;
+}
+
+tr[data-rescue] {
+  cursor: pointer;
 }
 
 .lbBadge {

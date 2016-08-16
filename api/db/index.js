@@ -45,7 +45,7 @@ Rat.belongsToMany(Rescue, {
   }
 })
 
-Rat.hasMany(Rescue, { foreignKey: 'firstLimpetId' })
+Rat.hasMany(Rescue, { foreignKey: 'firstLimpetId', as: 'firstLimpet' })
 
 Rescue.belongsTo(Rat, {
   as: 'firstLimpet',
