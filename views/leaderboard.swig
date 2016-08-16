@@ -8,10 +8,10 @@
 {% block body %}
 {% parent %}
 <div class="container-fluid">
+  <h1>Leaderboard</h1>
   <div class="row">
     <div id="leaderboard-container" class="col-md-5">
       <div class="card-header">
-        Leaderboard
       </div>
       <table id="leaderboard" class="table table-hover table-striped">
         <thead>

@@ -8,6 +8,7 @@
 {% block body %}
 {% parent %}
 <div class="container-fluid">
+  <h1>Paperwork</h1>
   <form id="paperwork" action="/rescues" method="post">
     <div class="form-group">
       <p>This is how you report a rescue or loss for the Fuel Rats leaderboard.</p>
