@@ -133,7 +133,7 @@ $(form).bootstrapValidator({
     rats: rats,
     firstLimpet: firstLimpetField.value,
     system: systemField.value,
-    succesful: $('input[name="successful"]:checked').val(),
+    successful: $('input[name="successful"]:checked').val(),
     codeRed: $('input[name="codeRed"]:checked').val(),
     platform: $('input[name="platform"]:checked').val(),
     notes: notesField.value
@@ -175,7 +175,7 @@ request.onload = () => {
   }
 
   if (rescue.system) {
-    systemField.value = rescue.systemField
+    systemField.value = rescue.system
   }
 
   if (rescue.codeRed === true) {
