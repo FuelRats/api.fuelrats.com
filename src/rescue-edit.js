@@ -103,7 +103,6 @@ $(systemField).change(function () {
 })
 
 
-
 $(form).bootstrapValidator({
   excluded: ':disabled',
   fields: {
@@ -175,7 +174,7 @@ request.onload = () => {
   }
 
   if (rescue.system) {
-    systemField.value = rescue.system
+    jQuery(systemField).typeahead('val', rescue.system)
   }
 
   if (rescue.codeRed === true) {
