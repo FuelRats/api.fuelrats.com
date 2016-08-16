@@ -71,18 +71,13 @@ class Anope {
 
   static drop (nickname) {
     return new Promise(function (resolve, reject) {
-      console.log('calling drop')
       client.methodCall('command', [['NickServ', 'API', `DROP ${nickname}`]], function (error, data) {
         if (error) {
-          console.log(error)
           reject(error)
         } else {
           if (data.return.includes('has been dropped')) {
-            console.log('dropped')
             resolve(nickname)
           } else {
-            console.log('failed')
-            console.log(data)
             reject(data.return)
           }
         }
@@ -108,9 +103,7 @@ class Anope {
 
   static confirm (nickname) {
     return new Promise(function (resolve, reject) {
-      console.log('CONFIRMING')
       client.methodCall('command', [['NickServ', 'API', `CONFIRM ${nickname}`]], function (error, data) {
-        console.log(error, data)
         if (error) {
           reject(error)
         } else {
@@ -152,23 +145,24 @@ function generateVirtualHost (user) {
     return a - b
   })
 
+  let rat
   if (sortedRats.length > 0) {
-
-    let rat = IRCSafeName(user.rats[0])
-
-    if (user.group === 'admin') {
-      return 'netadmin.fuelrats.com'
-    } else if (user.group === 'moderator') {
-      return `${rat}.op.fuelrats.com`
-    } else if (user.group === 'overseer') {
-      return `${rat}.overseer.fuelrats.com`
-    } else if (user.drilled === true) {
-      return `${rat}.rat.fuelrats.com`
-    } else {
-      return `${rat}.recruit.fuelrats.com`
-    }
+    rat = IRCSafeName(user.rats[0])
+  } else {
+    rat = user.id.split('-')[0]
   }
-  return null
+
+  if (user.group === 'admin') {
+    return 'netadmin.fuelrats.com'
+  } else if (user.group === 'moderator') {
+    return `${rat}.op.fuelrats.com`
+  } else if (user.group === 'overseer') {
+    return `${rat}.overseer.fuelrats.com`
+  } else if (user.drilled === true) {
+    return `${rat}.rat.fuelrats.com`
+  } else {
+    return `${rat}.recruit.fuelrats.com`
+  }
 }
 
 function IRCSafeName (rat) {
