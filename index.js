@@ -51,6 +51,7 @@ let paperwork = require('./api/controllers/paperwork')
 let rat = require('./api/controllers/rat').HTTP
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
+let roster = require('./api/controllers/roster').HTTP
 let rescue = require('./api/controllers/rescue').HTTP
 let rescueAdmin = require('./api/controllers/rescueAdmin')
 let user = require('./api/controllers/user').HTTP
@@ -272,6 +273,7 @@ router.get('/change_password', change_password.get)
 router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
 router.get('/register', register.get)
 router.get('/welcome', auth.isAuthenticated(true), welcome.get)
+router.get('/roster', roster.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
