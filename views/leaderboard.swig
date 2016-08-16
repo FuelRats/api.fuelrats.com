@@ -35,7 +35,7 @@
               {{ badge("codeRed") }}
               {% endif %}
               {% for i in Array(cmdr.pips) %}
-                {{ badge("pip") }} 
+                {{ badge("pip") }}
               {% endfor %}
               {% if cmdr.rescueCount >= 1000 %}
               {{ badge("1000") }}
@@ -75,7 +75,7 @@
   <img src="svg/rat.svg" alt="Fuel Rat Badge" title="This rat has completed a rescue" class="lbBadge">
   {% endif  %}
   {% if type == 'codeRed' %}
-  <img src="svg/codeRed.svg" alt="Code Red Badge" title="This rat has completed an code red rescue" class="lbBadge">
+  <img src="svg/codeRed.svg" alt="Code Red Badge" title="This rat has completed a code red rescue" class="lbBadge">
   {% endif  %}
   {% if type == 'epic' %}
   <img src="svg/epic.svg" alt="Epic Badge" title="This rat has completed an epic rescue or other epic achievement" class="lbBadge">

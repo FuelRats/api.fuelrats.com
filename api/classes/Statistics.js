@@ -13,6 +13,7 @@ class Statistics {
           where: {},
           include: [{
             model: Rescue,
+            as: 'firstLimpet',
             attributes: [],
             where: {
               successful: true
@@ -38,10 +39,10 @@ class Statistics {
           })
           resolve(rats)
         }).catch(function (error) {
-          reject()
+          reject(error)
         })
       } catch(ex) {
-        reject()
+        reject(ex)
       }
     })
   }

@@ -13,7 +13,7 @@ exports.get = function (request, response) {
   Statistics.getLeaderboardRats().then(function (rats) {
     console.log('render')
     response.render('leaderboard.swig', {CMDRs: rats})
-  }, function (error) {
-
+  }).catch(function (error) {
+    console.log(error)
   })
 }
