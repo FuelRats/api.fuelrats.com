@@ -68,7 +68,7 @@
 <script>
 $('#roster').DataTable({
   "paging":   false,
-  "order": [[ 3, "asc" ]]
+  "order": [[ 3, "desc" ]]
 });
 </script>
 {% endblock %}
