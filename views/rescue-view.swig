@@ -9,14 +9,16 @@
 {% parent %}
 <div class="container-fluid">
   {% if title %}
-  <h1 class="page-header">Operation {{ title }}</h1>
+  <h1 class="page-header">Operation {{ title }}
   {% else %}
     {% if client %}
     Rescue of {{ client }} in {{system }}
     {% else %}
-    <h1 class="page-header">Rescue in {{system }}</h1>
+    <h1 class="page-header">Rescue in {{system }}
     {% endif %}
   {% endif %}
+  <a href="https://api.fuelrats.com/rescues/edit/{{ id }}"><button type="button" class="btn btn-primary" id="editRescueButton">Edit</button></a>
+  </h1>
 
   <div class="row">
     <div class="col-md-8">
