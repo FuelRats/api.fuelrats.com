@@ -3,7 +3,7 @@
 {% block head %}
 {% parent %}
 <title>Roster</title>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/css/dataTables.bootstrap4.min.css">
 {% endblock %}
 
 {% block body %}
@@ -11,7 +11,7 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-6">
-      <table class="table table-bordered table-striped table-hover">
+      <table class="table table-bordered table-striped table-hover" id="roster">
         <thead class="thead-default">
           <tr>
             <th>CMDR</th>
@@ -49,4 +49,15 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block resources %}
+{% parent %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/js/jquery.dataTables.min.js" type="application/ecmascript"></script>
+<script>
+$('#roster').DataTable({
+  "paging":   false,
+  "order": [[ 3, "asc" ]]
+});
+</script>
 {% endblock %}
