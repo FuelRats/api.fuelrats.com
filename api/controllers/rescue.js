@@ -1,6 +1,7 @@
 'use strict'
 
 let _ = require('underscore')
+let db = require('../db').db
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
 
@@ -540,6 +541,10 @@ class HTTP {
 
 function getRescuePermissionType (rescue, user) {
   if (rescue.open === true) {
+    return 'self.rescue.update'
+  }
+
+  if (rescue.createdAt - Date.now() < 3600000) {
     return 'self.rescue.update'
   }
 
