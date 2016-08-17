@@ -9,7 +9,7 @@
 {% parent %}
 <div class="Aligner">
   <div class="Aligner-item">
-    <img src="https://www.fuelrats.com/wp-content/uploads/2016/06/mechsqueak404_1400.jpg" alt="Fuel Rats Error Art by Uvelius Sang" class="errorart">
+    <img src="https://www.fuelrats.com/wp-content/uploads/2016/08/mechsqueak404_1400-1024x1024.jpg" alt="Fuel Rats Error Art by Uvelius Sang" class="errorart">
     <div class="page-header" style="text-align: center;">
       <h1>404 Not Found</h1>
     </div>
