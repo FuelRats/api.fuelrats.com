@@ -543,13 +543,9 @@ function getRescuePermissionType (rescue, user) {
     return 'self.rescue.update'
   }
 
-  if (rescue.createdAt - Date.now() < 3600000) {
-    return 'self.rescue.update'
-  }
-
   if (user) {
     for (let CMDR of user.CMDRs) {
-      if (rescue.rats.includes(CMDR)) {
+      if (rescue.rats.includes(CMDR) || rescue.firstLimpetId === CMDR) {
         return 'self.rescue.update'
       }
     }

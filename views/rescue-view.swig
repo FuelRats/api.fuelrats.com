@@ -12,11 +12,7 @@
   <h1 class="page-header">Operation {{ title }}
   {% else %}
     {% if client %}
-<<<<<<< HEAD
     <h1 class="page-header">Rescue of {{ client }} in {{system }}</h1>
-=======
-    <h1 class="page-header">Rescue of {{ client }} in {{system }}
->>>>>>> develop
     {% else %}
     <h1 class="page-header">Rescue in {{system }}
     {% endif %}

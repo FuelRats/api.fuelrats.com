@@ -25,7 +25,8 @@ exports.editRescue = function (request, response) {
     Permission.require(permission, request.user).then(function () {
       response.render('rescue-edit.swig', { rescue: rescue })
     }, function () {
-      response.render('errors/403.swig')
+      console.log('rendering')
+      response.render('errors/403.swig', { message: 'Only assigned rats or administrators may edit rescues' })
     })
   })
 
