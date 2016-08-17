@@ -84,6 +84,14 @@ input[type='radio'] {
   margin-bottom: 30px;
 }
 
+.errorart {
+  margin: auto;
+  display:block;
+  width: 500px;
+  height: auto;
+  margin-bottom: 30px;
+}
+
 div[data-pgroup]::after {
   color: #fff;
   margin-left: 3px;

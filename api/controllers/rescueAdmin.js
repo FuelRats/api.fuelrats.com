@@ -14,7 +14,7 @@ let convertRescueToAPIResult = require('./rescue').convertRescueToAPIResult
 exports.editRescue = function (request, response) {
   findRescueWithRats({ id: request.params.id }).then(function (rescueInstance) {
     if (!rescueInstance) {
-      response.render('errors/404.swig')
+      return response.render('errors/404.swig', { path: request.path })
     }
 
     let rescue = convertRescueToAPIResult(rescueInstance)
@@ -25,9 +25,10 @@ exports.editRescue = function (request, response) {
     Permission.require(permission, request.user).then(function () {
       response.render('rescue-edit.swig', { rescue: rescue })
     }, function () {
-      console.log('rendering')
       response.render('errors/403.swig', { message: 'Only assigned rats or administrators may edit rescues' })
     })
+  }).catch(function () {
+    return response.render('errors/404.swig', { path: request.path })
   })
 
 
@@ -53,8 +54,7 @@ exports.viewRescue = function (request, response, next) {
   }).then(function (rescueInstance) {
     try {
       if (!rescueInstance) {
-        response.render('errors/404.swig')
-        return
+        return response.render('errors/404.swig', { path: request.path })
       }
 
       let rescue = rescueInstance.toJSON()
@@ -63,6 +63,6 @@ exports.viewRescue = function (request, response, next) {
       console.log(err)
     }
   }).catch(function () {
-    response.render('errors/500.swig')
+    return response.render('errors/404.swig', { path: request.path })
   })
 }

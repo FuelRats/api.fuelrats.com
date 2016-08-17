@@ -11,7 +11,7 @@
 {% parent %}
 <div class="Aligner">
   <div class="Aligner-item">
-    <img src="http://www.fuelrats.com/wp-content/uploads/2015/07/ratsticker-1024x1024.jpg" alt="FuelRats Logo" class="logo">
+    <img src="https://www.fuelrats.com/wp-content/uploads/2016/06/mechsqueak403_1400.jpg" alt="Fuel Rats Error Art by Uvelius Sang" class="errorart">
     <div class="page-header" style="text-align: center;">
       <h1>403 Forbidden</h1>
     </div>
