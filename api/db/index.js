@@ -62,6 +62,12 @@ Action.belongsTo(User, { as: 'user' })
 
 Reset.belongsTo(User, { as: 'user' })
 
+db.addIndex('table', {
+  fields: ['JSONBFIELD'],
+  using: 'GIN',
+  operator: 'jsonb_path_ops'
+})
+
 module.exports = {
   Action: Action,
   Client: Client,
