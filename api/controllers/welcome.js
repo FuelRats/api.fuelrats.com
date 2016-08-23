@@ -46,8 +46,8 @@ exports.get = function (request, response) {
         attributes: [
           'id',
           'createdAt',
+          'client',
           'codeRed',
-          'epic',
           'open',
           'notes',
           'system',
@@ -75,21 +75,29 @@ exports.get = function (request, response) {
       let assistCount = 0
       let failureCount = 0
 
+      let openRescues = []
+
       for (let rescue of rat.rescues) {
-        if (rescue.successful === true) {
-          if (rescue.isFirstLimpet === true) {
-            firstLimpetCount += 1
-          } else {
-            assistCount += 1
-          }
+        if (rescue.open === true) {
+          openRescues.push(rescue)
+          rat.rescues.splice(rat.rescues.indexOf(rescue), 1)
         } else {
-          failureCount += 1
+          if (rescue.successful === true) {
+            if (rescue.isFirstLimpet === true) {
+              firstLimpetCount += 1
+            } else {
+              assistCount += 1
+            }
+          } else {
+            failureCount += 1
+          }
         }
       }
 
       rat.firstLimpetCount = firstLimpetCount
       rat.assistCount = assistCount
       rat.failureCount = failureCount
+      rat.openRescues = openRescues
       rat.successRate = ((firstLimpetCount + assistCount) / rat.rescues.length * 100).toFixed(2)
     }
     response.render('welcome.swig', { user: user, userGroupLabel: labels[user.group] })
