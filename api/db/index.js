@@ -65,6 +65,8 @@ Reset.belongsTo(User, { as: 'user' })
 
 Epic.belongsTo(Rescue, { as: 'rescue' })
 Epic.belongsTo(Rat, { as: 'rat' })
+Rescue.hasMany(Epic, { as: 'epics' })
+User.hasMany(Epic, { as: 'epics' })
 
 module.exports = {
   Action: Action,
@@ -76,5 +78,6 @@ module.exports = {
   Rescue: Rescue,
   Token: Token,
   User: User,
-  RescueRats: RescueRats
+  RescueRats: RescueRats,
+  Epic: Epic
 }

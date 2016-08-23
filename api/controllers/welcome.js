@@ -4,6 +4,7 @@ let winston = require('winston')
 let User = require('../db').User
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
+let Epic = require('../db').Epic
 let db = require('../db').db
 
 const labels = {
