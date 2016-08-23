@@ -54,7 +54,18 @@ exports.get = function (request, response) {
           'system',
           'successful',
           [db.literal('CASE WHEN "rats.rescues"."firstLimpetId" = "rats"."id" THEN TRUE ELSE FALSE END'), 'isFirstLimpet']
-        ]
+        ],
+        include: [{
+          required: false,
+          model: Epic,
+          as: 'epics',
+          attributes: [
+            'id',
+            'createdAt',
+            'notes',
+            'ratId'
+          ]
+        }]
       }]
     }],
     order: [
