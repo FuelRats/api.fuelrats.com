@@ -23,6 +23,7 @@ let Code = db.import(__dirname + '/code')
 let Token = db.import(__dirname + '/token')
 let Action = db.import(__dirname + '/action')
 let Reset = db.import(__dirname + '/reset')
+let Epic = db.import(__dirname + '/epic')
 
 Rat.belongsTo(User, {
   as: 'user',
@@ -61,6 +62,9 @@ Token.belongsTo(Client, { as: 'client' })
 Action.belongsTo(User, { as: 'user' })
 
 Reset.belongsTo(User, { as: 'user' })
+
+Epic.belongsTo(Rescue, { as: 'rescue' })
+Epic.belongsTo(Rat, { as: 'rat' })
 
 db.addIndex('table', {
   fields: ['JSONBFIELD'],
