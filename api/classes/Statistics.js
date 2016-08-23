@@ -3,6 +3,7 @@ let Rescue = require('../db').Rescue
 let Rat = require('../db').Rat
 let User = require('../db').User
 let db = require('../db').db
+let Epic = require('../db').Epic
 
 
 class Statistics {
@@ -19,16 +20,24 @@ class Statistics {
               successful: true
             },
             required: true
+          }, {
+            model: Epic,
+            as: 'epics',
+            attributes: [
+              'id',
+              'createdAt',
+              'notes'
+            ],
+            required: false
           }],
           attributes: [
             'id',
             [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
-            [db.fn('bool_or', db.col('epic')), 'epic'],
             [db.fn('bool_or', db.col('codeRed')), 'codeRed'],
             'CMDRname',
             'joined'
           ],
-          group: ['Rat.id'],
+          group: ['Rat.id', 'epics.id'],
           order: [[db.fn('COUNT', 'Rescue.id'), 'DESC']]
         }).then(function (ratInstances) {
           let rats = ratInstances.map(function (ratInstance) {

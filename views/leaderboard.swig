@@ -28,7 +28,7 @@
               <td>{{ cmdr.rescueCount }}</td>
               <td>
               {{ badge("rat") }}
-              {% if cmdr.epic == true %}
+              {% if cmdr.epics.length > 0 %}
               {{ badge("epic") }}
               {% endif %}
               {% if cmdr.codeRed == true %}

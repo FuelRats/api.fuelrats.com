@@ -65,8 +65,8 @@ Reset.belongsTo(User, { as: 'user' })
 
 Epic.belongsTo(Rescue, { as: 'rescue' })
 Epic.belongsTo(Rat, { as: 'rat' })
-Rescue.hasMany(Epic, { as: 'epics' })
-Rat.hasMany(Epic, { as: 'epics' })
+Rescue.hasMany(Epic, { foreignKey: 'rescueId', as: 'epics' })
+Rat.hasMany(Epic, { foreignKey: 'ratId', as: 'epics' })
 
 module.exports = {
   Action: Action,
