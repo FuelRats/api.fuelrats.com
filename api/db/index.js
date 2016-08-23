@@ -66,12 +66,6 @@ Reset.belongsTo(User, { as: 'user' })
 Epic.belongsTo(Rescue, { as: 'rescue' })
 Epic.belongsTo(Rat, { as: 'rat' })
 
-db.addIndex('table', {
-  fields: ['JSONBFIELD'],
-  using: 'GIN',
-  operator: 'jsonb_path_ops'
-})
-
 module.exports = {
   Action: Action,
   Client: Client,
