@@ -132,26 +132,28 @@ class Anope {
 
   static setVirtualHost (user, nickname) {
     return new Promise(function (resolve, reject) {
-      let virtualHost = generateVirtualHost(user)
-      winston.info('Generated Vhost: ' + virtualHost)
+      setTimeout(function () {
+        let virtualHost = generateVirtualHost(user)
+        winston.info('Generated Vhost: ' + virtualHost)
 
-      if (virtualHost) {
-        client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
-          if (error) {
-            winston.error(error)
-            reject(error)
-          } else {
-            winston.info(data)
-            if (/not registered/.test(data.return) === true) {
-              reject(data.return)
+        if (virtualHost) {
+          client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
+            if (error) {
+              winston.error(error)
+              reject(error)
             } else {
-              resolve(virtualHost)
+              winston.info(data)
+              if (/not registered/.test(data.return) === true) {
+                reject(data.return)
+              } else {
+                resolve(virtualHost)
+              }
             }
-          }
-        })
-      } else {
-        reject(null)
-      }
+          })
+        } else {
+          reject(null)
+        }
+      }, 500)
     })
   }
 }
