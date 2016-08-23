@@ -93,19 +93,6 @@
           <strong>Rats</strong>
         </div>
 
-        {% if firstLimpet %}
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item">
-            {{ firstLimpet }}
-          </li>
-          {% for unidentifiedRat in unidentifiedRats %}
-            <li class="list-group-item">
-              {{ unidentifiedRat }}
-            </li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-
         <ul class="list-group list-group-flush">
           {% for rat in rats %}
             <li class="list-group-item">
