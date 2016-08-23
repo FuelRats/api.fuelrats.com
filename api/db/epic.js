@@ -7,12 +7,8 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
-    value: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    expires: {
-      type: DataTypes.DATE,
+    notes: {
+      type: DataTypes.TEXT,
       allowNull: false
     }
   }, {
