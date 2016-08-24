@@ -9,7 +9,9 @@ let Epic = require('../db').Epic
 class Statistics {
   static getOverviewStatistics () {
     return Rescue.findAll({
-      where: {},
+      where: {
+        open: false
+      },
       attributes: [
         [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
         [db.fn('SUM', db.cast(db.col('successful'), 'INTEGER')), 'successCount']
@@ -99,7 +101,9 @@ class Statistics {
   static getTotalStatistics () {
     return new Promise(function (resolve, reject) {
       Rescue.findAll({
-        where: {},
+        where: {
+          open: false
+        },
         attributes: [
           [db.fn('date_trunc', 'day', db.col('createdAt')), 'date'],
           [db.fn('SUM', db.cast(db.col('successful'), 'INTEGER')), 'successCount'],
