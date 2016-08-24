@@ -7,6 +7,16 @@ let Epic = require('../db').Epic
 
 
 class Statistics {
+  static getOverviewStatistics () {
+    return Rescue.findAll({
+      where: {},
+      attributes: [
+        [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
+        [db.fn('SUM', db.cast(db.col('successful'), 'INTEGER')), 'successCount']
+      ]
+    })
+  }
+
   static getLeaderboardRats () {
     return new Promise(function (resolve, reject) {
       try {
@@ -74,7 +84,7 @@ class Statistics {
         ],
         group: ['system'],
         order: [[db.fn('COUNT', 'system'), 'DESC']],
-        limit: 50
+        limit: 100
       }).then(function (systemInstances) {
         let systems = systemInstances.map(function (systemInstance) {
           let system = systemInstance.toJSON()
@@ -96,7 +106,7 @@ class Statistics {
           [db.fn('COUNT', 'id'), 'total']
         ],
         group: [db.fn('date_trunc', 'day', db.col('createdAt'))],
-        order: [[db.fn('date_trunc', 'day', db.col('createdAt')), 'DESC']]
+        order: [[db.fn('date_trunc', 'day', db.col('createdAt')), 'ASC']]
       }).then(function (rescueDaysInstances) {
         let rescueDays = rescueDaysInstances.map(function (rescueDaysInstance) {
           let rescueDay = rescueDaysInstance.toJSON()
