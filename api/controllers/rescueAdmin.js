@@ -5,6 +5,7 @@ let winston = require('winston')
 let Permission = require('../permission')
 let Rescue = require('../db').Rescue
 let Rat = require('../db').Rat
+let Epic = require('../db').Epic
 let findRescueWithRats = require('./rescue').findRescueWithRats
 let getRescuePermissionType = require('./rescue').getRescuePermissionType
 let convertRescueToAPIResult = require('./rescue').convertRescueToAPIResult
@@ -49,6 +50,16 @@ exports.viewRescue = function (request, response, next) {
         model: Rat,
         as: 'firstLimpet',
         required: false
+      },
+      {
+        model: Epic,
+        as: 'epics',
+        include: [{
+          model: Rat,
+          as: 'rat',
+          required: false
+        }],
+        required: false
       }
     ]
   }).then(function (rescueInstance) {
@@ -58,6 +69,15 @@ exports.viewRescue = function (request, response, next) {
       }
 
       let rescue = rescueInstance.toJSON()
+
+      if (rescue.epics.length > 0) {
+        let epicRatList = rescue.epics.map(function (epic) {
+          return epic.rat.CMDRname
+        })
+
+        rescue.epicString = `${formatArray(epicRatList)} has received an epic commendation for this rescue`
+      }
+
       response.render('rescue-view.swig', rescue)
     } catch (err) {
       console.log(err)
@@ -65,4 +85,16 @@ exports.viewRescue = function (request, response, next) {
   }).catch(function () {
     return response.render('errors/404.swig', { path: request.path })
   })
+}
+
+function formatArray (arr) {
+  let outStr = ''
+  if (arr.length === 1) {
+    outStr = arr[0]
+  } else if (arr.length === 2) {
+    outStr = arr.join(' and ')
+  } else if (arr.length > 2) {
+    outStr = arr.slice(0, -1).join(', ') + ', and ' + arr.slice(-1)
+  }
+  return outStr
 }

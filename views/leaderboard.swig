@@ -10,7 +10,7 @@
 <div class="container-fluid">
   <h1>Leaderboard</h1>
   <div class="row">
-    <div id="leaderboard-container" class="col-md-5">
+    <div id="leaderboard-container" class="col-md-6">
       <div class="card-header">
       </div>
       <table id="leaderboard" class="table table-hover table-striped">
@@ -52,7 +52,7 @@
         </tbody>
       </table>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-6">
       <div class="row">
         <div id="overview-container" class="col-md-12">
           <div id="overview">
