@@ -186,7 +186,7 @@ function generateVirtualHost (user) {
 function IRCSafeName (rat) {
   let ratName = rat.CMDRname
   ratName = ratName.replace(/[^a-zA-Z0-9\s]/g, '')
-  return ratName.toLowercase()
+  return ratName.toLowerCase()
 }
 
 class IRCUserInfo {
