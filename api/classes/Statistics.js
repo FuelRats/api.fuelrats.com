@@ -29,6 +29,14 @@ class Statistics {
               'notes'
             ],
             required: false
+          }, {
+            model: User,
+            as: 'user',
+            attributes: [
+              'id',
+              'drilledDispatch'
+            ],
+            required: false
           }],
           attributes: [
             'id',
@@ -37,7 +45,7 @@ class Statistics {
             'CMDRname',
             'joined'
           ],
-          group: ['Rat.id', 'epics.id'],
+          group: ['Rat.id', 'user.id', 'epics.id'],
           order: [[db.fn('COUNT', 'Rescue.id'), 'DESC']]
         }).then(function (ratInstances) {
           let rats = ratInstances.map(function (ratInstance) {

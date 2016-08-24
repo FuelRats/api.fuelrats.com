@@ -34,6 +34,9 @@
               {% if cmdr.codeRed == true %}
               {{ badge("codeRed") }}
               {% endif %}
+              {% if cmdr.user.drilledDispatch == true %}
+              {{ badge("dispatch") }}
+              {% endif %}
               {% for i in Array(cmdr.pips) %}
                 {{ badge("pip") }}
               {% endfor %}
@@ -76,6 +79,9 @@
   {% endif  %}
   {% if type == 'codeRed' %}
   <img src="svg/codeRed.svg" alt="Code Red Badge" title="This rat has completed a code red rescue" class="lbBadge">
+  {% endif  %}
+  {% if type == 'dispatch' %}
+  <img src="svg/dispatch.svg" alt="Dispatch Badge" title="This rat has dispatched a rescue" class="lbBadge">
   {% endif  %}
   {% if type == 'epic' %}
   <img src="svg/epic.svg" alt="Epic Badge" title="This rat has completed an epic rescue or other epic achievement" class="lbBadge">
