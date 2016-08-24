@@ -28,11 +28,14 @@
               <td>{{ cmdr.rescueCount }}</td>
               <td>
               {{ badge("rat") }}
-              {% if cmdr.epic == true %}
+              {% if cmdr.epics.length > 0 %}
               {{ badge("epic") }}
               {% endif %}
               {% if cmdr.codeRed == true %}
               {{ badge("codeRed") }}
+              {% endif %}
+              {% if cmdr.user.drilledDispatch == true %}
+              {{ badge("dispatch") }}
               {% endif %}
               {% for i in Array(cmdr.pips) %}
                 {{ badge("pip") }}
@@ -49,13 +52,38 @@
         </tbody>
       </table>
     </div>
-    <div class="col-md-8">
+    <div class="col-md-5">
       <div class="row">
-        <div id="rescues-by-date-container" class="col-md-12"></div>
+        <div id="overview-container" class="col-md-12">
+          <div id="overview">
+            <div class="container-fluid">
+              <div class="col-md-12 bg-primary">
+                <h1>{{ overview.successRate }}% success</h1>
+              </div>
+              <div class="col-md-7 bg-success">
+                <h3>{{ overview.successCount }} successful</h3>
+              </div>
+                <div class="col-md-5 bg-danger">
+                  <h3>{{ overview.failureCount }} failed</h3>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div id="rescues-by-date-container" class="col-md-12">
+          <div class="card-header">
+            Rescues over time
+          </div>
+          <svg id="rescues-by-date"></svg>
+        </div>
       </div>
       <div class="row">
         <div id="rescues-by-system-container" class="col-md-12">
-
+          <div class="card-header">
+            Rescues by system
+          </div>
+          <div class="card-block">
+            <svg id="rescues-by-system"></svg>
+          </div>
         </div>
       </div>
     </div>
@@ -65,9 +93,9 @@
 
 {% block resources %}
 {% parent %}
-
+<script src="//d3js.org/d3.v3.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
-<script src="statistics.js"></script>
+<script src="js/leaderboard.js"></script>
 {% endblock %}
 
 {% macro badge(type) %}
@@ -76,6 +104,9 @@
   {% endif  %}
   {% if type == 'codeRed' %}
   <img src="svg/codeRed.svg" alt="Code Red Badge" title="This rat has completed a code red rescue" class="lbBadge">
+  {% endif  %}
+  {% if type == 'dispatch' %}
+  <img src="svg/dispatch.svg" alt="Dispatch Badge" title="This rat has dispatched a rescue" class="lbBadge">
   {% endif  %}
   {% if type == 'epic' %}
   <img src="svg/epic.svg" alt="Epic Badge" title="This rat has completed an epic rescue or other epic achievement" class="lbBadge">

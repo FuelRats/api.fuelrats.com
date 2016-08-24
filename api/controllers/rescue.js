@@ -24,6 +24,19 @@ class Controller {
       let direction = query.direction || 'ASC'
       delete query.direction
 
+      if (query.data) {
+        let dataQuery = query.data
+        delete query.data
+
+        try {
+          query.data = {
+            $contains: JSON.parse(dataQuery)
+          }
+        } catch (ex) {
+          reject({ error: Error.throw('invalid_parameter', 'data'), meta: {} })
+        }
+      }
+
       let dbQuery = {
         where: query,
         limit: limit,
@@ -34,12 +47,14 @@ class Controller {
         include: [
           {
             model: Rat,
-            as: 'rats'
+            as: 'rats',
+            require: false
           }
         ]
       }
 
       Rescue.findAndCountAll(dbQuery).then(function (result) {
+        console.log(result)
         let meta = {
           count: result.rows.length,
           limit: limit,

@@ -54,6 +54,7 @@ let reset = require('./api/controllers/reset')
 let roster = require('./api/controllers/roster').HTTP
 let rescue = require('./api/controllers/rescue').HTTP
 let rescueAdmin = require('./api/controllers/rescueAdmin')
+let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
@@ -279,6 +280,7 @@ router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
 router.get('/register', register.get)
 router.get('/welcome', auth.isAuthenticated(true), welcome.get)
 router.get('/roster', roster.get)
+router.get('/statistics', statistics.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)

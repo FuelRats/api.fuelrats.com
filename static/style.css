@@ -84,6 +84,15 @@ input[type='radio'] {
   margin-bottom: 30px;
 }
 
+#overview .container-fluid > div {
+  padding: 1rem;
+  text-align: center;
+}
+
+#overview {
+  margin-bottom: 2rem;
+}
+
 .errorart {
   margin: auto;
   display:block;

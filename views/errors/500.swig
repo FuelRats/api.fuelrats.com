@@ -12,7 +12,7 @@
     <div class="page-header" style="text-align: center;">
       <h1>500 Internal Server Error</h1>
     </div>
-    <img src="http://www.fuelrats.com/wp-content/uploads/2016/06/mechsqueak500_1400.jpg" alt="FuelRats Error Image">
+    <img src="https://www.fuelrats.com/wp-content/uploads/2016/08/mechsqueak500-1024x952.jpg" alt="FuelRats Error Image">
 
 
     <div class="col-md-6 col-md-offset-5" style="margin-top: 15px;">

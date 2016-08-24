@@ -23,6 +23,7 @@ let Code = db.import(__dirname + '/code')
 let Token = db.import(__dirname + '/token')
 let Action = db.import(__dirname + '/action')
 let Reset = db.import(__dirname + '/reset')
+let Epic = db.import(__dirname + '/epic')
 
 Rat.belongsTo(User, {
   as: 'user',
@@ -62,6 +63,11 @@ Action.belongsTo(User, { as: 'user' })
 
 Reset.belongsTo(User, { as: 'user' })
 
+Epic.belongsTo(Rescue, { as: 'rescue' })
+Epic.belongsTo(Rat, { as: 'rat' })
+Rescue.hasMany(Epic, { foreignKey: 'rescueId', as: 'epics' })
+Rat.hasMany(Epic, { foreignKey: 'ratId', as: 'epics' })
+
 module.exports = {
   Action: Action,
   Client: Client,
@@ -72,5 +78,6 @@ module.exports = {
   Rescue: Rescue,
   Token: Token,
   User: User,
-  RescueRats: RescueRats
+  RescueRats: RescueRats,
+  Epic: Epic
 }

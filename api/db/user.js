@@ -38,6 +38,12 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.ENUM('normal', 'overseer', 'moderator', 'admin'),
       allowNull: false,
       defaultValue: 'normal'
+    },
+    dispatch: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null,
+      unique: true
     }
   }, {
     paranoid: true,

@@ -1,19 +1,33 @@
 'use strict'
 
+require('intl')
+
 let Statistics = require('../classes/Statistics')
 
 exports.get = function (request, response) {
-  console.log('leaderboard')
-  Statistics.getPopularSystemsCount().then(function () {
-
-  })
-  Statistics.getTotalStatistics().then(function () {
-
-  })
   Statistics.getLeaderboardRats().then(function (rats) {
-    console.log('render')
-    response.render('leaderboard.swig', {CMDRs: rats})
+
+    Statistics.getOverviewStatistics().then(function (overviewInstance) {
+      console.log(overviewInstance)
+      try {
+        let overview = overviewInstance[0].toJSON()
+        overview.failureCount = (overview.rescueCount - overview.successCount).toLocaleString('en-GB', {
+          style: 'decimal'
+        })
+        overview.successRate = (overview.successCount / overview.rescueCount * 100).toFixed(2)
+        overview.successCount = overview.successCount.toLocaleString('en-GB', {
+          style: 'decimal'
+        })
+        response.render('leaderboard.swig', {CMDRs: rats, overview: overview})
+      } catch (ex) {
+        console.log(ex)
+      }
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(500)
+    })
   }).catch(function (error) {
-    console.log(error)
+    response.model.errors.push(error)
+    response.status(500)
   })
 }
