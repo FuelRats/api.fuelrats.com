@@ -91,14 +91,6 @@ class Controller {
 
   static create (query, connection) {
     return new Promise(function (resolve, reject) {
-      if (query.data) {
-        try {
-          query.data = JSON.parse(query.data)
-        } catch (ex) {
-          reject({ error: Errors.throw('server_error', ex), meta: {} })
-        }
-      }
-
       Rat.create(query).then(function (ratInstance) {
         ratInstance.setUser(connection.user.id).then(function () {
           let rat = convertRatToAPIResult(ratInstance)
@@ -136,14 +128,6 @@ class Controller {
           let permission = getRatPermissionType(rat, connection.user)
 
           Permission.require(permission, connection.user).then(function () {
-            if (data.data) {
-              try {
-                data.data = JSON.parse(data.data)
-              } catch (ex) {
-                reject({ error: Errors.throw('server_error', ex), meta: {} })
-              }
-            }
-
             Rat.update(data, {
               where: { id: query.id }
             }).then(function () {
