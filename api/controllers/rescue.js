@@ -61,6 +61,14 @@ class Controller {
       let firstLimpet = query.firstLimpet
       delete query.firstLimpet
 
+      if (query.data) {
+        try {
+          query.data = JSON.parse(query.data)
+        } catch (ex) {
+          reject({ error: Errors.throw('server_error', ex), meta: {} })
+        }
+      }
+
       Rescue.create(query).then(function (rescue) {
         if (!rescue) {
           reject({ error: Error.throw('operation_failed'), meta: {} })
@@ -148,6 +156,14 @@ class Controller {
                 updates.push(rescue.addRat(ratId))
               }
               delete data.rats
+            }
+
+            if (data.data) {
+              try {
+                data.data = JSON.parse(data.data)
+              } catch (ex) {
+                reject({ error: Errors.throw('server_error', ex), meta: {} })
+              }
             }
 
             if (data.firstLimpet) {
