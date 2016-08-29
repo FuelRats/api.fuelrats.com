@@ -22,28 +22,28 @@
           </tr>
         </thead>
         <tbody>
-          {% for cmdr in CMDRs %}
+          {% for user in users %}
             <tr>
-              <td>{{ cmdr.CMDRname}} </td>
-              <td>{{ cmdr.rescueCount }}</td>
+              <td>{{ user.rats[0] }} </td>
+              <td>{{ user.rescueCount }}</td>
               <td>
               {{ badge("rat") }}
-              {% if cmdr.epics.length > 0 %}
+              {% if user.epicRescues[0] %}
               {{ badge("epic") }}
               {% endif %}
-              {% if cmdr.codeRed == true %}
+              {% if user.codeRed == true %}
               {{ badge("codeRed") }}
               {% endif %}
-              {% if cmdr.user.drilledDispatch == true %}
+              {% if user.drilledDispatch == true %}
               {{ badge("dispatch") }}
               {% endif %}
-              {% for i in Array(cmdr.pips) %}
+              {% for i in Array(user.pips) %}
                 {{ badge("pip") }}
               {% endfor %}
-              {% if cmdr.rescueCount >= 1000 %}
+              {% if user.rescueCount >= 1000 %}
               {{ badge("1000") }}
               {% endif %}
-              {% if cmdr.joined|date('Y') == 2015 %}
+              {% if user.joined|date('Y') == 2015 %}
               {{ badge("3301") }}
               {% endif %}
               </td>
