@@ -5,36 +5,25 @@ let Permission = require('../permission')
 let User = require('../db').User
 let Rat = require('../db').Rat
 let Errors = require('../errors')
+let API = require('../classes/API')
 
 class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
-      let limit = parseInt(query.limit) || 25
-      delete query.limit
+      let dbQuery = API.createQueryFromRequest(query)
 
-      let offset = parseInt(query.offset) || 0
-      delete query.offset
-
-      if (query.nicknames) {
-        query.nicknames = { $contains: [query.nicknames] }
-      }
-      let dbQuery = {
-        where: query,
-        limit: limit,
-        offset: offset,
-        include: [
-          {
-            model: Rat,
-            as: 'rats'
-          }
-        ]
-      }
+      dbQuery.include = [
+        {
+          model: Rat,
+          as: 'rats'
+        }
+      ]
 
       User.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
           count: result.rows.length,
-          limit: limit,
-          offset: offset,
+          limit: dbQuery.limit,
+          offset: dbQuery.offset,
           total: result.count
         }
 

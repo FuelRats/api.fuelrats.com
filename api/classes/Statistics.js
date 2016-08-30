@@ -23,6 +23,7 @@ class Statistics {
     return new Promise(function (resolve, reject) {
       try {
         Rat.findAll({
+          raw: true,
           where: {},
           include: [{
             model: Rescue,
@@ -35,39 +36,33 @@ class Statistics {
           }, {
             model: Epic,
             as: 'epics',
-            attributes: [
-              'id',
-              'createdAt',
-              'notes'
-            ],
+            attributes: [],
             required: false
           }, {
             model: User,
             as: 'user',
-            attributes: [
-              'id',
-              'drilledDispatch'
-            ],
+            attributes: [],
             required: false
           }],
           attributes: [
-            'id',
             [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
+            [db.literal('array_agg(DISTINCT "rescueId")'), 'epicRescues'],
+            [db.fn('min', db.col('joined')), 'joined'],
+            [db.literal('array_agg(DISTINCT "CMDRname")'), 'rats'],
             [db.fn('bool_or', db.col('codeRed')), 'codeRed'],
-            'CMDRname',
-            'joined'
+            [db.fn('bool_or', db.col('drilledDispatch')), 'drilledDispatch']
           ],
-          group: ['Rat.id', 'user.id', 'epics.id'],
+          group: [db.literal('CASE WHEN "Rat"."UserId" IS NULL THEN "Rat"."id" ELSE "Rat"."UserId" END')],
           order: [[db.fn('COUNT', 'Rescue.id'), 'DESC']]
-        }).then(function (ratInstances) {
-          let rats = ratInstances.map(function (ratInstance) {
-            let rat = ratInstance.toJSON()
+        }).then(function (rats) {
+          rats = rats.map(function (rat) {
             let pips = Math.floor(rat.rescueCount / 100)
             rat.pips = pips > 4 ? 4 : pips
             return rat
           })
           resolve(rats)
         }).catch(function (error) {
+          console.log(error)
           reject(error)
         })
       } catch(ex) {

@@ -160,6 +160,43 @@ describe('Rescue Endpoints', function () {
     })
   })
 
+  describe('GET /rescues', function () {
+
+    it('should retrieve a rescue matching a JSON data value', function (done) {
+      request.get('/rescues?data={"foo": ["test"]}')
+      .set('Cookie', cookie).send()
+      .expect(200).end(function (error, response) {
+        if (error) {
+          return done(error)
+        }
+
+        // Make sure there are no errors
+        assert.notProperty(response.body, 'errors')
+
+        // Make sure our response is correctly constructed
+        assert.isArray(response.body.data)
+
+        // Check all of the properties on the returned object
+        assert.equal(response.body.data.active, generatedRescue.active)
+        assert.equal(response.body.data.client, generatedRescue.client)
+        assert.equal(response.body.data.codeRed, generatedRescue.codeRed)
+        assert.equal(response.body.data.data, generatedRescue.data)
+        assert.equal(response.body.data.epic, generatedRescue.epic)
+        assert.equal(response.body.data.firstLimpet, generatedRescue.firstLimpet)
+        assert.equal(response.body.data.open, generatedRescue.open)
+        assert.equal(response.body.data.notes, generatedRescue.notes)
+        assert.equal(response.body.data.platform, generatedRescue.platform)
+        assert.equal(response.body.data.quotes, generatedRescue.quotes)
+        assert.includes(response.body.data.rats, generatedRescue.firstLimpet)
+        assert.equal(response.body.data.successful, generatedRescue.successful)
+        assert.equal(response.body.data.system, generatedRescue.system)
+        assert.equal(response.body.data.title, generatedRescue.title)
+        assert.equal(response.body.data.unidentifiedRats, generatedRescue.unidentifiedRats)
+        done()
+      })
+    })
+  })
+
   describe('PUT /rescues', function () {
     // Create a rescue object
     let rescue = generator.randomRescue()

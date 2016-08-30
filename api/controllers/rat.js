@@ -6,27 +6,18 @@ let Rat = require('../db').Rat
 let Errors = require('../errors')
 let websocket = require('../websocket')
 let Permission = require('../permission')
+let API = require('../classes/API')
 
 class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
-      let limit = parseInt(query.limit) || 25
-      delete query.limit
-
-      let offset = parseInt(query.offset) || 0
-      delete query.offset
-
-      let dbQuery = {
-        where: query,
-        limit: limit,
-        offset: offset
-      }
+      let dbQuery = API.createQueryFromRequest(query)
 
       Rat.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
           count: result.rows.length,
-          limit: limit,
-          offset: offset,
+          limit: dbQuery.limit,
+          offset: dbQuery.offset,
           total: result.count
         }
 

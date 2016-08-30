@@ -4,6 +4,7 @@ let _ = require('underscore')
 let db = require('../db').db
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
+let API = require('../classes/API')
 
 let Errors = require('../errors')
 let websocket = require('../websocket')
@@ -13,52 +14,21 @@ class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
 
-      let limit = parseInt(query.limit) || 25
-      delete query.limit
+      let dbQuery = API.createQueryFromRequest(query)
 
-      let offset = parseInt(query.offset) || 0
-      delete query.offset
-
-      let order = parseInt(query.order) || 'createdAt'
-      delete query.order
-      let direction = query.direction || 'ASC'
-      delete query.direction
-
-      if (query.data) {
-        let dataQuery = query.data
-        delete query.data
-
-        try {
-          query.data = {
-            $contains: JSON.parse(dataQuery)
-          }
-        } catch (ex) {
-          reject({ error: Error.throw('invalid_parameter', 'data'), meta: {} })
+      dbQuery.include = [
+        {
+          model: Rat,
+          as: 'rats',
+          require: false
         }
-      }
-
-      let dbQuery = {
-        where: query,
-        limit: limit,
-        offset: offset,
-        order: [
-          [order, direction]
-        ],
-        include: [
-          {
-            model: Rat,
-            as: 'rats',
-            require: false
-          }
-        ]
-      }
+      ]
 
       Rescue.findAndCountAll(dbQuery).then(function (result) {
-        console.log(result)
         let meta = {
           count: result.rows.length,
-          limit: limit,
-          offset: offset,
+          limit: dbQuery.limit,
+          offset: dbQuery.offset,
           total: result.count
         }
 
