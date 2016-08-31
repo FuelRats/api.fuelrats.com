@@ -22,6 +22,10 @@ class API {
       }
     }
 
+    if (request.nicknames) {
+      request.nicknames = { $contains: [request.nicknames] }
+    }
+
     let query = {
       where: request,
       limit: limit,
