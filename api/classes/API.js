@@ -22,8 +22,8 @@ class API {
       }
     }
 
-    if (query.nicknames) {
-      query.nicknames = { $contains: [query.nicknames] }
+    if (request.nicknames) {
+      request.nicknames = { $contains: [request.nicknames] }
     }
 
     let query = {
