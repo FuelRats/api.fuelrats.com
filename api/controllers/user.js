@@ -117,6 +117,25 @@ class Controller {
       }
     })
   }
+
+  static forceUpdateIRCStatus (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      if (query.id) {
+        findUserWithRats({ id: query.id }).then(function (userInstance) {
+          if (!userInstance) {
+            return reject({ error: Error.throw('not_found', query.id), meta: {} })
+          }
+
+          Anope.updateAllVirtualHosts(userInstance)
+          resolve({ data: { success: true }, meta: {} })
+        }).catch(function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
+        })
+      } else {
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+      }
+    })
+  }
 }
 
 class HTTP {
@@ -191,6 +210,20 @@ class HTTP {
       next()
     }).catch(function (error) {
       response.model.errors.push(error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+
+  static forceUpdateIRCStatus (request, response, next) {
+    Controller.read(request.body, request, request.params).then(function (res) {
+      let data = res.data
+
+      response.model.data = data
+      response.status = 200
+      next()
+    }, function (error) {
+      response.model.errors.push(error.error)
       response.status(error.error.code)
       next()
     })

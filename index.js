@@ -254,6 +254,7 @@ router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('
 
 
 router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
+router.get('/users/:id/forceUpdateIRCStatus', auth.isAuthenticated(false), Permission.required('user.update', false), user.getById)
 router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read', false), user.getById)
 router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
