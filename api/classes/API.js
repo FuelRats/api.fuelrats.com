@@ -13,6 +13,11 @@ class API {
     let direction = request.direction || 'ASC'
     delete request.direction
 
+    if (request.firstLimpet) {
+      request.firstLimpetId = request.firstLimpet
+      delete request.firstLimpet
+    }
+
     if (request.data) {
       let dataQuery = request.data
       delete request.data
