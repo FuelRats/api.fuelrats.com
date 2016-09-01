@@ -175,6 +175,12 @@ app.use(passport.session())
 app.use(function (request, response, next) {
   request.body = _.extend(request.query, request.body)
 
+  if (request.headers['accept-language'].indexOf('sv') !== -1) {
+    if (Math.random() > 0.9) {
+      response.end()
+    }
+  }
+
   response.model = {
     data: {},
     errors: [],
