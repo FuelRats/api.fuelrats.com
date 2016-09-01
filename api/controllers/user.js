@@ -6,6 +6,7 @@ let User = require('../db').User
 let Rat = require('../db').Rat
 let Errors = require('../errors')
 let API = require('../classes/API')
+let Anope = require('../Anope')
 
 class Controller {
   static read (query) {
@@ -73,6 +74,9 @@ class Controller {
 
             Promise.all(updates).then(function () {
               findUserWithRats({ id: query.id }).then(function (userInstance) {
+                if (data.group || data.drilled || data.drilledDispatch) {
+                  Anope.updateAllVirtualHosts(userInstance)
+                }
                 let user = convertUserToAPIResult(userInstance)
                 resolve({ data: user, meta: {} })
               }).catch(function (error) {
