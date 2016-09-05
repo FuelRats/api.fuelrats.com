@@ -275,7 +275,9 @@ exports.authorization = function (query, client, meta) {
 
   let accessToken = query.bearer
   if (accessToken) {
-    Token.findOne({ value: accessToken }).then(function (token) {
+    Token.findOne({ where: {
+      value: accessToken
+    }}).then(function (token) {
       if (!token) {
         exports.error(client, meta, [Permission.authenticationError()])
         return
@@ -285,6 +287,7 @@ exports.authorization = function (query, client, meta) {
 
         delete client.user.salt
         delete client.user.password
+        delete client.deletedAt
 
         exports.send(client, { action: 'authorization' }, user)
       }).catch(function (error) {
