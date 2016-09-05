@@ -173,6 +173,8 @@ app.use(passport.session())
 
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
+  request.websocket = websocket
+
   request.body = _.extend(request.query, request.body)
 
   response.model = {
