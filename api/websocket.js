@@ -5,12 +5,12 @@ let Error = require('./errors')
 // Import controllers
 let Token = require('./db').Token
 let User = require('./db').User
-let rat = require('./controllers/rat')
+let rat = require('./controllers/rat').Controller
 let Permission = require('./permission')
 let rescue = require('./controllers/rescue').Controller
 let stream = require('./controllers/stream')
 let client = require('./controllers/client')
-let user = require('./controllers/user')
+let user = require('./controllers/user').Controller
 let _ = require('underscore')
 
 let controllers = {
