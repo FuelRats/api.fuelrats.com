@@ -7,7 +7,6 @@ let Rescue = require('../db').Rescue
 let API = require('../classes/API')
 
 let Errors = require('../errors')
-let websocket = require('../websocket')
 let Permission = require('../permission')
 
 class Controller {
@@ -90,10 +89,10 @@ class Controller {
             findRescueWithRats({ id: rescue.id }).then(function (rescueInstance) {
               let rescue = convertRescueToAPIResult(rescueInstance)
 
-              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+              let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                 return cl.clientId !== connection.clientId
               })
-              websocket.broadcast(allClientsExcludingSelf, {
+              connection.websocket.broadcast(allClientsExcludingSelf, {
                 action: 'rescue:created'
               }, rescue)
 
@@ -171,10 +170,10 @@ class Controller {
 
                 let rescue = convertRescueToAPIResult(rescueInstance)
 
-                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                   return cl.clientId !== connection.clientId
                 })
-                websocket.broadcast(allClientsExcludingSelf, {
+                connection.websocket.broadcast(allClientsExcludingSelf, {
                   action: 'rescue:updated'
                 }, rescue)
 
@@ -213,10 +212,10 @@ class Controller {
             }
             rescue.destroy()
 
-            let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+            let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
               return cl.clientId !== connection.clientId
             })
-            websocket.broadcast(allClientsExcludingSelf, {
+            connection.websocket.broadcast(allClientsExcludingSelf, {
               action: 'rescue:deleted'
             }, convertRescueToAPIResult(rescue))
 
@@ -254,10 +253,10 @@ class Controller {
                   }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
-                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                     return cl.clientId !== connection.clientId
                   })
-                  websocket.broadcast(allClientsExcludingSelf, {
+                  connection.websocket.broadcast(allClientsExcludingSelf, {
                     action: 'rescue:updated'
                   }, rescue)
 
@@ -307,10 +306,10 @@ class Controller {
                   }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
-                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                     return cl.clientId !== connection.clientId
                   })
-                  websocket.broadcast(allClientsExcludingSelf, {
+                  connection.websocket.broadcast(allClientsExcludingSelf, {
                     action: 'rescue:updated'
                   }, rescue)
 
@@ -364,10 +363,10 @@ class Controller {
                   }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
-                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                     return cl.clientId !== connection.clientId
                   })
-                  websocket.broadcast(allClientsExcludingSelf, {
+                  connection.websocket.broadcast(allClientsExcludingSelf, {
                     action: 'rescue:updated'
                   }, rescue)
                   resolve({ data: rescue, meta: {} })

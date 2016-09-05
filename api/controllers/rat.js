@@ -4,7 +4,6 @@ let _ = require('underscore')
 let Rat = require('../db').Rat
 
 let Errors = require('../errors')
-let websocket = require('../websocket')
 let Permission = require('../permission')
 let API = require('../classes/API')
 
@@ -95,10 +94,10 @@ class Controller {
         ratInstance.setUser(connection.user.id).then(function () {
           let rat = convertRatToAPIResult(ratInstance)
 
-          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+          let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
             return cl.clientId !== connection.clientId
           })
-          websocket.broadcast(allClientsExcludingSelf, {
+          connection.websocket.broadcast(allClientsExcludingSelf, {
             action: 'rat:created'
           }, rat)
 
@@ -133,10 +132,10 @@ class Controller {
             }).then(function () {
               Rat.findOne({ id: query.id }).then(function (ratInstance) {
                 let newRat = convertRatToAPIResult(ratInstance)
-                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                   return cl.clientId !== connection.clientId
                 })
-                websocket.broadcast(allClientsExcludingSelf, {
+                connection.websocket.broadcast(allClientsExcludingSelf, {
                   action: 'rat:updated'
                 }, newRat)
                 resolve({ data: newRat, meta: {} })
@@ -162,10 +161,10 @@ class Controller {
         Rat.findById(query.id).then(function (rat) {
           rat.destroy()
 
-          let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+          let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
             return cl.clientId !== connection.clientId
           })
-          websocket.broadcast(allClientsExcludingSelf, {
+          connection.websocket.broadcast(allClientsExcludingSelf, {
             action: 'rat:deleted'
           }, convertRatToAPIResult(rat))
 

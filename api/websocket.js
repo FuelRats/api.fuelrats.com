@@ -9,7 +9,7 @@ let rat = require('./controllers/rat').Controller
 let Permission = require('./permission')
 let rescue = require('./controllers/rescue').Controller
 let stream = require('./controllers/stream')
-let client = require('./controllers/client')
+let client = require('./controllers/client').Controller
 let user = require('./controllers/user').Controller
 let _ = require('underscore')
 
@@ -47,6 +47,7 @@ let controllers = {
     unsubscribe: [stream.unsubscribe, true]
   }
 }
+
 
 exports.retrieveCaseInsensitiveProperty = function (propertyName, obj) {
   if (!obj) { return null }
@@ -111,6 +112,7 @@ exports.received = function (client, requestString) {
               if (client.user) {
                 if (controller[method].length > 2) {
                   Permission.require(controller[method][2]).then(function () {
+                    client.websocket = exports
                     callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
                   }).catch(function (error) {
                     exports.error(client, requestMeta, [error])
