@@ -115,15 +115,18 @@ exports.received = function (client, requestString) {
                   Permission.require(controller[method][2]).then(function () {
                     client.websocket = exports
                     callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
+                    return
                   }).catch(function (error) {
                     exports.error(client, requestMeta, [error])
+                    return
                   })
                 }
                 callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
               } else {
+                return
                 exports.error(client, requestMeta, [Permission.authenticationError()])
+                return
               }
-              return
             }
 
             callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
