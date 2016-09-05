@@ -21,6 +21,11 @@ class Controller {
           model: Rat,
           as: 'rats',
           require: false
+        },
+        {
+          model: Epic,
+          as: 'epics',
+          require: false
         }
       ]
 
