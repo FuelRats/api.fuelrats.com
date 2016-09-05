@@ -4,6 +4,7 @@ let _ = require('underscore')
 let db = require('../db').db
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
+let Epic = require('../db').Epic
 let API = require('../classes/API')
 
 let Errors = require('../errors')
@@ -465,6 +466,11 @@ class HTTP {
             model: Rat,
             as: 'firstLimpet',
             required: false
+          },
+          {
+            model: Epic,
+            as: 'epics',
+            required: false
           }
         ]
       }).then(function (rescueInstance) {
@@ -553,6 +559,9 @@ function convertRescueToAPIResult (rescueInstance) {
     rescue.rats = []
   }
 
+  rescue.epic = (rescue.epics.length > 0)
+  delete rescue.epics
+
   delete rescue.firstLimpet
   rescue.firstLimpet = rescue.firstLimpetId
   delete rescue.firstLimpetId
@@ -567,6 +576,11 @@ function findRescueWithRats (where) {
       {
         model: Rat,
         as: 'rats',
+        required: false
+      },
+      {
+        model: Epic,
+        as: 'epics',
         required: false
       }
     ]
