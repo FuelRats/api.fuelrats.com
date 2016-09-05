@@ -80,6 +80,7 @@ exports.received = function (client, requestString) {
     requestMeta = exports.retrieveCaseInsensitiveProperty('meta', request)
     if (!requestMeta) { requestMeta = {} }
     if (!data) { data = {} }
+    requestMeta.action = action
 
     let query = _.clone(request)
 
@@ -124,14 +125,14 @@ exports.received = function (client, requestString) {
               }
               return
             }
-          }
 
-          callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-        } else {
-          exports.error(client, {
-            action: action
-          }, [Error.throw('invalid_parameter', 'action')])
+            callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
+            return
+          }
         }
+        exports.error(client, {
+          action: action
+        }, [Error.throw('invalid_parameter', 'action')])
       } else {
         let applicationId = exports.retrieveCaseInsensitiveProperty('applicationId', request)
         if (!applicationId || applicationId.length === 0) {
