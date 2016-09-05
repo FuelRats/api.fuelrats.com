@@ -76,6 +76,7 @@ exports.received = function (client, requestString) {
     let requestHasValidAction = false
     let requestHadActionField = false
     action = exports.retrieveCaseInsensitiveProperty('action', request)
+    console.log(action)
     data = exports.retrieveCaseInsensitiveProperty('data', request)
     requestMeta = exports.retrieveCaseInsensitiveProperty('meta', request)
     if (!requestMeta) { requestMeta = {} }
@@ -122,16 +123,15 @@ exports.received = function (client, requestString) {
                   })
                 }
                 callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-              } else {
                 return
+              } else {
                 exports.error(client, requestMeta, [Permission.authenticationError()])
                 return
               }
             }
-
-            callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-            return
           }
+          callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
+          return
         }
         exports.error(client, {
           action: action
