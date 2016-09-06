@@ -73,12 +73,11 @@ exports.received = function (client, requestString) {
   try {
     request = JSON.parse(requestString)
 
-    let requestHasValidAction = false
-    let requestHadActionField = false
     action = exports.retrieveCaseInsensitiveProperty('action', request)
-    console.log(action)
     data = exports.retrieveCaseInsensitiveProperty('data', request)
     requestMeta = exports.retrieveCaseInsensitiveProperty('meta', request)
+    client.websocket = exports
+
     if (!requestMeta) { requestMeta = {} }
     if (!data) { data = {} }
     requestMeta.action = action
@@ -86,19 +85,11 @@ exports.received = function (client, requestString) {
     let query = _.clone(request)
 
     if (action) {
-      requestHadActionField = true
-      if (typeof action == 'string') {
-        if (action === 'authorization') {
-          exports.authorization(query, client, requestMeta)
-          return
-        }
-
-        requestHasValidAction = action.length > 2 && action.includes(':')
+      if (action === 'authorization') {
+        exports.authorization(query, client, requestMeta)
+        return
       }
-    }
 
-
-    if (requestHasValidAction === true) {
       let requestSections = action.split(':')
       let namespace = requestSections[0].toLowerCase()
 
@@ -107,32 +98,29 @@ exports.received = function (client, requestString) {
         let method = requestSections[1].toLowerCase()
 
         if (method && controller[method]) {
-          if (controller[method].length > 1) {
-            let isAuthenticated = controller[method][1] === true
+          let requiresAuthentication = controller[method][1] === true
+          let requiresPermission = controller[method].length > 2
 
-            if (isAuthenticated) {
-              if (client.user) {
-                if (controller[method].length > 2) {
-                  Permission.require(controller[method][2]).then(function () {
-                    client.websocket = exports
-                    callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-                    return
-                  }).catch(function (error) {
-                    exports.error(client, requestMeta, [error])
-                    return
-                  })
-                }
-                callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-                return
+          if (requiresAuthentication) {
+            if (client.user) {
+              if (requiresPermission) {
+                Permission.require(controller[method][2]).then(function () {
+                  callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
+                }).catch(function (error) {
+                  exports.error(client, requestMeta, [error])
+                })
               } else {
-                exports.error(client, requestMeta, [Permission.authenticationError()])
-                return
+                callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
               }
+            } else {
+              exports.error(client, requestMeta, [Permission.authenticationError()])
             }
+          } else {
+            callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
           }
-          callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
           return
         }
+
         exports.error(client, {
           action: action
         }, [Error.throw('invalid_parameter', 'action')])
@@ -167,12 +155,7 @@ exports.received = function (client, requestString) {
       }
 
     } else {
-      let error
-      if (requestHadActionField) {
-        error = Error.invalid_parameter
-      } else {
-        error = Error.missing_required_field
-      }
+      let error = Error.missing_required_field
 
       let meta = _.extend(requestMeta, {
         action: 'unknown',
