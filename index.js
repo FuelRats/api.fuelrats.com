@@ -292,6 +292,10 @@ router.route('/oauth2/authorise')
   .get(auth.isAuthenticated(true), oauth2.authorization)
   .post(auth.isAuthenticated(false), oauth2.decision)
 
+router.route('/oauth2/authorize')
+  .get(auth.isAuthenticated(true), oauth2.authorization)
+  .post(auth.isAuthenticated(false), oauth2.decision)
+
 // Create endpoint handlers for oauth2 token
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 

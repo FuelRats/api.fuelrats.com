@@ -85,7 +85,7 @@ exports.received = function (client, requestString) {
     let query = _.clone(request)
 
     if (action) {
-      if (action === 'authorization') {
+      if (action === 'authorisation' || action === 'authorization') {
         exports.authorization(query, client, requestMeta)
         return
       }
