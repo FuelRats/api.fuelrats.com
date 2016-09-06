@@ -213,7 +213,7 @@ class Controller {
         Permission.require('rescue.delete', connection.user).then(function () {
           Rescue.findById(query.id).then(function (rescue) {
             if (!rescue) {
-              reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+              reject({ error: Errors.throw('not_found', query.id), meta: {} })
               return
             }
             rescue.destroy()
@@ -223,7 +223,7 @@ class Controller {
             })
             connection.websocket.broadcast(allClientsExcludingSelf, {
               action: 'rescue:deleted'
-            }, convertRescueToAPIResult(rescue))
+            }, { id: query.id })
 
             resolve({ data: null, meta: {} })
           }).catch(function (error) {
@@ -268,7 +268,9 @@ class Controller {
 
                   resolve({
                     data: rescue,
-                    meta: {}
+                    meta: {
+                      id: query.id
+                    }
                   })
                 }).catch(function (error) {
                   reject({ error: Errors.throw('server_error', error), meta: {} })

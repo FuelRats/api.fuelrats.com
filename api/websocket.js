@@ -25,7 +25,7 @@ let controllers = {
     create: [rescue.create, true],
     read: [rescue.read],
     update: [rescue.update, true],
-    delete: [rescue.delete, true, 'rescue.delete']
+    delete: [rescue.delete, true]
   },
 
   users: {
