@@ -42,6 +42,13 @@ class API {
 
     return query
   }
+
+  static version (version) {
+    return function (req, res, next) {
+      req.apiVersion = version
+      next()
+    }
+  }
 }
 
 module.exports = API

@@ -329,19 +329,15 @@ app.use(function (request, response) {
       }
     }
   } else {
-    delete response.model.errors
-    response.send(response.model)
-  }
-})
-
-app.get('*', function (request, response) {
-  if (!request.referer) {
-    response.status(404)
-    response.render('errors/404', { path: request.path })
-  } else {
-    delete response.model.data
-    response.model.errors = Error.throw('not_found', request.path)
-    response.send(response.model)
+    if (Object.getOwnPropertyNames(response.model.data).length === 0 && response.statusCode === 200) {
+      delete response.model.data
+      response.model.errors = Error.throw('not_found', request.path)
+      response.status(404)
+      response.send(response.model)
+    } else {
+      delete response.model.errors
+      response.send(response.model)
+    }
   }
 })
 
