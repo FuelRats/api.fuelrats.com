@@ -24,8 +24,8 @@ services:
 
 before_script:
 - cp config-example.json config.json
-- psql -c 'create extension citext;' -U postgres
 - psql -c 'create database fuelratstest;' -U postgres
+- psql -c 'create extension citext;' -U postgres fuelratstest
 - npm install webpack@^2.1.0-beta
 - npm install -g grunt-cli
 
