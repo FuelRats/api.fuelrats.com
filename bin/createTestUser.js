@@ -14,7 +14,7 @@ db.sync({ force: true }).then(function () {
       password: hash,
       drilled: true,
       drilledDispatch: true,
-      nicknames: db.literal('ARRAY[\'testnick\']::citext'),
+      nicknames: db.literal('ARRAY[\'testnick\']::citext[]'),
       group: 'admin'
     }
 
