@@ -22,7 +22,7 @@ module.exports = function (sequelize, DataTypes) {
     nicknames: {
       type: 'citext[]',
       allowNull: true,
-      defaultValue: 'ARRAY[]::citext'
+      defaultValue: 'ARRAY[]::citext[]'
     },
     drilled: {
       type: DataTypes.BOOLEAN,
