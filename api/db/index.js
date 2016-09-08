@@ -68,6 +68,8 @@ Epic.belongsTo(Rat, { as: 'rat' })
 Rescue.hasMany(Epic, { foreignKey: 'rescueId', as: 'epics' })
 Rat.hasMany(Epic, { foreignKey: 'ratId', as: 'epics' })
 
+
+
 module.exports = {
   Action: Action,
   Client: Client,
@@ -79,5 +81,6 @@ module.exports = {
   Token: Token,
   User: User,
   RescueRats: RescueRats,
-  Epic: Epic
+  Epic: Epic,
+  citext: CITEXT
 }

@@ -1,4 +1,5 @@
 'use strict'
+let CITEXT = require('./citext')
 
 module.exports = function (sequelize, DataTypes) {
   let User = sequelize.define('User', {
@@ -20,7 +21,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true
     },
     nicknames: {
-      type: 'citext[]',
+      type: DataTypes.ARRAY(CITEXT),
       allowNull: true,
       defaultValue: sequelize.literal('ARRAY[]::citext[]')
     },
