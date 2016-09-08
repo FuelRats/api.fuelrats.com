@@ -122,7 +122,7 @@ class Controller {
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (query.id) {
-        Rat.findOne({ id: query.id }).then(function (rat) {
+        Rat.findOne({ where: { id: query.id } }).then(function (rat) {
           // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
           let permission = getRatPermissionType(rat, connection.user)
 
