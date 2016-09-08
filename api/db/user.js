@@ -20,7 +20,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true
     },
     nicknames: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
+      type: 'citext[]',
       allowNull: true,
       defaultValue: []
     },
