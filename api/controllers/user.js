@@ -47,7 +47,7 @@ class Controller {
 
   static create () {
     return new Promise(function (resolve, reject) {
-      reject({ error: Errors.throw('not_implemented', 'rescue:create is not implemented, please use POST /register'), meta: {} })
+      reject({ error: Errors.throw('not_implemented', 'user:create is not implemented, please use POST /register'), meta: {} })
     })
   }
 
