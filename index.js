@@ -123,6 +123,9 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(expressSession({
+  cookie: {
+    domain: '.fuelrats.com'
+  },
   secret: config.secretSauce,
   resave: false,
   saveUninitialized: false
