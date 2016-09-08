@@ -81,6 +81,5 @@ module.exports = {
   Token: Token,
   User: User,
   RescueRats: RescueRats,
-  Epic: Epic,
-  citext: CITEXT
+  Epic: Epic
 }
