@@ -4,6 +4,7 @@ let _ = require('underscore')
 let Permission = require('../permission')
 let User = require('../db').User
 let Rat = require('../db').Rat
+let db = require('../db').db
 let Errors = require('../errors')
 let API = require('../classes/API')
 let Anope = require('../Anope')
@@ -19,6 +20,15 @@ class Controller {
           as: 'rats'
         }
       ]
+
+      dbQuery.attributes = {
+        include: [
+          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
+        exclude: [
+          'nicknames'
+        ]
+      }
 
       User.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
@@ -47,7 +57,7 @@ class Controller {
 
   static create () {
     return new Promise(function (resolve, reject) {
-      reject({ error: Errors.throw('not_implemented', 'rescue:create is not implemented, please use POST /register'), meta: {} })
+      reject({ error: Errors.throw('not_implemented', 'user:create is not implemented, please use POST /register'), meta: {} })
     })
   }
 
@@ -64,6 +74,10 @@ class Controller {
                 updates.push(user.addRat(ratId))
               }
               delete data.rats
+            }
+
+            if (data['nicknames']) {
+              data.nicknames = db.cast(data['nicknames'], 'citext[]')
             }
 
             if (Object.keys(data).length > 0) {
@@ -251,6 +265,14 @@ function convertUserToAPIResult (userInstance) {
 function findUserWithRats (where) {
   return User.findOne({
     where: where,
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames'
+      ]
+    },
     include: [
       {
         model: Rat,

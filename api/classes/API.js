@@ -10,6 +10,7 @@ class API {
 
     let order = parseInt(request.order) || 'createdAt'
     delete request.order
+
     let direction = request.direction || 'ASC'
     delete request.direction
 
@@ -25,10 +26,6 @@ class API {
       request.data = {
         $contains: JSON.parse(dataQuery)
       }
-    }
-
-    if (request.nicknames) {
-      request.nicknames = { $contains: [request.nicknames] }
     }
 
     let query = {

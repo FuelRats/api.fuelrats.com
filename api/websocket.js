@@ -5,6 +5,8 @@ let Error = require('./errors')
 // Import controllers
 let Token = require('./db').Token
 let User = require('./db').User
+let Rat = require('./db').Rat
+let db = require('./db').db
 let rat = require('./controllers/rat').Controller
 let Permission = require('./permission')
 let rescue = require('./controllers/rescue').Controller
@@ -271,7 +273,24 @@ exports.authorization = function (query, client, meta) {
         exports.error(client, meta, [Permission.authenticationError()])
         return
       }
-      User.findById(token.userId).then(function (user) {
+      User.findOne({
+        where: {
+          id: token.UserId
+        },
+        attributes: {
+          include: [
+            [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+          ],
+          exclude: [
+            'nicknames'
+          ]
+        },
+        include: [{
+          model: Rat,
+          as: 'rats',
+          required: false
+        }]
+      }).then(function (user) {
         client.user = user.toJSON()
 
         delete client.user.salt

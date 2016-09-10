@@ -141,6 +141,16 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (id, done) {
   User.findOne({
     where: { id: id },
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames',
+        'dispatch',
+        'deletedAt'
+      ]
+    },
     include: [
       {
         model: Rat,
@@ -265,6 +275,7 @@ router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
 router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
+router.get('/nicknames/search/:nickname', nicknames.search)
 router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
 router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
 router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)

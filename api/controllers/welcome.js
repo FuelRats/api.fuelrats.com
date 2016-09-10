@@ -22,7 +22,7 @@ exports.get = function (request, response) {
     attributes: [
       'id',
       'email',
-      'nicknames',
+      [db.cast(db.col('nicknames'), 'text[]'), 'nicknames'],
       'drilled',
       'drilledDispatch',
       'group'
