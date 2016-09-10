@@ -143,7 +143,9 @@ passport.deserializeUser(function (id, done) {
         [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
       ],
       exclude: [
-        'nicknames'
+        'nicknames',
+        'dispatch',
+        'deletedAt'
       ]
     },
     include: [

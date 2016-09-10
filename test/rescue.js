@@ -13,12 +13,14 @@ let generator = require('./generator')
 let rootUrl = 'http://localhost:8080'
 request = request(rootUrl)
 let cookie
+console.log('startign tests')
 
 // Before and After hooks
 // =============================================================================
 
 describe('Login Test', function () {
   it('should create user session for valid user', function (done) {
+    console.log('login test')
     this.timeout(10000)
     request.post('/login')
       .set('Accept','application/json')
@@ -47,6 +49,7 @@ describe('POST /rats', function () {
   let rat = generator.randomRat()
 
   it('should create a new rat', function (done) {
+    console.log('make rat')
     this.timeout(5000)
     request.post('/rats')
     .set('Cookie', cookie)
