@@ -68,6 +68,7 @@ describe('POST /rats', function () {
       assert.equal(response.body.data.platform, rat.platform)
 
       generatedRat = response.body.data
+      console.log(response.body.data)
       done()
     })
   })

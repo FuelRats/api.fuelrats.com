@@ -21,7 +21,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true
     },
     nicknames: {
-      type: DataTypes.ARRAY(CITEXT),
+      type: 'citext[]',
       allowNull: true,
       defaultValue: sequelize.literal('ARRAY[]::citext[]')
     },

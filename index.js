@@ -138,6 +138,14 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (id, done) {
   User.findOne({
     where: { id: id },
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames'
+      ]
+    },
     include: [
       {
         model: Rat,

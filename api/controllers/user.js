@@ -4,6 +4,7 @@ let _ = require('underscore')
 let Permission = require('../permission')
 let User = require('../db').User
 let Rat = require('../db').Rat
+let db = require('../db').db
 let Errors = require('../errors')
 let API = require('../classes/API')
 let Anope = require('../Anope')
@@ -19,6 +20,15 @@ class Controller {
           as: 'rats'
         }
       ]
+
+      dbQuery.attributes = {
+        include: [
+          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
+        exclude: [
+          'nicknames'
+        ]
+      }
 
       User.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
@@ -251,6 +261,14 @@ function convertUserToAPIResult (userInstance) {
 function findUserWithRats (where) {
   return User.findOne({
     where: where,
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames'
+      ]
+    },
     include: [
       {
         model: Rat,

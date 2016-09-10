@@ -174,6 +174,16 @@ class Controller {
             $overlap:  db.literal(`ARRAY[${db.escape(query.nickname)}, ${db.escape(strippedNickname)}]::citext[]`)
           }
         },
+        attributes: [
+          'id',
+          'createdAt',
+          'updatedAt',
+          'email',
+          'drilled',
+          'drilledDispatch',
+          'group',
+          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
         include: [{
           model: Rat,
           as: 'rats',
@@ -200,11 +210,6 @@ class Controller {
           if (!displayPrivateFields) {
             user.email = null
           }
-
-          delete user.password
-          delete user.salt
-          delete user.dispatch
-          delete user.deletedAt
 
           user.rats = user.rats.map(function (rat) {
             delete rat.UserId
