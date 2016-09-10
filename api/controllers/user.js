@@ -76,6 +76,10 @@ class Controller {
               delete data.rats
             }
 
+            if (data['nicknames']) {
+              data.nicknames = db.cast(data['nicknames'], 'citext[]')
+            }
+
             if (Object.keys(data).length > 0) {
               updates.push(User.update(data, {
                 where: { id: user.id }

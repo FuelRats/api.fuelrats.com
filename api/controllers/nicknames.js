@@ -46,7 +46,7 @@ class Controller {
         nicknames.push(data.nickname)
 
         Anope.confirm(data.nickname).then(function () {
-          User.update({ nicknames: nicknames }, {
+          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: { id: connection.user.id }
           }).then(function () {
             User.findOne({
@@ -94,7 +94,7 @@ class Controller {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
-        User.update({ nicknames: nicknames }, {
+        User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
           where: { id: connection.user.id }
         }).then(function () {
           User.findOne({
@@ -135,7 +135,7 @@ class Controller {
           let nicknames = connection.user.nicknames
           nicknames.splice(nicknames.indexOf(query.nickname), 1)
 
-          User.update({ nicknames: nicknames }, {
+          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: {
               id: connection.user.id
             }
