@@ -153,11 +153,12 @@ exports.isAuthenticated = function (isUserFacing) {
           } else {
             req.session.returnTo = req.originalUrl || req.url
 
-            if (req.session.legacy) {
+            if (req.session.legacy || isUserFacing) {
               return res.redirect('/login')
             } else {
               res.model.data = req.user
               res.status(200)
+              next()
               return
             }
           }
