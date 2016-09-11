@@ -26,7 +26,7 @@ exports.get = function (request, response) {
 
 exports.post = function (request, response, next) {
   if (request.user) {
-    if (request.session.legacy) {
+    if (request.session.legacy || request.query.legacy) {
       return response.redirect('/login')
     } else {
       response.model.data = request.user
