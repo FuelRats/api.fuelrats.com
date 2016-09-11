@@ -30,11 +30,17 @@ class Controller {
         ],
         order: [['joined', 'DESC']]
       }).then(function (ratInstances) {
+        let overseers = []
+
         let rats = ratInstances.map(function (ratInstance) {
           let rat = ratInstance.toJSON()
+
+          if (rat.user && (rat.user.group === 'overseer' || rat.user.group === 'moderator')) {
+            overseers.push(rat)
+          }
           return rat
         })
-        resolve(rats)
+        resolve({ rats: rats, overseers: overseers })
       }).catch(function (error) {
         reject(error)
       })
@@ -47,9 +53,8 @@ class HTTP {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
     Controller.roster(request.body, request, request.query).then(function (data) {
-      response.render('roster.swig', { rats: data })
+      response.render('roster.swig', data)
     }, function (error) {
-      console.log(error)
       response.model.errors.push(error.error)
       response.status(error.error.code)
       next()
