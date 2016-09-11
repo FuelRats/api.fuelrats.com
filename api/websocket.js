@@ -275,7 +275,7 @@ exports.authorization = function (query, client, meta) {
       }
       User.findOne({
         where: {
-          id: token.UserId
+          id: token.userId
         },
         attributes: {
           include: [
