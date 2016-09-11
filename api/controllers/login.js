@@ -3,7 +3,7 @@ let Action = require('../db').Action
 
 exports.get = function (request, response) {
   if (request.isUnauthenticated()) {
-    request.session.legacy = true
+    request.session.legacy = 'true'
     response.render('login.swig', request.query)
   } else {
     Action.create({
