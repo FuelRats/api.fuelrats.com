@@ -130,28 +130,38 @@ class Anope {
     })
   }
 
+  static updateAllVirtualHosts (userInstance) {
+    let user = userInstance.toJSON()
+
+    for (let nickname in user.nicknames) {
+      Anope.setVirtualHost(user, nickname)
+    }
+  }
+
   static setVirtualHost (user, nickname) {
     return new Promise(function (resolve, reject) {
-      let virtualHost = generateVirtualHost(user)
-      winston.info('Generated Vhost: ' + virtualHost)
+      setTimeout(function () {
+        let virtualHost = generateVirtualHost(user)
+        winston.info('Generated Vhost: ' + virtualHost)
 
-      if (virtualHost) {
-        client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
-          if (error) {
-            winston.error(error)
-            reject(error)
-          } else {
-            winston.info(data)
-            if (/not registered/.test(data.return) === true) {
-              reject(data.return)
+        if (virtualHost) {
+          client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
+            if (error) {
+              winston.error(error)
+              reject(error)
             } else {
-              resolve(virtualHost)
+              winston.info(data)
+              if (/not registered/.test(data.return) === true) {
+                reject(data.return)
+              } else {
+                resolve(virtualHost)
+              }
             }
-          }
-        })
-      } else {
-        reject(null)
-      }
+          })
+        } else {
+          reject(null)
+        }
+      }, 500)
     })
   }
 }
@@ -184,7 +194,7 @@ function generateVirtualHost (user) {
 function IRCSafeName (rat) {
   let ratName = rat.CMDRname
   ratName = ratName.replace(/[^a-zA-Z0-9\s]/g, '')
-  return ratName.toLowercase()
+  return ratName.toLowerCase()
 }
 
 class IRCUserInfo {

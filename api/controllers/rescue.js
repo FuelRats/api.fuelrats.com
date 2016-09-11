@@ -4,46 +4,36 @@ let _ = require('underscore')
 let db = require('../db').db
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
+let Epic = require('../db').Epic
+let API = require('../classes/API')
 
 let Errors = require('../errors')
-let websocket = require('../websocket')
 let Permission = require('../permission')
 
 class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
 
-      let limit = parseInt(query.limit) || 25
-      delete query.limit
+      let dbQuery = API.createQueryFromRequest(query)
 
-      let offset = parseInt(query.offset) || 0
-      delete query.offset
-
-      let order = parseInt(query.order) || 'createdAt'
-      delete query.order
-      let direction = query.direction || 'ASC'
-      delete query.direction
-
-      let dbQuery = {
-        where: query,
-        limit: limit,
-        offset: offset,
-        order: [
-          [order, direction]
-        ],
-        include: [
-          {
-            model: Rat,
-            as: 'rats'
-          }
-        ]
-      }
+      dbQuery.include = [
+        {
+          model: Rat,
+          as: 'rats',
+          require: false
+        },
+        {
+          model: Epic,
+          as: 'epics',
+          require: false
+        }
+      ]
 
       Rescue.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
           count: result.rows.length,
-          limit: limit,
-          offset: offset,
+          limit: dbQuery.limit,
+          offset: dbQuery.offset,
           total: result.count
         }
 
@@ -105,10 +95,10 @@ class Controller {
             findRescueWithRats({ id: rescue.id }).then(function (rescueInstance) {
               let rescue = convertRescueToAPIResult(rescueInstance)
 
-              let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+              let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                 return cl.clientId !== connection.clientId
               })
-              websocket.broadcast(allClientsExcludingSelf, {
+              connection.websocket.broadcast(allClientsExcludingSelf, {
                 action: 'rescue:created'
               }, rescue)
 
@@ -186,10 +176,10 @@ class Controller {
 
                 let rescue = convertRescueToAPIResult(rescueInstance)
 
-                let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                   return cl.clientId !== connection.clientId
                 })
-                websocket.broadcast(allClientsExcludingSelf, {
+                connection.websocket.broadcast(allClientsExcludingSelf, {
                   action: 'rescue:updated'
                 }, rescue)
 
@@ -223,17 +213,17 @@ class Controller {
         Permission.require('rescue.delete', connection.user).then(function () {
           Rescue.findById(query.id).then(function (rescue) {
             if (!rescue) {
-              reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+              reject({ error: Errors.throw('not_found', query.id), meta: {} })
               return
             }
             rescue.destroy()
 
-            let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+            let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
               return cl.clientId !== connection.clientId
             })
-            websocket.broadcast(allClientsExcludingSelf, {
+            connection.websocket.broadcast(allClientsExcludingSelf, {
               action: 'rescue:deleted'
-            }, convertRescueToAPIResult(rescue))
+            }, { id: query.id })
 
             resolve({ data: null, meta: {} })
           }).catch(function (error) {
@@ -269,16 +259,18 @@ class Controller {
                   }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
-                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                     return cl.clientId !== connection.clientId
                   })
-                  websocket.broadcast(allClientsExcludingSelf, {
+                  connection.websocket.broadcast(allClientsExcludingSelf, {
                     action: 'rescue:updated'
                   }, rescue)
 
                   resolve({
                     data: rescue,
-                    meta: {}
+                    meta: {
+                      id: query.id
+                    }
                   })
                 }).catch(function (error) {
                   reject({ error: Errors.throw('server_error', error), meta: {} })
@@ -322,10 +314,10 @@ class Controller {
                   }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
-                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                     return cl.clientId !== connection.clientId
                   })
-                  websocket.broadcast(allClientsExcludingSelf, {
+                  connection.websocket.broadcast(allClientsExcludingSelf, {
                     action: 'rescue:updated'
                   }, rescue)
 
@@ -379,10 +371,10 @@ class Controller {
                   }
                   let rescue = convertRescueToAPIResult(rescueInstance)
 
-                  let allClientsExcludingSelf = websocket.socket.clients.filter(function (cl) {
+                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                     return cl.clientId !== connection.clientId
                   })
-                  websocket.broadcast(allClientsExcludingSelf, {
+                  connection.websocket.broadcast(allClientsExcludingSelf, {
                     action: 'rescue:updated'
                   }, rescue)
                   resolve({ data: rescue, meta: {} })
@@ -481,6 +473,11 @@ class HTTP {
             model: Rat,
             as: 'firstLimpet',
             required: false
+          },
+          {
+            model: Epic,
+            as: 'epics',
+            required: false
           }
         ]
       }).then(function (rescueInstance) {
@@ -569,6 +566,9 @@ function convertRescueToAPIResult (rescueInstance) {
     rescue.rats = []
   }
 
+  rescue.epic = (rescue.epics.length > 0)
+  delete rescue.epics
+
   delete rescue.firstLimpet
   rescue.firstLimpet = rescue.firstLimpetId
   delete rescue.firstLimpetId
@@ -583,6 +583,11 @@ function findRescueWithRats (where) {
       {
         model: Rat,
         as: 'rats',
+        required: false
+      },
+      {
+        model: Epic,
+        as: 'epics',
         required: false
       }
     ]

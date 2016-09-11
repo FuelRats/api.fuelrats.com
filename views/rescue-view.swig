@@ -21,6 +21,11 @@
   </h1>
 
   <div class="row">
+    {% if epicString %}
+    <div class="alert alert-warning" role="alert">
+      <img class="epicicon" src="/svg/epic.svg" alt="epic icon">{{ epicString }}
+    </div>
+    {% endif %}
     <div class="col-md-8">
       <dl class="dl-horizontal row">
         <dt class="col-sm-2">Status:</dt>
@@ -92,19 +97,6 @@
         <div class="card-header">
           <strong>Rats</strong>
         </div>
-
-        {% if firstLimpet %}
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item">
-            {{ firstLimpet }}
-          </li>
-          {% for unidentifiedRat in unidentifiedRats %}
-            <li class="list-group-item">
-              {{ unidentifiedRat }}
-            </li>
-          {% endfor %}
-        </ul>
-        {% endif %}
 
         <ul class="list-group list-group-flush">
           {% for rat in rats %}

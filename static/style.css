@@ -84,6 +84,20 @@ input[type='radio'] {
   margin-bottom: 30px;
 }
 
+.epicicon {
+  height: auto;
+  width: 42px;
+}
+
+#overview .container-fluid > div {
+  padding: 1rem;
+  text-align: center;
+}
+
+#overview {
+  margin-bottom: 2rem;
+}
+
 .errorart {
   margin: auto;
   display:block;

@@ -4,6 +4,7 @@ let winston = require('winston')
 let User = require('../db').User
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
+let Epic = require('../db').Epic
 let db = require('../db').db
 
 const labels = {
@@ -21,7 +22,7 @@ exports.get = function (request, response) {
     attributes: [
       'id',
       'email',
-      'nicknames',
+      [db.cast(db.col('nicknames'), 'text[]'), 'nicknames'],
       'drilled',
       'drilledDispatch',
       'group'
@@ -46,14 +47,25 @@ exports.get = function (request, response) {
         attributes: [
           'id',
           'createdAt',
+          'client',
           'codeRed',
-          'epic',
           'open',
           'notes',
           'system',
           'successful',
           [db.literal('CASE WHEN "rats.rescues"."firstLimpetId" = "rats"."id" THEN TRUE ELSE FALSE END'), 'isFirstLimpet']
-        ]
+        ],
+        include: [{
+          required: false,
+          model: Epic,
+          as: 'epics',
+          attributes: [
+            'id',
+            'createdAt',
+            'notes',
+            'ratId'
+          ]
+        }]
       }]
     }],
     order: [
@@ -75,21 +87,29 @@ exports.get = function (request, response) {
       let assistCount = 0
       let failureCount = 0
 
+      let openRescues = []
+
       for (let rescue of rat.rescues) {
-        if (rescue.successful === true) {
-          if (rescue.isFirstLimpet === true) {
-            firstLimpetCount += 1
-          } else {
-            assistCount += 1
-          }
+        if (rescue.open === true) {
+          openRescues.push(rescue)
+          rat.rescues.splice(rat.rescues.indexOf(rescue), 1)
         } else {
-          failureCount += 1
+          if (rescue.successful === true) {
+            if (rescue.isFirstLimpet === true) {
+              firstLimpetCount += 1
+            } else {
+              assistCount += 1
+            }
+          } else {
+            failureCount += 1
+          }
         }
       }
 
       rat.firstLimpetCount = firstLimpetCount
       rat.assistCount = assistCount
       rat.failureCount = failureCount
+      rat.openRescues = openRescues
       rat.successRate = ((firstLimpetCount + assistCount) / rat.rescues.length * 100).toFixed(2)
     }
     response.render('welcome.swig', { user: user, userGroupLabel: labels[user.group] })

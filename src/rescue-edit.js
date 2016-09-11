@@ -76,7 +76,7 @@ $(firstLimpetField).tagsinput('input').blur(function () {
 
 let systemEngine = new Bloodhound({
   remote: {
-    url: 'http://www.edsm.net/typeahead/systems/query/%QUERY',
+    url: 'https://www.edsm.net/typeahead/systems/query/%QUERY',
     minLength: 3,
     wildcard: '%QUERY',
     filter: function (data) {

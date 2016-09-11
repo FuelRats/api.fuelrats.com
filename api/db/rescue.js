@@ -25,11 +25,6 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.JSONB,
       allowNull: true
     },
-    epic: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
     open: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -77,7 +72,12 @@ module.exports = function (sequelize, DataTypes) {
         Rescue.belongsToMany(models.Rat, { as: 'rats', through: 'RescueRats' })
         Rescue.belongsTo(models.Rat, { as: 'firstLimpet' })
       }
-    }
+    },
+    indexes: [{
+      fields: ['data'],
+      using: 'gin',
+      operator: 'jsonb_path_ops'
+    }]
   })
 
   return Rescue
