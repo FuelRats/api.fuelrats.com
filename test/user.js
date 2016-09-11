@@ -13,14 +13,12 @@ let generator = require('./generator')
 let rootUrl = 'http://localhost:8080'
 request = request(rootUrl)
 let cookie
-console.log('startign tests')
 
 // Before and After hooks
 // =============================================================================
 
 describe('Login Test', function () {
   it('should create user session for valid user', function (done) {
-    console.log('login test')
     this.timeout(10000)
     request.post('/login')
       .set('Accept','application/json')
@@ -49,12 +47,11 @@ describe('POST /rats', function () {
   let rat = generator.randomRat()
 
   it('should create a new rat', function (done) {
-    console.log('make rat')
     this.timeout(5000)
     request.post('/rats')
-    .set('Cookie', cookie)
-    .send(rat)
-    .expect(201).end(function (error, response) {
+      .set('Cookie', cookie)
+      .send(rat)
+      .expect(201).end(function (error, response) {
       if (error) {
         return done(error)
       }
@@ -71,7 +68,6 @@ describe('POST /rats', function () {
       assert.equal(response.body.data.platform, rat.platform)
 
       generatedRat = response.body.data
-      console.log(response.body.data)
       done()
     })
   })
@@ -91,9 +87,9 @@ describe('Rescue Endpoints', function () {
     it('should create a new rescue', function (done) {
       this.timeout(5000)
       request.post('/rescues')
-      .set('Cookie', cookie)
-      .send(rescue)
-      .expect(201).end(function (error, response) {
+        .set('Cookie', cookie)
+        .send(rescue)
+        .expect(201).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -131,8 +127,8 @@ describe('Rescue Endpoints', function () {
 
     it('should retrieve a rescue matching the one we created', function (done) {
       request.get('/rescues?id=' + generatedRescue.id)
-      .set('Cookie', cookie).send()
-      .expect(200).end(function (error, response) {
+        .set('Cookie', cookie).send()
+        .expect(200).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -168,8 +164,8 @@ describe('Rescue Endpoints', function () {
 
     it('should retrieve a rescue matching a JSON data value', function (done) {
       request.get('/rescues?data={"foo": ["test"]}')
-      .set('Cookie', cookie).send()
-      .expect(200).end(function (error, response) {
+        .set('Cookie', cookie).send()
+        .expect(200).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -209,9 +205,9 @@ describe('Rescue Endpoints', function () {
     it('should modify the rescue', function (done) {
       this.timeout(5000)
       request.put('/rescues/' + generatedRescue.id)
-      .set('Cookie', cookie)
-      .send(rescue)
-      .expect(201).end(function (error, response) {
+        .set('Cookie', cookie)
+        .send(rescue)
+        .expect(201).end(function (error, response) {
         if (error) {
           return done(error)
         }
@@ -249,8 +245,8 @@ describe('Rescue Endpoints', function () {
 
     it('should delete the rescue', function (done) {
       request.delete('/rescues/' + generatedRescue.id)
-      .set('Cookie', cookie).send()
-      .expect(204).end(function (error, response) {
+        .set('Cookie', cookie).send()
+        .expect(204).end(function (error, response) {
         if (error) {
           return done(error)
         }

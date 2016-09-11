@@ -130,6 +130,14 @@ class Anope {
     })
   }
 
+  static updateAllVirtualHosts (userInstance) {
+    let user = userInstance.toJSON()
+
+    for (let nickname in user.nicknames) {
+      Anope.setVirtualHost(user, nickname)
+    }
+  }
+
   static setVirtualHost (user, nickname) {
     return new Promise(function (resolve, reject) {
       setTimeout(function () {

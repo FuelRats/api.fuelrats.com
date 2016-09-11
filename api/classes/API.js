@@ -10,8 +10,14 @@ class API {
 
     let order = parseInt(request.order) || 'createdAt'
     delete request.order
+
     let direction = request.direction || 'ASC'
     delete request.direction
+
+    if (request.firstLimpet) {
+      request.firstLimpetId = request.firstLimpet
+      delete request.firstLimpet
+    }
 
     if (request.data) {
       let dataQuery = request.data
@@ -20,10 +26,6 @@ class API {
       request.data = {
         $contains: JSON.parse(dataQuery)
       }
-    }
-
-    if (request.nicknames) {
-      request.nicknames = { $contains: [request.nicknames] }
     }
 
     let query = {
@@ -36,6 +38,13 @@ class API {
     }
 
     return query
+  }
+
+  static version (version) {
+    return function (req, res, next) {
+      req.apiVersion = version
+      next()
+    }
   }
 }
 

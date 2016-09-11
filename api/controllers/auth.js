@@ -6,6 +6,7 @@ let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
 let Rat = require('../db').Rat
+let db = require('../db').db
 let Token = require('../db').Token
 let Client = require('../db').Client
 let bcrypt = require('bcrypt')
@@ -101,6 +102,14 @@ passport.use(new BearerStrategy(
       }
       User.findOne({
         where: { id: token.userId },
+        attributes: {
+          include: [
+            [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+          ],
+          exclude: [
+            'nicknames'
+          ]
+        },
         include: [
           {
             model: Rat,
@@ -143,7 +152,14 @@ exports.isAuthenticated = function (isUserFacing) {
             return next(error)
           } else {
             req.session.returnTo = req.originalUrl || req.url
-            return res.redirect('/login')
+
+            if (req.session.legacy) {
+              return res.redirect('/login')
+            } else {
+              res.model.data = req.user
+              res.status(200)
+              return
+            }
           }
         }
         req.user = user
@@ -156,6 +172,16 @@ exports.isAuthenticated = function (isUserFacing) {
 function findUserWithRats (where) {
   return User.findOne({
     where: where,
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames',
+        'dispatch',
+        'deletedAt'
+      ]
+    },
     include: [
       {
         model: Rat,

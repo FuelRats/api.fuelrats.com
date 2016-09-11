@@ -1,8 +1,10 @@
 'use strict'
 let _ = require('underscore')
 let Anope = require('../Anope')
+let Permission = require('../permission')
 let Errors = require('../errors')
 let User = require('../db').User
+let db = require('../db').db
 let Rat = require('../db').Rat
 
 
@@ -44,7 +46,7 @@ class Controller {
         nicknames.push(data.nickname)
 
         Anope.confirm(data.nickname).then(function () {
-          User.update({ nicknames: nicknames }, {
+          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: { id: connection.user.id }
           }).then(function () {
             User.findOne({
@@ -92,7 +94,7 @@ class Controller {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
-        User.update({ nicknames: nicknames }, {
+        User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
           where: { id: connection.user.id }
         }).then(function () {
           User.findOne({
@@ -125,7 +127,7 @@ class Controller {
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (!query.nickname) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', query.nickname) })
+        reject({ meta: {}, error: Errors.throw('missing_required_field', 'nickname') })
       }
 
       if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
@@ -133,7 +135,7 @@ class Controller {
           let nicknames = connection.user.nicknames
           nicknames.splice(nicknames.indexOf(query.nickname), 1)
 
-          User.update({ nicknames: nicknames }, {
+          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: {
               id: connection.user.id
             }
@@ -148,6 +150,83 @@ class Controller {
       } else {
         reject({ meta: {}, error: Errors.throw('no_permission') })
       }
+    })
+  }
+
+  static search (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      if (!query.nickname) {
+        reject({ meta: {}, error: Errors.throw('missing_required_field', 'nickname') })
+      }
+
+      let strippedNickname = query.nickname.replace(/\[(.*?)\]$/g, '')
+
+      let displayPrivateFields = connection.user && Permission.granted('user.read', connection.user)
+
+      let limit = parseInt(query.limit) || 25
+      let offset = parseInt(query.offset) || 0
+      let order = parseInt(query.order) || 'createdAt'
+      let direction = query.direction || 'ASC'
+
+      let dbQuery = {
+        where: {
+          nicknames: {
+            $overlap:  db.literal(`ARRAY[${db.escape(query.nickname)}, ${db.escape(strippedNickname)}]::citext[]`)
+          }
+        },
+        attributes: [
+          'id',
+          'createdAt',
+          'updatedAt',
+          'email',
+          'drilled',
+          'drilledDispatch',
+          'group',
+          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
+        include: [{
+          model: Rat,
+          as: 'rats',
+          require: false
+        }],
+        limit: limit,
+        offset: offset,
+        order: [
+          [order, direction]
+        ]
+      }
+
+      User.findAndCountAll(dbQuery).then(function (result) {
+        let meta = {
+          count: result.rows.length,
+          limit: dbQuery.limit,
+          offset: dbQuery.offset,
+          total: result.count
+        }
+
+        let users = result.rows.map(function (userInstance) {
+          let user = userInstance.toJSON()
+
+          if (!displayPrivateFields) {
+            user.email = null
+          }
+
+          user.rats = user.rats.map(function (rat) {
+            delete rat.UserId
+            delete rat.deletedAt
+            return rat
+          })
+
+          return user
+        })
+
+        resolve({
+          data: users,
+          meta: meta
+        })
+      }).catch(function (error) {
+        reject({ meta: {}, error: Errors.throw('server_error', error) })
+      })
     })
   }
 }
@@ -202,6 +281,20 @@ class HTTP {
 
     Controller.delete(request.body, request, request.query).then(function () {
       response.status(204)
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+
+  static search (request, response, next) {
+    response.model.meta.params = _.extend(response.model.meta.params, request.params)
+
+    Controller.search(request.body, request, request.query).then(function (res) {
+      response.model.data = res.data
+      response.status(200)
       next()
     }).catch(function (error) {
       response.model.errors.push(error)

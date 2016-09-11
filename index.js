@@ -123,6 +123,9 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(expressSession({
+  cookie: {
+    domain: '.fuelrats.com'
+  },
   secret: config.secretSauce,
   resave: false,
   saveUninitialized: false
@@ -138,6 +141,16 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (id, done) {
   User.findOne({
     where: { id: id },
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames',
+        'dispatch',
+        'deletedAt'
+      ]
+    },
     include: [
       {
         model: Rat,
@@ -173,6 +186,8 @@ app.use(passport.session())
 
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
+  request.websocket = websocket
+
   request.body = _.extend(request.query, request.body)
 
   response.model = {
@@ -254,11 +269,13 @@ router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('
 
 
 router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
+router.get('/users/:id/forceUpdateIRCStatus', auth.isAuthenticated(false), Permission.required('user.update', false), user.getById)
 router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read', false), user.getById)
 router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
 router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
+router.get('/nicknames/search/:nickname', nicknames.search)
 router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
 router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
 router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
@@ -286,6 +303,10 @@ router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
 
 router.route('/oauth2/authorise')
+  .get(auth.isAuthenticated(true), oauth2.authorization)
+  .post(auth.isAuthenticated(false), oauth2.decision)
+
+router.route('/oauth2/authorize')
   .get(auth.isAuthenticated(true), oauth2.authorization)
   .post(auth.isAuthenticated(false), oauth2.decision)
 
@@ -322,19 +343,15 @@ app.use(function (request, response) {
       }
     }
   } else {
-    delete response.model.errors
-    response.send(response.model)
-  }
-})
-
-app.get('*', function (request, response) {
-  if (!request.referer) {
-    response.status(404)
-    response.render('errors/404', { path: request.path })
-  } else {
-    delete response.model.data
-    response.model.errors = Error.throw('not_found', request.path)
-    response.send(response.model)
+    if (Object.getOwnPropertyNames(response.model.data).length === 0 && response.statusCode === 200) {
+      delete response.model.data
+      response.model.errors = Error.throw('not_found', request.path)
+      response.status(404)
+      response.send(response.model)
+    } else {
+      delete response.model.errors
+      response.send(response.model)
+    }
   }
 })
 
