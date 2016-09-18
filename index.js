@@ -131,7 +131,6 @@ app.use(expressSession({
   saveUninitialized: false
 }))
 app.use(passport.initialize())
-app.use(passport.session())
 passport.use(auth.LocalStrategy)
 
 passport.serializeUser(function (user, done) {
