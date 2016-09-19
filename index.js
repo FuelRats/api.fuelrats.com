@@ -175,11 +175,6 @@ app.set('x-powered-by', false)
 
 let port = config.port || process.env.PORT
 
-app.use(expressSession({
-  secret: config.secretSauce,
-  resave: false,
-  saveUninitialized: false
-}))
 app.use(passport.initialize())
 app.use(passport.session())
 
