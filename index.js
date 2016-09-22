@@ -115,6 +115,13 @@ swig.setFilter('eliteDateNoFormat', function (date, args) {
   return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
 })
 
+let sessionOptions = {
+  cookie: config.cookie,
+  secret: config.secretSauce,
+  resave: false,
+  saveUninitialized: false
+}
+
 app.use(cors())
 app.use(compression())
 app.use(bodyParser.urlencoded({
@@ -122,14 +129,7 @@ app.use(bodyParser.urlencoded({
 }))
 app.use(bodyParser.json())
 app.use(cookieParser())
-app.use(expressSession({
-  cookie: {
-    domain: '.fuelrats.com'
-  },
-  secret: config.secretSauce,
-  resave: false,
-  saveUninitialized: false
-}))
+app.use(expressSession(sessionOptions))
 app.use(passport.initialize())
 app.use(passport.session())
 passport.use(auth.LocalStrategy)
