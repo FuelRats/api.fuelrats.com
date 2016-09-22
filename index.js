@@ -131,7 +131,6 @@ app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(expressSession(sessionOptions))
 app.use(passport.initialize())
-app.use(passport.session())
 passport.use(auth.LocalStrategy)
 
 passport.serializeUser(function (user, done) {
@@ -219,8 +218,8 @@ if (options.logging || options.test) {
     winston.info('ENDPOINT:', request.originalUrl)
     winston.info('METHOD:', request.method)
     winston.info('DATA:', censoredParams)
-    winston.info('IP:', request.headers['X-Forwarded-for'] || request.connection.remoteAddress)
-    request.inet = request.headers['X-Forwarded-for'] || request.connection.remoteAddress
+    winston.info('IP:', request.headers['x-forwarded-for'] || request.connection.remoteAddress)
+    request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
     next()
   })
 }

@@ -34,7 +34,7 @@ exports.post = function (request, response, next) {
       next()
     }
   } else {
-    request.session.userIp = request.headers['x-Forwarded-For'] || request.connection.remoteAddress
+    request.session.userIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress
 
     request.session.errorCode = 401 // This could signify that the login has failed
     response.redirect('/login?error_login=1')
