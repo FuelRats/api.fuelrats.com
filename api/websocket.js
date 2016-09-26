@@ -13,6 +13,7 @@ let rescue = require('./controllers/rescue').Controller
 let stream = require('./controllers/stream')
 let client = require('./controllers/client').Controller
 let user = require('./controllers/user').Controller
+let nickname = require('./controllers/nicknames').Controller
 let _ = require('underscore')
 
 let controllers = {
@@ -42,6 +43,10 @@ let controllers = {
     read: [client.read, true, 'client.read'],
     update: [client.update, true, 'client.update'],
     delete: [client.delete, true, 'client.delete']
+  },
+
+  nicknames: {
+    search: [nickname.search]
   },
 
   stream: {
