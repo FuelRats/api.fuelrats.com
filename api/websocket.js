@@ -50,8 +50,8 @@ let controllers = {
   },
 
   stream: {
-    subscribe: [stream.subscribe, true],
-    unsubscribe: [stream.unsubscribe, true]
+    subscribe: [stream.subscribe],
+    unsubscribe: [stream.unsubscribe]
   }
 }
 
