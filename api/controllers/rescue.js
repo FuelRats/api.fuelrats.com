@@ -29,6 +29,13 @@ class Controller {
         }
       ]
 
+      if (query.rats) {
+        dbQuery.include[0].require = true
+        dbQuery.include[0].where = {
+          id: query.rats
+        }
+      }
+
       Rescue.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
           count: result.rows.length,

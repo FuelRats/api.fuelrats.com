@@ -62,7 +62,6 @@ class Statistics {
           })
           resolve(rats)
         }).catch(function (error) {
-          console.log(error)
           reject(error)
         })
       } catch(ex) {

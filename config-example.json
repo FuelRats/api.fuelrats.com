@@ -1,4 +1,7 @@
 {
+  "cookie": {
+    "domain": "localhost"
+  },
   "hostname": "localhost",
   "port": 8080,
   "proxyEnabled": false,
