@@ -164,8 +164,13 @@ class Anope {
           Promise.all(hostUpdates).then(function () {
             for (let channel of officialChannels) {
               Anope.syncChannel(channel)
+              resolve()
             }
           }).catch(function (errors) {
+            for (let channel of officialChannels) {
+              Anope.syncChannel(channel)
+              resolve()
+            }
             reject(errors)
           })
         } else {
