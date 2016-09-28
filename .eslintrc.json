@@ -77,6 +77,10 @@
     "spaced-comment": [
       2,
       "always"
+    ],
+    "guard-for-in": [
+      2,
+      "always"
     ]
   }
 }

@@ -129,7 +129,7 @@ function updateUserVhost (userId) {
       }
     ]
   }).then(function (user) {
-    for (let nickname in user.nicknames) {
+    for (let nickname of user.nicknames) {
       Anope.setVirtualHost(user, nickname)
     }
   }).catch(function (error) {
