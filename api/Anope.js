@@ -10,6 +10,7 @@ let sslRootCAs = require('ssl-root-cas/latest')
 sslRootCAs.inject()
 
 const client = xmlrpc.createSecureClient('https://irc.eu.fuelrats.com:6080/xmlrpc')
+const officialChannels = ['#fuelrats', '#drillrats', '#ratchat']
 
 class Anope {
   static authenticate (nickname, password) {
@@ -130,6 +131,24 @@ class Anope {
     })
   }
 
+  static setVirtualHost (nickname, host) {
+    return new Promise(function (resolve, reject) {
+      client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${host}`]], function (error, data) {
+        if (error) {
+          winston.error(error)
+          reject(error)
+        } else {
+          winston.info(data)
+          if (/not registered/.test(data.return) === true) {
+            reject(data.return)
+          } else {
+            resolve(host)
+          }
+        }
+      })
+    })
+  }
+
   static updateVirtualHost (user) {
     return new Promise(function (resolve, reject) {
       setTimeout(function () {
@@ -137,25 +156,40 @@ class Anope {
         winston.info('Generated Vhost: ' + virtualHost)
 
         if (virtualHost) {
+          let hostUpdates = []
           for (let nickname of user.nicknames) {
-            client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
-              if (error) {
-                winston.error(error)
-                reject(error)
-              } else {
-                winston.info(data)
-                if (/not registered/.test(data.return) === true) {
-                  reject(data.return)
-                } else {
-                  resolve(virtualHost)
-                }
-              }
-            })
+            hostUpdates.push(Anope.setVirtualHost(nickname, virtualHost))
           }
+
+          Promise.all(hostUpdates).then(function () {
+            for (let channel of officialChannels) {
+              Anope.syncChannel(channel)
+            }
+          }).catch(function (errors) {
+            reject(errors)
+          })
         } else {
           reject(null)
         }
       }, 500)
+    })
+  }
+
+  static syncChannel (channel) {
+    return new Promise(function (resolve, reject) {
+      client.methodCall('command', [['ChanServ', 'API', `SYNC ${channel}`]], function (error, data) {
+        if (error) {
+          winston.error(error)
+          reject(error)
+        } else {
+          winston.info(data)
+          if (/isn't registered/.test(data.return) === true) {
+            reject(data.return)
+          } else {
+            resolve()
+          }
+        }
+      })
     })
   }
 }
