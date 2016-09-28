@@ -79,8 +79,7 @@
       "always"
     ],
     "guard-for-in": [
-      2,
-      "always"
+      2
     ]
   }
 }
