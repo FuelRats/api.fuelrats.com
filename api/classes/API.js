@@ -2,6 +2,9 @@
 
 class API {
   static createQueryFromRequest (request) {
+    delete request.rats
+    delete delete request.CMDRs
+
     let limit = parseInt(request.limit) || 25
     delete request.limit
 
@@ -30,11 +33,11 @@ class API {
 
     let query = {
       where: request,
-      limit: limit,
-      offset: offset,
       order: [
         [order, direction]
-      ]
+      ],
+      limit: limit,
+      offset: offset,
     }
 
     return query

@@ -21,6 +21,13 @@ class Controller {
         }
       ]
 
+      if (query.CMDRs) {
+        dbQuery.include[0].require = true
+        dbQuery.include[0].where = {
+          id: query.CMDRs
+        }
+      }
+
       dbQuery.attributes = {
         include: [
           [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
@@ -156,8 +163,10 @@ class HTTP {
   static get (request, response, next) {
     Controller.read(request.query, request).then(function (res) {
       let data = res.data
+      let meta = res.meta
 
       response.model.data = data
+      response.model.meta = meta
       response.status = 200
       next()
     }, function (error) {
