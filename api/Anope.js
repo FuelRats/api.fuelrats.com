@@ -130,34 +130,28 @@ class Anope {
     })
   }
 
-  static updateAllVirtualHosts (userInstance) {
-    let user = userInstance.toJSON()
-
-    for (let nickname in user.nicknames) {
-      Anope.setVirtualHost(user, nickname)
-    }
-  }
-
-  static setVirtualHost (user, nickname) {
+  static updateVirtualHost (user) {
     return new Promise(function (resolve, reject) {
       setTimeout(function () {
         let virtualHost = generateVirtualHost(user)
         winston.info('Generated Vhost: ' + virtualHost)
 
         if (virtualHost) {
-          client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
-            if (error) {
-              winston.error(error)
-              reject(error)
-            } else {
-              winston.info(data)
-              if (/not registered/.test(data.return) === true) {
-                reject(data.return)
+          for (let nickname of user.nicknames) {
+            client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
+              if (error) {
+                winston.error(error)
+                reject(error)
               } else {
-                resolve(virtualHost)
+                winston.info(data)
+                if (/not registered/.test(data.return) === true) {
+                  reject(data.return)
+                } else {
+                  resolve(virtualHost)
+                }
               }
-            }
-          })
+            })
+          }
         } else {
           reject(null)
         }

@@ -129,9 +129,7 @@ function updateUserVhost (userId) {
       }
     ]
   }).then(function (user) {
-    for (let nickname of user.nicknames) {
-      Anope.setVirtualHost(user, nickname)
-    }
+    Anope.updateVirtualHost(user)
   }).catch(function (error) {
     winston.error('Could not get user for userId when updating Vhost', error)
   })

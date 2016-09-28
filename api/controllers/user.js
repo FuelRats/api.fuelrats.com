@@ -96,7 +96,7 @@ class Controller {
             Promise.all(updates).then(function () {
               findUserWithRats({ id: query.id }).then(function (userInstance) {
                 if (data.group || data.drilled || data.drilledDispatch) {
-                  Anope.updateAllVirtualHosts(userInstance)
+                  Anope.updateVirtualHost(userInstance)
                 }
                 let user = convertUserToAPIResult(userInstance)
                 resolve({ data: user, meta: {} })
@@ -147,7 +147,7 @@ class Controller {
             return reject({ error: Error.throw('not_found', query.id), meta: {} })
           }
 
-          Anope.updateAllVirtualHosts(userInstance)
+          Anope.updateVirtualHost(userInstance)
           resolve({ data: { success: true }, meta: {} })
         }).catch(function (error) {
           reject({ error: Errors.throw('server_error', error), meta: {} })
