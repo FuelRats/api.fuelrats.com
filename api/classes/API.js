@@ -33,11 +33,11 @@ class API {
 
     let query = {
       where: request,
-      limit: limit,
-      offset: offset,
       order: [
         [order, direction]
-      ]
+      ],
+      limit: limit,
+      offset: offset,
     }
 
     return query
