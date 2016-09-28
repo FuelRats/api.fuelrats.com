@@ -21,6 +21,13 @@ class Controller {
         }
       ]
 
+      if (query.CMDRs) {
+        dbQuery.include[0].require = true
+        dbQuery.include[0].where = {
+          id: query.CMDRs
+        }
+      }
+
       dbQuery.attributes = {
         include: [
           [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
