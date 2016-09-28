@@ -59,6 +59,7 @@ let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
 let welcome = require('./api/controllers/welcome')
+let jiraDrill = require('./api/controllers/jira/drill').HTTP
 
 db.sync()
 
@@ -306,6 +307,8 @@ router.route('/oauth2/authorize')
 
 // Create endpoint handlers for oauth2 token
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
+
+router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 
 
 // Register routes
