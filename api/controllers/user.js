@@ -7,7 +7,7 @@ let Rat = require('../db').Rat
 let db = require('../db').db
 let Errors = require('../errors')
 let API = require('../classes/API')
-let Anope = require('../Anope')
+let Anope = require('../Anope/index')
 
 class Controller {
   static read (query) {

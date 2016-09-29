@@ -1,6 +1,6 @@
 'use strict'
 let _ = require('underscore')
-let Anope = require('../Anope')
+let Anope = require('../Anope/index')
 let Permission = require('../permission')
 let Errors = require('../errors')
 let User = require('../db').User

@@ -1,7 +1,7 @@
 'use strict'
 
 let winston = require('winston')
-let Anope = require('../../Anope')
+let Anope = require('../../Anope/index')
 let db = require('../../db').db
 let User = require('../../db').User
 let Rat = require('../../db').Rat
