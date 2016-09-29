@@ -44,7 +44,7 @@ class Controller {
     return new Promise(function (resolve, reject) {
       let limit = parseInt(query.limit) || 25
 
-      let offset = parseInt(query.offset) || 0
+      let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
 
       let dbQuery = {
         where: {

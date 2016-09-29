@@ -8,8 +8,9 @@ class API {
     let limit = parseInt(request.limit) || 25
     delete request.limit
 
-    let offset = parseInt(request.offset) || 0
+    let offset = (parseInt(request.page) - 1) * limit || parseInt(request.offset) || 0
     delete request.offset
+    delete request.page
 
     let order = parseInt(request.order) || 'createdAt'
     delete request.order

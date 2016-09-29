@@ -166,7 +166,7 @@ class Controller {
       let displayPrivateFields = connection.user && Permission.granted('user.read', connection.user)
 
       let limit = parseInt(query.limit) || 25
-      let offset = parseInt(query.offset) || 0
+      let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
       let order = parseInt(query.order) || 'createdAt'
       let direction = query.direction || 'ASC'
 
