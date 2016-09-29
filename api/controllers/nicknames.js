@@ -1,11 +1,13 @@
 'use strict'
 let _ = require('underscore')
-let Anope = require('../Anope/index')
 let Permission = require('../permission')
 let Errors = require('../errors')
 let User = require('../db').User
 let db = require('../db').db
 let Rat = require('../db').Rat
+
+let NickServ = require('../Anope/NickServ')
+let HostServ = require('../Anope/HostServ')
 
 
 class Controller {
@@ -16,7 +18,7 @@ class Controller {
         return
       }
 
-      Anope.info(query.nickname).then(function (info) {
+      NickServ.info(query.nickname).then(function (info) {
         if (!info) {
           reject({ meta: {}, error: Errors.throw('not_found') })
           return
@@ -41,11 +43,11 @@ class Controller {
         }
       }
 
-      Anope.register(data.nickname, data.password, connection.user.email).then(function () {
+      NickServ.register(data.nickname, data.password, connection.user.email).then(function () {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
-        Anope.confirm(data.nickname).then(function () {
+        NickServ.confirm(data.nickname).then(function () {
           User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: { id: connection.user.id }
           }).then(function () {
@@ -59,7 +61,7 @@ class Controller {
                 }
               ]
             }).then(function (user) {
-              Anope.updateVirtualHost(user).then(function () {
+              HostServ.updateVirtualHost(user).then(function () {
                 resolve({ meta: {}, data: data.nickname })
               }).catch(function (error) {
                 reject({ meta: {}, error: Errors.throw('server_error', error) })
@@ -90,7 +92,7 @@ class Controller {
         }
       }
 
-      Anope.authenticate(data.nickname, data.password).then(function () {
+      NickServ.identify(data.nickname, data.password).then(function () {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
@@ -107,7 +109,7 @@ class Controller {
               }
             ]
           }).then(function (user) {
-            Anope.updateVirtualHost(user).then(function () {
+            HostServ.updateVirtualHost(user).then(function () {
               resolve({ meta: {}, data: data.nickname })
             }).catch(function (error) {
               reject({ meta: {}, error: Errors.throw('server_error', error) })
@@ -131,7 +133,7 @@ class Controller {
       }
 
       if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
-        Anope.drop(query.nickname).then(function () {
+        NickServ.drop(query.nickname).then(function () {
           let nicknames = connection.user.nicknames
           nicknames.splice(nicknames.indexOf(query.nickname), 1)
 

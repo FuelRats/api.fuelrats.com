@@ -7,7 +7,8 @@ let Rat = require('../db').Rat
 let db = require('../db').db
 let Errors = require('../errors')
 let API = require('../classes/API')
-let Anope = require('../Anope/index')
+
+let HostServ = require('../Anope/HostServ')
 
 class Controller {
   static read (query) {
@@ -96,7 +97,7 @@ class Controller {
             Promise.all(updates).then(function () {
               findUserWithRats({ id: query.id }).then(function (userInstance) {
                 if (data.group || data.drilled || data.drilledDispatch) {
-                  Anope.updateVirtualHost(userInstance)
+                  HostServ.updateVirtualHost(userInstance)
                 }
                 let user = convertUserToAPIResult(userInstance)
                 resolve({ data: user, meta: {} })
@@ -147,7 +148,7 @@ class Controller {
             return reject({ error: Error.throw('not_found', query.id), meta: {} })
           }
 
-          Anope.updateVirtualHost(userInstance)
+          HostServ.updateVirtualHost(userInstance)
           resolve({ data: { success: true }, meta: {} })
         }).catch(function (error) {
           reject({ error: Errors.throw('server_error', error), meta: {} })

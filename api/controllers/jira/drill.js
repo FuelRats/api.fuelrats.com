@@ -1,7 +1,7 @@
 'use strict'
 
 let winston = require('winston')
-let Anope = require('../../Anope/index')
+let HostServ = require('../../Anope/HostServ')
 let db = require('../../db').db
 let User = require('../../db').User
 let Rat = require('../../db').Rat
@@ -129,7 +129,7 @@ function updateUserVhost (userId) {
       }
     ]
   }).then(function (user) {
-    Anope.updateVirtualHost(user)
+    HostServ.updateVirtualHost(user)
   }).catch(function (error) {
     winston.error('Could not get user for userId when updating Vhost', error)
   })
