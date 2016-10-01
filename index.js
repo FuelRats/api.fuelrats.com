@@ -360,6 +360,10 @@ app.use(function (err, req, res, next) {
   /* eslint-enable no-unused-vars */
   if (res.model) {
     delete res.model.data
+    res.model.errors.push(err)
+    if (err.code) {
+      res.status(err.code)
+    }
   }
   res.send(res.model)
 })
