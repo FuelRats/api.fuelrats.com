@@ -3,7 +3,7 @@
 class API {
   static createQueryFromRequest (request) {
     delete request.rats
-    delete delete request.CMDRs
+    delete request.CMDRs
 
     let limit = parseInt(request.limit) || 25
     delete request.limit
