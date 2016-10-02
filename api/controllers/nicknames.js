@@ -167,7 +167,7 @@ class Controller {
 
       let limit = parseInt(query.limit) || 25
       let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
-      let order = parseInt(query.order) || 'createdAt'
+      let order = query.order || 'createdAt'
       let direction = query.direction || 'ASC'
 
       let dbQuery = {

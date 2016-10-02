@@ -3,7 +3,7 @@
 class API {
   static createQueryFromRequest (request) {
     delete request.rats
-    delete delete request.CMDRs
+    delete request.CMDRs
 
     let limit = parseInt(request.limit) || 25
     delete request.limit
@@ -12,7 +12,7 @@ class API {
     delete request.offset
     delete request.page
 
-    let order = parseInt(request.order) || 'createdAt'
+    let order = request.order || 'createdAt'
     delete request.order
 
     let direction = request.direction || 'ASC'
