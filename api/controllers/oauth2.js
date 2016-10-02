@@ -65,7 +65,7 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
     }).then(function (token) {
       let associations = []
       associations.push(token.setClient(client))
-      associations.push(token.setUser(client.userId))
+      associations.push(token.setUser(auth.userId))
 
       Promise.all(associations).then(function () {
         callback(null, token.value)
