@@ -12,8 +12,9 @@ class Controller {
       let limit = parseInt(query.limit) || 25
       delete query.limit
 
-      let offset = parseInt(query.offset) || 0
+      let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
       delete query.offset
+      delete query.page
 
       if (query.user) {
         query.UserId = query.user

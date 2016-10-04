@@ -1,11 +1,13 @@
 'use strict'
 let _ = require('underscore')
-let Anope = require('../Anope')
 let Permission = require('../permission')
 let Errors = require('../errors')
 let User = require('../db').User
 let db = require('../db').db
 let Rat = require('../db').Rat
+
+let NickServ = require('../Anope/NickServ')
+let HostServ = require('../Anope/HostServ')
 
 
 class Controller {
@@ -16,7 +18,7 @@ class Controller {
         return
       }
 
-      Anope.info(query.nickname).then(function (info) {
+      NickServ.info(query.nickname).then(function (info) {
         if (!info) {
           reject({ meta: {}, error: Errors.throw('not_found') })
           return
@@ -41,16 +43,25 @@ class Controller {
         }
       }
 
-      Anope.register(data.nickname, data.password, connection.user.email).then(function () {
+      NickServ.register(data.nickname, data.password, connection.user.email).then(function () {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
-        Anope.confirm(data.nickname).then(function () {
+        NickServ.confirm(data.nickname).then(function () {
           User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: { id: connection.user.id }
           }).then(function () {
             User.findOne({
               where: { id: connection.user.id },
+
+              attributes: {
+                include: [
+                  [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+                ],
+                exclude: [
+                  'nicknames'
+                ]
+              },
               include: [
                 {
                   model: Rat,
@@ -59,7 +70,7 @@ class Controller {
                 }
               ]
             }).then(function (user) {
-              Anope.setVirtualHost(user, data.nickname).then(function () {
+              HostServ.updateVirtualHost(user).then(function () {
                 resolve({ meta: {}, data: data.nickname })
               }).catch(function (error) {
                 reject({ meta: {}, error: Errors.throw('server_error', error) })
@@ -90,7 +101,7 @@ class Controller {
         }
       }
 
-      Anope.authenticate(data.nickname, data.password).then(function () {
+      NickServ.identify(data.nickname, data.password).then(function () {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
@@ -99,6 +110,14 @@ class Controller {
         }).then(function () {
           User.findOne({
             where: { id: connection.user.id },
+            attributes: {
+              include: [
+                [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+              ],
+              exclude: [
+                'nicknames'
+              ]
+            },
             include: [
               {
                 model: Rat,
@@ -107,7 +126,7 @@ class Controller {
               }
             ]
           }).then(function (user) {
-            Anope.setVirtualHost(user, data.nickname).then(function () {
+            HostServ.updateVirtualHost(user).then(function () {
               resolve({ meta: {}, data: data.nickname })
             }).catch(function (error) {
               reject({ meta: {}, error: Errors.throw('server_error', error) })
@@ -131,7 +150,7 @@ class Controller {
       }
 
       if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
-        Anope.drop(query.nickname).then(function () {
+        NickServ.drop(query.nickname).then(function () {
           let nicknames = connection.user.nicknames
           nicknames.splice(nicknames.indexOf(query.nickname), 1)
 
@@ -164,8 +183,8 @@ class Controller {
       let displayPrivateFields = connection.user && Permission.granted('user.read', connection.user)
 
       let limit = parseInt(query.limit) || 25
-      let offset = parseInt(query.offset) || 0
-      let order = parseInt(query.order) || 'createdAt'
+      let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
+      let order = query.order || 'createdAt'
       let direction = query.direction || 'ASC'
 
       let dbQuery = {

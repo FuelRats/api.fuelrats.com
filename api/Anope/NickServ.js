@@ -1,18 +1,10 @@
 'use strict'
 let winston = require('winston')
 
-let xmlrpc = require('homematic-xmlrpc')
-let sslRootCAs = require('ssl-root-cas/latest')
-  .addFile(__dirname + '/../ca/lets-encrypt-x1-cross-signed.pem')
-  .addFile(__dirname + '/../ca/lets-encrypt-x2-cross-signed.pem')
-  .addFile(__dirname + '/../ca/lets-encrypt-x3-cross-signed.pem')
-  .addFile(__dirname + '/../ca/lets-encrypt-x4-cross-signed.pem')
-sslRootCAs.inject()
+let client = require('./index').client
 
-const client = xmlrpc.createSecureClient('https://irc.eu.fuelrats.com:6080/xmlrpc')
-
-class Anope {
-  static authenticate (nickname, password) {
+class NickServ {
+  static identify (nickname, password) {
     return new Promise(function (resolve, reject) {
       client.methodCall('checkAuthentication', [[nickname, password]], function (error, data) {
         if (error) {
@@ -129,72 +121,6 @@ class Anope {
       })
     })
   }
-
-  static updateAllVirtualHosts (userInstance) {
-    let user = userInstance.toJSON()
-
-    for (let nickname in user.nicknames) {
-      Anope.setVirtualHost(user, nickname)
-    }
-  }
-
-  static setVirtualHost (user, nickname) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        let virtualHost = generateVirtualHost(user)
-        winston.info('Generated Vhost: ' + virtualHost)
-
-        if (virtualHost) {
-          client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
-            if (error) {
-              winston.error(error)
-              reject(error)
-            } else {
-              winston.info(data)
-              if (/not registered/.test(data.return) === true) {
-                reject(data.return)
-              } else {
-                resolve(virtualHost)
-              }
-            }
-          })
-        } else {
-          reject(null)
-        }
-      }, 500)
-    })
-  }
-}
-
-function generateVirtualHost (user) {
-  let sortedRats = user.rats.sort(function (a, b) {
-    return a - b
-  })
-
-  let rat
-  if (sortedRats.length > 0) {
-    rat = IRCSafeName(user.rats[0])
-  } else {
-    rat = user.id.split('-')[0]
-  }
-
-  if (user.group === 'admin') {
-    return 'netadmin.fuelrats.com'
-  } else if (user.group === 'moderator') {
-    return `${rat}.op.fuelrats.com`
-  } else if (user.group === 'overseer') {
-    return `${rat}.overseer.fuelrats.com`
-  } else if (user.drilled === true) {
-    return `${rat}.rat.fuelrats.com`
-  } else {
-    return `${rat}.recruit.fuelrats.com`
-  }
-}
-
-function IRCSafeName (rat) {
-  let ratName = rat.CMDRname
-  ratName = ratName.replace(/[^a-zA-Z0-9\s]/g, '')
-  return ratName.toLowerCase()
 }
 
 class IRCUserInfo {
@@ -254,4 +180,4 @@ class IRCUserInfo {
   }
 }
 
-module.exports = Anope
+module.exports = NickServ
