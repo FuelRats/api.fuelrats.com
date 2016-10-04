@@ -1,5 +1,4 @@
 'use strict'
-let CITEXT = require('./citext')
 
 module.exports = function (sequelize, DataTypes) {
   let User = sequelize.define('User', {
