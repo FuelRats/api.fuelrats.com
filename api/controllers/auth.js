@@ -28,43 +28,13 @@ function (email, password, done) {
       return
     }
 
-    if (user.salt) {
-      crypto.pbkdf2(password, user.salt, 25000, 512, 'sha256', function (err, hashRaw) {
-        let hash = new Buffer(hashRaw, 'binary').toString('hex')
-        if (user.password === hash) {
-          // Legacy password system migration
-          bcrypt.hash(password, 16, function (error, convertedPassword) {
-            if (error) {
-              done(null, user)
-              return
-            }
-
-            let apiUser = convertUserToAPIResult(user)
-
-            User.update({
-              password: convertedPassword,
-              salt: null
-            }, {
-              where: { id: user.id }
-            }).then(function () {
-              done(null, apiUser)
-            }).catch(function () {
-              done(null, false)
-            })
-          })
-        } else {
-          done(null, false, { message: 'Incorrect username or password.' })
-        }
-      })
-    } else {
-      bcrypt.compare(password, user.password, function (err, res) {
-        if (err || res === false) {
-          done(null, false)
-        } else {
-          done(null, convertUserToAPIResult(user))
-        }
-      })
-    }
+    bcrypt.compare(password, user.password, function (err, res) {
+      if (err || res === false) {
+        done(null, false)
+      } else {
+        done(null, convertUserToAPIResult(user))
+      }
+    })
   }).catch(function () {
     done(null, false)
   })

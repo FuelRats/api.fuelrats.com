@@ -264,7 +264,6 @@ function convertUserToAPIResult (userInstance) {
     user.CMDRs = []
   }
   delete user.rats
-  delete user.salt
   delete user.password
   delete user.deletedAt
   delete user.dispatch

@@ -16,10 +16,6 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING(1024),
       allowNull: false
     },
-    salt: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
     nicknames: {
       type: 'citext[]',
       allowNull: true,
