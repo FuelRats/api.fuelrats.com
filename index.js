@@ -235,8 +235,6 @@ let router = express.Router()
 // ROUTES
 // =============================================================================
 
-router.get('/badge', badge.get)
-
 router.post('/register', register.post)
 
 router.post('/login', passport.authenticate('local'), login.post)
@@ -284,19 +282,7 @@ router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('
 router.get('/version', version.get)
 
 router.get('/docs', docs.get)
-router.get('/leaderboard', leaderboard.get)
-router.get('/login', login.get)
-router.get('/reset', reset.get)
-router.get('/change_password', change_password.get)
-router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
-router.get('/register', register.get)
-router.get('/welcome', auth.isAuthenticated(true), welcome.get)
-router.get('/roster', roster.get)
 router.get('/statistics', statistics.get)
-
-router.get('/rescues/view/:id', rescueAdmin.viewRescue)
-router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
-
 router.route('/oauth2/authorise')
   .get(auth.isAuthenticated(true), oauth2.authorization)
   .post(auth.isAuthenticated(false), oauth2.decision)
