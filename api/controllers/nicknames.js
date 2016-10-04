@@ -53,6 +53,7 @@ class Controller {
           }).then(function () {
             User.findOne({
               where: { id: connection.user.id },
+
               attributes: {
                 include: [
                   [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
@@ -60,6 +61,7 @@ class Controller {
                 exclude: [
                   'nicknames'
                 ]
+              },
               include: [
                 {
                   model: Rat,
