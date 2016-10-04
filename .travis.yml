@@ -1,5 +1,9 @@
 language: node_js
 
+branches:
+  except:
+  - v2
+
 cache:
   directories:
     - node_modules

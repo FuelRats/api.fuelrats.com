@@ -38,27 +38,21 @@ require('./api/models/client')
 
 // Import controllers
 let auth = require('./api/controllers/auth')
-let badge = require('./api/controllers/badge')
 let change_password = require('./api/controllers/change_password')
 let client = require('./api/controllers/client').HTTP
 let docs = require('./api/controllers/docs')
-let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
 let logout = require('./api/controllers/logout')
 let nicknames = require('./api/controllers/nicknames').HTTP
 let oauth2 = require('./api/controllers/oauth2')
-let paperwork = require('./api/controllers/paperwork')
 let rat = require('./api/controllers/rat').HTTP
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
-let roster = require('./api/controllers/roster').HTTP
 let rescue = require('./api/controllers/rescue').HTTP
-let rescueAdmin = require('./api/controllers/rescueAdmin')
 let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
-let welcome = require('./api/controllers/welcome')
 let jiraDrill = require('./api/controllers/jira/drill').HTTP
 
 db.sync()
