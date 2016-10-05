@@ -1,7 +1,7 @@
 'use strict'
 
 module.exports = function (db, DataTypes) {
-  let User = sequelize.define('User', {
+  let User = db.define('User', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,

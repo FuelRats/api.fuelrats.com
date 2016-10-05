@@ -1,5 +1,6 @@
 'use strict'
 
+
 class API {
 
 
@@ -44,6 +45,34 @@ class API {
     }
 
     return query
+  }
+
+  static route (route) {
+    return function (request, response, next) {
+      response.header('X-API-Version', request.version)
+      response.header('X-Rate-Limit-Limit', 100)
+      response.header('X-Rate-Limit-Remaining', 98)
+      response.header('X-Rate-Limit-Reset', '2016-10-05T21:00:00+00')
+
+      let params = Object.assign(request.query, request.params)
+
+      route(params, request, request.body).then(function (result) {
+        response.status(200).send({
+          links: {
+            self: request.originalUrl
+          },
+          meta: {
+            method: request.method,
+            params: Object.assign(request.query, request.params),
+            timestamp: new Date().toISOString()
+          },
+          data: result
+        })
+      }).catch(function (error) {
+        console.log(error)
+        next(error)
+      })
+    }
   }
 
   static version (version) {

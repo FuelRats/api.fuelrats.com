@@ -2,31 +2,47 @@
 
 let Errors = require('./errors')
 
-const permissions = {
-  normal: [
-    'rescue.create',
+const groups = {
+  default: [
     'rescue.read',
-    'self.*'
-  ],
-  overseer: [
-    'self.*',
-    'rescue.read',
-    'rescue.create',
-    'rescue.update',
+    'rescue.write.me',
     'rat.read',
-    'rat.update',
-    'drill.*',
-    'admin.read'
+    'rat.write.me',
+    'client.read.me',
+    'client.write.me',
+    'client.delete.me',
+    'user.read.me',
+    'user.write.me'
   ],
+
+  overseer: [
+    'rescue.write',
+    'rat.write',
+    'user.read',
+    'user.groups',
+    'rescue.delete'
+  ],
+
   moderator: [
-    'self.*',
-    'admin.read',
-    'rescue.*',
-    'rat.*',
-    'drill.*'
+    'rescue.write',
+    'rat.write',
+    'user.read',
+    'user.write',
+    'user.groups',
+    'client.read',
+    'rescue.delete'
   ],
+
   admin: [
-    '*'
+    'rescue.write',
+    'rescue.delete',
+    'rat.write',
+    'rat.delete',
+    'user.write',
+    'user.delete',
+    'user.groups',
+    'client.write',
+    'client.delete'
   ]
 }
 

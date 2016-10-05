@@ -15,7 +15,7 @@ let client = require('./controllers/client').Controller
 let user = require('./controllers/user').Controller
 let nickname = require('./controllers/nicknames').Controller
 let _ = require('underscore')
-
+/*
 let controllers = {
   rats: {
     create: [rat.create],
@@ -53,7 +53,7 @@ let controllers = {
     subscribe: [stream.subscribe],
     unsubscribe: [stream.unsubscribe]
   }
-}
+}*/
 
 
 exports.retrieveCaseInsensitiveProperty = function (propertyName, obj) {

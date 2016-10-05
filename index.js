@@ -20,6 +20,7 @@ let winston = require('winston')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
+let dedelimit = require('dedelimit').dedelimit
 
 // Import config
 let config = require('./config-example')
@@ -28,13 +29,13 @@ if (fs.existsSync('./config.json')) {
   _.extend(config, require('./config'))
 }
 
+let API = require('./api/classes/API')
 let Error = require('./api/errors')
 
 // Import models
 let db = require('./api/db').db
 let User = require('./api/db').User
 let Rat = require('./api/db').Rat
-require('./api/models/client')
 
 // Import controllers
 let auth = require('./api/controllers/auth')
@@ -48,7 +49,7 @@ let oauth2 = require('./api/controllers/oauth2')
 let rat = require('./api/controllers/rat').HTTP
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
-let rescue = require('./api/controllers/rescue').HTTP
+let rescue = require('./api/controllers/rescue')
 let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
@@ -192,7 +193,10 @@ app.use(function (request, response, next) {
     }
   }
 
-  next()
+  dedelimit(request.query, function (err, query) {
+    request.query = query
+    next()
+  })
 })
 
 // Add logging
@@ -225,9 +229,15 @@ let router = express.Router()
 
 
 
-
+console.log(API.version)
+console.log(rescue.search)
 // ROUTES
 // =============================================================================
+router.get('/rescues', API.version('v1.0'), rescue.search)
+router.get('/v2/rescues', API.version('v2.0'), API.route(rescue.search))
+
+/*
+
 
 router.post('/register', register.post)
 
@@ -245,7 +255,6 @@ router.get('/rats/:id', rat.getById)
 router.put('/rats/:id', auth.isAuthenticated(false), rat.put)
 router.delete('/rats/:id', auth.isAuthenticated(false), Permission.required('rat.delete', false), rat.delete)
 
-router.get('/rescues', rescue.get)
 router.post('/rescues', auth.isAuthenticated(false), rescue.post)
 router.get('/rescues/:id', rescue.getById)
 router.put('/rescues/:id', auth.isAuthenticated(false), rescue.put)
@@ -289,7 +298,7 @@ router.route('/oauth2/authorize')
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
-
+*/
 
 // Register routes
 app.use(express.static(__dirname + '/static'))

@@ -83,6 +83,8 @@ User.addScope('defaultScope', {
       as: 'rats'
     }
   ]
+}, {
+  override: true
 })
 
 Rescue.addScope('defaultScope', {
@@ -98,6 +100,8 @@ Rescue.addScope('defaultScope', {
       required: false
     }
   ]
+}, {
+  override: true
 })
 
 Code.addScope('defaultScope', {
@@ -113,6 +117,8 @@ Code.addScope('defaultScope', {
       required: true
     }
   ]
+}, {
+  override: true
 })
 
 Token.addScope('defaultScope', {
@@ -128,6 +134,8 @@ Token.addScope('defaultScope', {
       required: true
     }
   ]
+}, {
+  override: true
 })
 
 Client.addScope('defaultScope', {
@@ -138,6 +146,8 @@ Client.addScope('defaultScope', {
       required: true
     }
   ]
+}, {
+  override: true
 })
 
 
