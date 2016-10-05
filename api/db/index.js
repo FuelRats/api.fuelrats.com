@@ -68,6 +68,22 @@ Epic.belongsTo(Rat, { as: 'rat' })
 Rescue.hasMany(Epic, { foreignKey: 'rescueId', as: 'epics' })
 Rat.hasMany(Epic, { foreignKey: 'ratId', as: 'epics' })
 
+User.addScope('defaultScope', {
+  attributes: {
+    include: [
+      [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+    ],
+    exclude: [
+      'nicknames'
+    ]
+  },
+  include: [
+    {
+      model: Rat,
+      as: 'rats'
+    }
+  ]
+})
 
 
 module.exports = {

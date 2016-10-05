@@ -1,6 +1,8 @@
 'use strict'
 
 class API {
+
+
   static createQueryFromRequest (request) {
     delete request.rats
     delete request.CMDRs
@@ -46,7 +48,7 @@ class API {
 
   static version (version) {
     return function (req, res, next) {
-      req.apiVersion = version
+      req.version = version
       next()
     }
   }

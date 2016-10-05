@@ -1,6 +1,6 @@
 'use strict'
 
-module.exports = function (sequelize, DataTypes) {
+module.exports = function (db, DataTypes) {
   let User = sequelize.define('User', {
     id: {
       type: DataTypes.UUID,
@@ -18,7 +18,7 @@ module.exports = function (sequelize, DataTypes) {
     nicknames: {
       type: 'citext[]',
       allowNull: true,
-      defaultValue: sequelize.literal('ARRAY[]::citext[]')
+      defaultValue: db.literal('ARRAY[]::citext[]')
     },
     groups: {
       type: DataTypes.ARRAY(DataTypes.STRING(128)),
