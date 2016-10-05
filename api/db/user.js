@@ -20,16 +20,6 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       defaultValue: sequelize.literal('ARRAY[]::citext[]')
     },
-    drilled: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-    drilledDispatch: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
     groups: {
       type: DataTypes.ARRAY(DataTypes.STRING(128)),
       allowNull: false,
