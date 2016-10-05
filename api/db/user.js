@@ -30,10 +30,10 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: false
     },
-    group: {
-      type: DataTypes.ENUM('normal', 'overseer', 'moderator', 'admin'),
+    groups: {
+      type: DataTypes.ARRAY(DataTypes.STRING(128)),
       allowNull: false,
-      defaultValue: 'normal'
+      defaultValue: []
     },
     dispatch: {
       type: DataTypes.BOOLEAN,
