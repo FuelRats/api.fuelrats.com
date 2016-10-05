@@ -85,6 +85,61 @@ User.addScope('defaultScope', {
   ]
 })
 
+Rescue.addScope('defaultScope', {
+  include: [
+    {
+      model: Rat,
+      as: 'rats',
+      required: false
+    },
+    {
+      model: Epic,
+      as: 'epics',
+      required: false
+    }
+  ]
+})
+
+Code.addScope('defaultScope', {
+  include: [
+    {
+      model: User,
+      as: 'user',
+      required: true
+    },
+    {
+      model: Client,
+      as: 'client',
+      required: true
+    }
+  ]
+})
+
+Token.addScope('defaultScope', {
+  include: [
+    {
+      model: User,
+      as: 'user',
+      required: true
+    },
+    {
+      model: Client,
+      as: 'client',
+      required: true
+    }
+  ]
+})
+
+Client.addScope('defaultScope', {
+  include:  [
+    {
+      model: User,
+      as: 'user',
+      required: true
+    }
+  ]
+})
+
 
 module.exports = {
   Action: Action,

@@ -586,18 +586,7 @@ function convertRescueToAPIResult (rescueInstance) {
 function findRescueWithRats (where) {
   return Rescue.findOne({
     where: where,
-    include: [
-      {
-        model: Rat,
-        as: 'rats',
-        required: false
-      },
-      {
-        model: Epic,
-        as: 'epics',
-        required: false
-      }
-    ]
+
   })
 }
 
