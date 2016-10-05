@@ -7,6 +7,11 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
+    scope: {
+      type: DataTypes.ARRAY(DataTypes.STRING(128)),
+      allowNull: false,
+      defaultValue: []
+    },
     value: {
       type: DataTypes.STRING,
       allowNull: false
