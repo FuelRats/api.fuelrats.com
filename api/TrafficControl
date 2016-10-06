@@ -2,7 +2,7 @@
 
 const hour = 60 * 60 * 1000
 
-const allowedUnauthentiatedRequestCount = 5
+const allowedUnauthentiatedRequestCount = 150
 const allowedAuthenticatedRequestCount = 1000
 const allowedAdminRequestCount = 10000
 
