@@ -1,6 +1,6 @@
 'use strict'
-let Rat = require('./index').Rat
-let Epic = require('./index').Epic
+let Rat = require('./../db/index').Rat
+let Epic = require('./../db/index').Epic
 
 const defaultRequestLimit = 25
 const maximumUnauthenticatedLimit = 100
@@ -13,7 +13,7 @@ const maximumAdminLimit = 5000
  */
 class Query {
   /**
-   * Create a Sequelize query from a set of
+   * Create a Sequelize query from a set of parameters
    * @constructor
    * @param {Object} params - API request parameters
    * @param {Object} connection - A websocket or Express connection object
@@ -21,75 +21,39 @@ class Query {
   constructor (params, connection) {
     this._params = params
     this._connection = connection
-  }
 
-  /**
-   * Generate a Rescue query
-   */
-  get Rescue () {
-    let params = this._params
-    delete params.fields
+    delete this._params.fields
 
-    let limit = Query.limit(params.limit, this._connection.user)
-    delete params.limit
+    let limit = Query.limit(this._params.limit, this._connection.user)
+    delete this._params.limit
 
-    let offset = Query.page(params.page, limit) || Query.offset(params._offset)
-    delete params.offset
-    delete params.page
+    let offset = Query.page(this._params.page, limit) || Query.offset(this._params._offset)
+    delete this._params.offset
+    delete this._params.page
 
-    let order = Query.order(params.order)
-    delete params.order
+    let order = Query.order(this._params.order)
+    delete this._params.order
 
-    if (params.data) {
-      params.data = Query.data(params.data)
+    if (this._params.data) {
+      this._params.data = Query.data(this._params.data)
     }
 
-    let limitRats = false
-    let rats = {}
-    if (params.rats) {
-      rats = {
-        id: params.rats
-      }
-      limitRats = true
-    }
-    delete params.rats
-
-
-    return {
-      where: params,
-      attributes: {
-        exclude: [
-          'deletedAt'
-        ]
-      },
-      include: [
-        {
-          where: rats,
-          model: Rat,
-          as: 'rats',
-          require: limitRats,
-          through: {
-            attributes: []
-          }
-        },
-        {
-          model: Rat,
-          as: 'firstLimpet',
-          require: false
-        },
-        {
-          model: Epic,
-          as: 'epics',
-          require: false
-        }
-      ],
-
+    this._query = {
+      where: this._params,
       order: [
         [order.field, order.direction]
       ],
       limit: limit,
       offset: offset
     }
+  }
+
+  /**
+   * Return an object containing a Sequelize-compatible query generated from the parameters
+   * @returns {{where: (Object|*), order: *[], limit: number, offset: number}|*} A sequelize compatible query
+   */
+  get toSequelize () {
+    return this._query
   }
 
   /**

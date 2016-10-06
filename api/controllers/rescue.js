@@ -6,7 +6,7 @@ let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
 let Epic = require('../db').Epic
 let API = require('../classes/API')
-let Query = require('../db/Query')
+let RescueQuery = require('../Query/RescueQuery')
 let RescueResult = require('../Results/rescue')
 
 let Errors = require('../errors')
@@ -15,8 +15,7 @@ let Permission = require('../permission')
 class Rescues {
   static search (params, connection, data) {
     return new Promise(function (resolve, reject) {
-      console.log(new Query(params, connection).Rescue)
-      Rescue.findAndCountAll(new Query(params, connection).Rescue).then(function (result) {
+      Rescue.findAndCountAll(new RescueQuery(params, connection).toSequelize).then(function (result) {
         resolve(new RescueResult(result, params))
       }).catch(function (error) {
         reject(Errors.throw('server_error', error.message))
