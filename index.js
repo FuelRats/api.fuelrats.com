@@ -228,13 +228,12 @@ if (options.logging || options.test) {
 let router = express.Router()
 
 
-
-console.log(API.version)
-console.log(rescue.search)
 // ROUTES
 // =============================================================================
 router.get('/rescues', API.version('v1.0'), rescue.search)
 router.get('/v2/rescues', API.version('v2.0'), API.route(rescue.search))
+
+router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
 
 /*
 

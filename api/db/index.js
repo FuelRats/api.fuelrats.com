@@ -87,23 +87,6 @@ User.addScope('defaultScope', {
   override: true
 })
 
-Rescue.addScope('defaultScope', {
-  include: [
-    {
-      model: Rat,
-      as: 'rats',
-      required: false
-    },
-    {
-      model: Epic,
-      as: 'epics',
-      required: false
-    }
-  ]
-}, {
-  override: true
-})
-
 Code.addScope('defaultScope', {
   include: [
     {

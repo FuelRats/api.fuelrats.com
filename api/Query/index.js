@@ -24,18 +24,18 @@ class Query {
 
     delete this._params.fields
 
-    let limit = Query.limit(this._params.limit, this._connection.user)
+    let limit = this.limit(this._params.limit, this._connection.user)
     delete this._params.limit
 
-    let offset = Query.page(this._params.page, limit) || Query.offset(this._params._offset)
+    let offset = this.page(this._params.page, limit) || this.offset(this._params._offset)
     delete this._params.offset
     delete this._params.page
 
-    let order = Query.order(this._params.order)
+    let order = this.order(this._params.order)
     delete this._params.order
 
     if (this._params.data) {
-      this._params.data = Query.data(this._params.data)
+      this._params.data = this.data(this._params.data)
     }
 
     this._query = {
@@ -61,11 +61,11 @@ class Query {
    * @param order a column to order the query by, optionally prefixed by a - to order descending
    * @returns {{field: *, direction: string}} An object containing the field to order by and the direction in which to order
    */
-  static order (order) {
+  order (order) {
     let direction = 'ASC'
     if (!order) {
-      order = 'createdAt'
-      direction = 'DESC'
+      order = this.defaultSortField
+      direction = this.defaultSortDirection
     } else {
       if (order.startsWith('-')) {
         order = order.substring(1)
@@ -81,7 +81,7 @@ class Query {
    * @param {Object} data - the JSON object to compare against
    * @returns {{$contains}} A sequelize JSONB contains query
    */
-  static data (data) {
+  data (data) {
     return {
       $contains: JSON.parse(data)
     }
@@ -93,7 +93,7 @@ class Query {
    * @param {number} limit - The number of results per page
    * @returns {number} - An offset parameter
    */
-  static page (page, limit) {
+  page (page, limit) {
     page = Number(page)
     if (!page) {
       return null
@@ -106,7 +106,7 @@ class Query {
    * @param {number} offset - The number of results to offset by
    * @returns {number} - An offset parameter
    */
-  static offset (offset) {
+  offset (offset) {
     offset = Number(offset)
     if (!offset) {
       return 0
@@ -120,7 +120,7 @@ class Query {
    * @param {Object} user - A user object to use for validating permission level (or null for unauthenticated requests)
    * @returns {number} A limit parameter
    */
-  static limit (limit, user) {
+  limit (limit, user) {
     limit = Number(limit)
     if (!limit) {
       return defaultRequestLimit
@@ -132,6 +132,22 @@ class Query {
     }
 
     return limit > maximumAllowedLimit ? maximumAllowedLimit : limit
+  }
+
+  /**
+   * Get the current default sort field for queries where a sort is not specified
+   * @returns {string} the default sort field
+   */
+  get defaultSortField () {
+    return 'createdAt'
+  }
+
+  /**
+   * Get the current default sort direction for queries where a sort is not specified
+   * @returns {string} the default sort direction
+   */
+  get defaultSortDirection () {
+    return 'DESC'
   }
 }
 

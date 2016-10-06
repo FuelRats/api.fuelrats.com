@@ -1,6 +1,6 @@
 'use strict'
-let Rat = require('./../db/index').Rat
-let Epic = require('./../db/index').Epic
+let Rat = require('./../db').Rat
+let Epic = require('./../db').Epic
 let Query = require('./index')
 
 /**

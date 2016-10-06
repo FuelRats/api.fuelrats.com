@@ -19,6 +19,8 @@ class Result {
 
     if (dbResult.rows) {
       return dbResult.rows.map(this.fromSequelize)
+    } else if (Array.isArray(dbResult)) {
+      return dbResult.map(this.fromSequelize)
     } else {
       return this.fromSequelize(dbResult)
     }

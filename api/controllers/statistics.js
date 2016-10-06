@@ -1,21 +1,27 @@
 'use strict'
 
-let Statistics = require('../classes/Statistics')
-let winston = require('winston')
+let db = require('../db').db
+let Rat = require('../db').Rat
+let Rescue = require('../db').Rescue
+let Epic = require('../db').Epic
+let API = require('../classes/API')
+let Result = require('../Results')
+let RescueStatisticsQuery = require('../Query/RescueStatisticsQuery')
 
-exports.get = function (request, response, next) {
-  let operations = []
+let Errors = require('../errors')
 
-
-
-  operations.push(Statistics.getPopularSystemsCount())
-  operations.push(Statistics.getTotalStatistics())
-
-  Promise.all(operations).then(function (values) {
-    response.model.data = values
-    response.status(200)
-    next()
-  }, function (errors) {
-    winston.error(errors)
-  })
+class Statistics {
+  static rescues (params, connection, data) {
+    return new Promise(function (resolve, reject) {
+      let stats = new RescueStatisticsQuery(params, connection).toSequelize
+      console.log(stats)
+      Rescue.findAll(stats).then(function (result) {
+        resolve(new Result(result, params))
+      }).catch(function (error) {
+        reject(Errors.throw('server_error', error.message))
+      })
+    })
+  }
 }
+
+module.exports = Statistics
