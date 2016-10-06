@@ -63,6 +63,13 @@ let errors = {
     'title': 'Already Exists'
   },
 
+  'rate_limit_exceeded': {
+    'code': 429,
+    'detail': 'You have exceeded the number of allowed requests per hour for your IP address or user',
+    'status': 'Too Many Requests',
+    'title': 'Rate Limit Exceeded'
+  },
+
   throw: function (type, detail) {
     let errorModel = errors[type]
     if (detail) {

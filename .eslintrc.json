@@ -80,6 +80,9 @@
     ],
     "guard-for-in": [
       2
+    ],
+    "no-undef": [
+      2
     ]
   }
 }

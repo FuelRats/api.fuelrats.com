@@ -1,9 +1,9 @@
 'use strict'
-
+let TrafficControl = require('../TrafficControl')
+let Error = require('../errors')
+let traffic = new TrafficControl()
 
 class API {
-
-
   static createQueryFromRequest (request) {
     delete request.rats
     delete request.CMDRs
@@ -49,10 +49,16 @@ class API {
 
   static route (route) {
     return function (request, response, next) {
+      let rateLimit = traffic.validateRateLimit(request)
+
       response.header('X-API-Version', request.version)
-      response.header('X-Rate-Limit-Limit', 100)
-      response.header('X-Rate-Limit-Remaining', 98)
-      response.header('X-Rate-Limit-Reset', '2016-10-05T21:00:00+00')
+      response.header('X-Rate-Limit-Limit', rateLimit.total)
+      response.header('X-Rate-Limit-Remaining', rateLimit.remaining)
+      response.header('X-Rate-Limit-Reset', traffic.nextResetDate)
+
+      if (rateLimit.exceeded) {
+        return next(Error.throw('rate_limit_exceeded'))
+      }
 
       let params = Object.assign(request.query, request.params)
 
