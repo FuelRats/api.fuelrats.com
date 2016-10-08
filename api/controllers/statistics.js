@@ -17,7 +17,7 @@ class Statistics {
       let stats = new RescueStatisticsQuery(params, connection).toSequelize
       console.log(stats)
       Rescue.findAll(stats).then(function (result) {
-        resolve(new Result(result, params))
+        resolve(new Result(result, params).toResponse())
       }).catch(function (error) {
         reject(Errors.throw('server_error', error.message))
       })
@@ -29,7 +29,7 @@ class Statistics {
       let stats = new SystemStatisticsQuery(params, connection).toSequelize
       console.log(stats)
       Rescue.findAll(stats).then(function (result) {
-        resolve(new Result(result, params))
+        resolve(new Result(result, params).toResponse())
       }).catch(function (error) {
         reject(Errors.throw('server_error', error.message))
       })

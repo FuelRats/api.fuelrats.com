@@ -18,11 +18,11 @@ class Result {
     }
 
     if (dbResult.rows) {
-      return dbResult.rows.map(this.fromSequelize)
+      this._result = dbResult.rows.map(this.fromSequelize.bind(this))
     } else if (Array.isArray(dbResult)) {
-      return dbResult.map(this.fromSequelize)
+      this._result = dbResult.map(this.fromSequelize.bind(this))
     } else {
-      return this.fromSequelize(dbResult)
+      this._result = this.fromSequelize(dbResult)
     }
   }
 
@@ -33,7 +33,20 @@ class Result {
    * @returns {Object|*|String|string|{type, data}}
    */
   fromSequelize (dbResult) {
-    return dbResult.toJSON()
+    let result = dbResult.toJSON()
+    if (this._params.fields) {
+      let fields = this._params.fields.split(',')
+      for (let key of Object.keys(result)) {
+        if (!fields.includes(key)) {
+          delete result[key]
+        }
+      }
+    }
+    return result
+  }
+
+  toResponse () {
+    return this._result
   }
 }
 

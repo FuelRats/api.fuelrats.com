@@ -16,7 +16,8 @@ class Rescues {
   static search (params, connection, data) {
     return new Promise(function (resolve, reject) {
       Rescue.findAndCountAll(new RescueQuery(params, connection).toSequelize).then(function (result) {
-        resolve(new RescueResult(result, params))
+        console.log(params)
+        resolve(new RescueResult(result, params).toResponse())
       }).catch(function (error) {
         reject(Errors.throw('server_error', error.message))
       })
