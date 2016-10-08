@@ -74,13 +74,19 @@ User.addScope('defaultScope', {
       [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
     ],
     exclude: [
-      'nicknames'
+      'nicknames',
+      'deletedAt'
     ]
   },
   include: [
     {
       model: Rat,
-      as: 'rats'
+      as: 'rats',
+      attributes: {
+        exclude: [
+          'deletedAt'
+        ]
+      }
     }
   ]
 }, {

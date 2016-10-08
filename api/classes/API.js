@@ -41,7 +41,7 @@ class API {
         [order, direction]
       ],
       limit: limit,
-      offset: offset,
+      offset: offset
     }
 
     return query

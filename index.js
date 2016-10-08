@@ -232,16 +232,17 @@ let router = express.Router()
 // =============================================================================
 router.get('/rescues', API.version('v1.0'), rescue.search)
 router.get('/v2/rescues', API.version('v2.0'), API.route(rescue.search))
+router.post('/v2/rescues', API.version('v.2.0'), auth.isAuthenticated, API.route(rescue.create))
 
 router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
 
+router.post('/login', passport.authenticate('local'), login.post)
 /*
 
 
 router.post('/register', register.post)
 
-router.post('/login', passport.authenticate('local'), login.post)
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
 

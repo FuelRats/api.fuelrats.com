@@ -2,7 +2,6 @@
 let passport = require('passport')
 let BasicStrategy = require('passport-http').BasicStrategy
 let BearerStrategy = require('passport-http-bearer').Strategy
-let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
 let Rat = require('../db').Rat
@@ -11,6 +10,7 @@ let Token = require('../db').Token
 let Client = require('../db').Client
 let bcrypt = require('bcrypt')
 let Permission = require('../permission')
+let UserResult = require('../Results/user')
 
 exports.LocalStrategy = new LocalStrategy({
   usernameField: 'email',
@@ -22,21 +22,23 @@ function (email, password, done) {
     done(null, false, { message: 'Incorrect username/email.' })
   }
 
-  findUserWithRats({ email: { $iLike: email }}).then(function (user) {
+  User.findOne({ where: { email: { $iLike: email }}}).then(function (user) {
     if (!user) {
       done(null, false, { message: 'Incorrect username/email.' })
       return
     }
 
     bcrypt.compare(password, user.password, function (err, res) {
-      if (err || res === false) {
-        done(null, false)
+      if (err) {
+        done(err)
+      } else if (res === false) {
+        done(false)
       } else {
-        done(null, convertUserToAPIResult(user))
+        done(null, new UserResult(user).toResponse())
       }
     })
-  }).catch(function () {
-    done(null, false)
+  }).catch(function (err) {
+    done(err)
   })
 })
 
@@ -67,37 +69,22 @@ passport.use(new BearerStrategy(bearerAuthenticate))
 
 exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })
 exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
-exports.isAuthenticated = function (isUserFacing) {
-  return function (req, res, next) {
-    if (req.user) {
-      req.session.returnTo = null
-      return next()
-    } else {
-      passport.authenticate('bearer', { session : false }, function (error, user) {
-        if (!user) {
-          if (!isUserFacing) {
-            let error = Permission.authenticationError()
-            res.model.errors.push(error)
-            res.status(error.code)
+exports.isAuthenticated = function (req, res, next) {
+  if (req.user) {
+    req.session.returnTo = null
+    return next()
+  } else {
+    passport.authenticate('bearer', { session : false }, function (error, user) {
+      if (!user) {
+        let error = Permission.authenticationError()
+        res.model.errors.push(error)
+        res.status(error.code)
 
-            return next(error)
-          } else {
-            req.session.returnTo = req.originalUrl || req.url
-
-            if (req.session.legacy || isUserFacing) {
-              return res.redirect('/login')
-            } else {
-              res.model.data = req.user
-              res.status(200)
-              next()
-              return
-            }
-          }
-        }
-        req.user = user
-        next()
-      })(req, res, next)
-    }
+        return next(error)
+      }
+      req.user = user
+      next()
+    })(req, res, next)
   }
 }
 
@@ -169,40 +156,4 @@ function bearerAuthenticate (accessToken, callback) {
   }).catch(function (error) {
     callback(error)
   })
-}
-
-function findUserWithRats (where) {
-  return User.findOne({
-    where: where,
-    attributes: {
-      include: [
-        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-      ],
-      exclude: [
-        'nicknames',
-        'dispatch',
-        'deletedAt'
-      ]
-    },
-    include: [
-      {
-        model: Rat,
-        as: 'rats',
-        required: false
-      }
-    ]
-  })
-}
-
-function convertUserToAPIResult (userInstance) {
-  let user = userInstance.toJSON()
-  let reducedRats = user.rats.map(function (rat) {
-    return rat.id
-  })
-  user.CMDRs = reducedRats
-  delete user.rats
-  delete user.salt
-  delete user.password
-
-  return user
 }

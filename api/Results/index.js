@@ -10,7 +10,7 @@ class Result {
    * @param {Object} dbResult - A database result returned by sequelize
    * @param {Object} params - API request parameters
    */
-  constructor (dbResult, params) {
+  constructor (dbResult, params = {}) {
     this._params = params
 
     if (!dbResult) {
