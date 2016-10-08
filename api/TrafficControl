@@ -142,7 +142,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {boolean} true if the authenticated user this entity belongs to is an admin
    */
   get isAdmin () {
-    return this._user.groups.contains('admin')
+    return this._user.groups.includes('admin')
   }
 
   /**

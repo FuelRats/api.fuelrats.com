@@ -20,7 +20,7 @@ class Query {
    * @param {Object} connection - A websocket or Express connection object
    */
   constructor (params, connection) {
-    this._params = Object.assign({}, params);
+    this._params = Object.assign({}, params)
     this._connection = connection
 
     delete this._params.fields

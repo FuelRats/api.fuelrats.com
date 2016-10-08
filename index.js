@@ -55,6 +55,7 @@ let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
 let jiraDrill = require('./api/controllers/jira/drill').HTTP
+let UserResult = require('./api/Results/user')
 
 db.sync()
 
@@ -135,34 +136,12 @@ passport.serializeUser(function (user, done) {
 
 passport.deserializeUser(function (id, done) {
   User.findOne({
-    where: { id: id },
-    attributes: {
-      include: [
-        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-      ],
-      exclude: [
-        'nicknames',
-        'dispatch',
-        'deletedAt'
-      ]
-    },
-    include: [
-      {
-        model: Rat,
-        as: 'rats',
-        required: false
-      }
-    ]
-  }).then(function (userInstance) {
-    let user = userInstance.toJSON()
-    let reducedRats = user.rats.map(function (rat) {
-      return rat.id
-    })
-    user.CMDRs = reducedRats
-    delete user.rats
-    done(null, user)
-  }).catch(function () {
-    done(null, false)
+    where: {id: id}
+  }).then(function (user) {
+    let result = new UserResult(user).toResponse()
+    done(null, result)
+  }).catch(function (error) {
+    done(err)
   })
 })
 

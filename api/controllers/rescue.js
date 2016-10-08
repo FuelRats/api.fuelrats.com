@@ -22,139 +22,23 @@ class Rescues {
       })
     })
   }
+
+  static create (params, connection, data) {
+    return new Promise(function (resolve, reject) {
+      Rescue.create(data).then(function (rescue) {
+        if (!rescue) {
+          return reject(Errors.throw('operation_failed'))
+        }
+
+        resolve(new RescueResult(rescue, params).toResponse())
+      }).catch(function (error) {
+        reject(Errors.throw('server_error', error.message))
+      })
+    })
+  }
 }
 
 class Controller {
-  static read (query) {
-    return new Promise(function (resolve, reject) {
-
-      let dbQuery = API.createQueryFromRequest(query)
-
-      dbQuery.include = [
-        {
-          model: Rat,
-          as: 'rats',
-          require: false
-        },
-        {
-          model: Epic,
-          as: 'epics',
-          require: false
-        }
-      ]
-
-      if (query.rats) {
-        dbQuery.include[0].require = true
-        dbQuery.include[0].where = {
-          id: query.rats
-        }
-      }
-
-      Rescue.findAndCountAll(dbQuery).then(function (result) {
-        let meta = {
-          count: result.rows.length,
-          limit: dbQuery.limit,
-          offset: dbQuery.offset,
-          total: result.count
-        }
-
-        /* For backwards compatibility reasons we return only the list of rat
-        foreign keys, not their objects */
-        let rescues = result.rows.map(function (rescueInstance) {
-          let rescue = convertRescueToAPIResult(rescueInstance)
-          return rescue
-        })
-
-        resolve({
-          data: rescues,
-          meta: meta
-        })
-      }).catch(function (error) {
-        let errorObj = Errors.server_error
-        errorObj.detail = error
-        reject({
-          error: errorObj,
-          meta: {}
-        })
-      })
-    })
-  }
-
-  static create (query, connection) {
-    return new Promise(function (resolve, reject) {
-      let ratIds = query.rats
-      delete query.rats
-      let firstLimpet = query.firstLimpet
-      delete query.firstLimpet
-
-      Rescue.create(query).then(function (rescue) {
-        if (!rescue) {
-          reject({ error: Error.throw('operation_failed'), meta: {} })
-          return
-        }
-        let getRatOperations = []
-
-        if (ratIds) {
-          for (let ratId of ratIds) {
-            getRatOperations.push(Rat.findById(ratId))
-          }
-        }
-
-        Promise.all(getRatOperations).then(function (rats) {
-          let associations = []
-          for (let rat of rats) {
-            associations.push(rescue.addRat(rat))
-
-            if (firstLimpet) {
-              if (rat.id === firstLimpet) {
-                associations.push(rescue.setFirstLimpet(rat))
-              }
-            }
-          }
-
-          Promise.all(associations).then(function () {
-            findRescueWithRats({ id: rescue.id }).then(function (rescueInstance) {
-              let rescue = convertRescueToAPIResult(rescueInstance)
-
-              let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
-                return cl.clientId !== connection.clientId
-              })
-              connection.websocket.broadcast(allClientsExcludingSelf, {
-                action: 'rescue:created'
-              }, rescue)
-
-              resolve({
-                data: rescue,
-                meta: {}
-              })
-            })
-          }).catch(function (error) {
-            let errorModel = Errors.server_error
-            errorModel.detail = error
-            reject({
-              error: errorModel,
-              meta: {}
-            })
-          })
-        }).catch(function (error) {
-          let errorModel = Errors.server_error
-          errorModel.detail = error
-          reject({
-            error: errorModel,
-            meta: {}
-          })
-        })
-
-      }).catch(function (error) {
-        let errorModel = Errors.server_error
-        errorModel.detail = error
-        reject({
-          error: errorModel,
-          meta: {}
-        })
-      })
-    })
-  }
 
   static update (data, connection, query) {
     return new Promise(function (resolve, reject) {

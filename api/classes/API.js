@@ -48,6 +48,7 @@ class API {
   }
 
   static route (route) {
+    console.log(route)
     return function (request, response, next) {
       let rateLimit = traffic.validateRateLimit(request)
 
