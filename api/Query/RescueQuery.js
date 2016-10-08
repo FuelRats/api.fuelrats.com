@@ -16,33 +16,44 @@ class RescueQuery extends Query {
   constructor (params, connection) {
     super(params, connection)
 
-    let limitRats = false
-    let rats = {}
-    if (this._params.rats) {
-      rats = {
-        id: this._params.rats
-      }
-      limitRats = true
-    }
-    delete this._params.rats
-
     this._query.attributes = {
       exclude: [
         'deletedAt'
       ]
     }
 
+    let rats = {}
+    if (this._params.rats) {
+      rats = this.subQuery(this._params.rats)
+      delete this._params.rats
+    }
+
+    let firstLimpet = {}
+    if (this._params.firstLimpet) {
+      firstLimpet = this.subQuery(this._params.firstLimpet)
+      delete this._params.firstLimpet
+    }
+
+    let epics = {}
+    if (this._params.epics) {
+      epics = this.subQuery(this._params.epics)
+      delete this._params.epics
+    }
+
+    this._query.where = this._params
+
     this._query.include = [
       {
         where: rats,
         model: Rat,
         as: 'rats',
-        require: limitRats,
+        require: false,
         through: {
           attributes: []
         }
       },
       {
+        where: firstLimpet,
         model: Rat,
         as: 'firstLimpet',
         require: false

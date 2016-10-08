@@ -39,18 +39,7 @@ class Query {
       this._params.data = this.data(this._params.data)
     }
 
-    /* Iterate through every key value pair in the query */
-    for (let key of Object.keys(this._params)) {
-      if (this._params[key] instanceof Object) {
-        /* This query parameter has a sub query */
-        for (let subQuery of Object.keys(this._params[key])) {
-          /* Check if we have a sub query function available in the QueryOptions class to process this sub query, and call it */
-          if (this._params[key][subQuery] && this.options[subQuery]) {
-            this._params[key] = this.options[subQuery].call(this, this._params[key], subQuery)
-          }
-        }
-      }
-    }
+    this._params = this.subQuery(this._params)
 
     this._query = {
       where: this._params,
@@ -146,6 +135,22 @@ class Query {
     }
 
     return limit > maximumAllowedLimit ? maximumAllowedLimit : limit
+  }
+
+  subQuery (params) {
+    /* Iterate through every key value pair in the query */
+    for (let key of Object.keys(params)) {
+      if (params[key] instanceof Object) {
+        /* This query parameter has a sub query */
+        for (let subQuery of Object.keys(params[key])) {
+          /* Check if we have a sub query function available in the QueryOptions class to process this sub query, and call it */
+          if (params[key][subQuery] && this.options[subQuery]) {
+            params[key] = this.options[subQuery].call(this, params[key], subQuery)
+          }
+        }
+      }
+    }
+    return params
   }
 
   /**

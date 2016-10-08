@@ -13,10 +13,9 @@ let Errors = require('../errors')
 let Permission = require('../permission')
 
 class Rescues {
-  static search (params, connection, data) {
+  static search (params, connection) {
     return new Promise(function (resolve, reject) {
       Rescue.findAndCountAll(new RescueQuery(params, connection).toSequelize).then(function (result) {
-        console.log(params)
         resolve(new RescueResult(result, params).toResponse())
       }).catch(function (error) {
         reject(Errors.throw('server_error', error.message))
