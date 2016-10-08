@@ -53,7 +53,7 @@ class TrafficControl {
     let entity = this.authenticatedRequests[user.id]
     if (!entity) {
       entity = new AuthenticatedUserEntity(user)
-      this._authenticatedRequests[user.id] = entity
+      this.authenticatedRequests[user.id] = entity
     }
     return entity
   }
@@ -96,7 +96,6 @@ class TrafficControl {
   _reset () {
     this.authenticatedRequests = {}
     this.unauthenticatedRequests = {}
-    console.log(this._remainingTimeToNextResetDate)
     this._resetTimer = setTimeout(this._reset.bind(this), this._remainingTimeToNextResetDate)
   }
 }
