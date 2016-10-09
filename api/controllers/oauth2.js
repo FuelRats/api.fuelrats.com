@@ -5,6 +5,7 @@ let crypto = require('crypto')
 let Token = require('../db').Token
 let Client = require('../db').Client
 let Code = require('../db').Code
+let Permission = require('permission')
 
 let server = oauth2orize.createServer()
 
@@ -26,8 +27,16 @@ server.deserializeClient(function (id, callback) {
 })
 
 server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, callback) {
+  let scopes = ares.scope.split(' ')
+  for (let scope in scopes) {
+    if (Permission.permissions.includes(scope) === false) {
+      callback(Error.throw('invalid_scope', scope))
+    }
+  }
+
   Code.create({
     value: crypto.randomBytes(24).toString('hex'),
+    scope: scopes,
     redirectUri: redirectUri
   }).then(function (code) {
     let associations = []
@@ -61,6 +70,7 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
     auth.destroy()
 
     Token.create({
+      scope: auth.scope,
       value: crypto.randomBytes(32).toString('hex')
     }).then(function (token) {
       let associations = []

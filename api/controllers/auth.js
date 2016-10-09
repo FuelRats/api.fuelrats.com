@@ -143,13 +143,8 @@ function bearerAuthenticate (accessToken, callback) {
         }
       ]
     }).then(function (userInstance) {
-      let user = userInstance.toJSON()
-      let reducedRats = user.rats.map(function (rat) {
-        return rat.id
-      })
-      user.CMDRs = reducedRats
-      delete user.rats
-      callback(null, user, { scope: '*' })
+      let user = UserResult(userInstance)
+      callback(null, user, { scope: token.scope })
     }).catch(function (error) {
       callback(error)
     })

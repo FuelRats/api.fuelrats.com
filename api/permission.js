@@ -2,6 +2,39 @@
 
 let Errors = require('./errors')
 
+/**
+ * List of possible permissions and oauth scopes
+ * @type {string[]}
+ */
+const permissions = [
+  'rescue.read',
+  'rescue.read.me',
+  'rescue.write',
+  'rescue.write.me',
+  'rescue.delete',
+  'rat.read',
+  'rat.read.me',
+  'rat.write',
+  'rat.write.me',
+  'rat.delete',
+  'client.read',
+  'client.read.me',
+  'client.write',
+  'client.write.me',
+  'client.delete',
+  'client.delete.me',
+  'user.read',
+  'user.read.me',
+  'user.groups',
+  'user.groups.me',
+  'user.delete'
+
+]
+
+/**
+ * The permissions available to various user groups
+ * @type {{default: string[], overseer: string[], moderator: string[], admin: string[]}}
+ */
 const groups = {
   default: [
     'rescue.read',
@@ -46,10 +79,20 @@ const groups = {
   ]
 }
 
+/**
+ * Class for managing various permissions
+ */
 class Permission {
-  static require (permission, user) {
+  /**
+   * Promise to validate whether a user has the appropriate permissions
+   * @param {string} permission - The permission to validate
+   * @param {Object} user - The user object of the user to validate
+   * @param {Object} client - Optional client object of an oauth2 client to validate
+   * @returns {Promise}
+   */
+  static require (permission, user, client = null) {
     return new Promise(function (resolve, reject) {
-      if (Permission.granted(permission, user)) {
+      if (Permission.granted(permission, user, client)) {
         resolve()
       } else {
         let error = Permission.permissionError(permission)
@@ -58,38 +101,45 @@ class Permission {
     })
   }
 
-  static required (permission, isUserFacing) {
+  /**
+   * Express.js middleware to require a permission or throw back an error
+   * @param {string} permission - The permission to require
+   * @returns {Function} Express.js middleware function
+   */
+  static required (permission) {
     return function (req, res, next) {
-      if (Permission.granted(permission, req.user)) {
+      if (Permission.granted(permission, req.user, req.client)) {
         return next()
       } else {
         let error = Permission.permissionError(permission)
         res.model.errors.push(error)
         res.status(error.code)
-        res.isUserFacing = isUserFacing
         return next()
       }
     }
   }
 
-  static granted (permission, user) {
-    let userLevel = user.group
+  /**
+   * Check whether a user has the required permissions
+   * @param {string} permission - The permission to validate
+   * @param {Object} user - The user object of the user to validate
+   * @param {Object} [client] - Optional oauth2 client object to validate if the user has given this application the permission to do this
+   * @returns {boolean} - Boolean value indicating whether permission is granted
+   */
+  static granted (permission, user, client = null) {
     let hasPermission = false
-    permission = permission.split('.')
 
-    for (let currentPermission of permissions[userLevel]) {
-      currentPermission = currentPermission.split('.')
-      let currentNodeIndex = 0
-
-      while (currentNodeIndex < permission.length) {
-        if (currentPermission[currentNodeIndex] === '*') {
+    for (let group of user.groups) {
+      if (groups[group].includes(permission)) {
+        if (client) {
+          if (client.scopes.includes(permission)) {
+            hasPermission = true
+            break
+          }
+        } else {
           hasPermission = true
-        }
-        if (permission[currentNodeIndex] !== currentPermission[currentNodeIndex]) {
           break
         }
-
-        currentNodeIndex += 1
       }
     }
     return hasPermission
@@ -105,6 +155,14 @@ class Permission {
 
   static permissionError (permission) {
     return Errors.throw('no_permission', permission)
+  }
+
+  /**
+   * Get the available permissions/oauth scopes
+   * @returns {string[]}
+   */
+  static get permissions () {
+    return permissions
   }
 }
 
