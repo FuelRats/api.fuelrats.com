@@ -77,40 +77,31 @@ class Rescues {
       }
     })
   }
-}
 
-class Controller {
-  static delete (data, connection, query) {
+  static delete (params, connection) {
     return new Promise(function (resolve, reject) {
-      if (query.id) {
-        Permission.require('rescue.delete', connection.user).then(function () {
-          Rescue.findById(query.id).then(function (rescue) {
-            if (!rescue) {
-              reject({ error: Errors.throw('not_found', query.id), meta: {} })
-              return
-            }
-            rescue.destroy()
+      if (params.id) {
+        Rescue.findOne({
+          where: {
+            id: params.id
+          }
+        }).then(function (rescue) {
+          if (!rescue) {
+            return reject(Error.throw('not_found', params.id))
+          }
 
-            let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
-              return cl.clientId !== connection.clientId
-            })
-            connection.websocket.broadcast(allClientsExcludingSelf, {
-              action: 'rescue:deleted'
-            }, { id: query.id })
+          rescue.destroy()
 
-            resolve({ data: null, meta: {} })
-          }).catch(function (error) {
-            reject({ error: Errors.throw('server_error', error), meta: {} })
-          })
-        }).catch(function (error) {
-          reject({ error: error })
+          resolve(null)
+        }).catch(function (err) {
+          reject({ error: Errors.throw('server_error', err), meta: {} })
         })
-      } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
       }
     })
   }
+}
 
+class Controller {
   static assign (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (query.id) {
