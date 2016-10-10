@@ -74,7 +74,7 @@ exports.isAuthenticated = function (req, res, next) {
     req.session.returnTo = null
     return next()
   } else {
-    passport.authenticate('bearer', { session : false }, function (error, user) {
+    passport.authenticate('bearer', { session : false }, function (error, user, options) {
       if (!user) {
         let error = Permission.authenticationError()
         res.model.errors.push(error)
@@ -82,6 +82,7 @@ exports.isAuthenticated = function (req, res, next) {
 
         return next(error)
       }
+      req.scope = options.scope
       req.user = user
       next()
     })(req, res, next)

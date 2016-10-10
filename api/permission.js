@@ -67,6 +67,7 @@ const groups = {
   ],
 
   admin: [
+    'rescue.read',
     'rescue.write',
     'rescue.delete',
     'rat.write',
@@ -85,17 +86,17 @@ const groups = {
 class Permission {
   /**
    * Promise to validate whether a user has the appropriate permissions
-   * @param {string} permission - The permission to validate
+   * @param {string[]} permissions - The permissions to validate
    * @param {Object} user - The user object of the user to validate
-   * @param {Object} client - Optional client object of an oauth2 client to validate
+   * @param {Object} client - Optional scope array of an oauth2 client to validate
    * @returns {Promise}
    */
-  static require (permission, user, client = null) {
+  static require (permission, user, scope = null) {
     return new Promise(function (resolve, reject) {
-      if (Permission.granted(permission, user, client)) {
+      if (Permission.granted(permissions, user, scope)) {
         resolve()
       } else {
-        let error = Permission.permissionError(permission)
+        let error = Permission.permissionError(permissions)
         reject(error)
       }
     })
@@ -103,15 +104,15 @@ class Permission {
 
   /**
    * Express.js middleware to require a permission or throw back an error
-   * @param {string} permission - The permission to require
+   * @param {string[]} permission - The permissions to require
    * @returns {Function} Express.js middleware function
    */
-  static required (permission) {
+  static required (permissions) {
     return function (req, res, next) {
-      if (Permission.granted(permission, req.user, req.client)) {
+      if (Permission.granted(permissions, req.user, req.scope)) {
         return next()
       } else {
-        let error = Permission.permissionError(permission)
+        let error = Permission.permissionError(permissions)
         res.model.errors.push(error)
         res.status(error.code)
         return next()
@@ -121,24 +122,26 @@ class Permission {
 
   /**
    * Check whether a user has the required permissions
-   * @param {string} permission - The permission to validate
+   * @param {string[]} permissions - The permissions to validate
    * @param {Object} user - The user object of the user to validate
    * @param {Object} [client] - Optional oauth2 client object to validate if the user has given this application the permission to do this
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
-  static granted (permission, user, client = null) {
+  static granted (permissions, user, scope = null) {
     let hasPermission = false
 
-    for (let group of user.groups) {
-      if (groups[group].includes(permission)) {
-        if (client) {
-          if (client.scopes.includes(permission)) {
+    for (let permission of permissions) {
+      for (let group of user.groups) {
+        if (groups[group].includes(permission)) {
+          if (scope) {
+            if (scope.includes(permission)) {
+              hasPermission = true
+              break
+            }
+          } else {
             hasPermission = true
             break
           }
-        } else {
-          hasPermission = true
-          break
         }
       }
     }

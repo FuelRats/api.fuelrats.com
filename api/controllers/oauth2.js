@@ -5,7 +5,7 @@ let crypto = require('crypto')
 let Token = require('../db').Token
 let Client = require('../db').Client
 let Code = require('../db').Code
-let Permission = require('permission')
+let Permission = require('../permission')
 
 let server = oauth2orize.createServer()
 

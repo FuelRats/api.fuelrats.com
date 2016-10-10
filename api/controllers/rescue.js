@@ -36,82 +36,50 @@ class Rescues {
       })
     })
   }
-}
 
-class Controller {
-
-  static update (data, connection, query) {
+  static update (params, connection, data) {
     return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findRescueWithRats({ id: query.id }).then(function (rescue) {
+      if (params.id) {
+        Rescue.findOne({
+          where: {
+            id: params.id
+          }
+        }).then(function (rescue) {
           if (!rescue) {
-            reject({ error: Error.throw('not_found', rescue.id), meta: {} })
+            reject(Error.throw('not_found', params.id))
           }
 
-          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
           let permission = getRescuePermissionType(rescue, connection.user)
-          Permission.require(permission, connection.user).then(function () {
-            let updates = []
-
-            if (data.rats) {
-              for (let ratId of data.rats) {
-                updates.push(rescue.addRat(ratId))
+          Permission.require(permission, connection.user, connection.scope).then(function () {
+            Rescue.update(data, {
+              where: {
+                id: params.id
               }
-              delete data.rats
-            }
+            }).then(function (rescue) {
+              if (!rescue) {
+                return reject(Error.throw('operation_failed'))
+              }
 
-            if (data.firstLimpet) {
-              let firstLimpet = data.firstLimpet
-              updates.push(rescue.setFirstLimpet(firstLimpet))
-              delete data.firstLimpet
-            }
-
-            if (Object.keys(data).length > 0) {
-              updates.push(Rescue.update(data, {
-                where: { id: rescue.id }
-              }))
-            }
-
-            Promise.all(updates).then(function () {
-              findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
-                if (!rescueInstance) {
-                  reject({ error: Error.throw('operation_failed'), meta: {} })
-                  return
-                }
-
-                let rescue = convertRescueToAPIResult(rescueInstance)
-
-                let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
-                  return cl.clientId !== connection.clientId
-                })
-                connection.websocket.broadcast(allClientsExcludingSelf, {
-                  action: 'rescue:updated'
-                }, rescue)
-
-                resolve({
-                  data: rescue,
-                  meta: {}
-                })
-
-                resolve({ data: rescue, meta: {} })
+              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
+                resolve(new RescueResult(result, params).toResponse())
               }).catch(function (error) {
-                reject({ error: Errors.throw('server_error', error), meta: {} })
+                reject(Errors.throw('server_error', error.message))
               })
-            }).catch(function (error) {
-              reject({ error: Errors.throw('server_error', error), meta: {} })
             })
-          }, function (error) {
-            reject({ error: error })
+          }).catch(function (err) {
+            reject(err)
           })
-        }, function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+        }).catch(function (err) {
+          reject(Error.throw('server_error', err))
         })
       } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+        reject(Error.throw('missing_required_field', 'id'))
       }
     })
   }
+}
 
+class Controller {
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (query.id) {
@@ -443,21 +411,21 @@ class HTTP {
 
 function getRescuePermissionType (rescue, user) {
   if (rescue.open === true) {
-    return 'self.rescue.update'
+    return ['rescue.write.me', 'rescue.write']
   }
 
   if (rescue.createdAt - Date.now() < 3600000) {
-    return 'self.rescue.update'
+    return ['rescue.write.me', 'rescue.write']
   }
 
   if (user) {
     for (let CMDR of user.CMDRs) {
       if (rescue.rats.includes(CMDR) || rescue.firstLimpetId === CMDR) {
-        return 'self.rescue.update'
+        return ['rescue.write.me', 'rescue.write']
       }
     }
   }
-  return 'rescue.update'
+  return ['rescue.write']
 }
 
 function convertRescueToAPIResult (rescueInstance) {
