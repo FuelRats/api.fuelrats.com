@@ -24,12 +24,6 @@ module.exports = function (db, DataTypes) {
       type: DataTypes.ARRAY(DataTypes.STRING(128)),
       allowNull: false,
       defaultValue: []
-    },
-    dispatch: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true,
-      defaultValue: null,
-      unique: true
     }
   }, {
     paranoid: true,
