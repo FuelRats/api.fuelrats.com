@@ -24,6 +24,11 @@ module.exports = function (db, DataTypes) {
       type: DataTypes.ARRAY(DataTypes.STRING(128)),
       allowNull: false,
       defaultValue: []
+    },
+    image: {
+      type: DataTypes.BLOB(),
+      allowNull: true,
+      defaultValue: null
     }
   }, {
     paranoid: true,
