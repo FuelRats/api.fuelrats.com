@@ -7,7 +7,7 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
-    CMDRname: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false
     },
