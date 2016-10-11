@@ -209,7 +209,6 @@ let router = express.Router()
 
 // ROUTES
 // =============================================================================
-router.get('/rescues', API.version('v1.0'), rescue.search)
 router.get('/v2/rescues', API.version('v2.0'), API.route(rescue.search))
 router.post('/v2/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
@@ -217,6 +216,7 @@ router.delete('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, Perm
 router.put('/v2/rescues/:id/assign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.assign))
 router.put('/v2/rescues/:id/unassign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.unassign))
 router.put('/v2/rescues/:id/addquote', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.addquote))
+router.put('/v2/rescues/:id', API.version('v2.0'), API.route(rescue.getById))
 
 router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))

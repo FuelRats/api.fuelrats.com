@@ -23,6 +23,20 @@ class Rescues {
     })
   }
 
+  static findById (params, connection) {
+    return new Promise(function (resolve, reject) {
+      if (params.id) {
+        Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
+          resolve(new RescueResult(result, params).toResponse())
+        }).catch(function (errors) {
+          reject(Errors.throw('server_error', errors[0].message))
+        })
+      } else {
+        reject(Error.throw('missing_required_field', 'id'))
+      }
+    })
+  }
+
   static create (params, connection, data) {
     return new Promise(function (resolve, reject) {
       Rescue.create(data).then(function (rescue) {
