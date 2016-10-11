@@ -78,7 +78,7 @@ class Rescues {
     })
   }
 
-  static delete (params, connection) {
+  static delete (params) {
     return new Promise(function (resolve, reject) {
       if (params.id) {
         Rescue.findOne({
@@ -99,306 +99,129 @@ class Rescues {
       }
     })
   }
-}
 
-class Controller {
-  static assign (data, connection, query) {
+  static assign (params, connection, data) {
     return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findRescueWithRats({ id: query.id }).then(function (rescue) {
-          if (!rescue) {
-            reject({ error: Error.throw('not_found', rescue.id), meta: {} })
-            return
+      if (params.id) {
+        Rescue.findOne({
+          where: {
+            id: params.id
           }
-          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+        }).then(function (rescue) {
+          if (!rescue) {
+            reject(Error.throw('not_found', params.id))
+          }
+
           let permission = getRescuePermissionType(rescue, connection.user)
+          Permission.require(permission, connection.user, connection.scope).then(function () {
+            let rats = []
+            for (let rat of data) {
+              rats.push(rescue.addRat(rat))
+            }
 
-          Permission.require(permission, connection.user).then(function () {
-            Rat.findById(data.ratId).then(function (rat) {
-              rescue.addRat(rat).then(function () {
-                findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
-                  if (!rescueInstance) {
-                    reject({ error: Error.throw('operation_failed'), meta: {} })
-                    return
-                  }
-                  let rescue = convertRescueToAPIResult(rescueInstance)
-
-                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
-                    return cl.clientId !== connection.clientId
-                  })
-                  connection.websocket.broadcast(allClientsExcludingSelf, {
-                    action: 'rescue:updated'
-                  }, rescue)
-
-                  resolve({
-                    data: rescue,
-                    meta: {
-                      id: query.id
-                    }
-                  })
-                }).catch(function (error) {
-                  reject({ error: Errors.throw('server_error', error), meta: {} })
-                })
-              }).catch(function (error) {
-                reject({ error: Errors.throw('server_error', error), meta: {} })
+            Promise.all(rats).then(function () {
+              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
+                resolve(new RescueResult(result, params).toResponse())
+              }).catch(function (errors) {
+                reject(Errors.throw('server_error', errors[0].message))
               })
-            }).catch(function (error) {
-              reject({ error: Errors.throw('server_error', error), meta: {} })
+            }).catch(function (err) {
+              reject(Error.throw('server_error', err))
             })
-          }, function (error) {
-            reject({ error: error })
+          }).catch(function (err) {
+            reject(err)
           })
-        }, function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+        }).catch(function (err) {
+          reject(Error.throw('server_error', err))
         })
       } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+        reject(Error.throw('missing_required_field', 'id'))
       }
     })
   }
 
-  static unassign (data, connection, query) {
+  static unassign (params, connection, data) {
     return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findRescueWithRats({ id: query.id }).then(function (rescue) {
-          if (!rescue) {
-            reject({ error: Error.throw('not_found', rescue.id), meta: {} })
-            return
+      if (params.id) {
+        Rescue.findOne({
+          where: {
+            id: params.id
           }
-          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+        }).then(function (rescue) {
+          if (!rescue) {
+            reject(Error.throw('not_found', params.id))
+          }
+
           let permission = getRescuePermissionType(rescue, connection.user)
+          Permission.require(permission, connection.user, connection.scope).then(function () {
+            let rats = []
+            for (let rat of data) {
+              rats.push(rescue.removeRat(rat))
+            }
 
-          Permission.require(permission, connection.user).then(function () {
-            Rat.findById(data.ratId).then(function (rat) {
-              rescue.removeRat(rat).then(function () {
-                findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
-                  if (!rescueInstance) {
-                    reject({ error: Error.throw('operation_failed'), meta: {} })
-                    return
-                  }
-                  let rescue = convertRescueToAPIResult(rescueInstance)
-
-                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
-                    return cl.clientId !== connection.clientId
-                  })
-                  connection.websocket.broadcast(allClientsExcludingSelf, {
-                    action: 'rescue:updated'
-                  }, rescue)
-
-                  resolve({
-                    data: rescue,
-                    meta: {}
-                  })
-                }).catch(function (error) {
-                  reject({ error: Errors.throw('server_error', error), meta: {} })
-                })
-              }).catch(function (error) {
-                reject({ error: Errors.throw('server_error', error), meta: {} })
+            Promise.all(rats).then(function () {
+              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
+                resolve(new RescueResult(result, params).toResponse())
+              }).catch(function (errors) {
+                reject(Errors.throw('server_error', errors[0].message))
               })
-            }).catch(function (error) {
-              reject({ error: Errors.throw('server_error', error), meta: {} })
+            }).catch(function (err) {
+              reject(Error.throw('server_error', err))
             })
-          }, function (error) {
-            reject({ error: error })
+          }).catch(function (err) {
+            reject(err)
           })
-        }, function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+        }).catch(function (err) {
+          reject(Error.throw('server_error', err))
         })
       } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+        reject(Error.throw('missing_required_field', 'id'))
       }
     })
   }
 
-  static addquote (data, connection, query) {
+  static addquote (params, connection, data) {
     return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findRescueWithRats({ id: query.id }).then(function (rescue) {if (!rescue) {
-          reject({ error: Error.throw('not_found'), meta: {} })
-          return
-        }
-          // If the rescue is closed or the user is not involved with the rescue, we will require moderator permission
+      if (params.id) {
+        Rescue.findOne({
+          where: {
+            id: params.id
+          }
+        }).then(function (rescue) {
+          if (!rescue) {
+            reject(Error.throw('not_found', params.id))
+          }
+
           let permission = getRescuePermissionType(rescue, connection.user)
-
-          Permission.require(permission, connection.user).then(function () {
-            let updatedQuotes = rescue.quotes.concat(data)
-            Rescue.update(
-              {
-                quotes: updatedQuotes
-              }, {
-                where: { id: rescue.id }
-              }).then(function () {
-                findRescueWithRats({ id: query.id }).then(function (rescueInstance) {
-                  if (!rescueInstance) {
-                    reject({ error: Error.throw('operation_failed', rescue.id), meta: {} })
-                    return
-                  }
-                  let rescue = convertRescueToAPIResult(rescueInstance)
-
-                  let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
-                    return cl.clientId !== connection.clientId
-                  })
-                  connection.websocket.broadcast(allClientsExcludingSelf, {
-                    action: 'rescue:updated'
-                  }, rescue)
-                  resolve({ data: rescue, meta: {} })
-                }).catch(function (error) {
-                  reject({ error: Errors.throw('server_error', error), meta: {} })
-                })
-              }).catch(function (error) {
-                reject({ error: Errors.throw('server_error', error), meta: {} })
+          Permission.require(permission, connection.user, connection.scope).then(function () {
+            Rescue.update({
+              quotes: rescue.quotes.concat(data)
+            }, {
+              where: {
+                id: params.id
               }
-            )
-          }, function (error) {
-            reject({ error: error })
+            }).then(function () {
+              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
+                resolve(new RescueResult(result, params).toResponse())
+              }).catch(function (errors) {
+                reject(Errors.throw('server_error', errors[0].message))
+              })
+            }).catch(function (err) {
+              reject(Error.throw('server_error', err))
+            })
+          }).then(function (err) {
+            reject(err)
           })
-        }, function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+        }).catch(function (err) {
+          reject(Error.throw('server_error', err))
         })
       } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+        reject(Error.throw('missing_required_field', 'id'))
       }
     })
   }
 }
 
-class HTTP {
-  static assign (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.assign(request.params, request, request.params).then(function (data) {
-      response.model.data = data.data
-      response.status(200)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static unassign (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.unassign(request.params, request, request.params).then(function (data) {
-      response.model.data = data.data
-      response.status(200)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static addquote (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-    Controller.addquote(request.body.quotes, request, request.params).then(function (data) {
-      response.model.data = data.data
-      response.status(200)
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static get (request, response, next) {
-    Controller.read(request.query, request).then(function (res) {
-      let data = res.data
-      let meta = res.meta
-
-      response.model.data = data
-      response.model.meta = meta
-      response.status = 400
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static getById (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-    let id = request.params.id
-
-    if (id) {
-      Rescue.findOne({
-        where: { id: id },
-        include: [
-          {
-            model: Rat,
-            as: 'rats',
-            required: false
-          },
-          {
-            model: Rat,
-            as: 'firstLimpet',
-            required: false
-          },
-          {
-            model: Epic,
-            as: 'epics',
-            required: false
-          }
-        ]
-      }).then(function (rescueInstance) {
-        if (request.query.v === '2') {
-          response.model.data = rescueInstance.toJSON()
-        } else {
-          response.model.data = convertRescueToAPIResult(rescueInstance)
-        }
-        response.status(200)
-        next()
-      }).catch(function (error) {
-        response.model.errors.push(error)
-        response.status(400)
-        next()
-      })
-    }
-  }
-
-  static post (request, response, next) {
-    Controller.create(request.body, request).then(function (res) {
-      response.model.data = res.data
-      response.status(201)
-      next()
-    }, function (error) {
-      response.model.errors.push(error)
-      response.status(400)
-      next()
-    })
-  }
-
-  static put (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.update(request.body, request, request.params).then(function (data) {
-      response.model.data = data.data
-      response.status(201)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static delete (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.delete(request.body, request, request.params).then(function () {
-      response.status(204)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-}
 
 function getRescuePermissionType (rescue, user) {
   if (rescue.open === true) {
@@ -419,32 +242,5 @@ function getRescuePermissionType (rescue, user) {
   return ['rescue.write']
 }
 
-function convertRescueToAPIResult (rescueInstance) {
-  let rescue = rescueInstance.toJSON()
-  if (rescue.rats) {
-    let reducedRats = rescue.rats.map(function (rat) {
-      return rat.id
-    })
-    rescue.rats = reducedRats
-  } else {
-    rescue.rats = []
-  }
-
-  rescue.epic = (rescue.epics.length > 0)
-  delete rescue.epics
-
-  delete rescue.firstLimpet
-  rescue.firstLimpet = rescue.firstLimpetId
-  delete rescue.firstLimpetId
-  delete rescue.deletedAt
-  return rescue
-}
-
-function findRescueWithRats (where) {
-  return Rescue.findOne({
-    where: where,
-
-  })
-}
 
 module.exports = Rescues
