@@ -7,11 +7,6 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
-    active: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
-    },
     client: {
       type: DataTypes.STRING,
       allowNull: true
@@ -24,11 +19,6 @@ module.exports = function (sequelize, DataTypes) {
     data: {
       type: DataTypes.JSONB,
       allowNull: true
-    },
-    open: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
     },
     notes: {
       type: DataTypes.TEXT,
@@ -44,6 +34,11 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
       defaultValue: []
+    },
+    status: {
+      type: DataTypes.ENUM('open', 'inactive', 'closed'),
+      allowNull: false,
+      defaultValue: 'open'
     },
     system: {
       type: DataTypes.STRING,
