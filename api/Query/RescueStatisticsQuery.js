@@ -17,7 +17,7 @@ class RescueStatisticsQuery extends Query {
     this._query.include = []
     this._query.attributes = [
       [this._groupedByDateField, 'date'],
-      [db.fn('SUM', db.cast(db.col('successful'), 'INTEGER')), 'successCount'],
+      [db.fn('SUM', db.literal('CASE WHEN "Rescue"."type" = \'successful\' THEN 1 ELSE 0 END')), 'successCount'],
       [db.fn('COUNT', 'id'), 'total']
     ]
     this._query.group = [this._groupedByDateField]
