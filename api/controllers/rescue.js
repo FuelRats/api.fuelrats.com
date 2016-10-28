@@ -237,19 +237,21 @@ class Rescues {
 }
 
 
+const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
+
 function getRescuePermissionType (rescue, user) {
   if (rescue.open === true) {
-    return ['rescue.write.me', 'rescue.write']
+    return selfWriteAllowedPermissions
   }
 
   if (rescue.createdAt - Date.now() < 3600000) {
-    return ['rescue.write.me', 'rescue.write']
+    return selfWriteAllowedPermissions
   }
 
   if (user) {
     for (let CMDR of user.CMDRs) {
       if (rescue.rats.includes(CMDR) || rescue.firstLimpetId === CMDR) {
-        return ['rescue.write.me', 'rescue.write']
+        return selfWriteAllowedPermissions
       }
     }
   }
