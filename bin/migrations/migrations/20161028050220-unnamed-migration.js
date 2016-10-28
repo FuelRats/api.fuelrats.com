@@ -19,7 +19,7 @@ module.exports = {
       {
         type: Sequelize.ENUM('open', 'inactive', 'closed'),
         allowNull: false,
-        defaultValue: 'other'
+        defaultValue: 'open'
       }
     )
   },
