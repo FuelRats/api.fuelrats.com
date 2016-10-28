@@ -45,11 +45,6 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: []
     },
-    successful: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
     system: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -59,6 +54,11 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: null
+    },
+    type: {
+      type: DataTypes.ENUM('success', 'failure', 'invalid', 'other'),
+      allowNull: false,
+      defaultValue:  'other'
     },
     unidentifiedRats: {
       type: DataTypes.ARRAY(DataTypes.STRING),
