@@ -46,7 +46,7 @@ let login = require('./api/controllers/login')
 let logout = require('./api/controllers/logout')
 let nicknames = require('./api/controllers/nicknames').HTTP
 let oauth2 = require('./api/controllers/oauth2')
-let rat = require('./api/controllers/rat').HTTP
+let rat = require('./api/controllers/rat')
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
 let rescue = require('./api/controllers/rescue')
@@ -217,6 +217,11 @@ router.put('/v2/rescues/:id/assign', API.version('v2.0'), auth.isAuthenticated, 
 router.put('/v2/rescues/:id/unassign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.unassign))
 router.put('/v2/rescues/:id/addquote', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.addquote))
 router.put('/v2/rescues/:id', API.version('v2.0'), API.route(rescue.getById))
+
+router.get('/v2/rats', API.version('v2.0'), API.route(rat.search))
+router.post('/v2/rats', API.version('v2.0'), auth.isAuthenticated, API.route(rat.create))
+router.put('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rat.update))
+router.delete('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required('rat.delete'), API.route(rat.delete))
 
 router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
