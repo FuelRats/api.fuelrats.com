@@ -270,7 +270,7 @@ router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
 router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
-router.get('/nicknames/search/:nickname', nicknames.search)
+router.get('/nicknames/search/:nickname', auth.isAuthenticated(false), nicknames.search)
 router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
 router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
 router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
@@ -296,10 +296,6 @@ router.get('/statistics', statistics.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
-
-router.route('/oauth2/authorise')
-  .get(auth.isAuthenticated(true), oauth2.authorization)
-  .post(auth.isAuthenticated(false), oauth2.decision)
 
 router.route('/oauth2/authorize')
   .get(auth.isAuthenticated(true), oauth2.authorization)

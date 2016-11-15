@@ -34,11 +34,6 @@ class Statistics {
             },
             required: true
           }, {
-            model: Epic,
-            as: 'epics',
-            attributes: [],
-            required: false
-          }, {
             model: User,
             as: 'user',
             attributes: [],
@@ -46,7 +41,6 @@ class Statistics {
           }],
           attributes: [
             [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
-            [db.literal('array_agg(DISTINCT "rescueId")'), 'epicRescues'],
             [db.fn('min', db.col('joined')), 'joined'],
             [db.literal('array_agg(DISTINCT "CMDRname")'), 'rats'],
             [db.fn('bool_or', db.col('codeRed')), 'codeRed'],
