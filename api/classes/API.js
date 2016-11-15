@@ -1,7 +1,8 @@
 'use strict'
 
 class API {
-  static createQueryFromRequest (request) {
+  static createQueryFromRequest (req) {
+    let request = Object.assign({}, req)
     delete request.rats
     delete request.CMDRs
 
