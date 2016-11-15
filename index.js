@@ -297,10 +297,6 @@ router.get('/statistics', statistics.get)
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
 
-router.route('/oauth2/authorise')
-  .get(auth.isAuthenticated(true), oauth2.authorization)
-  .post(auth.isAuthenticated(false), oauth2.decision)
-
 router.route('/oauth2/authorize')
   .get(auth.isAuthenticated(true), oauth2.authorization)
   .post(auth.isAuthenticated(false), oauth2.decision)
