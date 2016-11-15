@@ -180,7 +180,7 @@ class Controller {
 
       let strippedNickname = query.nickname.replace(/\[(.*?)\]$/g, '')
 
-      let displayPrivateFields = connection.user && Permission.granted('user.read', connection.user)
+      let displayPrivateFields = typeof connection.user !== 'undefined' && connection.user.group === 'admin'
 
       let limit = parseInt(query.limit) || 25
       let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
