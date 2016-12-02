@@ -192,6 +192,7 @@ function bearerAuthenticate (accessToken, callback) {
       })
       user.CMDRs = reducedRats
       delete user.rats
+      delete user.dispatch
       callback(null, user, { scope: '*' })
     }).catch(function (error) {
       callback(error)
@@ -233,6 +234,7 @@ function convertUserToAPIResult (userInstance) {
   delete user.rats
   delete user.salt
   delete user.password
+  delete user.dispatch
 
   return user
 }
