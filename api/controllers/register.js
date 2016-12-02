@@ -7,10 +7,6 @@ let bcrypt = require('bcrypt')
 let passport = require('passport')
 
 
-exports.get = function (request, response) {
-  response.redirect('/login')
-}
-
 exports.post = function (request, response, next) {
   let referer = request.get('Referer')
 
@@ -108,7 +104,6 @@ exports.post = function (request, response, next) {
       next()
     }
   }).catch(function (error) {
-    console.log(error)
     if (referer) {
       response.redirect('/login?registrationError=1')
     } else {

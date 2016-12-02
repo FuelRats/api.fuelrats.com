@@ -232,10 +232,10 @@ router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.r
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
 
 router.post('/login', passport.authenticate('local'), login.post)
+router.post('/register', register.post)
 /*
 
 
-router.post('/register', register.post)
 
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
