@@ -1,294 +1,140 @@
 'use strict'
 
-let _ = require('underscore')
-let Permission = require('../permission')
 let User = require('../db').User
-let Rat = require('../db').Rat
-let db = require('../db').db
+
 let Errors = require('../errors')
-let API = require('../classes/API')
+let Permission = require('../permission')
+let UserQuery = require('../Query/UserQuery')
+let UserResult = require('../Results/user')
 
-let HostServ = require('../Anope/HostServ')
-
-class Controller {
-  static read (query) {
+class Users {
+  static search (params, connection) {
     return new Promise(function (resolve, reject) {
-      let dbQuery = API.createQueryFromRequest(query)
-
-      dbQuery.include = [
-        {
-          model: Rat,
-          as: 'rats'
-        }
-      ]
-
-      if (query.CMDRs) {
-        dbQuery.include[0].require = true
-        dbQuery.include[0].where = {
-          id: query.CMDRs
-        }
-      }
-
-      dbQuery.attributes = {
-        include: [
-          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-        ],
-        exclude: [
-          'nicknames'
-        ]
-      }
-
-      User.findAndCountAll(dbQuery).then(function (result) {
-        let meta = {
-          count: result.rows.length,
-          limit: dbQuery.limit,
-          offset: dbQuery.offset,
-          total: result.count
-        }
-
-        /* For backwards compatibility reasons we return only the list of rat
-        foreign keys, not their objects */
-        let users = result.rows.map(function (userInstance) {
-          let user = convertUserToAPIResult(userInstance)
-          return user
-        })
-
-        resolve({
-          data: users,
-          meta: meta
+      Users.findAndCountAll(new UserQuery(params, connection).toSequelize).then(function (result) {
+        let permission = getUserReadPermissionType(result, connection.user)
+        Permission.require(permission, connection.user, connection.scope).then(function () {
+          resolve(new UserResult(result, params).toResponse())
+        }).catch(function (err) {
+          reject(err)
         })
       }).catch(function (error) {
-        reject({ error: Errors.throw('server_error', error), meta: {} })
+        reject(Errors.throw('server_error', error.message))
       })
     })
   }
 
-  static create () {
+  static findById (params, connection) {
     return new Promise(function (resolve, reject) {
-      reject({ error: Errors.throw('not_implemented', 'user:create is not implemented, please use POST /register'), meta: {} })
-    })
-  }
-
-  static update (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findUserWithRats({ id: query.id }).then(function (user) {
-          let permission = connection.user.id === query.id ? 'self.user.edit' : 'user.edit'
-          Permission.require(permission, connection.user).then(function () {
-            let updates = []
-
-            if (data.CMDRs) {
-              for (let ratId of data.CMDRs) {
-                updates.push(user.addRat(ratId))
-              }
-              delete data.rats
-            }
-
-            if (data['nicknames']) {
-              data.nicknames = db.cast(data['nicknames'], 'citext[]')
-            }
-
-            if (Object.keys(data).length > 0) {
-              updates.push(User.update(data, {
-                where: { id: user.id }
-              }))
-            }
-
-            Promise.all(updates).then(function () {
-              findUserWithRats({ id: query.id }).then(function (userInstance) {
-                if (data.group || data.drilled || data.drilledDispatch) {
-                  HostServ.updateVirtualHost(userInstance)
-                }
-                let user = convertUserToAPIResult(userInstance)
-                resolve({ data: user, meta: {} })
-              }).catch(function (error) {
-                reject({ error: Errors.throw('server_error', error), meta: {} })
-              })
-            }).catch(function (error) {
-              reject({ error: Errors.throw('server_error', error), meta: {} })
-            })
-          }, function (error) {
-            reject({ error: error })
+      if (params.id) {
+        User.findAndCountAll(new UserQuery({ id: params.id }, connection).toSequelize).then(function (result) {
+          let permission = getUserReadPermissionType(result, connection.user)
+          Permission.require(permission, connection.user, connection.scope).then(function () {
+            resolve(new UserResult(result, params).toResponse())
+          }).catch(function (err) {
+            reject(err)
           })
-        }, function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+        }).catch(function (errors) {
+          reject(Errors.throw('server_error', errors[0].message))
         })
       } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+        reject(Error.throw('missing_required_field', 'id'))
       }
     })
   }
 
-  static delete (data, connection, query) {
+  static create (params, connection, data) {
     return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('user.delete')
-        reject({ error: error, meta: {} })
-        return
-      }
+      User.create(data).then(function (user) {
+        if (!user) {
+          return reject(Errors.throw('operation_failed'))
+        }
 
-      if (query.id) {
-        User.findById(query.id).then(function (rescue) {
-          rescue.destroy()
-          resolve({ data: null, meta: {} })
-        }).catch(function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
-        })
-      } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
-      }
+        resolve(new UserResult(user, params).toResponse())
+      }).catch(function (error) {
+        reject(Errors.throw('server_error', error.message))
+      })
     })
   }
 
-  static forceUpdateIRCStatus (data, connection, query) {
+  static update (params, connection, data) {
     return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findUserWithRats({ id: query.id }).then(function (userInstance) {
-          if (!userInstance) {
-            return reject({ error: Error.throw('not_found', query.id), meta: {} })
+      if (params.id) {
+        User.findOne({
+          where: {
+            id: params.id
+          }
+        }).then(function (user) {
+          if (!user) {
+            reject(Error.throw('not_found', params.id))
           }
 
-          HostServ.updateVirtualHost(userInstance)
-          resolve({ data: { success: true }, meta: {} })
-        }).catch(function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
+          let permission = getUserWritePermissionType(user, connection.user)
+          Permission.require(permission, connection.user, connection.scope).then(function () {
+            User.update(data, {
+              where: {
+                id: params.id
+              }
+            }).then(function (user) {
+              if (!user) {
+                return reject(Error.throw('operation_failed'))
+              }
+
+              User.findAndCountAll(new UserQuery({ id: params.id }, connection).toSequelize).then(function (result) {
+                resolve(new UserResult(result, params).toResponse())
+              }).catch(function (error) {
+                reject(Errors.throw('server_error', error.message))
+              })
+            })
+          }).catch(function (err) {
+            reject(err)
+          })
+        }).catch(function (err) {
+          reject(Error.throw('server_error', err))
         })
       } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+        reject(Error.throw('missing_required_field', 'id'))
+      }
+    })
+  }
+
+  static delete (params) {
+    return new Promise(function (resolve, reject) {
+      if (params.id) {
+        User.findOne({
+          where: {
+            id: params.id
+          }
+        }).then(function (user) {
+          if (!user) {
+            return reject(Error.throw('not_found', params.id))
+          }
+
+          user.destroy()
+
+          resolve(null)
+        }).catch(function (err) {
+          reject({ error: Errors.throw('server_error', err), meta: {} })
+        })
       }
     })
   }
 }
 
-class HTTP {
-  static get (request, response, next) {
-    Controller.read(request.query, request).then(function (res) {
-      let data = res.data
-      let meta = res.meta
+const selfReadAllowedPermissions = ['user.read.me', 'user.read']
+const selfWriteAllowedPermissions = ['user.write.me', 'user.write']
 
-      response.model.data = data
-      response.model.meta = meta
-      response.status = 200
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
+function getUserReadPermissionType (user, self) {
+  if (user.id === self.id) {
+    return selfReadAllowedPermissions
   }
-
-  static getById (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-    let id = request.params.id
-    if (id) {
-      findUserWithRats({ id: id }).then(function (userInstance) {
-        if (!userInstance) {
-          response.model.errors.push(Errors.throw('not_found', 'id'))
-          response.status(404)
-          next()
-          return
-        }
-
-        let user = convertUserToAPIResult(userInstance)
-        response.model.data = user
-        response.status(200)
-        next()
-      }).catch(function (error) {
-        response.model.errors.push(Errors.throw('server_error', error))
-        response.status(500)
-        next()
-      })
-    } else {
-      response.model.errors.push(Errors.throw('missing_required_field', 'id'))
-      response.status(400)
-      next()
-    }
-  }
-
-  static post (request, response, next) {
-    let notImplemented = Errors.throw('not_implemented', 'POST /users is not implemented, please use POST /register')
-    response.model.errors.push(notImplemented)
-    response.status(404)
-    next()
-  }
-
-  static put (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.update(request.body, request, request.params).then(function (data) {
-      response.model.data = data.data
-      response.status(201)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static delete (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.delete(request.body, request, request.params).then(function () {
-      response.status(204)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static forceUpdateIRCStatus (request, response, next) {
-    Controller.read(request.body, request, request.params).then(function (res) {
-      let data = res.data
-
-      response.model.data = data
-      response.status = 200
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
+  return ['user.read']
 }
 
-function convertUserToAPIResult (userInstance) {
-  let user = userInstance.toJSON()
-  let reducedRats = user.rats.map(function (rat) {
-    return rat.id
-  })
-  user.CMDRs = reducedRats
-  if (!user.CMDRs) {
-    user.CMDRs = []
+function getUserWritePermissionType (user, self) {
+  if (user.id === self.id) {
+    return selfWriteAllowedPermissions
   }
-  delete user.rats
-  delete user.password
-  delete user.deletedAt
-  delete user.dispatch
-
-  return user
+  return ['user.write']
 }
 
-function findUserWithRats (where) {
-  return User.findOne({
-    where: where,
-    attributes: {
-      include: [
-        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-      ],
-      exclude: [
-        'nicknames'
-      ]
-    },
-    include: [
-      {
-        model: Rat,
-        as: 'rats'
-      }
-    ]
-  })
-}
-
-module.exports = { Controller, HTTP }
+module.exports = Users

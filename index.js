@@ -51,7 +51,7 @@ let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
 let rescue = require('./api/controllers/rescue')
 let statistics = require('./api/controllers/statistics')
-let user = require('./api/controllers/user').HTTP
+let user = require('./api/controllers/user')
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
 let jiraDrill = require('./api/controllers/jira/drill').HTTP
@@ -222,6 +222,11 @@ router.get('/v2/rats', API.version('v2.0'), API.route(rat.search))
 router.post('/v2/rats', API.version('v2.0'), auth.isAuthenticated, API.route(rat.create))
 router.put('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rat.update))
 router.delete('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required('rat.delete'), API.route(rat.delete))
+
+router.get('/v2/users', API.version('v2.0'), auth.isAuthenticated, API.route(user.search))
+router.post('/v2/users', API.version('v2.0'), auth.isAuthenticated, Permission.required('user.write'), API.route(user.create))
+router.put('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated, API.route(user.update))
+router.delete('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required('user.delete'), API.route(user.delete))
 
 router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))

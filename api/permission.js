@@ -25,8 +25,6 @@ const permissions = [
   'client.delete.me',
   'user.read',
   'user.read.me',
-  'user.groups',
-  'user.groups.me',
   'user.delete'
 
 ]
@@ -51,8 +49,6 @@ const groups = {
   overseer: [
     'rescue.write',
     'rat.write',
-    'user.read',
-    'user.groups',
     'rescue.delete'
   ],
 
@@ -61,7 +57,6 @@ const groups = {
     'rat.write',
     'user.read',
     'user.write',
-    'user.groups',
     'client.read',
     'rescue.delete'
   ],
