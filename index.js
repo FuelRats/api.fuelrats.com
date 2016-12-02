@@ -165,6 +165,7 @@ passport.deserializeUser(function (id, done) {
     })
     user.CMDRs = reducedRats
     delete user.rats
+    delete user.dispatch
     done(null, user)
   }).catch(function () {
     done(null, false)
