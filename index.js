@@ -48,6 +48,7 @@ let logout = require('./api/controllers/logout')
 let nicknames = require('./api/controllers/nicknames').HTTP
 let oauth2 = require('./api/controllers/oauth2')
 let paperwork = require('./api/controllers/paperwork')
+let profile = require('./api/controllers/profile')
 let rat = require('./api/controllers/rat').HTTP
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
@@ -292,6 +293,7 @@ router.get('/change_password', change_password.get)
 router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
 router.get('/register', register.get)
 router.get('/welcome', auth.isAuthenticated(true), welcome.get)
+router.get('/profile', auth.isAuthenticated(true), profile.get)
 router.get('/roster', roster.get)
 router.get('/statistics', statistics.get)
 
