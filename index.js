@@ -215,8 +215,8 @@ if (options.logging || options.test) {
     winston.info('TIMESTAMP:', Date.now())
     winston.info('ENDPOINT:', request.originalUrl)
     winston.info('METHOD:', request.method)
+    winston.info('HEADERS:', request.headers)
     winston.info('DATA:', censoredParams)
-    winston.info('IP:', request.headers['x-forwarded-for'] || request.connection.remoteAddress)
     request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
     next()
   })
