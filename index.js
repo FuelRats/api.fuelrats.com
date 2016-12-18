@@ -20,6 +20,7 @@ let winston = require('winston')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
+require('winston-daily-rotate-file')
 
 // Import config
 let config = require('./config-example')
@@ -92,6 +93,19 @@ if (process.argv) {
     }
   }
 }
+
+let transport = new winston.transports.DailyRotateFile({
+  filename: './log',
+  datePattern: 'yyyy-MM-dd.',
+  prepend: true,
+  level: process.env.ENV === 'development' ? 'debug' : 'info'
+})
+
+let logger = new (winston.Logger)({
+  transports: [
+    transport
+  ]
+})
 
 
 // MIDDLEWARE
@@ -211,12 +225,12 @@ if (options.logging || options.test) {
       censoredParams.password = '**********'
     }
 
-    winston.info('')
-    winston.info('TIMESTAMP:', Date.now())
-    winston.info('ENDPOINT:', request.originalUrl)
-    winston.info('METHOD:', request.method)
-    winston.info('DATA:', censoredParams)
-    winston.info('IP:', request.headers['x-forwarded-for'] || request.connection.remoteAddress)
+    logger.info('')
+    logger.info('TIMESTAMP:', Date.now())
+    logger.info('ENDPOINT:', request.originalUrl)
+    logger.info('METHOD:', request.method)
+    logger.info('HEADERS:', request.headers)
+    logger.info('DATA:', censoredParams)
     request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
     next()
   })
