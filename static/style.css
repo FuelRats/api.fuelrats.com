@@ -323,6 +323,6 @@ svg text {
   fill: #31b0d5;
 }
 
-.leaderboard-overview {
+#leaderboard-overview {
   min-width: 1250px;
 }
