@@ -1,7 +1,4 @@
-{% extends 'layouts/main.swig' %}
-
-{% block head %}
-{% parent %}
+<head>
 <title>Reset Password</title>
 <style>
     .email {
@@ -9,26 +6,23 @@
         margin: 20px;
     }
 </style>
-{% endblock %}
-
-{% block body %}
-{% parent %}
-<div class="email">
-  <div>
-    <p>Someone requested a password reset to your Fuel Rats account.</p>
-    <p></p>
-    <p>
-        To reset your password click this link:<br>
-        <a href="{{emaillink}}">{{emaillink}}</a>
-    </p>
-    <p>If you ignore this link, your password will not be changed</p>
-    <br>
-    <br>
-    <p>Regards,</p>
-    <p>The Fuel Rats</p>
-    <p>--</p>
-    <p><a href="https://fuelrats.com/">https://fuelrats.com</a></p>
-  </div>
-</div>
-
-{% endblock %}
+</head>
+<body>
+    <div class="email">
+      <div>
+        <p>Someone requested a password reset to your Fuel Rats account.</p>
+        <p></p>
+        <p>
+            To reset your password click this link:<br>
+            <a href="{{emaillink}}">{{emaillink}}</a>
+        </p>
+        <p>If you ignore this link, your password will not be changed</p>
+        <br>
+        <br>
+        <p>Regards,</p>
+        <p>The Fuel Rats</p>
+        <p>--</p>
+        <p><a href="https://fuelrats.com/">https://fuelrats.com</a></p>
+      </div>
+    </div>
+</body>

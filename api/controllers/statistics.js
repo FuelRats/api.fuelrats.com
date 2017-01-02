@@ -10,6 +10,8 @@ exports.get = function (request, response, next) {
 
   operations.push(Statistics.getPopularSystemsCount())
   operations.push(Statistics.getTotalStatistics())
+  operations.push(Statistics.getOverviewStatistics())
+  operations.push(Statistics.getLeaderboardRats())
 
   Promise.all(operations).then(function (values) {
     response.model.data = values
