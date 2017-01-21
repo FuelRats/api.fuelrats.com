@@ -24,6 +24,11 @@ class API {
       delete request.firstLimpet
     }
 
+    if (request.createdAtAfter) {
+      request.createdAt = { $gte: request.createdAtAfter }
+      delete request.createdAtAfter
+    }
+
     if (request.data) {
       let dataQuery = request.data
       delete request.data
