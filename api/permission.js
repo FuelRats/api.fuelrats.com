@@ -46,6 +46,10 @@ const groups = {
     'user.write.me'
   ],
 
+  rat: [],
+
+  dispatch: [],
+
   overseer: [
     'rescue.write',
     'rat.write',
@@ -110,7 +114,7 @@ class Permission {
         let error = Permission.permissionError(permissions)
         res.model.errors.push(error)
         res.status(error.code)
-        return next()
+        return next(error)
       }
     }
   }
@@ -124,6 +128,8 @@ class Permission {
    */
   static granted (permissions, user, scope = null) {
     let hasPermission = false
+
+    user.groups.push('default')
 
     for (let permission of permissions) {
       for (let group of user.groups) {
