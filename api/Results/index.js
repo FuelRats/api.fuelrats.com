@@ -22,8 +22,12 @@ class Result {
     } else if (Array.isArray(dbResult)) {
       this._result = dbResult.map(this.fromSequelize.bind(this))
     } else {
-      this._result = this.fromSequelize(dbResult)
+      this._result = this.result(dbResult)
     }
+  }
+
+  result (dbResult) {
+    return this.fromSequelize(dbResult)
   }
 
   /**
