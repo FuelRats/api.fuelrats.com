@@ -66,6 +66,7 @@ const groups = {
   ],
 
   admin: [
+    'user.read',
     'rescue.read',
     'rescue.write',
     'rescue.delete',
@@ -127,6 +128,10 @@ class Permission {
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
   static granted (permissions, user, scope = null) {
+    if (!user) {
+      return false
+    }
+
     let hasPermission = false
 
     user.groups.push('default')
