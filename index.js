@@ -228,8 +228,8 @@ router.post('/v2/users', API.version('v2.0'), auth.isAuthenticated, Permission.r
 router.put('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated, API.route(user.update))
 router.delete('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required(['user.delete']), API.route(user.delete))
 
-router.get('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.read.me']), API.route(nicknames.info))
 router.get('/v2/nicknames/search/:nickname', API.route(nicknames.search))
+router.get('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.read.me']), API.route(nicknames.info))
 router.post('/v2/nicknames/', auth.isAuthenticated, Permission.required(['user.write.me']), API.route(nicknames.register))
 router.put('/v2/nicknames/', auth.isAuthenticated, Permission.required(['user.write.me']), API.route(nicknames.connect))
 router.delete('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.write.me']), API.route(nicknames.delete))

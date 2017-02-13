@@ -137,7 +137,8 @@ class Nicknames {
       }
 
       User.findAndCountAll(new NicknameQuery(params, connection).toSequelize).then(function (result) {
-        resolve(new NicknameResult(result, params).toResponse())
+        let accessToPrivateInfo = Permission.granted(['user.read'], connection.user, connection.scope)
+        resolve(new NicknameResult(result, params, accessToPrivateInfo).toResponse())
       })
     })
   }
