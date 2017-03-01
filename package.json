@@ -6,9 +6,9 @@
     "Trezy <tre@trezy.com>"
   ],
   "scripts": {
-    "dev": "grunt api",
-    "import": "grunt import",
-    "test": "grunt test"
+    "dev": "$(npm bin)/grunt api",
+    "import": "$(npm bin)/grunt import",
+    "test": "$(npm bin)/grunt test"
   },
   "license": "MIT",
   "main": "api/index.js",
@@ -35,6 +35,7 @@
     "git-rev": "^0.2.1",
     "grunt": "^0.4.5",
     "grunt-babel": "^6.0.0",
+    "grunt-cli": "^1.2.0",
     "grunt-contrib-cssmin": "^1.0.1",
     "grunt-contrib-uglify": "^1.0.1",
     "grunt-contrib-watch": "^0.6.1",
