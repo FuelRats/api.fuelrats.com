@@ -46,8 +46,8 @@ class Statistics {
           }],
           attributes: [
             [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
-            [db.literal('array_agg(DISTINCT "rescueId")'), 'epicRescues'],
             [db.fn('min', db.col('joined')), 'joined'],
+            [db.literal('array_agg(DISTINCT "rescueId")'), 'epicRescues'],
             [db.literal('array_agg(DISTINCT "CMDRname")'), 'rats'],
             [db.fn('bool_or', db.col('codeRed')), 'codeRed'],
             [db.fn('bool_or', db.col('drilledDispatch')), 'drilledDispatch']
@@ -116,4 +116,5 @@ class Statistics {
     })
   }
 }
+
 module.exports = Statistics

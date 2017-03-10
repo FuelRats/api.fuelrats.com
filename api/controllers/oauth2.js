@@ -6,6 +6,7 @@ let Token = require('../db').Token
 let Client = require('../db').Client
 let Code = require('../db').Code
 let Permission = require('../permission')
+let Errors = require('../errors')
 
 let server = oauth2orize.createServer()
 
@@ -45,6 +46,24 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
 
     Promise.all(associations).then(function () {
       callback(null, code.value)
+    }).catch(function (error) {
+      callback(error)
+    })
+  }).catch(function (error) {
+    callback(error)
+  })
+}))
+
+server.grant(oauth2orize.grant.token(function (client, user, ares, callback) {
+  Token.create({
+    value: crypto.randomBytes(32).toString('hex')
+  }).then(function (token) {
+    let associations = []
+    associations.push(token.setClient(client))
+    associations.push(token.setUser(user.id))
+
+    Promise.all(associations).then(function () {
+      callback(null, token.value)
     }).catch(function (error) {
       callback(error)
     })
@@ -95,7 +114,11 @@ exports.authorization = [
       if (!client) {
         return callback(null, false)
       }
-      callback(null, client, redirectUri)
+      if (client.redirectUri === null || client.redirectUri === redirectUri) {
+        return callback(null, client, redirectUri)
+      } else {
+        return callback(Errors.throw('server_error', 'redirectUri mismatch'))
+      }
     }).catch(function (error) {
       return callback(error)
     })

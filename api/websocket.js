@@ -287,7 +287,9 @@ exports.authorization = function (query, client, meta) {
             [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
           ],
           exclude: [
-            'nicknames'
+            'nicknames',
+            'dispatch',
+            'deletedAt'
           ]
         },
         include: [{

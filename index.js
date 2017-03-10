@@ -21,6 +21,7 @@ let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
 let dedelimit = require('dedelimit').dedelimit
+require('winston-daily-rotate-file')
 
 // Import config
 let config = require('./config-example')
@@ -88,6 +89,19 @@ if (process.argv) {
     }
   }
 }
+
+let transport = new winston.transports.DailyRotateFile({
+  filename: './log',
+  datePattern: 'yyyy-MM-dd.',
+  prepend: true,
+  level: process.env.ENV === 'development' ? 'debug' : 'info'
+})
+
+let logger = new (winston.Logger)({
+  transports: [
+    transport
+  ]
+})
 
 
 // MIDDLEWARE
@@ -187,12 +201,12 @@ if (options.logging || options.test) {
       censoredParams.password = '**********'
     }
 
-    winston.info('')
-    winston.info('TIMESTAMP:', Date.now())
-    winston.info('ENDPOINT:', request.originalUrl)
-    winston.info('METHOD:', request.method)
-    winston.info('DATA:', censoredParams)
-    winston.info('IP:', request.headers['x-forwarded-for'] || request.connection.remoteAddress)
+    logger.info('')
+    logger.info('TIMESTAMP:', Date.now())
+    logger.info('ENDPOINT:', request.originalUrl)
+    logger.info('METHOD:', request.method)
+    logger.info('HEADERS:', request.headers)
+    logger.info('DATA:', censoredParams)
     request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
     next()
   })
@@ -276,7 +290,7 @@ router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
 router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
-router.get('/nicknames/search/:nickname', nicknames.search)
+router.get('/nicknames/search/:nickname', auth.isAuthenticated(false), nicknames.search)
 router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
 router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
 router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
@@ -290,10 +304,26 @@ router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('
 router.get('/version', version.get)
 
 router.get('/docs', docs.get)
+<<<<<<< HEAD
 router.get('/statistics', statistics.get)
 router.route('/oauth2/authorise')
   .get(auth.isAuthenticated(true), oauth2.authorization)
   .post(auth.isAuthenticated(false), oauth2.decision)
+=======
+router.get('/leaderboard', leaderboard.get)
+router.get('/login', login.get)
+router.get('/reset', reset.get)
+router.get('/change_password', change_password.get)
+router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
+router.get('/register', register.get)
+router.get('/welcome', auth.isAuthenticated(true), welcome.get)
+router.get('/profile', auth.isAuthenticated(true), profile.get)
+router.get('/roster', roster.get)
+router.get('/statistics', statistics.get)
+
+router.get('/rescues/view/:id', rescueAdmin.viewRescue)
+router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
+>>>>>>> develop
 
 router.route('/oauth2/authorize')
   .get(auth.isAuthenticated(true), oauth2.authorization)
