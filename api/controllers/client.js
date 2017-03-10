@@ -60,6 +60,7 @@ class Controller {
 
         Client.create({
           name: data.name,
+          redirectUri: data.redirectUri,
           secret: hash
         }).then(function (clientInstance) {
           clientInstance.setUser(connection.user.id).then(function () {
