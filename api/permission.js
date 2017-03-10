@@ -81,7 +81,7 @@ const groups = {
 }
 
 /**
- * Class for managing various permissions
+ * Class for managing user permissions
  */
 class Permission {
   /**

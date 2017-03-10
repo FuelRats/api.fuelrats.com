@@ -44,6 +44,7 @@ let client = require('./api/controllers/client').HTTP
 let docs = require('./api/controllers/docs')
 let login = require('./api/controllers/login')
 let logout = require('./api/controllers/logout')
+let news = require('./api/controllers/news')
 let nicknames = require('./api/controllers/nicknames')
 let oauth2 = require('./api/controllers/oauth2')
 let rat = require('./api/controllers/rat')
@@ -240,6 +241,8 @@ router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.s
 
 router.post('/login', passport.authenticate('local'), login.post)
 router.post('/register', register.post)
+
+router.get('/v2/news', API.route(news.list))
 /*
 
 
