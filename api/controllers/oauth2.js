@@ -51,10 +51,10 @@ server.grant(oauth2orize.grant.token(function (client, user, ares, callback) {
   }).then(function (token) {
     let associations = []
     associations.push(token.setClient(client))
-    associations.push(token.setUser(user))
+    associations.push(token.setUser(user.id))
 
     Promise.all(associations).then(function () {
-      callback(null, token)
+      callback(null, token.value)
     }).catch(function (error) {
       callback(error)
     })
