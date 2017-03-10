@@ -5,6 +5,7 @@ let crypto = require('crypto')
 let Token = require('../db').Token
 let Client = require('../db').Client
 let Code = require('../db').Code
+let Errors = require('../errors')
 
 let server = oauth2orize.createServer()
 
@@ -85,7 +86,11 @@ exports.authorization = [
       if (!client) {
         return callback(null, false)
       }
-      callback(null, client, redirectUri)
+      if (client.redirectUri === null || client.redirectUri === redirectUri) {
+        return callback(null, client, redirectUri)
+      } else {
+        return callback(Errors.throw('server_error', 'redirectUri mismatch'))
+      }
     }).catch(function (error) {
       return callback(error)
     })
