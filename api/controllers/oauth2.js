@@ -45,6 +45,24 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
   })
 }))
 
+server.grant(oauth2orize.grant.token(function (client, user, ares, callback) {
+  Token.create({
+    value: crypto.randomBytes(32).toString('hex')
+  }).then(function (token) {
+    let associations = []
+    associations.push(token.setClient(client))
+    associations.push(token.setUser(user))
+
+    Promise.all(associations).then(function () {
+      callback(null, token)
+    }).catch(function (error) {
+      callback(error)
+    })
+  }).catch(function (error) {
+    callback(error)
+  })
+}))
+
 server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, callback) {
   Code.findOne({ where: { value: code }}).then(function (auth) {
     if (!auth) {
