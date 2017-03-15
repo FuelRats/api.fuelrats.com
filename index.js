@@ -20,6 +20,8 @@ let winston = require('winston')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
+
+let npid = require('npid')
 require('winston-daily-rotate-file')
 
 // Import config
@@ -64,6 +66,15 @@ let welcome = require('./api/controllers/welcome')
 let jiraDrill = require('./api/controllers/jira/drill').HTTP
 
 db.sync()
+
+
+try {
+  let pid = npid.create('api.pid')
+  pid.removeOnExit()
+} catch (err) {
+  winston.error(err)
+  process.exit(1)
+}
 
 
 let options = {
