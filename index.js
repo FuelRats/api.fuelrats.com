@@ -20,6 +20,8 @@ let winston = require('winston')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
+
+let npid = require('npid')
 require('winston-daily-rotate-file')
 
 // Import config
@@ -66,6 +68,15 @@ let jiraDrill = require('./api/controllers/jira/drill').HTTP
 db.sync()
 
 
+try {
+  let pid = npid.create('api.pid')
+  pid.removeOnExit()
+} catch (err) {
+  winston.error(err)
+  process.exit(1)
+}
+
+
 let options = {
   logging: true,
   test: false
@@ -95,7 +106,7 @@ if (process.argv) {
 }
 
 let transport = new winston.transports.DailyRotateFile({
-  filename: './log',
+  filename: './logs/',
   datePattern: 'yyyy-MM-dd.',
   prepend: true,
   level: process.env.ENV === 'development' ? 'debug' : 'info'
