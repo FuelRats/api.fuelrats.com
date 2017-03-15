@@ -106,7 +106,7 @@ if (process.argv) {
 }
 
 let transport = new winston.transports.DailyRotateFile({
-  filename: './log',
+  filename: './logs/',
   datePattern: 'yyyy-MM-dd.',
   prepend: true,
   level: process.env.ENV === 'development' ? 'debug' : 'info'
