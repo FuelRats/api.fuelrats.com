@@ -40,6 +40,10 @@ class Controller {
           }
           return rat
         })
+
+        overseers.sort(function (a, b) {
+          a.CMDRname.localeCompare(b.CMDRname)
+        })
         resolve({ rats: rats, overseers: overseers })
       }).catch(function (error) {
         reject(error)
