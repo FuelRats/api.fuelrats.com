@@ -69,6 +69,7 @@ db.sync()
 
 
 try {
+  npid.remove('api.pid')
   let pid = npid.create('api.pid')
   pid.removeOnExit()
 } catch (err) {
