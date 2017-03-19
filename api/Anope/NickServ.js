@@ -30,7 +30,7 @@ class NickServ {
           reject(error)
         } else {
           winston.info(data)
-          if (/Nickname .* registered/.test(data.return) === true) {
+          if (data && /Nickname .* registered/.test(data.return) === true) {
             resolve(nickname)
           } else {
             reject(data.return)
