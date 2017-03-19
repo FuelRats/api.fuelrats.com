@@ -97,8 +97,16 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
   })
 }))
 
-
 exports.authorization = [
+  function (req, res, next) {
+    if (!req.query.client_id) {
+      return next(Errors.throw('missing_required_field', 'client_id'))
+    } else if (!req.query.response_type) {
+      return next(Errors.throw('missing_required_field', 'response_type'))
+    }
+    next()
+
+  },
   server.authorization(function (clientId, redirectUri, callback) {
     Client.findById(clientId).then(function (client) {
       if (!client) {
