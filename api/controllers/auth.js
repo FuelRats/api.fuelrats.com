@@ -74,13 +74,14 @@ exports.isAuthenticated = function (req, res, next) {
     req.session.returnTo = null
     return next()
   } else {
+    if (req.query.bearer) {
+      req.headers.Authorization = 'Bearer ' + req.query.bearer
+      delete req.query.bearer
+    }
+
     passport.authenticate('bearer', { session : false }, function (error, user, options) {
       if (!user) {
-        let error = Permission.authenticationError()
-        res.model.errors.push(error)
-        res.status(error.code)
-
-        return next(error)
+        return next(Permission.authenticationError())
       }
       req.scope = options.scope
       req.user = user
@@ -92,6 +93,7 @@ exports.isAuthenticated = function (req, res, next) {
 exports.isJiraAuthenticated = function () {
   return function (req, res, next) {
     let bearer = req.query.bearer
+    delete req.query.bearer
     if (!bearer) {
       let error = Permission.authenticationError()
       res.model.errors.push(error)
