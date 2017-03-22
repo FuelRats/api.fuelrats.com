@@ -268,6 +268,20 @@ router.post('/login', passport.authenticate('local'), login.post)
 router.post('/register', register.post)
 
 router.get('/v2/news', API.route(news.list))
+
+
+
+router.route('/oauth2/authorise')
+  .get(auth.isAuthenticated, oauth2.authorization)
+  .post(auth.isAuthenticated, oauth2.decision)
+
+router.route('/oauth2/authorize')
+  .get(auth.isAuthenticated, oauth2.authorization)
+  .post(auth.isAuthenticated, oauth2.decision)
+
+// Create endpoint handlers for oauth2 token
+router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
+
 /*
 
 
@@ -316,16 +330,6 @@ router.get('/version', version.get)
 
 router.get('/docs', docs.get)
 router.get('/statistics', statistics.get)
-router.route('/oauth2/authorise')
-  .get(auth.isAuthenticated(true), oauth2.authorization)
-  .post(auth.isAuthenticated(false), oauth2.decision)
-
-router.route('/oauth2/authorize')
-  .get(auth.isAuthenticated(true), oauth2.authorization)
-  .post(auth.isAuthenticated(false), oauth2.decision)
-
-// Create endpoint handlers for oauth2 token
-router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 */

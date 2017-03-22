@@ -46,6 +46,7 @@
     "grunt-shell-spawn": "^0.3.10",
     "homematic-xmlrpc": "^1.0.2",
     "https": "^1.0.0",
+    "i18next": "^7.1.2",
     "intl": "^1.2.4",
     "kerberos": "0.0.18",
     "load-grunt-config": "^0.19.1",

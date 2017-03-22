@@ -7,6 +7,13 @@ let Client = require('../db').Client
 let Code = require('../db').Code
 let Permission = require('../permission')
 let Errors = require('../errors')
+let i18next = require('i18next')
+let localisationResources = require('../../localisations.json')
+
+i18next.init({
+  lng: 'en',
+  resources:  localisationResources,
+})
 
 let server = oauth2orize.createServer()
 
@@ -132,7 +139,15 @@ exports.authorization = [
     })
   }),
   function (req, res) {
-    res.render('authorise.swig', { transactionId: req.oauth2.transactionID, user: req.user, client: req.oauth2.client })
+    let translation = {
+      scopes: Permission.humanReadable()
+    }
+
+    res.render('authorise.swig', {
+      transactionId: req.oauth2.transactionID,
+      user: req.user,
+      client: req.oauth2.client
+    })
   }
 ]
 

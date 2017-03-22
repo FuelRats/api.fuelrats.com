@@ -1,6 +1,20 @@
 'use strict'
 
 let Errors = require('./errors')
+let i18next = require('i18next')
+let localisationResources = require('../localisations.json')
+
+i18next.init({
+  lng: 'en',
+  resources:  localisationResources,
+})
+
+const permissionLocaleKeys = {
+  'read': 'permissionRead',
+  'write': 'permissionWrite',
+  'delete': 'permissionDelete'
+}
+
 
 /**
  * List of possible permissions and oauth scopes
@@ -172,6 +186,31 @@ class Permission {
    */
   static get permissions () {
     return permissions
+  }
+
+  /**
+   * Get a list of localised human readable permissions from a list of OAuth scopes
+   * @param {Array} permissions Array of OAuth scopes
+   * @returns {Array} Array of localised human readable permissions
+   */
+  static humanReadable (permissions)  {
+    let humanReadablePermissions = []
+
+    for (let permission of permissions) {
+      let permissionComponents = permission.split('.')
+      let group = permissionComponents[0]
+      let action = permissionComponents[1]
+      let isSelf = (permissionComponents[2] === 'me')
+
+      let permissionLocaleKey = permissionLocaleKeys[action]
+      permissionLocaleKey += isSelf ? 'Own' : 'All'
+
+      humanReadablePermissions.push(i18next.t(permissionLocaleKey, {
+        group: i18next.t(group, { count: 0 })
+      }))
+    }
+
+    return humanReadablePermissions
   }
 }
 

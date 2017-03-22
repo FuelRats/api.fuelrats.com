@@ -1,0 +1,27 @@
+{
+  "en": {
+    "translation": {
+      "requestingAccess": "{{client}} is requesting access to your Fuel Rats Account",
+      "authoriseTitle": "Authorise Application",
+      "authoriseAllow": "Allow",
+      "authoriseDeny": "Deny",
+      "requestingAccessTo": "{{client}} wants access to:",
+
+      "rescue": "rescue",
+      "rescue_plural": "rescues",
+      "client": "OAuth Client",
+      "client_plural": "OAuth Clients",
+      "rat": "rat",
+      "rat_plural": "rats",
+      "user": "user profile",
+      "user_plural": "user profiles",
+
+      "permissionReadAll": "Read all {{group}}",
+      "permissionReadOwn": "Read all your {{group}}",
+      "permissionWriteAll": "Modify all rescues {{group}}",
+      "permissionWriteOwn": "Modify all your rescues {{group}}",
+      "permissionDeleteAll": "Delete all {{group}}",
+      "permissionDeleteOwn": "Delete all your {{group}}"
+    }
+  }
+}

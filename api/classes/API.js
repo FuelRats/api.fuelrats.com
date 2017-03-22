@@ -4,7 +4,6 @@ let Error = require('../errors')
 let traffic = new TrafficControl()
 
 class API {
-<<<<<<< HEAD
   /**
    * Express.js middleware to route a request to a websocket compatible API endpoint
    * @param {Function} route - The API endpoint to route to
