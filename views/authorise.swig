@@ -14,12 +14,28 @@
       <div class="page-header" style="text-align: center;">
         <h1>{{translation.authoriseTitle}}</h1>
       </div>
-      <h5>{{translation.requestingAccess}}</h5>
+      <h5>{% autoescape false %}{{translation.requestingAccess}}{% endautoescape %}</h5>
+
+      <div class="col-md-6 col-md-offset-3" style="margin-top: 25px;">
+
+          {{translation.requestingAccessTo}}<br/>
+
+        <ul style="margin-top: 5px;">
+        {% for scope in translation.scopes %}
+          {% if scope.accessible %}
+            <li>{{scope.permission}}</li>
+          {% else %}
+            <li class="inaccessible">{{scope.permission}}</li>
+          {% endif %}
+        {% endfor %}
+        </ul>
+
+      </div>
 
       <input name="transaction_id" type="hidden" value="{{transactionId}}">
-      <div class="col-md-6 col-md-offset-4" style="margin-top: 15px;">
-        <button type="submit" value="allow" class="btn btn-success">{{translation.authoriseAllow}}</button>
-        <button type="submit" value="deny" class="btn btn-danger">{{translation.authoriseDeny}}</button>
+        <div class="col-md-6 col-md-offset-4" style="margin-top: 15px;">
+            <button type="submit" value="allow" class="btn btn-success">{{translation.authoriseAllow}}</button>
+            <button type="submit" value="deny" class="btn btn-danger">{{translation.authoriseDeny}}</button>
       </div>
     </form>
   </div>

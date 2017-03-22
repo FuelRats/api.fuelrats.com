@@ -139,15 +139,27 @@ exports.authorization = [
     })
   }),
   function (req, res) {
-    let translation = {
-      scopes: Permission.humanReadable()
-    }
+    try {
+      let translation = {
+        requestingAccess: i18next.t('requestingAccess', { client: req.oauth2.client.name }),
+        requestingAccessTo: i18next.t('requestingAccessTo', { client: req.oauth2.client.name }),
+        authoriseTitle: i18next.t('authoriseTitle'),
+        authoriseAllow: i18next.t('authoriseAllow'),
+        authoriseDeny: i18next.t('authoriseDeny'),
+        scopes: Permission.humanReadable(req.oauth2.req.scope, req.user)
+      }
 
-    res.render('authorise.swig', {
-      transactionId: req.oauth2.transactionID,
-      user: req.user,
-      client: req.oauth2.client
-    })
+      console.log(translation)
+
+      res.render('authorise.swig', {
+        transactionId: req.oauth2.transactionID,
+        user: req.user,
+        client: req.oauth2.client,
+        translation: translation
+      })
+    } catch (ex) {
+      console.log(ex)
+    }
   }
 ]
 

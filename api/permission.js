@@ -12,7 +12,8 @@ i18next.init({
 const permissionLocaleKeys = {
   'read': 'permissionRead',
   'write': 'permissionWrite',
-  'delete': 'permissionDelete'
+  'delete': 'permissionDelete',
+  'groups': 'permissionGroup'
 }
 
 
@@ -39,6 +40,7 @@ const permissions = [
   'client.delete.me',
   'user.read',
   'user.read.me',
+  'user.groups',
   'user.delete'
 
 ]
@@ -50,6 +52,7 @@ const permissions = [
 const groups = {
   default: [
     'rescue.read',
+    'rescue.read.me',
     'rescue.write.me',
     'rat.read',
     'rat.write.me',
@@ -84,11 +87,14 @@ const groups = {
     'rescue.read',
     'rescue.write',
     'rescue.delete',
+    'rat.read',
     'rat.write',
     'rat.delete',
+    'user.read',
     'user.write',
     'user.delete',
     'user.groups',
+    'client.read',
     'client.write',
     'client.delete'
   ]
@@ -190,13 +196,17 @@ class Permission {
 
   /**
    * Get a list of localised human readable permissions from a list of OAuth scopes
-   * @param {Array} permissions Array of OAuth scopes
-   * @returns {Array} Array of localised human readable permissions
+   * @param {Array} scopes Array of OAuth scopes
+   * @returns {Array} Array of objects with localised human readable permissions
    */
-  static humanReadable (permissions)  {
+  static humanReadable (scopes, user)  {
     let humanReadablePermissions = []
 
-    for (let permission of permissions) {
+    if (scopes.includes('*')) {
+      scopes = permissions
+    }
+
+    for (let permission of scopes) {
       let permissionComponents = permission.split('.')
       let group = permissionComponents[0]
       let action = permissionComponents[1]
@@ -204,10 +214,21 @@ class Permission {
 
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'
+      let accessible = Permission.granted([permission], user, null)
 
-      humanReadablePermissions.push(i18next.t(permissionLocaleKey, {
-        group: i18next.t(group, { count: 0 })
-      }))
+      let count = 0
+      if (group === 'user' && isSelf) {
+        count = 1
+      }
+
+      humanReadablePermissions.push({
+        permission: i18next.t(permissionLocaleKey, {
+          group: i18next.t(group, { count: count }),
+          count: count
+        }),
+
+        accessible: accessible
+      })
     }
 
     return humanReadablePermissions
