@@ -28,7 +28,7 @@ server.deserializeClient(function (id, callback) {
       return
     }
 
-    callback(null, client)
+    callback(null, client.toJSON())
   }).catch(function (error) {
     callback(error)
   })
@@ -37,7 +37,7 @@ server.deserializeClient(function (id, callback) {
 server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, callback) {
   let scopes = ares.scope.split(' ')
   for (let scope in scopes) {
-    if (Permission.permissions.includes(scope) === false) {
+    if (Permission.permissions.includes(scope) === false && scope !== '*') {
       callback(Error.throw('invalid_scope', scope))
     }
   }
@@ -62,8 +62,16 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
 }))
 
 server.grant(oauth2orize.grant.token(function (client, user, ares, callback) {
+  let scopes = ares.scope.split(' ')
+  for (let scope in scopes) {
+    if (Permission.permissions.includes(scope) === false && scope !== '*') {
+      callback(Error.throw('invalid_scope', scope))
+    }
+  }
+
   Token.create({
-    value: crypto.randomBytes(32).toString('hex')
+    value: crypto.randomBytes(32).toString('hex'),
+    scope: scopes
   }).then(function (token) {
     let associations = []
     associations.push(token.setClient(client))
@@ -139,27 +147,23 @@ exports.authorization = [
     })
   }),
   function (req, res) {
-    try {
-      let translation = {
-        requestingAccess: i18next.t('requestingAccess', { client: req.oauth2.client.name }),
-        requestingAccessTo: i18next.t('requestingAccessTo', { client: req.oauth2.client.name }),
-        authoriseTitle: i18next.t('authoriseTitle'),
-        authoriseAllow: i18next.t('authoriseAllow'),
-        authoriseDeny: i18next.t('authoriseDeny'),
-        scopes: Permission.humanReadable(req.oauth2.req.scope, req.user)
-      }
-
-      console.log(translation)
-
-      res.render('authorise.swig', {
-        transactionId: req.oauth2.transactionID,
-        user: req.user,
-        client: req.oauth2.client,
-        translation: translation
-      })
-    } catch (ex) {
-      console.log(ex)
+    let translation = {
+      requestingAccess: i18next.t('requestingAccess', { client: req.oauth2.client.name }),
+      requestingAccessTo: i18next.t('requestingAccessTo', { client: req.oauth2.client.name }),
+      authoriseTitle: i18next.t('authoriseTitle'),
+      authoriseAllow: i18next.t('authoriseAllow'),
+      authoriseDeny: i18next.t('authoriseDeny'),
+      scopes: Permission.humanReadable(req.oauth2.req.scope, req.user)
     }
+
+    console.log(translation)
+
+    res.render('authorise.swig', {
+      transactionId: req.oauth2.transactionID,
+      user: req.user,
+      client: req.oauth2.client,
+      translation: translation
+    })
   }
 ]
 
