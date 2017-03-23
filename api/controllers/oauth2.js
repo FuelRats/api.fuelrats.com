@@ -62,7 +62,7 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
 }))
 
 server.grant(oauth2orize.grant.token(function (client, user, ares, areq, callback) {
-  for (let scope in areq.scope) {
+  for (let scope of areq.scope) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
       callback(Errors.throw('invalid_scope', scope))
     }
@@ -73,7 +73,7 @@ server.grant(oauth2orize.grant.token(function (client, user, ares, areq, callbac
     scope: areq.scope
   }).then(function (token) {
     let associations = []
-    associations.push(token.setClient(client))
+    associations.push(token.setClient(client.id))
     associations.push(token.setUser(user.id))
 
     Promise.all(associations).then(function () {
