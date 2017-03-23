@@ -111,7 +111,7 @@ class Permission {
    * @param {Object} client - Optional scope array of an oauth2 client to validate
    * @returns {Promise}
    */
-  static require (permission, user, scope = null) {
+  static require (permissions, user, scope = null) {
     return new Promise(function (resolve, reject) {
       if (Permission.granted(permissions, user, scope)) {
         resolve()
