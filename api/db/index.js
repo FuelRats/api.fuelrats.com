@@ -111,11 +111,6 @@ Token.addScope('defaultScope', {
       model: User,
       as: 'user',
       required: true
-    },
-    {
-      model: Client,
-      as: 'client',
-      required: true
     }
   ]
 }, {

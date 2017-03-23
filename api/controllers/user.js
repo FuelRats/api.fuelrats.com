@@ -10,7 +10,7 @@ let UserResult = require('../Results/user')
 class Users {
   static search (params, connection) {
     return new Promise(function (resolve, reject) {
-      Users.findAndCountAll(new UserQuery(params, connection).toSequelize).then(function (result) {
+      User.findAndCountAll(new UserQuery(params, connection).toSequelize).then(function (result) {
         let permission = getUserReadPermissionType(result, connection.user)
         Permission.require(permission, connection.user, connection.scope).then(function () {
           resolve(new UserResult(result, params).toResponse())

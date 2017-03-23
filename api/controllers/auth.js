@@ -146,7 +146,7 @@ function bearerAuthenticate (accessToken, callback) {
         }
       ]
     }).then(function (userInstance) {
-      let user = UserResult(userInstance)
+      let user = new UserResult(userInstance).toResponse()
       callback(null, user, { scope: token.scope })
     }).catch(function (error) {
       callback(error)
