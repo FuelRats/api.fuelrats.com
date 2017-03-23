@@ -33,9 +33,10 @@
       </div>
 
       <input name="transaction_id" type="hidden" value="{{transactionId}}">
-        <div class="col-md-6 col-md-offset-4" style="margin-top: 15px;">
-            <button type="submit" value="allow" class="btn btn-success">{{translation.authoriseAllow}}</button>
-            <button type="submit" value="deny" class="btn btn-danger">{{translation.authoriseDeny}}</button>
+      <input name="scope" type="hidden" value="{{scope}}">
+      <div class="col-md-6 col-md-offset-4" style="margin-top: 15px;">
+        <button type="submit" value="allow" class="btn btn-success">{{translation.authoriseAllow}}</button>
+        <button type="submit" value="deny" class="btn btn-danger">{{translation.authoriseDeny}}</button>
       </div>
     </form>
   </div>

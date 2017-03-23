@@ -42,6 +42,14 @@ let errors = {
     'title': 'Invalid Parameter'
   },
 
+
+  'invalid_scope': {
+    'code': 400,
+    'detail': '',
+    'status': 'Invalid Scope',
+    'title': 'Invalid Parameter'
+  },
+
   'server_error': {
     'code': 500,
     'detail': '',

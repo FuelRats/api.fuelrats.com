@@ -38,7 +38,7 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
   let scopes = ares.scope.split(' ')
   for (let scope in scopes) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
-      callback(Error.throw('invalid_scope', scope))
+      callback(Errors.throw('invalid_scope', scope))
     }
   }
 
@@ -61,17 +61,16 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
   })
 }))
 
-server.grant(oauth2orize.grant.token(function (client, user, ares, callback) {
-  let scopes = ares.scope.split(' ')
-  for (let scope in scopes) {
+server.grant(oauth2orize.grant.token(function (client, user, ares, areq, callback) {
+  for (let scope in areq.scope) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
-      callback(Error.throw('invalid_scope', scope))
+      callback(Errors.throw('invalid_scope', scope))
     }
   }
 
   Token.create({
     value: crypto.randomBytes(32).toString('hex'),
-    scope: scopes
+    scope: areq.scope
   }).then(function (token) {
     let associations = []
     associations.push(token.setClient(client))
@@ -162,7 +161,8 @@ exports.authorization = [
       transactionId: req.oauth2.transactionID,
       user: req.user,
       client: req.oauth2.client,
-      translation: translation
+      translation: translation,
+      scope: req.oauth2.req.scope.join(' ')
     })
   }
 ]
