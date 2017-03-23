@@ -34,9 +34,8 @@ server.deserializeClient(function (id, callback) {
   })
 })
 
-server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, callback) {
-  let scopes = ares.scope.split(' ')
-  for (let scope in scopes) {
+server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, areq, callback) {
+  for (let scope of areq.scope) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
       callback(Errors.throw('invalid_scope', scope))
     }
@@ -44,11 +43,11 @@ server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, c
 
   Code.create({
     value: crypto.randomBytes(24).toString('hex'),
-    scope: scopes,
+    scope: areq.scope,
     redirectUri: redirectUri
   }).then(function (code) {
     let associations = []
-    associations.push(code.setClient(client))
+    associations.push(code.setClient(client.id))
     associations.push(code.setUser(user.id))
 
     Promise.all(associations).then(function () {
