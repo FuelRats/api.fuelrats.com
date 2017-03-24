@@ -9,13 +9,24 @@ let winston = require('winston')
 
 db.sync({ force: true }).then(function () {
   bcrypt.hash('testuser', 16, function (error, hash) {
-    let testUser = {
-      email: 'support@fuelrats.com',
+    let adminTestUser = {
+      email: 'admintestuser@fuelrats.com',
       password: hash,
-      drilled: true,
-      drilledDispatch: true,
+      nicknames: db.literal('ARRAY[\'admintestnick\']::citext[]'),
+      groups: ['rat', 'dispatch', 'admin']
+    }
+
+    User.create(adminTestUser).then(function () {
+      winston.info('Admin Test User Created')
+    }).catch(function (error) {
+      winston.error(error)
+    })
+
+    let testUser = {
+      email: 'testuser@fuelrats.com',
+      password: hash,
       nicknames: db.literal('ARRAY[\'testnick\']::citext[]'),
-      group: 'admin'
+      groups: []
     }
 
     User.create(testUser).then(function () {
