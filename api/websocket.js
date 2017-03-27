@@ -304,7 +304,7 @@ exports.authorization = function (query, client, meta) {
         delete client.user.password
         delete client.deletedAt
 
-        exports.send(client, { action: 'authorization' }, user)
+        exports.send(client, { action: 'authorization' }, client.user)
       }).catch(function (error) {
         exports.error(client, meta, [Error.throw('server_error', error)])
       })
