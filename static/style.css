@@ -322,3 +322,7 @@ svg text {
 .data-stack:hover .success-bar {
   fill: #31b0d5;
 }
+
+#leaderboard-overview {
+  min-width: 1250px;
+}

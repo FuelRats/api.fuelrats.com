@@ -9,7 +9,7 @@
 {% parent %}
 <div class="container-fluid">
   <h1>Leaderboard</h1>
-  <div class="row">
+  <div id="leaderboard-overview" class="row">
     <div id="leaderboard-container" class="col-md-6">
       <div class="card-header">
       </div>
