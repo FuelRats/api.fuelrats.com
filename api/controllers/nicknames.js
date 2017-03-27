@@ -1,9 +1,13 @@
 'use strict'
 let _ = require('underscore')
-let Anope = require('../Anope')
+let Permission = require('../permission')
 let Errors = require('../errors')
 let User = require('../db').User
+let db = require('../db').db
 let Rat = require('../db').Rat
+
+let NickServ = require('../Anope/NickServ')
+let HostServ = require('../Anope/HostServ')
 
 
 class Controller {
@@ -14,7 +18,7 @@ class Controller {
         return
       }
 
-      Anope.info(query.nickname).then(function (info) {
+      NickServ.info(query.nickname).then(function (info) {
         if (!info) {
           reject({ meta: {}, error: Errors.throw('not_found') })
           return
@@ -39,16 +43,25 @@ class Controller {
         }
       }
 
-      Anope.register(data.nickname, data.password, connection.user.email).then(function () {
+      NickServ.register(data.nickname, data.password, connection.user.email).then(function () {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
-        Anope.confirm(data.nickname).then(function () {
-          User.update({ nicknames: nicknames }, {
+        NickServ.confirm(data.nickname).then(function () {
+          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: { id: connection.user.id }
           }).then(function () {
             User.findOne({
               where: { id: connection.user.id },
+
+              attributes: {
+                include: [
+                  [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+                ],
+                exclude: [
+                  'nicknames'
+                ]
+              },
               include: [
                 {
                   model: Rat,
@@ -57,8 +70,11 @@ class Controller {
                 }
               ]
             }).then(function (user) {
-              Anope.setVirtualHost(user, data.nickname)
-              resolve({ meta: {}, data: data.nickname })
+              HostServ.updateVirtualHost(user).then(function () {
+                resolve({ meta: {}, data: data.nickname })
+              }).catch(function (error) {
+                reject({ meta: {}, error: Errors.throw('server_error', error) })
+              })
             }).catch(function (error) {
               reject({ meta: {}, error: Errors.throw('server_error', error) })
             })
@@ -85,15 +101,23 @@ class Controller {
         }
       }
 
-      Anope.authenticate(data.nickname, data.password).then(function () {
+      NickServ.identify(data.nickname, data.password).then(function () {
         let nicknames = connection.user.nicknames
         nicknames.push(data.nickname)
 
-        User.update({ nicknames: nicknames }, {
+        User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
           where: { id: connection.user.id }
         }).then(function () {
           User.findOne({
             where: { id: connection.user.id },
+            attributes: {
+              include: [
+                [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+              ],
+              exclude: [
+                'nicknames'
+              ]
+            },
             include: [
               {
                 model: Rat,
@@ -102,8 +126,11 @@ class Controller {
               }
             ]
           }).then(function (user) {
-            Anope.setVirtualHost(user, data.nickname)
-            resolve({ meta: {}, data: data.nickname })
+            HostServ.updateVirtualHost(user).then(function () {
+              resolve({ meta: {}, data: data.nickname })
+            }).catch(function (error) {
+              reject({ meta: {}, error: Errors.throw('server_error', error) })
+            })
           }).catch(function (error) {
             reject({ meta: {}, error: Errors.throw('server_error', error) })
           })
@@ -119,15 +146,15 @@ class Controller {
   static delete (data, connection, query) {
     return new Promise(function (resolve, reject) {
       if (!query.nickname) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', query.nickname) })
+        reject({ meta: {}, error: Errors.throw('missing_required_field', 'nickname') })
       }
 
       if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
-        Anope.drop(query.nickname).then(function () {
+        NickServ.drop(query.nickname).then(function () {
           let nicknames = connection.user.nicknames
           nicknames.splice(nicknames.indexOf(query.nickname), 1)
 
-          User.update({ nicknames: nicknames }, {
+          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
             where: {
               id: connection.user.id
             }
@@ -142,6 +169,83 @@ class Controller {
       } else {
         reject({ meta: {}, error: Errors.throw('no_permission') })
       }
+    })
+  }
+
+  static search (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      if (!query.nickname) {
+        reject({ meta: {}, error: Errors.throw('missing_required_field', 'nickname') })
+      }
+
+      let strippedNickname = query.nickname.replace(/\[(.*?)\]$/g, '')
+
+      let displayPrivateFields = typeof connection.user !== 'undefined' && connection.user.group === 'admin'
+
+      let limit = parseInt(query.limit) || 25
+      let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
+      let order = query.order || 'createdAt'
+      let direction = query.direction || 'ASC'
+
+      let dbQuery = {
+        where: {
+          nicknames: {
+            $overlap:  db.literal(`ARRAY[${db.escape(query.nickname)}, ${db.escape(strippedNickname)}]::citext[]`)
+          }
+        },
+        attributes: [
+          'id',
+          'createdAt',
+          'updatedAt',
+          'email',
+          'drilled',
+          'drilledDispatch',
+          'group',
+          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
+        include: [{
+          model: Rat,
+          as: 'rats',
+          require: false
+        }],
+        limit: limit,
+        offset: offset,
+        order: [
+          [order, direction]
+        ]
+      }
+
+      User.findAndCountAll(dbQuery).then(function (result) {
+        let meta = {
+          count: result.rows.length,
+          limit: dbQuery.limit,
+          offset: dbQuery.offset,
+          total: result.count
+        }
+
+        let users = result.rows.map(function (userInstance) {
+          let user = userInstance.toJSON()
+
+          if (!displayPrivateFields) {
+            user.email = null
+          }
+
+          user.rats = user.rats.map(function (rat) {
+            delete rat.UserId
+            delete rat.deletedAt
+            return rat
+          })
+
+          return user
+        })
+
+        resolve({
+          data: users,
+          meta: meta
+        })
+      }).catch(function (error) {
+        reject({ meta: {}, error: Errors.throw('server_error', error) })
+      })
     })
   }
 }
@@ -196,6 +300,20 @@ class HTTP {
 
     Controller.delete(request.body, request, request.query).then(function () {
       response.status(204)
+      next()
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(error.error.code)
+      next()
+    })
+  }
+
+  static search (request, response, next) {
+    response.model.meta.params = _.extend(response.model.meta.params, request.params)
+
+    Controller.search(request.body, request, request.query).then(function (res) {
+      response.model.data = res.data
+      response.status(200)
       next()
     }).catch(function (error) {
       response.model.errors.push(error)

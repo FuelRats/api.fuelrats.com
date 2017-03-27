@@ -29,8 +29,12 @@ body > .navbar {
   margin-top: 1rem;
 }
 
+body > .container {
+  padding-top: 10rem;
+}
 body > .container-fluid {
   margin: 2rem;
+  padding-top: 10rem;
 }
 
 .btn-group {
@@ -39,6 +43,10 @@ body > .container-fluid {
 
 table td {
   white-space: nowrap;
+}
+
+tr[data-rescue] {
+  cursor: pointer;
 }
 
 .lbBadge {
@@ -72,6 +80,28 @@ input[type='radio'] {
   margin: auto;
   display:block;
   width: 250px;
+  height: auto;
+  margin-bottom: 30px;
+}
+
+.epicicon {
+  height: auto;
+  width: 42px;
+}
+
+#overview .container-fluid > div {
+  padding: 1rem;
+  text-align: center;
+}
+
+#overview {
+  margin-bottom: 2rem;
+}
+
+.errorart {
+  margin: auto;
+  display:block;
+  width: 500px;
   height: auto;
   margin-bottom: 30px;
 }

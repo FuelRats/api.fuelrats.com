@@ -35,7 +35,7 @@ exports.post = function (request, response) {
       value: request.body.token
     }
   }).then(function (reset) {
-    if (!reset) {
+    if (!reset || !reset.userId) {
       response.redirect('/reset?expired=1')
     }
 

@@ -83,6 +83,29 @@
 
     <div class="col-md-9">
       {% for CMDR in user.rats %}
+        {% if CMDR.openRescues.length > 0 %}
+        <h2 id="openrescues-{{ CMDR.id }}">Rescues in progress</h2>
+        <table class="table table-bordered table-striped table-hover">
+          <thead class="thead-default">
+            <tr>
+              <th>Client</th>
+              <th>Opened</th>
+              <th>System</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for openRescue in CMDR.openRescues %}
+              <tr data-rescue="{{ openRescue.id }}">
+                <td>{{ openRescue.client }}</td>
+                <td>{{ openRescue.createdAt|eliteDate() }}</td>
+                <td>{{ openRescue.system }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
         <h2 id="rescues-{{ CMDR.id }}">
           {{ CMDR.CMDRname }}
           {% if CMDR.rescues.length > 0 %}
@@ -108,19 +131,24 @@
 
             <tbody>
               {% for rescue in CMDR.rescues %}
-                <tr title="{{ rescue.notes }}">
+                <tr data-rescue="{{ rescue.id }}" title="{{ rescue.notes }}">
                   <td>{{ rescue.createdAt|eliteDate() }}</td>
-                    {% if rescue.successful %}
-                      {% if rescue.isFirstLimpet %}
-                      <td class="table-success">
-                        Success
-                      {% else %}
-                      <td class="table-info">
-                        Success (Assist)
-                      {% endif %}
+                    {% if rescue.open %}
+                    <td class="table-warning">
+                      In Progress
                     {% else %}
-                    <td class="table-danger">
-                      Failure
+                      {% if rescue.successful %}
+                        {% if rescue.isFirstLimpet %}
+                        <td class="table-success">
+                          Success
+                        {% else %}
+                        <td class="table-info">
+                          Success (Assist)
+                        {% endif %}
+                      {% else %}
+                      <td class="table-danger">
+                        Failure
+                      {% endif %}
                     {% endif %}
                   </td>
                   <td>{{ rescue.system }}</td>

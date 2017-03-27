@@ -10,7 +10,7 @@
 <div class="Aligner">
   <div class="Aligner-item">
     <img src="http://www.fuelrats.com/wp-content/uploads/2015/07/ratsticker-1024x1024.jpg" alt="FuelRats Logo" class="logo">
-    <form action="/oauth2/authorise" method="post">
+    <form action="/oauth2/authorize" method="post">
       <div class="page-header" style="text-align: center;">
         <h1>Authorise Application</h1>
       </div>

@@ -13,12 +13,14 @@ let generator = require('./generator')
 let rootUrl = 'http://localhost:8080'
 request = request(rootUrl)
 let cookie
+console.log('startign tests')
 
 // Before and After hooks
 // =============================================================================
 
 describe('Login Test', function () {
   it('should create user session for valid user', function (done) {
+    console.log('login test')
     this.timeout(10000)
     request.post('/login')
       .set('Accept','application/json')
@@ -47,6 +49,7 @@ describe('POST /rats', function () {
   let rat = generator.randomRat()
 
   it('should create a new rat', function (done) {
+    console.log('make rat')
     this.timeout(5000)
     request.post('/rats')
     .set('Cookie', cookie)
@@ -68,6 +71,7 @@ describe('POST /rats', function () {
       assert.equal(response.body.data.platform, rat.platform)
 
       generatedRat = response.body.data
+      console.log(response.body.data)
       done()
     })
   })
@@ -127,6 +131,43 @@ describe('Rescue Endpoints', function () {
 
     it('should retrieve a rescue matching the one we created', function (done) {
       request.get('/rescues?id=' + generatedRescue.id)
+      .set('Cookie', cookie).send()
+      .expect(200).end(function (error, response) {
+        if (error) {
+          return done(error)
+        }
+
+        // Make sure there are no errors
+        assert.notProperty(response.body, 'errors')
+
+        // Make sure our response is correctly constructed
+        assert.isArray(response.body.data)
+
+        // Check all of the properties on the returned object
+        assert.equal(response.body.data.active, generatedRescue.active)
+        assert.equal(response.body.data.client, generatedRescue.client)
+        assert.equal(response.body.data.codeRed, generatedRescue.codeRed)
+        assert.equal(response.body.data.data, generatedRescue.data)
+        assert.equal(response.body.data.epic, generatedRescue.epic)
+        assert.equal(response.body.data.firstLimpet, generatedRescue.firstLimpet)
+        assert.equal(response.body.data.open, generatedRescue.open)
+        assert.equal(response.body.data.notes, generatedRescue.notes)
+        assert.equal(response.body.data.platform, generatedRescue.platform)
+        assert.equal(response.body.data.quotes, generatedRescue.quotes)
+        assert.includes(response.body.data.rats, generatedRescue.firstLimpet)
+        assert.equal(response.body.data.successful, generatedRescue.successful)
+        assert.equal(response.body.data.system, generatedRescue.system)
+        assert.equal(response.body.data.title, generatedRescue.title)
+        assert.equal(response.body.data.unidentifiedRats, generatedRescue.unidentifiedRats)
+        done()
+      })
+    })
+  })
+
+  describe('GET /rescues', function () {
+
+    it('should retrieve a rescue matching a JSON data value', function (done) {
+      request.get('/rescues?data={"foo": ["test"]}')
       .set('Cookie', cookie).send()
       .expect(200).end(function (error, response) {
         if (error) {

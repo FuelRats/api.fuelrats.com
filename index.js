@@ -21,6 +21,9 @@ let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
 
+let npid = require('npid')
+require('winston-daily-rotate-file')
+
 // Import config
 let config = require('./config-example')
 
@@ -48,17 +51,31 @@ let logout = require('./api/controllers/logout')
 let nicknames = require('./api/controllers/nicknames').HTTP
 let oauth2 = require('./api/controllers/oauth2')
 let paperwork = require('./api/controllers/paperwork')
+let profile = require('./api/controllers/profile')
 let rat = require('./api/controllers/rat').HTTP
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
+let roster = require('./api/controllers/roster').HTTP
 let rescue = require('./api/controllers/rescue').HTTP
 let rescueAdmin = require('./api/controllers/rescueAdmin')
+let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
 let websocket = require('./api/websocket')
 let welcome = require('./api/controllers/welcome')
+let jiraDrill = require('./api/controllers/jira/drill').HTTP
 
 db.sync()
+
+
+try {
+  npid.remove('api.pid')
+  let pid = npid.create('api.pid')
+  pid.removeOnExit()
+} catch (err) {
+  winston.error(err)
+  process.exit(1)
+}
 
 
 let options = {
@@ -89,6 +106,19 @@ if (process.argv) {
   }
 }
 
+let transport = new winston.transports.DailyRotateFile({
+  filename: './logs/',
+  datePattern: 'yyyy-MM-dd.',
+  prepend: true,
+  level: process.env.ENV === 'development' ? 'debug' : 'info'
+})
+
+let logger = new (winston.Logger)({
+  transports: [
+    transport
+  ]
+})
+
 
 // MIDDLEWARE
 // =============================================================================
@@ -108,6 +138,18 @@ swig.setFilter('eliteDate', function (date, args) {
   }
 })
 
+swig.setFilter('eliteDateNoFormat', function (date, args) {
+  let context = moment(date)
+  return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
+})
+
+let sessionOptions = {
+  cookie: config.cookie,
+  secret: config.secretSauce,
+  resave: false,
+  saveUninitialized: false
+}
+
 app.use(cors())
 app.use(compression())
 app.use(bodyParser.urlencoded({
@@ -115,13 +157,8 @@ app.use(bodyParser.urlencoded({
 }))
 app.use(bodyParser.json())
 app.use(cookieParser())
-app.use(expressSession({
-  secret: config.secretSauce,
-  resave: false,
-  saveUninitialized: false
-}))
+app.use(expressSession(sessionOptions))
 app.use(passport.initialize())
-app.use(passport.session())
 passport.use(auth.LocalStrategy)
 
 passport.serializeUser(function (user, done) {
@@ -131,6 +168,16 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (id, done) {
   User.findOne({
     where: { id: id },
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames',
+        'dispatch',
+        'deletedAt'
+      ]
+    },
     include: [
       {
         model: Rat,
@@ -145,6 +192,7 @@ passport.deserializeUser(function (id, done) {
     })
     user.CMDRs = reducedRats
     delete user.rats
+    delete user.dispatch
     done(null, user)
   }).catch(function () {
     done(null, false)
@@ -156,16 +204,13 @@ app.set('x-powered-by', false)
 
 let port = config.port || process.env.PORT
 
-app.use(expressSession({
-  secret: config.secretSauce,
-  resave: false,
-  saveUninitialized: false
-}))
 app.use(passport.initialize())
 app.use(passport.session())
 
 // Combine query parameters with the request body, prioritizing the body
 app.use(function (request, response, next) {
+  request.websocket = websocket
+
   request.body = _.extend(request.query, request.body)
 
   response.model = {
@@ -192,13 +237,13 @@ if (options.logging || options.test) {
       censoredParams.password = '**********'
     }
 
-    winston.info('')
-    winston.info('TIMESTAMP:', Date.now())
-    winston.info('ENDPOINT:', request.originalUrl)
-    winston.info('METHOD:', request.method)
-    winston.info('DATA:', censoredParams)
-    winston.info('IP:', request.headers['X-Forwarded-for'] || request.connection.remoteAddress)
-    request.inet = request.headers['X-Forwarded-for'] || request.connection.remoteAddress
+    logger.info('')
+    logger.info('TIMESTAMP:', Date.now())
+    logger.info('ENDPOINT:', request.originalUrl)
+    logger.info('METHOD:', request.method)
+    logger.info('HEADERS:', request.headers)
+    logger.info('DATA:', censoredParams)
+    request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
     next()
   })
 }
@@ -247,11 +292,13 @@ router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('
 
 
 router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
+router.get('/users/:id/forceUpdateIRCStatus', auth.isAuthenticated(false), Permission.required('user.update', false), user.getById)
 router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read', false), user.getById)
 router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
 router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
+router.get('/nicknames/search/:nickname', auth.isAuthenticated(false), nicknames.search)
 router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
 router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
 router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
@@ -272,16 +319,21 @@ router.get('/change_password', change_password.get)
 router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
 router.get('/register', register.get)
 router.get('/welcome', auth.isAuthenticated(true), welcome.get)
+router.get('/profile', auth.isAuthenticated(true), profile.get)
+router.get('/roster', roster.get)
+router.get('/statistics', statistics.get)
 
 router.get('/rescues/view/:id', rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
 
-router.route('/oauth2/authorise')
+router.route('/oauth2/authorize')
   .get(auth.isAuthenticated(true), oauth2.authorization)
   .post(auth.isAuthenticated(false), oauth2.decision)
 
 // Create endpoint handlers for oauth2 token
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
+
+router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 
 
 // Register routes
@@ -313,19 +365,15 @@ app.use(function (request, response) {
       }
     }
   } else {
-    delete response.model.errors
-    response.send(response.model)
-  }
-})
-
-app.get('*', function (request, response) {
-  if (!request.referer) {
-    response.status(404)
-    response.render('errors/404', { path: request.path })
-  } else {
-    delete response.model.data
-    response.model.errors = Error.throw('not_found', request.path)
-    response.send(response.model)
+    if (Object.getOwnPropertyNames(response.model.data).length === 0 && response.statusCode === 200) {
+      delete response.model.data
+      response.model.errors = Error.throw('not_found', request.path)
+      response.status(404)
+      response.send(response.model)
+    } else {
+      delete response.model.errors
+      response.send(response.model)
+    }
   }
 })
 
@@ -337,6 +385,10 @@ app.use(function (err, req, res, next) {
   /* eslint-enable no-unused-vars */
   if (res.model) {
     delete res.model.data
+    res.model.errors.push(err)
+    if (err.code) {
+      res.status(err.code)
+    }
   }
   res.send(res.model)
 })

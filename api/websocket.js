@@ -5,12 +5,15 @@ let Error = require('./errors')
 // Import controllers
 let Token = require('./db').Token
 let User = require('./db').User
-let rat = require('./controllers/rat')
+let Rat = require('./db').Rat
+let db = require('./db').db
+let rat = require('./controllers/rat').Controller
 let Permission = require('./permission')
 let rescue = require('./controllers/rescue').Controller
 let stream = require('./controllers/stream')
-let client = require('./controllers/client')
-let user = require('./controllers/user')
+let client = require('./controllers/client').Controller
+let user = require('./controllers/user').Controller
+let nickname = require('./controllers/nicknames').Controller
 let _ = require('underscore')
 
 let controllers = {
@@ -25,7 +28,7 @@ let controllers = {
     create: [rescue.create, true],
     read: [rescue.read],
     update: [rescue.update, true],
-    delete: [rescue.delete, true, 'rescue.delete']
+    delete: [rescue.delete, true]
   },
 
   users: {
@@ -42,11 +45,16 @@ let controllers = {
     delete: [client.delete, true, 'client.delete']
   },
 
+  nicknames: {
+    search: [nickname.search]
+  },
+
   stream: {
-    subscribe: [stream.subscribe, true],
-    unsubscribe: [stream.unsubscribe, true]
+    subscribe: [stream.subscribe],
+    unsubscribe: [stream.unsubscribe]
   }
 }
+
 
 exports.retrieveCaseInsensitiveProperty = function (propertyName, obj) {
   if (!obj) { return null }
@@ -72,30 +80,23 @@ exports.received = function (client, requestString) {
   try {
     request = JSON.parse(requestString)
 
-    let requestHasValidAction = false
-    let requestHadActionField = false
     action = exports.retrieveCaseInsensitiveProperty('action', request)
     data = exports.retrieveCaseInsensitiveProperty('data', request)
     requestMeta = exports.retrieveCaseInsensitiveProperty('meta', request)
+    client.websocket = exports
+
     if (!requestMeta) { requestMeta = {} }
     if (!data) { data = {} }
+    requestMeta.action = action
 
     let query = _.clone(request)
 
     if (action) {
-      requestHadActionField = true
-      if (typeof action == 'string') {
-        if (action === 'authorization') {
-          exports.authorization(query, client, requestMeta)
-          return
-        }
-
-        requestHasValidAction = action.length > 2 && action.includes(':')
+      if (action === 'authorisation' || action === 'authorization') {
+        exports.authorization(query, client, requestMeta)
+        return
       }
-    }
 
-
-    if (requestHasValidAction === true) {
       let requestSections = action.split(':')
       let namespace = requestSections[0].toLowerCase()
 
@@ -104,32 +105,32 @@ exports.received = function (client, requestString) {
         let method = requestSections[1].toLowerCase()
 
         if (method && controller[method]) {
-          if (controller[method].length > 1) {
-            let isAuthenticated = controller[method][1] === true
+          let requiresAuthentication = controller[method][1] === true
+          let requiresPermission = controller[method].length > 2
 
-            if (isAuthenticated) {
-              if (client.user) {
-                if (controller[method].length > 2) {
-                  Permission.require(controller[method][2]).then(function () {
-                    callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-                  }).catch(function (error) {
-                    exports.error(client, requestMeta, [error])
-                  })
-                }
-                callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
+          if (requiresAuthentication) {
+            if (client.user) {
+              if (requiresPermission) {
+                Permission.require(controller[method][2]).then(function () {
+                  callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
+                }).catch(function (error) {
+                  exports.error(client, requestMeta, [error])
+                })
               } else {
-                exports.error(client, requestMeta, [Permission.authenticationError()])
+                callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
               }
-              return
+            } else {
+              exports.error(client, requestMeta, [Permission.authenticationError()])
             }
+          } else {
+            callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
           }
-
-          callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-        } else {
-          exports.error(client, {
-            action: action
-          }, [Error.throw('invalid_parameter', 'action')])
+          return
         }
+
+        exports.error(client, {
+          action: action
+        }, [Error.throw('invalid_parameter', 'action')])
       } else {
         let applicationId = exports.retrieveCaseInsensitiveProperty('applicationId', request)
         if (!applicationId || applicationId.length === 0) {
@@ -161,12 +162,7 @@ exports.received = function (client, requestString) {
       }
 
     } else {
-      let error
-      if (requestHadActionField) {
-        error = Error.invalid_parameter
-      } else {
-        error = Error.missing_required_field
-      }
+      let error = Error.missing_required_field
 
       let meta = _.extend(requestMeta, {
         action: 'unknown',
@@ -275,23 +271,45 @@ exports.authorization = function (query, client, meta) {
 
   let accessToken = query.bearer
   if (accessToken) {
-    Token.findOne({ value: accessToken }).then(function (token) {
+    Token.findOne({ where: {
+      value: accessToken
+    }}).then(function (token) {
       if (!token) {
         exports.error(client, meta, [Permission.authenticationError()])
         return
       }
-      User.findById(token.userId).then(function (user) {
+      User.findOne({
+        where: {
+          id: token.userId
+        },
+        attributes: {
+          include: [
+            [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+          ],
+          exclude: [
+            'nicknames',
+            'dispatch',
+            'deletedAt'
+          ]
+        },
+        include: [{
+          model: Rat,
+          as: 'rats',
+          required: false
+        }]
+      }).then(function (user) {
         client.user = user.toJSON()
 
         delete client.user.salt
         delete client.user.password
+        delete client.deletedAt
 
         exports.send(client, { action: 'authorization' }, user)
       }).catch(function (error) {
         exports.error(client, meta, [Error.throw('server_error', error)])
       })
-    }).catch(function () {
-      exports.error(client, meta, [Permission.authenticationError()])
+    }).catch(function (error) {
+      exports.error(client, meta, [Error.throw('server_error', error)])
     })
   } else {
     exports.error(client, meta, [Permission.authenticationError()])

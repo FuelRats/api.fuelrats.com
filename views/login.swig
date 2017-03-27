@@ -10,7 +10,7 @@
 
 <div class="container-fluid">
   <div class="row">
-    <form action="/login" method="post" class="col-md-6">
+    <form action="/login?legacy=1" method="post" class="col-md-6">
       <div class="page-header">
         <h1>Login</h1>
       </div>

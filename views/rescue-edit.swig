@@ -9,6 +9,7 @@
 {% parent %}
 <meta id="meta-id" name='rescue-id' value="{{ rescue.id }}">
 <div class="container-fluid">
+  <h1>Edit Case</h1>
   <form id="paperwork" action="/rescues" method="put">
     <div class="form-group">
       <label for="rats">Who arrived for the rescue?</label>
@@ -81,6 +82,19 @@
       <label for="notes">Notes</label>
       <textarea name="notes" id="notes" class="form-control"></textarea>
     </div>
+
+    {% if quotes %}
+      <dt class="col-sm-2">Quotes:</dt>
+      <table class="table table-bordered table-striped">
+        <tbody>
+            {% for quote in quotes %}
+            <tr>
+              <td>{{ quote }}</td>
+            </tr>
+            {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
 
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>

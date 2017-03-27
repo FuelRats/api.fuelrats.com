@@ -5,6 +5,7 @@ let winston = require('winston')
 let Permission = require('../permission')
 let Rescue = require('../db').Rescue
 let Rat = require('../db').Rat
+let Epic = require('../db').Epic
 let findRescueWithRats = require('./rescue').findRescueWithRats
 let getRescuePermissionType = require('./rescue').getRescuePermissionType
 let convertRescueToAPIResult = require('./rescue').convertRescueToAPIResult
@@ -14,7 +15,7 @@ let convertRescueToAPIResult = require('./rescue').convertRescueToAPIResult
 exports.editRescue = function (request, response) {
   findRescueWithRats({ id: request.params.id }).then(function (rescueInstance) {
     if (!rescueInstance) {
-      response.render('errors/404.swig')
+      return response.render('errors/404.swig', { path: request.path })
     }
 
     let rescue = convertRescueToAPIResult(rescueInstance)
@@ -25,8 +26,10 @@ exports.editRescue = function (request, response) {
     Permission.require(permission, request.user).then(function () {
       response.render('rescue-edit.swig', { rescue: rescue })
     }, function () {
-      response.render('errors/403.swig')
+      response.render('errors/403.swig', { message: 'Only assigned rats or administrators may edit rescues' })
     })
+  }).catch(function () {
+    return response.render('errors/404.swig', { path: request.path })
   })
 
 
@@ -47,21 +50,51 @@ exports.viewRescue = function (request, response, next) {
         model: Rat,
         as: 'firstLimpet',
         required: false
+      },
+      {
+        model: Epic,
+        as: 'epics',
+        include: [{
+          model: Rat,
+          as: 'rat',
+          required: false
+        }],
+        required: false
       }
     ]
   }).then(function (rescueInstance) {
     try {
       if (!rescueInstance) {
-        response.render('errors/404.swig')
-        return
+        return response.render('errors/404.swig', { path: request.path })
       }
 
       let rescue = rescueInstance.toJSON()
+
+      if (rescue.epics.length > 0) {
+        let epicRatList = rescue.epics.map(function (epic) {
+          return epic.rat.CMDRname
+        })
+
+        rescue.epicString = `${formatArray(epicRatList)} has received an epic commendation for this rescue`
+      }
+
       response.render('rescue-view.swig', rescue)
     } catch (err) {
       console.log(err)
     }
   }).catch(function () {
-    response.render('errors/500.swig')
+    return response.render('errors/404.swig', { path: request.path })
   })
+}
+
+function formatArray (arr) {
+  let outStr = ''
+  if (arr.length === 1) {
+    outStr = arr[0]
+  } else if (arr.length === 2) {
+    outStr = arr.join(' and ')
+  } else if (arr.length > 2) {
+    outStr = arr.slice(0, -1).join(', ') + ', and ' + arr.slice(-1)
+  }
+  return outStr
 }

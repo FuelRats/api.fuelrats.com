@@ -76,7 +76,7 @@ $(firstLimpetField).tagsinput('input').blur(function () {
 
 let systemEngine = new Bloodhound({
   remote: {
-    url: 'http://www.edsm.net/typeahead/systems/query/%QUERY',
+    url: 'https://www.edsm.net/typeahead/systems/query/%QUERY',
     minLength: 3,
     wildcard: '%QUERY',
     filter: function (data) {
@@ -101,7 +101,6 @@ $(systemField).typeahead(null, {
 $(systemField).change(function () {
   $(form).bootstrapValidator('revalidateField', 'system')
 })
-
 
 
 $(form).bootstrapValidator({
@@ -133,7 +132,7 @@ $(form).bootstrapValidator({
     rats: rats,
     firstLimpet: firstLimpetField.value,
     system: systemField.value,
-    succesful: $('input[name="successful"]:checked').val(),
+    successful: $('input[name="successful"]:checked').val(),
     codeRed: $('input[name="codeRed"]:checked').val(),
     platform: $('input[name="platform"]:checked').val(),
     notes: notesField.value
@@ -175,7 +174,7 @@ request.onload = () => {
   }
 
   if (rescue.system) {
-    systemField.value = rescue.system
+    jQuery(systemField).typeahead('val', rescue.system)
   }
 
   if (rescue.codeRed === true) {

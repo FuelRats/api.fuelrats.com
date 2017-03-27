@@ -1,18 +1,10 @@
 'use strict'
 let winston = require('winston')
 
-let xmlrpc = require('homematic-xmlrpc')
-let sslRootCAs = require('ssl-root-cas/latest')
-  .addFile(__dirname + '/../ca/lets-encrypt-x1-cross-signed.pem')
-  .addFile(__dirname + '/../ca/lets-encrypt-x2-cross-signed.pem')
-  .addFile(__dirname + '/../ca/lets-encrypt-x3-cross-signed.pem')
-  .addFile(__dirname + '/../ca/lets-encrypt-x4-cross-signed.pem')
-sslRootCAs.inject()
+let client = require('./index').client
 
-const client = xmlrpc.createSecureClient('https://irc.eu.fuelrats.com:6080/xmlrpc')
-
-class Anope {
-  static authenticate (nickname, password) {
+class NickServ {
+  static identify (nickname, password) {
     return new Promise(function (resolve, reject) {
       client.methodCall('checkAuthentication', [[nickname, password]], function (error, data) {
         if (error) {
@@ -38,7 +30,7 @@ class Anope {
           reject(error)
         } else {
           winston.info(data)
-          if (/Nickname .* registered/.test(data.return) === true) {
+          if (data && /Nickname .* registered/.test(data.return) === true) {
             resolve(nickname)
           } else {
             reject(data.return)
@@ -78,7 +70,7 @@ class Anope {
 
   static drop (nickname) {
     return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', 'xlexious', `DROP ${nickname}`]], function (error, data) {
+      client.methodCall('command', [['NickServ', 'API', `DROP ${nickname}`]], function (error, data) {
         if (error) {
           winston.error(error)
           reject(error)
@@ -114,7 +106,7 @@ class Anope {
 
   static confirm (nickname) {
     return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', 'xlexious', `CONFIRM ${nickname}`]], function (error, data) {
+      client.methodCall('command', [['NickServ', 'API', `CONFIRM ${nickname}`]], function (error, data) {
         if (error) {
           winston.error(error)
           reject(error)
@@ -129,61 +121,6 @@ class Anope {
       })
     })
   }
-
-  static setVirtualHost (user, nickname) {
-    return new Promise(function (resolve, reject) {
-      let virtualHost = generateVirtualHost(user)
-      winston.info('Generated Vhost: ' + virtualHost)
-
-      if (virtualHost) {
-        client.methodCall('command', [['HostServ', 'xlexious', `SETALL ${nickname} ${virtualHost}`]], function (error, data) {
-          if (error) {
-            winston.error(error)
-            reject(error)
-          } else {
-            winston.info(data)
-            if (/not registered/.test(data.return) === true) {
-              reject(data.return)
-            } else {
-              resolve(virtualHost)
-            }
-          }
-        })
-      } else {
-        reject(null)
-      }
-    })
-  }
-}
-
-function generateVirtualHost (user) {
-  let sortedRats = user.rats.sort(function (a, b) {
-    return a - b
-  })
-
-  if (sortedRats.length > 0) {
-
-    let rat = IRCSafeName(user.sortedRats[0])
-
-    if (user.group === 'admin') {
-      return 'netadmin.fuelrats.com'
-    } else if (user.group === 'moderator') {
-      return `${rat}.op.fuelrats.com`
-    } else if (user.group === 'overseer') {
-      return `${rat}.overseer.fuelrats.com`
-    } else if (user.drilled === true) {
-      return `${rat}.rat.fuelrats.com`
-    } else {
-      return `${rat}.recruit.fuelrats.com`
-    }
-  }
-  return null
-}
-
-function IRCSafeName (rat) {
-  let ratName = rat.CMDRname
-  ratName = ratName.replace(/[^a-zA-Z0-9\s]/g, '')
-  return ratName.toLowercase()
 }
 
 class IRCUserInfo {
@@ -243,4 +180,4 @@ class IRCUserInfo {
   }
 }
 
-module.exports = Anope
+module.exports = NickServ

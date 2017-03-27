@@ -14,6 +14,10 @@ module.exports = function (sequelize, DataTypes) {
     secret: {
       type: DataTypes.STRING(1024),
       allowNull: false
+    },
+    redirectUri: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   }, {
     classMethods: {

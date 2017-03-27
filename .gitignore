@@ -2,10 +2,12 @@
 .vagrant/
 data/
 test/bundle.js
-config.json
+/config.json
 npm-debug.log.*
 views/docs.hbs
 static/js/
+
+.idea/*
 
 bin/logfile
 

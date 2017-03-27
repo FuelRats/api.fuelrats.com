@@ -8,11 +8,10 @@
 {% block body %}
 {% parent %}
 <div class="container-fluid">
+  <h1>Paperwork</h1>
   <form id="paperwork" action="/rescues" method="post">
     <div class="form-group">
-      <p>This is how you report a rescue or loss for the Fuel Rats leaderboard.</p>
-
-      <p>Only the Rat performing the rescue (or a designate) should file this report! Please do not double-report rescues.</p>
+      <h3 style="color: #ff0000">YOU ONLY USE THIS FORM IF MECHA HAS NOT ALREADY CREATED A CASE.<br> OTHERWISE USE THE LINK THAT WAS POSTED TO YOU IN PRIVATE MESSAGE</h3>
 
     </div>
 

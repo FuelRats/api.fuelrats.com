@@ -4,37 +4,45 @@ let _ = require('underscore')
 let Permission = require('../permission')
 let User = require('../db').User
 let Rat = require('../db').Rat
+let db = require('../db').db
 let Errors = require('../errors')
+let API = require('../classes/API')
+
+let HostServ = require('../Anope/HostServ')
 
 class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
-      let limit = parseInt(query.limit) || 25
-      delete query.limit
+      let dbQuery = API.createQueryFromRequest(query)
 
-      let offset = parseInt(query.offset) || 0
-      delete query.offset
+      dbQuery.include = [
+        {
+          model: Rat,
+          as: 'rats'
+        }
+      ]
 
-      if (query.nicknames) {
-        query.nicknames = { $contains: [query.nicknames] }
+      if (query.CMDRs) {
+        dbQuery.include[0].require = true
+        dbQuery.include[0].where = {
+          id: query.CMDRs
+        }
       }
-      let dbQuery = {
-        where: query,
-        limit: limit,
-        offset: offset,
+
+      dbQuery.attributes = {
         include: [
-          {
-            model: Rat,
-            as: 'rats'
-          }
+          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
+        exclude: [
+          'nicknames'
         ]
       }
 
       User.findAndCountAll(dbQuery).then(function (result) {
         let meta = {
           count: result.rows.length,
-          limit: limit,
-          offset: offset,
+          limit: dbQuery.limit,
+          offset: dbQuery.offset,
           total: result.count
         }
 
@@ -57,7 +65,7 @@ class Controller {
 
   static create () {
     return new Promise(function (resolve, reject) {
-      reject({ error: Errors.throw('not_implemented', 'rescue:create is not implemented, please use POST /register'), meta: {} })
+      reject({ error: Errors.throw('not_implemented', 'user:create is not implemented, please use POST /register'), meta: {} })
     })
   }
 
@@ -76,6 +84,10 @@ class Controller {
               delete data.rats
             }
 
+            if (data['nicknames']) {
+              data.nicknames = db.cast(data['nicknames'], 'citext[]')
+            }
+
             if (Object.keys(data).length > 0) {
               updates.push(User.update(data, {
                 where: { id: user.id }
@@ -84,6 +96,9 @@ class Controller {
 
             Promise.all(updates).then(function () {
               findUserWithRats({ id: query.id }).then(function (userInstance) {
+                if (data.group || data.drilled || data.drilledDispatch) {
+                  HostServ.updateVirtualHost(userInstance)
+                }
                 let user = convertUserToAPIResult(userInstance)
                 resolve({ data: user, meta: {} })
               }).catch(function (error) {
@@ -124,14 +139,35 @@ class Controller {
       }
     })
   }
+
+  static forceUpdateIRCStatus (data, connection, query) {
+    return new Promise(function (resolve, reject) {
+      if (query.id) {
+        findUserWithRats({ id: query.id }).then(function (userInstance) {
+          if (!userInstance) {
+            return reject({ error: Error.throw('not_found', query.id), meta: {} })
+          }
+
+          HostServ.updateVirtualHost(userInstance)
+          resolve({ data: { success: true }, meta: {} })
+        }).catch(function (error) {
+          reject({ error: Errors.throw('server_error', error), meta: {} })
+        })
+      } else {
+        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+      }
+    })
+  }
 }
 
 class HTTP {
   static get (request, response, next) {
     Controller.read(request.query, request).then(function (res) {
       let data = res.data
+      let meta = res.meta
 
       response.model.data = data
+      response.model.meta = meta
       response.status = 200
       next()
     }, function (error) {
@@ -202,6 +238,20 @@ class HTTP {
       next()
     })
   }
+
+  static forceUpdateIRCStatus (request, response, next) {
+    Controller.read(request.body, request, request.params).then(function (res) {
+      let data = res.data
+
+      response.model.data = data
+      response.status = 200
+      next()
+    }, function (error) {
+      response.model.errors.push(error.error)
+      response.status(error.error.code)
+      next()
+    })
+  }
 }
 
 function convertUserToAPIResult (userInstance) {
@@ -217,6 +267,7 @@ function convertUserToAPIResult (userInstance) {
   delete user.salt
   delete user.password
   delete user.deletedAt
+  delete user.dispatch
 
   return user
 }
@@ -224,6 +275,14 @@ function convertUserToAPIResult (userInstance) {
 function findUserWithRats (where) {
   return User.findOne({
     where: where,
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames'
+      ]
+    },
     include: [
       {
         model: Rat,

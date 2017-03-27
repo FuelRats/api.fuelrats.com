@@ -6,6 +6,7 @@ let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
 let Rat = require('../db').Rat
+let db = require('../db').db
 let Token = require('../db').Token
 let Client = require('../db').Client
 let bcrypt = require('bcrypt')
@@ -92,38 +93,7 @@ passport.use('client-basic', new BasicStrategy(
 ))
 
 
-passport.use(new BearerStrategy(
-  function (accessToken, callback) {
-    Token.findOne({ where: { value: accessToken } }).then(function (token) {
-      if (!token) {
-        callback(null, false)
-        return
-      }
-      User.findOne({
-        where: { id: token.userId },
-        include: [
-          {
-            model: Rat,
-            as: 'rats',
-            required: false
-          }
-        ]
-      }).then(function (userInstance) {
-        let user = userInstance.toJSON()
-        let reducedRats = user.rats.map(function (rat) {
-          return rat.id
-        })
-        user.CMDRs = reducedRats
-        delete user.rats
-        callback(null, user, { scope: '*' })
-      }).catch(function () {
-        callback(null, false)
-      })
-    }).catch(function () {
-      callback(null, false)
-    })
-  }
-))
+passport.use(new BearerStrategy(bearerAuthenticate))
 
 exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })
 exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
@@ -143,7 +113,15 @@ exports.isAuthenticated = function (isUserFacing) {
             return next(error)
           } else {
             req.session.returnTo = req.originalUrl || req.url
-            return res.redirect('/login')
+
+            if (req.session.legacy || isUserFacing) {
+              return res.redirect('/login')
+            } else {
+              res.model.data = req.user
+              res.status(200)
+              next()
+              return
+            }
           }
         }
         req.user = user
@@ -153,9 +131,90 @@ exports.isAuthenticated = function (isUserFacing) {
   }
 }
 
+exports.isJiraAuthenticated = function () {
+  return function (req, res, next) {
+    let bearer = req.query.bearer
+    if (!bearer) {
+      let error = Permission.authenticationError()
+      res.model.errors.push(error)
+      res.status(error.code)
+      return next(error)
+    }
+
+    bearerAuthenticate(bearer, function (error, user) {
+      if (error) {
+        res.model.errors.push(error)
+        res.status = error.code
+        return next(error)
+      }
+
+      if (user) {
+        req.user = user
+        next()
+      } else {
+        let error = Permission.authenticationError()
+        res.model.errors.push(error)
+        res.status(error.code)
+
+        return next(error)
+      }
+    })
+  }
+}
+
+function bearerAuthenticate (accessToken, callback) {
+  Token.findOne({ where: { value: accessToken } }).then(function (token) {
+    if (!token) {
+      callback(null, false)
+      return
+    }
+    User.findOne({
+      where: { id: token.userId },
+      attributes: {
+        include: [
+          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
+        exclude: [
+          'nicknames'
+        ]
+      },
+      include: [
+        {
+          model: Rat,
+          as: 'rats',
+          required: false
+        }
+      ]
+    }).then(function (userInstance) {
+      let user = userInstance.toJSON()
+      let reducedRats = user.rats.map(function (rat) {
+        return rat.id
+      })
+      user.CMDRs = reducedRats
+      delete user.rats
+      delete user.dispatch
+      callback(null, user, { scope: '*' })
+    }).catch(function (error) {
+      callback(error)
+    })
+  }).catch(function (error) {
+    callback(error)
+  })
+}
+
 function findUserWithRats (where) {
   return User.findOne({
     where: where,
+    attributes: {
+      include: [
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames',
+        'dispatch',
+        'deletedAt'
+      ]
+    },
     include: [
       {
         model: Rat,
@@ -175,6 +234,7 @@ function convertUserToAPIResult (userInstance) {
   delete user.rats
   delete user.salt
   delete user.password
+  delete user.dispatch
 
   return user
 }
