@@ -61,7 +61,8 @@
       <div class="form-group">
         <label for="platform">Platform</label>
         <label><input type="radio" name="platform" id="platform_pc" class="form-control" value="pc" checked> PC</label>
-        <label><input type="radio" name="platform" id="platform_xb" class="form-control" value="xb"> Xbox</label>
+        <label><input type="radio" name="platform" id="platform_xb" class="form-control" value="xb"> Xbox One</label>
+        <label><input type="radio" name="platform" id="platform_ps" class="form-control" value="ps"> PlayStation 4</label>
       </div>
 
       <div class="form-group">

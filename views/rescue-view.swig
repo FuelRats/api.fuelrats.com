@@ -46,7 +46,7 @@
         </dd>
 
         <dt class="col-sm-2">Platform:</dt>
-        <dd class="col-sm-10">{{ platform }}</dd>
+        <dd class="col-sm-10">{{ platform|formatPlatform() }}</dd>
 
         <dt class="col-sm-12">Successful:</dt>
         <dd class="col-sm-12">{{ successful }}</dd>

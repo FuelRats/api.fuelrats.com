@@ -36,6 +36,12 @@
           Xbox One
         </label>
       </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" id="platform-ps" name="platform" value="ps">
+          PlayStation 4
+        </label>
+      </div>
     </div>
 
     <div class="form-group">
