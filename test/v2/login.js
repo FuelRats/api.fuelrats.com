@@ -12,7 +12,8 @@ module.exports = {
     }
 
     new Request(POST, {
-      path: '/login'
+      path: '/login',
+      insecure: true
     }, loginData).then(function (post) {
       let res = post.body
 
