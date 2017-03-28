@@ -143,6 +143,17 @@ swig.setFilter('eliteDateNoFormat', function (date, args) {
   return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
 })
 
+let platformHumanReadable = {
+  'pc': 'PC',
+  'xb': 'XB1',
+  'ps': 'PS4',
+  'unknown': '?'
+}
+
+swig.setFilter('formatPlatform', function (platformIdentifier, args) {
+  return platformHumanReadable[platformIdentifier]
+})
+
 let sessionOptions = {
   cookie: config.cookie,
   secret: config.secretSauce,
