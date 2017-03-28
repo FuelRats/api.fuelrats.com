@@ -1,6 +1,6 @@
 'use strict'
-let https = require('https')
 let config = require('../../config.json')
+let https = config.proxyHasSSL === true ? require('https') : require('http')
 
 /**
  * Symbol representing HTTP GET method requests
@@ -49,7 +49,8 @@ class APITest {
     return new Promise(function (resolve) {
       let options = {
         host: config.hostname,
-        path: ''
+        path: '',
+        port: 8080
       }
 
       Object.assign(options, overrideOptions)
@@ -79,9 +80,12 @@ class APITest {
    * @private
    */
   static _httpPostRequest (overrideOptions, data = null) {
+    let textBody = JSON.stringify(data)
+
     return new Promise(function (resolve) {
       let options = {
         host: config.hostname,
+        port: 8080,
         path: '/',
         method: 'POST',
         headers: {
@@ -92,7 +96,6 @@ class APITest {
 
       Object.assign(options, overrideOptions)
 
-      let textBody = JSON.stringify(data)
 
       let post = https.request(options, function (response) {
         response.setEncoding('utf8')
@@ -103,10 +106,18 @@ class APITest {
         })
 
         response.on('end', function () {
-          resolve({
-            response,
-            body: JSON.parse(body)
-          })
+          try {
+            let jsonBody = JSON.parse(body)
+            resolve({
+              response,
+              body: jsonBody
+            })
+          } catch (ex) {
+            resolve({
+              response,
+              body
+            })
+          }
         })
       })
 
@@ -119,5 +130,5 @@ class APITest {
 module.exports = {
   GET,
   POST,
-  test: APITest
+  APITest
 }
