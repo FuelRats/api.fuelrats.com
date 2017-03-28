@@ -1,5 +1,5 @@
 'use strict'
-let { GET, POST, APITest } = require('../../api/classes/APITest')
+let { GET, POST, Request } = require('../../api/classes/Request')
 
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
       password: 'testuser'
     }
 
-    new APITest(POST, {
+    new Request(POST, {
       path: '/login'
     }, loginData).then(function (post) {
       let res = post.body

@@ -1,6 +1,7 @@
 'use strict'
 let config = require('../../config.json')
-let https = config.proxyHasSSL === true ? require('https') : require('http')
+let https = require('https')
+let http = require('http')
 
 /**
  * Symbol representing HTTP GET method requests
@@ -18,9 +19,9 @@ const POST = Symbol()
  * Class for sending test requests to the API
  * @class
  */
-class APITest {
+class Request {
   /**
-   * Create a new instance of a test request to the API
+   * Create a new instance of an http request
    * @param requestType Either a GET or POST symbol for the type of request
    * @param options Override options in https module format
    * @param data Object to send in HTTP post request
@@ -29,10 +30,10 @@ class APITest {
   constructor (requestType, options, data = null) {
     switch (requestType) {
       case GET:
-        return APITest._httpGetRequest(options)
+        return Request._httpGetRequest(options)
 
       case POST:
-        return APITest._httpPostRequest(options, data)
+        return Request._httpPostRequest(options, data)
 
       default:
         return null
@@ -46,6 +47,12 @@ class APITest {
    * @private
    */
   static _httpGetRequest (overrideOptions) {
+    let httpEngine = https
+    if (overrideOptions.insecure) {
+      delete overrideOptions.insecure
+      httpEngine = http
+    }
+
     return new Promise(function (resolve) {
       let options = {
         host: config.hostname,
@@ -55,7 +62,7 @@ class APITest {
 
       Object.assign(options, overrideOptions)
 
-      https.get(options, function (response) {
+      httpEngine.get(options, function (response) {
         let body = ''
 
         response.on('data', function (data) {
@@ -80,6 +87,12 @@ class APITest {
    * @private
    */
   static _httpPostRequest (overrideOptions, data = null) {
+    let httpEngine = https
+    if (overrideOptions.insecure) {
+      delete overrideOptions.insecure
+      httpEngine = http
+    }
+
     let textBody = JSON.stringify(data)
 
     return new Promise(function (resolve) {
@@ -97,7 +110,7 @@ class APITest {
       Object.assign(options, overrideOptions)
 
 
-      let post = https.request(options, function (response) {
+      let post = httpEngine.request(options, function (response) {
         response.setEncoding('utf8')
         let body = ''
 
@@ -130,5 +143,5 @@ class APITest {
 module.exports = {
   GET,
   POST,
-  APITest
+  Request
 }
