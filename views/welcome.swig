@@ -33,7 +33,7 @@
             <li class="nav-item">
               <a class="nav-link active" href="#rescues-{{ CMDR.id }}">
                 {{ CMDR.CMDRname }}
-                <span class="label label-pill label-default">{{ CMDR.platform }}</span>
+                <span class="label label-pill label-default">{{ CMDR.platform|formatPlatform() }}</span>
               </a>
             </li>
           {% endfor %}

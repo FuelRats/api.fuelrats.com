@@ -8,6 +8,7 @@ const firstLimpetField = document.getElementById('firstLimpet')
 const systemField      = document.getElementById('system')
 const platformPC       = document.getElementById('platform-pc')
 const platformXB       = document.getElementById('platform-xb')
+const platformPS       = document.getElementById('platform-ps')
 const crtrue           = document.getElementById('cr-true')
 const crfalse          = document.getElementById('cr-false')
 const successfultrue   = document.getElementById('successful-true')
@@ -167,10 +168,21 @@ request.onload = () => {
     $(firstLimpetField).tagsinput('add', { id: rescue.firstLimpet.id, rat: rescue.firstLimpet.CMDRname })
   }
 
-  if (rescue.platform === 'pc') {
-    platformPC.checked = true
-  } else if (rescue.platform === 'xb') {
-    platformXB.checked = true
+  switch (rescue.platform) {
+    case 'pc':
+      platformPC.checked = true
+      break
+
+    case 'xb':
+      platformXB.checked = true
+      break
+
+    case 'ps':
+      platformPS.checked = true
+      break
+
+    default:
+      break
   }
 
   if (rescue.system) {
