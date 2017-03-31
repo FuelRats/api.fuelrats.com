@@ -20,6 +20,7 @@ let winston = require('winston')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
+let geoip = require('geoip-lite')
 
 let npid = require('npid')
 require('winston-daily-rotate-file')
@@ -256,6 +257,11 @@ if (options.logging || options.test) {
     logger.info('HEADERS:', request.headers)
     logger.info('DATA:', censoredParams)
     request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
+
+    let geo = geoip.lookup(request.inet)
+    if (geo) {
+      request.isSouthernHemisphere = geo.ll[0] < 0
+    }
     next()
   })
 }

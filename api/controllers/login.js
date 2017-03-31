@@ -3,8 +3,11 @@ let Action = require('../db').Action
 
 exports.get = function (request, response) {
   request.session.legacy = 'true'
+  let query = Object.assign(request.query, {
+    southern: request.isSouthernHemisphere
+  })
   if (request.isUnauthenticated()) {
-    response.render('login.swig', request.query)
+    response.render('login.swig', query)
   } else {
     response.redirect('/welcome')
   }
