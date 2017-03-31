@@ -12,5 +12,7 @@ path = require( 'path' )
 
 
 exports.get = function ( request, response ) {
-  response.render( 'paperwork.swig')
+  response.render( 'paperwork.swig', {
+    southern: request.isSouthernHemisphere
+  })
 }

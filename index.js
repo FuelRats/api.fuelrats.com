@@ -20,6 +20,7 @@ let winston = require('winston')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
+let geoip = require('geoip-lite')
 
 let npid = require('npid')
 require('winston-daily-rotate-file')
@@ -47,6 +48,7 @@ let client = require('./api/controllers/client').HTTP
 let docs = require('./api/controllers/docs')
 let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
+let ssologin = require('./api/controllers/ssologin')
 let logout = require('./api/controllers/logout')
 let nicknames = require('./api/controllers/nicknames').HTTP
 let oauth2 = require('./api/controllers/oauth2')
@@ -255,6 +257,11 @@ if (options.logging || options.test) {
     logger.info('HEADERS:', request.headers)
     logger.info('DATA:', censoredParams)
     request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
+
+    let geo = geoip.lookup(request.inet)
+    if (geo) {
+      request.isSouthernHemisphere = geo.ll[0] < 0
+    }
     next()
   })
 }
@@ -279,6 +286,7 @@ router.get('/badge', badge.get)
 router.post('/register', register.post)
 
 router.post('/login', passport.authenticate('local'), login.post)
+router.post('/ssologin', passport.authenticate('local'), ssologin.loginWithCredentials)
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
 
@@ -325,6 +333,7 @@ router.get('/version', version.get)
 router.get('/docs', docs.get)
 router.get('/leaderboard', leaderboard.get)
 router.get('/login', login.get)
+router.get('/ssologin', ssologin.getLoginPage)
 router.get('/reset', reset.get)
 router.get('/change_password', change_password.get)
 router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)

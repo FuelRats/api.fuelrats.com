@@ -8,7 +8,10 @@ let crypto = require('crypto')
 
 
 exports.get = function (request, response) {
-  response.render('reset.swig', request.query)
+  let query = Object.assign(request.query, {
+    southern: request.isSouthernHemisphere
+  })
+  response.render('reset.swig', query)
 }
 
 let getPlainTextEmailVersion = function (emaillink) {

@@ -18,7 +18,7 @@ exports.get = function (request, response) {
         overview.successCount = overview.successCount.toLocaleString('en-GB', {
           style: 'decimal'
         })
-        response.render('leaderboard.swig', {users: rats, overview: overview})
+        response.render('leaderboard.swig', {users: rats, overview: overview, southern: request.isSouthernHemisphere})
       } catch (ex) {
         console.log(ex)
       }
