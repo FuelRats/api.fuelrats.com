@@ -24,7 +24,7 @@ exports.editRescue = function (request, response) {
     let permission = getRescuePermissionType(rescue, request.user)
 
     Permission.require(permission, request.user).then(function () {
-      response.render('rescue-edit.swig', { rescue: rescue, southern: request.isSouthernHemisphere })
+      response.render('rescue-edit.swig', { rescue: rescue })
     }, function () {
       response.render('errors/403.swig', { message: 'Only assigned rats or administrators may edit rescues' })
     })
@@ -77,10 +77,6 @@ exports.viewRescue = function (request, response, next) {
 
         rescue.epicString = `${formatArray(epicRatList)} has received an epic commendation for this rescue`
       }
-
-      rescue = Object.assign(rescue, {
-        southern: request.isSouthernHemisphere
-      })
 
       response.render('rescue-view.swig', rescue)
     } catch (err) {

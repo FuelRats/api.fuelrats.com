@@ -57,7 +57,6 @@ class HTTP {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
     Controller.roster(request.body, request, request.query).then(function (data) {
-      data.southern = request.isSouthernHemisphere
       response.render('roster.swig', data)
     }, function (error) {
       response.model.errors.push(error.error)

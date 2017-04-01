@@ -1,16 +1,6 @@
 <!doctype html>
 <head>
   <link rel="stylesheet" href="/style.min.css">
-  {% if southern == true %}
-  <style type="text/css">
-  body {
-    -webkit-transform: rotate(180deg);
-    -moz-transform: rotate(180deg);
-    -ms-transform: rotate(180deg);
-    transform: rotate(180deg);
-  }
-  </style>
-  {% endif %}
   {% block head %}
   {% endblock %}
 </head>

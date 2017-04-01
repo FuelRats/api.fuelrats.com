@@ -15,10 +15,7 @@ exports.get = function (request, response) {
     }
   }).then(function (reset) {
     if (reset && reset.expires.getTime() > Date.now()) {
-      let query = Object.assign(request.query, {
-        southern: request.isSouthernHemisphere
-      })
-      response.render('change_password.swig', query)
+      response.render('change_password.swig', request.query)
     } else {
       response.redirect('/reset?expired=1')
     }

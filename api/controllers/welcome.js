@@ -112,7 +112,7 @@ exports.get = function (request, response) {
       rat.openRescues = openRescues
       rat.successRate = ((firstLimpetCount + assistCount) / rat.rescues.length * 100).toFixed(2)
     }
-    response.render('welcome.swig', { user: user, userGroupLabel: labels[user.group], southern: request.isSouthernHemisphere })
+    response.render('welcome.swig', { user: user, userGroupLabel: labels[user.group] })
   }).catch(function (error) {
     console.log(error)
   })
