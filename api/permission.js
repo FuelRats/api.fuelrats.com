@@ -197,6 +197,7 @@ class Permission {
   /**
    * Get a list of localised human readable permissions from a list of OAuth scopes
    * @param {Array} scopes Array of OAuth scopes
+   * @param {Object} user A user object to check permissions against
    * @returns {Array} Array of objects with localised human readable permissions
    */
   static humanReadable (scopes, user)  {

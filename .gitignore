@@ -116,3 +116,4 @@ views/docs.hbs
 .eslintrc.json
 
 static/style.min.css
+bin/testinfo.json

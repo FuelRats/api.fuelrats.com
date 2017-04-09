@@ -32,5 +32,25 @@ module.exports = {
 
       test.done()
     })
+  },
+
+  testInvalidLogin: function (test) {
+    let loginData = {
+      email: 'blackrats@fuelrats.com',
+      password: 'testuser'
+    }
+
+    new Request(POST, {
+      path: '/login',
+      insecure: true
+    }, loginData).then(function (post) {
+      let res = post.body
+
+      test.strictEqual(post.response.statusCode, 401)
+
+      test.equal(res, 'Unauthorized')
+
+      test.done()
+    })
   }
 }
