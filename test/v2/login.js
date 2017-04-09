@@ -3,6 +3,10 @@ let { GET, POST, Request } = require('../../api/classes/Request')
 
 
 module.exports = {
+  /**
+   * Test that a valid login successfully passes authentication and returns a valid response
+   * @param test NodeUnit callback object
+   */
   testLogin: function (test) {
     test.expect(11)
 
@@ -34,6 +38,10 @@ module.exports = {
     })
   },
 
+  /**
+   * Test that a login with invalid username properly returns unauthorized error
+   * @param test NodeUnit callback object
+   */
   testInvalidLogin: function (test) {
     test.expect(2)
     let loginData = {
@@ -55,6 +63,10 @@ module.exports = {
     })
   },
 
+  /**
+   * Test that a valid login to the single sign-on endpoint properly authenticates and returns a redirect
+   * @param test NodeUnit callback object
+   */
   testSSOLogin: function (test) {
     test.expect(3)
 
