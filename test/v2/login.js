@@ -35,6 +35,7 @@ module.exports = {
   },
 
   testInvalidLogin: function (test) {
+    test.expect(2)
     let loginData = {
       email: 'blackrats@fuelrats.com',
       password: 'testuser'
@@ -52,5 +53,28 @@ module.exports = {
 
       test.done()
     })
-  }
+  },
+
+  testSSOLogin: function (test) {
+    test.expect(3)
+
+    let loginData = {
+      email: 'admintestuser@fuelrats.com',
+      password: 'testuser',
+      redirect: 'https://www.fuelrats.com/',
+    }
+
+    new Request(POST, {
+      path: '/ssologin',
+      insecure: true
+    }, loginData).then(function (post) {
+      let res = post.body
+
+      test.strictEqual(post.response.statusCode, 302)
+      test.strictEqual(post.response.headers.location, 'https://www.fuelrats.com/')
+      test.equal(res, 'Found. Redirecting to https://www.fuelrats.com/')
+
+      test.done()
+    })
+  },
 }

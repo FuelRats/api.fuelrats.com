@@ -9,7 +9,11 @@ class SSOLogin  {
         type: 'login',
         userId: request.user.id
       })
-      response.redirect(request.session.ssoTarget)
+      if (request.body.redirect) {
+        response.redirect(request.body.redirect)
+      } else {
+        response.redirect('/')
+      }
     } else {
       request.session.userIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress
 
