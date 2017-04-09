@@ -31,7 +31,7 @@ exports.post = function (request, response, next) {
       }
     }
 
-    let platforms = ['pc', 'xb']
+    let platforms = ['pc', 'xb', 'ps']
 
     email = email.trim()
     if (platforms.indexOf(platform) === -1) {

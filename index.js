@@ -45,6 +45,7 @@ let change_password = require('./api/controllers/change_password')
 let client = require('./api/controllers/client').HTTP
 let docs = require('./api/controllers/docs')
 let login = require('./api/controllers/login')
+let ssologin = require('./api/controllers/ssologin')
 let logout = require('./api/controllers/logout')
 let news = require('./api/controllers/news')
 let nicknames = require('./api/controllers/nicknames')
@@ -136,6 +137,17 @@ swig.setFilter('eliteDate', function (date, args) {
 swig.setFilter('eliteDateNoFormat', function (date, args) {
   let context = moment(date)
   return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
+})
+
+let platformHumanReadable = {
+  'pc': 'PC',
+  'xb': 'XB1',
+  'ps': 'PS4',
+  'unknown': '?'
+}
+
+swig.setFilter('formatPlatform', function (platformIdentifier, args) {
+  return platformHumanReadable[platformIdentifier]
 })
 
 let sessionOptions = {
@@ -265,6 +277,7 @@ router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.r
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
 
 router.post('/login', passport.authenticate('local'), login.post)
+router.post('/ssologin', passport.authenticate('local'), ssologin.loginWithCredentials)
 router.post('/register', register.post)
 
 router.get('/v2/news', API.route(news.list))
@@ -283,8 +296,6 @@ router.route('/oauth2/authorize')
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 /*
-
-
 
 router.post('/reset', reset.post)
 router.post('/change_password', change_password.post)
@@ -329,6 +340,16 @@ router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('
 router.get('/version', version.get)
 
 router.get('/docs', docs.get)
+router.get('/leaderboard', leaderboard.get)
+router.get('/login', login.get)
+router.get('/ssologin', ssologin.getLoginPage)
+router.get('/reset', reset.get)
+router.get('/change_password', change_password.get)
+router.get('/paperwork', auth.isAuthenticated(true), paperwork.get)
+router.get('/register', register.get)
+router.get('/welcome', auth.isAuthenticated(true), welcome.get)
+router.get('/profile', auth.isAuthenticated(true), profile.get)
+router.get('/roster', roster.get)
 router.get('/statistics', statistics.get)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
