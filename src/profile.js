@@ -264,6 +264,7 @@ class ShipDialog {
         let ratRadioButton = document.createElement('input')
         ratRadioButton.type = 'radio'
         ratRadioButton.value = rat.id
+        ratRadioButton.name = 'shipRat'
         shipRatGroup.appendChild(ratRadioButton)
 
 
