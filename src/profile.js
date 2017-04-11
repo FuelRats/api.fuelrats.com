@@ -316,7 +316,7 @@ class ShipDialog {
     request.send(JSON.stringify({
       ratId: shipRatValue,
       name: shipNameField.value,
-      type: shipTypeField.options[shipTypeField.selectedIndex].value
+      shipType: shipTypeField.options[shipTypeField.selectedIndex].value
     }))
   }
 }
