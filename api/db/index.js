@@ -69,6 +69,10 @@ Epic.belongsTo(Rat, { as: 'rat' })
 Rescue.hasMany(Epic, { foreignKey: 'rescueId', as: 'epics' })
 Rat.hasMany(Epic, { foreignKey: 'ratId', as: 'epics' })
 Ship.belongsTo(Rat, { as: 'rat' })
+Rat.hasMany(Ship, {
+  foreignKey: 'ratId',
+  as: 'ships'
+})
 
 
 module.exports = {
