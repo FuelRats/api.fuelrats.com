@@ -59,6 +59,7 @@ let reset = require('./api/controllers/reset')
 let roster = require('./api/controllers/roster').HTTP
 let rescue = require('./api/controllers/rescue').HTTP
 let rescueAdmin = require('./api/controllers/rescueAdmin')
+let ship = require('./api/controllers/ship').HTTP
 let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user').HTTP
 let version = require('./api/controllers/version')
@@ -137,6 +138,12 @@ swig.setFilter('eliteDate', function (date, args) {
   } else {
     return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
   }
+})
+
+swig.setFilter('padShipId', function (ship) {
+  ship = ship.toString()
+  let pad = '0000'
+  return pad.substring(0, pad.length - ship.length) + ship
 })
 
 swig.setFilter('eliteDateNoFormat', function (date, args) {
@@ -321,6 +328,12 @@ router.get('/clients', auth.isAuthenticated(false), Permission.required('client.
 router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('client.update', false), client.put)
 router.post('/clients', auth.isAuthenticated(false), Permission.required('self.client.create', false), client.post)
 router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete', false), client.delete)
+
+router.get('/ships', ship.get)
+router.post('/ships', ship.post)
+router.get('/ships/:id', ship.getById)
+router.put('/ships/:id', auth.isAuthenticated(false), ship.put)
+router.delete('/ships/:id', auth.isAuthenticated(false), ship.delete)
 
 router.get('/version', version.get)
 

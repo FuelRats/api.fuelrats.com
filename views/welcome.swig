@@ -6,6 +6,8 @@
 
 {% include 'components/addNickname.swig' %}
 {% include 'components/removeNickname.swig' %}
+{% include 'components/addShip.swig' %}
+{% include 'components/removeShip.swig' %}
 {% endblock %}
 
 {% block body %}
@@ -79,6 +81,33 @@
         </div>
       </div>
     </div>
+    <div class="card">
+          <div class="card-header">
+            <strong>Ships</strong>
+          </div>
+          <div class="card-block">
+            <ul class="nav nav-stacked ship-list">
+              {% for rat in user.rats %}
+                {% for ship in rat.ships %}
+                <li class="nav-item">
+                  <a class="nav-link active">
+                    {{ ship.name }}
+                    <span class="label label-pill label-default">FR{{ ship.shipId|padShipId() }}</span>
+                  </a>
+                  <img class="delete" data-ship="{{ ship.id }}" src="svg/delete.svg"></img>
+                </li>
+                {% endfor %}
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="card-footer">
+            <div class="input-group">
+              <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-secondary btn-success-outline" id="addShipButton">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
 
     <div class="col-md-9">

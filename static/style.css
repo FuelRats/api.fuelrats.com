@@ -13,6 +13,7 @@ body {
   margin: 0 !important;
 }
 
+.ship-list .delete,
 .rat-list .delete {
   float: right;
   visibility: hidden;
@@ -21,6 +22,7 @@ body {
   cursor: pointer;
 }
 
+.ship-list .nav-item:hover .delete,
 .rat-list .nav-item:hover .delete {
   visibility: visible;
 }
@@ -317,6 +319,14 @@ svg text {
 
 .data-stack:hover .success-bar {
   fill: #31b0d5;
+}
+
+#shipRatGroup  .label-pill {
+  margin-left: 5px;
+}
+
+#shipRatGroup radio + label {
+  margin-left: 5px;
 }
 
 header + nav,
