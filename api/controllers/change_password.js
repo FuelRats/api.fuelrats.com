@@ -27,7 +27,7 @@ exports.get = function (request, response) {
 
 exports.post = function (request, response) {
   if (!request.body.token) {
-    response.redirect('/reset?expired=1')
+    return response.redirect('/reset?expired=1')
   }
 
   Reset.findOne({
@@ -36,12 +36,12 @@ exports.post = function (request, response) {
     }
   }).then(function (reset) {
     if (!reset || !reset.userId) {
-      response.redirect('/reset?expired=1')
+      return response.redirect('/reset?expired=1')
     }
 
     bcrypt.hash(request.body.password, 16, function (error, hash) {
       if (error) {
-        response.redirect('/reset?expired=1')
+        return response.redirect('/reset?expired=1')
       }
 
       User.update({
