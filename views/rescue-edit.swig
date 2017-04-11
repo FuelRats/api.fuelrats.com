@@ -7,7 +7,6 @@
 
 {% block body %}
 {% parent %}
-<meta id="meta-id" name='rescue-id' value="{{ rescue.id }}">
 <div class="container-fluid">
   <h1>Edit Case</h1>
   <form id="paperwork" action="/rescues" method="put">
@@ -105,6 +104,7 @@
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 </div>
+<meta id="meta-id" name='rescue-id' value="{{ rescue.id }}">
 {% endblock %}
 
 {% block resources %}
