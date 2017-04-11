@@ -28,6 +28,7 @@ module.exports = function (sequelize, DataTypes) {
         'Cobra MkIV',
         'Diamondback Explorer',
         'Diamondback Scout',
+        'Dolphin',
         'Eagle',
         'F63 Condor',
         'Federal Assault Ship',
