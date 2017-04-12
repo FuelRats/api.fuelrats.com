@@ -43,7 +43,7 @@ const shipTypes = [
   'Taipan Fighter',
   'Type-6 Transporter',
   'Type-7 Transporter',
-  'Type 9 Heavy',
+  'Type-9 Heavy',
   'Viper MkIII',
   'Viper MkIV',
   'Vulture'
