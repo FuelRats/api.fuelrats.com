@@ -105,8 +105,11 @@ class NicknameDialog {
 
     jQuery('#addNicknameDialog').modal('show')
 
-    jQuery('#addNicknameDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
+    jQuery('#addNicknameDialog').on('hidden.bs.modal', function () {
+
+      while (document.getElementById('addNicknameDialog')) {
+        document.body.removeChild(document.getElementById('addNicknameDialog'))
+      }
     })
   }
 
@@ -179,6 +182,8 @@ class NicknameDialog {
       nickname: this.nickname,
       password: passwordField.value
     }))
+
+
   }
 
   registerNicknameButtonClicked () {
@@ -221,8 +226,10 @@ class RemoveNicknameDialog {
     jQuery('#removeNicknameDialog').modal('show')
 
 
-    jQuery('#removeNicknameDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
+    jQuery('#removeNicknameDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('removeNicknameDialog')) {
+        document.body.removeChild(document.getElementById('removeNicknameDialog'))
+      }
     })
   }
 
@@ -253,6 +260,15 @@ class ShipDialog {
       option.textContent = shipType
       shipTypeField.appendChild(option)
     }
+
+    jQuery('#addShipDialog').modal('show')
+
+    jQuery('#addShipDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('addShipDialog')) {
+        document.body.removeChild(document.getElementById('addShipDialog'))
+      }
+    })
+
     shipTypeField.selectedIndex = 0
 
     let shipRatGroup = this.dialog.querySelector('#shipRatGroup')
@@ -287,12 +303,6 @@ class ShipDialog {
     }
 
     request.send()
-
-    jQuery('#addShipDialog').modal('show')
-
-    jQuery('#addShipDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
-    })
   }
 
   addShipButtonClicked () {
@@ -335,8 +345,10 @@ class RemoveShipDialog {
     jQuery('#removeShipDialog').modal('show')
 
 
-    jQuery('#removeShipDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
+    jQuery('#removeShipDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('removeShipDialog')) {
+        document.body.removeChild(document.getElementById('removeShipDialog'))
+      }
     })
   }
 
