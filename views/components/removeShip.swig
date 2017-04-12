@@ -9,7 +9,7 @@
         <div class="modal-body">
           <div class="alert alert-danger" role="alert">
             <b>Are you sure you want to delete this ship?</b><br>
-            <p>You will need an administrator in order to add it back with the same registration</p>
+            <p>You will need an administrator in order to add it back with the same registration. If you are just looking to change the name or type of ship please use the edit function.</p>
           </div>
         </div>
         <div class="modal-footer">
