@@ -10,6 +10,7 @@ const registerNicknameAuthTemplate = document.getElementById('registerNicknameAu
 const removeNicknameDialogTemplate = document.getElementById('removeNicknameDialogTemplate')
 const addShipDialogTemplate = document.getElementById('addShipDialogTemplate')
 const removeShipDialogTemplate = document.getElementById('removeShipDialogTemplate')
+const editShipDialogTemplate = document.getElementById('editShipDialogTemplate')
 
 const shipTypes = [
   'Adder',
@@ -42,7 +43,7 @@ const shipTypes = [
   'Taipan Fighter',
   'Type-6 Transporter',
   'Type-7 Transporter',
-  'Type 9 Heavy',
+  'Type-9 Heavy',
   'Viper MkIII',
   'Viper MkIV',
   'Vulture'
@@ -63,6 +64,11 @@ class Profile {
       ratDeleteButtons[ratDeleteButton].addEventListener('click', this.showRemoveNicknameDialog.bind(this), false)
     }
 
+    let shipEditButtons = document.querySelectorAll('.ship-list .edit')
+    for (let shipEditButton = 0; shipEditButton < shipEditButtons.length; shipEditButton += 1) {
+      shipEditButtons[shipEditButton].addEventListener('click', this.showEditShipDialog.bind(this), false)
+    }
+
     let shipDeleteButtons = document.querySelectorAll('.ship-list .delete')
     for (let shipDeleteButton = 0; shipDeleteButton < shipDeleteButtons.length; shipDeleteButton += 1) {
       shipDeleteButtons[shipDeleteButton].addEventListener('click', this.showRemoveShipDialog.bind(this), false)
@@ -79,6 +85,10 @@ class Profile {
 
   showAddShipDialog () {
     new ShipDialog()
+  }
+
+  showEditShipDialog (event) {
+    new EditShipDialog(event.currentTarget.getAttribute('data-ship'))
   }
 
   showRemoveShipDialog (event) {
@@ -105,8 +115,11 @@ class NicknameDialog {
 
     jQuery('#addNicknameDialog').modal('show')
 
-    jQuery('#addNicknameDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
+    jQuery('#addNicknameDialog').on('hidden.bs.modal', function () {
+
+      while (document.getElementById('addNicknameDialog')) {
+        document.body.removeChild(document.getElementById('addNicknameDialog'))
+      }
     })
   }
 
@@ -179,6 +192,8 @@ class NicknameDialog {
       nickname: this.nickname,
       password: passwordField.value
     }))
+
+
   }
 
   registerNicknameButtonClicked () {
@@ -221,8 +236,10 @@ class RemoveNicknameDialog {
     jQuery('#removeNicknameDialog').modal('show')
 
 
-    jQuery('#removeNicknameDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
+    jQuery('#removeNicknameDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('removeNicknameDialog')) {
+        document.body.removeChild(document.getElementById('removeNicknameDialog'))
+      }
     })
   }
 
@@ -253,6 +270,15 @@ class ShipDialog {
       option.textContent = shipType
       shipTypeField.appendChild(option)
     }
+
+    jQuery('#addShipDialog').modal('show')
+
+    jQuery('#addShipDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('addShipDialog')) {
+        document.body.removeChild(document.getElementById('addShipDialog'))
+      }
+    })
+
     shipTypeField.selectedIndex = 0
 
     let shipRatGroup = this.dialog.querySelector('#shipRatGroup')
@@ -287,12 +313,6 @@ class ShipDialog {
     }
 
     request.send()
-
-    jQuery('#addShipDialog').modal('show')
-
-    jQuery('#addShipDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
-    })
   }
 
   addShipButtonClicked () {
@@ -322,6 +342,66 @@ class ShipDialog {
   }
 }
 
+class EditShipDialog {
+  constructor (shipId) {
+    this.shipId = shipId
+    let dialog = editShipDialogTemplate.content.cloneNode(true)
+    document.body.appendChild(dialog)
+    this.dialog = document.getElementById('editShipDialog')
+
+    this.editButton = this.dialog.querySelector('#editShipButton')
+    this.editButton.addEventListener('click', this.editShipButtonClicked.bind(this), false)
+    let shipTypeField = this.dialog.querySelector('#shipTypeField')
+    let shipNameField = this.dialog.querySelector('#shipNameField')
+    for (let shipType of shipTypes) {
+      let option = document.createElement('option')
+      option.value = shipType
+      option.textContent = shipType
+      shipTypeField.appendChild(option)
+    }
+
+    jQuery('#editShipDialog').modal('show')
+
+    jQuery('#editShipDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('editShipDialog')) {
+        document.body.removeChild(document.getElementById('editShipDialog'))
+      }
+    })
+
+    let request = new XMLHttpRequest()
+    request.open('GET', '/profile', true)
+    request.onload = () => {
+      let response = JSON.parse(request.responseText)
+      for (let rat of response.data.rats) {
+        for (let ship of rat.ships) {
+          if (ship.id === shipId) {
+            shipTypeField.selectedIndex = shipTypes.indexOf(ship.shipType)
+            shipNameField.value = ship.name
+          }
+        }
+      }
+    }
+    request.send()
+  }
+
+  editShipButtonClicked () {
+    let shipNameField = this.dialog.querySelector('#shipNameField')
+    let shipTypeField = this.dialog.querySelector('#shipTypeField')
+
+    let request = new XMLHttpRequest()
+    request.open('PUT', '/ships/' + this.shipId, true)
+    request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+    request.onload = () => {
+      document.location.reload()
+    }
+
+    request.send(JSON.stringify({
+      name: shipNameField.value,
+      shipType: shipTypeField.options[shipTypeField.selectedIndex].value
+    }))
+  }
+}
+
 class RemoveShipDialog {
   constructor (ship) {
     let dialog = removeShipDialogTemplate.content.cloneNode(true)
@@ -335,8 +415,10 @@ class RemoveShipDialog {
     jQuery('#removeShipDialog').modal('show')
 
 
-    jQuery('#removeShipDialog').on('hidden', function () {
-      document.body.removeChild(dialog)
+    jQuery('#removeShipDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('removeShipDialog')) {
+        document.body.removeChild(document.getElementById('removeShipDialog'))
+      }
     })
   }
 

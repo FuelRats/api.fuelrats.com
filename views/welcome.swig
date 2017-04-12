@@ -7,6 +7,7 @@
 {% include 'components/addNickname.swig' %}
 {% include 'components/removeNickname.swig' %}
 {% include 'components/addShip.swig' %}
+{% include 'components/editShip.swig' %}
 {% include 'components/removeShip.swig' %}
 {% endblock %}
 
@@ -95,6 +96,7 @@
                     <span class="label label-pill label-default">FR{{ ship.shipId|padShipId() }}</span>
                   </a>
                   <img class="delete" data-ship="{{ ship.id }}" src="svg/delete.svg"></img>
+                  <img class="edit" data-ship="{{ ship.id }}" src="svg/edit.svg"></img>
                 </li>
                 {% endfor %}
               {% endfor %}

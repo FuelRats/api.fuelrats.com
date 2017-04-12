@@ -13,6 +13,7 @@ body {
   margin: 0 !important;
 }
 
+.ship-list .edit,
 .ship-list .delete,
 .rat-list .delete {
   float: right;
@@ -22,6 +23,7 @@ body {
   cursor: pointer;
 }
 
+.ship-list .nav-item:hover .edit,
 .ship-list .nav-item:hover .delete,
 .rat-list .nav-item:hover .delete {
   visibility: visible;
