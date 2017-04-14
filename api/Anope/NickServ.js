@@ -12,7 +12,7 @@ class NickServ {
           reject(error)
         } else {
           winston.info(data)
-          if (data.result === 'Success' && data.account != null) {
+          if (data.result === 'Success' && data.account !== null) {
             resolve(data.account)
           } else {
             reject(data)
