@@ -34,6 +34,9 @@ class Controller {
 
         let rats = ratInstances.map(function (ratInstance) {
           let rat = ratInstance.toJSON()
+          if (rat.CMDRname === 'N/A') {
+            return null
+          }
 
           if (rat.user && (rat.user.group === 'overseer' || rat.user.group === 'moderator')) {
             overseers.push(rat)

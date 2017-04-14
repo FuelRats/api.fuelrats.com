@@ -50,6 +50,9 @@ class Statistics {
           order: [[db.fn('COUNT', 'Rescue.id'), 'DESC']]
         }).then(function (rats) {
           rats = rats.map(function (rat) {
+            if (rat.CMDRname === 'N/A') {
+              return null
+            }
             let pips = Math.floor(rat.rescueCount / 100)
             rat.pips = pips > 4 ? 4 : pips
             return rat
