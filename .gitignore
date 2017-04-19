@@ -33,6 +33,7 @@ dist/
 # Logs
 logs
 *.log
+.*logs
 
 # Runtime data
 pids
@@ -116,3 +117,11 @@ views/docs.hbs
 .eslintrc.json
 
 static/style.min.css
+.idea/
+2017-03-18.logs
+2017-03-19.logs
+2017-03-31.logs
+2017-04-11.logs
+2017-04-12.logs
+js/
+static/fonts/

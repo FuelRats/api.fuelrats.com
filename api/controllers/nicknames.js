@@ -72,17 +72,9 @@ class Controller {
             }).then(function (user) {
               HostServ.updateVirtualHost(user).then(function () {
                 resolve({ meta: {}, data: data.nickname })
-              }).catch(function (error) {
-                reject({ meta: {}, error: Errors.throw('server_error', error) })
               })
-            }).catch(function (error) {
-              reject({ meta: {}, error: Errors.throw('server_error', error) })
             })
-          }).catch(function (error) {
-            reject({ meta: {}, error: Errors.throw('server_error', error) })
           })
-        }).catch(function (error) {
-          reject({ meta: {}, error: Errors.throw('server_error', error) })
         })
       }).catch(function (error) {
         reject({ meta: {}, error: Errors.throw('server_error', error) })

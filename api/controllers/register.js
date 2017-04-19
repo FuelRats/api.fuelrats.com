@@ -43,6 +43,10 @@ exports.post = function (request, response, next) {
       return
     }
 
+    if (CMDRname.indexOf('CMDR') !== -1) {
+      reject(Errors.throw('invalid_parameter', 'CMDRname'))
+    }
+
     User.findOne({ where: {
       email: { $iLike: email }
     }}).then(function (user) {
