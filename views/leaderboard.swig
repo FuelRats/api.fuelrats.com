@@ -10,6 +10,12 @@
 <div class="container-fluid">
   <h1>Leaderboard</h1>
   <div class="row">
+    <div id="rescues-by-date-container" class="">
+      <div class="card-header">
+        Rescues over time
+      </div>
+      <svg id="rescues-by-date"></svg>
+    </div>
     <div id="leaderboard-container" class="col-md-6">
       <div class="card-header">
       </div>
@@ -68,12 +74,6 @@
                 </div>
             </div>
           </div>
-        </div>
-        <div id="rescues-by-date-container" class="col-md-12">
-          <div class="card-header">
-            Rescues over time
-          </div>
-          <svg id="rescues-by-date"></svg>
         </div>
       </div>
       <div class="row">
