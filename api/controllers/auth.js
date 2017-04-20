@@ -103,6 +103,29 @@ exports.isAuthenticated = function (isUserFacing) {
       req.session.returnTo = null
       return next()
     } else {
+      if (req.query.bearer) {
+        bearerAuthenticate(req.query.bearer, function (error, user) {
+          if (error) {
+            res.model.errors.push(error)
+            res.status = error.code
+            return next(error)
+          }
+
+          if (user) {
+            req.user = user
+            next()
+          } else {
+            let error = Permission.authenticationError()
+            res.model.errors.push(error)
+            res.status(error.code)
+
+            return next(error)
+          }
+        })
+        delete req.query.bearer
+        return
+      }
+
       passport.authenticate('bearer', { session : false }, function (error, user) {
         if (!user) {
           if (!isUserFacing) {
