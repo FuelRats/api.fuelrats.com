@@ -350,7 +350,7 @@ router.get('/profile', auth.isAuthenticated(true), profile.get)
 router.get('/roster', roster.get)
 router.get('/statistics', statistics.get)
 
-router.get('/rescues/view/:id', auth.isAuthenticated(false), rescueAdmin.viewRescue)
+router.get('/rescues/view/:id', auth.isAuthenticated(true), rescueAdmin.viewRescue)
 router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
 
 router.route('/oauth2/authorize')
