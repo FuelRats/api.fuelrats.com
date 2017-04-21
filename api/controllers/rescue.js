@@ -10,6 +10,7 @@ let API = require('../classes/API')
 let Errors = require('../errors')
 let Permission = require('../permission')
 let BotServ = require('../Anope/BotServ')
+let Statistics = require('../classes/Statistics')
 
 class Controller {
   static read (query) {
@@ -170,6 +171,15 @@ class Controller {
             }
 
             if (Object.keys(data).length > 0) {
+              if (data.open === 'false') {
+                Statistics.getOverviewStatistics().then(function (overviewInstance) {
+                  let overview = overviewInstance[0].toJSON()
+
+                  if ((overview.successCount % 1000) === 0) {
+                    BotServ.say('#ratchat', `THIS IS SUCCESSFUL RESCUE #${overview.rescueCount}!`)
+                  }
+                })
+              }
               updates.push(Rescue.update(data, {
                 where: { id: rescue.id }
               }))
