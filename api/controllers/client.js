@@ -5,6 +5,7 @@ let Permission = require('../permission')
 let Errors = require('../errors')
 let crypto = require('crypto')
 let bcrypt = require('bcrypt')
+let BotServ = require('../Anope/BotServ')
 
 class Controller {
   static read (data, connection, query) {
@@ -67,6 +68,8 @@ class Controller {
             let client = convertClientToAPIResult(clientInstance)
             client.secret = secret
 
+
+            BotServ.say('#rattech', `[API] OAuth Client Registered by ${connection.user.email}: "${client.name}" (${client.id})`)
             resolve({
               data: client,
               meta: {}
