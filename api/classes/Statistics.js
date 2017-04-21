@@ -10,7 +10,12 @@ class Statistics {
   static getOverviewStatistics () {
     return Rescue.findAll({
       where: {
-        open: false
+        open: false,
+        data: {
+          markedForDeletion: {
+            marked: false
+          }
+        }
       },
       attributes: [
         [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
