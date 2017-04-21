@@ -191,7 +191,7 @@ class Controller {
                   action: 'rescue:updated'
                 }, rescue)
 
-                if (query.editForm && rescue.open === false) {
+                if (connection.editForm && rescue.open === false) {
                   BotServ.say('#ratchat', `[API] Paperwork for rescue ${rescue.id} of ${rescue.client} in ${rescue.system} has been completed by ${getCMDRname(connection.user)}`)
                 }
 
@@ -522,6 +522,7 @@ class HTTP {
 
   static put (request, response, next) {
     response.model.meta.params = _.extend(response.model.meta.params, request.params)
+    request.editForm = request.query.editForm
 
     Controller.update(request.body, request, request.params).then(function (data) {
       response.model.data = data.data
