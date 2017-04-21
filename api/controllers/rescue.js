@@ -192,7 +192,7 @@ class Controller {
                 }, rescue)
 
                 if (connection.editForm && rescue.open === false) {
-                  BotServ.say('#ratchat', `[API] Paperwork for rescue ${rescue.id} of ${rescue.client} in ${rescue.system} has been completed by ${getCMDRname(connection.user)}`)
+                  BotServ.say('#ratchat', `[API] Paperwork for rescue of ${rescue.client} in ${rescue.system} has been completed by ${getNickname(connection.user)}`)
                 }
 
                 resolve({
@@ -607,9 +607,9 @@ function findRescueWithRats (where) {
   })
 }
 
-function getCMDRname (user) {
-  if (user.rats.length > 0) {
-    return user.rats[0].CMDRname
+function getNickname (user) {
+  if (user.nicknames.length > 0) {
+    return user.nicknames[0]
   }
   return user.id
 }
