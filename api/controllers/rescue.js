@@ -10,6 +10,7 @@ let API = require('../classes/API')
 let Errors = require('../errors')
 let Permission = require('../permission')
 let BotServ = require('../Anope/BotServ')
+let Statistics = require('../classes/Statistics')
 
 class Controller {
   static read (query) {
@@ -170,6 +171,15 @@ class Controller {
             }
 
             if (Object.keys(data).length > 0) {
+              if (data.open === 'false') {
+                Statistics.getOverviewStatistics().then(function (overviewInstance) {
+                  let overview = overviewInstance[0].toJSON()
+
+                  if ((overview.successCount % 1000) === 0) {
+                    BotServ.say('#ratchat', `THIS IS SUCCESSFUL RESCUE #${overview.rescueCount}!`)
+                  }
+                })
+              }
               updates.push(Rescue.update(data, {
                 where: { id: rescue.id }
               }))
@@ -192,7 +202,7 @@ class Controller {
                 }, rescue)
 
                 if (connection.editForm && rescue.open === false) {
-                  BotServ.say('#ratchat', `[API] Paperwork for rescue ${rescue.id} of ${rescue.client} in ${rescue.system} has been completed by ${getCMDRname(connection.user)}`)
+                  BotServ.say('#ratchat', `[API] Paperwork for rescue of ${rescue.client} in ${rescue.system} has been completed by ${getNickname(connection.user)}`)
                 }
 
                 resolve({
@@ -607,9 +617,9 @@ function findRescueWithRats (where) {
   })
 }
 
-function getCMDRname (user) {
-  if (user.rats.length > 0) {
-    return user.rats[0].CMDRname
+function getNickname (user) {
+  if (user.nicknames.length > 0) {
+    return user.nicknames[0]
   }
   return user.id
 }
