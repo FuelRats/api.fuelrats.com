@@ -9,6 +9,7 @@ let API = require('../classes/API')
 
 let Errors = require('../errors')
 let Permission = require('../permission')
+let BotServ = require('../Anope/BotServ')
 
 class Controller {
   static read (query) {
@@ -189,6 +190,10 @@ class Controller {
                 connection.websocket.broadcast(allClientsExcludingSelf, {
                   action: 'rescue:updated'
                 }, rescue)
+
+                if (connection.model && rescue.closed === true) {
+                  BotServ.say('#ratchat', `[API] Paperwork for rescue of ${rescue.client} in ${rescue.system} has been completed by ${getCMDRname(connection.user)}`)
+                }
 
                 resolve({
                   data: rescue,
@@ -599,6 +604,13 @@ function findRescueWithRats (where) {
       }
     ]
   })
+}
+
+function getCMDRname (user) {
+  if (user.rats.length > 0) {
+    return user.rats[0].CMDRname
+  }
+  return user.id
 }
 
 module.exports = { Controller, HTTP, getRescuePermissionType, findRescueWithRats, convertRescueToAPIResult }

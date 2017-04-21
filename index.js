@@ -45,6 +45,8 @@ let badge = require('./api/controllers/badge')
 let change_password = require('./api/controllers/change_password')
 let client = require('./api/controllers/client').HTTP
 let docs = require('./api/controllers/docs')
+
+let irc = require('./api/controllers/irc').HTTP
 let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
 let ssologin = require('./api/controllers/ssologin')
@@ -361,6 +363,8 @@ router.route('/oauth2/authorize')
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
+router.post('/irc/message', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.message)
+router.post('/irc/action', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.action)
 
 
 // Register routes
