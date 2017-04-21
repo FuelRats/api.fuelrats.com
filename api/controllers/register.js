@@ -5,6 +5,7 @@ let Rat = require('../db').Rat
 let Errors = require('../errors')
 let bcrypt = require('bcrypt')
 let passport = require('passport')
+let BotServ = require('../Anope/BotServ')
 
 
 exports.get = function (request, response) {
@@ -71,6 +72,7 @@ exports.post = function (request, response, next) {
               }
 
               authenticateAndReturnUser(request, rat, user).then(function (user) {
+                BotServ.say('#rat-ops', `[API] A new user has been registered on fuelrats.com, email: ${user.email}, CMDR: ${rat.CMDRname}`)
                 resolve(user)
               }).catch(function (error) {
                 user.destroy()
@@ -82,6 +84,7 @@ exports.post = function (request, response, next) {
                 platform: platform
               }).then(function (rat) {
                 authenticateAndReturnUser(request, rat, user).then(function (user) {
+                  BotServ.say('#rat-ops', `[API] A new user has been registered on fuelrats.com, email: ${user.email}, CMDR: ${rat.CMDRname}`)
                   resolve(user)
                 }).catch(function (error) {
                   user.destroy()
