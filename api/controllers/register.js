@@ -46,7 +46,7 @@ exports.post = function (request, response, next) {
 
     if (CMDRname.indexOf('CMDR') !== -1) {
       BotServ.say('#rattech', `[API] Attempted registration of name containing 'CMDR' by ${email} has been rejected`)
-      reject(Errors.throw('invalid_parameter', 'CMDRname'))
+      return reject(Errors.throw('invalid_parameter', 'CMDRname'))
     }
 
     User.findOne({ where: {
