@@ -191,8 +191,8 @@ class Controller {
                   action: 'rescue:updated'
                 }, rescue)
 
-                if (connection.model && rescue.closed === true) {
-                  BotServ.say('#ratchat', `[API] Paperwork for rescue of ${rescue.client} in ${rescue.system} has been completed by ${getCMDRname(connection.user)}`)
+                if (connection.model && rescue.open === false) {
+                  BotServ.say('#ratchat', `[API] Paperwork for rescue ${rescue.id} of ${rescue.client} in ${rescue.system} has been completed by ${getCMDRname(connection.user)}`)
                 }
 
                 resolve({
