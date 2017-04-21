@@ -13,7 +13,9 @@ class Statistics {
         open: false,
         data: {
           markedForDeletion: {
-            marked: false
+            marked: {
+              $ne: true
+            }
           }
         }
       },
