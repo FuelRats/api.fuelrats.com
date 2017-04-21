@@ -140,7 +140,7 @@ $(form).bootstrapValidator({
   }
 
   let updateRequest = new XMLHttpRequest()
-  updateRequest.open('PUT', '/rescues/' + id, true)
+  updateRequest.open('PUT', '/rescues/' + id + '?editForm=1', true)
   updateRequest.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
   updateRequest.onload = () => {
     window.location = '/rescues/view/' + id
