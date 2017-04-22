@@ -15,14 +15,14 @@ class Statistics {
         open: false,
         data: {
           markedForDeletion: {
-            $not: {
-              marked: true
+            marked: {
+              $ne: true
             }
           }
         },
-        firstLimpetId: {
-          $ne: notAvailableDummyId
-        }
+        $and: [
+          db.literal(`"firstLimpetId" IS DISTINCT FROM '${notAvailableDummyId}'`)
+        ]
       },
       attributes: [
         [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
@@ -43,9 +43,9 @@ class Statistics {
             attributes: [],
             where: {
               successful: true,
-              firstLimpetId: {
-                $ne: notAvailableDummyId
-              }
+              $and: [
+                db.literal(`"firstLimpetId" IS DISTINCT FROM '${notAvailableDummyId}'`)
+              ]
             },
             required: true
           }, {
@@ -113,9 +113,9 @@ class Statistics {
       Rescue.findAll({
         where: {
           open: false,
-          firstLimpetId: {
-            $ne: notAvailableDummyId
-          }
+          $and: [
+            db.literal(`"firstLimpetId" IS DISTINCT FROM '${notAvailableDummyId}'`)
+          ]
         },
         attributes: [
           [db.fn('date_trunc', 'day', db.col('createdAt')), 'date'],
