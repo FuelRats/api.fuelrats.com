@@ -5,6 +5,8 @@ let User = require('../db').User
 let db = require('../db').db
 let Epic = require('../db').Epic
 
+const notAvailableDummyId = '6ebbe087-7a92-4875-bb68-226db873d3f7'
+
 
 class Statistics {
   static getOverviewStatistics () {
@@ -13,10 +15,13 @@ class Statistics {
         open: false,
         data: {
           markedForDeletion: {
-            marked: {
-              $ne: true
+            $not: {
+              marked: true
             }
           }
+        },
+        firstLimpetId: {
+          $ne: notAvailableDummyId
         }
       },
       attributes: [
@@ -37,7 +42,10 @@ class Statistics {
             as: 'firstLimpet',
             attributes: [],
             where: {
-              successful: true
+              successful: true,
+              firstLimpetId: {
+                $ne: notAvailableDummyId
+              }
             },
             required: true
           }, {
@@ -77,7 +85,11 @@ class Statistics {
   static getPopularSystemsCount () {
     return new Promise(function (resolve, reject) {
       Rescue.findAll({
-        where: {},
+        where: {
+          firstLimpetId: {
+            $ne: notAvailableDummyId
+          }
+        },
         attributes: [
           'system',
           [db.fn('COUNT', 'system'), 'count']
@@ -100,7 +112,10 @@ class Statistics {
     return new Promise(function (resolve, reject) {
       Rescue.findAll({
         where: {
-          open: false
+          open: false,
+          firstLimpetId: {
+            $ne: notAvailableDummyId
+          }
         },
         attributes: [
           [db.fn('date_trunc', 'day', db.col('createdAt')), 'date'],
