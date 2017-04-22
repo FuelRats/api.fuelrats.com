@@ -107,6 +107,15 @@ class Controller {
               let allClientsExcludingSelf = connection.websocket.socket.clients.filter(function (cl) {
                 return cl.clientId !== connection.clientId
               })
+
+              Statistics.getOverviewStatistics().then(function (overviewInstance) {
+                let overview = overviewInstance[0].toJSON()
+
+                if ((overview.successCount % 1000) === 0) {
+                  BotServ.say('#ratchat', `THIS IS RESCUE #${overview.rescueCount}!`)
+                }
+              })
+
               connection.websocket.broadcast(allClientsExcludingSelf, {
                 action: 'rescue:created'
               }, rescue)
@@ -171,15 +180,6 @@ class Controller {
             }
 
             if (Object.keys(data).length > 0) {
-              if (data.open === 'false') {
-                Statistics.getOverviewStatistics().then(function (overviewInstance) {
-                  let overview = overviewInstance[0].toJSON()
-
-                  if ((overview.successCount % 1000) === 0) {
-                    BotServ.say('#ratchat', `THIS IS SUCCESSFUL RESCUE #${overview.rescueCount}!`)
-                  }
-                })
-              }
               updates.push(Rescue.update(data, {
                 where: { id: rescue.id }
               }))
