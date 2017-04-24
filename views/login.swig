@@ -52,7 +52,7 @@
       {% endif %}
 
       <div class="form-group">
-        <label for="CMDRname">CMDR Name / Gamertag</label>
+        <label for="CMDRname">CMDR Name / Gamertag (Without CMDR)</label>
         <div class="dropdown">
           <input type="text" name="CMDRname" id="CMDRname" data-autocomplete="CMDRname" class="form-control">
         </div>
