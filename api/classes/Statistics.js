@@ -18,7 +18,7 @@ class Statistics {
             marked: {
               $ne: true
             }
-          }
+          }""
         },
         $and: [
           db.literal(`"firstLimpetId" IS DISTINCT FROM '${notAvailableDummyId}'`)
