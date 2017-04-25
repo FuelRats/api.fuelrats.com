@@ -2,6 +2,7 @@
 
 const addNicknameButton = document.getElementById('addNicknameButton')
 const addShipButton = document.getElementById('addShipButton')
+const showDecalButton = document.getElementById('showDecalButton')
 
 const addNicknameDialogTemplate = document.getElementById('addNicknameDialogTemplate')
 const addNicknameCheckTemplate = document.getElementById('addNicknameCheckTemplate')
@@ -11,6 +12,8 @@ const removeNicknameDialogTemplate = document.getElementById('removeNicknameDial
 const addShipDialogTemplate = document.getElementById('addShipDialogTemplate')
 const removeShipDialogTemplate = document.getElementById('removeShipDialogTemplate')
 const editShipDialogTemplate = document.getElementById('editShipDialogTemplate')
+const decalDialogTemplate = document.getElementById('decalDialogTemplate')
+const decalCard = document.getElementById('decal')
 
 const shipTypes = [
   'Adder',
@@ -53,6 +56,7 @@ class Profile {
   constructor () {
     addNicknameButton.addEventListener('click', this.showAddNicknameDialog.bind(this), false)
     addShipButton.addEventListener('click', this.showAddShipDialog.bind(this), false)
+    showDecalButton.addEventListener('click', this.showDecalDialog.bind(this), false)
 
     let rescues = document.querySelectorAll('[data-rescue]')
     for (let rescue = 0; rescue < rescues.length; rescue += 1) {
@@ -72,6 +76,22 @@ class Profile {
     let shipDeleteButtons = document.querySelectorAll('.ship-list .delete')
     for (let shipDeleteButton = 0; shipDeleteButton < shipDeleteButtons.length; shipDeleteButton += 1) {
       shipDeleteButtons[shipDeleteButton].addEventListener('click', this.showRemoveShipDialog.bind(this), false)
+    }
+
+    if (decalCard.classList.contains('hidden')) {
+      let request = new XMLHttpRequest()
+      request.open('GET', '/decals/check', true)
+      request.onload = () => {
+        try {
+          let response = JSON.parse(request.responseText)
+          if (response.data.eligble === true) {
+            decalCard.classList.remove('hidden')
+          }
+        } catch (ex) {
+          console.error(ex)
+        }
+      }
+      request.send()
     }
   }
 
@@ -93,6 +113,10 @@ class Profile {
 
   showRemoveShipDialog (event) {
     new RemoveShipDialog(event.currentTarget.getAttribute('data-ship'))
+  }
+
+  showDecalDialog (event) {
+    new DecalDialog()
   }
 
   navigateToRescue (event) {
@@ -430,6 +454,40 @@ class RemoveShipDialog {
     }
 
     request.send()
+  }
+}
+
+class DecalDialog {
+  constructor () {
+    let dialog = decalDialogTemplate.content.cloneNode(true)
+    document.body.appendChild(dialog)
+    new Clipboard('.btn');
+    this.dialog = document.getElementById('decalDialog')
+    this.redeemField = document.getElementById('decal-redeem')
+
+
+    jQuery('#decalDialog').modal('show')
+
+    let request = new XMLHttpRequest()
+    request.open('GET', '/decals/redeem', true)
+    request.onload = () => {
+      try {
+        let response = JSON.parse(request.responseText)
+
+        this.redeemField.value = response.data.code
+      } catch (ex) {
+        console.error(ex)
+      }
+    }
+
+    request.send()
+
+
+    jQuery('#decalDialog').on('hidden.bs.modal', function () {
+      while (document.getElementById('decalDialog')) {
+        document.body.removeChild(document.getElementById('decalDialog'))
+      }
+    })
   }
 }
 
