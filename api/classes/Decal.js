@@ -4,6 +4,7 @@ let Rescue = require('../db').Rescue
 let User = require('../db').User
 let Rat = require('../db').Rat
 let Decals = require('../db').Decal
+let Error = require('../errors')
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const currentDecalDeadline = '2016-05-01 00:00:00+00'
@@ -25,7 +26,7 @@ class Decal {
           if (previouslyEligible && previouslyEligible.rats) {
             for (let rat of previouslyEligible.rats) {
               if (rat.firstLimpet.length > 0) {
-                return reject()
+                return reject(Error.throw('bad_request', 'User qualifies for originally issued decal'))
               }
             }
           }
@@ -38,11 +39,11 @@ class Decal {
                 }
               }
             }
-            reject()
+            reject(Error.throw('bad_request', 'User does not qualify for any decal'))
           })
         })
       }).catch(function (error) {
-        reject (error)
+        reject (Error.throw('server_error', error))
       })
     })
   }
@@ -75,7 +76,7 @@ class Decal {
         }
       }).then(function (availableDecal) {
         if (!availableDecal) {
-          reject()
+          reject('Could not find any available decals')
         }
 
         availableDecal.update({

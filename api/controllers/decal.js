@@ -3,14 +3,6 @@
 let Errors = require('../errors')
 let Decal = require('../classes/Decal')
 
-class Controller {
-  static read (query) {
-    return new Promise(function (resolve, reject) {
-
-    })
-  }
-}
-
 class HTTP {
   static check (request, response, next) {
     Decal.checkEligble(request.user).then(function () {
@@ -19,8 +11,9 @@ class HTTP {
       }
       response.status = 200
       next()
-    }).catch(function () {
-      response.status = 204
+    }).catch(function (error) {
+      response.model.errors.push(error)
+      response.status(error.code)
       next()
     })
   }
@@ -42,5 +35,5 @@ class HTTP {
 
 
 module.exports = {
-  HTTP, Controller
+  HTTP
 }
