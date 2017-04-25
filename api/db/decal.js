@@ -7,7 +7,7 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
-    name: {
+    code: {
       type: DataTypes.STRING,
       allowNull: false,
       require: true,
@@ -15,7 +15,16 @@ module.exports = function (sequelize, DataTypes) {
     type:  {
       type: DataTypes.ENUM('Rescues', 'Promotional', 'Special'),
       allowNull: false
-    }
+    },
+    claimedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      defaultValue: ''
+    },
   }, {
     paranoid: true,
     classMethods: {
