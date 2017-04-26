@@ -6,6 +6,7 @@ let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
 let Epic = require('../db').Epic
 let Ship = require('../db').Ship
+let Decal = require('../db').Decal
 let db = require('../db').db
 
 const labels = {
@@ -72,6 +73,10 @@ exports.get = function (request, response) {
         model: Ship,
         as: 'ships'
       }]
+    }, {
+      required: false,
+      model: Decal,
+      as: 'decal'
     }],
     order: [
       [

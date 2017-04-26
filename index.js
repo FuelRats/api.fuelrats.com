@@ -44,6 +44,7 @@ let auth = require('./api/controllers/auth')
 let badge = require('./api/controllers/badge')
 let change_password = require('./api/controllers/change_password')
 let client = require('./api/controllers/client').HTTP
+let decal = require('./api/controllers/decal').HTTP
 let docs = require('./api/controllers/docs')
 
 let irc = require('./api/controllers/irc').HTTP
@@ -286,6 +287,7 @@ let router = express.Router()
 
 router.get('/badge', badge.get)
 
+
 router.post('/register', register.post)
 
 router.post('/login', passport.authenticate('local'), login.post)
@@ -336,6 +338,10 @@ router.post('/ships', ship.post)
 router.get('/ships/:id', ship.getById)
 router.put('/ships/:id', auth.isAuthenticated(false), ship.put)
 router.delete('/ships/:id', auth.isAuthenticated(false), ship.delete)
+
+
+router.get('/decals/check', auth.isAuthenticated(false), decal.check)
+router.get('/decals/redeem', auth.isAuthenticated(false), decal.redeem)
 
 router.get('/version', version.get)
 
@@ -398,7 +404,7 @@ app.use(function (request, response) {
   } else {
     if (Object.getOwnPropertyNames(response.model.data).length === 0 && response.statusCode === 200) {
       delete response.model.data
-      response.model.errors = Error.throw('not_found', request.path)
+      response.model.errors.push(Error.throw('not_found', request.path))
       response.status(404)
       response.send(response.model)
     } else {

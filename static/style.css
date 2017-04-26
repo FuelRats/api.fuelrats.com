@@ -335,3 +335,19 @@ header + nav,
 header + .container-fluid {
   margin-top: 8rem !important;
 }
+
+.decal-card.hidden {
+  display: none;
+}
+
+.decal-card b {
+  font-size: 110%;
+}
+
+.decal-card button {
+  margin-top: 10px;
+}
+
+.btn.copy img {
+  height: 22px;
+}

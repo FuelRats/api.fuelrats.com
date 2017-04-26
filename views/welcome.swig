@@ -9,6 +9,7 @@
 {% include 'components/addShip.swig' %}
 {% include 'components/editShip.swig' %}
 {% include 'components/removeShip.swig' %}
+    {% include 'components/decal.swig' %}
 {% endblock %}
 
 {% block body %}
@@ -26,6 +27,18 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-3">
+    <div class="card decal-card {% if user.decal === null %} hidden {% endif %}" id="decal">
+        <div class="card-block">
+            <b>You are eligible for an in-game Fuel Rats Decal</b><br/>
+            <button type="button" class="btn btn-primary" id="showDecalButton">
+                {% if user.decal %}
+                Show Decal Code
+                {% else %}
+                Redeem
+                {% endif %}
+            </button>
+        </div>
+    </div>
     <div class="card">
       <div class="card-header">
         <strong>Your CMDRs</strong>
@@ -198,5 +211,6 @@
 
 {% block resources %}
 {% parent %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.0/clipboard.min.js"></script>
 <script src="js/profile.js" type="application/ecmascript"></script>
 {% endblock %}
