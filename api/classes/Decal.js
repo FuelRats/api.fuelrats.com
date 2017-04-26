@@ -54,7 +54,7 @@ class Decal {
         if (decal === true) {
           Decal.redeem(user, 'Rescues').then(function (decal) {
             if (!decal) {
-              return reject()
+              return reject('Could not find decal')
             }
             resolve(decal)
           })
@@ -110,7 +110,7 @@ function checkEligibleForOriginalDecal (user) {
           },
           successful: true
         },
-        limit: 1,
+        limit: rescueParticipationRequirement,
         model: Rescue,
         as: 'firstLimpet'
       }]
