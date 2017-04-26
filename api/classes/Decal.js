@@ -110,7 +110,6 @@ function checkEligibleForOriginalDecal (user) {
           },
           successful: true
         },
-        limit: rescueParticipationRequirement,
         model: Rescue,
         as: 'firstLimpet'
       }]
@@ -135,7 +134,6 @@ function checkEligibleForRescueDecal (user) {
           },
           successful: true
         },
-        limit: rescueParticipationRequirement,
         model: Rescue,
         as: 'firstLimpet'
       }]
