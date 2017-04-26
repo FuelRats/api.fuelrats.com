@@ -9,7 +9,8 @@
         <div class="modal-body">
           <p>
             <b>This is your redeem code for an in-game Fuel Rats decal</b><br>
-            You may copy the redeem code and enter it in the product access section of your <a target="_blank" href="https://www.frontierstore.net/customer/accountpage/index/">Frontier Store Account</a>.
+            You may copy the redeem code and enter it in the product access section of your <a target="_blank" href="https://www.frontierstore.net/customer/accountpage/index/">Frontier Store Account</a>. If you are on Xbox you need to contact
+            <a target="_blank" href="https://support.frontier.co.uk/open.php?topic=173">Frontier support</a>, include your decal code, and ask to exchange it for an Xbox redeem code.
           </p>
           <div class="input-group">
             <input type="text" class="form-control" placeholder="Decal Redeem Code" id="decal-redeem" readonly>
