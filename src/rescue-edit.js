@@ -75,6 +75,7 @@ $(firstLimpetField).tagsinput('input').blur(function () {
   $('.tt-selectable').trigger('click')
 })
 
+/*
 let systemEngine = new Bloodhound({
   remote: {
     url: 'https://www.edsm.net/typeahead/systems/query/%QUERY',
@@ -97,7 +98,7 @@ systemEngine.initialize()
 $(systemField).typeahead(null, {
   name: 'systems',
   source: systemEngine.ttAdapter()
-})
+})*/
 
 $(systemField).change(function () {
   $(form).bootstrapValidator('revalidateField', 'system')
