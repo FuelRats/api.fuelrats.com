@@ -43,7 +43,10 @@ let Rat = require('./api/db').Rat
 let auth = require('./api/controllers/auth')
 let change_password = require('./api/controllers/change_password')
 let client = require('./api/controllers/client').HTTP
+let decal = require('./api/controllers/decal').HTTP
 let docs = require('./api/controllers/docs')
+let irc = require('./api/controllers/irc').HTTP
+let leaderboard = require('./api/controllers/leaderboard')
 let login = require('./api/controllers/login')
 let ssologin = require('./api/controllers/ssologin')
 let logout = require('./api/controllers/logout')
@@ -54,6 +57,10 @@ let rat = require('./api/controllers/rat')
 let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
 let rescue = require('./api/controllers/rescue')
+let roster = require('./api/controllers/roster').HTTP
+let rescue = require('./api/controllers/rescue').HTTP
+let rescueAdmin = require('./api/controllers/rescueAdmin')
+let ship = require('./api/controllers/ship').HTTP
 let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user')
 let version = require('./api/controllers/version')
@@ -132,6 +139,12 @@ swig.setFilter('eliteDate', function (date, args) {
   } else {
     return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
   }
+})
+
+swig.setFilter('padShipId', function (ship) {
+  ship = ship.toString()
+  let pad = '0000'
+  return pad.substring(0, pad.length - ship.length) + ship
 })
 
 swig.setFilter('eliteDateNoFormat', function (date, args) {
@@ -275,6 +288,10 @@ router.delete('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.requir
 
 router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
+router.get('/badge', badge.get)
+
+
+router.post('/register', register.post)
 
 router.post('/login', passport.authenticate('local'), login.post)
 router.post('/ssologin', passport.authenticate('local'), ssologin.loginWithCredentials)
@@ -310,8 +327,9 @@ router.get('/rats/:id', rat.getById)
 router.put('/rats/:id', auth.isAuthenticated(false), rat.put)
 router.delete('/rats/:id', auth.isAuthenticated(false), Permission.required('rat.delete', false), rat.delete)
 
+router.get('/rescues', auth.isAuthenticated(false), rescue.get)
 router.post('/rescues', auth.isAuthenticated(false), rescue.post)
-router.get('/rescues/:id', rescue.getById)
+router.get('/rescues/:id', auth.isAuthenticated(false), rescue.getById)
 router.put('/rescues/:id', auth.isAuthenticated(false), rescue.put)
 router.put('/rescues/:id/addquote', auth.isAuthenticated(false), rescue.addquote)
 router.put('/rescues/:id/assign/:ratId', auth.isAuthenticated(false), rescue.assign)
@@ -337,6 +355,16 @@ router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('cli
 router.post('/clients', auth.isAuthenticated(false), Permission.required('self.client.create', false), client.post)
 router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete', false), client.delete)
 
+router.get('/ships', ship.get)
+router.post('/ships', ship.post)
+router.get('/ships/:id', ship.getById)
+router.put('/ships/:id', auth.isAuthenticated(false), ship.put)
+router.delete('/ships/:id', auth.isAuthenticated(false), ship.delete)
+
+
+router.get('/decals/check', auth.isAuthenticated(false), decal.check)
+router.get('/decals/redeem', auth.isAuthenticated(false), decal.redeem)
+
 router.get('/version', version.get)
 
 router.get('/docs', docs.get)
@@ -354,6 +382,19 @@ router.get('/statistics', statistics.get)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 */
+router.get('/rescues/view/:id', auth.isAuthenticated(true), rescueAdmin.viewRescue)
+router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
+
+router.route('/oauth2/authorize')
+  .get(auth.isAuthenticated(true), oauth2.authorization)
+  .post(auth.isAuthenticated(false), oauth2.decision)
+
+// Create endpoint handlers for oauth2 token
+router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
+
+router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
+router.post('/irc/message', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.message)
+router.post('/irc/action', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.action)
 
 // Register routes
 app.use(express.static(__dirname + '/static'))
@@ -386,7 +427,7 @@ app.use(function (request, response) {
   } else {
     if (Object.getOwnPropertyNames(response.model.data).length === 0 && response.statusCode === 200) {
       delete response.model.data
-      response.model.errors = Error.throw('not_found', request.path)
+      response.model.errors.push(Error.throw('not_found', request.path))
       response.status(404)
       response.send(response.model)
     } else {

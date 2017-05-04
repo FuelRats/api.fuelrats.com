@@ -2,6 +2,7 @@
 
 let winston = require('winston')
 let HostServ = require('../../Anope/HostServ')
+let BotServ = require('../../Anope/BotServ')
 let db = require('../../db').db
 let User = require('../../db').User
 let Rat = require('../../db').Rat
@@ -25,11 +26,13 @@ class Controller {
 
       let email = fields[emailAddressField]
       if (!email) {
+        BotServ.say('#doersofstuff', '[API] Unable to update drilled status or IRC permissions. Email was not provided')
         return reject({ error: Errors.throw('missing_required_field', `'issue.fields.${emailAddressField}`), meta: {} })
       }
 
       let CMDRname = fields[CMDRnameField]
       if (!CMDRname) {
+        BotServ.say('#doersofstuff', '[API] Unable to update IRC permissions. CMDR name was not provided')
         return reject({ error: Errors.throw('missing_required_field', `'issue.fields.${CMDRnameField}`), meta: {} })
       }
 
@@ -50,6 +53,7 @@ class Controller {
             }
           }).then(function () {
             updateUserVhost(user.id)
+            BotServ.say('#doersofstuff', `[API] Drilled status and IRC permissions updated for ${user.email}`)
             resolve({ data: { message: 'Drilled Status Updated' } })
           }).catch(function (error) {
             reject({ error: Errors.throw('server_error', error), meta: {} })
@@ -71,6 +75,7 @@ class Controller {
             ]
           }).then(function (user) {
             if (!user) {
+              BotServ.say('#doersofstuff', 'Unable to update drilled status or IRC permissions, could not find user by either CMDR name or email')
               return reject({ error: Errors.throw('not_found', `'issue.fields.${CMDRnameField}`), meta: {} })
             }
 
@@ -80,6 +85,7 @@ class Controller {
               }
             }).then(function () {
               updateUserVhost(user.id)
+              BotServ.say('#doersofstuff', `[API] Drilled status and IRC permissions updated for ${user.email}`)
               resolve({ data: { message: 'Drilled Status Updated' } })
             }).catch(function (error) {
               reject({ error: Errors.throw('server_error', error), meta: {} })

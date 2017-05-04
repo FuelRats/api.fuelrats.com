@@ -69,14 +69,59 @@ passport.use(new BearerStrategy(bearerAuthenticate))
 
 exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })
 exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
-exports.isAuthenticated = function (req, res, next) {
-  if (req.user) {
-    req.session.returnTo = null
-    return next()
-  } else {
-    if (req.query.bearer) {
-      req.headers.Authorization = 'Bearer ' + req.query.bearer
-      delete req.query.bearer
+exports.isAuthenticated = function (isUserFacing) {
+  return function (req, res, next) {
+    if (req.user) {
+      req.session.returnTo = null
+      return next()
+    } else {
+      if (req.query.bearer) {
+        bearerAuthenticate(req.query.bearer, function (error, user) {
+          if (error) {
+            res.model.errors.push(error)
+            res.status = error.code
+            return next(error)
+          }
+
+          if (user) {
+            req.user = user
+            next()
+          } else {
+            let error = Permission.authenticationError()
+            res.model.errors.push(error)
+            res.status(error.code)
+
+            return next(error)
+          }
+        })
+        delete req.query.bearer
+        return
+      }
+
+      passport.authenticate('bearer', { session : false }, function (error, user) {
+        if (!user) {
+          if (!isUserFacing) {
+            let error = Permission.authenticationError()
+            res.model.errors.push(error)
+            res.status(error.code)
+
+            return next(error)
+          } else {
+            req.session.returnTo = req.originalUrl || req.url
+
+            if (req.session.legacy || isUserFacing) {
+              return res.redirect('/login')
+            } else {
+              res.model.data = req.user
+              res.status(200)
+              next()
+              return
+            }
+          }
+        }
+        req.user = user
+        next()
+      })(req, res, next)
     }
 
     passport.authenticate('bearer', { session : false }, function (error, user, options) {

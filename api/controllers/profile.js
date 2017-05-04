@@ -5,6 +5,8 @@ let User = require('../db').User
 let Rat = require('../db').Rat
 let Rescue = require('../db').Rescue
 let Epic = require('../db').Epic
+let Ship = require('../db').Ship
+let Decal = require('../db').Decal
 let db = require('../db').db
 
 exports.get = function (request, response, next) {
@@ -59,7 +61,15 @@ exports.get = function (request, response, next) {
             'ratId'
           ]
         }]
+      }, {
+        required: false,
+        model: Ship,
+        as: 'ships'
       }]
+    }, {
+      required: false,
+      model: Decal,
+      as: 'decal'
     }],
     order: [
       [
@@ -108,6 +118,7 @@ exports.get = function (request, response, next) {
     response.model.data = user
     next()
   }).catch(function (error) {
+    console.log(error)
     response.model.errors.push(error)
     next()
   })

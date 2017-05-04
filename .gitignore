@@ -33,6 +33,7 @@ dist/
 # Logs
 logs
 *.log
+.*logs
 
 # Runtime data
 pids
@@ -117,3 +118,6 @@ views/docs.hbs
 
 static/style.min.css
 bin/testinfo.json
+.idea/
+js/
+static/fonts/

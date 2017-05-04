@@ -4,6 +4,13 @@ api:
   - 'express:dev'
   - 'watch'
 
+prep:
+  description: Run pre processing tasks
+  tasks:
+  - 'cssmin:production'
+  - 'buildJS'
+  - 'uglify:production'
+
 buildJS:
   tasks:
   - 'babel'

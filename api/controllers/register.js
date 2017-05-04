@@ -5,6 +5,7 @@ let Rat = require('../db').Rat
 let Errors = require('../errors')
 let bcrypt = require('bcrypt')
 let passport = require('passport')
+let BotServ = require('../Anope/BotServ')
 
 
 exports.post = function (request, response, next) {
@@ -39,6 +40,11 @@ exports.post = function (request, response, next) {
       return
     }
 
+    if (CMDRname.indexOf('CMDR') !== -1) {
+      BotServ.say('#rattech', `[API] Attempted registration of name containing "CMDR" by ${email} has been rejected`)
+      return reject(Errors.throw('invalid_parameter', 'CMDRname'))
+    }
+
     User.findOne({ where: {
       email: { $iLike: email }
     }}).then(function (user) {
@@ -63,6 +69,7 @@ exports.post = function (request, response, next) {
               }
 
               authenticateAndReturnUser(request, rat, user).then(function (user) {
+                BotServ.say('#rat-ops', `[API] A new user has been registered on fuelrats.com, email: ${user.email}, CMDR: ${rat.CMDRname}`)
                 resolve(user)
               }).catch(function (error) {
                 user.destroy()
@@ -74,6 +81,7 @@ exports.post = function (request, response, next) {
                 platform: platform
               }).then(function (rat) {
                 authenticateAndReturnUser(request, rat, user).then(function (user) {
+                  BotServ.say('#rat-ops', `[API] A new user has been registered on fuelrats.com, email: ${user.email}, CMDR: ${rat.CMDRname}`)
                   resolve(user)
                 }).catch(function (error) {
                   user.destroy()

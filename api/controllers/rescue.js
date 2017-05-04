@@ -11,6 +11,8 @@ let RescueResult = require('../Results/rescue')
 
 let Errors = require('../errors')
 let Permission = require('../permission')
+let BotServ = require('../Anope/BotServ')
+let Statistics = require('../classes/Statistics')
 
 class Rescues {
   static search (params, connection) {
@@ -43,7 +45,6 @@ class Rescues {
         if (!rescue) {
           return reject(Errors.throw('operation_failed'))
         }
-
         resolve(new RescueResult(rescue, params).toResponse())
       }).catch(function (error) {
         reject(Errors.throw('server_error', error.message))
@@ -235,20 +236,5 @@ class Rescues {
     })
   }
 }
-
-
-const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
-
-function getRescuePermissionType (rescue, user) {
-  if (user) {
-    for (let CMDR of user.CMDRs) {
-      if (rescue.rats.includes(CMDR) || rescue.firstLimpetId === CMDR) {
-        return selfWriteAllowedPermissions
-      }
-    }
-  }
-  return ['rescue.write']
-}
-
 
 module.exports = Rescues

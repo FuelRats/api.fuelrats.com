@@ -72,6 +72,10 @@ class Nicknames {
           }).then(function (user) {
             HostServ.updateVirtualHost(user).then(function () {
               resolve({meta: {}, data: data.nickname})
+            }).then(function (user) {
+              HostServ.updateVirtualHost(user).then(function () {
+                resolve({ meta: {}, data: data.nickname })
+              })
             })
           })
         })

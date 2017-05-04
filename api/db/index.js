@@ -24,6 +24,8 @@ let Token = db.import(__dirname + '/token')
 let Action = db.import(__dirname + '/action')
 let Reset = db.import(__dirname + '/reset')
 let Epic = db.import(__dirname + '/epic')
+let Ship = db.import(__dirname + '/ship')
+let Decal = db.import(__dirname + '/decal')
 
 Rat.belongsTo(User, {
   as: 'user',
@@ -129,6 +131,16 @@ Client.addScope('defaultScope', {
   override: true
 })
 
+Ship.belongsTo(Rat, { as: 'rat' })
+Rat.hasMany(Ship, {
+  foreignKey: 'ratId',
+  as: 'ships'
+})
+Decal.belongsTo(User, { as: 'user' })
+User.hasOne(Decal, {
+  foreignKey: 'userId',
+  as: 'decal'
+})
 
 module.exports = {
   Action: Action,
@@ -141,5 +153,7 @@ module.exports = {
   Token: Token,
   User: User,
   RescueRats: RescueRats,
-  Epic: Epic
+  Epic: Epic,
+  Ship: Ship,
+  Decal: Decal
 }
