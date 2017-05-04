@@ -352,7 +352,7 @@ class ShipDialog {
 
     let shipRatValue = ''
     let ratRadioButtons = document.querySelectorAll('#shipRatGroup input[type="radio"]')
-    for (let ratRadioButton of ratRadioButtons) {
+    for (let ratRadioButton of Array.from(ratRadioButtons)) {
       if (ratRadioButton.checked) {
         shipRatValue = ratRadioButton.value
       }
