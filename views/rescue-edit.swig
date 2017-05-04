@@ -47,7 +47,6 @@
       <label for="system">Where did it happen?</label>
       <small>In what star system did the rescue took place? (put "n/a" if not applicable)</small>
       <input type="text" name="system" id="system" class="form-control" required autofocus>
-      <div class="alert alert-warning" role="alert">Unable to validate as the service we depend on for star system information is unavailable </div>
     </div>
 
     <div class="form-group">
