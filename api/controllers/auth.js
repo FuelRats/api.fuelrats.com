@@ -97,7 +97,7 @@ passport.use(new BearerStrategy(bearerAuthenticate))
 
 exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })
 exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
-exports.isAuthenticated = function (isUserFacing) {
+exports.isAuthenticated = function (isUserFacing, anonymous = false) {
   return function (req, res, next) {
     if (req.user) {
       req.session.returnTo = null
@@ -128,6 +128,9 @@ exports.isAuthenticated = function (isUserFacing) {
 
       passport.authenticate('bearer', { session : false }, function (error, user) {
         if (!user) {
+          if (anonymous) {
+            return next()
+          }
           if (!isUserFacing) {
             let error = Permission.authenticationError()
             res.model.errors.push(error)
