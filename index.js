@@ -299,9 +299,9 @@ router.get('/logout', logout.post)
 router.post('/logout', logout.post)
 
 router.get('/autocomplete', rat.autocomplete)
-router.get('/rats', rat.get)
-router.post('/rats', rat.post)
-router.get('/rats/:id', rat.getById)
+router.get('/rats', auth.isAuthenticated(false, true), rat.get)
+router.post('/rats', auth.isAuthenticated(false, true), rat.post)
+router.get('/rats/:id', auth.isAuthenticated(false, true), rat.getById)
 router.put('/rats/:id', auth.isAuthenticated(false), rat.put)
 router.delete('/rats/:id', auth.isAuthenticated(false), Permission.required('rat.delete', false), rat.delete)
 
@@ -333,9 +333,9 @@ router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('cli
 router.post('/clients', auth.isAuthenticated(false), Permission.required('self.client.create', false), client.post)
 router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete', false), client.delete)
 
-router.get('/ships', ship.get)
-router.post('/ships', ship.post)
-router.get('/ships/:id', ship.getById)
+router.get('/ships', auth.isAuthenticated(false, true), ship.get)
+router.post('/ships', auth.isAuthenticated(false, true), ship.post)
+router.get('/ships/:id', auth.isAuthenticated(false, true), ship.getById)
 router.put('/ships/:id', auth.isAuthenticated(false), ship.put)
 router.delete('/ships/:id', auth.isAuthenticated(false), ship.delete)
 
