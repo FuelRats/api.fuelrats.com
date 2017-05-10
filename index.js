@@ -20,6 +20,8 @@ let winston = require('winston')
 let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
+let Reddit = require('./api/reddit')
+new Reddit()
 
 let npid = require('npid')
 require('winston-daily-rotate-file')

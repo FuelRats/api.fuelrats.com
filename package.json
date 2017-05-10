@@ -52,6 +52,7 @@
     "mongoosastic": "^4.0.2",
     "mongoose": "^4.5.8",
     "node-dev": "^2.7.1",
+    "node-feedparser": "^1.0.1",
     "nodemailer": "^2.2.0",
     "npid": "^0.4.0",
     "oauth2orize": "^1.8.0",
