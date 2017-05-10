@@ -54,8 +54,8 @@ class Reddit {
 
       while (item) {
         if (self.items.indexOf(item['atom:id']['#']) === -1) {
-          BotServ.say('#ratchat', `[Reddit] New Post: "${item.title}" ${item.link}`)
-          BotServ.say('#rat-ops', `[Reddit] New Post: "${item.title}" ${item.link}`)
+          BotServ.say('#ratchat', `${String.fromCharCode(2)}[Reddit] New Post: "${item.title}" ${item.link}`)
+          BotServ.say('#rat-ops', `${String.fromCharCode(2)}[Reddit] New Post: "${item.title}" ${item.link}`)
           self.items.push(item['atom:id']['#'])
         }
         item = stream.read()
