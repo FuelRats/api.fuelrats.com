@@ -7,7 +7,7 @@ let Decals = require('../db').Decal
 let Error = require('../errors')
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
-const currentDecalDeadline = '2017-05-01 00:00:00+00'
+const currentDecalDeadline = '2017-05-17 00:00:00+00'
 const rescueParticipationRequirement = 10
 
 class Decal {
