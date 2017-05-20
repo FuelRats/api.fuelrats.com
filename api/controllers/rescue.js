@@ -112,7 +112,7 @@ class Controller {
                 let overview = overviewInstance[0].toJSON()
 
                 if ((overview.successCount % 1000) === 0) {
-                  BotServ.say('#ratchat', `THIS IS RESCUE #${overview.rescueCount}!`)
+                  BotServ.say('#ratchat', `THIS IS RESCUE #${overview.successCount}!`)
                 }
               })
 
