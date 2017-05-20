@@ -12,6 +12,8 @@ let Permission = require('../permission')
 let BotServ = require('../Anope/BotServ')
 let Statistics = require('../classes/Statistics')
 
+let lastRoundNumberRescue = null
+
 class Controller {
   static read (query) {
     return new Promise(function (resolve, reject) {
@@ -111,7 +113,8 @@ class Controller {
               Statistics.getOverviewStatistics().then(function (overviewInstance) {
                 let overview = overviewInstance[0].toJSON()
 
-                if ((overview.successCount % 1000) === 0) {
+                if ((overview.successCount % 1000) === 0 && overview.successCount !== lastRoundNumberRescue) {
+                  lastRoundNumberRescue = overview.successCount
                   BotServ.say('#ratchat', `THIS IS RESCUE #${overview.successCount}!`)
                 }
               })
