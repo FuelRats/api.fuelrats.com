@@ -1,14 +1,14 @@
 'use strict'
-let User = require('./../db').User
+let Rat = require('./../db').Rat
 let Epic = require('./../db').Epic
-let Query = require('./index')
+import Query from './'
 
 /**
  * A class representing a rat query
  */
-class UserQuery extends Query {
+class RatQuery extends Query {
   /**
-   * Create a sequelize user query from a set of parameters
+   * Create a sequelize rat query from a set of parameters
    * @constructor
    * @param params
    * @param connection
@@ -18,11 +18,10 @@ class UserQuery extends Query {
 
     this._query.attributes = {
       exclude: [
-        'deletedAt',
-        'password'
+        'deletedAt'
       ]
     }
   }
 }
 
-module.exports = UserQuery
+export default RatQuery

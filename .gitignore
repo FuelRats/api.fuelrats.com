@@ -121,3 +121,4 @@ bin/testinfo.json
 .idea/
 js/
 static/fonts/
+lib/*

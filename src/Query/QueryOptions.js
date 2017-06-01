@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * Class representing a Sequelize database field query constructed from an API subquery
  */
@@ -21,4 +19,4 @@ class QueryOptions {
   }
 }
 
-module.exports = QueryOptions
+export default QueryOptions

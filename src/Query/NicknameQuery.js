@@ -1,7 +1,6 @@
-'use strict'
 let db = require('../db').db
 let Rat = require('../db').Rat
-let Query = require('./index')
+import Query from './'
 
 /**
  * A class representing a rat query
@@ -47,4 +46,4 @@ class NicknameQuery extends Query {
   }
 }
 
-module.exports = NicknameQuery
+export default NicknameQuery

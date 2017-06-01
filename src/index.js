@@ -1,73 +1,56 @@
-'use strict'
+import bodyParser from 'body-parser'
+import cors from 'cors'
+import compression from 'compression'
+import cookieParser from 'cookie-parser'
 
-// IMPORT
-// =============================================================================
-
-// Import libraries
-let _ = require('underscore')
-let bodyParser = require('body-parser')
-let cors = require('cors')
-let compression = require('compression')
-let cookieParser = require('cookie-parser')
-let express = require('express')
-let expressSession = require('express-session')
-let fs = require('fs')
-let http = require('http')
-let moment = require('moment')
-let passport = require('passport')
-let Permission = require('./api/permission')
-let winston = require('winston')
-let swig = require('swig')
-let uid = require('uid-safe')
-let ws = require('ws').Server
-let dedelimit = require('dedelimit').dedelimit
-let npid = require('npid')
-require('winston-daily-rotate-file')
+import express from 'express'
+import expressSession from 'express-session'
+import fs from 'fs'
+import http from 'http'
+import passport from 'passport'
+import Permission from './permission'
+import winston from 'winston'
+import uid from 'uid-safe'
+import { Server as ws } from 'ws'
+import { dedelimit } from 'dedelimit'
+import npid from 'npid'
+import 'winston-daily-rotate-file'
 
 // Import config
-let config = require('./config-example')
+let config = require('../config-example')
 
 if (fs.existsSync('./config.json')) {
-  _.extend(config, require('./config'))
+  Object.assign(config, require('../config'))
 }
 
-let API = require('./api/classes/API')
-let Error = require('./api/errors')
+import API from './classes/API'
+import Error from './errors'
 
 // Import models
-let db = require('./api/db').db
-let User = require('./api/db').User
-let Rat = require('./api/db').Rat
+import { db, User, Rat } from './db'
 
 // Import controllers
-let auth = require('./api/controllers/auth')
-let change_password = require('./api/controllers/change_password')
-let client = require('./api/controllers/client').HTTP
-let decal = require('./api/controllers/decal').HTTP
-let docs = require('./api/controllers/docs')
-let irc = require('./api/controllers/irc').HTTP
-let leaderboard = require('./api/controllers/leaderboard')
-let login = require('./api/controllers/login')
-let ssologin = require('./api/controllers/ssologin')
-let logout = require('./api/controllers/logout')
-let news = require('./api/controllers/news')
-let nicknames = require('./api/controllers/nicknames')
-let oauth2 = require('./api/controllers/oauth2')
-let rat = require('./api/controllers/rat')
-let register = require('./api/controllers/register')
-let reset = require('./api/controllers/reset')
-let rescue = require('./api/controllers/rescue')
-let roster = require('./api/controllers/roster').HTTP
-let ship = require('./api/controllers/ship').HTTP
-let statistics = require('./api/controllers/statistics')
-let user = require('./api/controllers/user')
-let version = require('./api/controllers/version')
-let websocket = require('./api/websocket')
-let jiraDrill = require('./api/controllers/jira/drill').HTTP
-let UserResult = require('./api/Results/user')
+import auth from './controllers/auth'
+import leaderboard from './controllers/leaderboard'
+import login from './controllers/login'
+import irc from './controllers/irc'
+import jira from './controllers/jira'
+import ssologin from './controllers/ssologin'
+import logout from './controllers/logout'
+import news from './controllers/news'
+import nicknames from './controllers/nicknames'
+import oauth2 from './controllers/oauth2'
+import rat from './controllers/rat'
+import register from './controllers/register'
+import reset from './controllers/reset'
+import rescue from './controllers/rescue'
+import statistics from './controllers/statistics'
+import user from './controllers/user'
+import version from './controllers/version'
+import websocket from './websocket'
+import UserResult from './Results/user'
 
 db.sync()
-
 
 try {
   npid.remove('api.pid')
@@ -87,10 +70,6 @@ let options = {
 if (process.env.CONTINOUS_INTEGRATION) {
   options.logging = false
 }
-
-
-// Parse command line arguments
-// =============================================================================
 
 if (process.argv) {
   for (let i = 0; i < process.argv.length; i++) {
@@ -126,41 +105,6 @@ let logger = new (winston.Logger)({
 
 let app = express()
 
-app.engine('.swig', swig.renderFile)
-app.set('views', __dirname + '/views')
-app.set('view cache', false)
-
-swig.setFilter('eliteDate', function (date, args) {
-  let context = moment(date)
-  if (moment().diff(context, 'days') < 7) {
-    return context.fromNow()
-  } else {
-    return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
-  }
-})
-
-swig.setFilter('padShipId', function (ship) {
-  ship = ship.toString()
-  let pad = '0000'
-  return pad.substring(0, pad.length - ship.length) + ship
-})
-
-swig.setFilter('eliteDateNoFormat', function (date, args) {
-  let context = moment(date)
-  return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
-})
-
-let platformHumanReadable = {
-  'pc': 'PC',
-  'xb': 'XB1',
-  'ps': 'PS4',
-  'unknown': '?'
-}
-
-swig.setFilter('formatPlatform', function (platformIdentifier, args) {
-  return platformHumanReadable[platformIdentifier]
-})
-
 let sessionOptions = {
   cookie: config.cookie,
   secret: config.secretSauce,
@@ -190,7 +134,7 @@ passport.deserializeUser(function (id, done) {
     let result = new UserResult(user).toResponse()
     done(null, result)
   }).catch(function (error) {
-    done(err)
+    done(error)
   })
 })
 
@@ -206,7 +150,7 @@ app.use(passport.session())
 app.use(function (request, response, next) {
   request.websocket = websocket
 
-  request.body = _.extend(request.query, request.body)
+  request.body = Object.assign(request.query, request.body)
 
   response.model = {
     data: {},
@@ -216,7 +160,7 @@ app.use(function (request, response, next) {
     },
     meta: {
       method: request.method,
-      params: _.extend(request.query, request.body),
+      params: Object.assign(request.query, request.body),
       timestamp: new Date().toISOString()
     }
   }
@@ -230,7 +174,7 @@ app.use(function (request, response, next) {
 // Add logging
 if (options.logging || options.test) {
   app.use(function (request, response, next) {
-    var censoredParams = _.clone(response.model.meta.params)
+    let censoredParams = Object.assign(response.model.meta.params)
     if (censoredParams.password) {
       censoredParams.password = '**********'
     }
@@ -387,7 +331,7 @@ router.route('/oauth2/authorize')
 // Create endpoint handlers for oauth2 token
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
-router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
+router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jira.post)
 router.post('/irc/message', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.message)
 router.post('/irc/action', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.action)
 
