@@ -58,8 +58,6 @@ let register = require('./api/controllers/register')
 let reset = require('./api/controllers/reset')
 let rescue = require('./api/controllers/rescue')
 let roster = require('./api/controllers/roster').HTTP
-let rescue = require('./api/controllers/rescue').HTTP
-let rescueAdmin = require('./api/controllers/rescueAdmin')
 let ship = require('./api/controllers/ship').HTTP
 let statistics = require('./api/controllers/statistics')
 let user = require('./api/controllers/user')
@@ -288,7 +286,6 @@ router.delete('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.requir
 
 router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
 router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
-router.get('/badge', badge.get)
 
 
 router.post('/register', register.post)
@@ -382,8 +379,6 @@ router.get('/statistics', statistics.get)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 */
-router.get('/rescues/view/:id', auth.isAuthenticated(true), rescueAdmin.viewRescue)
-router.get('/rescues/edit/:id', auth.isAuthenticated(true), Permission.required('rescue.edit', true), rescueAdmin.editRescue)
 
 router.route('/oauth2/authorize')
   .get(auth.isAuthenticated(true), oauth2.authorization)

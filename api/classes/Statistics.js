@@ -67,7 +67,7 @@ class Statistics {
             [db.fn('bool_or', db.col('codeRed')), 'codeRed'],
             [db.fn('bool_or', db.col('drilledDispatch')), 'drilledDispatch']
           ],
-          group: [db.literal('CASE WHEN "Rat"."UserId" IS NULL THEN "Rat"."id" ELSE "Rat"."UserId" END')],
+          group: [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END')],
           order: [[db.fn('COUNT', 'Rescue.id'), 'DESC']]
         }).then(function (rats) {
           rats = rats.map(function (rat) {

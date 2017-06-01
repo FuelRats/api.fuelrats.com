@@ -29,9 +29,12 @@ let Decal = db.import(__dirname + '/decal')
 
 Rat.belongsTo(User, {
   as: 'user',
-  foreignKey: 'UserId'
+  foreignKey: 'userId'
 })
-User.hasMany(Rat, { as: 'rats' })
+User.hasMany(Rat, {
+  as: 'rats',
+  foreignKey: 'userId'
+})
 
 
 Rescue.belongsToMany(Rat, {

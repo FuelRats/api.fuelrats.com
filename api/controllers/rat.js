@@ -113,7 +113,7 @@ class Rats {
 const selfWriteAllowedPermissions = ['rat.write.me', 'rat.write']
 
 function getRatPermissionType (rat, user) {
-  if (user === rat.UserId) {
+  if (user === rat.userId) {
     return selfWriteAllowedPermissions
   }
   return ['rescue.write']

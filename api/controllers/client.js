@@ -18,7 +18,7 @@ class Controller {
       delete query.page
 
       if (query.user) {
-        query.UserId = query.user
+        query.userId = query.user
         delete query.user
       }
 

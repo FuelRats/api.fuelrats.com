@@ -62,7 +62,7 @@ exports.post = function (request, response, next) {
             where: { CMDRname: { $iLike: CMDRname } }
           }).then(function (rat) {
             if (rat) {
-              if (rat.UserId !== null) {
+              if (rat.userId !== null) {
                 user.destroy()
                 reject(Errors.throw('already_exists', 'CMDRname'))
                 return
