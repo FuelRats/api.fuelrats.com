@@ -69,6 +69,8 @@ function generateVirtualHost (user) {
   }
 
   if (user.group === 'admin') {
+    return 'admin.fuelrats.com'
+  } else if (user.group === 'netadmin') {
     return 'netadmin.fuelrats.com'
   } else if (user.group === 'moderator') {
     return `${rat}.op.fuelrats.com`
