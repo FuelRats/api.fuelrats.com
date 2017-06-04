@@ -27,6 +27,9 @@ const permissions = {
   ],
   admin: [
     '*'
+  ],
+  netadmin: [
+    '*'
   ]
 }
 
