@@ -18,6 +18,9 @@ class Controller {
   static read (query, connection) {
     return new Promise(function (resolve, reject) {
 
+      if (!connection.user || connection.user.group.indexOf('admin') ===  -1) {
+        delete query.client
+      }
       let dbQuery = API.createQueryFromRequest(query)
 
       dbQuery.include = [
