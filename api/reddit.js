@@ -4,67 +4,80 @@
 let FeedParser = require('feedparser')
 let request = require('request')
 let BotServ = require('./Anope/BotServ')
+let winston = require('winston')
 
 class Reddit {
   constructor () {
-    let self = this
-    let req = request('https://www.reddit.com/r/FuelRats/new.xml')
-    let feedparser = new FeedParser()
-    self.items = []
 
-    req.on('response', function () {
-      let stream = this
+    try {
+      let self = this
+      let req = request('https://www.reddit.com/r/FuelRats/new.xml')
+      let feedparser = new FeedParser()
+      self.items = []
 
-      stream.pipe(feedparser)
-    })
+      req.on('response', function () {
+        let stream = this
 
-    feedparser.on('readable', function () {
-      let stream = this
+        stream.pipe(feedparser)
+      })
 
-      let item = stream.read()
+      feedparser.on('readable', function () {
+        let stream = this
+
+        let item = stream.read()
 
 
-      while (item !== null) {
-        self.items.push(item['atom:id']['#'])
-        item = stream.read()
-      }
+        while (item !== null) {
+          self.items.push(item['atom:id']['#'])
+          item = stream.read()
+        }
 
-    })
+      })
 
-    feedparser.on('end', function () {
-      console.log(self.items)
-      setTimeout(self.check.bind(self), 60000)
-    })
+      feedparser.on('end', function () {
+        console.log(self.items)
+        setTimeout(self.check.bind(self), 60000)
+      })
+    } catch (error) {
+      BotServ.say('#rattech', `[API] Received an error retrieving new posts from Reddit`)
+      winston.error(error)
+    }
   }
 
   check () {
-    let self = this
-    let req = request('https://www.reddit.com/r/FuelRats/new.xml')
-    let feedparser = new FeedParser()
+    try {
 
-    req.on('response', function (res) {
-      let stream = this
-      stream.pipe(feedparser)
-    })
+      let self = this
+      let req = request('https://www.reddit.com/r/FuelRats/new.xml')
+      let feedparser = new FeedParser()
 
-    feedparser.on('readable', function () {
-      let stream = this
+      req.on('response', function (res) {
+        let stream = this
+        stream.pipe(feedparser)
+      })
 
-      let item = stream.read()
+      feedparser.on('readable', function () {
+        let stream = this
 
-      while (item) {
-        if (self.items.indexOf(item['atom:id']['#']) === -1) {
-          BotServ.say('#ratchat', `${String.fromCharCode(2)}[Reddit] New Post: "${item.title}" ${item.link}`)
-          BotServ.say('#rat-ops', `${String.fromCharCode(2)}[Reddit] New Post: "${item.title}" ${item.link}`)
-          self.items.push(item['atom:id']['#'])
+        let item = stream.read()
+
+        while (item) {
+          if (self.items.indexOf(item['atom:id']['#']) === -1) {
+            BotServ.say('#ratchat', `${String.fromCharCode(2)}[Reddit] New Post: "${item.title}" ${item.link}`)
+            BotServ.say('#rat-ops', `${String.fromCharCode(2)}[Reddit] New Post: "${item.title}" ${item.link}`)
+            self.items.push(item['atom:id']['#'])
+          }
+          item = stream.read()
         }
-        item = stream.read()
-      }
-    })
+      })
 
-    feedparser.on('end', function () {
-      setTimeout(self.check.bind(self), 60000)
-    })
+      feedparser.on('end', function () {
+        setTimeout(self.check.bind(self), 60000)
+      })
+    } catch (error) {
+      BotServ.say('#rattech', `[API] Received an error retrieving new posts from Reddit`)
+      winston.error(error)
+    }
   }
 }
 

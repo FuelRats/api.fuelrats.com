@@ -15,9 +15,12 @@ let Statistics = require('../classes/Statistics')
 let lastRoundNumberRescue = null
 
 class Controller {
-  static read (query) {
+  static read (query, connection) {
     return new Promise(function (resolve, reject) {
 
+      if (!connection.user || connection.user.group.indexOf('admin') ===  -1) {
+        delete query.client
+      }
       let dbQuery = API.createQueryFromRequest(query)
 
       dbQuery.include = [
@@ -52,6 +55,11 @@ class Controller {
         foreign keys, not their objects */
         let rescues = result.rows.map(function (rescueInstance) {
           let rescue = convertRescueToAPIResult(rescueInstance)
+            if (!connection.user || connection.user.group.indexOf('admin') ===  -1) {
+              if (rescue.open === false) {
+                rescue.client = null
+              }
+            }
           return rescue
         })
 
