@@ -15,7 +15,7 @@ let Statistics = require('../classes/Statistics')
 let lastRoundNumberRescue = null
 
 class Controller {
-  static read (query) {
+  static read (query, connection) {
     return new Promise(function (resolve, reject) {
 
       let dbQuery = API.createQueryFromRequest(query)
@@ -51,7 +51,12 @@ class Controller {
         /* For backwards compatibility reasons we return only the list of rat
         foreign keys, not their objects */
         let rescues = result.rows.map(function (rescueInstance) {
-          let rescue = convertRescueToAPIResult(rescueInstance)
+          let rescue = convertRescueToAPIResult(rescueInstance
+            if (!connection.user || connection.user.group.indexOf('admin') ===  -1) {
+              if (rescue.open === false) {
+                rescue.client = null
+              }
+            }
           return rescue
         })
 
