@@ -13,7 +13,7 @@
   "license": "MIT",
   "main": "lib/index.js",
   "dependencies": {
-    "babel-core": "^6.24.1",
+    "babel-core": "^6.11.4",
     "babel-loader": "^6.2.4",
     "babel-preset-es2015": "^6.9.0",
     "babel-runtime": "^6.11.6",
@@ -29,7 +29,7 @@
     "d3": "^3.5.17",
     "dedelimit": "0.0.4",
     "download": "^4.4.3",
-    "eslint": "^3.19.0",
+    "eslint": "^3.3.1",
     "express": "^4.13.3",
     "express-force-ssl": "^0.3.0",
     "express-session": "^1.13.0",
@@ -83,7 +83,6 @@
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
-    "babel-plugin-syntax-async-functions": "^6.13.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
     "babel-preset-es2017": "^6.24.1"
   }

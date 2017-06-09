@@ -1,8 +1,0 @@
-{
-  "presets": ["es2017"],
-  "plugins": [
-    "transform-es2015-modules-commonjs",
-    "syntax-async-functions"
-  ],
-  "sourceMaps": true
-}
