@@ -87,4 +87,4 @@ let errors = {
   }
 }
 
-export default errors
+module.exports = errors

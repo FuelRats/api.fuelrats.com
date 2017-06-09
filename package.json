@@ -11,7 +11,7 @@
     "test": "$(npm bin)/grunt test"
   },
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "api/index.js",
   "dependencies": {
     "babel-core": "^6.11.4",
     "babel-loader": "^6.2.4",
@@ -80,10 +80,5 @@
   },
   "engines": {
     "node": "6.4.3"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
-    "babel-preset-es2017": "^6.24.1"
   }
 }

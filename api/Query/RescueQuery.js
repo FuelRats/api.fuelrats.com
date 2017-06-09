@@ -1,5 +1,7 @@
-import Query from './'
-import { Rat, Epic } from '../db'
+'use strict'
+let Rat = require('./../db').Rat
+let Epic = require('./../db').Epic
+let Query = require('./index')
 
 /**
  * A class representing a rescue query
@@ -65,4 +67,4 @@ class RescueQuery extends Query {
   }
 }
 
-export default RescueQuery
+module.exports = RescueQuery

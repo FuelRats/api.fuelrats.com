@@ -1,6 +1,6 @@
 'use strict'
 let db = require('./../db').db
-import Query from './'
+let Query = require('./index')
 
 /**
  * A class representing a rescue query
@@ -49,4 +49,4 @@ class SystemStatisticsQuery extends Query {
   }
 }
 
-export default SystemStatisticsQuery
+module.exports = SystemStatisticsQuery

@@ -1,4 +1,7 @@
-import QueryOptions from './QueryOptions'
+'use strict'
+let Rat = require('./../db/index').Rat
+let Epic = require('./../db/index').Epic
+let QueryOptions = require('./QueryOptions')
 
 const defaultRequestLimit = 25
 const maximumUnauthenticatedLimit = 100
@@ -174,4 +177,4 @@ class Query {
   }
 }
 
-export default Query
+module.exports = Query

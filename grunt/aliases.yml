@@ -7,7 +7,9 @@ api:
 prep:
   description: Run pre processing tasks
   tasks:
+  - 'cssmin:production'
   - 'buildJS'
+  - 'uglify:production'
 
 buildJS:
   tasks:
@@ -23,3 +25,4 @@ test:
   tasks:
   - 'run:createTestUser'
   - 'express:test'
+  - 'mochaTest'
