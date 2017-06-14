@@ -9,232 +9,175 @@ const API = require('../classes/API')
 const RescueQuery = require('../Query/RescueQuery')
 const RescueResult = require('../Results/rescue')
 
-const Errors = require('../errors')
+const Error = require('../errors')
 const Permission = require('../permission')
 const BotServ = require('../Anope/BotServ')
 const Statistics = require('../classes/Statistics')
 
 class Rescues {
-  static search (params, connection) {
-    return new Promise(function (resolve, reject) {
-      Rescue.findAndCountAll(new RescueQuery(params, connection).toSequelize).then(function (result) {
-        resolve(new RescueResult(result, params).toResponse())
-      }).catch(function (error) {
-        reject(Errors.throw('server_error', error.message))
-      })
-    })
+  static async search (params, connection) {
+    let result = await Rescue.findAndCountAll(new RescueQuery(params, connection).toSequelize)
+    return new RescueResult(result, params).toResponse()
   }
 
-  static findById (params, connection) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
-          resolve(new RescueResult(result, params).toResponse())
-        }).catch(function (errors) {
-          reject(Errors.throw('server_error', errors[0].message))
-        })
-      } else {
-        reject(Error.template('missing_required_field', 'id'))
-      }
-    })
+  static async findById (params, connection) {
+    if (params.id) {
+      let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
+      return new RescueResult(result, params).toResponse()
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
   }
 
-  static create (params, connection, data) {
-    return new Promise(function (resolve, reject) {
-      Rescue.create(data).then(function (rescue) {
-        if (!rescue) {
-          return reject(Errors.throw('operation_failed'))
+  static async create (params, connection, data) {
+    let rescue = await Rescue.create(data)
+    if (!rescue) {
+      throw Error.template('operation_failed')
+    }
+    return new RescueResult(rescue, params).toResponse()
+  }
+
+  static async update (params, connection, data) {
+    if (params.id) {
+      let rescue = await Rescue.findOne({
+        where: {
+          id: params.id
         }
-        resolve(new RescueResult(rescue, params).toResponse())
-      }).catch(function (error) {
-        reject(Errors.throw('server_error', error.message))
       })
-    })
-  }
 
-  static update (params, connection, data) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        Rescue.findOne({
+      if (!rescue) {
+        throw Error.template('not_found', params.id)
+      }
+
+      let permission = getRescuePermissionType(rescue, connection.user)
+      if (Permission.require(permission, connection.user, connection.scope)) {
+        let rescue = await Rescue.update(data, {
           where: {
             id: params.id
           }
-        }).then(function (rescue) {
-          if (!rescue) {
-            reject(Error.template('not_found', params.id))
-          }
-
-          let permission = getRescuePermissionType(rescue, connection.user)
-          Permission.require(permission, connection.user, connection.scope).then(function () {
-            Rescue.update(data, {
-              where: {
-                id: params.id
-              }
-            }).then(function (rescue) {
-              if (!rescue) {
-                return reject(Error.template('operation_failed'))
-              }
-
-              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
-                resolve(new RescueResult(result, params).toResponse())
-              }).catch(function (error) {
-                reject(Errors.throw('server_error', error.message))
-              })
-            })
-          }).catch(function (err) {
-            reject(err)
-          })
-        }).catch(function (err) {
-          reject(Error.template('server_error', err))
         })
-      } else {
-        reject(Error.template('missing_required_field', 'id'))
+
+        if (!rescue) {
+          throw Error.template('operation_failed')
+        }
+
+        let result = Rescue.findAndCountAll(new RescueQuery({id: params.id}, connection).toSequelize)
+        return new RescueResult(result, params).toResponse()
       }
-    })
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
   }
 
-  static delete (params) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        Rescue.findOne({
+  static async delete (params) {
+    if (params.id) {
+      let rescue = await Rescue.findOne({
+        where: {
+          id: params.id
+        }
+      })
+
+      if (!rescue) {
+        throw Error.template('not_found', params.id)
+      }
+
+      rescue.destroy()
+      return true
+    }
+  }
+
+  static async assign (params, connection, data) {
+    if (params.id) {
+      let rescue = await Rescue.findOne({
+        where: {
+          id: params.id
+        }
+      })
+
+      if (!rescue) {
+        throw Error.template('not_found', params.id)
+      }
+
+      let permission = getRescuePermissionType(rescue, connection.user)
+      if (Permission.require(permission, connection.user, connection.scope)) {
+        let rats = []
+        for (let rat of data) {
+          rats.push(rescue.addRat(rat))
+        }
+
+        await Promise.all(rats)
+        let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
+        return new RescueResult(result, params).toResponse()
+      }
+    }
+  }
+
+  static async unassign (params, connection, data) {
+    if (params.id) {
+      let rescue = await Rescue.findOne({
+        where: {
+          id: params.id
+        }
+      })
+
+      if (!rescue) {
+        throw Error.template('not_found', params.id)
+      }
+
+      let permission = getRescuePermissionType(rescue, connection.user)
+      if (Permission.require(permission, connection.user, connection.scope)) {
+        let rats = []
+        for (let rat of data) {
+          rats.push(rescue.removeRat(rat))
+        }
+
+        await Promise.all(rats)
+        let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
+        return new RescueResult(result, params).toResponse()
+      }
+    }
+  }
+
+  static async addquote (params, connection, data) {
+    if (params.id) {
+      let rescue = await Rescue.findOne({
+        where: {
+          id: params.id
+        }
+      })
+
+      if (!rescue) {
+        throw Error.template('not_found', params.id)
+      }
+
+      let permission = getRescuePermissionType(rescue, connection.user)
+      if (Permission.require(permission, connection.user, connection.scope)) {
+        await Rescue.update({
+          quotes: rescue.quotes.concat(data)
+        }, {
           where: {
             id: params.id
           }
-        }).then(function (rescue) {
-          if (!rescue) {
-            return reject(Error.template('not_found', params.id))
-          }
-
-          rescue.destroy()
-
-          resolve(null)
-        }).catch(function (err) {
-          reject({ error: Errors.throw('server_error', err), meta: {} })
         })
+
+        let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
+        return new RescueResult(result, params).toResponse()
       }
-    })
+    }
   }
+}
 
-  static assign (params, connection, data) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        Rescue.findOne({
-          where: {
-            id: params.id
-          }
-        }).then(function (rescue) {
-          if (!rescue) {
-            reject(Error.template('not_found', params.id))
-          }
+const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
-          let permission = getRescuePermissionType(rescue, connection.user)
-          Permission.require(permission, connection.user, connection.scope).then(function () {
-            let rats = []
-            for (let rat of data) {
-              rats.push(rescue.addRat(rat))
-            }
-
-            Promise.all(rats).then(function () {
-              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
-                resolve(new RescueResult(result, params).toResponse())
-              }).catch(function (errors) {
-                reject(Errors.throw('server_error', errors[0].message))
-              })
-            }).catch(function (err) {
-              reject(Error.template('server_error', err))
-            })
-          }).catch(function (err) {
-            reject(err)
-          })
-        }).catch(function (err) {
-          reject(Error.template('server_error', err))
-        })
-      } else {
-        reject(Error.template('missing_required_field', 'id'))
+function getRescuePermissionType (rescue, user) {
+  if (user) {
+    for (let CMDR of user.CMDRs) {
+      if (rescue.rats.includes(CMDR) || rescue.firstLimpetId === CMDR) {
+        return selfWriteAllowedPermissions
       }
-    })
+    }
   }
-
-  static unassign (params, connection, data) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        Rescue.findOne({
-          where: {
-            id: params.id
-          }
-        }).then(function (rescue) {
-          if (!rescue) {
-            reject(Error.template('not_found', params.id))
-          }
-
-          let permission = getRescuePermissionType(rescue, connection.user)
-          Permission.require(permission, connection.user, connection.scope).then(function () {
-            let rats = []
-            for (let rat of data) {
-              rats.push(rescue.removeRat(rat))
-            }
-
-            Promise.all(rats).then(function () {
-              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
-                resolve(new RescueResult(result, params).toResponse())
-              }).catch(function (errors) {
-                reject(Errors.throw('server_error', errors[0].message))
-              })
-            }).catch(function (err) {
-              reject(Error.template('server_error', err))
-            })
-          }).catch(function (err) {
-            reject(err)
-          })
-        }).catch(function (err) {
-          reject(Error.template('server_error', err))
-        })
-      } else {
-        reject(Error.template('missing_required_field', 'id'))
-      }
-    })
-  }
-
-  static addquote (params, connection, data) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        Rescue.findOne({
-          where: {
-            id: params.id
-          }
-        }).then(function (rescue) {
-          if (!rescue) {
-            reject(Error.template('not_found', params.id))
-          }
-
-          let permission = getRescuePermissionType(rescue, connection.user)
-          Permission.require(permission, connection.user, connection.scope).then(function () {
-            Rescue.update({
-              quotes: rescue.quotes.concat(data)
-            }, {
-              where: {
-                id: params.id
-              }
-            }).then(function () {
-              Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
-                resolve(new RescueResult(result, params).toResponse())
-              }).catch(function (errors) {
-                reject(Errors.throw('server_error', errors[0].message))
-              })
-            }).catch(function (err) {
-              reject(Error.template('server_error', err))
-            })
-          }).then(function (err) {
-            reject(err)
-          })
-        }).catch(function (err) {
-          reject(Error.template('server_error', err))
-        })
-      } else {
-        reject(Error.template('missing_required_field', 'id'))
-      }
-    })
-  }
+  return ['rescue.write']
 }
 
 module.exports = Rescues

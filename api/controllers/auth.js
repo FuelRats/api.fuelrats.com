@@ -17,186 +17,129 @@ exports.LocalStrategy = new LocalStrategy({
   passwordField: 'password',
   session: false
 },
-function (email, password, done) {
+async function (email, password, done) {
   if (!email || !password) {
     done(null, false, { message: 'Incorrect username/email.' })
   }
 
-  User.findOne({ where: { email: { $iLike: email }}}).then(function (user) {
-    if (!user) {
-      done(null, false, { message: 'Incorrect username/email.' })
-      return
-    }
+  let user = await User.findOne({ where: { email: { $iLike: email }}})
+  if (!user) {
+    done(null, false, { message: 'Incorrect username/email.' })
+    return
+  }
 
-    bcrypt.compare(password, user.password, function (err, res) {
-      if (err) {
-        done(err)
-      } else if (res === false) {
-        done(false)
-      } else {
-        done(null, new UserResult(user).toResponse())
-      }
-    })
-  }).catch(function (err) {
+  try {
+    let result = await bcrypt.compare(password, user.password)
+    if (result === false) {
+      done(false)
+    } else {
+      done(null, new UserResult(user).toResponse())
+    }
+  } catch (err) {
     done(err)
-  })
+  }
 })
 
 passport.use(exports.LocalStrategy)
 
 passport.use('client-basic', new BasicStrategy(
-  function (username, secret, callback) {
-    Client.findById(username).then(function (client) {
-      if (!client) {
-        callback(null, false)
-      }
+  async function (username, secret, callback) {
+    let client = await Client.findById(username)
+    if (!client) {
+      callback(null, false)
+    }
 
-      bcrypt.compare(secret, client.secret, function (err, res) {
-        if (err || res === false) {
-          callback(null, false)
-        } else {
-          callback(null, client)
-        }
-      })
-    }).catch(function (error) {
-      callback(error)
-    })
+    try {
+      let result = await bcrypt.compare(secret, client.secret)
+      if (result === false) {
+        callback(null, false)
+      } else {
+        callback(null, client)
+      }
+    } catch (err) {
+      callback(null, err)
+    }
   }
 ))
 
 
-passport.use(new BearerStrategy(bearerAuthenticate))
+passport.use(new BearerStrategy(async function (token, done) {
+  try {
+    let tokenResult = await bearerAuthenticate(token)
+    done(null, tokenResult)
+  } catch (err) {
+    if (err === false) {
+      done(null, false)
+    } else {
+      done(err)
+    }
+  }
+}))
 
 exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })
 exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
-exports.isAuthenticated = function (isUserFacing) {
-  return function (req, res, next) {
+exports.isAuthenticated = function () {
+  return async function (req, res, next) {
     if (req.user) {
       req.session.returnTo = null
       return next()
     } else {
       if (req.query.bearer) {
-        bearerAuthenticate(req.query.bearer, function (error, user) {
-          if (error) {
-            res.model.errors.push(error)
-            res.status = error.code
-            return next(error)
-          }
+        let authenticated = await bearerAuthenticate(req.query.bearer)
+        if (authenticated.user) {
+          req.user = authenticated.user
+          req.scope = authenticated.scope
+          next()
+        } else {
+          let error = Permission.authenticationError()
+          res.model.errors.push(error)
+          res.status(error.code)
 
-          if (user) {
-            req.user = user
-            next()
-          } else {
-            let error = Permission.authenticationError()
-            res.model.errors.push(error)
-            res.status(error.code)
-
-            return next(error)
-          }
-        })
+          return next(error)
+        }
         delete req.query.bearer
         return
       }
 
-      passport.authenticate('bearer', { session : false }, function (error, user) {
+      passport.authenticate('bearer', { session : false }, function (error, user, options) {
         if (!user) {
-          if (!isUserFacing) {
-            let error = Permission.authenticationError()
-            res.model.errors.push(error)
-            res.status(error.code)
-
-            return next(error)
-          } else {
-            req.session.returnTo = req.originalUrl || req.url
-
-            if (req.session.legacy || isUserFacing) {
-              return res.redirect('/login')
-            } else {
-              res.model.data = req.user
-              res.status(200)
-              next()
-              return
-            }
-          }
+          return next(Permission.authenticationError())
         }
+        req.scope = options.scope
         req.user = user
         next()
       })(req, res, next)
     }
-
-    passport.authenticate('bearer', { session : false }, function (error, user, options) {
-      if (!user) {
-        return next(Permission.authenticationError())
-      }
-      req.scope = options.scope
-      req.user = user
-      next()
-    })(req, res, next)
   }
 }
 
-exports.isJiraAuthenticated = function () {
-  return function (req, res, next) {
-    let bearer = req.query.bearer
-    delete req.query.bearer
-    if (!bearer) {
-      let error = Permission.authenticationError()
-      res.model.errors.push(error)
-      res.status(error.code)
-      return next(error)
-    }
-
-    bearerAuthenticate(bearer, function (error, user) {
-      if (error) {
-        res.model.errors.push(error)
-        res.status = error.code
-        return next(error)
-      }
-
-      if (user) {
-        req.user = user
-        next()
-      } else {
-        let error = Permission.authenticationError()
-        res.model.errors.push(error)
-        res.status(error.code)
-
-        return next(error)
-      }
-    })
+async function bearerAuthenticate (accessToken) {
+  let token = await Token.findOne({ where: { value: accessToken } })
+  if (!token) {
+    throw(false)
   }
-}
-
-function bearerAuthenticate (accessToken, callback) {
-  Token.findOne({ where: { value: accessToken } }).then(function (token) {
-    if (!token) {
-      callback(null, false)
-      return
-    }
-    User.findOne({
-      where: { id: token.userId },
-      attributes: {
-        include: [
-          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-        ],
-        exclude: [
-          'nicknames'
-        ]
-      },
+  let userInstance = await User.findOne({
+    where: { id: token.userId },
+    attributes: {
       include: [
-        {
-          model: Rat,
-          as: 'rats',
-          required: false
-        }
+        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      ],
+      exclude: [
+        'nicknames'
       ]
-    }).then(function (userInstance) {
-      let user = new UserResult(userInstance).toResponse()
-      callback(null, user, { scope: token.scope })
-    }).catch(function (error) {
-      callback(error)
-    })
-  }).catch(function (error) {
-    callback(error)
+    },
+    include: [
+      {
+        model: Rat,
+        as: 'rats',
+        required: false
+      }
+    ]
   })
+
+  let user = new UserResult(userInstance).toResponse()
+  return {
+    user: user,
+    scope: token.scope
+  }
 }

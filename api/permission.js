@@ -112,14 +112,10 @@ class Permission {
    * @returns {Promise}
    */
   static require (permissions, user, scope = null) {
-    return new Promise(function (resolve, reject) {
-      if (Permission.granted(permissions, user, scope)) {
-        resolve()
-      } else {
-        let error = Permission.permissionError(permissions)
-        reject(error)
-      }
-    })
+    if (Permission.granted(permissions, user, scope)) {
+      return true
+    }
+    throw(Permission.permissionError(permissions))
   }
 
   /**
@@ -182,8 +178,8 @@ class Permission {
     }
   }
 
-  static permissionError (permission) {
-    return Errors.throw('no_permission', permission)
+  static permissionError (permissions) {
+    return Errors.throw('no_permission', permissions)
   }
 
   /**
