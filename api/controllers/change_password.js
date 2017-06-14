@@ -1,8 +1,8 @@
 'use strict'
 
-let User = require('../db').User
-let Reset = require('../db').Reset
-let bcrypt = require('bcrypt')
+const User = require('../db').User
+const Reset = require('../db').Reset
+const bcrypt = require('bcrypt')
 
 exports.get = function (request, response) {
   if (!request.query.token) {

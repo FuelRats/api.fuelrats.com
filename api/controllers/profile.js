@@ -1,13 +1,13 @@
 'use strict'
-let moment = require('moment')
-let winston = require('winston')
-let User = require('../db').User
-let Rat = require('../db').Rat
-let Rescue = require('../db').Rescue
-let Epic = require('../db').Epic
-let Ship = require('../db').Ship
-let Decal = require('../db').Decal
-let db = require('../db').db
+const moment = require('moment')
+const winston = require('winston')
+const User = require('../db').User
+const Rat = require('../db').Rat
+const Rescue = require('../db').Rescue
+const Epic = require('../db').Epic
+const Ship = require('../db').Ship
+const Decal = require('../db').Decal
+const db = require('../db').db
 
 exports.get = function (request, response, next) {
   User.findOne({

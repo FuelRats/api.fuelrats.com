@@ -1,9 +1,9 @@
 'use strict'
 
-let Errors = require('../errors')
-let https = require('https')
-let config = require('../../config')
-let xml = require('xml2js')
+const Errors = require('../errors')
+const https = require('https')
+const config = require('../../config')
+const xml = require('xml2js')
 
 
 const jiraauth = new Buffer(`${config.jira.username}:${config.jira.password}`).toString('base64')

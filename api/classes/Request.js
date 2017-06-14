@@ -1,7 +1,7 @@
 'use strict'
-let config = require('../../config.json')
-let https = require('https')
-let http = require('http')
+const config = require('../../config.json')
+const https = require('https')
+const http = require('http')
 
 /**
  * Symbol representing HTTP GET method requests

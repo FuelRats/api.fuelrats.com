@@ -1,6 +1,6 @@
 'use strict'
 
-let Result = require('./index')
+const Result = require('./index')
 
 /**
  * Class for generating an API IRC nickname result from an anope resul

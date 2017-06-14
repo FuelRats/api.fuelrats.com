@@ -1,20 +1,20 @@
 'use strict'
-let winston = require('winston')
-let Error = require('./errors')
+const winston = require('winston')
+const Error = require('./errors')
 
 // Import controllers
-let Token = require('./db').Token
-let User = require('./db').User
-let Rat = require('./db').Rat
-let db = require('./db').db
-let rat = require('./controllers/rat').Controller
-let Permission = require('./permission')
-let rescue = require('./controllers/rescue').Controller
-let stream = require('./controllers/stream')
-let client = require('./controllers/client').Controller
-let user = require('./controllers/user').Controller
-let nickname = require('./controllers/nicknames').Controller
-let _ = require('underscore')
+const Token = require('./db').Token
+const User = require('./db').User
+const Rat = require('./db').Rat
+const db = require('./db').db
+const rat = require('./controllers/rat').Controller
+const Permission = require('./permission')
+const rescue = require('./controllers/rescue').Controller
+const stream = require('./controllers/stream')
+const client = require('./controllers/client').Controller
+const user = require('./controllers/user').Controller
+const nickname = require('./controllers/nicknames').Controller
+const _ = require('underscore')
 /*
 let controllers = {
   rats: {

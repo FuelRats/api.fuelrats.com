@@ -1,18 +1,18 @@
 'use strict'
 
-let _ = require('underscore')
-let db = require('../db').db
-let Rat = require('../db').Rat
-let Rescue = require('../db').Rescue
-let Epic = require('../db').Epic
-let API = require('../classes/API')
-let RescueQuery = require('../Query/RescueQuery')
-let RescueResult = require('../Results/rescue')
+const _ = require('underscore')
+const db = require('../db').db
+const Rat = require('../db').Rat
+const Rescue = require('../db').Rescue
+const Epic = require('../db').Epic
+const API = require('../classes/API')
+const RescueQuery = require('../Query/RescueQuery')
+const RescueResult = require('../Results/rescue')
 
-let Errors = require('../errors')
-let Permission = require('../permission')
-let BotServ = require('../Anope/BotServ')
-let Statistics = require('../classes/Statistics')
+const Errors = require('../errors')
+const Permission = require('../permission')
+const BotServ = require('../Anope/BotServ')
+const Statistics = require('../classes/Statistics')
 
 class Rescues {
   static search (params, connection) {

@@ -1,10 +1,10 @@
 'use strict'
 
-let nodemailer = require('nodemailer')
+const nodemailer = require('nodemailer')
 
-let User = require('../db').User
-let Reset = require('../db').Reset
-let crypto = require('crypto')
+const User = require('../db').User
+const Reset = require('../db').Reset
+const crypto = require('crypto')
 
 
 exports.get = function (request, response) {

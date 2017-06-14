@@ -1,8 +1,8 @@
 'use strict'
-let _ = require('underscore')
-let Errors = require('../errors')
-let User = require('../db').User
-let Rat = require('../db').Rat
+const _ = require('underscore')
+const Errors = require('../errors')
+const User = require('../db').User
+const Rat = require('../db').Rat
 
 
 class Controller {

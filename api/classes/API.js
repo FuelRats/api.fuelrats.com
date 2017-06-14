@@ -1,6 +1,6 @@
 'use strict'
-let TrafficControl = require('../TrafficControl')
-let Error = require('../errors')
+const TrafficControl = require('../TrafficControl')
+const Error = require('../errors')
 let traffic = new TrafficControl()
 
 class API {

@@ -1,11 +1,11 @@
 'use strict'
 
-let Client = require('../db').Client
-let Permission = require('../permission')
-let Errors = require('../errors')
-let crypto = require('crypto')
-let bcrypt = require('bcrypt')
-let BotServ = require('../Anope/BotServ')
+const Client = require('../db').Client
+const Permission = require('../permission')
+const Errors = require('../errors')
+const crypto = require('crypto')
+const bcrypt = require('bcrypt')
+const BotServ = require('../Anope/BotServ')
 
 class Controller {
   static read (data, connection, query) {

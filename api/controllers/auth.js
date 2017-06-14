@@ -1,16 +1,16 @@
 'use strict'
-let passport = require('passport')
-let BasicStrategy = require('passport-http').BasicStrategy
-let BearerStrategy = require('passport-http-bearer').Strategy
-let LocalStrategy = require('passport-local').Strategy
-let User = require('../db').User
-let Rat = require('../db').Rat
-let db = require('../db').db
-let Token = require('../db').Token
-let Client = require('../db').Client
-let bcrypt = require('bcrypt')
-let Permission = require('../permission')
-let UserResult = require('../Results/user')
+const passport = require('passport')
+const BasicStrategy = require('passport-http').BasicStrategy
+const BearerStrategy = require('passport-http-bearer').Strategy
+const LocalStrategy = require('passport-local').Strategy
+const User = require('../db').User
+const Rat = require('../db').Rat
+const db = require('../db').db
+const Token = require('../db').Token
+const Client = require('../db').Client
+const bcrypt = require('bcrypt')
+const Permission = require('../permission')
+const UserResult = require('../Results/user')
 
 exports.LocalStrategy = new LocalStrategy({
   usernameField: 'email',

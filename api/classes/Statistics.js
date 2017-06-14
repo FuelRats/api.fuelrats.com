@@ -1,9 +1,9 @@
 'use strict'
-let Rescue = require('../db').Rescue
-let Rat = require('../db').Rat
-let User = require('../db').User
-let db = require('../db').db
-let Epic = require('../db').Epic
+const Rescue = require('../db').Rescue
+const Rat = require('../db').Rat
+const User = require('../db').User
+const db = require('../db').db
+const Epic = require('../db').Epic
 
 const notAvailableDummyId = '6ebbe087-7a92-4875-bb68-226db873d3f7'
 

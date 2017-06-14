@@ -1,11 +1,11 @@
 'use strict'
 
-let User = require('../db').User
-let Rat = require('../db').Rat
-let Errors = require('../errors')
-let bcrypt = require('bcrypt')
-let passport = require('passport')
-let BotServ = require('../Anope/BotServ')
+const User = require('../db').User
+const Rat = require('../db').Rat
+const Errors = require('../errors')
+const bcrypt = require('bcrypt')
+const passport = require('passport')
+const BotServ = require('../Anope/BotServ')
 
 
 exports.post = function (request, response, next) {

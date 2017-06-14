@@ -1,7 +1,7 @@
 'use strict'
-let winston = require('winston')
+const winston = require('winston')
 
-let client = require('./index').client
+const client = require('./index').client
 
 class NickServ {
   static identify (nickname, password) {

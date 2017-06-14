@@ -1,10 +1,10 @@
 'use strict'
 
-let Rescue = require('../db').Rescue
-let User = require('../db').User
-let Rat = require('../db').Rat
-let Decals = require('../db').Decal
-let Error = require('../errors')
+const Rescue = require('../db').Rescue
+const User = require('../db').User
+const Rat = require('../db').Rat
+const Decals = require('../db').Decal
+const Error = require('../errors')
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const currentDecalDeadline = '2017-05-01 00:00:00+00'

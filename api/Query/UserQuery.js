@@ -1,7 +1,7 @@
 'use strict'
-let User = require('./../db').User
-let Epic = require('./../db').Epic
-let Query = require('./index')
+const User = require('./../db').User
+const Epic = require('./../db').Epic
+const Query = require('./index')
 
 /**
  * A class representing a rat query

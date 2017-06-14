@@ -17,7 +17,6 @@ let moment = require('moment')
 let passport = require('passport')
 let Permission = require('./api/permission')
 let winston = require('winston')
-let swig = require('swig')
 let uid = require('uid-safe')
 let ws = require('ws').Server
 let dedelimit = require('dedelimit').dedelimit
@@ -126,40 +125,6 @@ let logger = new (winston.Logger)({
 
 let app = express()
 
-app.engine('.swig', swig.renderFile)
-app.set('views', __dirname + '/views')
-app.set('view cache', false)
-
-swig.setFilter('eliteDate', function (date, args) {
-  let context = moment(date)
-  if (moment().diff(context, 'days') < 7) {
-    return context.fromNow()
-  } else {
-    return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
-  }
-})
-
-swig.setFilter('padShipId', function (ship) {
-  ship = ship.toString()
-  let pad = '0000'
-  return pad.substring(0, pad.length - ship.length) + ship
-})
-
-swig.setFilter('eliteDateNoFormat', function (date, args) {
-  let context = moment(date)
-  return context.add(1286, 'years').format(args || 'YYYY-MM-DD HH:mm')
-})
-
-let platformHumanReadable = {
-  'pc': 'PC',
-  'xb': 'XB1',
-  'ps': 'PS4',
-  'unknown': '?'
-}
-
-swig.setFilter('formatPlatform', function (platformIdentifier, args) {
-  return platformHumanReadable[platformIdentifier]
-})
 
 let sessionOptions = {
   cookie: config.cookie,

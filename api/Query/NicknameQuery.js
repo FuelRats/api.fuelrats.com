@@ -1,7 +1,7 @@
 'use strict'
-let db = require('../db').db
-let Rat = require('../db').Rat
-let Query = require('./index')
+const db = require('../db').db
+const Rat = require('../db').Rat
+const Query = require('./index')
 
 /**
  * A class representing a rat query

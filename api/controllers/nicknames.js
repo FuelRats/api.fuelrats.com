@@ -1,16 +1,16 @@
 'use strict'
-let _ = require('underscore')
-let Permission = require('../permission')
-let Errors = require('../errors')
-let User = require('../db').User
-let db = require('../db').db
-let Rat = require('../db').Rat
-let NicknameQuery = require('../Query/NicknameQuery')
-let NicknameInfoResult = require('../Results/nicknameinfo')
-let NicknameResult = require('../Results/nickname')
+const _ = require('underscore')
+const Permission = require('../permission')
+const Errors = require('../errors')
+const User = require('../db').User
+const db = require('../db').db
+const Rat = require('../db').Rat
+const NicknameQuery = require('../Query/NicknameQuery')
+const NicknameInfoResult = require('../Results/nicknameinfo')
+const NicknameResult = require('../Results/nickname')
 
-let NickServ = require('../Anope/NickServ')
-let HostServ = require('../Anope/HostServ')
+const NickServ = require('../Anope/NickServ')
+const HostServ = require('../Anope/HostServ')
 
 
 class Nicknames {

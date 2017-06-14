@@ -1,5 +1,5 @@
 'use strict'
-let Action = require('../db').Action
+const Action = require('../db').Action
 
 
 exports.post = function (request, response, next) {

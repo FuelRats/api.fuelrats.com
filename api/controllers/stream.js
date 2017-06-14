@@ -1,7 +1,7 @@
 'use strict'
 
-let websocket = require('../websocket')
-let Error = require('../errors')
+const websocket = require('../websocket')
+const Error = require('../errors')
 
 exports.subscribe = function (data, client, query) {
   return new Promise(function (resolve, reject) {

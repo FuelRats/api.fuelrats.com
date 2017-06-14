@@ -1,11 +1,11 @@
 'use strict'
-let Permission = require('../permission')
-let Errors = require('../errors')
-let User = require('../db').User
-let db = require('../db').db
-let Rat = require('../db').Rat
+const Permission = require('../permission')
+const Errors = require('../errors')
+const User = require('../db').User
+const db = require('../db').db
+const Rat = require('../db').Rat
 
-let BotServ = require('../Anope/BotServ')
+const BotServ = require('../Anope/BotServ')
 
 
 class Controller {

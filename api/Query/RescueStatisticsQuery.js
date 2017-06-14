@@ -1,6 +1,6 @@
 'use strict'
-let db = require('./../db').db
-let Query = require('./index')
+const db = require('./../db').db
+const Query = require('./index')
 
 /**
  * A class representing a rescue query

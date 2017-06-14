@@ -1,6 +1,6 @@
 'use strict'
-let winston = require('winston')
-let client = require('./index').client
+const winston = require('winston')
+const client = require('./index').client
 
 class ChanServ {
   static sync (channel) {

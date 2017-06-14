@@ -1,12 +1,12 @@
 'use strict'
 
-let _ = require('underscore')
-let Ship = require('../db').Ship
-let Rat = require('../db').Rat
+const _ = require('underscore')
+const Ship = require('../db').Ship
+const Rat = require('../db').Rat
 
-let Errors = require('../errors')
-let Permission = require('../permission')
-let API = require('../classes/API')
+const Errors = require('../errors')
+const Permission = require('../permission')
+const API = require('../classes/API')
 
 class Controller {
   static read (query) {

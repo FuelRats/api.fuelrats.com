@@ -1,15 +1,15 @@
 'use strict'
 
-let db = require('../db').db
-let Rat = require('../db').Rat
-let Rescue = require('../db').Rescue
-let Epic = require('../db').Epic
-let API = require('../classes/API')
-let Result = require('../Results')
-let RescueStatisticsQuery = require('../Query/RescueStatisticsQuery')
-let SystemStatisticsQuery = require('../Query/SystemStatisticsQuery')
+const db = require('../db').db
+const Rat = require('../db').Rat
+const Rescue = require('../db').Rescue
+const Epic = require('../db').Epic
+const API = require('../classes/API')
+const Result = require('../Results')
+const RescueStatisticsQuery = require('../Query/RescueStatisticsQuery')
+const SystemStatisticsQuery = require('../Query/SystemStatisticsQuery')
 
-let Errors = require('../errors')
+const Errors = require('../errors')
 
 class Statistics {
   static rescues (params, connection, data) {

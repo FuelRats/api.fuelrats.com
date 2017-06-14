@@ -1,9 +1,9 @@
 'use strict'
 
-let Errors = require('../errors')
-let Decal = require('../classes/Decal')
-let User = require('../db').User
-let Permission = require('../permission')
+const Errors = require('../errors')
+const Decal = require('../classes/Decal')
+const User = require('../db').User
+const Permission = require('../permission')
 
 class HTTP {
   static check (request, response, next) {

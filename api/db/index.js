@@ -1,6 +1,6 @@
 'use strict'
-let Sequelize = require('sequelize')
-let config = require('../../config')
+const Sequelize = require('sequelize')
+const config = require('../../config')
 
 if (process.env.NODE_ENV === 'testing') {
   config = config.test

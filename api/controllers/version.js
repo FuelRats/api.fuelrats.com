@@ -1,5 +1,5 @@
 'use strict'
-let gitrev = require('git-rev')
+const gitrev = require('git-rev')
 
 exports.get = function (request, response) {
   exports.view(request.body).then(function (data) {

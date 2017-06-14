@@ -1,9 +1,9 @@
 'use strict'
-let winston = require('winston')
-let ChanServ = require('./ChanServ')
+const winston = require('winston')
+const ChanServ = require('./ChanServ')
 const officialChannels = ['#fuelrats', '#drillrats', '#ratchat']
 
-let client = require('./index').client
+const client = require('./index').client
 
 class HostServ {
   static set (nickname, host) {

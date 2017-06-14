@@ -1,11 +1,11 @@
 'use strict'
 
-let User = require('../db').User
+const User = require('../db').User
 
-let Errors = require('../errors')
-let Permission = require('../permission')
-let UserQuery = require('../Query/UserQuery')
-let UserResult = require('../Results/user')
+const Errors = require('../errors')
+const Permission = require('../permission')
+const UserQuery = require('../Query/UserQuery')
+const UserResult = require('../Results/user')
 
 class Users {
   static search (params, connection) {

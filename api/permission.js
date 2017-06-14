@@ -1,8 +1,8 @@
 'use strict'
 
-let Errors = require('./errors')
-let i18next = require('i18next')
-let localisationResources = require('../localisations.json')
+const Errors = require('./errors')
+const i18next = require('i18next')
+const localisationResources = require('../localisations.json')
 
 i18next.init({
   lng: 'en',

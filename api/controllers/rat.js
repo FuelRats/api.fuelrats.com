@@ -1,11 +1,11 @@
 'use strict'
 
-let Rat = require('../db').Rat
+const Rat = require('../db').Rat
 
-let Errors = require('../errors')
-let Permission = require('../permission')
-let RatQuery = require('../Query/RatQuery')
-let RatResult = require('../Results/rat')
+const Errors = require('../errors')
+const Permission = require('../permission')
+const RatQuery = require('../Query/RatQuery')
+const RatResult = require('../Results/rat')
 
 class Rats {
   static search (params, connection) {

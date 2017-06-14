@@ -1,14 +1,14 @@
 'use strict'
 
-let oauth2orize = require('oauth2orize')
-let crypto = require('crypto')
-let Token = require('../db').Token
-let Client = require('../db').Client
-let Code = require('../db').Code
-let Permission = require('../permission')
-let Errors = require('../errors')
-let i18next = require('i18next')
-let localisationResources = require('../../localisations.json')
+const oauth2orize = require('oauth2orize')
+const crypto = require('crypto')
+const Token = require('../db').Token
+const Client = require('../db').Client
+const Code = require('../db').Code
+const Permission = require('../permission')
+const Errors = require('../errors')
+const i18next = require('i18next')
+const localisationResources = require('../../localisations.json')
 
 i18next.init({
   lng: 'en',
