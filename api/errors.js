@@ -78,7 +78,7 @@ let errors = {
     'title': 'Rate Limit Exceeded'
   },
 
-  throw: function (type, detail) {
+  template: function (type, detail) {
     let errorModel = errors[type]
     if (detail) {
       errorModel.detail = detail

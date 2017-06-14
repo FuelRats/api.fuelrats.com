@@ -37,7 +37,7 @@ class Users {
           reject(Errors.throw('server_error', errors[0].message))
         })
       } else {
-        reject(Error.throw('missing_required_field', 'id'))
+        reject(Error.template('missing_required_field', 'id'))
       }
     })
   }
@@ -65,7 +65,7 @@ class Users {
           }
         }).then(function (user) {
           if (!user) {
-            reject(Error.throw('not_found', params.id))
+            reject(Error.template('not_found', params.id))
           }
 
           let permission = getUserWritePermissionType(user, connection.user)
@@ -76,7 +76,7 @@ class Users {
               }
             }).then(function (user) {
               if (!user) {
-                return reject(Error.throw('operation_failed'))
+                return reject(Error.template('operation_failed'))
               }
 
               User.findAndCountAll(new UserQuery({ id: params.id }, connection).toSequelize).then(function (result) {
@@ -89,10 +89,10 @@ class Users {
             reject(err)
           })
         }).catch(function (err) {
-          reject(Error.throw('server_error', err))
+          reject(Error.template('server_error', err))
         })
       } else {
-        reject(Error.throw('missing_required_field', 'id'))
+        reject(Error.template('missing_required_field', 'id'))
       }
     })
   }
@@ -106,7 +106,7 @@ class Users {
           }
         }).then(function (user) {
           if (!user) {
-            return reject(Error.throw('not_found', params.id))
+            return reject(Error.template('not_found', params.id))
           }
 
           user.destroy()

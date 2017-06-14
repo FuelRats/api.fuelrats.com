@@ -130,13 +130,13 @@ exports.received = function (client, requestString) {
 
         exports.error(client, {
           action: action
-        }, [Error.throw('invalid_parameter', 'action')])
+        }, [Error.template('invalid_parameter', 'action')])
       } else {
         let applicationId = exports.retrieveCaseInsensitiveProperty('applicationId', request)
         if (!applicationId || applicationId.length === 0) {
           exports.error(client, {
             action: action
-          }, [Error.throw('invalid_parameter', 'applicationId')])
+          }, [Error.template('invalid_parameter', 'applicationId')])
           return
         }
 
@@ -306,10 +306,10 @@ exports.authorization = function (query, client, meta) {
 
         exports.send(client, { action: 'authorization' }, client.user)
       }).catch(function (error) {
-        exports.error(client, meta, [Error.throw('server_error', error)])
+        exports.error(client, meta, [Error.template('server_error', error)])
       })
     }).catch(function (error) {
-      exports.error(client, meta, [Error.throw('server_error', error)])
+      exports.error(client, meta, [Error.template('server_error', error)])
     })
   } else {
     exports.error(client, meta, [Permission.authenticationError()])

@@ -34,7 +34,7 @@ class Rescues {
           reject(Errors.throw('server_error', errors[0].message))
         })
       } else {
-        reject(Error.throw('missing_required_field', 'id'))
+        reject(Error.template('missing_required_field', 'id'))
       }
     })
   }
@@ -61,7 +61,7 @@ class Rescues {
           }
         }).then(function (rescue) {
           if (!rescue) {
-            reject(Error.throw('not_found', params.id))
+            reject(Error.template('not_found', params.id))
           }
 
           let permission = getRescuePermissionType(rescue, connection.user)
@@ -72,7 +72,7 @@ class Rescues {
               }
             }).then(function (rescue) {
               if (!rescue) {
-                return reject(Error.throw('operation_failed'))
+                return reject(Error.template('operation_failed'))
               }
 
               Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize).then(function (result) {
@@ -85,10 +85,10 @@ class Rescues {
             reject(err)
           })
         }).catch(function (err) {
-          reject(Error.throw('server_error', err))
+          reject(Error.template('server_error', err))
         })
       } else {
-        reject(Error.throw('missing_required_field', 'id'))
+        reject(Error.template('missing_required_field', 'id'))
       }
     })
   }
@@ -102,7 +102,7 @@ class Rescues {
           }
         }).then(function (rescue) {
           if (!rescue) {
-            return reject(Error.throw('not_found', params.id))
+            return reject(Error.template('not_found', params.id))
           }
 
           rescue.destroy()
@@ -124,7 +124,7 @@ class Rescues {
           }
         }).then(function (rescue) {
           if (!rescue) {
-            reject(Error.throw('not_found', params.id))
+            reject(Error.template('not_found', params.id))
           }
 
           let permission = getRescuePermissionType(rescue, connection.user)
@@ -141,16 +141,16 @@ class Rescues {
                 reject(Errors.throw('server_error', errors[0].message))
               })
             }).catch(function (err) {
-              reject(Error.throw('server_error', err))
+              reject(Error.template('server_error', err))
             })
           }).catch(function (err) {
             reject(err)
           })
         }).catch(function (err) {
-          reject(Error.throw('server_error', err))
+          reject(Error.template('server_error', err))
         })
       } else {
-        reject(Error.throw('missing_required_field', 'id'))
+        reject(Error.template('missing_required_field', 'id'))
       }
     })
   }
@@ -164,7 +164,7 @@ class Rescues {
           }
         }).then(function (rescue) {
           if (!rescue) {
-            reject(Error.throw('not_found', params.id))
+            reject(Error.template('not_found', params.id))
           }
 
           let permission = getRescuePermissionType(rescue, connection.user)
@@ -181,16 +181,16 @@ class Rescues {
                 reject(Errors.throw('server_error', errors[0].message))
               })
             }).catch(function (err) {
-              reject(Error.throw('server_error', err))
+              reject(Error.template('server_error', err))
             })
           }).catch(function (err) {
             reject(err)
           })
         }).catch(function (err) {
-          reject(Error.throw('server_error', err))
+          reject(Error.template('server_error', err))
         })
       } else {
-        reject(Error.throw('missing_required_field', 'id'))
+        reject(Error.template('missing_required_field', 'id'))
       }
     })
   }
@@ -204,7 +204,7 @@ class Rescues {
           }
         }).then(function (rescue) {
           if (!rescue) {
-            reject(Error.throw('not_found', params.id))
+            reject(Error.template('not_found', params.id))
           }
 
           let permission = getRescuePermissionType(rescue, connection.user)
@@ -222,16 +222,16 @@ class Rescues {
                 reject(Errors.throw('server_error', errors[0].message))
               })
             }).catch(function (err) {
-              reject(Error.throw('server_error', err))
+              reject(Error.template('server_error', err))
             })
           }).then(function (err) {
             reject(err)
           })
         }).catch(function (err) {
-          reject(Error.throw('server_error', err))
+          reject(Error.template('server_error', err))
         })
       } else {
-        reject(Error.throw('missing_required_field', 'id'))
+        reject(Error.template('missing_required_field', 'id'))
       }
     })
   }

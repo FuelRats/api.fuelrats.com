@@ -19,13 +19,13 @@ exports.subscribe = function (data, client, query) {
         })
       } else {
         reject({
-          error: Error.throw('already_exists', applicationId),
+          error: Error.template('already_exists', applicationId),
           meta: {}
         })
       }
     } else {
       reject({
-        error: Error.throw('not_found', applicationId),
+        error: Error.template('not_found', applicationId),
         meta: {}
       })
     }
@@ -48,13 +48,13 @@ exports.unsubscribe = function (data, client, query) {
         })
       } else {
         reject({
-          error: Error.throw('invalid_parameter', 'Not subscribed to this stream'),
+          error: Error.template('invalid_parameter', 'Not subscribed to this stream'),
           meta: {}
         })
       }
     } else {
       reject({
-        error: Error.throw('invalid_parameter', 'applicationId'),
+        error: Error.template('invalid_parameter', 'applicationId'),
         meta: {}
       })
     }

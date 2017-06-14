@@ -10,7 +10,7 @@ class API {
    * @returns {Function} Express.js routing middleware
    */
   static route (route) {
-    return function (request, response, next) {
+    return async function (request, response, next) {
       let rateLimit = traffic.validateRateLimit(request)
 
       response.header('X-API-Version', request.version)
@@ -19,12 +19,13 @@ class API {
       response.header('X-Rate-Limit-Reset', traffic.nextResetDate)
 
       if (rateLimit.exceeded) {
-        return next(Error.throw('rate_limit_exceeded'))
+        return next(Error.template('rate_limit_exceeded'))
       }
 
       let params = Object.assign(request.query, request.params)
 
-      route(params, request, request.body).then(function (result) {
+      try {
+        let result = await route(params, request, request.body)
         response.status(200).send({
           links: {
             self: request.originalUrl
@@ -36,9 +37,9 @@ class API {
           },
           data: result
         })
-      }).catch(function (error) {
-        next(error)
-      })
+      } catch (ex) {
+        next(ex)
+      }
     }
   }
 

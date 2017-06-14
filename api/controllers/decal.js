@@ -13,7 +13,7 @@ class HTTP {
           where: request.query
         }).then(function (user) {
           if (!user) {
-            let error = Error.throw('not_found', 'user')
+            let error = Error.template('not_found', 'user')
             response.model.errors.push(error)
             response.status(error.code)
             next()
