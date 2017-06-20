@@ -2,6 +2,7 @@
 let passport = require('passport')
 let BasicStrategy = require('passport-http').BasicStrategy
 let BearerStrategy = require('passport-http-bearer').Strategy
+let ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy
 let crypto = require('crypto')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../db').User
@@ -12,12 +13,8 @@ let Client = require('../db').Client
 let bcrypt = require('bcrypt')
 let Permission = require('../permission')
 
-exports.LocalStrategy = new LocalStrategy({
-  usernameField: 'email',
-  passwordField: 'password',
-  session: false
-},
-function (email, password, done) {
+
+exports.passwordAuthenticate = function (email, password, done) {
   if (!email || !password) {
     done(null, false, { message: 'Incorrect username/email.' })
   }
@@ -68,31 +65,45 @@ function (email, password, done) {
   }).catch(function () {
     done(null, false)
   })
-})
+}
+
+
+exports.LocalStrategy = new LocalStrategy({
+  usernameField: 'email',
+  passwordField: 'password',
+  session: false
+},
+  exports.passwordAuthenticate
+)
 
 passport.use(exports.LocalStrategy)
 
-passport.use('client-basic', new BasicStrategy(
-  function (username, secret, callback) {
-    Client.findById(username).then(function (client) {
-      if (!client) {
-        callback(null, false)
-      }
 
-      bcrypt.compare(secret, client.secret, function (err, res) {
-        if (err || res === false) {
-          callback(null, false)
-        } else {
-          callback(null, client)
-        }
-      })
-    }).catch(function (error) {
-      callback(error)
+
+
+exports.clientPasswordAuthentication = function (username, secret, callback) {
+  Client.findById(username).then(function (client) {
+    if (!client) {
+      callback(null, false)
+    }
+
+    bcrypt.compare(secret, client.secret, function (err, res) {
+      if (err || res === false) {
+        callback(null, false)
+      } else {
+        callback(null, client)
+      }
     })
-  }
+  }).catch(function (error) {
+    callback(error)
+  })
+}
+
+passport.use('client-basic', new BasicStrategy(
+  exports.clientPasswordAuthentication
 ))
 
-
+passport.use(new ClientPasswordStrategy(exports.clientPasswordAuthentication))
 passport.use(new BearerStrategy(bearerAuthenticate))
 
 exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })

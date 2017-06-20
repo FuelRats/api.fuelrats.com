@@ -6,6 +6,7 @@ let Token = require('../db').Token
 let Client = require('../db').Client
 let Code = require('../db').Code
 let Errors = require('../errors')
+let Auth = require('./auth')
 
 let server = oauth2orize.createServer()
 
@@ -96,6 +97,30 @@ server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, c
     callback(error)
   })
 }))
+
+server.exchange(oauth2orize.exchange.password(
+  function (client, username, password, scope, callback) {
+    Auth.passwordAuthenticate(username, password, function (err, user) {
+      if (!user || err) {
+        callback(err)
+      }
+
+      Token.create({
+        value: crypto.randomBytes(32).toString('hex')
+      }).then(function (token) {
+        let associations = []
+        associations.push(token.setClient(client.id))
+        associations.push(token.setUser(user.id))
+
+        Promise.all(associations).then(function () {
+          callback(null, token.value)
+        }).catch(function (error) {
+          callback(error)
+        })
+      })
+    })
+  }
+))
 
 exports.authorization = [
   function (req, res, next) {

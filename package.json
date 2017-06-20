@@ -61,6 +61,7 @@
     "passport-http-bearer": "^1.0.1",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^4.0.0",
+    "passport-oauth2-client-password": "^0.1.2",
     "pg": "^6.0.1",
     "sequelize": "^3.23.4",
     "ssl-root-cas": "^1.2.1",
