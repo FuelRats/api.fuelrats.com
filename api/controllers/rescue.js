@@ -15,9 +15,9 @@ const BotServ = require('../Anope/BotServ')
 const Statistics = require('../classes/Statistics')
 
 class Rescues {
-  static async search (params, connection) {
-    let result = await Rescue.findAndCountAll(new RescueQuery(params, connection).toSequelize)
-    return new RescueResult(result, params).toResponse()
+  static async search (ctx) {
+    let result = await Rescue.findAndCountAll(new RescueQuery(ctx.params, ctx).toSequelize)
+    return new RescueResult(result, ctx.params).toResponse()
   }
 
   static async findById (params, connection) {
@@ -100,10 +100,9 @@ class Rescues {
 
       let permission = getRescuePermissionType(rescue, connection.user)
       if (Permission.require(permission, connection.user, connection.scope)) {
-        let rats = []
-        for (let rat of data) {
-          rats.push(rescue.addRat(rat))
-        }
+        let rats = data.map((rat) => {
+          return rescue.addRat(rat)
+        })
 
         await Promise.all(rats)
         let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
@@ -126,10 +125,9 @@ class Rescues {
 
       let permission = getRescuePermissionType(rescue, connection.user)
       if (Permission.require(permission, connection.user, connection.scope)) {
-        let rats = []
-        for (let rat of data) {
-          rats.push(rescue.removeRat(rat))
-        }
+        let rats = data.map((rat) => {
+          return rescue.removeRat(rat)
+        })
 
         await Promise.all(rats)
         let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)

@@ -2,68 +2,67 @@
 
 // IMPORT
 // =============================================================================
+const Koa = require('koa')
+const session = require('koa-session')
+const cors = require('koa-cors')
+const router = require('koa-router')()
+const app = new Koa()
+const TrafficControl = require('./api/TrafficControl')
+
 
 // Import libraries
-let _ = require('underscore')
-let bodyParser = require('body-parser')
-let cors = require('cors')
-let compression = require('compression')
-let cookieParser = require('cookie-parser')
-let express = require('express')
-let expressSession = require('express-session')
-let fs = require('fs')
-let http = require('http')
-let moment = require('moment')
-let passport = require('passport')
-let Permission = require('./api/permission')
-let winston = require('winston')
-let uid = require('uid-safe')
-let ws = require('ws').Server
-let dedelimit = require('dedelimit').dedelimit
-let npid = require('npid')
+const compression = require('compression')
+const fs = require('fs')
+const http = require('http')
+const Permission = require('./api/permission')
+const winston = require('winston')
+const uid = require('uid-safe')
+const ws = require('ws').Server
+const dedelimit = require('dedelimit').dedelimit
+const npid = require('npid')
 require('winston-daily-rotate-file')
 
 // Import config
-let config = require('./config-example')
+const config = require('./config-example')
 
 if (fs.existsSync('./config.json')) {
-  _.extend(config, require('./config'))
+  Object.assign(config, require('./config'))
 }
 
-let API = require('./api/classes/API')
-let Error = require('./api/errors')
+const API = require('./api/classes/API')
+const Error = require('./api/errors')
 
 // Import models
-let db = require('./api/db').db
-let User = require('./api/db').User
-let Rat = require('./api/db').Rat
+const db = require('./api/db').db
+const User = require('./api/db').User
+const Rat = require('./api/db').Rat
 
 // Import controllers
-let auth = require('./api/controllers/auth')
-let change_password = require('./api/controllers/change_password')
-let client = require('./api/controllers/client').HTTP
-let decal = require('./api/controllers/decal').HTTP
-let docs = require('./api/controllers/docs')
-let irc = require('./api/controllers/irc').HTTP
-let leaderboard = require('./api/controllers/leaderboard')
-let login = require('./api/controllers/login')
-let ssologin = require('./api/controllers/ssologin')
-let logout = require('./api/controllers/logout')
-let news = require('./api/controllers/news')
-let nicknames = require('./api/controllers/nicknames')
-let oauth2 = require('./api/controllers/oauth2')
-let rat = require('./api/controllers/rat')
-let register = require('./api/controllers/register')
-let reset = require('./api/controllers/reset')
-let rescue = require('./api/controllers/rescue')
-let roster = require('./api/controllers/roster').HTTP
-let ship = require('./api/controllers/ship').HTTP
-let statistics = require('./api/controllers/statistics')
-let user = require('./api/controllers/user')
-let version = require('./api/controllers/version')
-let websocket = require('./api/websocket')
-let jiraDrill = require('./api/controllers/jira/drill').HTTP
-let UserResult = require('./api/Results/user')
+const auth = require('./api/controllers/auth')
+const change_password = require('./api/controllers/change_password')
+const client = require('./api/controllers/client').HTTP
+const decal = require('./api/controllers/decal').HTTP
+const docs = require('./api/controllers/docs')
+const irc = require('./api/controllers/irc').HTTP
+const leaderboard = require('./api/controllers/leaderboard')
+const login = require('./api/controllers/login')
+const ssologin = require('./api/controllers/ssologin')
+const logout = require('./api/controllers/logout')
+const news = require('./api/controllers/news')
+const nicknames = require('./api/controllers/nicknames')
+const oauth2 = require('./api/controllers/oauth2')
+const rat = require('./api/controllers/rat')
+const register = require('./api/controllers/register')
+const reset = require('./api/controllers/reset')
+const rescue = require('./api/controllers/rescue')
+const roster = require('./api/controllers/roster').HTTP
+const ship = require('./api/controllers/ship').HTTP
+const statistics = require('./api/controllers/statistics')
+const user = require('./api/controllers/user')
+const version = require('./api/controllers/version')
+const websocket = require('./api/websocket')
+const jiraDrill = require('./api/controllers/jira/drill').HTTP
+const UserResult = require('./api/Results/user')
 
 db.sync()
 
@@ -73,158 +72,69 @@ try {
   let pid = npid.create('api.pid')
   pid.removeOnExit()
 } catch (err) {
-  winston.error(err)
   process.exit(1)
 }
 
+app.keys = [config.secret]
 
-let options = {
-  logging: true,
-  test: false
+let sessionConfiguration = {
+  key: 'fuelrats:session',
+  overwrite: true,
+  signed: true
 }
 
-if (process.env.CONTINOUS_INTEGRATION) {
-  options.logging = false
-}
-
-
-// Parse command line arguments
-// =============================================================================
-
-if (process.argv) {
-  for (let i = 0; i < process.argv.length; i++) {
-    let arg = process.argv[i]
-    switch (arg) {
-      case '--no-log':
-        options.logging = false
-        break
-
-      case '--test':
-        options.test = true
-        break
-    }
-  }
-}
-
-let transport = new winston.transports.DailyRotateFile({
-  filename: './logs/',
-  datePattern: 'yyyy-MM-dd.',
-  prepend: true,
-  level: process.env.ENV === 'development' ? 'debug' : 'info'
-})
-
-let logger = new (winston.Logger)({
-  transports: [
-    transport
-  ]
-})
-
-
-// MIDDLEWARE
-// =============================================================================
-
-let app = express()
-
-
-let sessionOptions = {
-  cookie: config.cookie,
-  secret: config.secretSauce,
-  resave: false,
-  saveUninitialized: false
-}
-
+app.use(session(sessionConfiguration, app))
 app.use(cors())
-app.use(compression())
-app.use(bodyParser.urlencoded({
-  extended: true
-}))
-app.use(bodyParser.json())
-app.use(cookieParser())
-app.use(expressSession(sessionOptions))
-app.use(passport.initialize())
-passport.use(auth.LocalStrategy)
-
-passport.serializeUser(function (user, done) {
-  done(null, user.id)
-})
-
-passport.deserializeUser(function (id, done) {
-  User.findOne({
-    where: {id: id}
-  }).then(function (user) {
-    let result = new UserResult(user).toResponse()
-    done(null, result)
-  }).catch(function (error) {
-    done(err)
-  })
-})
-
-app.set('json spaces', 2)
-app.set('x-powered-by', false)
 
 let port = config.port || process.env.PORT
 
-app.use(passport.initialize())
-app.use(passport.session())
-
-// Combine query parameters with the request body, prioritizing the body
-app.use(function (request, response, next) {
-  request.websocket = websocket
-
-  request.body = _.extend(request.query, request.body)
-
-  response.model = {
-    data: {},
-    errors: [],
-    links: {
-      self: request.originalUrl
-    },
-    meta: {
-      method: request.method,
-      params: _.extend(request.query, request.body),
-      timestamp: new Date().toISOString()
-    }
-  }
-
-  dedelimit(request.query, function (err, query) {
-    request.query = query
+app.use(function (ctx, next) {
+  dedelimit(ctx.query, function (err, query) {
+    ctx.query = query
     next()
   })
 })
 
-// Add logging
-if (options.logging || options.test) {
-  app.use(function (request, response, next) {
-    var censoredParams = _.clone(response.model.meta.params)
-    if (censoredParams.password) {
-      censoredParams.password = '**********'
+app.use(async (ctx, next) => {
+  if (ctx.request.is('json')) {
+    try {
+      ctx.body = JSON.parse(ctx.body)
+      await next()
+    } catch (err) {
+      console.log(err)
+    }
+  }
+})
+
+
+const traffic = new TrafficControl()
+
+app.use(async (ctx, next) => {
+  try {
+    let rateLimit = traffic.validateRateLimit(ctx)
+
+    ctx.set('X-API-Version', '2.0')
+    ctx.set('X-Rate-Limit-Limit', rateLimit.total)
+    ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
+    ctx.set('X-Rate-Limit-Reset', traffic.nextResetDate)
+
+    if (rateLimit.exceeded) {
+      return next(Error.template('rate_limit_exceeded'))
     }
 
-    logger.info('')
-    logger.info('TIMESTAMP:', Date.now())
-    logger.info('ENDPOINT:', request.originalUrl)
-    logger.info('METHOD:', request.method)
-    logger.info('HEADERS:', request.headers)
-    logger.info('DATA:', censoredParams)
-    request.inet = request.headers['x-forwarded-for'] || request.connection.remoteAddress
-    next()
-  })
-}
-
-
-
-
-// ROUTER
-// =============================================================================
-
-// Create router
-let router = express.Router()
+    let result = await next()
+    console.log(result)
+  } catch (ex) {
+    console.log(ex)
+    await next(ex)
+  }
+})
 
 
 // ROUTES
 // =============================================================================
-router.get('/v2/rescues', API.version('v2.0'), API.route(rescue.search))
-router.post('/v2/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
+router.get('/v2/rescues', rescue.search)
+/* router.post('/v2/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
 router.delete('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required(['rescue.delete']), API.route(rescue.delete))
 router.put('/v2/rescues/:id/assign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.assign))
@@ -255,8 +165,8 @@ router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.s
 
 router.post('/register', register.post)
 
-router.post('/login', passport.authenticate('local'), login.post)
-router.post('/ssologin', passport.authenticate('local'), ssologin.loginWithCredentials)
+// router.post('/login', passport.authenticate('local'), login.post)
+// router.post('/ssologin', passport.authenticate('local'), ssologin.loginWithCredentials)
 router.post('/register', register.post)
 
 router.get('/v2/news', API.route(news.list))
@@ -273,7 +183,7 @@ router.route('/oauth2/authorize')
 
 // Create endpoint handlers for oauth2 token
 router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
-
+ */
 /*
 
 router.post('/reset', reset.post)
@@ -343,7 +253,6 @@ router.get('/roster', roster.get)
 router.get('/statistics', statistics.get)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
-*/
 
 router.route('/oauth2/authorize')
   .get(auth.isAuthenticated(true), oauth2.authorization)
@@ -356,13 +265,18 @@ router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user
 router.post('/irc/message', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.message)
 router.post('/irc/action', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.action)
 
-// Register routes
-app.use(express.static(__dirname + '/static'))
+//app.use(express.static(__dirname + '/static'))
 app.use('/', router)
 app.use('/api', router)
 
-let httpServer = http.Server(app)
+ */
 
+
+app.use(router.routes())
+app.use(router.allowedMethods())
+
+
+/*
   // Send the response
 app.use(function (request, response) {
   if (response.model.errors.length) {
@@ -397,20 +311,9 @@ app.use(function (request, response) {
   }
 })
 
-/* Because express.js is stupid and uses the method signature to distinguish between
-normal middleware and error middleware, we have to silence eslint complaining about
-the unused error */
-/* eslint-disable no-unused-vars */
-app.use(function (err, req, res, next) {
-  /* eslint-enable no-unused-vars */
-  res.status(err.code)
-  res.send({
-    errors: [err]
-  })
-})
+*/
 
-// SOCKET
-// =============================================================================
+/*
 
 let socket = new ws({
   server: httpServer
@@ -442,14 +345,6 @@ socket.on('connection', function (client) {
   })
 })
 
+*/
 
-
-
-// START THE SERVER
-// =============================================================================
-module.exports = httpServer.listen(port, function () {
-  if (!module.parent) {
-    winston.info('Starting the Fuel Rats API')
-    winston.info('Listening for requests on port ' + port + '...')
-  }
-})
+app.listen(port)
