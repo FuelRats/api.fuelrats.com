@@ -114,7 +114,7 @@ class TrafficEntity {
 
   /**
    * Set the number of requests made by this entity during the rate limit period
-   * @param count The number of requests made by this entity during the rate limit period
+   * @param {number} count The number of requests made by this entity during the rate limit period
    */
   set count (count) {
     this._requestCount =  count
@@ -142,7 +142,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {boolean} true if the authenticated user this entity belongs to is an admin
    */
   get isAdmin () {
-    return this._user.groups.includes('admin')
+    return this._user.data.attributes.groups.includes('admin') || this._user.data.attributes.groups.includes('netadmin')
   }
 
   /**

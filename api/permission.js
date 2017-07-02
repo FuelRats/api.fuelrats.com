@@ -147,10 +147,10 @@ class Permission {
 
     let hasPermission = false
 
-    user.groups.push('default')
+    user.data.attributes.groups.push('default')
 
     for (let permission of permissions) {
-      for (let group of user.groups) {
+      for (let group of user.data.attributes.groups) {
         if (groups[group].includes(permission)) {
           if (scope) {
             if (scope.includes(permission)) {
