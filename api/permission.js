@@ -108,7 +108,7 @@ class Permission {
    * Promise to validate whether a user has the appropriate permissions
    * @param {string[]} permissions - The permissions to validate
    * @param {Object} user - The user object of the user to validate
-   * @param {Object} client - Optional scope array of an oauth2 client to validate
+   * @param {Object} scope - Optional scope array of an oauth2 client to validate
    * @returns {Promise}
    */
   static require (permissions, user, scope = null) {
@@ -120,18 +120,15 @@ class Permission {
 
   /**
    * Express.js middleware to require a permission or throw back an error
-   * @param {string[]} permission - The permissions to require
+   * @param {string[]} permissions - The permissions to require
    * @returns {Function} Express.js middleware function
    */
   static required (permissions) {
-    return function (req, res, next) {
-      if (Permission.granted(permissions, req.user, req.scope)) {
+    return function (ctx, next) {
+      if (Permission.granted(permissions, ctx.user, ctx.scope)) {
         return next()
       } else {
-        let error = Permission.permissionError(permissions)
-        res.model.errors.push(error)
-        res.status(error.code)
-        return next(error)
+        return next(Permission.permissionError(permissions))
       }
     }
   }
@@ -140,7 +137,7 @@ class Permission {
    * Check whether a user has the required permissions
    * @param {string[]} permissions - The permissions to validate
    * @param {Object} user - The user object of the user to validate
-   * @param {Object} [client] - Optional oauth2 client object to validate if the user has given this application the permission to do this
+   * @param {Object} scope - Optional oauth2 client object to validate if the user has given this application the permission to do this
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
   static granted (permissions, user, scope = null) {
@@ -172,14 +169,14 @@ class Permission {
 
   static authenticationError (permission) {
     if (permission) {
-      return Errors.throw('not_authenticated', permission)
+      return Errors.template('not_authenticated', permission)
     } else {
-      return Errors.throw('not_authenticated')
+      return Errors.template('not_authenticated')
     }
   }
 
   static permissionError (permissions) {
-    return Errors.throw('no_permission', permissions)
+    return Errors.template('no_permission', permissions)
   }
 
   /**

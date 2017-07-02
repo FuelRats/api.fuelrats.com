@@ -26,7 +26,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: ''
     },
     platform: {
-      type: DataTypes.ENUM('xb', 'pc', 'ps', 'unknown'),
+      type: DataTypes.ENUM('xb', 'pc', 'ps'),
       allowNull: true,
       defaultValue: 'pc'
     },
@@ -50,10 +50,10 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null
     },
-    type: {
+    outcome: {
       type: DataTypes.ENUM('success', 'failure', 'invalid', 'other'),
-      allowNull: false,
-      defaultValue:  'other'
+      allowNull: true,
+      defaultValue:  null
     },
     unidentifiedRats: {
       type: DataTypes.ARRAY(DataTypes.STRING),
@@ -62,12 +62,6 @@ module.exports = function (sequelize, DataTypes) {
     }
   }, {
     paranoid: true,
-    classMethods: {
-      associate: function (models) {
-        Rescue.belongsToMany(models.Rat, { as: 'rats', through: 'RescueRats' })
-        Rescue.belongsTo(models.Rat, { as: 'firstLimpet' })
-      }
-    },
     indexes: [{
       fields: ['data'],
       using: 'gin',

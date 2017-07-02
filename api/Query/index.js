@@ -25,10 +25,10 @@ class Query {
 
     delete this._params.fields
 
-    let limit = this.limit(this._params.limit, this._connection.user)
+    this._limit = this.limit(this._params.limit, this._connection.user)
     delete this._params.limit
 
-    let offset = this.page(this._params.page, limit) || this.offset(this._params._offset)
+    this._offset = this.page(this._params.page, this._limit) || this.offset(this._params._offset)
     delete this._params.offset
     delete this._params.page
 
@@ -46,8 +46,8 @@ class Query {
       order: [
         [order.field, order.direction]
       ],
-      limit: limit,
-      offset: offset
+      limit: this._limit,
+      offset: this._offset
     }
   }
 

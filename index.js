@@ -7,18 +7,17 @@ const session = require('koa-session')
 const cors = require('koa-cors')
 const router = require('koa-router')()
 const app = new Koa()
+const koaBody = require('koa-body')()
 const TrafficControl = require('./api/TrafficControl')
 
 
 // Import libraries
 const compression = require('compression')
 const fs = require('fs')
-const http = require('http')
 const Permission = require('./api/permission')
 const winston = require('winston')
 const uid = require('uid-safe')
 const ws = require('ws').Server
-const dedelimit = require('dedelimit').dedelimit
 const npid = require('npid')
 require('winston-daily-rotate-file')
 
@@ -38,7 +37,7 @@ const User = require('./api/db').User
 const Rat = require('./api/db').Rat
 
 // Import controllers
-const auth = require('./api/controllers/auth')
+const Authentication = require('./api/controllers/auth')
 const change_password = require('./api/controllers/change_password')
 const client = require('./api/controllers/client').HTTP
 const decal = require('./api/controllers/decal').HTTP
@@ -75,7 +74,7 @@ try {
   process.exit(1)
 }
 
-app.keys = [config.secret]
+app.keys = ['hunter2']
 
 let sessionConfiguration = {
   key: 'fuelrats:session',
@@ -84,28 +83,38 @@ let sessionConfiguration = {
 }
 
 app.use(session(sessionConfiguration, app))
-app.use(cors())
+app.use(koaBody)
 
 let port = config.port || process.env.PORT
 
-app.use(function (ctx, next) {
-  dedelimit(ctx.query, function (err, query) {
-    ctx.query = query
-    next()
-  })
-})
+app.use(async function (ctx, next) {
+  try {
+    ctx.data = ctx.request.body
+    ctx.meta = function (result, query = null, additionalParameters = {}) {
+      let meta = {
+        meta: {}
+      }
+      if (query) {
+        meta.meta = {
+          count: result.rows.length,
+          limit: query._limit || null,
+          offset: query._offset || null,
+          total: result.count
+        }
+      }
 
-app.use(async (ctx, next) => {
-  if (ctx.request.is('json')) {
-    try {
-      ctx.body = JSON.parse(ctx.body)
-      await next()
-    } catch (err) {
-      console.log(err)
+      meta.meta = Object.assign(meta.meta, additionalParameters)
+      return meta
     }
+    let query = Object.assign(ctx.query, ctx.params)
+    ctx.query = parseQuery(query)
+    await next()
+  } catch (ex) {
+    console.log(ex)
   }
 })
 
+app.use(Authentication.authenticate)
 
 const traffic = new TrafficControl()
 
@@ -123,7 +132,7 @@ app.use(async (ctx, next) => {
     }
 
     let result = await next()
-    console.log(result)
+    ctx.body = result
   } catch (ex) {
     console.log(ex)
     await next(ex)
@@ -133,10 +142,18 @@ app.use(async (ctx, next) => {
 
 // ROUTES
 // =============================================================================
-router.get('/v2/rescues', rescue.search)
+router.get('/v2/rescues', Permission.required(['rescue.read']), rescue.search)
+router.get('/v2/rescues/:id', Permission.required(['rescue.read']), rescue.findById)
+router.post('/v2/rescues', Permission.required(['rescue.create']), rescue.create)
+router.put('/v2/rescues/:id', rescue.update)
+router.put('/v2/rescues/assign/:id', rescue.assign)
+router.put('/v2/rescues/unassign/:id', rescue.unassign)
+router.delete('/v2/rescues/:id', Permission.required(['rescue.delete']), rescue.delete)
+router.post('/v2/login',login.login)
 /* router.post('/v2/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
-router.delete('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required(['rescue.delete']), API.route(rescue.delete))
+router.delete('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated,
+Permission.required(['rescue.delete']), API.route(rescue.delete))
 router.put('/v2/rescues/:id/assign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.assign))
 router.put('/v2/rescues/:id/unassign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.unassign))
 router.put('/v2/rescues/:id/addquote', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.addquote))
@@ -145,18 +162,25 @@ router.put('/v2/rescues/:id', API.version('v2.0'), API.route(rescue.getById))
 router.get('/v2/rats', API.version('v2.0'), API.route(rat.search))
 router.post('/v2/rats', API.version('v2.0'), auth.isAuthenticated, API.route(rat.create))
 router.put('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rat.update))
-router.delete('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required(['rat.delete']), API.route(rat.delete))
+router.delete('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated,
+Permission.required(['rat.delete']), API.route(rat.delete))
 
 router.get('/v2/users', API.version('v2.0'), auth.isAuthenticated, API.route(user.search))
-router.post('/v2/users', API.version('v2.0'), auth.isAuthenticated, Permission.required(['user.write']), API.route(user.create))
+router.post('/v2/users', API.version('v2.0'), auth.isAuthenticated,
+Permission.required(['user.write']), API.route(user.create))
 router.put('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated, API.route(user.update))
-router.delete('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated, Permission.required(['user.delete']), API.route(user.delete))
+router.delete('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated,
+Permission.required(['user.delete']), API.route(user.delete))
 
 router.get('/v2/nicknames/search/:nickname', API.route(nicknames.search))
-router.get('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.read.me']), API.route(nicknames.info))
-router.post('/v2/nicknames/', auth.isAuthenticated, Permission.required(['user.write.me']), API.route(nicknames.register))
-router.put('/v2/nicknames/', auth.isAuthenticated, Permission.required(['user.write.me']), API.route(nicknames.connect))
-router.delete('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.write.me']), API.route(nicknames.delete))
+router.get('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.read.me']),
+ API.route(nicknames.info))
+router.post('/v2/nicknames/', auth.isAuthenticated,
+Permission.required(['user.write.me']), API.route(nicknames.register))
+router.put('/v2/nicknames/', auth.isAuthenticated, Permission.required(['user.write.me']),
+API.route(nicknames.connect))
+router.delete('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.write.me']),
+API.route(nicknames.delete))
 
 
 router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
@@ -210,17 +234,20 @@ router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('
 
 
 router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
-router.get('/users/:id/forceUpdateIRCStatus', auth.isAuthenticated(false), Permission.required('user.update', false), user.getById)
+router.get('/users/:id/forceUpdateIRCStatus', auth.isAuthenticated(false),
+Permission.required('user.update', false), user.getById)
 router.get('/users/:id', auth.isAuthenticated(false), Permission.required('user.read', false), user.getById)
 router.put('/users/:id', auth.isAuthenticated(false), user.put)
 router.post('/users', auth.isAuthenticated(false), user.post)
 router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('user.delete', false), user.delete)
 
 router.get('/nicknames/search/:nickname', auth.isAuthenticated(false), nicknames.search)
-router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false), nicknames.get)
+router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false),
+nicknames.get)
 router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
 router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
-router.delete('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.delete)
+router.delete('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.update', false),
+nicknames.delete)
 
 router.get('/clients', auth.isAuthenticated(false), Permission.required('client.read', false), client.get)
 router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('client.update', false), client.put)
@@ -324,7 +351,8 @@ websocket.socket = socket
 socket.on('connection', function (client) {
   client.subscribedStreams = []
   client.clientId = uid.sync(16)
-  winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress} assigned unique identifier ${client.clientId}`)
+  winston.info(`${Date()} Websocket connection established with ${client._socket.remoteAddress}
+  assigned unique identifier ${client.clientId}`)
   client.send(JSON.stringify({
     meta: {
       action: 'welcome',
@@ -346,5 +374,31 @@ socket.on('connection', function (client) {
 })
 
 */
+
+function parseQuery (query) {
+  let queryObj = {}
+
+  // Iterate over each individual query item
+  for (let key of Object.keys(query)) {
+    // Split them into period delimited arrays
+    let keys = key.split('.')
+    let target = queryObj
+
+    // Iterate over the period delimited arrays to construct a nested hierarchy
+    for (let keyPair of keys.entries()) {
+      let subkey = keyPair[1]
+      if (keyPair[0] === keys.length - 1) {
+        // We have reached the end of the delimited array which means we can insert the value
+        target[subkey] = query[key]
+      } else if (!target[subkey]) {
+        /* We have not reached the end of the delimited array so we need to create a nested object unless
+        it already exists */
+        target[subkey] = {}
+        target = target[subkey]
+      }
+    }
+  }
+  return queryObj
+}
 
 app.listen(port)

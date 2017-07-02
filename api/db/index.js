@@ -134,6 +134,31 @@ Client.addScope('defaultScope', {
   override: true
 })
 
+Rescue.addScope('defaultScope', {
+  include: [
+    {
+      model: Rat,
+      as: 'rats',
+      require: false,
+      through: {
+        attributes: []
+      }
+    },
+    {
+      model: Rat,
+      as: 'firstLimpet',
+      require: false
+    },
+    {
+      model: Epic,
+      as: 'epics',
+      require: false
+    }
+  ]
+}, {
+  override: true
+})
+
 Ship.belongsTo(Rat, { as: 'rat' })
 Rat.hasMany(Ship, {
   foreignKey: 'ratId',
