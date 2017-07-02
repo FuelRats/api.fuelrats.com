@@ -16,6 +16,8 @@ class RescueQuery extends Query {
   constructor (params, connection) {
     super(params, connection)
 
+    this._query.distinct = true
+
     this._query.attributes = {
       exclude: [
         'deletedAt'
