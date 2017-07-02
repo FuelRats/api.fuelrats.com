@@ -9,6 +9,8 @@ const bcrypt = require('bcrypt')
 const Permission = require('../permission')
 const UsersPresenter = require('../classes/Presenters').UsersPresenter
 
+const bearerTokenHeaderOffset = 7
+
 class Authentication {
   static async passwordAuthenticate (email, password) {
     if (!email || !password) {
@@ -29,7 +31,7 @@ class Authentication {
   }
 
   static async bearerAuthenticate (bearer) {
-    let token = await Token.findOne({ where: { value: accessToken } })
+    let token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
       throw(false)
     }
@@ -59,22 +61,13 @@ class Authentication {
     }
   }
 
-  static async clientAuthenticate (ctx, next) {
-    let client = await Client.findById(username)
+  static async clientAuthenticate (clientId, secret) {
+    let client = await Client.findById(clientId)
     if (!client) {
-      next(null, false)
+      return null
     }
 
-    try {
-      let result = await bcrypt.compare(secret, client.secret)
-      if (result === false) {
-        next(null, false)
-      } else {
-        next(null, client)
-      }
-    } catch (err) {
-      next(null, err)
-    }
+    return bcrypt.compare(secret, client.secret)
   }
 
   static async authenticate (ctx, next) {
@@ -86,8 +79,29 @@ class Authentication {
       }
     }
 
+    let bearerToken = getBearerToken(ctx)
+    if (bearerToken) {
+      let bearerCheck = await Authentication.bearerAuthenticate(bearerToken)
+      if (bearerCheck) {
+        ctx.user = bearerCheck.user
+        ctx.scope = bearerCheck.scope
+        return next()
+      }
+    }
     await next()
   }
+}
+
+function getBearerToken (ctx) {
+  if (ctx.query.bearer) {
+    return ctx.query.bearer
+  } else if (ctx.get('Authorization')) {
+    let authorizationHeader = ctx.get('Authorization')
+    if (authorizationHeader.startsWith('Bearer ') && authorizationHeader.length > bearerTokenHeaderOffset) {
+      return authorizationHeader.substring(bearerTokenHeaderOffset)
+    }
+  }
+  return null
 }
 
 module.exports = Authentication
