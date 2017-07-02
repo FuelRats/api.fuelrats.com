@@ -84,9 +84,6 @@
     "guard-for-in": [
       2
     ],
-    "no-undef": [
-      2
-    ],
     "require-await": [
       2
     ],
@@ -94,6 +91,9 @@
       2
     ],
     "no-return-await": [
+      2
+    ],
+    "no-await-in-loop": [
       2
     ]
   }
