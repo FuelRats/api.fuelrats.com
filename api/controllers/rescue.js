@@ -1,13 +1,12 @@
 'use strict'
 
-const _ = require('underscore')
 const db = require('../db').db
 const Rat = require('../db').Rat
 const Rescue = require('../db').Rescue
 const Epic = require('../db').Epic
 const API = require('../classes/API')
 const RescueQuery = require('../Query/RescueQuery')
-const RescueResult = require('../Results/rescue')
+const { RescuesPresenter } = require('../classes/presenters')
 
 const Error = require('../errors')
 const Permission = require('../permission')
@@ -16,44 +15,48 @@ const Statistics = require('../classes/Statistics')
 
 class Rescues {
   static async search (ctx) {
-    let result = await Rescue.findAndCountAll(new RescueQuery(ctx.params, ctx).toSequelize)
-    return new RescueResult(result, ctx.params).toResponse()
+    let rescueQuery = new RescueQuery(ctx.query, ctx)
+    let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+    return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
   }
 
-  static async findById (params, connection) {
-    if (params.id) {
-      let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
-      return new RescueResult(result, params).toResponse()
+  static async findById (ctx) {
+    if (ctx.params.id) {
+      let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+      let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+      return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
     } else {
       throw Error.template('missing_required_field', 'id')
     }
   }
 
-  static async create (params, connection, data) {
-    let rescue = await Rescue.create(data)
-    if (!rescue) {
+  static async create (ctx) {
+    let result = await Rescue.create(ctx.data)
+    if (!result) {
       throw Error.template('operation_failed')
     }
-    return new RescueResult(rescue, params).toResponse()
+
+    ctx.response.status = 201
+    return RescuesPresenter.render(result, ctx.meta(result))
   }
 
-  static async update (params, connection, data) {
-    if (params.id) {
+  static async update (ctx) {
+    if (ctx.params.id) {
       let rescue = await Rescue.findOne({
         where: {
-          id: params.id
+          id: ctx.params.id
         }
       })
 
       if (!rescue) {
-        throw Error.template('not_found', params.id)
+        throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, connection.user)
-      if (Permission.require(permission, connection.user, connection.scope)) {
-        let rescue = await Rescue.update(data, {
+      let permission = getRescuePermissionType(rescue, ctx.user)
+      if (Permission.require(permission, ctx.user, ctx.scope)) {
+        let rescue = await Rescue.update(ctx.data, {
           where: {
-            id: params.id
+            id: ctx.params.id
           }
         })
 
@@ -61,105 +64,112 @@ class Rescues {
           throw Error.template('operation_failed')
         }
 
-        let result = Rescue.findAndCountAll(new RescueQuery({id: params.id}, connection).toSequelize)
-        return new RescueResult(result, params).toResponse()
+        let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
+        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
       }
     } else {
       throw Error.template('missing_required_field', 'id')
     }
   }
 
-  static async delete (params) {
-    if (params.id) {
+  static async delete (ctx) {
+    if (ctx.params.id) {
       let rescue = await Rescue.findOne({
         where: {
-          id: params.id
+          id: ctx.params.id
         }
       })
 
       if (!rescue) {
-        throw Error.template('not_found', params.id)
+        throw Error.template('not_found', ctx.params.id)
       }
 
       rescue.destroy()
+      ctx.status = 204
       return true
     }
   }
 
-  static async assign (params, connection, data) {
-    if (params.id) {
+  static async assign (ctx) {
+    if (ctx.params.id) {
       let rescue = await Rescue.findOne({
         where: {
-          id: params.id
+          id: ctx.params.id
         }
       })
 
       if (!rescue) {
-        throw Error.template('not_found', params.id)
+        throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, connection.user)
-      if (Permission.require(permission, connection.user, connection.scope)) {
-        let rats = data.map((rat) => {
+      let permission = getRescuePermissionType(rescue, ctx.user)
+      if (Permission.require(permission, ctx.user, ctx.scope)) {
+        let rats = ctx.data.map((rat) => {
           return rescue.addRat(rat)
         })
 
         await Promise.all(rats)
-        let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
-        return new RescueResult(result, params).toResponse()
+
+        let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
       }
     }
   }
 
-  static async unassign (params, connection, data) {
-    if (params.id) {
+  static async unassign (ctx) {
+    if (ctx.params.id) {
       let rescue = await Rescue.findOne({
         where: {
-          id: params.id
+          id: ctx.params.id
         }
       })
 
       if (!rescue) {
-        throw Error.template('not_found', params.id)
+        throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, connection.user)
-      if (Permission.require(permission, connection.user, connection.scope)) {
-        let rats = data.map((rat) => {
+      let permission = getRescuePermissionType(rescue, ctx.user)
+      if (Permission.require(permission, ctx.user, ctx.scope)) {
+        let rats = ctx.data.map((rat) => {
           return rescue.removeRat(rat)
         })
 
         await Promise.all(rats)
-        let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
-        return new RescueResult(result, params).toResponse()
+
+        let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
       }
     }
   }
 
-  static async addquote (params, connection, data) {
-    if (params.id) {
+  static async addquote (ctx) {
+    if (ctx.params.id) {
       let rescue = await Rescue.findOne({
         where: {
-          id: params.id
+          id: ctx.params.id
         }
       })
 
       if (!rescue) {
-        throw Error.template('not_found', params.id)
+        throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, connection.user)
-      if (Permission.require(permission, connection.user, connection.scope)) {
+      let permission = getRescuePermissionType(rescue, ctx.user)
+      if (Permission.require(permission, ctx.user, ctx.scope)) {
         await Rescue.update({
-          quotes: rescue.quotes.concat(data)
+          quotes: rescue.quotes.concat(ctx.data)
         }, {
           where: {
-            id: params.id
+            id: ctx.params.id
           }
         })
 
-        let result = await Rescue.findAndCountAll(new RescueQuery({ id: params.id }, connection).toSequelize)
-        return new RescueResult(result, params).toResponse()
+        let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
       }
     }
   }
@@ -169,13 +179,12 @@ const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
 function getRescuePermissionType (rescue, user) {
   if (user) {
-    for (let CMDR of user.CMDRs) {
-      if (rescue.rats.includes(CMDR) || rescue.firstLimpetId === CMDR) {
+    for (let rat of user.rats) {
+      if (rescue.rats.includes(rat) || rescue.firstLimpetId === rat) {
         return selfWriteAllowedPermissions
       }
     }
   }
   return ['rescue.write']
 }
-
 module.exports = Rescues
