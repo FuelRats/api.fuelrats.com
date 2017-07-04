@@ -10,6 +10,7 @@ const Permission = require('../permission')
 const UsersPresenter = require('../classes/Presenters').UsersPresenter
 
 const bearerTokenHeaderOffset = 7
+const basicAuthHeaderOffset = 6
 
 class Authentication {
   static async passwordAuthenticate (email, password) {
@@ -71,10 +72,12 @@ class Authentication {
   }
 
   static async authenticate (ctx, next) {
+    let basicAuth = getBasicAuth(ctx)
+
     if (ctx.session.userId) {
       let user = await User.findOne({where: { id: ctx.session.userId }})
       if (user) {
-        ctx.user = user
+        ctx.user = UsersPresenter.render(user, {})
         return next()
       }
     }
@@ -90,6 +93,18 @@ class Authentication {
     }
     await next()
   }
+
+  static async isAuthenticated (ctx, next) {
+    if (ctx.user) {
+      await next()
+    } else {
+      throw Error.template('not_authenticated')
+    }
+  }
+
+  static isClientAuthenticated (ctx, next) {
+    return next()
+  }
 }
 
 function getBearerToken (ctx) {
@@ -102,6 +117,14 @@ function getBearerToken (ctx) {
     }
   }
   return null
+}
+
+function getBasicAuth (ctx) {
+  let authorizationHeader = ctx.get('Authorization')
+  if (authorizationHeader.startsWith('Basic ') && authorizationHeader.length > basicAuthHeaderOffset) {
+    let authString = Buffer.from(authorizationHeader.substring(basicAuthHeaderOffset), 'base64')
+    console.log(authString)
+  }
 }
 
 module.exports = Authentication

@@ -9,6 +9,8 @@ const router = require('koa-router')()
 const app = new Koa()
 const koaBody = require('koa-body')()
 const TrafficControl = require('./api/TrafficControl')
+const render = require('koa-ejs')
+const path = require('path')
 
 
 // Import libraries
@@ -83,6 +85,10 @@ let sessionConfiguration = {
 }
 
 app.use(session(sessionConfiguration, app))
+app.use(require('koa-static')('static', {
+  hidden: false,
+  gzip: true
+}))
 app.use(koaBody)
 
 let port = config.port || process.env.PORT
@@ -132,13 +138,23 @@ app.use(async (ctx, next) => {
     }
 
     let result = await next()
-    ctx.body = result
+    if (result) {
+      ctx.body = result
+
+    }
   } catch (ex) {
     console.log(ex)
     await next(ex)
   }
 })
 
+render(app, {
+  root: path.join(__dirname, 'views'),
+  layout: false,
+  viewExt: 'html',
+  cache: false,
+  debug: true
+})
 
 // ROUTES
 // =============================================================================
@@ -150,6 +166,19 @@ router.put('/v2/rescues/assign/:id', rescue.assign)
 router.put('/v2/rescues/unassign/:id', rescue.unassign)
 router.delete('/v2/rescues/:id', Permission.required(['rescue.delete']), rescue.delete)
 router.post('/v2/login',login.login)
+
+router.get('/oauth2/authorize',
+  Authentication.isAuthenticated,
+  oauth2.authorizationValidateFields,
+  oauth2.authorizationValidateRedirect,
+  oauth2.authorizationRender
+)
+
+router.post('/oauth2/authorize', Authentication.isAuthenticated, oauth2.decision)
+
+// Create endpoint handlers for oauth2 token
+router.post('/oauth2/token', Authentication.isClientAuthenticated, oauth2.token, oauth2.tokenErrorHandler)
+
 /* router.post('/v2/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
 router.delete('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated,
@@ -281,12 +310,6 @@ router.get('/statistics', statistics.get)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 
-router.route('/oauth2/authorize')
-  .get(auth.isAuthenticated(true), oauth2.authorization)
-  .post(auth.isAuthenticated(false), oauth2.decision)
-
-// Create endpoint handlers for oauth2 token
-router.route('/oauth2/token').post(auth.isClientAuthenticated, oauth2.token)
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 router.post('/irc/message', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.message)

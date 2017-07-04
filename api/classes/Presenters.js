@@ -38,10 +38,20 @@ class RescuesPresenter extends Presenter {
 }
 RescuesPresenter.prototype.type = 'rescues'
 
+class ClientsPresenter extends Presenter {
+  relationships () {
+    return {
+      user: UsersPresenter
+    }
+  }
+}
+ClientsPresenter.prototype.type = 'clients'
+
 module.exports = {
   Presenter,
   UsersPresenter,
   RatsPresenter,
   RescuesPresenter,
-  EpicsPresenter
+  EpicsPresenter,
+  ClientsPresenter
 }
