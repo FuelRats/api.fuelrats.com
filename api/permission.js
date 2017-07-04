@@ -209,6 +209,9 @@ class Permission {
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'
       let accessible = Permission.granted([permission], user, null)
+      if (isSelf && scopes.includes(`${group}.${action}`)) {
+        continue
+      }
 
       let count = 0
       if (group === 'user' && isSelf) {
@@ -220,7 +223,6 @@ class Permission {
           group: i18next.t(group, { count: count }),
           count: count
         }),
-
         accessible: accessible
       })
     }
