@@ -1,6 +1,6 @@
 'use strict'
 
-const oauth2orize = require('oauth2orize-koa')
+const oauth2orize = require('oauth2orize-koa-fr')
 const crypto = require('crypto')
 const Token = require('../db').Token
 const Client = require('../db').Client
@@ -49,13 +49,14 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
 }))
 
 server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
+  console.log(client, user, ares, areq)
   for (let scope of areq.scope) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
       throw Errors.template('invalid_scope', scope)
     }
   }
 
-  let token = Token.create({
+  let token = await Token.create({
     value: crypto.randomBytes(32).toString('hex'),
     scope: areq.scope,
     clientId: client.id,
