@@ -10,6 +10,7 @@ const Errors = require('../errors')
 const i18next = require('i18next')
 const localisationResources = require('../../localisations.json')
 const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
+const Authentication = require('./auth')
 
 i18next.init({
   lng: 'en',
@@ -49,7 +50,6 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
 }))
 
 server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
-  console.log(client, user, ares, areq)
   for (let scope of areq.scope) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
       throw Errors.template('invalid_scope', scope)
@@ -82,6 +82,24 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
   })
   return token.value
 }))
+
+server.exchange(oauth2orize.exchange.password(
+  async function (client, username, password) {
+    let user = await Authentication.passwordAuthenticate(username, password)
+    if (!user) {
+      return false
+    }
+
+    let token = await Token.create({
+      value: crypto.randomBytes(32).toString('hex'),
+      clientId: client.data.id,
+      userId: user.data.id,
+      scope: ['*']
+    })
+
+    return token.value
+  }
+))
 
 exports.authorizationValidateFields = async function (ctx, next) {
   if (!ctx.query.client_id) {
