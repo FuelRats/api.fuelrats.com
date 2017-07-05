@@ -31,52 +31,55 @@ server.deserializeClient(async function (id) {
   return client
 })
 
-server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, areq) {
+server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, ares, areq) {
   for (let scope of areq.scope) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
       throw Errors.template('invalid_scope', scope)
     }
   }
 
-  return Code.create({
+  let code = await Code.create({
     value: crypto.randomBytes(24).toString('hex'),
     scope: areq.scope,
     redirectUri: redirectUri,
     clientId: client.id,
-    userId: user.id
+    userId: user.data.id
   })
+  return code.value
 }))
 
-server.grant(oauth2orize.grant.token(function (client, user, ares, areq) {
+server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
   for (let scope of areq.scope) {
     if (Permission.permissions.includes(scope) === false && scope !== '*') {
       throw Errors.template('invalid_scope', scope)
     }
   }
 
-  return Token.create({
+  let token = Token.create({
     value: crypto.randomBytes(32).toString('hex'),
     scope: areq.scope,
     clientId: client.id,
-    userId: user.id
+    userId: user.data.id
   })
+  return token.value
 }))
 
 server.exchange(oauth2orize.exchange.code(async function (client, code, redirectUri) {
   let auth = await Code.findOne({ where: { value: code }})
 
-  if (!auth || client.id !== auth.clientId || redirectUri !== auth.redirectUri) {
+  if (!auth || client.data.id !== auth.clientId || redirectUri !== auth.redirectUri) {
     return false
   }
 
   auth.destroy()
 
-  return Token.create({
+  let token = await Token.create({
     scope: auth.scope,
     value: crypto.randomBytes(32).toString('hex'),
     clientId: client.id,
     userId: auth.userId
   })
+  return token.value
 }))
 
 exports.authorizationValidateFields = async function (ctx, next) {
@@ -91,6 +94,7 @@ exports.authorizationValidateFields = async function (ctx, next) {
 exports.authorizationValidateRedirect = server.authorize(async function (clientId, redirectUri) {
   let client = await Client.findById(clientId)
   if (!client) {
+
     return false
   }
   if (client.redirectUri === null || client.redirectUri === redirectUri) {
@@ -122,7 +126,5 @@ exports.authorizationRender = async function (ctx) {
 
 
 
-exports.decision = server.decision
-exports.token = server.token
-exports.tokenErrorHandler = server.errorHandler
+exports.server = server
 

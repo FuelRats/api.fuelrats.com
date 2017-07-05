@@ -174,10 +174,13 @@ router.get('/oauth2/authorize',
   oauth2.authorizationRender
 )
 
-router.post('/oauth2/authorize', Authentication.isAuthenticated, oauth2.decision)
+router.post('/oauth2/authorize', Authentication.isAuthenticated, ...oauth2.server.decision())
 
 // Create endpoint handlers for oauth2 token
-router.post('/oauth2/token', Authentication.isClientAuthenticated, oauth2.token, oauth2.tokenErrorHandler)
+router.post('/oauth2/token',
+  Authentication.isClientAuthenticated,
+  oauth2.server.token(),
+  oauth2.server.errorHandler())
 
 /* router.post('/v2/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))

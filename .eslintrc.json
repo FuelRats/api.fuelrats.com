@@ -47,7 +47,7 @@
       2
     ],
     "no-sparse-arrays": [
-      2
+      1
     ],
     "no-obj-calls": [
       2
@@ -62,7 +62,7 @@
       2
     ],
     "vars-on-top": [
-      2
+      1
     ],
     "space-before-function-paren": [
       2
@@ -85,16 +85,16 @@
       2
     ],
     "require-await": [
-      2
+      1
     ],
     "require-yield": [
-      2
+      1
     ],
     "no-return-await": [
-      2
+      1
     ],
     "no-await-in-loop": [
-      2
+      1
     ]
   }
 }

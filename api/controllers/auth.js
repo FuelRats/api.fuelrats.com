@@ -68,16 +68,25 @@ class Authentication {
       return null
     }
 
-    return bcrypt.compare(secret, client.secret)
+    let authorised = await bcrypt.compare(secret, client.secret)
+    if (authorised) {
+      return UsersPresenter.render(client, {})
+    }
+    return false
   }
 
   static async authenticate (ctx, next) {
-    let basicAuth = getBasicAuth(ctx)
+    let [ clientId, clientSecret ] = getBasicAuth(ctx)
+    if (clientId) {
+      ctx.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
+      ctx.state.user = ctx.state.client
+      return next()
+    }
 
     if (ctx.session.userId) {
       let user = await User.findOne({where: { id: ctx.session.userId }})
       if (user) {
-        ctx.user = UsersPresenter.render(user, {})
+        ctx.state.user = UsersPresenter.render(user, {})
         return next()
       }
     }
@@ -86,8 +95,8 @@ class Authentication {
     if (bearerToken) {
       let bearerCheck = await Authentication.bearerAuthenticate(bearerToken)
       if (bearerCheck) {
-        ctx.user = bearerCheck.user
-        ctx.scope = bearerCheck.scope
+        ctx.state.user = bearerCheck.user
+        ctx.state.scope = bearerCheck.scope
         return next()
       }
     }
@@ -95,15 +104,19 @@ class Authentication {
   }
 
   static async isAuthenticated (ctx, next) {
-    if (ctx.user) {
+    if (ctx.state.user) {
       await next()
     } else {
       throw Error.template('not_authenticated')
     }
   }
 
-  static isClientAuthenticated (ctx, next) {
-    return next()
+  static async isClientAuthenticated (ctx, next) {
+    if (ctx.state.client) {
+      await next()
+    } else {
+      throw Error.template('not_authenticated')
+    }
   }
 }
 
@@ -122,9 +135,10 @@ function getBearerToken (ctx) {
 function getBasicAuth (ctx) {
   let authorizationHeader = ctx.get('Authorization')
   if (authorizationHeader.startsWith('Basic ') && authorizationHeader.length > basicAuthHeaderOffset) {
-    let authString = Buffer.from(authorizationHeader.substring(basicAuthHeaderOffset), 'base64')
-    console.log(authString)
+    let authString = Buffer.from(authorizationHeader.substring(basicAuthHeaderOffset), 'base64').toString('utf8')
+    return authString.split(':')
   }
+  return []
 }
 
 module.exports = Authentication
