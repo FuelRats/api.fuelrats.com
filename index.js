@@ -41,7 +41,7 @@ const Rat = require('./api/db').Rat
 // Import controllers
 const Authentication = require('./api/controllers/auth')
 const change_password = require('./api/controllers/change_password')
-const client = require('./api/controllers/client').HTTP
+const client = require('./api/controllers/client')
 const decal = require('./api/controllers/decal').HTTP
 const docs = require('./api/controllers/docs')
 const irc = require('./api/controllers/irc').HTTP
@@ -165,6 +165,15 @@ router.put('/v2/rescues/:id', rescue.update)
 router.put('/v2/rescues/assign/:id', rescue.assign)
 router.put('/v2/rescues/unassign/:id', rescue.unassign)
 router.delete('/v2/rescues/:id', Permission.required(['rescue.delete']), rescue.delete)
+
+
+router.get('/v2/clients', Permission.required(['client.read']), client.read)
+router.get('/v2/clients/:id', client.findById)
+router.post('/v2/clients', client.create)
+router.put('/v2/clients/:id', client.update)
+router.delete('/v2/clients/:id', Permission.required(['client.delete']), client.delete)
+
+
 router.post('/v2/login',login.login)
 
 router.get('/oauth2/authorize',
@@ -262,7 +271,8 @@ router.put('/rescues/:id', auth.isAuthenticated(false), rescue.put)
 router.put('/rescues/:id/addquote', auth.isAuthenticated(false), rescue.addquote)
 router.put('/rescues/:id/assign/:ratId', auth.isAuthenticated(false), rescue.assign)
 router.put('/rescues/:id/unassign/:ratId', auth.isAuthenticated(false), rescue.unassign)
-router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('rescue.delete', false), rescue.delete)
+router.delete('/rescues/:id', auth.isAuthenticated(false), Permission.required('rescue.delete', false),
+rescue.delete)
 
 
 router.get('/users', auth.isAuthenticated(false), Permission.required('user.read', false), user.get)
@@ -276,15 +286,18 @@ router.delete('/users/:id', auth.isAuthenticated(false), Permission.required('us
 router.get('/nicknames/search/:nickname', auth.isAuthenticated(false), nicknames.search)
 router.get('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.read', false),
 nicknames.get)
-router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.post)
-router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false), nicknames.put)
+router.post('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false),
+ nicknames.post)
+router.put('/nicknames/', auth.isAuthenticated(false), Permission.required('self.user.update', false),
+ nicknames.put)
 router.delete('/nicknames/:nickname', auth.isAuthenticated(false), Permission.required('self.user.update', false),
 nicknames.delete)
 
 router.get('/clients', auth.isAuthenticated(false), Permission.required('client.read', false), client.get)
 router.put('/clients/:id', auth.isAuthenticated(false), Permission.required('client.update', false), client.put)
 router.post('/clients', auth.isAuthenticated(false), Permission.required('self.client.create', false), client.post)
-router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete', false), client.delete)
+router.delete('/clients/:id', auth.isAuthenticated(false), Permission.required('client.delete', false),
+client.delete)
 
 router.get('/ships', ship.get)
 router.post('/ships', ship.post)
@@ -390,7 +403,8 @@ socket.on('connection', function (client) {
   }))
 
   client.on('close', function () {
-    winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress} with ID ${client.clientId} closed`)
+    winston.info(`${Date()} Websocket connection to  ${client._socket.remoteAddress}
+    with ID ${client.clientId} closed`)
   })
 
   client.on('message', function (data) {

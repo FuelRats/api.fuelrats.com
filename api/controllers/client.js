@@ -6,169 +6,110 @@ const Errors = require('../errors')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
 const BotServ = require('../Anope/BotServ')
+const ClientQuery = require('../Query/ClientQuery')
+const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
 
-class Controller {
-  static read (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      let limit = parseInt(query.limit) || 25
-      delete query.limit
+class Clients {
+  static async read (ctx) {
+    let clientQuery = new ClientQuery(ctx.query, ctx)
+    let result = await Client.findAndCountAll(clientQuery.toSequelize)
+    return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
+  }
 
-      let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
-      delete query.offset
-      delete query.page
+  static async findById (ctx) {
+    if (ctx.params.id) {
+      let clientQuery = new ClientQuery({ id: ctx.params.id }, ctx)
+      let result = await Client.findAndCountAll(clientQuery.toSequelize)
 
-      if (query.user) {
-        query.userId = query.user
-        delete query.user
+      if (result.length === 0 || hasValidPermissionsForClient(result[0])) {
+        return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
+      }
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async create (ctx) {
+    let secret = crypto.randomBytes(32).toString('hex')
+    let encryptedSecret = await bcrypt.hash(secret, 16)
+
+    ctx.data = Object.assign(ctx.data, {
+      secret: encryptedSecret,
+      userId: ctx.state.user.data.id
+    })
+    let result = await Client.create(ctx.data)
+    result.secret = secret
+    if (!result) {
+      throw Error.template('operation_failed')
+    }
+
+    ctx.response.status = 201
+    return ClientsPresenter.render(result, ctx.meta(result))
+  }
+
+  static async update (ctx) {
+    if (ctx.params.id) {
+      let client = await Client.findOne({
+        where: {
+          id: ctx.params.id
+        }
+      })
+
+      if (!client) {
+        throw Error.template('not_found', ctx.params.id)
       }
 
-      Client.findAndCountAll({
-        where: query,
-        limit: limit,
-        offset: offset
-      }).then(function (result) {
-        let meta = {
-          count: result.rows.length,
-          limit: limit,
-          offset: offset,
-          total: result.count
+      if (hasValidPermissionsForClient(ctx, client)) {
+        if (!Permission.granted(['client.write'], ctx.state.user, ctx.state.scope)) {
+          delete ctx.data.userId
+          delete ctx.data.secret
         }
 
-        let clients = result.rows.map(function (clientInstance) {
-          let client = convertClientToAPIResult(clientInstance)
-          return client
+        let rescue = await Client.update(ctx.data, {
+          where: {
+            id: ctx.params.id
+          }
         })
 
-        resolve({
-          data: clients,
-          meta: meta
-        })
-      }).catch(function (error) {
-        reject({ error: Errors.throw('server_error', error), meta: {} })
-      })
-    })
-  }
-
-  static create (data, connection) {
-    return new Promise(function (resolve, reject) {
-      let secret = crypto.randomBytes(24).toString('hex')
-
-      bcrypt.hash(secret, 16, function (error, hash) {
-        if (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
-          return
+        if (!rescue) {
+          throw Error.template('operation_failed')
         }
 
-        Client.create({
-          name: data.name,
-          redirectUri: data.redirectUri,
-          secret: hash
-        }).then(function (clientInstance) {
-          clientInstance.setUser(connection.user.id).then(function () {
-            let client = convertClientToAPIResult(clientInstance)
-            client.secret = secret
-
-
-            BotServ.say('#rattech', `[API] OAuth Client Registered by ${connection.user.email}: "${client.name}" (${client.id})`)
-            resolve({
-              data: client,
-              meta: {}
-            })
-          }).catch(function (error) {
-            reject({ error: Errors.throw('server_error', error), meta: {} })
-          })
-        }).catch(function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
-        })
-      })
-    })
-  }
-
-  static update () {
-    return new Promise(function (resolve, reject) {
-      reject({ error: Errors.throw('not_implemented', 'client:update is not implemented, please contact the tech rats for changes'), meta: {} })
-    })
-  }
-
-  static delete (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      console.log(query)
-      if (query.id) {
-        Permission.require('client.delete', connection.user).then(function () {
-          Client.findById(query.id).then(function (client) {
-            client.destroy()
-            resolve({ data: null, meta: {} })
-          }).catch(function (error) {
-            reject({ error: Errors.throw('server_error', error), meta: {} })
-          })
-        }).catch(function (error) {
-          reject({ error: error })
-        })
-      } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
+        let clientQuery = new ClientQuery({id: ctx.params.id}, ctx)
+        let result = await Client.findAndCountAll(clientQuery.toSequelize)
+        return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
       }
-    })
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async delete (ctx) {
+    if (ctx.params.id) {
+      let rescue = await Client.findOne({
+        where: {
+          id: ctx.params.id
+        }
+      })
+
+      if (!rescue) {
+        throw Error.template('not_found', ctx.params.id)
+      }
+
+      rescue.destroy()
+      ctx.status = 204
+      return true
+    }
   }
 }
 
-class HTTP {
-  static get (request, response, next) {
-    Controller.read(request.query, request, request.body).then(function (res) {
-      let data = res.data
-
-      response.model.data = data
-      response.status = 200
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
+function hasValidPermissionsForClient (ctx, client) {
+  let permissions = ['client.write']
+  if (client.user.id === ctx.state.user.id) {
+    permissions.push('client.write.me')
   }
 
-  static post (request, response, next) {
-    Controller.create(request.body, request, request.query).then(function (res) {
-      let data = res.data
-
-      response.model.data = data
-      response.status(201)
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static put (request, response, next) {
-    let notImplemented = Errors.throw('not_implemented', 'PUT /clients is not implemented, please contact the tech rats for changes')
-    response.model.errors.push(notImplemented)
-    response.status(404)
-    next()
-  }
-
-  static delete (request, response, next) {
-    Controller.delete(request.body, request, request.params).then(function (res) {
-      let data = res.data
-
-      response.model.data = data
-      response.status(204)
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
+  return Permission.require(permissions, ctx.state.user, ctx.state.scope)
 }
 
-function convertClientToAPIResult (clientInstance) {
-  let client = clientInstance.toJSON()
-  client.user = client.userId
-  delete client.userId
-  delete client.secret
-
-  return client
-}
-
-module.exports = { Controller, HTTP }
+module.exports = Clients

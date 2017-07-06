@@ -115,7 +115,7 @@ class Permission {
     if (Permission.granted(permissions, user, scope)) {
       return true
     }
-    throw(Permission.permissionError(permissions))
+    throw Permission.permissionError(permissions)
   }
 
   /**
@@ -125,10 +125,10 @@ class Permission {
    */
   static required (permissions) {
     return function (ctx, next) {
-      if (Permission.granted(permissions, ctx.user, ctx.scope)) {
+      if (Permission.granted(permissions, ctx.state.user, ctx.state.scope)) {
         return next()
       } else {
-        return next(Permission.permissionError(permissions))
+        throw Permission.permissionError(permissions)
       }
     }
   }
