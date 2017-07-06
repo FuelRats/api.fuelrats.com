@@ -24,6 +24,7 @@ class Clients {
       if (result.length === 0 || hasValidPermissionsForClient(ctx, result[0], 'read')) {
         return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
       }
+      throw Errors.template('no_permission', 'client.read')
     } else {
       throw Error.template('missing_required_field', 'id')
     }
@@ -44,7 +45,9 @@ class Clients {
     }
 
     ctx.response.status = 201
-    return ClientsPresenter.render(result, ctx.meta(result))
+    let renderedResult = ClientsPresenter.render(result, ctx.meta(result))
+    process.emit('clientCreated', ctx, renderedResult)
+    return renderedResult
   }
 
   static async update (ctx) {
@@ -77,7 +80,9 @@ class Clients {
 
         let clientQuery = new ClientQuery({id: ctx.params.id}, ctx)
         let result = await Client.findAndCountAll(clientQuery.toSequelize)
-        return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
+        let renderedResult = ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
+        process.emit('clientUpdated', ctx, renderedResult)
+        return renderedResult
       }
     } else {
       throw Error.template('missing_required_field', 'id')
@@ -97,6 +102,8 @@ class Clients {
       }
 
       rescue.destroy()
+
+      process.emit('clientDeleted', ctx, ctx.params.id)
       ctx.status = 204
       return true
     }

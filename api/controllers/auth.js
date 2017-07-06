@@ -34,7 +34,7 @@ class Authentication {
   static async bearerAuthenticate (bearer) {
     let token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
-      throw(false)
+      throw false
     }
     let userInstance = await User.findOne({
       where: { id: token.userId },

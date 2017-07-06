@@ -7,6 +7,7 @@ const Epic = require('../db').Epic
 const API = require('../classes/API')
 const RescueQuery = require('../Query/RescueQuery')
 const { RescuesPresenter } = require('../classes/presenters')
+const EventEmitter = require('events')
 
 const Error = require('../errors')
 const Permission = require('../permission')
@@ -37,7 +38,9 @@ class Rescues {
     }
 
     ctx.response.status = 201
-    return RescuesPresenter.render(result, ctx.meta(result))
+    let rescue = RescuesPresenter.render(result, ctx.meta(result))
+    process.emit('rescueCreated', ctx, rescue)
+    return rescue
   }
 
   static async update (ctx) {
@@ -66,7 +69,9 @@ class Rescues {
 
         let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
         let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
-        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        process.emit('rescueUpdated', ctx, renderedResult)
+        return renderedResult
       }
     } else {
       throw Error.template('missing_required_field', 'id')
@@ -86,6 +91,8 @@ class Rescues {
       }
 
       rescue.destroy()
+
+      process.emit('rescueDeleted', ctx, ctx.params.id)
       ctx.status = 204
       return true
     }
@@ -113,7 +120,9 @@ class Rescues {
 
         let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
         let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
-        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        process.emit('rescueUpdated', ctx, renderedResult)
+        return renderedResult
       }
     }
   }
@@ -140,7 +149,9 @@ class Rescues {
 
         let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
         let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
-        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        process.emit('rescueUpdated', ctx, renderedResult)
+        return renderedResult
       }
     }
   }
@@ -169,7 +180,9 @@ class Rescues {
 
         let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
         let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
-        return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        process.emit('rescueUpdated', ctx, renderedResult)
+        return renderedResult
       }
     }
   }

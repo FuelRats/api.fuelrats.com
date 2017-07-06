@@ -22,6 +22,8 @@ class Users {
       if (result.rows.length === 0 || hasValidPermissionsForUser(ctx, result.rows[0], 'read')) {
         return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
       }
+
+      throw Error.template('no_permission', 'client.read')
     } else {
       throw Error.template('missing_required_field', 'id')
     }
@@ -34,7 +36,10 @@ class Users {
     }
 
     ctx.response.status = 201
-    return UsersPresenter.render(result, ctx.meta(result))
+
+    let renderedResult = UsersPresenter.render(result, ctx.meta(result))
+    process.emit('userCreated', ctx, renderedResult)
+    return renderedResult
   }
 
   static async update (ctx) {
@@ -62,7 +67,9 @@ class Users {
 
         let userQuery = new UserQuery({id: ctx.params.id}, ctx)
         let result = await User.findAndCountAll(userQuery.toSequelize)
-        return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+        let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+        process.emit('userUpdated', ctx, renderedResult)
+        return renderedResult
       }
     } else {
       throw Error.template('missing_required_field', 'id')
@@ -82,6 +89,8 @@ class Users {
       }
 
       rescue.destroy()
+
+      process.emit('userDeleted', ctx, ctx.params.id)
       ctx.status = 204
       return true
     }

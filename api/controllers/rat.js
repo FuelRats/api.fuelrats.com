@@ -16,12 +16,13 @@ class Rats {
 
   static async findById (ctx) {
     if (ctx.params.id) {
-      let ratQuery = new RatQuery({ id: ctx.params.id }, ctx)
+      let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
       let result = await Rat.findAndCountAll(ratQuery.toSequelize)
 
       if (result.rows.length === 0 || hasValidPermissionsForRat(ctx, result.rows[0])) {
         return RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
       }
+      throw Errors.template('no_permission', 'client.read')
     } else {
       throw Error.template('missing_required_field', 'id')
     }
@@ -38,7 +39,9 @@ class Rats {
     }
 
     ctx.response.status = 201
-    return RatsPresenter.render(result, ctx.meta(result))
+    let renderedResult = RatsPresenter.render(result, ctx.meta(result))
+    process.emit('ratCreated', ctx, renderedResult)
+    return renderedResult
   }
 
   static async update (ctx) {
@@ -70,33 +73,33 @@ class Rats {
 
         let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
         let result = await Rat.findAndCountAll(ratQuery.toSequelize)
-        return RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
+        let renderedResult = RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
+        process.emit('ratUpdated', ctx, renderedResult)
+        return renderedResult
       }
     } else {
       throw Error.template('missing_required_field', 'id')
     }
   }
 
-  static delete (params) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        Rat.findOne({
-          where: {
-            id: params.id
-          }
-        }).then(function (rat) {
-          if (!rat) {
-            return reject(Error.template('not_found', params.id))
-          }
+  static async delete (ctx) {
+    if (ctx.params.id) {
+      let rat = await Rat.findOne({
+        where: {
+          id: ctx.params.id
+        }
+      })
 
-          rat.destroy()
-
-          resolve(null)
-        }).catch(function (err) {
-          reject({ error: Errors.throw('server_error', err), meta: {} })
-        })
+      if (!rat) {
+        throw Error.template('not_found', ctx.params.id)
       }
-    })
+
+      rat.destroy()
+
+      process.emit('ratDeleted', ctx, ctx.params.id)
+      ctx.status = 204
+      return true
+    }
   }
 }
 

@@ -27,8 +27,8 @@ class TrafficControl {
    */
   validateRateLimit (connection, increase = true) {
     let entity
-    if (connection.user) {
-      entity = this.retrieveAuthenticatedEntity(connection.user)
+    if (connection.state.user) {
+      entity = this.retrieveAuthenticatedEntity(connection.state.user)
     } else {
       entity = this.retrieveUnauthenticatedEntity(connection.inet)
     }

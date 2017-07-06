@@ -11,7 +11,9 @@ const koaBody = require('koa-body')()
 const TrafficControl = require('./api/TrafficControl')
 const render = require('koa-ejs')
 const path = require('path')
-
+const http = require('http')
+const ws = require('ws')
+const { URL } = require('url')
 
 // Import libraries
 const compression = require('compression')
@@ -19,7 +21,6 @@ const fs = require('fs')
 const Permission = require('./api/permission')
 const winston = require('winston')
 const uid = require('uid-safe')
-const ws = require('ws').Server
 const npid = require('npid')
 require('winston-daily-rotate-file')
 
@@ -61,7 +62,7 @@ const ship = require('./api/controllers/ship').HTTP
 const statistics = require('./api/controllers/statistics')
 const user = require('./api/controllers/user')
 const version = require('./api/controllers/version')
-const websocket = require('./api/websocket')
+const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill').HTTP
 
 db.sync()
@@ -94,24 +95,11 @@ let port = config.port || process.env.PORT
 
 app.use(async function (ctx, next) {
   ctx.data = ctx.request.body
-  ctx.meta = function (result, query = null, additionalParameters = {}) {
-    let meta = {
-      meta: {}
-    }
-    if (query) {
-      meta.meta = {
-        count: result.rows.length,
-        limit: query._limit || null,
-        offset: query._offset || null,
-        total: result.count
-      }
-    }
 
-    meta.meta = Object.assign(meta.meta, additionalParameters)
-    return meta
-  }
   let query = Object.assign(ctx.query, ctx.params)
   ctx.query = parseQuery(query)
+
+  ctx.inet = ctx.request.headers['X-Forwarded-for'] ||
   await next()
 })
 
@@ -162,7 +150,7 @@ render(app, {
 // =============================================================================
 router.get('/v2/rescues', Permission.required(['rescue.read']), rescue.search)
 router.get('/v2/rescues/:id', Permission.required(['rescue.read']), rescue.findById)
-router.post('/v2/rescues', Permission.required(['rescue.create']), rescue.create)
+router.post('/v2/rescues', Permission.required(['rescue.write']), rescue.create)
 router.put('/v2/rescues/:id', rescue.update)
 router.put('/v2/rescues/assign/:id', rescue.assign)
 router.put('/v2/rescues/unassign/:id', rescue.unassign)
@@ -455,4 +443,31 @@ function parseQuery (query) {
   return queryObj
 }
 
-app.listen(port)
+let server = http.createServer(app.callback())
+const wss = new ws.Server({ server })
+
+const websocketManager = new WebSocketManager(wss, traffic)
+
+wss.on('connection', async function connection (client) {
+  let url = new URL(`http://localhost:8080${client.upgradeReq.url}`)
+
+  let bearer = url.searchParams.get('bearer')
+  if (bearer) {
+    let { user, scope } = await Authentication.bearerAuthenticate(bearer)
+    if (user) {
+      client.user = user
+      client.scope = scope
+    }
+  }
+
+  client.on('message', (message) => {
+    try {
+      let request = JSON.parse(message)
+      websocketManager.onMessage(client, request)
+    } catch (ex) {
+      console.log(ex)
+    }
+  })
+})
+
+server.listen(port)
