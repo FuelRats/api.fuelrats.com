@@ -5,7 +5,6 @@ const Rat = require('../db').Rat
 const Rescue = require('../db').Rescue
 const Epic = require('../db').Epic
 const API = require('../classes/API')
-const Result = require('../Results')
 const RescueStatisticsQuery = require('../Query/RescueStatisticsQuery')
 const SystemStatisticsQuery = require('../Query/SystemStatisticsQuery')
 

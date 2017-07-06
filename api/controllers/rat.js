@@ -5,7 +5,6 @@ const Rat = require('../db').Rat
 const Errors = require('../errors')
 const Permission = require('../permission')
 const RatQuery = require('../Query/RatQuery')
-const RatResult = require('../Results/rat')
 
 class Rats {
   static search (params, connection) {

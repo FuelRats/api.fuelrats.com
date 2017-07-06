@@ -2,139 +2,99 @@
 
 const User = require('../db').User
 
-const Errors = require('../errors')
+const Error = require('../errors')
 const Permission = require('../permission')
 const UserQuery = require('../Query/UserQuery')
-const UserResult = require('../Results/user')
+const UsersPresenter = require('../classes/Presenters').UsersPresenter
 
 class Users {
-  static search (params, connection) {
-    return new Promise(function (resolve, reject) {
-      User.findAndCountAll(new UserQuery(params, connection).toSequelize).then(function (result) {
-        let permission = getUserReadPermissionType(result, connection.user)
-        Permission.require(permission, connection.user, connection.scope).then(function () {
-          resolve(new UserResult(result, params).toResponse())
-        }).catch(function (err) {
-          reject(err)
-        })
-      }).catch(function (error) {
-        reject(Errors.throw('server_error', error.message))
-      })
-    })
+  static async search (ctx) {
+    let rescueQuery = new UserQuery(ctx.query, ctx)
+    let result = await User.findAndCountAll(rescueQuery.toSequelize)
+    return UsersPresenter.render(result.rows, ctx.meta(result, rescueQuery))
   }
 
-  static findById (params, connection) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        User.findAndCountAll(new UserQuery({ id: params.id }, connection).toSequelize).then(function (result) {
-          let permission = getUserReadPermissionType(result, connection.user)
-          Permission.require(permission, connection.user, connection.scope).then(function () {
-            resolve(new UserResult(result, params).toResponse())
-          }).catch(function (err) {
-            reject(err)
-          })
-        }).catch(function (errors) {
-          reject(Errors.throw('server_error', errors[0].message))
-        })
-      } else {
-        reject(Error.template('missing_required_field', 'id'))
+  static async findById (ctx) {
+    if (ctx.params.id) {
+      let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+      let result = await User.findAndCountAll(userQuery.toSequelize)
+
+      if (result.rows.length === 0 || hasValidPermissionsForUser(ctx, result.rows[0], 'read')) {
+        return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
       }
-    })
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
   }
 
-  static create (params, connection, data) {
-    return new Promise(function (resolve, reject) {
-      User.create(data).then(function (user) {
-        if (!user) {
-          return reject(Errors.throw('operation_failed'))
+  static async create (ctx) {
+    let result = await User.create(ctx.data)
+    if (!result) {
+      throw Error.template('operation_failed')
+    }
+
+    ctx.response.status = 201
+    return UsersPresenter.render(result, ctx.meta(result))
+  }
+
+  static async update (ctx) {
+    if (ctx.params.id) {
+      let user = await User.findOne({
+        where: {
+          id: ctx.params.id
+        }
+      })
+
+      if (!user) {
+        throw Error.template('not_found', ctx.params.id)
+      }
+
+      if (hasValidPermissionsForUser(ctx, user, 'write')) {
+        let rescue = await User.update(ctx.data, {
+          where: {
+            id: ctx.params.id
+          }
+        })
+
+        if (!rescue) {
+          throw Error.template('operation_failed')
         }
 
-        resolve(new UserResult(user, params).toResponse())
-      }).catch(function (error) {
-        reject(Errors.throw('server_error', error.message))
+        let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+        let result = await User.findAndCountAll(userQuery.toSequelize)
+        return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+      }
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async delete (ctx) {
+    if (ctx.params.id) {
+      let rescue = await User.findOne({
+        where: {
+          id: ctx.params.id
+        }
       })
-    })
-  }
 
-  static update (params, connection, data) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        User.findOne({
-          where: {
-            id: params.id
-          }
-        }).then(function (user) {
-          if (!user) {
-            reject(Error.template('not_found', params.id))
-          }
-
-          let permission = getUserWritePermissionType(user, connection.user)
-          Permission.require(permission, connection.user, connection.scope).then(function () {
-            User.update(data, {
-              where: {
-                id: params.id
-              }
-            }).then(function (user) {
-              if (!user) {
-                return reject(Error.template('operation_failed'))
-              }
-
-              User.findAndCountAll(new UserQuery({ id: params.id }, connection).toSequelize).then(function (result) {
-                resolve(new UserResult(result, params).toResponse())
-              }).catch(function (error) {
-                reject(Errors.throw('server_error', error.message))
-              })
-            })
-          }).catch(function (err) {
-            reject(err)
-          })
-        }).catch(function (err) {
-          reject(Error.template('server_error', err))
-        })
-      } else {
-        reject(Error.template('missing_required_field', 'id'))
+      if (!rescue) {
+        throw Error.template('not_found', ctx.params.id)
       }
-    })
-  }
 
-  static delete (params) {
-    return new Promise(function (resolve, reject) {
-      if (params.id) {
-        User.findOne({
-          where: {
-            id: params.id
-          }
-        }).then(function (user) {
-          if (!user) {
-            return reject(Error.template('not_found', params.id))
-          }
-
-          user.destroy()
-
-          resolve(null)
-        }).catch(function (err) {
-          reject({ error: Errors.throw('server_error', err), meta: {} })
-        })
-      }
-    })
+      rescue.destroy()
+      ctx.status = 204
+      return true
+    }
   }
 }
 
-const selfReadAllowedPermissions = ['user.read.me', 'user.read']
-const selfWriteAllowedPermissions = ['user.write.me', 'user.write']
-
-function getUserReadPermissionType (user, self) {
-  if (user.id === self.id) {
-    return selfReadAllowedPermissions
+function hasValidPermissionsForUser (ctx, user, action = 'read') {
+  let permissions = [`user.${action}`]
+  if (user.id === ctx.state.user.data.id) {
+    permissions.push(`user.${action}.me`)
   }
-  return ['user.read']
-}
 
-function getUserWritePermissionType (user, self) {
-  if (user.id === self.id) {
-    return selfWriteAllowedPermissions
-  }
-  return ['user.write']
+  return Permission.require(permissions, ctx.state.user, ctx.state.scope)
 }
 
 module.exports = Users

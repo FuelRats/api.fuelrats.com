@@ -1,13 +1,10 @@
 'use strict'
-const _ = require('underscore')
 const Permission = require('../permission')
 const Errors = require('../errors')
 const User = require('../db').User
 const db = require('../db').db
 const Rat = require('../db').Rat
 const NicknameQuery = require('../Query/NicknameQuery')
-const NicknameInfoResult = require('../Results/nicknameinfo')
-const NicknameResult = require('../Results/nickname')
 
 const NickServ = require('../Anope/NickServ')
 const HostServ = require('../Anope/HostServ')

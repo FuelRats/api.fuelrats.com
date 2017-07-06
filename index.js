@@ -63,7 +63,6 @@ const user = require('./api/controllers/user')
 const version = require('./api/controllers/version')
 const websocket = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill').HTTP
-const UserResult = require('./api/Results/user')
 
 db.sync()
 
@@ -167,11 +166,17 @@ router.put('/v2/rescues/unassign/:id', rescue.unassign)
 router.delete('/v2/rescues/:id', Permission.required(['rescue.delete']), rescue.delete)
 
 
-router.get('/v2/clients', Permission.required(['client.read']), client.read)
+router.get('/v2/clients', Permission.required(['client.read']), client.search)
 router.get('/v2/clients/:id', client.findById)
 router.post('/v2/clients', client.create)
 router.put('/v2/clients/:id', client.update)
 router.delete('/v2/clients/:id', Permission.required(['client.delete']), client.delete)
+
+router.get('/v2/users', Permission.required(['user.read']), user.search)
+router.get('/v2/users/:id', user.findById)
+router.post('/v2/users', user.create)
+router.put('/v2/users/:id', user.update)
+router.delete('/v2/users/:id', Permission.required(['user.delete']), user.delete)
 
 
 router.post('/v2/login',login.login)

@@ -10,7 +10,7 @@ const ClientQuery = require('../Query/ClientQuery')
 const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
 
 class Clients {
-  static async read (ctx) {
+  static async search (ctx) {
     let clientQuery = new ClientQuery(ctx.query, ctx)
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
     return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
