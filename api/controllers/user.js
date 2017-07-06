@@ -9,9 +9,9 @@ const UsersPresenter = require('../classes/Presenters').UsersPresenter
 
 class Users {
   static async search (ctx) {
-    let rescueQuery = new UserQuery(ctx.query, ctx)
-    let result = await User.findAndCountAll(rescueQuery.toSequelize)
-    return UsersPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+    let userQuery = new UserQuery(ctx.query, ctx)
+    let result = await User.findAndCountAll(userQuery.toSequelize)
+    return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
   static async findById (ctx) {

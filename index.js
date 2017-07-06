@@ -179,6 +179,12 @@ router.put('/v2/users/:id', user.update)
 router.delete('/v2/users/:id', Permission.required(['user.delete']), user.delete)
 
 
+router.get('/v2/rats', rat.search)
+router.get('/v2/rats/:id', rat.findById)
+router.post('/v2/rats', rat.create)
+router.put('/v2/rats/:id', rat.update)
+router.delete('/v2/rats/:id', Permission.required(['rat.delete']), rat.delete)
+
 router.post('/v2/login',login.login)
 
 router.get('/oauth2/authorize',

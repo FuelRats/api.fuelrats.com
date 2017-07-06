@@ -21,7 +21,7 @@ class Clients {
       let clientQuery = new ClientQuery({ id: ctx.params.id }, ctx)
       let result = await Client.findAndCountAll(clientQuery.toSequelize)
 
-      if (result.length === 0 || hasValidPermissionsForClient(result[0])) {
+      if (result.length === 0 || hasValidPermissionsForClient(ctx, result[0], 'read')) {
         return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
       }
     } else {
@@ -59,7 +59,7 @@ class Clients {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      if (hasValidPermissionsForClient(ctx, client)) {
+      if (hasValidPermissionsForClient(ctx, client, 'write')) {
         if (!Permission.granted(['client.write'], ctx.state.user, ctx.state.scope)) {
           delete ctx.data.userId
           delete ctx.data.secret
@@ -103,10 +103,10 @@ class Clients {
   }
 }
 
-function hasValidPermissionsForClient (ctx, client) {
-  let permissions = ['client.write']
-  if (client.user.id === ctx.state.user.id) {
-    permissions.push('client.write.me')
+function hasValidPermissionsForClient (ctx, client, action = 'read') {
+  let permissions = [`client.${action}`]
+  if (client.id === ctx.state.user.data.id) {
+    permissions.push(`client.${action}.me`)
   }
 
   return Permission.require(permissions, ctx.state.user, ctx.state.scope)
