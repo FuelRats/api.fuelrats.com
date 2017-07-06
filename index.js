@@ -150,35 +150,35 @@ render(app, {
 
 // ROUTES
 // =============================================================================
-router.get('/v2/rescues', Permission.required(['rescue.read']), rescue.search)
-router.get('/v2/rescues/:id', Permission.required(['rescue.read']), rescue.findById)
-router.post('/v2/rescues', Permission.required(['rescue.write']), rescue.create)
-router.put('/v2/rescues/:id', rescue.update)
-router.put('/v2/rescues/assign/:id', rescue.assign)
-router.put('/v2/rescues/unassign/:id', rescue.unassign)
-router.delete('/v2/rescues/:id', Permission.required(['rescue.delete']), rescue.delete)
+router.get('/rescues', Permission.required(['rescue.read']), rescue.search)
+router.get('/rescues/:id', Permission.required(['rescue.read']), rescue.findById)
+router.post('/rescues', Permission.required(['rescue.write']), rescue.create)
+router.put('/rescues/:id', rescue.update)
+router.put('/rescues/assign/:id', rescue.assign)
+router.put('/rescues/unassign/:id', rescue.unassign)
+router.delete('/rescues/:id', Permission.required(['rescue.delete']), rescue.delete)
 
 
-router.get('/v2/clients', Permission.required(['client.read']), client.search)
-router.get('/v2/clients/:id', client.findById)
-router.post('/v2/clients', client.create)
-router.put('/v2/clients/:id', client.update)
-router.delete('/v2/clients/:id', Permission.required(['client.delete']), client.delete)
+router.get('/clients', Permission.required(['client.read']), client.search)
+router.get('/clients/:id', client.findById)
+router.post('/clients', client.create)
+router.put('/clients/:id', client.update)
+router.delete('/clients/:id', Permission.required(['client.delete']), client.delete)
 
-router.get('/v2/users', Permission.required(['user.read']), user.search)
-router.get('/v2/users/:id', user.findById)
-router.post('/v2/users', user.create)
-router.put('/v2/users/:id', user.update)
-router.delete('/v2/users/:id', Permission.required(['user.delete']), user.delete)
+router.get('/users', Permission.required(['user.read']), user.search)
+router.get('/users/:id', user.findById)
+router.post('/users', user.create)
+router.put('/users/:id', user.update)
+router.delete('/users/:id', Permission.required(['user.delete']), user.delete)
 
 
-router.get('/v2/rats', rat.search)
-router.get('/v2/rats/:id', rat.findById)
-router.post('/v2/rats', rat.create)
-router.put('/v2/rats/:id', rat.update)
-router.delete('/v2/rats/:id', Permission.required(['rat.delete']), rat.delete)
+router.get('/rats', rat.search)
+router.get('/rats/:id', rat.findById)
+router.post('/rats', rat.create)
+router.put('/rats/:id', rat.update)
+router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
 
-router.post('/v2/login',login.login)
+router.post('/login',login.login)
 
 router.get('/oauth2/authorize',
   Authentication.isAuthenticated,
@@ -195,41 +195,41 @@ router.post('/oauth2/token',
   oauth2.server.token(),
   oauth2.server.errorHandler())
 
-/* router.post('/v2/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
-router.put('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
-router.delete('/v2/rescues/:id', API.version('v2.0'), auth.isAuthenticated,
+/* router.post('/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
+router.put('/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
+router.delete('/rescues/:id', API.version('v2.0'), auth.isAuthenticated,
 Permission.required(['rescue.delete']), API.route(rescue.delete))
-router.put('/v2/rescues/:id/assign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.assign))
-router.put('/v2/rescues/:id/unassign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.unassign))
-router.put('/v2/rescues/:id/addquote', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.addquote))
-router.put('/v2/rescues/:id', API.version('v2.0'), API.route(rescue.getById))
+router.put('/rescues/:id/assign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.assign))
+router.put('/rescues/:id/unassign', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.unassign))
+router.put('/rescues/:id/addquote', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.addquote))
+router.put('/rescues/:id', API.version('v2.0'), API.route(rescue.getById))
 
-router.get('/v2/rats', API.version('v2.0'), API.route(rat.search))
-router.post('/v2/rats', API.version('v2.0'), auth.isAuthenticated, API.route(rat.create))
-router.put('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rat.update))
-router.delete('/v2/rats/:id', API.version('v2.0'), auth.isAuthenticated,
+router.get('/rats', API.version('v2.0'), API.route(rat.search))
+router.post('/rats', API.version('v2.0'), auth.isAuthenticated, API.route(rat.create))
+router.put('/rats/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rat.update))
+router.delete('/rats/:id', API.version('v2.0'), auth.isAuthenticated,
 Permission.required(['rat.delete']), API.route(rat.delete))
 
-router.get('/v2/users', API.version('v2.0'), auth.isAuthenticated, API.route(user.search))
-router.post('/v2/users', API.version('v2.0'), auth.isAuthenticated,
+router.get('/users', API.version('v2.0'), auth.isAuthenticated, API.route(user.search))
+router.post('/users', API.version('v2.0'), auth.isAuthenticated,
 Permission.required(['user.write']), API.route(user.create))
-router.put('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated, API.route(user.update))
-router.delete('/v2/users/:id', API.version('v2.0'), auth.isAuthenticated,
+router.put('/users/:id', API.version('v2.0'), auth.isAuthenticated, API.route(user.update))
+router.delete('/users/:id', API.version('v2.0'), auth.isAuthenticated,
 Permission.required(['user.delete']), API.route(user.delete))
 
-router.get('/v2/nicknames/search/:nickname', API.route(nicknames.search))
-router.get('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.read.me']),
+router.get('/nicknames/search/:nickname', API.route(nicknames.search))
+router.get('/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.read.me']),
  API.route(nicknames.info))
-router.post('/v2/nicknames/', auth.isAuthenticated,
+router.post('/nicknames/', auth.isAuthenticated,
 Permission.required(['user.write.me']), API.route(nicknames.register))
-router.put('/v2/nicknames/', auth.isAuthenticated, Permission.required(['user.write.me']),
+router.put('/nicknames/', auth.isAuthenticated, Permission.required(['user.write.me']),
 API.route(nicknames.connect))
-router.delete('/v2/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.write.me']),
+router.delete('/nicknames/:nickname', auth.isAuthenticated, Permission.required(['user.write.me']),
 API.route(nicknames.delete))
 
 
-router.get('/v2/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
-router.get('/v2/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
+router.get('/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
+router.get('/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
 
 
 router.post('/register', register.post)
@@ -238,7 +238,7 @@ router.post('/register', register.post)
 // router.post('/ssologin', passport.authenticate('local'), ssologin.loginWithCredentials)
 router.post('/register', register.post)
 
-router.get('/v2/news', API.route(news.list))
+router.get('/news', API.route(news.list))
 
 
 
