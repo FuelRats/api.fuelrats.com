@@ -4,6 +4,35 @@ const Presenter = require('yayson')({
   adapter: 'sequelize'
 }).Presenter
 
+const ObjectPresenter = require('yayson')({
+  adapter: 'default'
+}).Presenter
+
+class CustomPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id || null
+  }
+
+  attributes (instance) {
+    return instance
+  }
+}
+CustomPresenter.prototype.type = 'custom'
+
+class SubscriptionsPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id
+  }
+
+  attributes (instance) {
+    if (instance) {
+      return ['id']
+    }
+    return null
+  }
+}
+SubscriptionsPresenter.prototype.type = 'subscriptions'
+
 class UsersPresenter extends Presenter {}
 UsersPresenter.prototype.type = 'users'
 
@@ -53,5 +82,7 @@ module.exports = {
   RatsPresenter,
   RescuesPresenter,
   EpicsPresenter,
-  ClientsPresenter
+  ClientsPresenter,
+  SubscriptionsPresenter,
+  CustomPresenter
 }

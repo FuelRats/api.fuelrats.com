@@ -55,8 +55,8 @@ class Rescues {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, ctx.user)
-      if (Permission.require(permission, ctx.user, ctx.scope)) {
+      let permission = getRescuePermissionType(rescue, ctx.state.user)
+      if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
         let rescue = await Rescue.update(ctx.data, {
           where: {
             id: ctx.params.id
@@ -110,8 +110,8 @@ class Rescues {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, ctx.user)
-      if (Permission.require(permission, ctx.user, ctx.scope)) {
+      let permission = getRescuePermissionType(rescue, ctx.state.user)
+      if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
         let rats = ctx.data.map((rat) => {
           return rescue.addRat(rat)
         })
@@ -139,8 +139,8 @@ class Rescues {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, ctx.user)
-      if (Permission.require(permission, ctx.user, ctx.scope)) {
+      let permission = getRescuePermissionType(rescue, ctx.state.user)
+      if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
         let rats = ctx.data.map((rat) => {
           return rescue.removeRat(rat)
         })
@@ -168,8 +168,8 @@ class Rescues {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      let permission = getRescuePermissionType(rescue, ctx.user)
-      if (Permission.require(permission, ctx.user, ctx.scope)) {
+      let permission = getRescuePermissionType(rescue, ctx.state.user)
+      if (Permission.require(permission, ctx.state.user, ctx.scope)) {
         await Rescue.update({
           quotes: rescue.quotes.concat(ctx.data)
         }, {
@@ -192,8 +192,8 @@ const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
 function getRescuePermissionType (rescue, user) {
   if (user) {
-    for (let rat of user.rats) {
-      if (rescue.rats.includes(rat) || rescue.firstLimpetId === rat) {
+    for (let rat of user.data.attributes.rats) {
+      if (rescue.rats.find((fRat) => { return fRat.id === rat.id }) || rescue.firstLimpetId === rat.id) {
         return selfWriteAllowedPermissions
       }
     }

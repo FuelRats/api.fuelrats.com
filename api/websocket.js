@@ -9,7 +9,7 @@ const stream = require('./controllers/stream')
 const client = require('./controllers/client')
 const user = require('./controllers/user')
 
-let controllers = {
+const controllers = {
   rats: {
     create: [rat.create],
     read: [rat.search],
@@ -40,20 +40,65 @@ let controllers = {
 
   stream: {
     subscribe: [stream.subscribe],
-    unsubscribe: [stream.unsubscribe]
+    unsubscribe: [stream.unsubscribe],
+    broadcast: [stream.broadcast]
   }
 }
+
+const apiEvents = [
+  'rescueCreated',
+  'rescueUpdated',
+  'rescueDeleted',
+  'ratCreated',
+  'ratUpdated',
+  'ratDeleted',
+  'userCreated',
+  'userUpdated',
+  'userDeleted',
+  'clientCreated',
+  'clientUpdated',
+  'clientDeleted'
+]
 
 class WebSocketManager {
   constructor (socket, trafficManager) {
     this.socket = socket
     this.traffic = trafficManager
+
+    let _this = this
+    for (let event of apiEvents) {
+      process.on(event, function (ctx, result, permissions) {
+        _this.onEvent.call(_this, event, ctx, result, permissions)
+      })
+    }
+
+    process.on('apiBroadcast', function (id, ctx, result) {
+      _this.onBroadcast.call(_this, id, ctx, result)
+    })
+  }
+
+  onBroadcast (id, ctx, result) {
+    let clients = this.socket.clients.filter((client) => {
+      return client.subscriptions.includes(id)
+    })
+    this.broadcast(clients, result)
+  }
+
+  onEvent (event, ctx, result, permissions = null) {
+    let clients = this.socket.clients.filter((client) => {
+      if (client.clientId !== ctx.client.clientId) {
+        return (!permissions || Permission.granted(permissions, client.user, client.scope))
+      }
+      return false
+    })
+    result.meta.event = event
+    this.broadcast(clients, result)
   }
 
   async onMessage (client, request) {
     try {
       let { result, meta } = await this.process(client, request)
-      result.meta = Object.assign(result.meta, meta)
+      result.meta = Object.assign(result.meta || {}, meta)
       this.send(client, result)
     } catch (ex) {
       this.send(client, ex)
@@ -62,7 +107,7 @@ class WebSocketManager {
 
   async process (client, request) {
     client.websocket = this
-    if (!request.action || request.action.length < 2) {
+    if (!request.action || request.action.length < 2 || !Array.isArray(request.action)) {
       throw Error.template('missing_required_field', 'action')
     }
 
@@ -103,6 +148,12 @@ class WebSocketManager {
     client.send(JSON.stringify(message))
   }
 
+  broadcast (clients, message) {
+    for (let client of clients) {
+      this.send(client, message)
+    }
+  }
+
   static meta (result, query = null, additionalParameters = {}) {
     let meta = {
       meta: {}
@@ -133,7 +184,9 @@ class Context {
     this.state.user = client.user
 
     this.query = request
+    this.data = request.data
 
+    delete this.query.data
     delete this.query.meta
     delete this.query.action
     this.params = this.query

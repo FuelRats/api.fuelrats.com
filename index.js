@@ -95,6 +95,8 @@ let port = config.port || process.env.PORT
 
 app.use(async function (ctx, next) {
   ctx.data = ctx.request.body
+  ctx.meta = WebSocketManager.meta
+  ctx.client = {}
 
   let query = Object.assign(ctx.query, ctx.params)
   ctx.query = parseQuery(query)
@@ -450,6 +452,8 @@ const websocketManager = new WebSocketManager(wss, traffic)
 
 wss.on('connection', async function connection (client) {
   let url = new URL(`http://localhost:8080${client.upgradeReq.url}`)
+  client.clientId = uid.sync(16)
+  client.subscriptions = []
 
   let bearer = url.searchParams.get('bearer')
   if (bearer) {
@@ -462,6 +466,7 @@ wss.on('connection', async function connection (client) {
 
   client.on('message', (message) => {
     try {
+      client.websocket = wss
       let request = JSON.parse(message)
       websocketManager.onMessage(client, request)
     } catch (ex) {
