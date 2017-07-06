@@ -93,30 +93,26 @@ app.use(koaBody)
 let port = config.port || process.env.PORT
 
 app.use(async function (ctx, next) {
-  try {
-    ctx.data = ctx.request.body
-    ctx.meta = function (result, query = null, additionalParameters = {}) {
-      let meta = {
-        meta: {}
-      }
-      if (query) {
-        meta.meta = {
-          count: result.rows.length,
-          limit: query._limit || null,
-          offset: query._offset || null,
-          total: result.count
-        }
-      }
-
-      meta.meta = Object.assign(meta.meta, additionalParameters)
-      return meta
+  ctx.data = ctx.request.body
+  ctx.meta = function (result, query = null, additionalParameters = {}) {
+    let meta = {
+      meta: {}
     }
-    let query = Object.assign(ctx.query, ctx.params)
-    ctx.query = parseQuery(query)
-    await next()
-  } catch (ex) {
-    console.log(ex)
+    if (query) {
+      meta.meta = {
+        count: result.rows.length,
+        limit: query._limit || null,
+        offset: query._offset || null,
+        total: result.count
+      }
+    }
+
+    meta.meta = Object.assign(meta.meta, additionalParameters)
+    return meta
   }
+  let query = Object.assign(ctx.query, ctx.params)
+  ctx.query = parseQuery(query)
+  await next()
 })
 
 app.use(Authentication.authenticate)
@@ -142,8 +138,15 @@ app.use(async (ctx, next) => {
 
     }
   } catch (ex) {
-    console.log(ex)
-    await next(ex)
+    let error = ex
+    if (!error.code) {
+      error = Error.template('server_error', error.name)
+    }
+    ctx.body = ex
+    ctx.status = ex.code
+    if (error.code === 500) {
+      ctx.app.emit('error', ex, ctx)
+    }
   }
 })
 
