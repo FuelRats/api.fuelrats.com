@@ -4,7 +4,6 @@ const User = require('../db').User
 const Rat = require('../db').Rat
 const Errors = require('../errors')
 const bcrypt = require('bcrypt')
-const passport = require('passport')
 const BotServ = require('../Anope/BotServ')
 
 
