@@ -12,7 +12,16 @@ class Login {
 
     ctx.session.userId = user.data.id
     ctx.status = 200
+    if (ctx.session.redirect) {
+      let redirectUrl = ctx.session.redirect
+      ctx.session.redirect = null
+      ctx.redirect(redirectUrl)
+    }
     return user
+  }
+
+  static async display (ctx) {
+    await ctx.render('login')
   }
 }
 

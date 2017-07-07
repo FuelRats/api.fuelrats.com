@@ -43,8 +43,7 @@ const Rat = require('./api/db').Rat
 const Authentication = require('./api/controllers/auth')
 const change_password = require('./api/controllers/change_password')
 const client = require('./api/controllers/client')
-const decal = require('./api/controllers/decal').HTTP
-const docs = require('./api/controllers/docs')
+const decal = require('./api/controllers/decal')
 const irc = require('./api/controllers/irc').HTTP
 const leaderboard = require('./api/controllers/leaderboard')
 const login = require('./api/controllers/login')
@@ -165,6 +164,7 @@ router.post('/clients', client.create)
 router.put('/clients/:id', client.update)
 router.delete('/clients/:id', Permission.required(['client.delete']), client.delete)
 
+
 router.get('/users', Permission.required(['user.read']), user.search)
 router.get('/users/:id', user.findById)
 router.post('/users', user.create)
@@ -178,10 +178,12 @@ router.post('/rats', rat.create)
 router.put('/rats/:id', rat.update)
 router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
 
+
+router.get('/login',login.display)
 router.post('/login',login.login)
 
 router.get('/oauth2/authorize',
-  Authentication.isAuthenticated,
+  Authentication.isAuthenticatedRedirect,
   oauth2.authorizationValidateFields,
   oauth2.authorizationValidateRedirect,
   oauth2.authorizationRender
