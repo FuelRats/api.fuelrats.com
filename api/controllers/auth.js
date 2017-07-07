@@ -8,6 +8,7 @@ const Error = require('../errors')
 const bcrypt = require('bcrypt')
 const Permission = require('../permission')
 const UsersPresenter = require('../classes/Presenters').UsersPresenter
+const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
@@ -70,7 +71,7 @@ class Authentication {
 
     let authorised = await bcrypt.compare(secret, client.secret)
     if (authorised) {
-      return UsersPresenter.render(client, {})
+      return ClientsPresenter.render(client, {})
     }
     return false
   }
@@ -108,6 +109,15 @@ class Authentication {
       await next()
     } else {
       throw Error.template('not_authenticated')
+    }
+  }
+
+  static async isAuthenticatedRedirect (ctx, next) {
+    if (ctx.state.user) {
+      await next()
+    } else {
+      ctx.session.redirect = ctx.request.path
+      ctx.redirect('/login')
     }
   }
 

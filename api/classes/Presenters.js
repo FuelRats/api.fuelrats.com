@@ -33,6 +33,9 @@ class SubscriptionsPresenter extends ObjectPresenter {
 }
 SubscriptionsPresenter.prototype.type = 'subscriptions'
 
+class DecalsPresenter extends Presenter {}
+DecalsPresenter.prototype.type = 'decals'
+
 class UsersPresenter extends Presenter {}
 UsersPresenter.prototype.type = 'users'
 
@@ -83,6 +86,7 @@ module.exports = {
   RescuesPresenter,
   EpicsPresenter,
   ClientsPresenter,
+  DecalsPresenter,
   SubscriptionsPresenter,
   CustomPresenter
 }
