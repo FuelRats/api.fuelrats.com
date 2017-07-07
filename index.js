@@ -7,6 +7,7 @@ const session = require('koa-session')
 const cors = require('koa-cors')
 const router = require('koa-router')()
 const app = new Koa()
+require('koa-qs')(app)
 const koaBody = require('koa-body')()
 const TrafficControl = require('./api/TrafficControl')
 const render = require('koa-ejs')
@@ -98,7 +99,8 @@ app.use(async function (ctx, next) {
   ctx.client = {}
 
   let query = Object.assign(ctx.query, ctx.params)
-  ctx.query = parseQuery(query)
+  let parsedQuery = parseQuery(query)
+  ctx.query = parsedQuery
 
   ctx.inet = ctx.request.headers['X-Forwarded-for'] ||
   await next()
