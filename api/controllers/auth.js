@@ -104,17 +104,17 @@ class Authentication {
     await next()
   }
 
-  static async isAuthenticated (ctx, next) {
+  static isAuthenticated (ctx, next) {
     if (ctx.state.user) {
-      await next()
+      return next()
     } else {
       throw Error.template('not_authenticated')
     }
   }
 
-  static async isAuthenticatedRedirect (ctx, next) {
+  static isAuthenticatedRedirect (ctx, next) {
     if (ctx.state.user) {
-      await next()
+      return next()
     } else {
       ctx.session.redirect = ctx.request.path
       ctx.redirect('/login')
