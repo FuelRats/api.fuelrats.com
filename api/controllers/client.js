@@ -21,7 +21,7 @@ class Clients {
       let clientQuery = new ClientQuery({ id: ctx.params.id }, ctx)
       let result = await Client.findAndCountAll(clientQuery.toSequelize)
 
-      if (result.length === 0 || hasValidPermissionsForClient(ctx, result[0], 'read')) {
+      if (result.length === 0 || hasValidPermissionsForClient(ctx, result.rows[0], 'read')) {
         return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
       }
       throw Errors.template('no_permission', 'client.read')

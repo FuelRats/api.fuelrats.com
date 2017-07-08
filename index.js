@@ -151,27 +151,27 @@ render(app, {
 
 // ROUTES
 // =============================================================================
-router.get('/rescues', Permission.required(['rescue.read']), rescue.search)
-router.get('/rescues/:id', Permission.required(['rescue.read']), rescue.findById)
-router.post('/rescues', Permission.required(['rescue.write']), rescue.create)
-router.put('/rescues/:id', rescue.update)
-router.put('/rescues/assign/:id', rescue.assign)
-router.put('/rescues/unassign/:id', rescue.unassign)
-router.delete('/rescues/:id', Permission.required(['rescue.delete']), rescue.delete)
+router.get('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.search)
+router.get('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.findById)
+router.post('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.write']), rescue.create)
+router.put('/rescues/:id', Authentication.isAuthenticated, rescue.update)
+router.put('/rescues/assign/:id', Authentication.isAuthenticated, rescue.assign)
+router.put('/rescues/unassign/:id', Authentication.isAuthenticated, rescue.unassign)
+router.delete('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.delete']), rescue.delete)
 
 
-router.get('/clients', Permission.required(['client.read']), client.search)
-router.get('/clients/:id', client.findById)
-router.post('/clients', client.create)
-router.put('/clients/:id', client.update)
-router.delete('/clients/:id', Permission.required(['client.delete']), client.delete)
+router.get('/clients', Authentication.isAuthenticated, Permission.required(['client.read']), client.search)
+router.get('/clients/:id', Authentication.isAuthenticated, client.findById)
+router.post('/clients', Authentication.isAuthenticated, client.create)
+router.put('/clients/:id', Authentication.isAuthenticated, client.update)
+router.delete('/clients/:id', Authentication.isAuthenticated, Permission.required(['client.delete']), client.delete)
 
 
-router.get('/users', Permission.required(['user.read']), user.search)
-router.get('/users/:id', user.findById)
-router.post('/users', user.create)
-router.put('/users/:id', user.update)
-router.delete('/users/:id', Permission.required(['user.delete']), user.delete)
+router.get('/users', Authentication.isAuthenticated, Permission.required(['user.read']), user.search)
+router.get('/users/:id', Authentication.isAuthenticated, user.findById)
+router.post('/users', Authentication.isAuthenticated, user.create)
+router.put('/users/:id', Authentication.isAuthenticated, user.update)
+router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
 
 
 router.get('/rats', rat.search)
