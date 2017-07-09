@@ -153,7 +153,7 @@ class Permission {
       for (let group of user.data.attributes.groups) {
         if (groups[group].includes(permission)) {
           if (scope) {
-            if (scope.includes(permission)) {
+            if (scope.includes(permission) || scope.includes('*')) {
               hasPermission = true
               break
             }
