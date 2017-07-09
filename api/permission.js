@@ -84,9 +84,9 @@ class Permission {
           return group.id === groupRelation.id
         })
 
-        if (group && group.permissions.includes(permission.id)) {
+        if (group && group.permissions.includes(permission)) {
           if (scope) {
-            if (scope.includes(permission.id) || scope.includes('*')) {
+            if (scope.includes(permission) || scope.includes('*')) {
               hasPermission = true
               break
             }
