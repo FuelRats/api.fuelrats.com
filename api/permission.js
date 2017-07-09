@@ -116,7 +116,7 @@ class Permission {
    * Get the available permissions/oauth scopes
    * @returns {string[]}
    */
-  static get permissions () {
+  static get groups () {
     return groups
   }
 

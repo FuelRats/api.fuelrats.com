@@ -1,4 +1,5 @@
 'use strict'
+const Permissions = require('./permission')
 
 const hour = 60 * 60 * 1000
 
@@ -142,9 +143,11 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {boolean} true if the authenticated user this entity belongs to is an admin
    */
   get isAdmin () {
-
-    return true
-    //return this._user.data.attributes.groups.includes('admin')
+    return Permissions.groups.find((group) => {
+      return group.isAdministrator && this._user.data.relationships.groups.data.find((uGroup) => {
+        return uGroup.id === group.id
+      })
+    })
   }
 
   /**
