@@ -26,6 +26,8 @@ let Reset = db.import(__dirname + '/reset')
 let Epic = db.import(__dirname + '/epic')
 let Ship = db.import(__dirname + '/ship')
 let Decal = db.import(__dirname + '/decal')
+let Group = db.import(__dirname + '/group')
+let UserGroups = db.import(__dirname + '/usergroups')
 
 Rat.belongsTo(User, {
   as: 'user',
@@ -35,6 +37,7 @@ User.hasMany(Rat, {
   as: 'rats',
   foreignKey: 'userId'
 })
+
 
 
 Rescue.belongsToMany(Rat, {
@@ -87,6 +90,19 @@ User.addScope('defaultScope', {
     {
       model: Rat,
       as: 'rats',
+      attributes: {
+        exclude: [
+          'deletedAt'
+        ]
+      }
+    },
+    {
+      model: Group,
+      as: 'groups',
+      require: false,
+      through: {
+        attributes: []
+      },
       attributes: {
         exclude: [
           'deletedAt'
@@ -170,6 +186,20 @@ User.hasOne(Decal, {
   as: 'decal'
 })
 
+User.belongsToMany(Group, {
+  as: 'groups',
+  through: {
+    model: UserGroups
+  }
+})
+
+Group.belongsToMany(User, {
+  as: 'users',
+  through: {
+    model: UserGroups
+  }
+})
+
 module.exports = {
   Action: Action,
   Client: Client,
@@ -183,5 +213,6 @@ module.exports = {
   RescueRats: RescueRats,
   Epic: Epic,
   Ship: Ship,
-  Decal: Decal
+  Decal: Decal,
+  Group: Group
 }

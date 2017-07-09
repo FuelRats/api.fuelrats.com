@@ -20,11 +20,6 @@ module.exports = function (db, DataTypes) {
       allowNull: true,
       defaultValue: db.literal('ARRAY[]::citext[]')
     },
-    groups: {
-      type: DataTypes.ARRAY(DataTypes.STRING(128)),
-      allowNull: false,
-      defaultValue: []
-    },
     image: {
       type: DataTypes.BLOB(),
       allowNull: true,

@@ -99,8 +99,7 @@ app.use(async function (ctx, next) {
   ctx.client = {}
 
   let query = Object.assign(ctx.query, ctx.params)
-  let parsedQuery = parseQuery(query)
-  ctx.query = parsedQuery
+  ctx.query = parseQuery(query)
 
   ctx.inet = ctx.request.headers['X-Forwarded-for'] ||
   await next()
@@ -134,7 +133,7 @@ app.use(async (ctx, next) => {
       error = Error.template('server_error', error.name)
     }
     ctx.body = ex
-    ctx.status = ex.code
+    ctx.status = error.code
     if (error.code === 500) {
       ctx.app.emit('error', ex, ctx)
     }
@@ -172,6 +171,12 @@ router.get('/users/:id', Authentication.isAuthenticated, user.findById)
 router.post('/users', Authentication.isAuthenticated, user.create)
 router.put('/users/:id', Authentication.isAuthenticated, user.update)
 router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
+
+router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, nicknames.info)
+router.get('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.search)
+router.post('/nicknames', Authentication.isAuthenticated, nicknames.register)
+router.put('/nicknames', Authentication.isAuthenticated, nicknames.connect)
+router.delete('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.delete)
 
 
 router.get('/rats', rat.search)

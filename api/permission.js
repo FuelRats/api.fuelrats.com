@@ -3,6 +3,7 @@
 const Errors = require('./errors')
 const i18next = require('i18next')
 const localisationResources = require('../localisations.json')
+const Group = require('./db').Group
 
 i18next.init({
   lng: 'en',
@@ -16,89 +17,14 @@ const permissionLocaleKeys = {
   'groups': 'permissionGroup'
 }
 
+let groups = {}
 
-/**
- * List of possible permissions and oauth scopes
- * @type {string[]}
- */
-const permissions = [
-  'rescue.read',
-  'rescue.read.me',
-  'rescue.write',
-  'rescue.write.me',
-  'rescue.delete',
-  'rat.read',
-  'rat.read.me',
-  'rat.write',
-  'rat.write.me',
-  'rat.delete',
-  'client.read',
-  'client.read.me',
-  'client.write',
-  'client.write.me',
-  'client.delete',
-  'client.delete.me',
-  'user.read',
-  'user.read.me',
-  'user.groups',
-  'user.delete'
-
-]
-
-/**
- * The permissions available to various user groups
- * @type {{default: string[], overseer: string[], moderator: string[], admin: string[]}}
- */
-const groups = {
-  default: [
-    'rescue.read',
-    'rescue.read.me',
-    'rescue.write.me',
-    'rat.read',
-    'rat.write.me',
-    'client.read.me',
-    'client.write.me',
-    'client.delete.me',
-    'user.read.me',
-    'user.write.me'
-  ],
-
-  rat: [],
-
-  dispatch: [],
-
-  overseer: [
-    'rescue.write',
-    'rat.write',
-    'rescue.delete'
-  ],
-
-  moderator: [
-    'rescue.write',
-    'rat.write',
-    'user.read',
-    'user.write',
-    'client.read',
-    'rescue.delete'
-  ],
-
-  admin: [
-    'user.read',
-    'rescue.read',
-    'rescue.write',
-    'rescue.delete',
-    'rat.read',
-    'rat.write',
-    'rat.delete',
-    'user.read',
-    'user.write',
-    'user.delete',
-    'user.groups',
-    'client.read',
-    'client.write',
-    'client.delete'
-  ]
+async function fetchPermissions () {
+  groups = await Group.findAll({})
 }
+
+fetchPermissions()
+
 
 /**
  * Class for managing user permissions
@@ -137,7 +63,7 @@ class Permission {
    * Check whether a user has the required permissions
    * @param {string[]} permissions - The permissions to validate
    * @param {Object} user - The user object of the user to validate
-   * @param {Object} scope - Optional oauth2 client object to validate if the user has given this application the permission to do this
+   * @param {Object} scope - Optional oauth2 client object to validate
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
   static granted (permissions, user, scope = null) {
@@ -147,13 +73,20 @@ class Permission {
 
     let hasPermission = false
 
-    user.data.attributes.groups.push('default')
+    user.data.relationships.groups.data.push({
+      id: 'default',
+      type: 'groups'
+    })
 
     for (let permission of permissions) {
-      for (let group of user.data.attributes.groups) {
-        if (groups[group].includes(permission)) {
+      for (let groupRelation of user.data.relationships.groups.data) {
+        let group = groups.find((group) => {
+          return group.id === groupRelation.id
+        })
+
+        if (group && group.permissions.includes(permission.id)) {
           if (scope) {
-            if (scope.includes(permission) || scope.includes('*')) {
+            if (scope.includes(permission.id) || scope.includes('*')) {
               hasPermission = true
               break
             }
@@ -184,7 +117,7 @@ class Permission {
    * @returns {string[]}
    */
   static get permissions () {
-    return permissions
+    return groups
   }
 
   /**
@@ -197,7 +130,7 @@ class Permission {
     let humanReadablePermissions = []
 
     if (scopes.includes('*')) {
-      scopes = permissions
+      scopes = groups
     }
 
     for (let permission of scopes) {
