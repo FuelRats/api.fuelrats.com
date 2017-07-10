@@ -56,13 +56,12 @@ module.exports = function (sequelize, DataTypes) {
       )
     }
   }, {
-    paranoid: true,
-    classMethods: {
-      associate: function (models) {
-        Ship.belongsTo(models.Rat, { as: 'rat' })
-      }
-    }
+    paranoid: true
   })
+
+  Ship.associate = function (models) {
+    models.Ship.belongsTo(models.Rat, { as: 'rat' })
+  }
 
   return Ship
 }

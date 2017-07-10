@@ -69,5 +69,39 @@ module.exports = function (sequelize, DataTypes) {
     }]
   })
 
+  Rescue.associate = function (models) {
+    models.Rescue.belongsTo(models.Rat, {
+      as: 'firstLimpet',
+      foreignKey: 'firstLimpetId'
+    })
+
+    models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })
+
+    models.Rescue.addScope('defaultScope', {
+      include: [
+        {
+          model: models.Rat,
+          as: 'rats',
+          require: false,
+          through: {
+            attributes: []
+          }
+        },
+        {
+          model: models.Rat,
+          as: 'firstLimpet',
+          require: false
+        },
+        {
+          model: models.Epic,
+          as: 'epics',
+          require: false
+        }
+      ]
+    }, {
+      override: true
+    })
+  }
+
   return Rescue
 }

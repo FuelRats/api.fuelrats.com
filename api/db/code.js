@@ -20,14 +20,24 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: false
     }
-  }, {
-    classMethods: {
-      associate: function (models) {
-        Code.belongsTo(models.User, { as: 'user' })
-        Code.belongsTo(models.Client, { as: 'client' })
-      }
-    }
   })
+
+  Code.associate = function (models) {
+    models.Code.belongsTo(models.User, { as: 'user' })
+    models.Code.belongsTo(models.Client, { as: 'client' })
+
+    models.Code.addScope('defaultScope', {
+      include: [
+        {
+          model: models.User,
+          as: 'user',
+          required: true
+        }
+      ]
+    }, {
+      override: true
+    })
+  }
 
   return Code
 }

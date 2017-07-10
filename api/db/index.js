@@ -1,6 +1,6 @@
 'use strict'
 const Sequelize = require('sequelize')
-const config = require('../../config')
+let config = require('../../config')
 
 if (process.env.NODE_ENV === 'testing') {
   config = config.test
@@ -13,206 +13,31 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
   dialect: 'postgres'
 })
 
-let Rat = db.import(__dirname + '/rat')
-let Rescue = db.import(__dirname + '/rescue')
-let User = db.import(__dirname + '/user')
-let RescueRats = db.import(__dirname + '/rescuerats')
-let Client = db.import(__dirname + '/client')
 
-let Code = db.import(__dirname + '/code')
-let Token = db.import(__dirname + '/token')
-let Action = db.import(__dirname + '/action')
-let Reset = db.import(__dirname + '/reset')
-let Epic = db.import(__dirname + '/epic')
-let Ship = db.import(__dirname + '/ship')
-let Decal = db.import(__dirname + '/decal')
-let Group = db.import(__dirname + '/group')
-let UserGroups = db.import(__dirname + '/usergroups')
-
-Rat.belongsTo(User, {
-  as: 'user',
-  foreignKey: 'userId'
-})
-User.hasMany(Rat, {
-  as: 'rats',
-  foreignKey: 'userId'
-})
-
-
-
-Rescue.belongsToMany(Rat, {
-  as: 'rats',
-  through: {
-    model: RescueRats
-  }
-})
-
-Rat.belongsToMany(Rescue, {
-  as: 'rescues',
-  through: {
-    model: RescueRats
-  }
-})
-
-Rat.hasMany(Rescue, { foreignKey: 'firstLimpetId', as: 'firstLimpet' })
-
-Rescue.belongsTo(Rat, {
-  as: 'firstLimpet',
-  foreignKey: 'firstLimpetId'
-})
-
-Client.belongsTo(User, { as: 'user' })
-Code.belongsTo(User, { as: 'user' })
-Code.belongsTo(Client, { as: 'client' })
-Token.belongsTo(User, { as: 'user' })
-Token.belongsTo(Client, { as: 'client' })
-
-Action.belongsTo(User, { as: 'user' })
-
-Reset.belongsTo(User, { as: 'user' })
-
-Epic.belongsTo(Rescue, { as: 'rescue' })
-Epic.belongsTo(Rat, { as: 'rat' })
-Rescue.hasMany(Epic, { foreignKey: 'rescueId', as: 'epics' })
-Rat.hasMany(Epic, { foreignKey: 'ratId', as: 'epics' })
-
-User.addScope('defaultScope', {
-  attributes: {
-    include: [
-      [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-    ],
-    exclude: [
-      'nicknames',
-      'deletedAt'
-    ]
-  },
-  include: [
-    {
-      model: Rat,
-      as: 'rats',
-      attributes: {
-        exclude: [
-          'deletedAt'
-        ]
-      }
-    },
-    {
-      model: Group,
-      as: 'groups',
-      require: false,
-      through: {
-        attributes: []
-      },
-      attributes: {
-        exclude: [
-          'deletedAt'
-        ]
-      }
-    }
-  ]
-}, {
-  override: true
-})
-
-Code.addScope('defaultScope', {
-  include: [
-    {
-      model: User,
-      as: 'user',
-      required: true
-    }
-  ]
-}, {
-  override: true
-})
-
-Token.addScope('defaultScope', {
-  include: [
-    {
-      model: User,
-      as: 'user',
-      required: true
-    }
-  ]
-}, {
-  override: true
-})
-
-Client.addScope('defaultScope', {
-  include:  [
-    {
-      model: User,
-      as: 'user',
-      required: true
-    }
-  ]
-}, {
-  override: true
-})
-
-Rescue.addScope('defaultScope', {
-  include: [
-    {
-      model: Rat,
-      as: 'rats',
-      require: false,
-      through: {
-        attributes: []
-      }
-    },
-    {
-      model: Rat,
-      as: 'firstLimpet',
-      require: false
-    },
-    {
-      model: Epic,
-      as: 'epics',
-      require: false
-    }
-  ]
-}, {
-  override: true
-})
-
-Ship.belongsTo(Rat, { as: 'rat' })
-Rat.hasMany(Ship, {
-  foreignKey: 'ratId',
-  as: 'ships'
-})
-Decal.belongsTo(User, { as: 'user' })
-User.hasOne(Decal, {
-  foreignKey: 'userId',
-  as: 'decal'
-})
-
-User.belongsToMany(Group, {
-  as: 'groups',
-  through: {
-    model: UserGroups
-  }
-})
-
-Group.belongsToMany(User, {
-  as: 'users',
-  through: {
-    model: UserGroups
-  }
-})
-
-module.exports = {
-  Action: Action,
-  Client: Client,
-  Code: Code,
-  db: db,
-  Rat: Rat,
-  Reset: Reset,
-  Rescue: Rescue,
-  Token: Token,
-  User: User,
-  RescueRats: RescueRats,
-  Epic: Epic,
-  Ship: Ship,
-  Decal: Decal,
-  Group: Group
+let models = {
+  db
 }
+
+models.Rat = db.import(__dirname + '/rat')
+models.Rescue = db.import(__dirname + '/rescue')
+models.User = db.import(__dirname + '/user')
+models.RescueRats = db.import(__dirname + '/rescuerats')
+models.Client = db.import(__dirname + '/client')
+
+models.Code = db.import(__dirname + '/code')
+models.Token = db.import(__dirname + '/token')
+models.Action = db.import(__dirname + '/action')
+models.Reset = db.import(__dirname + '/reset')
+models.Epic = db.import(__dirname + '/epic')
+models.Ship = db.import(__dirname + '/ship')
+models.Decal = db.import(__dirname + '/decal')
+models.Group = db.import(__dirname + '/group')
+models.UserGroups = db.import(__dirname + '/usergroups')
+
+Object.keys(models).forEach(function (modelName) {
+  if (models[modelName].hasOwnProperty('associate')) {
+    models[modelName].associate(models)
+  }
+})
+
+module.exports = models

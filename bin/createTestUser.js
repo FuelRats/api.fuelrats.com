@@ -32,7 +32,7 @@ db.sync({ force: true }).then(async function () {
 
   bcrypt.hash(secret, 16)
 
-  let client = Client.create({
+  let client = await Client.create({
     name: 'API Test Client',
     userId: adminUser.id,
     secret: hash

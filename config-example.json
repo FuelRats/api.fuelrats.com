@@ -15,9 +15,9 @@
   },
   "test": {
     "postgres": {
-      "database": "fuelratstest",
+      "database": "fuelrats_test",
       "hostname": "localhost",
-      "username": "postgres",
+      "username": "fuelrats",
       "password": "",
       "port": 5432
     }

@@ -26,13 +26,12 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: ''
     },
   }, {
-    paranoid: true,
-    classMethods: {
-      associate: function (models) {
-        Decal.belongsTo(models.User, { as: 'user' })
-      }
-    }
+    paranoid: true
   })
+
+  Decal.associate = function (models) {
+    models.Decal.belongsTo(models.User, { as: 'user' })
+  }
 
   return Decal
 }

@@ -11,14 +11,12 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: false
     }
-  }, {
-    classMethods: {
-      associate: function (models) {
-        Epic.belongsTo(models.Rescue, { as: 'rescue' })
-        Epic.belongsTo(models.Rat, { as: 'rat' })
-      }
-    }
   })
+
+  Epic.associate = function (models) {
+    models.Epic.belongsTo(models.Rescue, { as: 'rescue' })
+    models.Epic.belongsTo(models.Rat, { as: 'rat' })
+  }
 
   return Epic
 }

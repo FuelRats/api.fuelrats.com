@@ -62,7 +62,7 @@ class Query {
   /**
    * Create a sequelize order parameter from a v2 order query
    * @param order a column to order the query by, optionally prefixed by a - to order descending
-   * @returns {{field: *, direction: string}} An object containing the field to order by and the direction in which to order
+   * @returns {{field: *, direction: string}} An object containing the field to order by and the order direction
    */
   order (order) {
     let direction = 'ASC'
@@ -120,7 +120,7 @@ class Query {
   /**
    * Create a sequelize limit parameter from a v2 limit query
    * @param {number} limit - The number of results to limit to (or null for default)
-   * @param {Object} user - A user object to use for validating permission level (or null for unauthenticated requests)
+   * @param {Object} user - A user object to use for validating permission level
    * @returns {number} A limit parameter
    */
   limit (limit, user) {
@@ -143,7 +143,7 @@ class Query {
       if (params[key] instanceof Object) {
         /* This query parameter has a sub query */
         for (let subQuery of Object.keys(params[key])) {
-          /* Check if we have a sub query function available in the QueryOptions class to process this sub query, and call it */
+          /* Check if we have a sub query function available in the QueryOptions class to process this sub query, */
           if (params[key][subQuery] && this.options[subQuery]) {
             params[key] = this.options[subQuery].call(this, params[key], subQuery)
           }

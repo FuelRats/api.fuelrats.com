@@ -25,12 +25,17 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.ARRAY(DataTypes.STRING)
     }
   }, {
-    paranoid: true,
-    classMethods: {
-      associate: function (models) {
-      }
-    }
+    paranoid: true
   })
+
+  Group.associate = function (models) {
+    models.Group.belongsToMany(models.User, {
+      as: 'users',
+      through: {
+        model: models.UserGroups
+      }
+    })
+  }
 
   return Group
 }

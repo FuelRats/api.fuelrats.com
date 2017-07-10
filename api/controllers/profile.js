@@ -1,6 +1,4 @@
 'use strict'
-const moment = require('moment')
-const winston = require('winston')
 const User = require('../db').User
 const Rat = require('../db').Rat
 const Rescue = require('../db').Rescue
@@ -8,6 +6,12 @@ const Epic = require('../db').Epic
 const Ship = require('../db').Ship
 const Decal = require('../db').Decal
 const db = require('../db').db
+
+class Profile {
+  static async read (ctx) {
+
+  }
+}
 
 exports.get = function (request, response, next) {
   User.findOne({
