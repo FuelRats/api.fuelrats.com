@@ -118,11 +118,9 @@ class WebSocketManager {
       throw Error.template('invalid_parameter', 'action')
     }
 
-    let authenticatedRequired = controllers[controller][method][1] === true
-    let requiredPermissions = controllers[controller][method][2]
-    let endpoint = controllers[controller][method][0]
+    let [endpoint, authenticationRequired, requiredPermissions] = controllers[controller]
 
-    if (!authenticatedRequired || client.user) {
+    if (!authenticationRequired || client.user) {
       if (!requiredPermissions || Permission.require(requiredPermissions, client.user, client.scope)) {
         let ctx = new Context(client, request)
 
@@ -139,7 +137,7 @@ class WebSocketManager {
 
         return { result:  result, meta: meta }
       }
-    } else if (authenticatedRequired) {
+    } else if (authenticationRequired) {
       throw Error.template('not_authenticated')
     }
   }
