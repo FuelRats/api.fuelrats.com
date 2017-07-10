@@ -21,6 +21,13 @@ let errors = {
     'title': 'Not Authenticated'
   },
 
+  'client_unauthorised': {
+    'code': 401,
+    'detail': 'Client must be authenticated to perform that action',
+    'status': 'Unauthorized',
+    'title': 'Client not Authenticated'
+  },
+
   'no_permission': {
     'code': 403,
     'detail': 'User does not have the required permission to perform that action',

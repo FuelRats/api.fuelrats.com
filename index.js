@@ -125,7 +125,8 @@ app.use(async (ctx, next) => {
     let result = await next()
     if (result) {
       ctx.body = result
-
+    } else {
+      ctx.status = 204
     }
   } catch (ex) {
     let error = ex
@@ -203,6 +204,8 @@ router.post('/oauth2/token',
   Authentication.isClientAuthenticated,
   oauth2.server.token(),
   oauth2.server.errorHandler())
+
+router.post('/oauth2/revoke', Authentication.isClientAuthenticated, oauth2.revoke)
 
 /* router.post('/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))

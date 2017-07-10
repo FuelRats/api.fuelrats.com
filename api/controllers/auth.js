@@ -125,7 +125,7 @@ class Authentication {
     if (ctx.state.client) {
       await next()
     } else {
-      throw Error.template('not_authenticated')
+      throw Error.template('client_unauthorised')
     }
   }
 }

@@ -135,9 +135,7 @@ class Permission {
 
     for (let permission of scopes) {
       let permissionComponents = permission.split('.')
-      let group = permissionComponents[0]
-      let action = permissionComponents[1]
-      let isSelf = (permissionComponents[2] === 'me')
+      let [group, action, isSelf] = permissionComponents
 
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'

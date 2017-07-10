@@ -101,16 +101,54 @@ server.exchange(oauth2orize.exchange.password(
   }
 ))
 
-exports.authorizationValidateFields = async function (ctx, next) {
-  if (!ctx.query.client_id) {
-    return next(Errors.template('missing_required_field', 'client_id'))
-  } else if (!ctx.query.response_type) {
-    return next(Errors.template('missing_required_field', 'response_type'))
+class OAuth2 {
+  static async revoke (ctx) {
+    if (!ctx.data.token) {
+      throw Errors.template('missing_required_field', 'token')
+    }
+
+    let token = await Token.findOne({ where: { value: ctx.data.token } })
+    if (!token) {
+      throw Errors.template('not_found')
+    }
+    if (token.clientId !== ctx.state.client.data.id) {
+      throw Errors.template('invalid_parameter', 'token')
+    }
+
+    token.destroy()
+    return null
   }
-  await next()
+
+  static async authorizationValidateFields (ctx, next) {
+    if (!ctx.query.client_id) {
+      return next(Errors.template('missing_required_field', 'client_id'))
+    } else if (!ctx.query.response_type) {
+      return next(Errors.template('missing_required_field', 'response_type'))
+    }
+    await next()
+  }
+
+  static async authorizationRender (ctx) {
+    let translation = {
+      requestingAccess: i18next.t('requestingAccess', { client: ctx.state.oauth2.client.data.attributes.name }),
+      requestingAccessTo: i18next.t('requestingAccessTo', { client: ctx.state.oauth2.client.data.attributes.name }),
+      authoriseTitle: i18next.t('authoriseTitle'),
+      authoriseAllow: i18next.t('authoriseAllow'),
+      authoriseDeny: i18next.t('authoriseDeny'),
+      scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.user)
+    }
+
+    await ctx.render('authorise', {
+      transactionId: ctx.state.oauth2.transactionID,
+      user: ctx.user,
+      client: ctx.state.oauth2.client,
+      translation: translation,
+      scope: ctx.state.oauth2.req.scope.join(' ')
+    })
+  }
 }
 
-exports.authorizationValidateRedirect = server.authorize(async function (clientId, redirectUri) {
+OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId, redirectUri) {
   let client = await Client.findById(clientId)
   if (!client) {
 
@@ -123,27 +161,7 @@ exports.authorizationValidateRedirect = server.authorize(async function (clientI
   }
 })
 
-exports.authorizationRender = async function (ctx) {
-  let translation = {
-    requestingAccess: i18next.t('requestingAccess', { client: ctx.state.oauth2.client.data.attributes.name }),
-    requestingAccessTo: i18next.t('requestingAccessTo', { client: ctx.state.oauth2.client.data.attributes.name }),
-    authoriseTitle: i18next.t('authoriseTitle'),
-    authoriseAllow: i18next.t('authoriseAllow'),
-    authoriseDeny: i18next.t('authoriseDeny'),
-    scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.user)
-  }
+OAuth2.server = server
 
-  await ctx.render('authorise', {
-    transactionId: ctx.state.oauth2.transactionID,
-    user: ctx.user,
-    client: ctx.state.oauth2.client,
-    translation: translation,
-    scope: ctx.state.oauth2.req.scope.join(' ')
-  })
-}
-
-
-
-
-exports.server = server
+module.exports = OAuth2
 
