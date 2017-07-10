@@ -191,7 +191,7 @@ class Rescues {
 const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
 function getRescuePermissionType (rescue, user) {
-  if (user) {
+  if (user && rescue.createdAt - Date.now() < 3600000) {
     for (let rat of user.data.attributes.rats) {
       if (rescue.rats.find((fRat) => { return fRat.id === rat.id }) || rescue.firstLimpetId === rat.id) {
         return selfWriteAllowedPermissions
