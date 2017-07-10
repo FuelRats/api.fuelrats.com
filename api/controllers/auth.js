@@ -28,6 +28,14 @@ class Authentication {
     if (result === false) {
       return null
     } else {
+      if (bcrypt.getRounds(user.password) > 12) {
+        let newRoundPassword = await bcrypt.hash(password, 12)
+        User.update({
+          password: newRoundPassword
+        }, {
+          where: { id: user.id }
+        })
+      }
       return UsersPresenter.render(user, {})
     }
   }
@@ -71,6 +79,14 @@ class Authentication {
 
     let authorised = await bcrypt.compare(secret, client.secret)
     if (authorised) {
+      if (bcrypt.getRounds(client.secret) > 12) {
+        let newRoundSecret = await bcrypt.hash(secret, 12)
+        Client.update({
+          secret: newRoundSecret
+        }, {
+          where: { id: client.id }
+        })
+      }
       return ClientsPresenter.render(client, {})
     }
     return false
