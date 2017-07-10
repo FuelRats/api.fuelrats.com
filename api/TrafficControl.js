@@ -24,7 +24,8 @@ class TrafficControl {
    *
    * @param {Object} connection - A websocket client or Express.js request object
    * @param {boolean} increase - Whether this validation should also increase the request count by 1
-   * @returns {Object} - An object containign whether the rate limit is exceeded, how many requests are left, and the total requests
+   * @returns {Object} - An object containign whether the rate limit is exceeded, how many requests are left,
+   * and the total requests
    */
   validateRateLimit (connection, increase = true) {
     let entity

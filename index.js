@@ -124,10 +124,10 @@ app.use(async (ctx, next) => {
     }
 
     let result = await next()
-    if (result) {
-      ctx.body = result
-    } else {
+    if (result === true) {
       ctx.status = 204
+    } else if (result) {
+      ctx.body = result
     }
   } catch (ex) {
     let error = ex

@@ -116,7 +116,7 @@ class OAuth2 {
     }
 
     token.destroy()
-    return null
+    return true
   }
 
   static async authorizationValidateFields (ctx, next) {
