@@ -32,7 +32,7 @@ class Clients {
 
   static async create (ctx) {
     let secret = crypto.randomBytes(32).toString('hex')
-    let encryptedSecret = await bcrypt.hash(secret, 16)
+    let encryptedSecret = await bcrypt.hash(secret, 12)
 
     ctx.data = Object.assign(ctx.data, {
       secret: encryptedSecret,

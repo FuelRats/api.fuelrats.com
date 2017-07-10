@@ -52,7 +52,7 @@ exports.post = function (request, response, next) {
         return
       }
 
-      bcrypt.hash(password, 16, function (error, hash) {
+      bcrypt.hash(password, 12, function (error, hash) {
         User.create({
           email: email,
           password: hash
