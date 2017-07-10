@@ -36,6 +36,9 @@ SubscriptionsPresenter.prototype.type = 'subscriptions'
 class DecalsPresenter extends Presenter {}
 DecalsPresenter.prototype.type = 'decals'
 
+class ShipsPresenter extends Presenter {}
+ShipsPresenter.prototype.type = 'ships'
+
 class UsersPresenter extends Presenter {
   relationships () {
     return {
@@ -46,7 +49,23 @@ class UsersPresenter extends Presenter {
 }
 UsersPresenter.prototype.type = 'users'
 
-class RatsPresenter extends Presenter {}
+class ProfilesPresenter extends Presenter {
+  relationships () {
+    return {
+      rats: RatsPresenter,
+      groups: GroupsPresenter
+    }
+  }
+}
+ProfilesPresenter.prototype.type = 'profiles'
+
+class RatsPresenter extends Presenter {
+  relationships () {
+    return {
+      ships: ShipsPresenter
+    }
+  }
+}
 RatsPresenter.prototype.type = 'rats'
 
 
@@ -108,5 +127,7 @@ module.exports = {
   SubscriptionsPresenter,
   CustomPresenter,
   NicknamesPresenter,
-  GroupsPresenter
+  GroupsPresenter,
+  ShipsPresenter,
+  ProfilesPresenter
 }

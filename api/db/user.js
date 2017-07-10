@@ -121,6 +121,30 @@ module.exports = function (db, DataTypes) {
     }, {
       override: true
     })
+
+    models.User.addScope('profile', {
+      include: [
+        {
+          model: models.Rat,
+          as: 'rats',
+          attributes: {
+            exclude: [
+              'deletedAt'
+            ]
+          },
+          include: [{
+            model: models.Ship,
+            as: 'ships',
+            require: false,
+            attributes: {
+              exclude: [
+                'deletedAt'
+              ]
+            }
+          }]
+        }
+      ]
+    })
   }
   return User
 }

@@ -53,6 +53,7 @@ const logout = require('./api/controllers/logout')
 const news = require('./api/controllers/news')
 const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
+const profile = require('./api/controllers/profile')
 const rat = require('./api/controllers/rat')
 const register = require('./api/controllers/register')
 const reset = require('./api/controllers/reset')
@@ -189,6 +190,7 @@ router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
 
 router.get('/login',login.display)
 router.post('/login',login.login)
+router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
 
 router.get('/oauth2/authorize',
   Authentication.isAuthenticatedRedirect,
