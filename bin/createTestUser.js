@@ -11,6 +11,10 @@ let crypto = require('crypto')
 
 
 db.sync({ force: true }).then(async function () {
+  let adminGroup = await Group.findOne({ 'id': 'admin' })
+  let ratGroup = await Group.findOne({ 'id': 'rat' })
+  let dispatchGroup = await Group.findOne({ 'id': 'dispatch' })
+
   let hash = await bcrypt.hash('testuser', 16)
   let adminTestUser = {
     email: 'admintestuser@fuelrats.com',
@@ -19,6 +23,8 @@ db.sync({ force: true }).then(async function () {
   }
 
   let adminUser = await User.create(adminTestUser)
+
+  adminUser.addGroups([adminGroup, ratGroup, dispatchGroup])
 
   console.log('Admin Test User Created')
   adminUser.addGroup()
@@ -44,8 +50,7 @@ db.sync({ force: true }).then(async function () {
   let testUser = {
     email: 'testuser@fuelrats.com',
     password: hash,
-    nicknames: db.literal('ARRAY[\'testnick\']::citext[]'),
-    groups: []
+    nicknames: db.literal('ARRAY[\'testnick\']::citext[]')
   }
 
   await User.create(testUser)
