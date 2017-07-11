@@ -209,6 +209,9 @@ router.post('/oauth2/token',
 
 router.post('/oauth2/revoke', Authentication.isClientAuthenticated, oauth2.revoke)
 
+router.get('/statistics/rescues', statistics.rescues)
+router.get('/statistics/systems', statistics.systems)
+
 /* router.post('/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
 router.delete('/rescues/:id', API.version('v2.0'), auth.isAuthenticated,
@@ -242,8 +245,7 @@ router.delete('/nicknames/:nickname', auth.isAuthenticated, Permission.required(
 API.route(nicknames.delete))
 
 
-router.get('/statistics/rescues', API.version('v2.0'), API.route(statistics.rescues))
-router.get('/statistics/systems', API.version('v2.0'), API.route(statistics.systems))
+
 
 
 router.post('/register', register.post)

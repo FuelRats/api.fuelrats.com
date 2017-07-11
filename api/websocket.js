@@ -157,11 +157,19 @@ class WebSocketManager {
       meta: {}
     }
     if (query) {
-      meta.meta = {
-        count: result.rows.length,
-        limit: query._limit || null,
-        offset: query._offset || null,
-        total: result.count
+      if (Array.isArray(result)) {
+        meta.meta = {
+          count: result.length,
+          limit: query._limit || null,
+          offset: query._offset || null,
+        }
+      } else {
+        meta.meta = {
+          count: result.rows.length,
+          limit: query._limit || null,
+          offset: query._offset || null,
+          total: result.count
+        }
       }
     }
 

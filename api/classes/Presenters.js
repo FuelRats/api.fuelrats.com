@@ -116,6 +116,13 @@ class NicknamesPresenter extends CustomPresenter {
 NicknamesPresenter.prototype.type = 'nicknames'
 
 
+class RescueStatisticsPresenter extends CustomPresenter {
+  id (instance) {
+    return instance.date || null
+  }
+}
+RescueStatisticsPresenter.prototype.type = 'rescuestatistics'
+
 module.exports = {
   Presenter,
   UsersPresenter,
@@ -129,5 +136,6 @@ module.exports = {
   NicknamesPresenter,
   GroupsPresenter,
   ShipsPresenter,
-  ProfilesPresenter
+  ProfilesPresenter,
+  RescueStatisticsPresenter
 }

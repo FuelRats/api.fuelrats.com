@@ -17,16 +17,39 @@ class RescueStatisticsQuery extends Query {
     this._query.include = []
     this._query.attributes = [
       [this._groupedByDateField, 'date'],
-      [db.fn('SUM', db.literal('CASE WHEN "Rescue"."type" = \'success\' THEN 1 ELSE 0 END')), 'successCount'],
       [db.fn('COUNT', 'id'), 'total']
     ]
+
+    let comparators = [{
+      field: 'outcome',
+      options: [
+        ['success'],
+        ['failure'],
+        ['invalid'],
+        ['other']
+      ]
+    },{
+      field: 'codeRed',
+      options: [
+        [true, 'codeRed']
+      ]
+    },{
+      field: 'platform',
+      options: [
+        ['pc'],
+        ['ps'],
+        ['xb']
+      ]
+    }]
+    this._query.attributes = this._query.attributes.concat(compare(comparators))
+
     this._query.group = [this._groupedByDateField]
   }
 
   /**
    * Create a sequelize order parameter from a v2 order query
    * @param order a column to order the query by, optionally prefixed by a - to order descending
-   * @returns {{field: *, direction: string}} An object containing the field to order by and the direction in which to order
+   * @returns {{field: *, direction: string}} An object containing the field to order by and the direction
    */
   order (order) {
     let direction = 'ASC'
@@ -45,6 +68,10 @@ class RescueStatisticsQuery extends Query {
     return { field: order, direction: direction }
   }
 
+  limit () {
+    return null
+  }
+
   /**
    * Private aggregate field for grouping rescues together by date
    * @returns {*}
@@ -53,6 +80,23 @@ class RescueStatisticsQuery extends Query {
   get _groupedByDateField () {
     return db.fn('date_trunc', 'day', db.col('createdAt'))
   }
+}
+
+function compare (comparators) {
+  let statements = []
+  for (let comparator of comparators) {
+    for (let option of comparator.options) {
+      let [value, name] = option
+      name = name || value
+      if (typeof value === 'string') {
+        value = `'${value}'`
+      }
+      statements.push()
+      statements.push([db.fn('SUM',
+        db.literal(`CASE WHEN "Rescue"."${comparator.field}" = ${value} THEN 1 ELSE 0 END`)), name])
+    }
+  }
+  return statements
 }
 
 module.exports = RescueStatisticsQuery
