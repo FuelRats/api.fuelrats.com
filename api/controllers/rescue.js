@@ -17,14 +17,14 @@ const Statistics = require('../classes/Statistics')
 class Rescues {
   static async search (ctx) {
     let rescueQuery = new RescueQuery(ctx.query, ctx)
-    let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
   }
 
   static async findById (ctx) {
     if (ctx.params.id) {
       let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-      let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+      let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
       return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
     } else {
       throw Error.template('missing_required_field', 'id')
@@ -32,7 +32,7 @@ class Rescues {
   }
 
   static async create (ctx) {
-    let result = await Rescue.create(ctx.data)
+    let result = await Rescue.scope('rescue').create(ctx.data)
     if (!result) {
       throw Error.template('operation_failed')
     }
@@ -45,7 +45,7 @@ class Rescues {
 
   static async update (ctx) {
     if (ctx.params.id) {
-      let rescue = await Rescue.findOne({
+      let rescue = await Rescue.scope('rescue').findOne({
         where: {
           id: ctx.params.id
         }
@@ -57,7 +57,7 @@ class Rescues {
 
       let permission = getRescuePermissionType(rescue, ctx.state.user)
       if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
-        let rescue = await Rescue.update(ctx.data, {
+        let rescue = await Rescue.scope('rescue').update(ctx.data, {
           where: {
             id: ctx.params.id
           }
@@ -68,7 +68,7 @@ class Rescues {
         }
 
         let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
-        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
         let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
         process.emit('rescueUpdated', ctx, renderedResult)
         return renderedResult
@@ -80,7 +80,7 @@ class Rescues {
 
   static async delete (ctx) {
     if (ctx.params.id) {
-      let rescue = await Rescue.findOne({
+      let rescue = await Rescue.scope('rescue').findOne({
         where: {
           id: ctx.params.id
         }
@@ -100,7 +100,7 @@ class Rescues {
 
   static async assign (ctx) {
     if (ctx.params.id) {
-      let rescue = await Rescue.findOne({
+      let rescue = await Rescue.scope('rescue').findOne({
         where: {
           id: ctx.params.id
         }
@@ -119,7 +119,7 @@ class Rescues {
         await Promise.all(rats)
 
         let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
         let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
         process.emit('rescueUpdated', ctx, renderedResult)
         return renderedResult
@@ -129,7 +129,7 @@ class Rescues {
 
   static async unassign (ctx) {
     if (ctx.params.id) {
-      let rescue = await Rescue.findOne({
+      let rescue = await Rescue.scope('rescue').findOne({
         where: {
           id: ctx.params.id
         }
@@ -148,7 +148,7 @@ class Rescues {
         await Promise.all(rats)
 
         let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
         let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
         process.emit('rescueUpdated', ctx, renderedResult)
         return renderedResult
@@ -158,7 +158,7 @@ class Rescues {
 
   static async addquote (ctx) {
     if (ctx.params.id) {
-      let rescue = await Rescue.findOne({
+      let rescue = await Rescue.scope('rescue').findOne({
         where: {
           id: ctx.params.id
         }
@@ -179,7 +179,7 @@ class Rescues {
         })
 
         let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-        let result = await Rescue.findAndCountAll(rescueQuery.toSequelize)
+        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
         let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
         process.emit('rescueUpdated', ctx, renderedResult)
         return renderedResult

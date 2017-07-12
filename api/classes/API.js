@@ -4,7 +4,7 @@ const db = require('../db').db
 
 
 class API {
-  static compare (comparators) {
+  static compare (table, comparators) {
     let statements = []
     for (let comparator of comparators) {
       for (let option of comparator.options) {
@@ -15,7 +15,7 @@ class API {
         }
         statements.push()
         statements.push([db.fn('SUM',
-          db.literal(`CASE WHEN "Rescue"."${comparator.field}" = ${value} THEN 1 ELSE 0 END`)), name])
+          db.literal(`CASE WHEN "${table}"."${comparator.field}" = ${value} THEN 1 ELSE 0 END`)), name])
       }
     }
     return statements

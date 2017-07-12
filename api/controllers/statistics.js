@@ -7,8 +7,10 @@ const Epic = require('../db').Epic
 const API = require('../classes/API')
 const RescueStatisticsQuery = require('../Query/RescueStatisticsQuery')
 const SystemStatisticsQuery = require('../Query/SystemStatisticsQuery')
+const RatsStatisticsQuery = require('../Query/RatsStatisticsQuery')
 const RescueStatisticsPresenter = require('../classes/Presenters').RescueStatisticsPresenter
 const SystemStatisticsPresenter = require('../classes/Presenters').SystemStatisticsPresenter
+const RatStatisticsPresenter = require('../classes/Presenters').RatStatisticsPresenter
 
 const Errors = require('../errors')
 
@@ -28,6 +30,13 @@ class Statistics {
     let result = await Rescue.scope(null).findAll(stats)
     let results = result.map((r) => { return r.toJSON() })
     return SystemStatisticsPresenter.render(results, ctx.meta(result, systemQuery))
+  }
+
+  static async rats (ctx) {
+    let ratsQuery = new RatsStatisticsQuery(ctx.query, ctx)
+    let stats = ratsQuery.toSequelize
+    let result = await Rat.findAll(stats)
+    return RatStatisticsPresenter.render(result, ctx.meta(result, ratsQuery))
   }
 }
 

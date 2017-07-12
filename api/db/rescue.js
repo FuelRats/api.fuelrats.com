@@ -75,9 +75,16 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'firstLimpetId'
     })
 
+    models.Rescue.belongsToMany(models.Rat, {
+      as: 'rats',
+      through: {
+        model: models.RescueRats
+      }
+    })
+
     models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })
 
-    models.Rescue.addScope('defaultScope', {
+    models.Rescue.addScope('rescue', {
       include: [
         {
           model: models.Rat,

@@ -42,7 +42,7 @@ class RescueStatisticsQuery extends Query {
         ['xb']
       ]
     }]
-    this._query.attributes = this._query.attributes.concat(API.compare(comparators))
+    this._query.attributes = this._query.attributes.concat(API.compare('Rescue', comparators))
 
     this._query.group = [this._groupedByDateField]
   }

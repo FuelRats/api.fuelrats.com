@@ -35,15 +35,6 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'userId'
     })
 
-
-
-    models.Rescue.belongsToMany(models.Rat, {
-      as: 'rats',
-      through: {
-        model: models.RescueRats
-      }
-    })
-
     models.Rat.belongsToMany(models.Rescue, {
       as: 'rescues',
       through: {

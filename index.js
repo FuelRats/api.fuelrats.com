@@ -212,6 +212,7 @@ router.post('/oauth2/revoke', Authentication.isClientAuthenticated, oauth2.revok
 
 router.get('/statistics/rescues', statistics.rescues)
 router.get('/statistics/systems', statistics.systems)
+router.get('/statistics/rats', statistics.rats)
 
 /* router.post('/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))

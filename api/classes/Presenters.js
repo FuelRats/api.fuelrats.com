@@ -130,6 +130,13 @@ class SystemStatisticsPresenter extends CustomPresenter {
 }
 SystemStatisticsPresenter.prototype.type = 'systemstatistics'
 
+class RatStatisticsPresenter extends CustomPresenter {
+  id (instance) {
+    return instance.id || null
+  }
+}
+RatStatisticsPresenter.prototype.type = 'ratstatistics'
+
 module.exports = {
   Presenter,
   UsersPresenter,
@@ -145,5 +152,6 @@ module.exports = {
   ShipsPresenter,
   ProfilesPresenter,
   RescueStatisticsPresenter,
-  SystemStatisticsPresenter
+  SystemStatisticsPresenter,
+  RatStatisticsPresenter
 }
