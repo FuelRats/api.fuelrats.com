@@ -170,7 +170,7 @@ class Query {
   }
 
   /**
-   * Returns the Options class used to generate a sequelize query from API subqueries, may be overriden to use a subclass
+   * Returns the Options class used to generate a sequelize query from API subqueries, may be overriden
    */
   get options () {
     return QueryOptions

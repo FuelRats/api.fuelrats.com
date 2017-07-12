@@ -1,6 +1,7 @@
 'use strict'
 const db = require('./../db').db
 const Query = require('./index')
+const API = require('../classes/API')
 
 /**
  * A class representing a rescue query
@@ -41,7 +42,7 @@ class RescueStatisticsQuery extends Query {
         ['xb']
       ]
     }]
-    this._query.attributes = this._query.attributes.concat(compare(comparators))
+    this._query.attributes = this._query.attributes.concat(API.compare(comparators))
 
     this._query.group = [this._groupedByDateField]
   }
@@ -80,23 +81,6 @@ class RescueStatisticsQuery extends Query {
   get _groupedByDateField () {
     return db.fn('date_trunc', 'day', db.col('createdAt'))
   }
-}
-
-function compare (comparators) {
-  let statements = []
-  for (let comparator of comparators) {
-    for (let option of comparator.options) {
-      let [value, name] = option
-      name = name || value
-      if (typeof value === 'string') {
-        value = `'${value}'`
-      }
-      statements.push()
-      statements.push([db.fn('SUM',
-        db.literal(`CASE WHEN "Rescue"."${comparator.field}" = ${value} THEN 1 ELSE 0 END`)), name])
-    }
-  }
-  return statements
 }
 
 module.exports = RescueStatisticsQuery

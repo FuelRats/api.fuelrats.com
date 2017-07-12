@@ -135,6 +135,7 @@ app.use(async (ctx, next) => {
       error = Error.template('server_error', error.name)
     }
     ctx.body = ex
+
     ctx.status = error.code
     if (error.code === 500) {
       ctx.app.emit('error', ex, ctx)

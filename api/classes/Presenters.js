@@ -123,6 +123,13 @@ class RescueStatisticsPresenter extends CustomPresenter {
 }
 RescueStatisticsPresenter.prototype.type = 'rescuestatistics'
 
+class SystemStatisticsPresenter extends CustomPresenter {
+  id (instance) {
+    return instance.system || null
+  }
+}
+SystemStatisticsPresenter.prototype.type = 'systemstatistics'
+
 module.exports = {
   Presenter,
   UsersPresenter,
@@ -137,5 +144,6 @@ module.exports = {
   GroupsPresenter,
   ShipsPresenter,
   ProfilesPresenter,
-  RescueStatisticsPresenter
+  RescueStatisticsPresenter,
+  SystemStatisticsPresenter
 }
