@@ -28,6 +28,13 @@ let errors = {
     'title': 'Client not Authenticated'
   },
 
+  'webhook_unauthorised': {
+    'code': 401,
+    'detail': 'Connection to webhook from an unauthorized IP address',
+    'status': 'Unauthorized',
+    'title': 'IP address not authorized'
+  },
+
   'no_permission': {
     'code': 403,
     'detail': 'User does not have the required permission to perform that action',

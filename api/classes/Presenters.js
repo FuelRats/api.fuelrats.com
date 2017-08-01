@@ -43,7 +43,8 @@ class UsersPresenter extends Presenter {
   relationships () {
     return {
       rats: RatsPresenter,
-      groups: GroupsPresenter
+      groups: GroupsPresenter,
+      displayRat: RatsPresenter
     }
   }
 }
@@ -53,7 +54,8 @@ class ProfilesPresenter extends Presenter {
   relationships () {
     return {
       rats: RatsPresenter,
-      groups: GroupsPresenter
+      groups: GroupsPresenter,
+      displayRat: RatsPresenter
     }
   }
 }

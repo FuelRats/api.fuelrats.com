@@ -3,7 +3,7 @@ const Permissions = require('./permission')
 
 const hour = 60 * 60 * 1000
 
-const allowedUnauthentiatedRequestCount = 150
+const allowedUnauthenticatedRequestCount = 150
 const allowedAuthenticatedRequestCount = 1000
 const allowedAdminRequestCount = 10000
 
@@ -24,7 +24,7 @@ class TrafficControl {
    *
    * @param {Object} connection - A websocket client or Express.js request object
    * @param {boolean} increase - Whether this validation should also increase the request count by 1
-   * @returns {Object} - An object containign whether the rate limit is exceeded, how many requests are left,
+   * @returns {Object} - An object containing whether the rate limit is exceeded, how many requests are left,
    * and the total requests
    */
   validateRateLimit (connection, increase = true) {
@@ -190,11 +190,11 @@ class RemoteAddressEntity extends TrafficEntity {
    * @returns {number} the number of remaining requests this entity has in this period
    */
   get remainingRequests () {
-    return allowedUnauthentiatedRequestCount - this._requestCount
+    return allowedUnauthenticatedRequestCount - this._requestCount
   }
 
   get totalRequests () {
-    return allowedUnauthentiatedRequestCount
+    return allowedUnauthenticatedRequestCount
   }
 }
 

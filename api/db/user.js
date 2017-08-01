@@ -35,6 +35,8 @@ module.exports = function (db, DataTypes) {
       foreignKey: 'userId'
     })
 
+    models.User.belongsTo(models.Rat, { as: 'displayRat' })
+
     models.User.hasOne(models.Decal, {
       foreignKey: 'userId',
       as: 'decal'
@@ -67,8 +69,15 @@ module.exports = function (db, DataTypes) {
               'deletedAt'
             ]
           }
-        },
-        {
+        }, {
+          model: models.Rat,
+          as: 'displayRat',
+          attributes: {
+            exclude: [
+              'deletedAt'
+            ]
+          }
+        }, {
           model: models.Group,
           as: 'groups',
           require: false,
@@ -79,7 +88,10 @@ module.exports = function (db, DataTypes) {
             exclude: [
               'deletedAt'
             ]
-          }
+          },
+          order: [
+            ['priority', 'DESC']
+          ]
         }
       ]
     }, {
@@ -103,8 +115,15 @@ module.exports = function (db, DataTypes) {
               'deletedAt'
             ]
           }
-        },
-        {
+        }, {
+          model: models.Rat,
+          as: 'displayRat',
+          attributes: {
+            exclude: [
+              'deletedAt'
+            ]
+          }
+        }, {
           model: models.Group,
           as: 'groups',
           require: false,

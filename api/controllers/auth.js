@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt')
 const Permission = require('../permission')
 const UsersPresenter = require('../classes/Presenters').UsersPresenter
 const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
+let config = require('../../config')
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
@@ -134,6 +135,14 @@ class Authentication {
     } else {
       ctx.session.redirect = ctx.request.path
       ctx.redirect('/login')
+    }
+  }
+
+  static isWhitelisted (ctx, next) {
+    if (config.whitelist.includes(ctx.inet)) {
+      return next()
+    } else {
+      throw Error.template('webhook_unauthorised')
     }
   }
 

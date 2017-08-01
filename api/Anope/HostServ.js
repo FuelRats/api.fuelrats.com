@@ -1,91 +1,121 @@
 'use strict'
-const winston = require('winston')
+const Anope = require('./index')
 const ChanServ = require('./ChanServ')
-const officialChannels = ['#fuelrats', '#drillrats', '#ratchat']
+const NickServ = require('./NickServ')
+const Permissions = require('../permission')
+const GroupsPresenter = require('../classes/Presenters').GroupsPresenter
 
-const client = require('./index').client
+const officialChannels = [
+  '#fuelrats',
+  '#drillrats',
+  '#drillrats2',
+  '#drillrats3',
+  '#ratchat',
+  '#rat-ops',
+  '#rattech',
+  '#doersofstuff'
+]
 
+/**
+ * Class for managing requests to HostServ
+ * @class
+ */
 class HostServ {
-  static set (nickname, host) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['HostServ', 'API', `SETALL ${nickname} ${host}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (/not registered/.test(data.return) === true) {
-            reject(data.return)
-          } else {
-            resolve(host)
-          }
-        }
-      })
-    })
+  /**
+   * Manually set a hostname on a particular account
+   * @param nickname The host nickname of this account
+   * @param host The hostname to set
+   * @returns {Promise.<*>}
+   */
+  static async set (nickname, host) {
+    let result = await Anope.command('HostServ', 'API', `SETALL ${nickname} ${host}`)
+    if (/not registered/.test(result.return) === true) {
+      throw result.return
+    }
+
+    return host
   }
 
-  static updateVirtualHost (user) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        let virtualHost = generateVirtualHost(user)
-        winston.info('Generated Vhost: ' + virtualHost)
+  /**
+   * Update the IRC hostname of a user
+   * @param user User object to generate and set the hostnames on
+   * @returns {Promise.<void>}
+   */
+  static async update (user) {
+    let virtualHost = generateVirtualHost(user)
+    if (!virtualHost) {
+      throw null
+    }
 
-        if (virtualHost) {
-          let hostUpdates = []
-          for (let nickname of user.nicknames) {
-            hostUpdates.push(HostServ.set(nickname, virtualHost))
-          }
+    await HostServ.set(user.data.attributes.nicknames[0], virtualHost)
 
-          Promise.all(hostUpdates).then(function () {
-            for (let channel of officialChannels) {
-              ChanServ.sync(channel)
-              resolve()
-            }
-          }).catch(function (errors) {
-            for (let channel of officialChannels) {
-              ChanServ.sync(channel)
-              resolve()
-            }
-            reject(errors)
-          })
-        } else {
-          reject(null)
-        }
-      }, 500)
-    })
+    //officialChannels.forEach(ChanServ.sync)
+    NickServ.update(user.data.attributes.nicknames[0])
+    return virtualHost
   }
 }
 
+/**
+ * Generate a virtual host for a user
+ * @param user The user to use as a base for generating the user object
+ * @returns {*}
+ */
 function generateVirtualHost (user) {
-  let sortedRats = user.rats.sort(function (a, b) {
-    return a - b
-  })
+  let group = getHighestPriorityGroup(user)
 
-  let rat
-  if (sortedRats.length > 0) {
-    rat = IRCSafeName(user.rats[0])
+  if (group.attributes.isAdministrator) {
+    return group.attributes.vhost
   } else {
-    rat = user.id.split('-')[0]
-  }
+    let preferredRat = getPreferredRat(user)
+    let ircSafeName = getIRCSafeName(preferredRat)
 
-  if (user.group === 'admin') {
-    return 'netadmin.fuelrats.com'
-  } else if (user.group === 'moderator') {
-    return `${rat}.op.fuelrats.com`
-  } else if (user.group === 'overseer') {
-    return `${rat}.overseer.fuelrats.com`
-  } else if (user.drilled === true) {
-    return `${rat}.rat.fuelrats.com`
-  } else {
-    return `${rat}.recruit.fuelrats.com`
+    return `${ircSafeName}.${group.attributes.vhost}`
   }
 }
 
-function IRCSafeName (rat) {
-  let ratName = rat.name
+/**
+ * Get the preferred display rat of an account
+ * @param user the user account to get the display rat of
+ * @returns {*}
+ */
+function getPreferredRat (user) {
+  let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])
+  if (!ratRef) {
+    return null
+  }
+
+  return user.included.find((include) => {
+    return include.id === ratRef.id
+  })
+}
+
+/**
+ * Get an IRC safe representation of a CMDR name
+ * @param rat the rat to get an IRC safe name from
+ * @returns {string} An IRC safe name
+ */
+function getIRCSafeName (rat) {
+  let ratName = rat.attributes.name
   ratName = ratName.replace(/ /g, '')
   ratName = ratName.replace(/[^a-zA-Z0-9\s]/g, '')
   return ratName.toLowerCase()
+}
+
+function getHighestPriorityGroup (user) {
+  let groups = user.included.filter((include) => {
+    return include.type === 'groups'
+  })
+
+  let defaultGroup = Permissions.groups.find((group) => {
+    return group.id === 'default'
+  })
+
+  groups.push(GroupsPresenter.render(defaultGroup).data)
+
+  groups.sort((a, b) => {
+    return a.priority > b.priority
+  })
+  return groups[0]
 }
 
 module.exports = HostServ

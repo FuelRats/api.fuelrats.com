@@ -14,6 +14,7 @@ const permissionLocaleKeys = {
   'read': 'permissionRead',
   'write': 'permissionWrite',
   'delete': 'permissionDelete',
+
   'groups': 'permissionGroup'
 }
 
@@ -21,6 +22,9 @@ let groups = {}
 
 async function fetchPermissions () {
   groups = await Group.findAll({})
+  groups.sort((group1, group2) => {
+    return group1.priority > group2.priority
+  })
 }
 
 fetchPermissions()
@@ -114,7 +118,7 @@ class Permission {
 
   /**
    * Get the available permissions/oauth scopes
-   * @returns {string[]}
+   * @returns [Object]
    */
   static get groups () {
     return groups

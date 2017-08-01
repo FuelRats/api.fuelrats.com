@@ -65,6 +65,7 @@ const user = require('./api/controllers/user')
 const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill').HTTP
+const { AnopeWebhook } = require('./api/controllers/anope-webhook')
 
 db.sync()
 
@@ -102,7 +103,7 @@ app.use(async function (ctx, next) {
   let query = Object.assign(ctx.query, ctx.params)
   ctx.query = parseQuery(query)
 
-  ctx.inet = ctx.request.headers['X-Forwarded-for'] ||
+  ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
   await next()
 })
 
@@ -173,6 +174,8 @@ router.get('/users', Authentication.isAuthenticated, Permission.required(['user.
 router.get('/users/:id', Authentication.isAuthenticated, user.findById)
 router.post('/users', Authentication.isAuthenticated, user.create)
 router.put('/users/:id', Authentication.isAuthenticated, user.update)
+router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
+  Permission.required(['user.write']), user.updatevirtualhost)
 router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
 
 router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, nicknames.info)
@@ -192,6 +195,8 @@ router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
 router.get('/login',login.display)
 router.post('/login',login.login)
 router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
+
+router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
 
 router.get('/oauth2/authorize',
   Authentication.isAuthenticatedRedirect,

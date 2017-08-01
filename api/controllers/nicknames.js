@@ -1,6 +1,6 @@
 'use strict'
 const Permission = require('../permission')
-const Errors = require('../errors')
+const Error = require('../errors')
 const User = require('../db').User
 const db = require('../db').db
 const NicknameQuery = require('../Query/NicknameQuery')
@@ -12,12 +12,12 @@ const HostServ = require('../Anope/HostServ')
 class Nicknames {
   static async info (ctx) {
     if (!ctx.params.nickname || ctx.params.nickname.length === 0) {
-      throw Errors.template('missing_required_field', 'nickname')
+      throw Error.template('missing_required_field', 'nickname')
     }
 
     let info = await NickServ.info(ctx.params.nickname)
     if (!info) {
-      throw Errors.template('not_found')
+      throw Error.template('not_found')
     }
 
     return NicknamesPresenter.render(info)
@@ -27,24 +27,29 @@ class Nicknames {
     let fields = ['nickname', 'password']
     for (let field of fields) {
       if (!ctx.data[field]) {
-        throw Errors.template('missing_required_field', field)
+        throw Error.template('missing_required_field', field)
       }
     }
 
-    await NickServ.register(ctx.data.nickname, ctx.data.password, ctx.state.user.data.attributes.email)
-
     let nicknames = ctx.state.user.data.attributes.nicknames
+    if (nicknames.includes(ctx.data.nickname)) {
+      throw Error.template('already_exists', 'Nickname is already registered')
+    }
+
+    if (nicknames.length > 0) {
+      await NickServ.group(ctx.data.nickname, nicknames[0], ctx.data.password)
+    } else {
+      await NickServ.register(ctx.data.nickname, ctx.data.password, ctx.state.user.data.attributes.email)
+      await NickServ.confirm(ctx.data.nickname)
+    }
+
     nicknames.push(ctx.data.nickname)
 
     await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
       where: { id: ctx.state.user.data.id }
     })
 
-    let user = await User.findOne({
-      where: { id: ctx.state.user.data.id }
-    })
-
-    await HostServ.updateVirtualHost(user)
+    await HostServ.update(ctx.state.user)
     return ctx.data.nickname
   }
 
@@ -53,31 +58,34 @@ class Nicknames {
 
     for (let field of fields) {
       if (!ctx.data[field]) {
-        throw Errors.template('missing_required_field', field)
+        throw Error.template('missing_required_field', field)
       }
     }
 
-    await NickServ.identify(ctx.data.nickname, ctx.data.password)
-
     let nicknames = ctx.state.user.data.attributes.nicknames
+    if (nicknames.includes(ctx.data.nickname)) {
+      throw Error.template('already_exists', 'Nickname is already registered to you')
+    }
+
+    await NickServ.identify(ctx.data.nickname, ctx.data.password)
+    if (nicknames.length > 0) {
+      await NickServ.group(ctx.data.nickname, nicknames[0], ctx.data.password)
+    }
+
     nicknames.push(ctx.data.nickname)
 
     await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
       where: { id: ctx.state.user.data.id }
     })
 
-    let user = await User.findOne({
-      where: {id: ctx.state.user.data.id}
-    })
 
-
-    await HostServ.updateVirtualHost(user)
+    await HostServ.update(ctx.state.user)
     return ctx.data.nickname
   }
 
   static async search (ctx) {
     if (!ctx.params.nickname) {
-      throw Errors.template('missing_required_field', 'nickname')
+      throw Error.template('missing_required_field', 'nickname')
     }
 
     let result = await User.findAndCountAll(new NicknameQuery(ctx.params, ctx).toSequelize)
@@ -86,7 +94,7 @@ class Nicknames {
 
   static async delete (ctx) {
     if (!ctx.params.nickname) {
-      throw Errors.template('missing_required_field', 'nickname')
+      throw Error.template('missing_required_field', 'nickname')
     }
 
     if (ctx.state.user.data.attributes.nicknames.includes(ctx.params.nickname) ||

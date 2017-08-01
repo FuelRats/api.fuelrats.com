@@ -5,6 +5,7 @@ const User = require('../db').User
 const Error = require('../errors')
 const Permission = require('../permission')
 const UserQuery = require('../Query/UserQuery')
+const HostServ = require('../Anope/HostServ')
 const UsersPresenter = require('../classes/Presenters').UsersPresenter
 
 class Users {
@@ -93,9 +94,24 @@ class Users {
       process.emit('userDeleted', ctx, ctx.params.id)
       ctx.status = 204
       return true
+    } else {
+      throw Error.template('missing_required_field', 'id')
     }
   }
-}
+
+  static async updatevirtualhost (ctx) {
+    if (ctx.params.id) {
+      let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+      let result = await User.findAndCountAll(userQuery.toSequelize)
+      if (result) {
+        return HostServ.update(result)
+      }
+      throw Error.template('not_found', 'id')
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+ }
 
 function hasValidPermissionsForUser (ctx, user, action = 'read') {
   let permissions = [`user.${action}`]
