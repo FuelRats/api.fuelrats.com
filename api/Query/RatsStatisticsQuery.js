@@ -42,7 +42,10 @@ class RatsStatisticsQuery extends Query {
           ]
         }],
         required: false,
-        scope: null
+        scopes: [
+          null,
+          'stats'
+        ]
       }
     ]
     this._query.attributes = [

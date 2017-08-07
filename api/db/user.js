@@ -49,7 +49,7 @@ module.exports = function (db, DataTypes) {
       }
     })
 
-    models.User.addScope('default', {
+    models.User.addScope('public', {
       attributes: {
         include: [
           [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']

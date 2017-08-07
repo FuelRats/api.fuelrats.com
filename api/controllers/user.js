@@ -18,7 +18,7 @@ class Users {
   static async findById (ctx) {
     if (ctx.params.id) {
       let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
-      let result = await User.findAndCountAll(userQuery.toSequelize)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
 
       if (result.rows.length === 0 || hasValidPermissionsForUser(ctx, result.rows[0], 'read')) {
         return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
@@ -67,7 +67,7 @@ class Users {
         }
 
         let userQuery = new UserQuery({id: ctx.params.id}, ctx)
-        let result = await User.findAndCountAll(userQuery.toSequelize)
+        let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
         let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
         process.emit('userUpdated', ctx, renderedResult)
         return renderedResult
@@ -102,7 +102,7 @@ class Users {
   static async updatevirtualhost (ctx) {
     if (ctx.params.id) {
       let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
-      let result = await User.findAndCountAll(userQuery.toSequelize)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
       if (result) {
         return HostServ.update(result)
       }
