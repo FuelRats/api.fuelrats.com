@@ -67,8 +67,6 @@ const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill').HTTP
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
 
-db.sync()
-
 
 try {
   npid.remove('api.pid')

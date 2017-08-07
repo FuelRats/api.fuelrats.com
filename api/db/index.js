@@ -13,6 +13,7 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
   dialect: 'postgres'
 })
 
+db.sync()
 
 let models = {
   db

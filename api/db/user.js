@@ -35,7 +35,7 @@ module.exports = function (db, DataTypes) {
       foreignKey: 'userId'
     })
 
-    models.User.belongsTo(models.Rat, { as: 'displayRat' })
+    models.User.belongsTo(models.Rat, { as: 'displayRat', constraints: false })
 
     models.User.hasOne(models.Decal, {
       foreignKey: 'userId',
