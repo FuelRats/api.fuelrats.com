@@ -35,7 +35,7 @@ class Statistics {
   static async rats (ctx) {
     let ratsQuery = new RatsStatisticsQuery(ctx.query, ctx)
     let stats = ratsQuery.toSequelize
-    let result = await Rat.findAll(stats)
+    let result = await Rat.scope('stats').findAll(stats)
     return RatStatisticsPresenter.render(result, ctx.meta(result, ratsQuery))
   }
 }

@@ -30,6 +30,7 @@ module.exports = function (sequelize, DataTypes) {
   })
 
   Rat.associate = function (models) {
+    models.Rat.addScope('stats', {})
     models.Rat.belongsTo(models.User, {
       as: 'user',
       foreignKey: 'userId'

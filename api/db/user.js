@@ -49,7 +49,7 @@ module.exports = function (db, DataTypes) {
       }
     })
 
-    models.User.addScope('defaultScope', {
+    models.User.addScope('default', {
       attributes: {
         include: [
           [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']
@@ -161,6 +161,19 @@ module.exports = function (db, DataTypes) {
               ]
             }
           }]
+        }
+      ]
+    })
+
+    models.User.addScope('stats', {
+      include: [
+        {
+          model: models.Rat,
+          as: 'displayRat',
+          attributes: [
+            'id',
+            'name'
+          ]
         }
       ]
     })

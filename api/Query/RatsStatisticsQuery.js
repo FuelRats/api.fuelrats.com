@@ -3,6 +3,8 @@ const db = require('./../db').db
 const Query = require('./index')
 const API = require('../classes/API')
 const Rescue = require('../db').Rescue
+const User = require('../db').User
+const Rat = require('../db').Rat
 
 /**
  * A class representing a rescue query
@@ -24,6 +26,23 @@ class RatsStatisticsQuery extends Query {
         attributes: [],
         include: [],
         required: true
+      },
+      {
+        model: User,
+        as: 'user',
+        attributes: [
+          'id',
+        ],
+        include: [{
+          model: Rat,
+          as: 'displayRat',
+          attributes: [
+            'id',
+            'name'
+          ]
+        }],
+        required: false,
+        scope: null
       }
     ]
     this._query.attributes = [
@@ -31,12 +50,12 @@ class RatsStatisticsQuery extends Query {
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
       [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
       [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed'],
-      [db.fn('COUNT', db.literal('CASE WHEN "firstLimpet"."platform" = \'pc\' THEN 1 END')), 'pc']
+      [db.fn('COUNT', db.literal('CASE WHEN "firstLimpet"."platform" = \'pc\' THEN 1 END')), 'pc'],
     ]
 
     this._query.attributes = this._query.attributes.concat(API.compare('firstLimpet', this.comparators))
 
-    this._query.group = [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END')]
+    this._query.group = [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'user.id', 'user.displayRat.id']
   }
 
   /**
