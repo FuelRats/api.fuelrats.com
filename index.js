@@ -4,7 +4,6 @@
 // =============================================================================
 const Koa = require('koa')
 const session = require('koa-session')
-const cors = require('koa-cors')
 const router = require('koa-router')()
 const app = new Koa()
 require('koa-qs')(app)
@@ -15,15 +14,12 @@ const path = require('path')
 const http = require('http')
 const ws = require('ws')
 const { URL } = require('url')
+const logger = require('./api/logger')
 
-// Import libraries
-const compression = require('compression')
 const fs = require('fs')
 const Permission = require('./api/permission')
-const winston = require('winston')
 const uid = require('uid-safe')
 const npid = require('npid')
-require('winston-daily-rotate-file')
 
 // Import config
 const config = require('./config-example')
@@ -32,13 +28,8 @@ if (fs.existsSync('./config.json')) {
   Object.assign(config, require('./config'))
 }
 
-const API = require('./api/classes/API')
 const Error = require('./api/errors')
 
-// Import models
-const db = require('./api/db').db
-const User = require('./api/db').User
-const Rat = require('./api/db').Rat
 
 // Import controllers
 const Authentication = require('./api/controllers/auth')
@@ -118,6 +109,17 @@ app.use(async (ctx, next) => {
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
     ctx.set('X-Rate-Limit-Reset', traffic.nextResetDate)
 
+    logger.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
+      'ip': ctx.inet,
+      'path': ctx.request.path,
+      'rate-limit-limit': rateLimit.total,
+      'rate-limit-remaining': rateLimit.remaining,
+      'query': ctx.query,
+      'body': ctx.data,
+      'method': ctx.request.req.method,
+      'headers': ctx.request.req.headers
+    })
+
     if (rateLimit.exceeded) {
       return next(Error.template('rate_limit_exceeded'))
     }
@@ -131,12 +133,13 @@ app.use(async (ctx, next) => {
   } catch (ex) {
     let error = ex
     if (!error.code) {
-      error = Error.template('server_error', error.name)
+      error = Error.template('server_error', error)
     }
-    ctx.body = ex
+    ctx.body = error
 
     ctx.status = error.code
     if (error.code === 500) {
+      logger.error(error, ctx)
       ctx.app.emit('error', ex, ctx)
     }
   }
@@ -496,4 +499,9 @@ wss.on('connection', async function connection (client) {
   })
 })
 
-server.listen(port)
+server.listen(port, 'localhost', (error) => {
+  if (error) {
+
+  }
+  logger.info(`HTTP Server listening on localhost port ${port}`)
+})
