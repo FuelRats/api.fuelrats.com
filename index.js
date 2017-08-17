@@ -115,9 +115,8 @@ app.use(async (ctx, next) => {
       'rate-limit-limit': rateLimit.total,
       'rate-limit-remaining': rateLimit.remaining,
       'query': ctx.query,
-      'body': ctx.data,
-      'method': ctx.request.req.method,
-      'headers': ctx.request.req.headers
+      'body': censor(ctx.data),
+      'method': ctx.request.req.method
     })
 
     if (rateLimit.exceeded) {
@@ -505,3 +504,17 @@ server.listen(port, 'localhost', (error) => {
   }
   logger.info(`HTTP Server listening on localhost port ${port}`)
 })
+
+function censor (obj) {
+  let censoredObj = {}
+  Object.assign(censoredObj, obj)
+
+  if (censoredObj.password) {
+    censoredObj.password = '[CENSORED]'
+  }
+  if (censoredObj.secret) {
+    censoredObj.secret = '[CENSORED]'
+  }
+
+  return censoredObj
+}
