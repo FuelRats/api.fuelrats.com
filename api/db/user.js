@@ -161,6 +161,40 @@ module.exports = function (db, DataTypes) {
               ]
             }
           }]
+        },
+        {
+          model: models.Rat,
+          as: 'displayRat',
+          attributes: {
+            exclude: [
+              'deletedAt'
+            ]
+          },
+          include: [{
+            model: models.Ship,
+            as: 'ships',
+            require: false,
+            attributes: {
+              exclude: [
+                'deletedAt'
+              ]
+            }
+          }]
+        }, {
+          model: models.Group,
+          as: 'groups',
+          require: false,
+          through: {
+            attributes: []
+          },
+          attributes: {
+            exclude: [
+              'deletedAt'
+            ]
+          },
+          order: [
+            ['priority', 'DESC']
+          ]
         }
       ]
     })
