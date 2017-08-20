@@ -1,5 +1,7 @@
 'use strict'
 
+let config = require('../config')
+
 const log4js = require('log4js')
 
 log4js.addLayout('frloggly', function (config) {
@@ -25,35 +27,9 @@ log4js.addLayout('frloggly', function (config) {
   }
 })
 
-log4js.configure({
-  appenders: {
-    console: { type: 'console' },
-    slack: {
-      type: 'frslack',
-      token: 'xoxb-224743461111-RXUqc7ezTmOaxc2pWpLvppBj',
-      channel_id: 'development',
-      username: 'fuelratsapi'
-    },
-    alerts: {
-      type: 'logLevelFilter',
-      appender: 'slack',
-      level: 'error'
-    },
-    loggly: {
-      type: 'frloggly',
-      token: '1ba2142e-2339-476e-80c3-31eeb2bae1f8',
-      subdomain: 'fuelrats',
-      tags: ['local-dev', 'nodejs'],
-      json: true,
-      layout: { type: 'frloggly' }
-    }
-  },
-  categories: {
-    default: {
-      appenders: [ 'console', 'alerts', 'loggly' ], level: 'info'
-    }
-  }
-})
+if (config.loggly) {
+  log4js.configure(config.loggly)
+}
 
 
 const logger = log4js.getLogger()

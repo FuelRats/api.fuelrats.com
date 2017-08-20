@@ -21,5 +21,34 @@
       "password": "",
       "port": 5432
     }
+  },
+  "loggly": {
+    "appenders": {
+      "console": { "type": "console" },
+      "slack": {
+        "type": "frslack",
+        "token": "",
+        "channel_id": "development",
+        "username": "fuelratsapi"
+      },
+      "alerts": {
+        "type": "logLevelFilter",
+        "appender": "slack",
+        "level": "error"
+      },
+      "loggly": {
+        "type": "frloggly",
+        "token": "",
+        "subdomain": "fuelrats",
+        "tags": ["local-dev", "nodejs"],
+        "json": true,
+        "layout": { "type": "frloggly" }
+      }
+    },
+    "categories": {
+      "default": {
+        "appenders": [ "console", "alerts", "loggly" ], "level": "info"
+      }
+    }
   }
 }
