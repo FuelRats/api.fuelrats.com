@@ -88,7 +88,7 @@ class Nicknames {
       throw Error.template('missing_required_field', 'nickname')
     }
 
-    let result = await User.findAndCountAll(new NicknameQuery(ctx.params, ctx).toSequelize)
+    let result = await User.scope('public').findAndCountAll(new NicknameQuery(ctx.params, ctx).toSequelize)
     return NicknamesPresenter.render(result)
   }
 
