@@ -40,7 +40,7 @@ function slackAppender (_config, layout, slack) {
       ],
       image_url: 'http://my-website.com/path/to/image.jpg',
       thumb_url: 'http://example.com/path/to/thumb.png',
-      footer: 'Development API',
+      footer: _config.footer,
       footer_icon: 'https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2017-08-08/223124196241_3037525c66a75a1f0441_96.png',
       ts: Math.floor(loggingEvent.startTime.getTime() / 1000)
     }])

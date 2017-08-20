@@ -138,7 +138,7 @@ app.use(async (ctx, next) => {
 
     ctx.status = error.code
     if (error.code === 500) {
-      logger.error(error, ctx)
+      logger.error(error)
       ctx.app.emit('error', ex, ctx)
     }
   }
