@@ -142,6 +142,16 @@ module.exports = function (db, DataTypes) {
     })
 
     models.User.addScope('profile', {
+      attributes: {
+        include: [
+          [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']
+        ],
+        exclude: [
+          'nicknames',
+          'password',
+          'deletedAt'
+        ]
+      },
       include: [
         {
           model: models.Rat,
