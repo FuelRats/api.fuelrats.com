@@ -18,7 +18,7 @@ class SystemStatisticsQuery extends Query {
     this._query.include = []
     this._query.attributes = [
       'system',
-      [this._countSystemsField, 'count']
+      [this.count, 'count']
     ]
 
     this._query.attributes = this._query.attributes.concat(API.compare('Rescue', this.comparators))
@@ -30,10 +30,11 @@ class SystemStatisticsQuery extends Query {
       let comparator = API.getComparator(this.comparators, conditional)
       if (comparator) {
         this._query.having = db.where(comparator, this._query.where[conditional])
-        continue
+      } else if (this[conditional]) {
+        this._query.having = db.where(this[conditional], this._query.where[conditional])
+      } else {
+        this._query.having.push(db.where(conditional, this._query.where[conditional]))
       }
-
-      this._query.having.push(db.where(conditional, this._query.where[conditional]))
     }
 
     this._query.where = {}
@@ -49,7 +50,7 @@ class SystemStatisticsQuery extends Query {
   order (order) {
     let direction = 'ASC'
     if (!order) {
-      order = this._countSystemsField
+      order = this.count
       direction = this.defaultSortDirection
     } else {
       if (order.startsWith('-')) {
@@ -57,7 +58,7 @@ class SystemStatisticsQuery extends Query {
         direction = 'DESC'
       }
       if (order === 'count') {
-        order = this._countSystemsField
+        order = this.count
       }
 
       let comparator = API.getComparator(this.comparators, order)
@@ -102,7 +103,7 @@ class SystemStatisticsQuery extends Query {
     }]
   }
 
-  get _countSystemsField () {
+  get count () {
     return db.fn('COUNT', 'system')
   }
 }
