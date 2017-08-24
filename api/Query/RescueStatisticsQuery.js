@@ -22,7 +22,7 @@ class RescueStatisticsQuery extends Query {
     ]
 
     let comparators = [{
-      field: 'outcome',
+      fields: ['outcome'],
       options: [
         ['success'],
         ['failure'],
@@ -30,12 +30,12 @@ class RescueStatisticsQuery extends Query {
         ['other']
       ]
     },{
-      field: 'codeRed',
+      fields: ['codeRed'],
       options: [
-        [true, 'codeRed']
+        [true, null, 'codeRed']
       ]
     },{
-      field: 'platform',
+      fields: ['platform'],
       options: [
         ['pc'],
         ['ps'],

@@ -94,7 +94,7 @@ class RatsStatisticsQuery extends Query {
 
   get comparators () {
     return [{
-      field: 'platform',
+      fields: ['platform'],
       options: [
         ['pc'],
         ['ps'],

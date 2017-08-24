@@ -59,7 +59,7 @@ class SystemStatisticsQuery extends Query {
 
   get comparators () {
     return [{
-      field: 'outcome',
+      fields: ['outcome'],
       options: [
         ['success'],
         ['failure'],
@@ -67,17 +67,23 @@ class SystemStatisticsQuery extends Query {
         ['other']
       ]
     },{
-      field: 'codeRed',
+      fields: ['codeRed'],
       options: [
-        [true, 'codeRed']
+        [true, null, 'codeRed']
       ]
     },{
-      field: 'platform',
+      fields: ['platform', 'outcome'],
       options: [
         ['pc'],
+        ['pc', 'success'],
+        ['pc', 'failure'],
         ['ps'],
-        ['xb']
-      ]
+        ['ps', 'success'],
+        ['ps', 'failure'],
+        ['xb'],
+        ['xb', 'success'],
+        ['xb', 'failure']
+      ],
     }]
   }
 
