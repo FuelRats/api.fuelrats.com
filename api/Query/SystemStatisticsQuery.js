@@ -85,10 +85,10 @@ class SystemStatisticsQuery extends Query {
     },{
       fields: ['codeRed', 'platform'],
       options: [
-        [true, null, 'codeRed'],
-        [true, 'pc', 'pcCodeRed'],
-        [true, 'ps', 'psCodeRed'],
-        [true, 'xb', 'xbCodeRed']
+        [true, null, 'codered'],
+        [true, 'pc', 'pccodered'],
+        [true, 'ps', 'pscodered'],
+        [true, 'xb', 'xbcodered']
       ]
     },{
       fields: ['platform', 'outcome'],
