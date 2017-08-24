@@ -24,7 +24,22 @@ class SystemStatisticsQuery extends Query {
     this._query.attributes = this._query.attributes.concat(API.compare('Rescue', this.comparators))
 
     this._query.group = ['system']
+
+    this._query.having = []
+    for (let conditional of Object.keys(this._query.where)) {
+      let comparator = API.getComparator(this.comparators, conditional)
+      if (comparator) {
+        this._query.having = db.where(comparator, this._query.where[conditional])
+        continue
+      }
+
+      this._query.having.push(db.where(conditional, this._query.where[conditional]))
+    }
+
+    this._query.where = {}
+    console.log(this._query)
   }
+
 
   /**
    * Create a sequelize order parameter from a v2 order query
