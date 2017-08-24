@@ -83,9 +83,12 @@ class SystemStatisticsQuery extends Query {
         ['other']
       ]
     },{
-      fields: ['codeRed'],
+      fields: ['codeRed', 'platform'],
       options: [
-        [true, null, 'codeRed']
+        [true, null, 'codeRed'],
+        [true, 'pc', 'pcCodeRed'],
+        [true, 'ps', 'psCodeRed'],
+        [true, 'xb', 'xbCodeRed']
       ]
     },{
       fields: ['platform', 'outcome'],
