@@ -4,7 +4,6 @@ const db = require('../db').db
 const Rat = require('../db').Rat
 const Rescue = require('../db').Rescue
 const Epic = require('../db').Epic
-const API = require('../classes/API')
 const RescueQuery = require('../Query/RescueQuery')
 const { RescuesPresenter } = require('../classes/Presenters')
 const EventEmitter = require('events')

@@ -1,7 +1,6 @@
 'use strict'
 const db = require('./../db').db
-const Query = require('./index')
-const API = require('../classes/API')
+const StatisticsQuery = require('./StatisticsQuery')
 const Rescue = require('../db').Rescue
 const User = require('../db').User
 const Rat = require('../db').Rat
@@ -9,7 +8,7 @@ const Rat = require('../db').Rat
 /**
  * A class representing a rescue query
  */
-class RatsStatisticsQuery extends Query {
+class RatsStatisticsQuery extends StatisticsQuery {
   /**
    * Create a sequelize rescue query from a set of parameters
    * @constructor
@@ -56,7 +55,7 @@ class RatsStatisticsQuery extends Query {
       [db.fn('COUNT', db.literal('CASE WHEN "firstLimpet"."platform" = \'pc\' THEN 1 END')), 'pc'],
     ]
 
-    this._query.attributes = this._query.attributes.concat(API.compare('firstLimpet', this.comparators))
+    this._query.attributes = this._query.attributes.concat(this.compare('firstLimpet', this.comparators))
 
     this._query.group = [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'user.id', 'user.displayRat.id']
   }
@@ -80,7 +79,7 @@ class RatsStatisticsQuery extends Query {
         order = this._countSystemsField
       }
 
-      let comparator = API.getComparator(this.comparators, order)
+      let comparator = this.getComparator(this.comparators, order)
       if (comparator) {
         order = comparator
       }
@@ -88,17 +87,13 @@ class RatsStatisticsQuery extends Query {
     return { field: order, direction: direction }
   }
 
-  limit (limit) {
-    return Number(limit) || null
-  }
-
   get comparators () {
     return [{
       fields: ['platform'],
       options: [
-        ['pc'],
-        ['ps'],
-        ['xb']
+        ['pc', 'pc'],
+        ['pc', 'ps'],
+        ['xb', 'xb']
       ]
     }]
   }

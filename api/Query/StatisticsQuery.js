@@ -1,7 +1,6 @@
 'use strict'
 const db = require('./../db').db
 const Query = require('./index')
-const API = require('../classes/API')
 
 /**
  * A class representing a rescue query
@@ -19,7 +18,7 @@ class StatisticsQuery extends Query {
 
     this._query.having = []
     for (let conditional of Object.keys(this._query.where)) {
-      let comparator = API.getComparator(this.comparators, conditional)
+      let comparator = this.getComparator(this.comparators, conditional)
       if (comparator) {
         this._query.having = db.where(comparator, this._query.where[conditional])
       } else if (this[conditional]) {
@@ -52,7 +51,7 @@ class StatisticsQuery extends Query {
         order = this.count
       }
 
-      let comparator = API.getComparator(this.comparators, order)
+      let comparator = this.getComparator(this.comparators, order)
       if (comparator) {
         order = comparator
       }

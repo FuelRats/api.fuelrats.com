@@ -6,7 +6,6 @@ const Rat = require('../db').Rat
 
 const Errors = require('../errors')
 const Permission = require('../permission')
-const API = require('../classes/API')
 
 class Controller {
   static read (query) {

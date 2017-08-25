@@ -1,7 +1,6 @@
 'use strict'
 const db = require('./../db').db
 const StatisticsQuery = require('./StatisticsQuery')
-const API = require('../classes/API')
 
 /**
  * A class representing a rescue query

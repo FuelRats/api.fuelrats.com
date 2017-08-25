@@ -1,12 +1,11 @@
 'use strict'
 const db = require('./../db').db
-const Query = require('./index')
-const API = require('../classes/API')
+const StatisticsQuery = require('./StatisticsQuery')
 
 /**
  * A class representing a rescue query
  */
-class RescueStatisticsQuery extends Query {
+class RescueStatisticsQuery extends StatisticsQuery {
   /**
    * Create a sequelize rescue query from a set of parameters
    * @constructor
@@ -42,7 +41,7 @@ class RescueStatisticsQuery extends Query {
         ['xb']
       ]
     }]
-    this._query.attributes = this._query.attributes.concat(API.compare('Rescue', comparators))
+    this._query.attributes = this._query.attributes.concat(this.compare('Rescue', comparators))
 
     this._query.group = [this._groupedByDateField]
   }
