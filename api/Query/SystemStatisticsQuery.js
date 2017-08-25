@@ -21,7 +21,7 @@ class SystemStatisticsQuery extends StatisticsQuery {
       [this.count, 'count']
     ]
 
-    this._query.attributes = this._query.attributes.concat(API.compare('Rescue', this.comparators))
+    this._query.attributes = this._query.attributes.concat(this.compare('Rescue', this.comparators))
 
     this._query.group = ['system']
   }
@@ -30,31 +30,39 @@ class SystemStatisticsQuery extends StatisticsQuery {
     return [{
       fields: ['outcome'],
       options: [
-        ['success'],
-        ['failure'],
-        ['invalid'],
-        ['other']
+        ['success', 'success'],
+        ['failure', 'failure'],
+        ['invalid', 'invalid'],
+        ['other', 'other']
       ]
     },{
-      fields: ['codeRed', 'platform'],
+      fields: ['codeRed', 'platform', 'outcome'],
       options: [
-        [true, null, 'codered'],
-        [true, 'pc', 'pccodered'],
-        [true, 'ps', 'pscodered'],
-        [true, 'xb', 'xbcodered']
+        ['codered', true, null],
+        ['coderedsuccess', true, null, 'success'],
+        ['coderedfailure', true, null, 'failure'],
+        ['pccodered', true, 'pc'],
+        ['pccoderedsuccess', true, 'pc', 'success'],
+        ['pccoderedfailure', true, 'pc', 'failure'],
+        ['pscodered', true, 'ps'],
+        ['pscoderedsuccess', true, 'ps', 'success'],
+        ['pscoderedfailure', true, 'ps', 'failure'],
+        ['xbcodered', true, 'xb'],
+        ['xbcoderedsuccess', true, 'xb', 'success'],
+        ['xbcoderedfailure', true, 'xb', 'failure']
       ]
     },{
       fields: ['platform', 'outcome'],
       options: [
-        ['pc'],
-        ['pc', 'success'],
-        ['pc', 'failure'],
-        ['ps'],
-        ['ps', 'success'],
-        ['ps', 'failure'],
-        ['xb'],
-        ['xb', 'success'],
-        ['xb', 'failure']
+        ['pc', 'pc'],
+        ['pcsucess', 'pc', 'success'],
+        ['pcfailure', 'pc', 'failure'],
+        ['ps', 'ps'],
+        ['pssuccess', 'ps', 'success'],
+        ['psfailure', 'ps', 'failure'],
+        ['xb', 'xb'],
+        ['xbsuccess', 'xb', 'success'],
+        ['xbfailure', 'xb', 'failure']
       ],
     }]
   }

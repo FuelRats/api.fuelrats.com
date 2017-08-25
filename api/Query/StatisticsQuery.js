@@ -57,12 +57,70 @@ class StatisticsQuery extends Query {
         order = comparator
       }
     }
-    return { field: order, direction: direction }
+    return {field: order, direction: direction}
   }
 
   limit (limit) {
     return Number(limit) || null
   }
+
+  get comparators () {
+    throw  {name: 'NotImplementedException', description: 'get comparators has not been implemented by subclass'}
+  }
+
+  compare (table) {
+    return this.comparators.flatMap((comparator) => {
+      return comparator.options.map((option) => {
+        let [name, ...values] = option
+
+        let cases = []
+        for (let [index, value] of values.entries()) {
+          if (!value) { continue }
+
+          if (typeof value === 'string') {
+            value = `'${value}'`
+          }
+          cases.push(`"${table}"."${comparator.fields[index]}" = ${value}`)
+        }
+
+        return [db.fn('SUM', db.literal(`CASE WHEN ${cases.join(' AND ')} THEN 1 ELSE 0 END`)), name]
+      })
+    })
+  }
+
+  getComparator (field) {
+    return this.comparators.flatMap((comparator) => {
+      let option = comparator.options.find((option) => {
+        let [name] = option
+        return name === field ? name : null
+      })
+      if (option) {
+        let [, ...values] = option
+        let cases = []
+
+        for (let [index, value] of values.entries) {
+          if (!value) { continue }
+          if (typeof value === 'string') {
+            value = `'${value}'`
+          }
+          cases.push(`."${comparator.fields[index]}" = ${value}`)
+        }
+        return db.fn('SUM', db.literal(`CASE WHEN ${cases.join(' AND ')} THEN 1 ELSE 0 END`))
+      }
+      return null
+    })
+  }
 }
+
+
+Object.defineProperties(Array.prototype, {
+  'flatMap': {
+    value: function (lambda) {
+      return Array.prototype.concat.apply([], this.map(lambda))
+    },
+    writeable: false,
+    enumerable: false
+  }
+})
 
 module.exports = StatisticsQuery
