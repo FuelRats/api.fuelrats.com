@@ -155,5 +155,6 @@ module.exports = {
   ProfilesPresenter,
   RescueStatisticsPresenter,
   SystemStatisticsPresenter,
-  RatStatisticsPresenter
+  RatStatisticsPresenter,
+  ObjectPresenter
 }

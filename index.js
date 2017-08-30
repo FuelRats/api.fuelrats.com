@@ -221,6 +221,8 @@ router.get('/statistics/rescues', statistics.rescues)
 router.get('/statistics/systems', statistics.systems)
 router.get('/statistics/rats', statistics.rats)
 
+router.get('/version', version.read)
+
 /* router.post('/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))
 router.delete('/rescues/:id', API.version('v2.0'), auth.isAuthenticated,
