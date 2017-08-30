@@ -101,8 +101,7 @@ class Nicknames {
       Permission.require(['nickname.delete'], ctx.state.user, ctx.state.scope)) {
       await NickServ.drop(ctx.params.nickname)
 
-      let nicknames = ctx.state.user.data.attributes.nicknames
-      nicknames.splice(nicknames.indexOf(ctx.params.nickname), 1)
+      let nicknames = await NickServ.list(ctx.state.user.data.attributes.nicknames[0])
 
       await User.update({
         nicknames: db.cast(nicknames, 'citext[]')

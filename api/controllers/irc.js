@@ -1,82 +1,26 @@
 'use strict'
-const Permission = require('../permission')
 const Errors = require('../errors')
-const User = require('../db').User
-const db = require('../db').db
-const Rat = require('../db').Rat
-
 const BotServ = require('../Anope/BotServ')
 
+class IRC {
+  static message (ctx) {
+    if (!ctx.data.channel || ctx.data.channel.length === 0) {
+      throw Errors.template('missing_required_field', 'channel')
+    } else if (!ctx.data.message || ctx.data.message.length === 0) {
+      throw Errors.template('missing_required_field', 'message')
+    }
 
-class Controller {
-  static message (data) {
-    return new Promise(function (resolve, reject) {
-      if (!data.channel || data.channel.length === 0) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', 'channel') })
-        return
-      }
-
-      if (!data.message || data.message.length === 0) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', 'message') })
-        return
-      }
-
-      BotServ.say(data.channel, data.message).then(function (result) {
-        resolve({ meta: {}, data: result })
-      }).catch(function (error) {
-        reject({ meta: {}, error: Errors.throw('server_error', error) })
-      })
-    })
+    return BotServ.say(ctx.data.channel, ctx.data.message)
   }
 
-  static action (data) {
-    return new Promise(function (resolve, reject) {
-      if (!data.channel || data.channel.length === 0) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', 'channel') })
-        return
-      }
+  static action (ctx) {
+    if (!ctx.data.channel || ctx.data.channel.length === 0) {
+      throw Errors.template('missing_required_field', 'channel')
+    } else if (!ctx.data.message || ctx.data.message.length === 0) {
+      throw Errors.template('missing_required_field', 'message')
+    }
 
-      if (!data.message || data.message.length === 0) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', 'message') })
-        return
-      }
-
-      BotServ.act(data.channel, data.message).then(function (result) {
-        resolve({ meta: {}, data: result })
-      }).catch(function (error) {
-        reject({ meta: {}, error: Errors.throw('server_error', error) })
-      })
-    })
+    return BotServ.act(ctx.data.channel, ctx.data.message)
   }
 }
-
-class HTTP {
-  static message (request, response, next) {
-    response.model.meta.params = Object.assign(response.model.meta.params, request.params)
-
-    Controller.message(request.body, request, request.query).then(function (res) {
-      response.model.data = res.data
-      response.status = 201
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static action (request, response, next) {
-    response.model.meta.params = Object.assign(response.model.meta.params, request.params)
-
-    Controller.message(request.body, request, request.query).then(function (res) {
-      response.model.data = res.data
-      response.status = 201
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-}
-module.exports = { HTTP: HTTP, Controller: Controller }
+module.exports = IRC

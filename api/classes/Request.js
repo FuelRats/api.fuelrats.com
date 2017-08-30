@@ -2,6 +2,7 @@
 const config = require('../../config.json')
 const https = require('https')
 const http = require('http')
+const querystring = require('querystring')
 
 /**
  * Symbol representing HTTP GET method requests
@@ -38,6 +39,15 @@ class Request {
       default:
         return null
     }
+  }
+
+  static async login (email, password) {
+    let post = await new Request(POST, {
+      path: '/login',
+      insecure: true
+    }, { email, password })
+
+    return post.response.headers['set-cookie'].join(';')
   }
 
   /**

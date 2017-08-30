@@ -11,9 +11,123 @@ let crypto = require('crypto')
 
 
 db.sync({ force: true }).then(async function () {
-  let adminGroup = await Group.findOne({ 'id': 'admin' })
-  let ratGroup = await Group.findOne({ 'id': 'rat' })
-  let dispatchGroup = await Group.findOne({ 'id': 'dispatch' })
+  let groups = [
+    Group.create({
+      id: 'default',
+      vhost: 'recruit.fuelrats.com',
+      isAdministrator: false,
+      priority: 0,
+      permissions: [
+        'rescue.read',
+        'rescue.read.me',
+        'rescue.write.me',
+        'rat.read',
+        'rat.write.me',
+        'client.read.me',
+        'client.write.me',
+        'client.delete.me',
+        'user.read.me',
+        'user.write.me'
+      ]
+    }),
+
+    Group.create({
+      id: 'rat',
+      vhost: 'rat.fuelrats.com',
+      isAdministrator: false,
+      priority: 10,
+      permissions: []
+    }),
+
+    Group.create({
+      id: 'dispatch',
+      vhost: null,
+      isAdministrator: false,
+      priority: 10,
+      permissions: []
+    }),
+
+    Group.create({
+      id: 'overseer',
+      vhost: 'overseer.fuelrats.com',
+      isAdministrator: false,
+      priority: 50,
+      permissions: [
+        'rescue.write',
+        'rat.write',
+        'rescue.delete'
+      ]
+    }),
+
+    Group.create({
+      id: 'moderator',
+      vhost: 'op.fuelrats.com',
+      isAdministrator: false,
+      priority: 90,
+      permissions: [
+        'rescue.write',
+        'rat.write',
+        'user.read',
+        'user.write',
+        'client.read',
+        'rescue.delete'
+      ]
+    }),
+
+    Group.create({
+      id: 'netadmin',
+      vhost: 'netadmin.fuelrats.com',
+      isAdministrator: true,
+      priority: 100,
+      permissions: [
+        'user.read',
+        'rescue.read',
+        'rescue.write',
+        'rescue.delete',
+        'rat.read',
+        'rat.write',
+        'rat.delete',
+        'user.read',
+        'user.write',
+        'user.delete',
+        'user.groups',
+        'client.read',
+        'client.write',
+        'client.delete'
+      ]
+    }),
+
+    Group.create({
+      id: 'admin',
+      vhost: 'admin.fuelrats.com',
+      isAdministrator: true,
+      priority: 100,
+      permissions: [
+        'user.read',
+        'rescue.read',
+        'rescue.write',
+        'rescue.delete',
+        'rat.read',
+        'rat.write',
+        'rat.delete',
+        'user.read',
+        'user.write',
+        'user.delete',
+        'user.groups',
+        'client.read',
+        'client.write',
+        'client.delete'
+      ]
+    })
+  ]
+
+  await Promise.all(groups)
+  console.log('User Groups Created')
+
+
+  let adminGroup = await Group.findById('admin')
+  let ratGroup = await Group.findById('rat')
+  let dispatchGroup = await Group.findById('dispatch')
 
   let hash = await bcrypt.hash('testuser', 16)
   let adminTestUser = {
@@ -23,11 +137,9 @@ db.sync({ force: true }).then(async function () {
   }
 
   let adminUser = await User.create(adminTestUser)
-
   adminUser.addGroups([adminGroup, ratGroup, dispatchGroup])
 
   console.log('Admin Test User Created')
-  adminUser.addGroup()
   let secret = await crypto.randomBytes(24).toString('hex')
 
   bcrypt.hash(secret, 16)
@@ -55,4 +167,5 @@ db.sync({ force: true }).then(async function () {
 
   await User.create(testUser)
   console.log('Test User Created')
+
 })
