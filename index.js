@@ -134,7 +134,9 @@ app.use(async (ctx, next) => {
     if (!error.code) {
       error = Error.template('server_error', error)
     }
-    ctx.body = error
+    ctx.body = {
+      errors: [error]
+    }
 
     ctx.status = error.code
     if (error.code === 500) {
