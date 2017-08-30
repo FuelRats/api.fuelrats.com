@@ -49,7 +49,6 @@ const rat = require('./api/controllers/rat')
 const register = require('./api/controllers/register')
 const reset = require('./api/controllers/reset')
 const rescue = require('./api/controllers/rescue')
-const roster = require('./api/controllers/roster').HTTP
 const ship = require('./api/controllers/ship').HTTP
 const statistics = require('./api/controllers/statistics')
 const user = require('./api/controllers/user')
@@ -222,6 +221,7 @@ router.get('/statistics/systems', statistics.systems)
 router.get('/statistics/rats', statistics.rats)
 
 router.get('/version', version.read)
+router.post('/reset', reset.requestReset)
 
 /* router.post('/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))

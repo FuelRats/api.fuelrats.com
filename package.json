@@ -20,6 +20,7 @@
     "cookie-parser": "^1.4.1",
     "crypto": "0.0.3",
     "download": "^4.4.3",
+    "ejs-promise": "^0.3.3",
     "eslint": "^3.3.1",
     "flatmap": "0.0.3",
     "git-rev": "^0.2.1",
