@@ -56,7 +56,7 @@ class NickServ {
    * @param account the account nickname to get the group names form
    * @returns {Promise.<*|Array>}
    */
-  static async groupList (account) {
+  static async list (account) {
     let result = await Anope.command('NickServ', account, `GLIST ${account}`)
     if (result.return.includes('Password authentication required')) {
       throw Error.template('not_authenticated', 'NickServ Password missing or incorrect')
