@@ -7,7 +7,6 @@ const Decals = require('../db').Decal
 const Error = require('../errors')
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
-const currentDecalDeadline = '2017-05-01 00:00:00+00'
 const rescueParticipationRequirement = 10
 
 class Decal {
@@ -113,7 +112,7 @@ function checkEligibleForRescueDecal (user) {
         required: true,
         where: {
           createdAt: {
-            $lt: currentDecalDeadline
+            $lt: getLastMonthTurnover()
           },
           successful: true
         },
@@ -124,4 +123,12 @@ function checkEligibleForRescueDecal (user) {
   })
 }
 
+function getLastMonthTurnover () {
+  let foo = new Date()
+  foo.setUTCDate(1)
+  foo.setUTCHours(0)
+  foo.setUTCMinutes(0)
+  foo.setUTCSeconds(0)
+  return foo
+}
 module.exports = Decal
