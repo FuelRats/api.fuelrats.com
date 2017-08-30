@@ -222,6 +222,8 @@ router.get('/statistics/rats', statistics.rats)
 
 router.get('/version', version.read)
 router.post('/reset', reset.requestReset)
+router.get('/reset/:token', reset.validateReset)
+router.post('/reset/:token', reset.resetPassword)
 
 /* router.post('/rescues', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.create))
 router.put('/rescues/:id', API.version('v2.0'), auth.isAuthenticated, API.route(rescue.update))

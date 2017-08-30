@@ -5,6 +5,7 @@ const User = require('../db').User
 const Reset = require('../db').Reset
 const crypto = require('crypto')
 const Error = require('../errors')
+const bcrypt = require('bcrypt')
 
 class Resets {
   static async requestReset (ctx) {
@@ -19,7 +20,7 @@ class Resets {
     })
 
     if (!user) {
-      throw Error.template('not_found', 'reset link invalid or expired')
+      throw Error.template('not_found', 'email does not exist')
     }
 
     let resets = await Reset.findAll({
@@ -52,6 +53,48 @@ class Resets {
       html: html
     })
 
+    return true
+  }
+
+  static async validateReset (ctx) {
+    if (!ctx.query.token) {
+      throw Error.template('missing_required_field', 'token')
+    }
+
+    let reset = await Reset.findOne({
+      value: ctx.query.token
+    })
+
+    if (!reset) {
+      throw Error.template('not_found', 'reset link invalid or expired')
+    }
+
+    return true
+  }
+
+  static async resetPassword (ctx) {
+    if (!ctx.query.token) {
+      throw Error.template('missing_required_field', 'token')
+    }
+
+    if (!ctx.data.password) {
+      throw Error.template('missing_required_field', 'password')
+    }
+
+    let reset = await Reset.findOne({
+      value: ctx.query.token
+    })
+
+    if (!reset) {
+      throw Error.template('not_found', 'reset link invalid or expired')
+    }
+
+    let newPassword = await bcrypt.hash(ctx.data.pssword, 12)
+    await User.update({
+      password: newPassword
+    }, {
+      where: { id: reset.userId }
+    })
     return true
   }
 
