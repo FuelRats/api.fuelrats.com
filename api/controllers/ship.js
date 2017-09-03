@@ -2,10 +2,78 @@
 
 const _ = require('underscore')
 const Ship = require('../db').Ship
-const Rat = require('../db').Rat
+const ShipQuery = require('../Query/ShipQuery')
+const ShipsPresenter = require('../classes/Presenters').ShipsPresenter
 
 const Errors = require('../errors')
 const Permission = require('../permission')
+
+class Ships {
+  static async search (ctx) {
+    let shipsQuery = new ShipQuery(ctx.query, ctx)
+    let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
+    return ShipsPresenter.render(result.rows, ctx.meta(result, shipsQuery))
+  }
+
+  static async findById (ctx) {
+    if (ctx.params.id) {
+      let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
+      let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
+
+      return ShipsPresenter.render(result.rows, ctx.meta(result, shipsQuery))
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async create (ctx) {
+    if (!isSelfRatOrHasPermission(ctx, ctx.data.ratId)) {
+      throw Errors.template('no_permission', ['ship.write'])
+    }
+
+    let result = await Ship.create(ctx.data)
+    if (!result) {
+      throw Error.template('operation_failed')
+    }
+
+    ctx.response.status = 201
+    let renderedResult = ShipsPresenter.render(result, ctx.meta(result))
+    process.emit('shipCreated', ctx, renderedResult)
+    return renderedResult
+  }
+
+  static async update (ctx) {
+    let ship = await Ship.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!ship) {
+      throw Error.template('not_found', ctx.params.id)
+    }
+
+    if (!Permission.granted(['rat.write'], ctx.state.user, ctx.state.scope)) {
+      delete ctx.data.userId
+    }
+
+    let rescue = await Rat.update(ctx.data, {
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!rescue) {
+      throw Error.template('operation_failed')
+    }
+
+    let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
+    let result = await Rat.findAndCountAll(ratQuery.toSequelize)
+    let renderedResult = RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
+    process.emit('ratUpdated', ctx, renderedResult)
+    return renderedResult
+  }
+}
 
 class Controller {
   static read (query) {
@@ -223,16 +291,12 @@ class HTTP {
   }
 }
 
+function isSelfRatOrHasPermission (ctx, ratId) {
+  let rat = ctx.state.user.included.find((included) => {
+    included.id === ratId
+  })
 
-function getShipPermissionType (rat, user) {
-  return user.CMDRs.indexOf(rat) !== -1 ? 'self.rat.update' : 'rat.update'
+  return rat || Permission.granted(['ship.write'], ctx.state.user, ctx.state.scope)
 }
 
-
-function convertShipToAPIResult (ratInstance) {
-  let rat = ratInstance.toJSON()
-  delete rat.deletedAt
-  return rat
-}
-
-module.exports = { Controller, HTTP }
+module.exports = Ships

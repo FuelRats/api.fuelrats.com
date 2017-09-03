@@ -57,7 +57,10 @@ const apiEvents = [
   'userDeleted',
   'clientCreated',
   'clientUpdated',
-  'clientDeleted'
+  'clientDeleted',
+  'shipCreated',
+  'shipUpdated',
+  'shipDeleted'
 ]
 
 class WebSocketManager {

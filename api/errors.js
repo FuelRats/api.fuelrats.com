@@ -14,6 +14,13 @@ let errors = {
     'title': 'Missing Required Field'
   },
 
+  'missing_required_fields': {
+    'code': 400,
+    'detail': '',
+    'status': 'Bad Request',
+    'title': 'Missing Required Field'
+  },
+
   'not_authenticated': {
     'code': 401,
     'detail': 'User must be authenticated to perform that action',
