@@ -19,10 +19,7 @@ class Rats {
       let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
       let result = await Rat.findAndCountAll(ratQuery.toSequelize)
 
-      if (result.rows.length === 0 || hasValidPermissionsForRat(ctx, result.rows[0])) {
-        return RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
-      }
-      throw Errors.template('no_permission', 'client.read')
+      return RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
     } else {
       throw Error.template('missing_required_field', 'id')
     }
@@ -46,17 +43,17 @@ class Rats {
 
   static async update (ctx) {
     if (ctx.params.id) {
-      let client = await Rat.findOne({
+      let rat = await Rat.findOne({
         where: {
           id: ctx.params.id
         }
       })
 
-      if (!client) {
+      if (!rat) {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      if (hasValidPermissionsForRat(ctx, client, 'write')) {
+      if (hasValidPermissionsForRat(ctx, rat, 'write')) {
         if (!Permission.granted(['rat.write'], ctx.state.user, ctx.state.scope)) {
           delete ctx.data.userId
         }
