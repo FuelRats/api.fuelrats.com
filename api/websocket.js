@@ -104,6 +104,10 @@ class WebSocketManager {
       result.meta = Object.assign(result.meta || {}, meta)
       this.send(client, result)
     } catch (ex) {
+      let error = ex
+      if (!error.code) {
+        error = Error.template('server_error', error)
+      }
       this.send(client, ex)
     }
   }
