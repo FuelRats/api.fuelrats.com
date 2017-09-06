@@ -80,7 +80,7 @@ module.exports = function (db, DataTypes) {
         }, {
           model: models.Group,
           as: 'groups',
-          require: false,
+          required: false,
           through: {
             attributes: []
           },
@@ -126,7 +126,7 @@ module.exports = function (db, DataTypes) {
         }, {
           model: models.Group,
           as: 'groups',
-          require: false,
+          required: false,
           through: {
             attributes: []
           },
@@ -164,7 +164,7 @@ module.exports = function (db, DataTypes) {
           include: [{
             model: models.Ship,
             as: 'ships',
-            require: false,
+            required: false,
             attributes: {
               exclude: [
                 'deletedAt'
@@ -183,7 +183,7 @@ module.exports = function (db, DataTypes) {
           include: [{
             model: models.Ship,
             as: 'ships',
-            require: false,
+            required: false,
             attributes: {
               exclude: [
                 'deletedAt'
@@ -193,7 +193,7 @@ module.exports = function (db, DataTypes) {
         }, {
           model: models.Group,
           as: 'groups',
-          require: false,
+          required: false,
           through: {
             attributes: []
           },

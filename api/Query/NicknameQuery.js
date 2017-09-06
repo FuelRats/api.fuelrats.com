@@ -37,7 +37,7 @@ class NicknameQuery extends Query {
     this._query.include = [{
       model: Rat,
       as: 'rats',
-      require: false,
+      required: false,
       attributes: {
         exclude: [
           'deletedAt'

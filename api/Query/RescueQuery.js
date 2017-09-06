@@ -49,7 +49,7 @@ class RescueQuery extends Query {
         where: rats,
         model: Rat,
         as: 'rats',
-        require: false,
+        required: false,
         through: {
           attributes: []
         }
@@ -58,12 +58,12 @@ class RescueQuery extends Query {
         where: firstLimpet,
         model: Rat,
         as: 'firstLimpet',
-        require: false
+        required: false
       },
       {
         model: Epic,
         as: 'epics',
-        require: false
+        required: false
       }
     ]
   }

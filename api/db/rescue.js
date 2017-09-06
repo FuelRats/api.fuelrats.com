@@ -89,7 +89,7 @@ module.exports = function (sequelize, DataTypes) {
         {
           model: models.Rat,
           as: 'rats',
-          require: false,
+          required: false,
           through: {
             attributes: []
           }
@@ -97,12 +97,12 @@ module.exports = function (sequelize, DataTypes) {
         {
           model: models.Rat,
           as: 'firstLimpet',
-          require: false
+          required: false
         },
         {
           model: models.Epic,
           as: 'epics',
-          require: false
+          required: false
         }
       ]
     }, {
