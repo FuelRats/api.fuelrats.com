@@ -118,15 +118,14 @@ class WebSocketManager {
       throw Error.template('missing_required_field', 'action')
     }
 
-    let controller = request.action[0]
-    let method = request.action[1]
+    let [controller, method] = request.action
 
 
     if (controllers.hasOwnProperty(controller) === false || controllers[controller].hasOwnProperty(method) === false) {
       throw Error.template('invalid_parameter', 'action')
     }
 
-    let [endpoint, authenticationRequired, requiredPermissions] = controllers[controller]
+    let [endpoint, authenticationRequired, requiredPermissions] = controllers[controller][method]
 
     if (!authenticationRequired || client.user) {
       if (!requiredPermissions || Permission.require(requiredPermissions, client.user, client.scope)) {
