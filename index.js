@@ -325,11 +325,11 @@ wss.on('connection', async function connection (client) {
   })
 })
 
-server.listen(port, 'localhost', (error) => {
+server.listen(port, config.hostname, (error) => {
   if (error) {
 
   }
-  logger.info(`HTTP Server listening on localhost port ${port}`)
+  logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
 })
 
 function censor (obj) {
