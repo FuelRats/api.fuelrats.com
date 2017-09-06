@@ -134,7 +134,7 @@ class Permission {
     let humanReadablePermissions = []
 
     if (scopes.includes('*')) {
-      scopes = groups
+      scopes = Permission.allPermissions
     }
 
     for (let permission of scopes) {
@@ -163,6 +163,28 @@ class Permission {
     }
 
     return humanReadablePermissions
+  }
+
+  static get allPermissions () {
+    return [
+      'rescue.read',
+      'rescue.write',
+      'rescue.delete',
+      'rat.read',
+      'rat.write',
+      'rat.delete',
+      'user.read',
+      'user.write',
+      'user.delete',
+      'user.groups',
+      'client.read',
+      'client.write',
+      'client.delete',
+      'ship.read',
+      'ship.write',
+      'ship.delete',
+      'decal.read'
+    ]
   }
 }
 

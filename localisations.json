@@ -16,6 +16,10 @@
       "user": "user profile",
       "user_plural": "user profiles",
       "groups_plural": "user permissions",
+      "decal": "decal",
+      "decal_plural": "decals",
+      "ship": "ship",
+      "ship_plural": "ships",
 
       "permissionReadAll": "View {{group}}",
       "permissionReadAll_plural": "View all {{group}}",

@@ -34,7 +34,7 @@ server.deserializeClient(async function (id) {
 
 server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, ares, areq) {
   for (let scope of areq.scope) {
-    if (Permission.permissions.includes(scope) === false && scope !== '*') {
+    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
       throw Errors.template('invalid_scope', scope)
     }
   }
@@ -51,7 +51,7 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
 
 server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
   for (let scope of areq.scope) {
-    if (Permission.permissions.includes(scope) === false && scope !== '*') {
+    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
       throw Errors.template('invalid_scope', scope)
     }
   }
