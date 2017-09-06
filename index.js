@@ -216,7 +216,6 @@ router.get('/profile', Authentication.isAuthenticated, Permission.required(['use
 router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
 
 router.get('/oauth2/authorize',
-  params('response_type', 'scope'),
   Authentication.isAuthenticatedRedirect,
   oauth2.authorizationValidateFields,
   oauth2.authorizationValidateRedirect,
@@ -345,19 +344,6 @@ function censor (obj) {
   }
 
   return censoredObj
-}
-
-function params (...requiredParams) {
-  return async function (ctx, next) {
-
-    let missingParams = requiredParams.filter((requiredParam) => {
-      return ctx.query.hasOwnProperty(requiredParam) === false
-    })
-    if (missingParams.length > 0) {
-      throw Error.template('missing_required_fields', missingParams)
-    }
-    await next()
-  }
 }
 
 function fields (...requiredFields) {
