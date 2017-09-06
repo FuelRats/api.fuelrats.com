@@ -121,7 +121,8 @@ class WebSocketManager {
     let controller = request.action[0]
     let method = request.action[1]
 
-    if (!controllers[controller] || !controllers[controller][method]) {
+
+    if (controllers.hasOwnProperty(controller) === false || controllers[controller].hasOwnProperty(method) === false) {
       throw Error.template('invalid_parameter', 'action')
     }
 

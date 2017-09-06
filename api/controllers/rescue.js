@@ -98,6 +98,10 @@ class Rescues {
   }
 
   static async assign (ctx) {
+    if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
+      ctx.data = ctx.data.data
+    }
+
     if (ctx.params.id) {
       let rescue = await Rescue.scope('rescue').findOne({
         where: {
@@ -127,6 +131,10 @@ class Rescues {
   }
 
   static async unassign (ctx) {
+    if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
+      ctx.data = ctx.data.data
+    }
+
     if (ctx.params.id) {
       let rescue = await Rescue.scope('rescue').findOne({
         where: {
@@ -156,6 +164,10 @@ class Rescues {
   }
 
   static async addquote (ctx) {
+    if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
+      ctx.data = ctx.data.data
+    }
+
     if (ctx.params.id) {
       let rescue = await Rescue.scope('rescue').findOne({
         where: {
