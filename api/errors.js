@@ -18,7 +18,7 @@ let errors = {
     'code': 400,
     'detail': '',
     'status': 'Bad Request',
-    'title': 'Missing Required Field'
+    'title': 'Missing Required Fields'
   },
 
   'not_authenticated': {
