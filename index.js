@@ -170,6 +170,7 @@ router.get('/rescues/:id', Authentication.isAuthenticated, Permission.required([
 router.post('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.write']), rescue.create)
 router.put('/rescues/:id', Authentication.isAuthenticated, rescue.update)
 router.put('/rescues/assign/:id', Authentication.isAuthenticated, rescue.assign)
+router.put('/rescues/addquote/:id', Authentication.isAuthenticated, rescue.assign)
 router.put('/rescues/unassign/:id', Authentication.isAuthenticated, rescue.unassign)
 router.delete('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.delete']), rescue.delete)
 
