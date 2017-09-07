@@ -206,8 +206,8 @@ router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
 router.get('/ships', ship.search)
 router.get('/ships/:id', ship.findById)
 router.post('/ships', fields('name', 'shipType', 'ratId'), clean('shipId'), ship.create)
-// router.put('/rats/:id', rat.update)
-// router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
+router.put('/ships/:id', clean('shipId'), ship.update)
+router.delete('/ships/:id', rat.delete)
 
 
 router.get('/login',login.display)
@@ -241,6 +241,10 @@ router.get('/version', version.read)
 router.post('/reset', reset.requestReset)
 router.get('/reset/:token', reset.validateReset)
 router.post('/reset/:token', reset.resetPassword)
+
+
+router.get('/decals/check', Authentication.isAuthenticated, decal.check)
+router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
 
 /*
 
