@@ -16,7 +16,6 @@ class StatisticsQuery extends Query {
     super(params, connection)
     this._query.include = []
 
-    this._query.having = []
     for (let conditional of Object.keys(this._query.where)) {
       let comparator = this.getComparator(this.comparators, conditional)
       if (comparator && comparator[0] !== null) {
@@ -24,7 +23,7 @@ class StatisticsQuery extends Query {
       } else if (this[conditional]) {
         this._query.having = db.where(this[conditional], this._query.where[conditional])
       } else {
-        this._query.having.push(db.where(conditional, this._query.where[conditional]))
+        this._query.having = db.where(conditional, this._query.where[conditional])
       }
     }
 

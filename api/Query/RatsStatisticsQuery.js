@@ -24,7 +24,8 @@ class RatsStatisticsQuery extends StatisticsQuery {
         as: 'firstLimpet',
         attributes: [],
         include: [],
-        required: true
+        required:  false,
+        duplicating: false
       },
       {
         model: User,
@@ -35,12 +36,14 @@ class RatsStatisticsQuery extends StatisticsQuery {
         include: [{
           model: Rat,
           as: 'displayRat',
+          duplicating: false,
           attributes: [
             'id',
             'name'
           ]
         }],
         required: false,
+        duplicating: false,
         scopes: [
           null,
           'stats'
