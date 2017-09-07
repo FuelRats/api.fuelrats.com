@@ -19,7 +19,7 @@ class StatisticsQuery extends Query {
     this._query.having = []
     for (let conditional of Object.keys(this._query.where)) {
       let comparator = this.getComparator(this.comparators, conditional)
-      if (comparator) {
+      if (comparator && comparator[0] !== null) {
         this._query.having = db.where(comparator, this._query.where[conditional])
       } else if (this[conditional]) {
         this._query.having = db.where(this[conditional], this._query.where[conditional])
