@@ -19,29 +19,7 @@ class RescueStatisticsQuery extends StatisticsQuery {
       [this._groupedByDateField, 'date'],
       [db.fn('COUNT', 'id'), 'total']
     ]
-
-    let comparators = [{
-      fields: ['outcome'],
-      options: [
-        ['success'],
-        ['failure'],
-        ['invalid'],
-        ['other']
-      ]
-    },{
-      fields: ['codeRed'],
-      options: [
-        [true, null, 'codeRed']
-      ]
-    },{
-      fields: ['platform'],
-      options: [
-        ['pc'],
-        ['ps'],
-        ['xb']
-      ]
-    }]
-    this._query.attributes = this._query.attributes.concat(this.compare('Rescue', comparators))
+    this._query.attributes = this._query.attributes.concat(this.compare('Rescue', this.comparators))
 
     this._query.group = [this._groupedByDateField]
   }
@@ -82,7 +60,27 @@ class RescueStatisticsQuery extends StatisticsQuery {
   }
 
   get comparators () {
-    return []
+    return [{
+      fields: ['outcome'],
+      options: [
+        ['success', 'success'],
+        ['failure', 'failure'],
+        ['invalid', 'invalid'],
+        ['other', 'other']
+      ]
+    },{
+      fields: ['codeRed'],
+      options: [
+        ['codeRed', true, null]
+      ]
+    },{
+      fields: ['platform'],
+      options: [
+        ['pc', 'pc'],
+        ['ps', 'ps'],
+        ['xb', 'xb']
+      ]
+    }]
   }
 }
 
