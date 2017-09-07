@@ -80,6 +80,10 @@ class RescueStatisticsQuery extends StatisticsQuery {
   get _groupedByDateField () {
     return db.fn('date_trunc', 'day', db.col('createdAt'))
   }
+
+  get comparators () {
+    return []
+  }
 }
 
 module.exports = RescueStatisticsQuery
