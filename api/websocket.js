@@ -8,6 +8,7 @@ const rescue = require('./controllers/rescue')
 const stream = require('./controllers/stream')
 const client = require('./controllers/client')
 const user = require('./controllers/user')
+const ObjectPresenter = require('./classes/Presenters').ObjectPresenter
 
 const controllers = {
   rats: {
@@ -94,7 +95,11 @@ class WebSocketManager {
       }
       return false
     })
-    result.meta.event = event
+    if (!result.meta) {
+      result.meta = {}
+    }
+
+    Object.assign(result.meta, { event })
     this.broadcast(clients, result)
   }
 

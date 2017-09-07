@@ -5,7 +5,7 @@ const Rat = require('../db').Rat
 const Rescue = require('../db').Rescue
 const Epic = require('../db').Epic
 const RescueQuery = require('../Query/RescueQuery')
-const { RescuesPresenter } = require('../classes/Presenters')
+const { RescuesPresenter, CustomPresenter } = require('../classes/Presenters')
 const EventEmitter = require('events')
 
 const Error = require('../errors')
@@ -91,7 +91,9 @@ class Rescues {
 
       rescue.destroy()
 
-      process.emit('rescueDeleted', ctx, ctx.params.id)
+      process.emit('rescueDeleted', ctx, CustomPresenter.render({
+        id: ctx.params.id
+      }, {}))
       ctx.status = 204
       return true
     }

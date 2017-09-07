@@ -6,7 +6,7 @@ const Error = require('../errors')
 const Permission = require('../permission')
 const UserQuery = require('../Query/UserQuery')
 const HostServ = require('../Anope/HostServ')
-const UsersPresenter = require('../classes/Presenters').UsersPresenter
+const { UsersPresenter, CustomPresenter } = require('../classes/Presenters')
 
 class Users {
   static async search (ctx) {
@@ -91,7 +91,9 @@ class Users {
 
       rescue.destroy()
 
-      process.emit('userDeleted', ctx, ctx.params.id)
+      process.emit('userDeleted', ctx, CustomPresenter.render({
+        id: ctx.params.id
+      }))
       ctx.status = 204
       return true
     } else {

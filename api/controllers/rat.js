@@ -5,7 +5,7 @@ const Rat = require('../db').Rat
 const Errors = require('../errors')
 const Permission = require('../permission')
 const RatQuery = require('../Query/RatQuery')
-const RatsPresenter = require('../classes/Presenters').RatsPresenter
+const { RatsPresenter, CustomPresenter } = require('../classes/Presenters')
 
 class Rats {
   static async search (ctx) {
@@ -93,7 +93,9 @@ class Rats {
 
       rat.destroy()
 
-      process.emit('ratDeleted', ctx, ctx.params.id)
+      process.emit('ratDeleted', ctx, CustomPresenter.render({
+        id: ctx.params.id
+      }))
       ctx.status = 204
       return true
     }
