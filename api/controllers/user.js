@@ -6,6 +6,7 @@ const Error = require('../errors')
 const Permission = require('../permission')
 const UserQuery = require('../Query/UserQuery')
 const HostServ = require('../Anope/HostServ')
+const bcrypt = require('bcrypt')
 const { UsersPresenter, CustomPresenter } = require('../classes/Presenters')
 
 class Users {
@@ -74,6 +75,33 @@ class Users {
       }
     } else {
       throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async setpassword (ctx) {
+    let user = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!user) {
+      throw Error.template('not_found', ctx.params.id)
+    }
+
+    if (hasValidPermissionsForUser(ctx, user, 'write')) {
+      let newPassword = await bcrypt.hash(ctx.data.password, 12)
+      await User.update({
+        password: newPassword
+      }, {
+        where: { id: user.id }
+      })
+
+      let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+      let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+      process.emit('userUpdated', ctx, renderedResult)
+      return renderedResult
     }
   }
 

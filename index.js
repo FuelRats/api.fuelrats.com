@@ -33,7 +33,6 @@ const Error = require('./api/errors')
 
 // Import controllers
 const Authentication = require('./api/controllers/auth')
-const change_password = require('./api/controllers/change_password')
 const client = require('./api/controllers/client')
 const decal = require('./api/controllers/decal')
 const irc = require('./api/controllers/irc').HTTP
@@ -185,7 +184,8 @@ router.delete('/clients/:id', Authentication.isAuthenticated, Permission.require
 router.get('/users', Authentication.isAuthenticated, Permission.required(['user.read']), user.search)
 router.get('/users/:id', Authentication.isAuthenticated, user.findById)
 router.post('/users', Authentication.isAuthenticated, user.create)
-router.put('/users/:id', Authentication.isAuthenticated, user.update)
+router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
+router.put('/users/setpassword/:id', Authentication.isAuthenticated, user.setpassword)
 router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
   Permission.required(['user.write']), user.updatevirtualhost)
 router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
@@ -249,15 +249,12 @@ router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
 /*
 
 router.post('/register', register.post)
+/user/image
 
 router.get('/news', API.route(news.list))
 
 router.get('/logout', logout.post)
 router.post('/logout', logout.post)
-
-
-router.get('/decals/check', auth.isAuthenticated(false), decal.check)
-router.get('/decals/redeem', auth.isAuthenticated(false), decal.redeem)
 
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
