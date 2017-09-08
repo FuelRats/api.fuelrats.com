@@ -31,7 +31,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: 'pc'
     },
     quotes: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
+      type: DataTypes.ARRAY(DataTypes.JSONB),
       allowNull: false,
       defaultValue: []
     },
