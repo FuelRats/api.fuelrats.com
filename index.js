@@ -183,9 +183,11 @@ router.delete('/clients/:id', Authentication.isAuthenticated, Permission.require
 
 router.get('/users', Authentication.isAuthenticated, Permission.required(['user.read']), user.search)
 router.get('/users/:id', Authentication.isAuthenticated, user.findById)
+router.get('/users/image/:id', user.image)
 router.post('/users', Authentication.isAuthenticated, user.create)
 router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
 router.put('/users/setpassword/:id', Authentication.isAuthenticated, user.setpassword)
+router.post('/users/image/:id', Authentication.isAuthenticated, user.setimage)
 router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
   Permission.required(['user.write']), user.updatevirtualhost)
 router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)

@@ -8,6 +8,7 @@ const UserQuery = require('../Query/UserQuery')
 const HostServ = require('../Anope/HostServ')
 const bcrypt = require('bcrypt')
 const { UsersPresenter, CustomPresenter } = require('../classes/Presenters')
+const gm = require('gm')
 
 class Users {
   static async search (ctx) {
@@ -25,11 +26,19 @@ class Users {
         return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
       }
 
-      throw Error.template('no_permission', 'client.read')
+      throw Error.template('no_permission', 'user.read')
     } else {
       throw Error.template('missing_required_field', 'id')
     }
   }
+
+  static async image (ctx, next) {
+    let user = await User.scope('image').findById(ctx.params.id)
+    ctx.type = 'image/jpeg'
+    ctx.body = user.image
+    next()
+  }
+
 
   static async create (ctx) {
     let result = await User.create(ctx.data)
@@ -78,6 +87,37 @@ class Users {
     }
   }
 
+  static async setimage (ctx) {
+    let user = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!user) {
+      throw Error.template('not_found', ctx.params.id)
+    }
+
+    if (hasValidPermissionsForUser(ctx, user, 'write')) {
+      let imageData = ctx.req._readableState.buffer.head.data
+
+      let formattedImageData = await formatImage(imageData)
+      await User.update({
+        image: formattedImageData
+      }, {
+        where: {id: ctx.params.id}
+      })
+
+      let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+      let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+      process.emit('userUpdated', ctx, renderedResult)
+      return renderedResult
+    } else {
+      throw Error.template('no_permission', 'user.write')
+    }
+  }
+
   static async setpassword (ctx) {
     let user = await User.findOne({
       where: {
@@ -102,6 +142,8 @@ class Users {
       let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
       process.emit('userUpdated', ctx, renderedResult)
       return renderedResult
+    } else {
+      throw Error.template('no_permission', 'user.write')
     }
   }
 
@@ -150,6 +192,27 @@ function hasValidPermissionsForUser (ctx, user, action = 'read') {
   }
 
   return Permission.require(permissions, ctx.state.user, ctx.state.scope)
+}
+
+function formatImage (imageData) {
+  return new Promise(function (resolve, reject) {
+    gm(imageData).identify((err, data) => {
+      if (err || data.format !== 'JPEG') {
+        reject(Error.template('invalid_image_format', 'Expected image/jpeg'))
+      }
+
+      if (data.size.width < 64 || data.size.height < 64) {
+        reject(Error.template('invalid_image_format', 'Image must be at least 64x64'))
+      }
+
+      gm(imageData).resize(500, 500, '!').toBuffer('JPG', (err, buffer) => {
+        if (err) {
+          reject(Error.template('invalid_image_format', 'Your image could not be saved in a valid format'))
+        }
+        resolve(buffer)
+      })
+    })
+  })
 }
 
 module.exports = Users

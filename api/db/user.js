@@ -7,6 +7,10 @@ module.exports = function (db, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
+    data: {
+      type: DataTypes.JSONB,
+      allowNull: true
+    },
     email: {
       type: DataTypes.STRING,
       allowNull: false
@@ -55,6 +59,7 @@ module.exports = function (db, DataTypes) {
           [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']
         ],
         exclude: [
+          'image',
           'nicknames',
           'password',
           'deletedAt'
@@ -104,6 +109,7 @@ module.exports = function (db, DataTypes) {
         ],
         exclude: [
           'nicknames',
+          'image'
         ]
       },
       include: [
@@ -149,7 +155,8 @@ module.exports = function (db, DataTypes) {
         exclude: [
           'nicknames',
           'password',
-          'deletedAt'
+          'deletedAt',
+          'image'
         ]
       },
       include: [
@@ -219,6 +226,12 @@ module.exports = function (db, DataTypes) {
             'name'
           ]
         }
+      ]
+    })
+
+    models.User.addScope('image', {
+      attributes: [
+        'image'
       ]
     })
   }
