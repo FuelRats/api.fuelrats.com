@@ -8,7 +8,7 @@ const Error = require('../errors')
 const bcrypt = require('bcrypt')
 
 class Resets {
-  static async requestReset (ctx) {
+  static async requestReset (ctx, next) {
     let user = await User.findOne({
       where: {
         email: { $iLike: ctx.data.email }
@@ -49,16 +49,18 @@ class Resets {
       html: html
     })
 
-    return true
+    ctx.body = 'OK'
+
+    next()
   }
 
   static async validateReset (ctx) {
-    if (!ctx.query.token) {
+    if (!ctx.params.token) {
       throw Error.template('missing_required_field', 'token')
     }
 
     let reset = await Reset.findOne({
-      value: ctx.query.token
+      value: ctx.params.token
     })
 
     if (!reset) {
@@ -69,7 +71,7 @@ class Resets {
   }
 
   static async resetPassword (ctx) {
-    if (!ctx.query.token) {
+    if (!ctx.params.token) {
       throw Error.template('missing_required_field', 'token')
     }
 
@@ -78,14 +80,14 @@ class Resets {
     }
 
     let reset = await Reset.findOne({
-      value: ctx.query.token
+      value: ctx.params.token
     })
 
     if (!reset) {
       throw Error.template('not_found', 'reset link invalid or expired')
     }
 
-    let newPassword = await bcrypt.hash(ctx.data.pssword, 12)
+    let newPassword = await bcrypt.hash(ctx.data.password, 12)
     await User.update({
       password: newPassword
     }, {
