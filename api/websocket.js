@@ -106,7 +106,7 @@ class WebSocketManager {
   async onMessage (client, request) {
     try {
       let { result, meta } = await this.process(client, request)
-      result.meta = Object.assign(result.meta || {}, meta)
+      Object.assign(result.meta || {}, meta)
       this.send(client, result)
     } catch (ex) {
       let error = ex
