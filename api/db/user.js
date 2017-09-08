@@ -13,7 +13,8 @@ module.exports = function (db, DataTypes) {
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      isEmail: true
     },
     password: {
       type: DataTypes.STRING(1024),
