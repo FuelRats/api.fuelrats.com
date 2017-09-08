@@ -65,7 +65,7 @@ try {
   process.exit(1)
 }
 
-app.keys = ['hunter2']
+app.keys = [config.cookie.secret]
 
 let sessionConfiguration = {
   key: 'fuelrats:session',
@@ -88,7 +88,7 @@ app.use(async function (ctx, next) {
   ctx.requireFields = WebSocketManager.requireFields
   ctx.client = {}
 
-  let query = Object.assign(ctx.query, ctx.params)
+  let query = ctx.query
   ctx.query = parseQuery(query)
 
   ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
@@ -348,7 +348,6 @@ function censor (obj) {
 
 function fields (...requiredFields) {
   return async function (ctx, next) {
-
     let missingFields = requiredFields.filter((requiredField) => {
       return ctx.data.hasOwnProperty(requiredField) === false
     })
