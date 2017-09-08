@@ -214,8 +214,7 @@ router.delete('/ships/:id', rat.delete)
 
 router.get('/login', login.display)
 router.post('/login', fields('email', 'password'), login.login)
-router.post('/register',
-  Authentication.isClientAuthenticated, fields('email', 'password', 'name', 'platform', 'nickname'),
+router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
   register.create)
 router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
 
