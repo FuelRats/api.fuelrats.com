@@ -7,7 +7,7 @@ const session = require('koa-session')
 const router = require('koa-router')()
 const app = new Koa()
 require('koa-qs')(app)
-const koaBody = require('koa-body')()
+const koaBody = require('koa-body')
 const TrafficControl = require('./api/TrafficControl')
 const render = require('koa-ejs')
 const path = require('path')
@@ -78,7 +78,7 @@ app.use(require('koa-static')('static', {
   hidden: false,
   gzip: true
 }))
-app.use(koaBody)
+app.use(koaBody())
 
 let port = config.port || process.env.PORT
 
@@ -214,7 +214,9 @@ router.delete('/ships/:id', rat.delete)
 
 router.get('/login', login.display)
 router.post('/login', fields('email', 'password'), login.login)
-router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'), register.create)
+router.post('/register',
+  Authentication.isClientAuthenticated, fields('email', 'password', 'name', 'platform', 'nickname'),
+  register.create)
 router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
 
 router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)

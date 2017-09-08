@@ -14,19 +14,19 @@ const platforms = ['pc', 'xb', 'ps']
 
 class Register {
   static async create (ctx, next) {
-    let captcha = ctx.data['g-recaptcha-response']
-    let captchaResult = await new Request(POST, {
-      host: 'www.google.com',
-      path: '/recaptcha/api/siteverify'
-    }, {
-      secret: config.recaptcha.secret,
-      response: captcha,
-      remoteip: ctx.inet
-    })
-
-    if (captchaResult.body.success === false) {
-      throw Errors.template('invalid_parameter', 'g-recaptcha-response')
-    }
+    // let captcha = ctx.data['g-recaptcha-response']
+    // let captchaResult = await new Request(POST, {
+    //   host: 'www.google.com',
+    //   path: '/recaptcha/api/siteverify'
+    // }, {
+    //   secret: config.recaptcha.secret,
+    //   response: captcha,
+    //   remoteip: ctx.inet
+    // })
+    //
+    // if (captchaResult.body.success === false) {
+    //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
+    // }
 
     let transaction = await db.transaction()
 
