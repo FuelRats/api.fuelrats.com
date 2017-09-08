@@ -205,7 +205,7 @@ function formatImage (imageData) {
         reject(Error.template('invalid_image_format', 'Image must be at least 64x64'))
       }
 
-      gm(imageData).resize(500, 500, '!').toBuffer('JPG', (err, buffer) => {
+      gm(imageData).resize(100, 100, '!').toBuffer('JPG', (err, buffer) => {
         if (err) {
           reject(Error.template('invalid_image_format', 'Your image could not be saved in a valid format'))
         }
