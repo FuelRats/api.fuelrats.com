@@ -42,6 +42,11 @@ class RescueQuery extends Query {
       delete this._params.epics
     }
 
+    if (this._params.outcome === 'null') {
+      this._params.outcome = {
+        $eq: null
+      }
+    }
     this._query.where = this._params
 
     this._query.include = [
