@@ -22,7 +22,6 @@ class Statistics {
     return RescueStatisticsPresenter.render(results, ctx.meta(result, rescuesQuery))
   }
 
-
   static async systems (ctx) {
     let systemQuery = new SystemStatisticsQuery(ctx.query, ctx)
     let stats = systemQuery.toSequelize

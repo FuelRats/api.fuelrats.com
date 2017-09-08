@@ -3,8 +3,14 @@
 let errors = {
   'bad_request': {
     'code': 400,
-    'detail': 'You\'ve made a request. How naughty. :-(',
+    'detail': 'You\'ve made a bad request. How naughty. :-(',
     'status': 'Bad Request'
+  },
+
+  'invalid_image': {
+    'code': 400,
+    'detail': '',
+    'status': 'Invalid Image Format'
   },
 
   'missing_required_field': {
