@@ -49,7 +49,6 @@ class Users {
     ctx.response.status = 201
 
     let renderedResult = UsersPresenter.render(result, ctx.meta(result))
-    process.emit('userCreated', ctx, renderedResult)
     return renderedResult
   }
 
@@ -79,7 +78,6 @@ class Users {
         let userQuery = new UserQuery({id: ctx.params.id}, ctx)
         let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
         let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-        process.emit('userUpdated', ctx, renderedResult)
         return renderedResult
       }
     } else {
@@ -110,9 +108,7 @@ class Users {
 
       let userQuery = new UserQuery({id: ctx.params.id}, ctx)
       let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-      process.emit('userUpdated', ctx, renderedResult)
-      return renderedResult
+      return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
     } else {
       throw Error.template('no_permission', 'user.write')
     }
@@ -141,9 +137,7 @@ class Users {
 
     let userQuery = new UserQuery({id: ctx.state.user.data.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-    process.emit('userUpdated', ctx, renderedResult)
-    return renderedResult
+    return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
   static async delete (ctx) {
@@ -160,9 +154,6 @@ class Users {
 
       rescue.destroy()
 
-      process.emit('userDeleted', ctx, CustomPresenter.render({
-        id: ctx.params.id
-      }))
       ctx.status = 204
       return true
     } else {

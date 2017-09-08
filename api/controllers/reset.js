@@ -9,10 +9,6 @@ const bcrypt = require('bcrypt')
 
 class Resets {
   static async requestReset (ctx) {
-    if (!ctx.data.email) {
-      throw Error.template('missing_required_field', 'email')
-    }
-
     let user = await User.findOne({
       where: {
         email: { $iLike: ctx.data.email }

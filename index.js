@@ -186,7 +186,7 @@ router.get('/users/:id', Authentication.isAuthenticated, user.findById)
 router.get('/users/image/:id', user.image)
 router.post('/users', Authentication.isAuthenticated, user.create)
 router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
-router.put('/users/setpassword/:id', Authentication.isAuthenticated, user.setpassword)
+router.put('/users/setpassword', Authentication.isAuthenticated, user.setpassword)
 router.post('/users/image/:id', Authentication.isAuthenticated, user.setimage)
 router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
   Permission.required(['user.write']), user.updatevirtualhost)
@@ -212,8 +212,9 @@ router.put('/ships/:id', clean('shipId'), ship.update)
 router.delete('/ships/:id', rat.delete)
 
 
-router.get('/login',login.display)
-router.post('/login',login.login)
+router.get('/login', login.display)
+router.post('/login', fields('email', 'password'), login.login)
+router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'), register.create)
 router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
 
 router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
@@ -240,9 +241,9 @@ router.get('/statistics/systems', statistics.systems)
 router.get('/statistics/rats', statistics.rats)
 
 router.get('/version', version.read)
-router.post('/reset', reset.requestReset)
+router.post('/reset', fields('email'), reset.requestReset)
 router.get('/reset/:token', reset.validateReset)
-router.post('/reset/:token', reset.resetPassword)
+router.post('/reset/:token', fields('password'), reset.resetPassword)
 
 
 router.get('/decals/check', Authentication.isAuthenticated, decal.check)
@@ -250,8 +251,6 @@ router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
 
 /*
 
-router.post('/register', register.post)
-/user/image
 
 router.get('/news', API.route(news.list))
 
@@ -287,6 +286,7 @@ function parseQuery (query) {
       let subkey = keyPair[1]
       if (keyPair[0] === keys.length - 1) {
         // We have reached the end of the delimited array which means we can insert the value
+
         target[subkey] = query[key]
       } else if (!target[subkey]) {
         /* We have not reached the end of the delimited array so we need to create a nested object unless
