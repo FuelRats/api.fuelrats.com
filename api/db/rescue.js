@@ -32,8 +32,7 @@ module.exports = function (sequelize, DataTypes) {
     },
     quotes: {
       type: DataTypes.ARRAY(DataTypes.JSONB),
-      allowNull: false,
-      defaultValue: []
+      allowNull: true
     },
     status: {
       type: DataTypes.ENUM('open', 'inactive', 'closed'),
