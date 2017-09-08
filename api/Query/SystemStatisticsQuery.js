@@ -54,7 +54,7 @@ class SystemStatisticsQuery extends StatisticsQuery {
       fields: ['platform', 'outcome'],
       options: [
         ['pc', 'pc'],
-        ['pcsucess', 'pc', 'success'],
+        ['pcsuccess', 'pc', 'success'],
         ['pcfailure', 'pc', 'failure'],
         ['ps', 'ps'],
         ['pssuccess', 'ps', 'success'],
