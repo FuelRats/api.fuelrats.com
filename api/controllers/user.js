@@ -121,30 +121,29 @@ class Users {
   static async setpassword (ctx) {
     let user = await User.findOne({
       where: {
-        id: ctx.params.id
+        id: ctx.state.user.data.id
       }
     })
 
-    if (!user) {
-      throw Error.template('not_found', ctx.params.id)
+
+
+    let validatePassword = await bcrypt.compare(ctx.data.password, user.password)
+    if (!validatePassword) {
+      throw Error.template('no_permission', 'Password is incorrect')
     }
 
-    if (hasValidPermissionsForUser(ctx, user, 'write')) {
-      let newPassword = await bcrypt.hash(ctx.data.password, 12)
-      await User.update({
-        password: newPassword
-      }, {
-        where: { id: user.id }
-      })
+    let newPassword = await bcrypt.hash(ctx.data.new, 12)
+    await User.update({
+      password: newPassword
+    }, {
+      where: { id: user.id }
+    })
 
-      let userQuery = new UserQuery({id: ctx.params.id}, ctx)
-      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-      process.emit('userUpdated', ctx, renderedResult)
-      return renderedResult
-    } else {
-      throw Error.template('no_permission', 'user.write')
-    }
+    let userQuery = new UserQuery({id: ctx.state.user.data.id}, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+    process.emit('userUpdated', ctx, renderedResult)
+    return renderedResult
   }
 
   static async delete (ctx) {
