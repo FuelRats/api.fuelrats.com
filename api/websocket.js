@@ -202,6 +202,7 @@ class Context {
     this.state.user = client.user
 
     this.query = request
+    this.meta.action = this.query.action
     this.data = request.data
 
     delete this.query.data
