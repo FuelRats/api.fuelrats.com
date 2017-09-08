@@ -13,20 +13,20 @@ const config = require('../../config.json')
 const platforms = ['pc', 'xb', 'ps']
 
 class Register {
-  static async create (ctx) {
-    // let captcha = ctx.data['g-recaptcha-response']
-    // let captchaResult = await new Request(POST, {
-    //   host: 'www.google.com',
-    //   path: '/recaptcha/api/siteverify'
-    // }, {
-    //   secret: config.recaptcha.secret,
-    //   response: captcha,
-    //   remoteip: ctx.inet
-    // })
-    //
-    // if (captchaResult.body.success === false) {
-    //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
-    // }
+  static async create (ctx, next) {
+    let captcha = ctx.data['g-recaptcha-response']
+    let captchaResult = await new Request(POST, {
+      host: 'www.google.com',
+      path: '/recaptcha/api/siteverify'
+    }, {
+      secret: config.recaptcha.secret,
+      response: captcha,
+      remoteip: ctx.inet
+    })
+
+    if (captchaResult.body.success === false) {
+      throw Errors.template('invalid_parameter', 'g-recaptcha-response')
+    }
 
     let transaction = await db.transaction()
 
@@ -68,8 +68,7 @@ class Register {
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     await HostServ.update(user[0])
 
-    let renderedResult = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
-    return renderedResult
+    ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
   }
 }
 
