@@ -236,6 +236,7 @@ router.post('/oauth2/token',
   oauth2.server.errorHandler())
 
 router.post('/oauth2/revoke', Authentication.isClientAuthenticated, oauth2.revoke)
+router.post('/oauth2/revokeall', Authentication.isClientAuthenticated, oauth2.revokeAll)
 
 router.get('/statistics/rescues', statistics.rescues)
 router.get('/statistics/systems', statistics.systems)

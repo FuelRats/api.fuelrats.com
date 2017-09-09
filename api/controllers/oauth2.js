@@ -119,6 +119,20 @@ class OAuth2 {
     return true
   }
 
+  static async revokeAll (ctx) {
+    let tokens = await Token.findAll({
+      where: {
+        clientId: ctx.state.client.id
+      }
+    })
+
+    tokens.map((token) => {
+      token.destroy()
+    })
+
+    return true
+  }
+
   static async authorizationValidateFields (ctx, next) {
     if (!ctx.query.scope) {
       return next(Errors.template('missing_required_field', 'scope'))
