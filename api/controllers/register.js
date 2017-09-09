@@ -8,7 +8,7 @@ const HostServ = require('../Anope/NickServ')
 const UserQuery = require('../Query/UserQuery')
 const UserPresenter = require('../classes/Presenters').UsersPresenter
 const { POST, Request } = require('../classes/Request')
-const config = require('../../config.json')
+const config = require('../../config')
 
 const platforms = ['pc', 'xb', 'ps']
 

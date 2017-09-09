@@ -201,6 +201,8 @@ class Rescues {
   }
 }
 
+process.on('rescueUpdated', (ctx, ))
+
 const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
 function getRescuePermissionType (rescue, user) {
