@@ -1,330 +1,118 @@
 'use strict'
-let _ = require('underscore')
-let Permission = require('../permission')
-let Errors = require('../errors')
-let User = require('../db').User
-let db = require('../db').db
-let Rat = require('../db').Rat
+const Permission = require('../permission')
+const Error = require('../errors')
+const User = require('../db').User
+const db = require('../db').db
+const NicknameQuery = require('../Query/NicknameQuery')
+const NicknamesPresenter = require('../classes/Presenters').NicknamesPresenter
 
-let NickServ = require('../Anope/NickServ')
-let HostServ = require('../Anope/HostServ')
+const NickServ = require('../Anope/NickServ')
+const HostServ = require('../Anope/HostServ')
 
-
-class Controller {
-  static info (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      if (!query.nickname || query.nickname.length === 0) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', 'nickname') })
-        return
-      }
-
-      NickServ.info(query.nickname).then(function (info) {
-        if (!info) {
-          reject({ meta: {}, error: Errors.throw('not_found') })
-          return
-        }
-
-        resolve({ meta: {}, data: anopeInfoToAPIResult(info, connection.user.group) })
-      }).catch(function (error) {
-        reject({ meta: {}, error: Errors.throw('server_error', error) })
-      })
-    })
-  }
-
-  static register (data, connection) {
-    return new Promise(function (resolve, reject) {
-      let fields = ['nickname', 'password']
-
-
-      for (let field of fields) {
-        if (!data[field]) {
-          reject({ meta: {}, error: Errors.throw('missing_required_field', field) })
-          return
-        }
-      }
-
-      NickServ.register(data.nickname, data.password, connection.user.email).then(function () {
-        let nicknames = connection.user.nicknames
-        nicknames.push(data.nickname)
-
-        NickServ.confirm(data.nickname).then(function () {
-          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
-            where: { id: connection.user.id }
-          }).then(function () {
-            User.findOne({
-              where: { id: connection.user.id },
-
-              attributes: {
-                include: [
-                  [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-                ],
-                exclude: [
-                  'nicknames'
-                ]
-              },
-              include: [
-                {
-                  model: Rat,
-                  as: 'rats',
-                  required: false
-                }
-              ]
-            }).then(function (user) {
-              HostServ.updateVirtualHost(user).then(function () {
-                resolve({ meta: {}, data: data.nickname })
-              })
-            })
-          })
-        })
-      }).catch(function (error) {
-        reject({ meta: {}, error: Errors.throw('server_error', error) })
-      })
-    })
-  }
-
-  static connect (data, connection) {
-    return new Promise(function (resolve, reject) {
-      let fields = ['nickname', 'password']
-
-      for (let field of fields) {
-        if (!data[field]) {
-          reject({ meta: {}, error: Errors.throw('missing_required_field', field) })
-          return
-        }
-      }
-
-      NickServ.identify(data.nickname, data.password).then(function () {
-        let nicknames = connection.user.nicknames
-        nicknames.push(data.nickname)
-
-        User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
-          where: { id: connection.user.id }
-        }).then(function () {
-          User.findOne({
-            where: { id: connection.user.id },
-            attributes: {
-              include: [
-                [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-              ],
-              exclude: [
-                'nicknames'
-              ]
-            },
-            include: [
-              {
-                model: Rat,
-                as: 'rats',
-                required: false
-              }
-            ]
-          }).then(function (user) {
-            HostServ.updateVirtualHost(user).then(function () {
-              resolve({ meta: {}, data: data.nickname })
-            }).catch(function (error) {
-              reject({ meta: {}, error: Errors.throw('server_error', error) })
-            })
-          }).catch(function (error) {
-            reject({ meta: {}, error: Errors.throw('server_error', error) })
-          })
-        }).catch(function (error) {
-          reject({ meta: {}, error: Errors.throw('server_error', error) })
-        })
-      }).catch(function () {
-        reject({ meta: {}, error: Errors.throw('no_permission') })
-      })
-    })
-  }
-
-  static delete (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      if (!query.nickname) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', 'nickname') })
-      }
-
-      if (connection.user.nicknames.includes(query.nickname) || connection.user.group === 'admin') {
-        NickServ.drop(query.nickname).then(function () {
-          let nicknames = connection.user.nicknames
-          nicknames.splice(nicknames.indexOf(query.nickname), 1)
-
-          User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
-            where: {
-              id: connection.user.id
-            }
-          }).then(function () {
-            resolve()
-          }).catch(function (error) {
-            reject({ meta: {}, error: Errors.throw('server_error', error) })
-          })
-        }).catch(function (error) {
-          reject({ meta: {}, error: Errors.throw('server_error', error) })
-        })
-      } else {
-        reject({ meta: {}, error: Errors.throw('no_permission') })
-      }
-    })
-  }
-
-  static search (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      if (!query.nickname) {
-        reject({ meta: {}, error: Errors.throw('missing_required_field', 'nickname') })
-      }
-
-      let strippedNickname = query.nickname.replace(/\[(.*?)\]$/g, '')
-
-      let displayPrivateFields = typeof connection.user !== 'undefined' && connection.user.group === 'admin'
-
-      let limit = parseInt(query.limit) || 25
-      let offset = (parseInt(query.page) - 1) * limit || parseInt(query.offset) || 0
-      let order = query.order || 'createdAt'
-      let direction = query.direction || 'ASC'
-
-      let dbQuery = {
-        where: {
-          nicknames: {
-            $overlap:  db.literal(`ARRAY[${db.escape(query.nickname)}, ${db.escape(strippedNickname)}]::citext[]`)
-          }
-        },
-        attributes: [
-          'id',
-          'createdAt',
-          'updatedAt',
-          'email',
-          'drilled',
-          'drilledDispatch',
-          'group',
-          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-        ],
-        include: [{
-          model: Rat,
-          as: 'rats',
-          require: false
-        }],
-        limit: limit,
-        offset: offset,
-        order: [
-          [order, direction]
-        ]
-      }
-
-      User.findAndCountAll(dbQuery).then(function (result) {
-        let meta = {
-          count: result.rows.length,
-          limit: dbQuery.limit,
-          offset: dbQuery.offset,
-          total: result.count
-        }
-
-        let users = result.rows.map(function (userInstance) {
-          let user = userInstance.toJSON()
-
-          if (!displayPrivateFields) {
-            user.email = null
-          }
-
-          user.rats = user.rats.map(function (rat) {
-            delete rat.UserId
-            delete rat.deletedAt
-            return rat
-          })
-
-          return user
-        })
-
-        resolve({
-          data: users,
-          meta: meta
-        })
-      }).catch(function (error) {
-        reject({ meta: {}, error: Errors.throw('server_error', error) })
-      })
-    })
-  }
-}
-
-class HTTP {
-  static get (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.info(request.body, request, request.query).then(function (res) {
-      let data = res.data
-
-      response.model.data = data
-      response.status = 200
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static post (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.register(request.body, request, request.query).then(function (res) {
-      response.model.data = res.data
-      response.status(201)
-      next()
-    }, function (error) {
-      response.model.errors.push(error)
-      response.status(500)
-      next()
-    })
-  }
-
-  static put (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.connect(request.body, request, request.query).then(function (data) {
-      response.model.data = data.data
-      response.status(201)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static delete (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.delete(request.body, request, request.query).then(function () {
-      response.status(204)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static search (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-
-    Controller.search(request.body, request, request.query).then(function (res) {
-      response.model.data = res.data
-      response.status(200)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-}
-
-
-function anopeInfoToAPIResult (result, group) {
-  if (group !== 'admin') {
-    if (result.vhost) {
-      result.hostmask = result.vhost
-      delete result.vhost
+class Nicknames {
+  static async info (ctx) {
+    if (!ctx.params.nickname || ctx.params.nickname.length === 0) {
+      throw Error.template('missing_required_field', 'nickname')
     }
-    delete result.email
-  }
-  return result
-}
 
-module.exports = { HTTP: HTTP, Controller: Controller }
+    let info = await NickServ.info(ctx.params.nickname)
+    if (!info) {
+      throw Error.template('not_found')
+    }
+
+    return NicknamesPresenter.render(info)
+  }
+
+  static async register (ctx) {
+    let fields = ['nickname', 'password']
+    for (let field of fields) {
+      if (!ctx.data[field]) {
+        throw Error.template('missing_required_field', field)
+      }
+    }
+
+    let nicknames = ctx.state.user.data.attributes.nicknames
+    if (nicknames.includes(ctx.data.nickname)) {
+      throw Error.template('already_exists', 'Nickname is already registered')
+    }
+
+    if (nicknames.length > 0) {
+      await NickServ.group(ctx.data.nickname, nicknames[0], ctx.data.password)
+    } else {
+      await NickServ.register(ctx.data.nickname, ctx.data.password, ctx.state.user.data.attributes.email)
+      await NickServ.confirm(ctx.data.nickname)
+    }
+
+    nicknames.push(ctx.data.nickname)
+
+    await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
+      where: { id: ctx.state.user.data.id }
+    })
+
+    await HostServ.update(ctx.state.user)
+    return ctx.data.nickname
+  }
+
+  static async connect (ctx) {
+    let fields = ['nickname', 'password']
+
+    for (let field of fields) {
+      if (!ctx.data[field]) {
+        throw Error.template('missing_required_field', field)
+      }
+    }
+
+    let nicknames = ctx.state.user.data.attributes.nicknames
+    if (nicknames.includes(ctx.data.nickname)) {
+      throw Error.template('already_exists', 'Nickname is already registered to you')
+    }
+
+    await NickServ.identify(ctx.data.nickname, ctx.data.password)
+    if (nicknames.length > 0) {
+      await NickServ.group(ctx.data.nickname, nicknames[0], ctx.data.password)
+    }
+
+    nicknames.push(ctx.data.nickname)
+
+    await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
+      where: { id: ctx.state.user.data.id }
+    })
+
+
+    await HostServ.update(ctx.state.user)
+    return ctx.data.nickname
+  }
+
+  static async search (ctx) {
+    if (!ctx.params.nickname) {
+      throw Error.template('missing_required_field', 'nickname')
+    }
+
+    let result = await User.scope('public').findAndCountAll(new NicknameQuery(ctx.params, ctx).toSequelize)
+    return NicknamesPresenter.render(result)
+  }
+
+  static async delete (ctx) {
+    if (!ctx.params.nickname) {
+      throw Error.template('missing_required_field', 'nickname')
+    }
+
+    if (ctx.state.user.data.attributes.nicknames.includes(ctx.params.nickname) ||
+      Permission.require(['nickname.delete'], ctx.state.user, ctx.state.scope)) {
+      await NickServ.drop(ctx.params.nickname)
+
+      let nicknames = await NickServ.list(ctx.state.user.data.attributes.nicknames[0])
+
+      await User.update({
+        nicknames: db.cast(nicknames, 'citext[]')
+      }, {
+        where: {
+          id: ctx.state.user.data.id
+        }
+      })
+
+      return true
+    }
+  }
+}
+module.exports = Nicknames

@@ -1,6 +1,6 @@
 <!doctype html>
 <head>
-  <link rel="stylesheet" href="/style.min.css">
+  <link rel="stylesheet" href="/style.css">
   {% block head %}
   {% endblock %}
 </head>

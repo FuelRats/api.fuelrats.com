@@ -1,45 +1,29 @@
 'use strict'
-let winston = require('winston')
-let client = require('./index').client
+const Anope = require('./index')
 
-class ChanServ {
+/**
+ * Class to manage requests to BotServ
+ * @class
+ */
+class BotServ {
+  /**
+   * Send an IRC message to a channel as a BotServ bot
+   * @param channel the channel to message
+   * @param message the message to send
+   */
   static say (channel, message) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['BotServ', 'API', `SAY ${channel} ${message}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (/isn't registered/.test(data.return) === true) {
-            reject(data.return)
-          } else {
-            resolve()
-          }
-        }
-      })
-    })
+    Anope.command('BotServ', 'API', `SAY ${channel} ${message}`)
   }
 
-
+  /**
+   * Send a CTCP ACTION to a channel as a BotServ bot
+   * @param channel the channel to message
+   * @param message the action message to send
+   */
   static act (channel, message) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['BotServ', 'API', `SAY ${channel} ${message}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (/isn't registered/.test(data.return) === true) {
-            reject(data.return)
-          } else {
-            resolve()
-          }
-        }
-      })
-    })
+    Anope.command('BotServ', 'API', `ACT ${channel} ${message}`)
   }
 }
 
 
-module.exports = ChanServ
+module.exports = BotServ

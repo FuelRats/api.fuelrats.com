@@ -1,16 +1,7 @@
 'use strict'
-let Action = require('../db').Action
+const Action = require('../db').Action
 
 class SSOLogin  {
-  static getLoginPage  (request, response) {
-    request.session.ssoTarget = request.query.target
-    if (request.isUnauthenticated()) {
-      response.render('ssologin.swig', request.query)
-    } else {
-      response.redirect(request.session.ssoTarget)
-    }
-  }
-
   static loginWithCredentials (request, response) {
     if (request.user) {
       Action.create({
@@ -18,7 +9,11 @@ class SSOLogin  {
         type: 'login',
         userId: request.user.id
       })
-      response.redirect(request.session.ssoTarget)
+      if (request.body.redirect) {
+        response.redirect(request.body.redirect)
+      } else {
+        response.redirect('/')
+      }
     } else {
       request.session.userIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress
 

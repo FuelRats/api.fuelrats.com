@@ -1,12 +1,12 @@
 'use strict'
 
-let winston = require('winston')
-let HostServ = require('../../Anope/HostServ')
-let BotServ = require('../../Anope/BotServ')
-let db = require('../../db').db
-let User = require('../../db').User
-let Rat = require('../../db').Rat
-let Errors = require('../../errors')
+const winston = require('winston')
+const HostServ = require('../../Anope/HostServ')
+const BotServ = require('../../Anope/BotServ')
+const db = require('../../db').db
+const User = require('../../db').User
+const Rat = require('../../db').Rat
+const Errors = require('../../errors')
 
 const DrillType = {
   10200: 'drilled',

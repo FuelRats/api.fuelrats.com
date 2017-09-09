@@ -19,13 +19,23 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true
     }
-  }, {
-    classMethods: {
-      associate: function (models) {
-        Client.belongsTo(models.User, { as: 'user' })
-      }
-    }
   })
+
+  Client.associate = function (models) {
+    models.Client.belongsTo(models.User, { as: 'user' })
+
+    models.Client.addScope('defaultScope', {
+      include:  [
+        {
+          model: models.User,
+          as: 'user',
+          required: true
+        }
+      ]
+    }, {
+      override: true
+    })
+  }
 
   return Client
 }

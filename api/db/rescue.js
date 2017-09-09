@@ -7,11 +7,6 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
-    active: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
-    },
     client: {
       type: DataTypes.STRING,
       allowNull: true
@@ -25,30 +20,24 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.JSONB,
       allowNull: true
     },
-    open: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
-    },
     notes: {
       type: DataTypes.TEXT,
       allowNull: false,
       defaultValue: ''
     },
     platform: {
-      type: DataTypes.ENUM('xb', 'pc', 'ps', 'unknown'),
+      type: DataTypes.ENUM('xb', 'pc', 'ps'),
       allowNull: true,
       defaultValue: 'pc'
     },
     quotes: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      allowNull: false,
-      defaultValue: []
+      type: DataTypes.ARRAY(DataTypes.JSONB),
+      allowNull: true
     },
-    successful: {
-      type: DataTypes.BOOLEAN,
+    status: {
+      type: DataTypes.ENUM('open', 'inactive', 'closed'),
       allowNull: false,
-      defaultValue: false
+      defaultValue: 'open'
     },
     system: {
       type: DataTypes.STRING,
@@ -60,6 +49,11 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null
     },
+    outcome: {
+      type: DataTypes.ENUM('success', 'failure', 'invalid', 'other'),
+      allowNull: true,
+      defaultValue:  null
+    },
     unidentifiedRats: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
@@ -67,18 +61,53 @@ module.exports = function (sequelize, DataTypes) {
     }
   }, {
     paranoid: true,
-    classMethods: {
-      associate: function (models) {
-        Rescue.belongsToMany(models.Rat, { as: 'rats', through: 'RescueRats' })
-        Rescue.belongsTo(models.Rat, { as: 'firstLimpet' })
-      }
-    },
     indexes: [{
       fields: ['data'],
       using: 'gin',
       operator: 'jsonb_path_ops'
     }]
   })
+
+  Rescue.associate = function (models) {
+    models.Rescue.belongsTo(models.Rat, {
+      as: 'firstLimpet',
+      foreignKey: 'firstLimpetId'
+    })
+
+    models.Rescue.belongsToMany(models.Rat, {
+      as: 'rats',
+      through: {
+        model: models.RescueRats
+      }
+    })
+
+    models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })
+
+    models.Rescue.addScope('rescue', {
+      include: [
+        {
+          model: models.Rat,
+          as: 'rats',
+          required: false,
+          through: {
+            attributes: []
+          }
+        },
+        {
+          model: models.Rat,
+          as: 'firstLimpet',
+          required: false
+        },
+        {
+          model: models.Epic,
+          as: 'epics',
+          required: false
+        }
+      ]
+    }, {
+      override: true
+    })
+  }
 
   return Rescue
 }

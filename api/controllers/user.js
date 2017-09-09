@@ -1,295 +1,208 @@
 'use strict'
 
-let _ = require('underscore')
-let Permission = require('../permission')
-let User = require('../db').User
-let Rat = require('../db').Rat
-let db = require('../db').db
-let Errors = require('../errors')
-let API = require('../classes/API')
+const User = require('../db').User
 
-let HostServ = require('../Anope/HostServ')
+const Error = require('../errors')
+const Permission = require('../permission')
+const UserQuery = require('../Query/UserQuery')
+const HostServ = require('../Anope/HostServ')
+const bcrypt = require('bcrypt')
+const { UsersPresenter, CustomPresenter } = require('../classes/Presenters')
+const gm = require('gm')
 
-class Controller {
-  static read (query) {
-    return new Promise(function (resolve, reject) {
-      let dbQuery = API.createQueryFromRequest(query)
-
-      dbQuery.include = [
-        {
-          model: Rat,
-          as: 'rats'
-        }
-      ]
-
-      if (query.CMDRs) {
-        dbQuery.include[0].require = true
-        dbQuery.include[0].where = {
-          id: query.CMDRs
-        }
-      }
-
-      dbQuery.attributes = {
-        include: [
-          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-        ],
-        exclude: [
-          'nicknames'
-        ]
-      }
-
-      User.findAndCountAll(dbQuery).then(function (result) {
-        let meta = {
-          count: result.rows.length,
-          limit: dbQuery.limit,
-          offset: dbQuery.offset,
-          total: result.count
-        }
-
-        /* For backwards compatibility reasons we return only the list of rat
-        foreign keys, not their objects */
-        let users = result.rows.map(function (userInstance) {
-          let user = convertUserToAPIResult(userInstance)
-          return user
-        })
-
-        resolve({
-          data: users,
-          meta: meta
-        })
-      }).catch(function (error) {
-        reject({ error: Errors.throw('server_error', error), meta: {} })
-      })
-    })
+class Users {
+  static async search (ctx) {
+    let userQuery = new UserQuery(ctx.query, ctx)
+    let result = await User.findAndCountAll(userQuery.toSequelize)
+    return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
-  static create () {
-    return new Promise(function (resolve, reject) {
-      reject({ error: Errors.throw('not_implemented', 'user:create is not implemented, please use POST /register'), meta: {} })
-    })
-  }
+  static async findById (ctx) {
+    if (ctx.params.id) {
+      let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
 
-  static update (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findUserWithRats({ id: query.id }).then(function (user) {
-          let permission = connection.user.id === query.id ? 'self.user.edit' : 'user.edit'
-          Permission.require(permission, connection.user).then(function () {
-            let updates = []
-
-            if (data.CMDRs) {
-              for (let ratId of data.CMDRs) {
-                updates.push(user.addRat(ratId))
-              }
-              delete data.rats
-            }
-
-            if (data['nicknames']) {
-              data.nicknames = db.cast(data['nicknames'], 'citext[]')
-            }
-
-            if (Object.keys(data).length > 0) {
-              updates.push(User.update(data, {
-                where: { id: user.id }
-              }))
-            }
-
-            Promise.all(updates).then(function () {
-              findUserWithRats({ id: query.id }).then(function (userInstance) {
-                if (data.group || data.drilled || data.drilledDispatch) {
-                  HostServ.updateVirtualHost(userInstance)
-                }
-                let user = convertUserToAPIResult(userInstance)
-                resolve({ data: user, meta: {} })
-              }).catch(function (error) {
-                reject({ error: Errors.throw('server_error', error), meta: {} })
-              })
-            }).catch(function (error) {
-              reject({ error: Errors.throw('server_error', error), meta: {} })
-            })
-          }, function (error) {
-            reject({ error: error })
-          })
-        }, function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
-        })
-      } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
-      }
-    })
-  }
-
-  static delete (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      if (connection.isUnauthenticated()) {
-        let error = Permission.authenticationError('user.delete')
-        reject({ error: error, meta: {} })
-        return
+      if (result.rows.length === 0 || hasValidPermissionsForUser(ctx, result.rows[0], 'read')) {
+        return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
       }
 
-      if (query.id) {
-        User.findById(query.id).then(function (rescue) {
-          rescue.destroy()
-          resolve({ data: null, meta: {} })
-        }).catch(function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
-        })
-      } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
-      }
-    })
-  }
-
-  static forceUpdateIRCStatus (data, connection, query) {
-    return new Promise(function (resolve, reject) {
-      if (query.id) {
-        findUserWithRats({ id: query.id }).then(function (userInstance) {
-          if (!userInstance) {
-            return reject({ error: Error.throw('not_found', query.id), meta: {} })
-          }
-
-          HostServ.updateVirtualHost(userInstance)
-          resolve({ data: { success: true }, meta: {} })
-        }).catch(function (error) {
-          reject({ error: Errors.throw('server_error', error), meta: {} })
-        })
-      } else {
-        reject({ error: Errors.throw('missing_required_field', 'id'), meta: {} })
-      }
-    })
-  }
-}
-
-class HTTP {
-  static get (request, response, next) {
-    Controller.read(request.query, request).then(function (res) {
-      let data = res.data
-      let meta = res.meta
-
-      response.model.data = data
-      response.model.meta = meta
-      response.status = 200
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static getById (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
-    let id = request.params.id
-    if (id) {
-      findUserWithRats({ id: id }).then(function (userInstance) {
-        if (!userInstance) {
-          response.model.errors.push(Errors.throw('not_found', 'id'))
-          response.status(404)
-          next()
-          return
-        }
-
-        let user = convertUserToAPIResult(userInstance)
-        response.model.data = user
-        response.status(200)
-        next()
-      }).catch(function (error) {
-        response.model.errors.push(Errors.throw('server_error', error))
-        response.status(500)
-        next()
-      })
+      throw Error.template('no_permission', 'user.read')
     } else {
-      response.model.errors.push(Errors.throw('missing_required_field', 'id'))
-      response.status(400)
-      next()
+      throw Error.template('missing_required_field', 'id')
     }
   }
 
-  static post (request, response, next) {
-    let notImplemented = Errors.throw('not_implemented', 'POST /users is not implemented, please use POST /register')
-    response.model.errors.push(notImplemented)
-    response.status(404)
+  static async image (ctx, next) {
+    let user = await User.scope('image').findById(ctx.params.id)
+    ctx.type = 'image/jpeg'
+    ctx.body = user.image
     next()
   }
 
-  static put (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
 
-    Controller.update(request.body, request, request.params).then(function (data) {
-      response.model.data = data.data
-      response.status(201)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
+  static async create (ctx) {
+    let result = await User.create(ctx.data)
+    if (!result) {
+      throw Error.template('operation_failed')
+    }
+
+    ctx.response.status = 201
+
+    let renderedResult = UsersPresenter.render(result, ctx.meta(result))
+    return renderedResult
   }
 
-  static delete (request, response, next) {
-    response.model.meta.params = _.extend(response.model.meta.params, request.params)
+  static async update (ctx) {
+    if (ctx.params.id) {
+      let user = await User.findOne({
+        where: {
+          id: ctx.params.id
+        }
+      })
 
-    Controller.delete(request.body, request, request.params).then(function () {
-      response.status(204)
-      next()
-    }).catch(function (error) {
-      response.model.errors.push(error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-
-  static forceUpdateIRCStatus (request, response, next) {
-    Controller.read(request.body, request, request.params).then(function (res) {
-      let data = res.data
-
-      response.model.data = data
-      response.status = 200
-      next()
-    }, function (error) {
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
-  }
-}
-
-function convertUserToAPIResult (userInstance) {
-  let user = userInstance.toJSON()
-  let reducedRats = user.rats.map(function (rat) {
-    return rat.id
-  })
-  user.CMDRs = reducedRats
-  if (!user.CMDRs) {
-    user.CMDRs = []
-  }
-  delete user.rats
-  delete user.salt
-  delete user.password
-  delete user.deletedAt
-  delete user.dispatch
-
-  return user
-}
-
-function findUserWithRats (where) {
-  return User.findOne({
-    where: where,
-    attributes: {
-      include: [
-        [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-      ],
-      exclude: [
-        'nicknames'
-      ]
-    },
-    include: [
-      {
-        model: Rat,
-        as: 'rats'
+      if (!user) {
+        throw Error.template('not_found', ctx.params.id)
       }
-    ]
+
+      if (hasValidPermissionsForUser(ctx, user, 'write')) {
+        let rescue = await User.update(ctx.data, {
+          where: {
+            id: ctx.params.id
+          }
+        })
+
+        if (!rescue) {
+          throw Error.template('operation_failed')
+        }
+
+        let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+        let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+        let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+        return renderedResult
+      }
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async setimage (ctx) {
+    let user = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!user) {
+      throw Error.template('not_found', ctx.params.id)
+    }
+
+    if (hasValidPermissionsForUser(ctx, user, 'write')) {
+      let imageData = ctx.req._readableState.buffer.head.data
+
+      let formattedImageData = await formatImage(imageData)
+      await User.update({
+        image: formattedImageData
+      }, {
+        where: {id: ctx.params.id}
+      })
+
+      let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+      return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+    } else {
+      throw Error.template('no_permission', 'user.write')
+    }
+  }
+
+  static async setpassword (ctx) {
+    let user = await User.findOne({
+      where: {
+        id: ctx.state.user.data.id
+      }
+    })
+
+
+
+    let validatePassword = await bcrypt.compare(ctx.data.password, user.password)
+    if (!validatePassword) {
+      throw Error.template('no_permission', 'Password is incorrect')
+    }
+
+    let newPassword = await bcrypt.hash(ctx.data.new, 12)
+    await User.update({
+      password: newPassword
+    }, {
+      where: { id: user.id }
+    })
+
+    let userQuery = new UserQuery({id: ctx.state.user.data.id}, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+  }
+
+  static async delete (ctx) {
+    if (ctx.params.id) {
+      let rescue = await User.findOne({
+        where: {
+          id: ctx.params.id
+        }
+      })
+
+      if (!rescue) {
+        throw Error.template('not_found', ctx.params.id)
+      }
+
+      rescue.destroy()
+
+      ctx.status = 204
+      return true
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async updatevirtualhost (ctx) {
+    if (ctx.params.id) {
+      let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+      if (result) {
+        return HostServ.update(result)
+      }
+      throw Error.template('not_found', 'id')
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+ }
+
+function hasValidPermissionsForUser (ctx, user, action = 'read') {
+  let permissions = [`user.${action}`]
+  if (user.id === ctx.state.user.data.id) {
+    permissions.push(`user.${action}.me`)
+  }
+
+  return Permission.require(permissions, ctx.state.user, ctx.state.scope)
+}
+
+function formatImage (imageData) {
+  return new Promise(function (resolve, reject) {
+    gm(imageData).identify((err, data) => {
+      if (err || data.format !== 'JPEG') {
+        reject(Error.template('invalid_image_format', 'Expected image/jpeg'))
+      }
+
+      if (data.size.width < 64 || data.size.height < 64) {
+        reject(Error.template('invalid_image_format', 'Image must be at least 64x64'))
+      }
+
+      gm(imageData).resize(100, 100, '!').toBuffer('JPG', (err, buffer) => {
+        if (err) {
+          reject(Error.template('invalid_image_format', 'Your image could not be saved in a valid format'))
+        }
+        resolve(buffer)
+      })
+    })
   })
 }
 
-module.exports = { Controller, HTTP }
+module.exports = Users

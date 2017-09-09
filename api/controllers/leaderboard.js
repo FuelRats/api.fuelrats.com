@@ -2,7 +2,7 @@
 
 require('intl')
 
-let Statistics = require('../classes/Statistics')
+const Statistics = require('../classes/Statistics')
 
 exports.get = function (request, response) {
   Statistics.getLeaderboardRats().then(function (rats) {

@@ -3,8 +3,14 @@
 let errors = {
   'bad_request': {
     'code': 400,
-    'detail': 'You\'ve made a request. How naughty. :-(',
+    'detail': 'You\'ve made a bad request. How naughty. :-(',
     'status': 'Bad Request'
+  },
+
+  'invalid_image': {
+    'code': 400,
+    'detail': '',
+    'status': 'Invalid Image Format'
   },
 
   'missing_required_field': {
@@ -14,11 +20,32 @@ let errors = {
     'title': 'Missing Required Field'
   },
 
+  'missing_required_fields': {
+    'code': 400,
+    'detail': '',
+    'status': 'Bad Request',
+    'title': 'Missing Required Fields'
+  },
+
   'not_authenticated': {
     'code': 401,
     'detail': 'User must be authenticated to perform that action',
     'status': 'Unauthorized',
     'title': 'Not Authenticated'
+  },
+
+  'client_unauthorised': {
+    'code': 401,
+    'detail': 'Client must be authenticated to perform that action',
+    'status': 'Unauthorized',
+    'title': 'Client not Authenticated'
+  },
+
+  'webhook_unauthorised': {
+    'code': 401,
+    'detail': 'Connection to webhook from an unauthorized IP address',
+    'status': 'Unauthorized',
+    'title': 'IP address not authorized'
   },
 
   'no_permission': {
@@ -39,6 +66,14 @@ let errors = {
     'code': 400,
     'detail': '',
     'status': 'Bad Request',
+    'title': 'Invalid Parameter'
+  },
+
+
+  'invalid_scope': {
+    'code': 400,
+    'detail': '',
+    'status': 'Invalid Scope',
     'title': 'Invalid Parameter'
   },
 
@@ -63,7 +98,14 @@ let errors = {
     'title': 'Already Exists'
   },
 
-  throw: function (type, detail) {
+  'rate_limit_exceeded': {
+    'code': 429,
+    'detail': 'You have exceeded the number of allowed requests per hour for your IP address or user',
+    'status': 'Too Many Requests',
+    'title': 'Rate Limit Exceeded'
+  },
+
+  template: function (type, detail) {
     let errorModel = errors[type]
     if (detail) {
       errorModel.detail = detail

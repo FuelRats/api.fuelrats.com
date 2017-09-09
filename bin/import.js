@@ -119,7 +119,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
             let _rat = ratInstance.toJSON()
             User.findAndCountAll({
               where: {
-                id: _rat.UserId
+                id: _rat.userId
               }
             }).then(function (uresults) {
               let users = uresults.rows.map(function (userInstance) {
@@ -172,7 +172,7 @@ processRats = function ( rescueDrills, dispatchDrills ) {
             let _rat = ratInstance.toJSON()
             User.findAndCountAll({
               where: {
-                id: _rat.UserId
+                id: _rat.userId
               }
             }).then(function (uresults) {
               let users = uresults.rows.map(function (userInstance) {

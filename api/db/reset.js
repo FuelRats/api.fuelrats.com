@@ -15,13 +15,11 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: false
     }
-  }, {
-    classMethods: {
-      associate: function (models) {
-        Reset.belongsTo(models.User, { as: 'user' })
-      }
-    }
   })
+
+  Reset.associate = function (models) {
+    models.Reset.belongsTo(models.User, { as: 'user' })
+  }
 
   return Reset
 }
