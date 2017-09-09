@@ -8,8 +8,7 @@
   ],
   "scripts": {
     "dev": "$(npm bin)/grunt api",
-    "import": "$(npm bin)/grunt import",
-    "test": "$(npm bin)/grunt test"
+    "import": "$(npm bin)/grunt import"
   },
   "license": "MIT",
   "main": "api/index.js",

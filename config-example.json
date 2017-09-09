@@ -1,44 +1,40 @@
 {
   "cookie": {
-    "domain": "localhost"
+    "domain": "localhost",
+    "secret": "oUAAAAAMkdpS2l6E"
   },
   "hostname": "localhost",
-  "port": 8080,
+  "port": 8082,
   "proxyEnabled": false,
-  "secretSauce": "Your secret goes here!",
   "postgres": {
     "database": "fuelrats",
     "hostname": "localhost",
     "username": "fuelrats",
-    "password": "",
-    "port": 5352
+    "password": "SqueakBaby",
+    "port": 5432
+  },
+  "recaptcha": {
+    "secret": "6LdUsBoUAAAAAMkdpS2l6EE29GOZD9MgT1fhB_u6"
+  },
+  "jira": {
+    "username": "",
+    "password": ""
   },
   "test": {
     "postgres": {
-      "database": "fuelrats_test",
+      "database": "fuelratstest",
       "hostname": "localhost",
       "username": "fuelrats",
-      "password": "",
+      "password": "SqueakBaby",
       "port": 5432
     }
   },
   "loggly": {
     "appenders": {
       "console": { "type": "console" },
-      "slack": {
-        "type": "frslack",
-        "token": "",
-        "channel_id": "development",
-        "username": "fuelratsapi"
-      },
-      "alerts": {
-        "type": "logLevelFilter",
-        "appender": "slack",
-        "level": "error"
-      },
       "loggly": {
         "type": "frloggly",
-        "token": "",
+        "token": "ce4d2f29-0a0d-4dd5-ad17-e19bc51311a7",
         "subdomain": "fuelrats",
         "tags": ["local-dev", "nodejs"],
         "json": true,
@@ -47,7 +43,7 @@
     },
     "categories": {
       "default": {
-        "appenders": [ "console", "alerts", "loggly" ], "level": "info"
+        "appenders": [ "console", "loggly" ], "level": "info"
       }
     }
   }

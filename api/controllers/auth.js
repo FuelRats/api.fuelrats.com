@@ -1,25 +1,4 @@
 'use strict'
-<<<<<<< HEAD
-let passport = require('passport')
-let BasicStrategy = require('passport-http').BasicStrategy
-let BearerStrategy = require('passport-http-bearer').Strategy
-let ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy
-let crypto = require('crypto')
-let LocalStrategy = require('passport-local').Strategy
-let User = require('../db').User
-let Rat = require('../db').Rat
-let db = require('../db').db
-let Token = require('../db').Token
-let Client = require('../db').Client
-let bcrypt = require('bcrypt')
-let Permission = require('../permission')
-
-
-exports.passwordAuthenticate = function (email, password, done) {
-  if (!email || !password) {
-    done(null, false, { message: 'Incorrect username/email.' })
-  }
-=======
 const User = require('../db').User
 const Rat = require('../db').Rat
 const db = require('../db').db
@@ -40,7 +19,6 @@ class Authentication {
     if (!email || !password) {
       return null
     }
->>>>>>> v2
 
     let user = await User.scope('internal').findOne({where: {email: {$iLike: email}}})
     if (!user) {
@@ -51,127 +29,16 @@ class Authentication {
     if (result === false) {
       return null
     } else {
-<<<<<<< HEAD
-      bcrypt.compare(password, user.password, function (err, res) {
-        if (err || res === false) {
-          done(null, false)
-        } else {
-          done(null, convertUserToAPIResult(user))
-        }
-      })
-    }
-  }).catch(function () {
-    done(null, false)
-  })
-}
-
-
-exports.LocalStrategy = new LocalStrategy({
-  usernameField: 'email',
-  passwordField: 'password',
-  session: false
-},
-  exports.passwordAuthenticate
-)
-
-passport.use(exports.LocalStrategy)
-
-
-
-
-exports.clientPasswordAuthentication = function (username, secret, callback) {
-  Client.findById(username).then(function (client) {
-    if (!client) {
-      callback(null, false)
-    }
-
-    bcrypt.compare(secret, client.secret, function (err, res) {
-      if (err || res === false) {
-        callback(null, false)
-      } else {
-        callback(null, client)
-      }
-    })
-  }).catch(function (error) {
-    callback(error)
-  })
-}
-
-passport.use('client-basic', new BasicStrategy(
-  exports.clientPasswordAuthentication
-))
-
-passport.use(new ClientPasswordStrategy(exports.clientPasswordAuthentication))
-passport.use(new BearerStrategy(bearerAuthenticate))
-
-exports.isClientAuthenticated = passport.authenticate('client-basic', { session : false })
-exports.isBearerAuthenticated = passport.authenticate('bearer', { session: false })
-exports.isAuthenticated = function (isUserFacing, anonymous = false) {
-  return function (req, res, next) {
-    if (req.user) {
-      req.session.returnTo = null
-      return next()
-    } else {
-      if (req.query.bearer) {
-        bearerAuthenticate(req.query.bearer, function (error, user) {
-          if (error) {
-            res.model.errors.push(error)
-            res.status = error.code
-            return next(error)
-          }
-
-          if (user) {
-            req.user = user
-            next()
-          } else {
-            let error = Permission.authenticationError()
-            res.model.errors.push(error)
-            res.status(error.code)
-
-            return next(error)
-          }
-=======
       if (bcrypt.getRounds(user.password) > 12) {
         let newRoundPassword = await bcrypt.hash(password, 12)
         User.update({
           password: newRoundPassword
         }, {
           where: { id: user.id }
->>>>>>> v2
         })
       }
-<<<<<<< HEAD
 
-      passport.authenticate('bearer', { session : false }, function (error, user) {
-        if (!user) {
-          if (anonymous) {
-            return next()
-          }
-          if (!isUserFacing) {
-            let error = Permission.authenticationError()
-            res.model.errors.push(error)
-            res.status(error.code)
-
-            return next(error)
-          } else {
-            req.session.returnTo = req.originalUrl || req.url
-
-            if (req.session.legacy || isUserFacing) {
-              return res.redirect('/login')
-            } else {
-              res.model.data = req.user
-              res.status(200)
-              next()
-              return
-            }
-          }
-        }
-        req.user = user
-        next()
-      })(req, res, next)
-=======
       return UsersPresenter.render(user, {})
->>>>>>> v2
     }
   }
 
