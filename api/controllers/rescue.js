@@ -69,7 +69,7 @@ class Rescues {
         let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
         let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
         let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
-        process.emit('rescueUpdated', ctx, renderedResult)
+        process.emit('rescueUpdated', ctx, renderedResult, ctx.data)
         return renderedResult
       }
     } else {
@@ -201,7 +201,17 @@ class Rescues {
   }
 }
 
-process.on('rescueUpdated', (ctx, result) => {
+process.on('rescueUpdated', (ctx, result, changedValues) => {
+  if (changedValues.hasOwnProperty('outcome')) {
+    let boardIndex = result.data[0].attributes.data.boardIndex
+    let caseNumber = boardIndex !== null ? `#${boardIndex}` : result.data[0].id
+
+    let author = ctx.state.user.data.attributes.nicknames[0] || ctx.state.user.data.id
+    if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
+      author = ctx.req.headers['x-command-by']
+    }
+    BotServ.say('#ratchat', `Paperwork for rescue ${caseNumber} has been completed by ${author}`)
+  }
 })
 
 const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
