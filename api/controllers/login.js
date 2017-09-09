@@ -19,10 +19,6 @@ class Login {
     }
     return user
   }
-
-  static async display (ctx) {
-    await ctx.render('login')
-  }
 }
 
 module.exports = Login

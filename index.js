@@ -211,8 +211,6 @@ router.post('/ships', fields('name', 'shipType', 'ratId'), clean('shipId'), ship
 router.put('/ships/:id', clean('shipId'), ship.update)
 router.delete('/ships/:id', rat.delete)
 
-
-router.get('/login', login.display)
 router.post('/login', fields('email', 'password'), login.login)
 router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
   register.create)
