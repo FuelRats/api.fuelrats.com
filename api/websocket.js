@@ -108,7 +108,10 @@ class WebSocketManager {
   async onMessage (client, request) {
     try {
       let { result, meta } = await this.process(client, request)
-      Object.assign(result.meta || {}, meta)
+      if (!result.meta) {
+        result.meta = {}
+      }
+      Object.assign(result.meta, meta)
       this.send(client, result)
     } catch (ex) {
       let error = ex
@@ -204,7 +207,7 @@ class Context {
     this.state.user = client.user
 
     this.query = request
-    this.meta.action = this.query.action
+    Object.assign(this.meta, this.query)
     this.data = request.data
 
     delete this.query.data

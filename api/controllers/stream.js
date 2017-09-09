@@ -54,9 +54,9 @@ class Stream {
       throw Error.template('missing_required_field', 'event')
     }
 
-    let result = CustomPresenter.render(ctx.data, {
-      event: event
-    })
+    let result = CustomPresenter.render(ctx.data)
+    result.meta = {}
+    Object.assign(result.meta, ctx.query)
     process.emit('apiBroadcast', applicationId, ctx, result)
     return result
   }
