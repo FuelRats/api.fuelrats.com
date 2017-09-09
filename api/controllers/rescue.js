@@ -202,6 +202,9 @@ class Rescues {
 }
 
 process.on('rescueUpdated', (ctx, result, changedValues) => {
+  if (!changedValues) {
+    return
+  }
   if (changedValues.hasOwnProperty('outcome')) {
     let boardIndex = result.data[0].attributes.data.boardIndex
     let caseNumber = boardIndex !== null ? `#${boardIndex}` : result.data[0].id
