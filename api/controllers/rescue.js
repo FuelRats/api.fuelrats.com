@@ -13,6 +13,8 @@ const Permission = require('../permission')
 const BotServ = require('../Anope/BotServ')
 const Statistics = require('../classes/Statistics')
 
+const bold = String.fromCharCode(0x02)
+
 class Rescues {
   static async search (ctx) {
     let rescueQuery = new RescueQuery(ctx.query, ctx)
@@ -209,12 +211,13 @@ process.on('rescueUpdated', (ctx, result, changedValues) => {
     let boardIndex = result.data[0].attributes.data.boardIndex
     let caseNumber = boardIndex !== null ? `#${boardIndex}` : result.data[0].id
 
-    let client = ctx.state.user.data.attributes.client
+    let client = ctx.state.user.data.attributes.client || ''
     let author = ctx.state.user.data.attributes.nicknames[0] || ctx.state.user.data.id
     if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
       author = ctx.req.headers['x-command-by']
     }
-    BotServ.say('#ratchat', `${0x02}[Paperwork]${0x02} Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
+    BotServ.say('#ratchat',
+      `${bold}[Paperwork]${bold} Paperwork for rescue ${caseNumber} ${client} has been completed by ${author}`)
   }
 })
 
