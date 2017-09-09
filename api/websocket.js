@@ -8,6 +8,7 @@ const rescue = require('./controllers/rescue')
 const stream = require('./controllers/stream')
 const client = require('./controllers/client')
 const user = require('./controllers/user')
+const profile = require('./controllers/profile')
 const ObjectPresenter = require('./classes/Presenters').ObjectPresenter
 
 const controllers = {
@@ -29,7 +30,8 @@ const controllers = {
     create: [user.create, true],
     read: [user.search, true, 'user.read'],
     update: [user.update, true],
-    delete: [user.delete, true, 'user.delete']
+    delete: [user.delete, true, 'user.delete'],
+    profile: [profile.read, true]
   },
 
   client: {
