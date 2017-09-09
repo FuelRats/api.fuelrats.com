@@ -201,7 +201,8 @@ class Rescues {
   }
 }
 
-process.on('rescueUpdated', (ctx, ))
+process.on('rescueUpdated', (ctx, result) => {
+})
 
 const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
