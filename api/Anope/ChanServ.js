@@ -1,24 +1,17 @@
 'use strict'
-let winston = require('winston')
-let client = require('./index').client
+const Anope = require('./index')
 
+/**
+ * Class for managing requests to ChanServ
+ */
 class ChanServ {
+  /**
+   * Sync the state of a channel
+   * @param channel the channel to sync
+   * @returns {Promise}
+   */
   static sync (channel) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['ChanServ', 'API', `SYNC ${channel}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (/isn't registered/.test(data.return) === true) {
-            reject(data.return)
-          } else {
-            resolve()
-          }
-        }
-      })
-    })
+    return Anope.command('ChanServ', 'API', `SYNC ${channel}`)
   }
 }
 

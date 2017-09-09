@@ -1,0 +1,47 @@
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="Aligner">
+    <div class="Aligner-item">
+        <img src="http://www.fuelrats.com/wp-content/uploads/2015/07/ratsticker-1024x1024.jpg" alt="FuelRats Logo" class="logo">
+        <form action="/oauth2/authorize" method="post">
+            <div class="page-header" style="text-align: center;">
+                <h1><%= translation.authoriseTitle %></h1>
+            </div>
+            <h5><%- translation.requestingAccess %></h5>
+
+            <div class="col-md-6 col-md-offset-4" style="margin-top: 15px;">
+                <button type="submit" value="allow" class="btn btn-success"><%= translation.authoriseAllow %></button>
+                <button type="submit" value="deny" class="btn btn-danger"><%= translation.authoriseDeny %></button>
+            </div>
+            <div class="col-md-6 col-md-offset-3" style="margin-top: 25px;">
+                <%= transactionId %>
+                <%= translation.requestingAccessTo %><br/>
+
+                <ul style="margin-top: 5px;">
+
+                    <% translation.scopes.forEach(function(scope){  %>
+                    <% if (scope.accessible) { %>
+                    <li><%= scope.permission %></li>
+                    <% } else { %>
+                    <li class="inaccessible"><%= scope.permission %></li>
+                    <% } %>
+                    <% }); %>
+                </ul>
+
+            </div>
+
+            <input name="transaction_id" type="hidden" value="<%= transactionId %>">
+            <input name="scope" type="hidden" value="<%= scope %>">
+        </form>
+    </div>
+</div>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/js/bootstrap.min.js"></script>
+
+</body>
+</html>

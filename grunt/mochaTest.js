@@ -6,7 +6,7 @@ module.exports = {
     src: [
       'test/client.js',
       'test/rat.js',
-      'test/nickname.js'
+      'test/nicknameinfo.js'
     ]
   }
 }

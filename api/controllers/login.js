@@ -1,42 +1,24 @@
 'use strict'
-let Action = require('../db').Action
+const Action = require('../db').Action
+const Authentication = require('./auth')
+const Error = require('../errors')
 
-exports.get = function (request, response) {
-  request.session.legacy = 'true'
-  if (request.isUnauthenticated()) {
-    response.render('login.swig', request.query)
-  } else {
-    response.redirect('/welcome')
-  }
-}
-
-
-
-
-
-exports.post = function (request, response, next) {
-  if (request.user) {
-    if (request.session.legacy || request.query.legacy) {
-      Action.create({
-        inet: request.inet,
-        type: 'login',
-        userId: request.user.id
-      })
-      if (request.session.returnTo) {
-        response.redirect(request.session.returnTo)
-        delete request.session.returnTo
-      } else {
-        response.redirect('/welcome')
-      }
-    } else {
-      response.model.data = request.user
-      response.status(200)
-      next()
+class Login {
+  static async login (ctx, next) {
+    let user = await Authentication.passwordAuthenticate(ctx.data.email, ctx.data.password)
+    if (!user) {
+      throw Error.template('not_authenticated', 'Authentication failed')
     }
-  } else {
-    request.session.userIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress
 
-    request.session.errorCode = 401 // This could signify that the login has failed
-    response.redirect('/login?error_login=1')
+    ctx.session.userId = user.data.id
+    ctx.status = 200
+    if (ctx.session.redirect) {
+      let redirectUrl = ctx.session.redirect
+      ctx.session.redirect = null
+      ctx.redirect(redirectUrl)
+    }
+    return user
   }
 }
+
+module.exports = Login

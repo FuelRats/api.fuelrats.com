@@ -7,7 +7,7 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4
     },
-    CMDRname: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -28,6 +28,30 @@ module.exports = function (sequelize, DataTypes) {
   }, {
     paranoid: true
   })
+
+  Rat.associate = function (models) {
+    models.Rat.addScope('stats', {})
+    models.Rat.belongsTo(models.User, {
+      as: 'user',
+      foreignKey: 'userId'
+    })
+
+    models.Rat.belongsToMany(models.Rescue, {
+      as: 'rescues',
+      through: {
+        model: models.RescueRats
+      }
+    })
+
+    models.Rat.hasMany(models.Rescue, { foreignKey: 'firstLimpetId', as: 'firstLimpet' })
+
+    models.Rat.hasMany(models.Ship, {
+      foreignKey: 'ratId',
+      as: 'ships'
+    })
+
+    models.Rat.hasMany(models.Epic, { foreignKey: 'ratId', as: 'epics' })
+  }
 
   return Rat
 }

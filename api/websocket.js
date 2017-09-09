@@ -1,317 +1,215 @@
 'use strict'
-let winston = require('winston')
-let Error = require('./errors')
+const Error = require('./errors')
 
 // Import controllers
-let Token = require('./db').Token
-let User = require('./db').User
-let Rat = require('./db').Rat
-let db = require('./db').db
-let rat = require('./controllers/rat').Controller
-let Permission = require('./permission')
-let rescue = require('./controllers/rescue').Controller
-let stream = require('./controllers/stream')
-let client = require('./controllers/client').Controller
-let user = require('./controllers/user').Controller
-let nickname = require('./controllers/nicknames').Controller
-let _ = require('underscore')
+const rat = require('./controllers/rat')
+const Permission = require('./permission')
+const rescue = require('./controllers/rescue')
+const stream = require('./controllers/stream')
+const client = require('./controllers/client')
+const user = require('./controllers/user')
+const ObjectPresenter = require('./classes/Presenters').ObjectPresenter
 
-let controllers = {
+const controllers = {
   rats: {
     create: [rat.create],
-    read: [rat.read],
+    read: [rat.search],
     update: [rat.update, true],
     delete: [rat.delete, true, 'rat.delete']
   },
 
   rescues: {
     create: [rescue.create, true],
-    read: [rescue.read],
+    read: [rescue.search],
     update: [rescue.update, true],
     delete: [rescue.delete, true]
   },
 
   users: {
     create: [user.create, true],
-    read: [user.read, true, 'user.read'],
+    read: [user.search, true, 'user.read'],
     update: [user.update, true],
     delete: [user.delete, true, 'user.delete']
   },
 
   client: {
     create: [client.create, true, 'self.client.create'],
-    read: [client.read, true, 'client.read'],
+    read: [client.search, true, 'client.read'],
     update: [client.update, true, 'client.update'],
     delete: [client.delete, true, 'client.delete']
   },
 
-  nicknames: {
-    search: [nickname.search]
-  },
-
   stream: {
     subscribe: [stream.subscribe],
-    unsubscribe: [stream.unsubscribe]
+    unsubscribe: [stream.unsubscribe],
+    broadcast: [stream.broadcast]
   }
 }
 
+const apiEvents = [
+  'rescueCreated',
+  'rescueUpdated',
+  'rescueDeleted',
+  'ratCreated',
+  'ratUpdated',
+  'ratDeleted',
+  'userCreated',
+  'userUpdated',
+  'userDeleted',
+  'clientCreated',
+  'clientUpdated',
+  'clientDeleted',
+  'shipCreated',
+  'shipUpdated',
+  'shipDeleted'
+]
 
-exports.retrieveCaseInsensitiveProperty = function (propertyName, obj) {
-  if (!obj) { return null }
+class WebSocketManager {
+  constructor (socket, trafficManager) {
+    this.socket = socket
+    this.traffic = trafficManager
 
-  propertyName = propertyName.toLowerCase()
+    let _this = this
+    for (let event of apiEvents) {
+      process.on(event, function (ctx, result, permissions) {
+        _this.onEvent.call(_this, event, ctx, result, permissions)
+      })
+    }
 
-  let caseInsensitivePropertyMap = Object.keys(obj).map(function (prop) {
-    return prop.toLowerCase()
-  })
-
-  let indexOfProperty = caseInsensitivePropertyMap.indexOf(propertyName)
-
-  if (indexOfProperty !== -1) {
-    return obj[Object.keys(obj)[indexOfProperty]]
+    process.on('apiBroadcast', function (id, ctx, result) {
+      _this.onBroadcast.call(_this, id, ctx, result)
+    })
   }
-  return null
-}
 
-exports.socket = null
+  onBroadcast (id, ctx, result) {
+    let clients = this.socket.clients.filter((client) => {
+      return client.subscriptions.includes(id)
+    })
+    this.broadcast(clients, result)
+  }
 
-exports.received = function (client, requestString) {
-  let action, data, requestMeta, request
-  try {
-    request = JSON.parse(requestString)
-
-    action = exports.retrieveCaseInsensitiveProperty('action', request)
-    data = exports.retrieveCaseInsensitiveProperty('data', request)
-    requestMeta = exports.retrieveCaseInsensitiveProperty('meta', request)
-    client.websocket = exports
-
-    if (!requestMeta) { requestMeta = {} }
-    if (!data) { data = {} }
-    requestMeta.action = action
-
-    let query = _.clone(request)
-
-    if (action) {
-      if (action === 'authorisation' || action === 'authorization') {
-        exports.authorization(query, client, requestMeta)
-        return
+  onEvent (event, ctx, result, permissions = null) {
+    let clients = this.socket.clients.filter((client) => {
+      if (client.clientId !== ctx.client.clientId) {
+        return (!permissions || Permission.granted(permissions, client.user, client.scope))
       }
+      return false
+    })
+    if (!result.meta) {
+      result.meta = {}
+    }
 
-      let requestSections = action.split(':')
-      let namespace = requestSections[0].toLowerCase()
+    Object.assign(result.meta, { event })
+    this.broadcast(clients, result)
+  }
 
-      if (controllers.hasOwnProperty(namespace)) {
-        let controller = controllers[namespace]
-        let method = requestSections[1].toLowerCase()
+  async onMessage (client, request) {
+    try {
+      let { result, meta } = await this.process(client, request)
+      Object.assign(result.meta || {}, meta)
+      this.send(client, result)
+    } catch (ex) {
+      let error = ex
+      if (!error.code) {
+        error = Error.template('server_error', error)
+      }
+      this.send(client, ex)
+    }
+  }
 
-        if (method && controller[method]) {
-          let requiresAuthentication = controller[method][1] === true
-          let requiresPermission = controller[method].length > 2
+  async process (client, request) {
+    client.websocket = this
+    if (!request.action || request.action.length < 2 || !Array.isArray(request.action)) {
+      throw Error.template('missing_required_field', 'action')
+    }
 
-          if (requiresAuthentication) {
-            if (client.user) {
-              if (requiresPermission) {
-                Permission.require(controller[method][2]).then(function () {
-                  callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-                }).catch(function (error) {
-                  exports.error(client, requestMeta, [error])
-                })
-              } else {
-                callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-              }
-            } else {
-              exports.error(client, requestMeta, [Permission.authenticationError()])
-            }
-          } else {
-            callAPIMethod(controller[method][0], data, client, query, action, requestMeta)
-          }
-          return
+    let [controller, method] = request.action
+
+
+    if (controllers.hasOwnProperty(controller) === false || controllers[controller].hasOwnProperty(method) === false) {
+      throw Error.template('invalid_parameter', 'action')
+    }
+
+    let [endpoint, authenticationRequired, requiredPermissions] = controllers[controller][method]
+
+    if (!authenticationRequired || client.user) {
+      if (!requiredPermissions || Permission.require(requiredPermissions, client.user, client.scope)) {
+        let ctx = new Context(client, request)
+
+        let rateLimit = this.traffic.validateRateLimit(ctx)
+
+        let meta = Object.assign(request.meta || {}, {
+          'API-Version': 'v2.0',
+          'Rate-Limit-Limit': rateLimit.total,
+          'Rate-Limit-Remaining': rateLimit.remaining,
+          'Rate-Limit-Reset':  this.traffic.nextResetDate
+        })
+
+        let result = await endpoint(ctx)
+
+        return { result:  result, meta: meta }
+      }
+    } else if (authenticationRequired) {
+      throw Error.template('not_authenticated')
+    }
+  }
+
+  send (client, message) {
+    client.send(JSON.stringify(message))
+  }
+
+  broadcast (clients, message) {
+    for (let client of clients) {
+      this.send(client, message)
+    }
+  }
+
+  static meta (result, query = null, additionalParameters = {}) {
+    let meta = {
+      meta: {}
+    }
+    if (query) {
+      if (Array.isArray(result)) {
+        meta.meta = {
+          count: result.length,
+          limit: query._limit || null,
+          offset: query._offset || null,
         }
-
-        exports.error(client, {
-          action: action
-        }, [Error.throw('invalid_parameter', 'action')])
       } else {
-        let applicationId = exports.retrieveCaseInsensitiveProperty('applicationId', request)
-        if (!applicationId || applicationId.length === 0) {
-          exports.error(client, {
-            action: action
-          }, [Error.throw('invalid_parameter', 'applicationId')])
-          return
+        meta.meta = {
+          count: result.rows.length,
+          limit: query._limit || null,
+          offset: query._offset || null,
+          total: result.count
         }
-
-        let callbackMeta = _.extend(requestMeta, {
-          action: 'stream:broadcast',
-          originalAction: action,
-          applicationId: applicationId,
-          id: client.clientId
-        })
-
-        exports.send(client, callbackMeta, data)
-
-        let meta = _.extend(requestMeta, {
-          action: action,
-          applicationId: applicationId
-        })
-
-        let clients = exports.socket.clients.filter(function (cl) {
-          return cl.subscribedStreams.indexOf(applicationId) !== -1 && cl.clientId !== client.clientId
-        })
-
-        exports.broadcast(clients, meta, data)
-      }
-
-    } else {
-      let error = Error.missing_required_field
-
-      let meta = _.extend(requestMeta, {
-        action: 'unknown',
-        id: client.clientId
-      })
-
-      error.detail = 'action'
-      exports.error(client, meta, [error])
-    }
-  } catch (ex) {
-    if (!requestMeta) { requestMeta = {} }
-    if (request && action) {
-      if (typeof action == 'string') {
-        let error = Error.server_error
-        error.detail = ex.message
-
-        let meta = _.extend(requestMeta, {
-          action: action,
-          id: client.clientId
-        })
-
-        exports.error(client, meta, [error])
-        return
       }
     }
-    let error = Error.server_error
-    error.detail = ex.message
 
-    let meta = _.extend(requestMeta, {
-      action: 'unknown',
-      id: client.clientId
-    })
-
-    exports.error(client, meta, [error])
+    meta.meta = Object.assign(meta.meta, additionalParameters)
+    return meta
   }
 }
 
-function callAPIMethod (method, data, client, query, action, requestMeta) {
-  method.call(null, data, client, query).then(function (response) {
-    let data = response.data
-    let meta = _.extend(requestMeta, response.meta)
-    meta.action = action
+class Context {
+  constructor (client, request) {
+    this.meta = WebSocketManager.meta
 
-    exports.send(client, meta, data)
-  }, function (response) {
-    let error = response.error
-    let meta = _.extend(requestMeta, response.meta)
-    meta.action = action
+    this.inet = client.upgradeReq.headers['X-Forwarded-for'] || client.upgradeReq.connection.remoteAddress
 
-    exports.error(client, meta, [error])
-  })
-}
+    this.client = client
+    this.state = {}
+    this.state.scope = client.scope
+    this.state.user = client.user
 
-exports.send = function (client, meta, data) {
-  if (meta.hasOwnProperty('action') === false) {
-    winston.error('Missing action parameter in meta response.')
-    return
-  }
+    this.query = request
+    this.meta.action = this.query.action
+    this.data = request.data
 
-  let response = {
-    meta: meta,
-    data: data
-  }
-
-  client.send(JSON.stringify(response))
-}
-
-exports.broadcast = function (clients, meta, data) {
-  if (meta.hasOwnProperty('action') === false) {
-    winston.error('Missing action parameter in meta response.')
-    return
-  }
-
-  let response = {
-    meta: meta,
-    data: data
-  }
-
-  let responseString = JSON.stringify(response)
-  clients.forEach(function (client) {
-    client.send(responseString)
-  })
-}
-
-exports.error = function (client, meta, errors) {
-  if (meta.hasOwnProperty('action') === false) {
-    winston.error('Missing action parameter in meta response.')
-    return
-  }
-
-  if (Object.prototype.toString.call(errors) !== '[object Array]') {
-    winston.error('Provided error list was not an array')
-    return
-  }
-
-  let response = {
-    meta: meta,
-    errors: errors
-  }
-
-  client.send(JSON.stringify(response))
-}
-
-exports.authorization = function (query, client, meta) {
-  meta.action = 'authorization'
-
-  let accessToken = query.bearer
-  if (accessToken) {
-    Token.findOne({ where: {
-      value: accessToken
-    }}).then(function (token) {
-      if (!token) {
-        exports.error(client, meta, [Permission.authenticationError()])
-        return
-      }
-      User.findOne({
-        where: {
-          id: token.userId
-        },
-        attributes: {
-          include: [
-            [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-          ],
-          exclude: [
-            'nicknames',
-            'dispatch',
-            'deletedAt'
-          ]
-        },
-        include: [{
-          model: Rat,
-          as: 'rats',
-          required: false
-        }]
-      }).then(function (user) {
-        client.user = user.toJSON()
-
-        delete client.user.salt
-        delete client.user.password
-        delete client.deletedAt
-
-        exports.send(client, { action: 'authorization' }, client.user)
-      }).catch(function (error) {
-        exports.error(client, meta, [Error.throw('server_error', error)])
-      })
-    }).catch(function (error) {
-      exports.error(client, meta, [Error.throw('server_error', error)])
-    })
-  } else {
-    exports.error(client, meta, [Permission.authenticationError()])
+    delete this.query.data
+    delete this.query.meta
+    delete this.query.action
+    this.params = this.query
   }
 }
+
+module.exports = WebSocketManager

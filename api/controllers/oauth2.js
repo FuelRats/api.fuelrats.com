@@ -1,161 +1,183 @@
 'use strict'
 
-let oauth2orize = require('oauth2orize')
-let crypto = require('crypto')
-let Token = require('../db').Token
-let Client = require('../db').Client
-let Code = require('../db').Code
-let Errors = require('../errors')
-let Auth = require('./auth')
+const oauth2orize = require('oauth2orize-koa-fr')
+const crypto = require('crypto')
+const Token = require('../db').Token
+const Client = require('../db').Client
+const Code = require('../db').Code
+const Permission = require('../permission')
+const Errors = require('../errors')
+const i18next = require('i18next')
+const localisationResources = require('../../localisations.json')
+const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
+const Authentication = require('./auth')
+
+i18next.init({
+  lng: 'en',
+  resources:  localisationResources,
+})
 
 let server = oauth2orize.createServer()
 
-server.serializeClient(function (client, callback) {
-  return callback(null, client.id)
+server.serializeClient(function (client) {
+  return client.data.id
 })
 
-server.deserializeClient(function (id, callback) {
-  Client.findById(id).then(function (client) {
-    if (!client) {
-      callback(null, false)
-      return
+server.deserializeClient(async function (id) {
+  let client = await Client.findById(id)
+  if (!client) {
+    return false
+  }
+
+  return client
+})
+
+server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, ares, areq) {
+  for (let scope of areq.scope) {
+    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
+      throw Errors.template('invalid_scope', scope)
     }
+  }
 
-    callback(null, client)
-  }).catch(function (error) {
-    callback(error)
-  })
-})
-
-server.grant(oauth2orize.grant.code(function (client, redirectUri, user, ares, callback) {
-  Code.create({
+  let code = await Code.create({
     value: crypto.randomBytes(24).toString('hex'),
-    redirectUri: redirectUri
-  }).then(function (code) {
-    let associations = []
-    associations.push(code.setClient(client))
-    associations.push(code.setUser(user.id))
-
-    Promise.all(associations).then(function () {
-      callback(null, code.value)
-    }).catch(function (error) {
-      callback(error)
-    })
-  }).catch(function (error) {
-    callback(error)
+    scope: areq.scope,
+    redirectUri: redirectUri,
+    clientId: client.id,
+    userId: user.data.id
   })
+  return code.value
 }))
 
-server.grant(oauth2orize.grant.token(function (client, user, ares, callback) {
-  Token.create({
-    value: crypto.randomBytes(32).toString('hex')
-  }).then(function (token) {
-    let associations = []
-    associations.push(token.setClient(client))
-    associations.push(token.setUser(user.id))
+server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
+  for (let scope of areq.scope) {
+    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
+      throw Errors.template('invalid_scope', scope)
+    }
+  }
 
-    Promise.all(associations).then(function () {
-      callback(null, token.value)
-    }).catch(function (error) {
-      callback(error)
-    })
-  }).catch(function (error) {
-    callback(error)
+  let token = await Token.create({
+    value: crypto.randomBytes(32).toString('hex'),
+    scope: areq.scope,
+    clientId: client.id,
+    userId: user.data.id
   })
+  return token.value
 }))
 
-server.exchange(oauth2orize.exchange.code(function (client, code, redirectUri, callback) {
-  Code.findOne({ where: { value: code }}).then(function (auth) {
-    if (!auth) {
-      return callback(null, false)
-    }
+server.exchange(oauth2orize.exchange.code(async function (client, code, redirectUri) {
+  let auth = await Code.findOne({ where: { value: code }})
 
-    if (client.id !== auth.clientId) {
-      return callback(null, false)
-    }
+  if (!auth || client.data.id !== auth.clientId || redirectUri !== auth.redirectUri) {
+    return false
+  }
 
-    if (redirectUri !== auth.redirectUri) {
-      return callback(null, false)
-    }
+  auth.destroy()
 
-    auth.destroy()
-
-    Token.create({
-      value: crypto.randomBytes(32).toString('hex')
-    }).then(function (token) {
-      let associations = []
-      associations.push(token.setClient(client))
-      associations.push(token.setUser(auth.userId))
-
-      Promise.all(associations).then(function () {
-        callback(null, token.value)
-      }).catch(function (error) {
-        callback(error)
-      })
-    })
-  }).catch(function (error) {
-    callback(error)
+  let token = await Token.create({
+    scope: auth.scope,
+    value: crypto.randomBytes(32).toString('hex'),
+    clientId: client.id,
+    userId: auth.userId
   })
+  return token.value
 }))
 
 server.exchange(oauth2orize.exchange.password(
-  function (client, username, password, scope, callback) {
-    Auth.passwordAuthenticate(username, password, function (err, user) {
-      if (!user || err) {
-        callback(err)
-      }
+  async function (client, username, password) {
+    let user = await Authentication.passwordAuthenticate(username, password)
+    if (!user) {
+      return false
+    }
 
-      Token.create({
-        value: crypto.randomBytes(32).toString('hex')
-      }).then(function (token) {
-        let associations = []
-        associations.push(token.setClient(client.id))
-        associations.push(token.setUser(user.id))
-
-        Promise.all(associations).then(function () {
-          callback(null, token.value)
-        }).catch(function (error) {
-          callback(error)
-        })
-      })
+    let token = await Token.create({
+      value: crypto.randomBytes(32).toString('hex'),
+      clientId: client.data.id,
+      userId: user.data.id,
+      scope: ['*']
     })
+
+    return token.value
   }
 ))
 
-exports.authorization = [
-  function (req, res, next) {
-    if (!req.query.client_id) {
-      return next(Errors.throw('missing_required_field', 'client_id'))
-    } else if (!req.query.response_type) {
-      return next(Errors.throw('missing_required_field', 'response_type'))
+class OAuth2 {
+  static async revoke (ctx) {
+    if (!ctx.data.token) {
+      throw Errors.template('missing_required_field', 'token')
     }
-    next()
 
-  },
-  server.authorization(function (clientId, redirectUri, callback) {
-    Client.findById(clientId).then(function (client) {
-      if (!client) {
-        return callback(null, false)
-      }
-      if (client.redirectUri === null || client.redirectUri === redirectUri) {
-        return callback(null, client, redirectUri)
-      } else {
-        return callback(Errors.throw('server_error', 'redirectUri mismatch'))
-      }
-    }).catch(function (error) {
-      return callback(error)
-    })
-  }),
-  function (req, res) {
-    res.render('authorise.swig', { transactionId: req.oauth2.transactionID, user: req.user, client: req.oauth2.client })
+    let token = await Token.findOne({ where: { value: ctx.data.token } })
+    if (!token) {
+      throw Errors.template('not_found')
+    }
+    if (token.clientId !== ctx.state.client.data.id) {
+      throw Errors.template('invalid_parameter', 'token')
+    }
+
+    token.destroy()
+    return true
   }
-]
 
-exports.decision = [
-  server.decision()
-]
+  static async revokeAll (ctx) {
+    let tokens = await Token.findAll({
+      where: {
+        clientId: ctx.state.client.id
+      }
+    })
 
-exports.token = [
-  server.token(),
-  server.errorHandler()
-]
+    tokens.map((token) => {
+      token.destroy()
+    })
+
+    return true
+  }
+
+  static async authorizationValidateFields (ctx, next) {
+    if (!ctx.query.scope) {
+      return next(Errors.template('missing_required_field', 'scope'))
+    } else if (!ctx.query.client_id) {
+      return next(Errors.template('missing_required_field', 'client_id'))
+    } else if (!ctx.query.response_type) {
+      return next(Errors.template('missing_required_field', 'response_type'))
+    }
+    await next()
+  }
+
+  static async authorizationRender (ctx) {
+    let translation = {
+      requestingAccess: i18next.t('requestingAccess', { client: ctx.state.oauth2.client.data.attributes.name }),
+      requestingAccessTo: i18next.t('requestingAccessTo', { client: ctx.state.oauth2.client.data.attributes.name }),
+      authoriseTitle: i18next.t('authoriseTitle'),
+      authoriseAllow: i18next.t('authoriseAllow'),
+      authoriseDeny: i18next.t('authoriseDeny'),
+      scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.user)
+    }
+
+    await ctx.render('authorise', {
+      transactionId: ctx.state.oauth2.transactionID,
+      user: ctx.user,
+      client: ctx.state.oauth2.client,
+      translation: translation,
+      scope: ctx.state.oauth2.req.scope.join(' ')
+    })
+  }
+}
+
+OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId, redirectUri) {
+  let client = await Client.findById(clientId)
+  if (!client) {
+
+    return false
+  }
+  if (client.redirectUri === null || client.redirectUri === redirectUri) {
+    return [ClientsPresenter.render(client, {}), redirectUri]
+  } else {
+    throw Errors.template('server_error', 'redirectUri mismatch')
+  }
+})
+
+OAuth2.server = server
+
+module.exports = OAuth2
+

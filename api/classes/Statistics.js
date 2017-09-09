@@ -1,9 +1,9 @@
 'use strict'
-let Rescue = require('../db').Rescue
-let Rat = require('../db').Rat
-let User = require('../db').User
-let db = require('../db').db
-let Epic = require('../db').Epic
+const Rescue = require('../db').Rescue
+const Rat = require('../db').Rat
+const User = require('../db').User
+const db = require('../db').db
+const Epic = require('../db').Epic
 
 const notAvailableDummyId = '6ebbe087-7a92-4875-bb68-226db873d3f7'
 
@@ -49,6 +49,11 @@ class Statistics {
             },
             required: true
           }, {
+            model: Epic,
+            as: 'epics',
+            attributes: [],
+            required: false
+          }, {
             model: User,
             as: 'user',
             attributes: [],
@@ -57,11 +62,12 @@ class Statistics {
           attributes: [
             [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
             [db.fn('min', db.col('joined')), 'joined'],
+            [db.literal('array_agg(DISTINCT "rescueId")'), 'epicRescues'],
             [db.literal('array_agg(DISTINCT "CMDRname")'), 'rats'],
             [db.fn('bool_or', db.col('codeRed')), 'codeRed'],
             [db.fn('bool_or', db.col('drilledDispatch')), 'drilledDispatch']
           ],
-          group: [db.literal('CASE WHEN "Rat"."UserId" IS NULL THEN "Rat"."id" ELSE "Rat"."UserId" END')],
+          group: [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END')],
           order: [[db.fn('COUNT', 'Rescue.id'), 'DESC']]
         }).then(function (rats) {
           rats = rats.map(function (rat) {

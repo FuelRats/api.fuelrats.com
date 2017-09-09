@@ -1,62 +1,65 @@
 'use strict'
 
-let websocket = require('../websocket')
-let Error = require('../errors')
+const Error = require('../errors')
+const SubscriptionsPresenter = require('../classes/Presenters').SubscriptionsPresenter
+const CustomPresenter = require('../classes/Presenters').CustomPresenter
 
-exports.subscribe = function (data, client, query) {
-  return new Promise(function (resolve, reject) {
-    let meta = {}
-
-    let applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query)
-
-    if (applicationId && applicationId.length > 0) {
-
-      if (client.subscribedStreams.indexOf(applicationId) === -1) {
-        client.subscribedStreams.push(applicationId)
-        resolve({
-          data: client.subscribedStreams,
-          meta: meta
-        })
-      } else {
-        reject({
-          error: Error.throw('already_exists', applicationId),
-          meta: {}
-        })
-      }
-    } else {
-      reject({
-        error: Error.throw('not_found', applicationId),
-        meta: {}
-      })
+class Stream {
+  static subscribe (ctx) {
+    let applicationId = ctx.query.id
+    if (!applicationId || applicationId.length === 0) {
+      throw Error.template('missing_required_field', 'id')
     }
-  })
+
+    if (ctx.client.subscriptions.includes(applicationId)) {
+      throw Error.template('already_exists', applicationId)
+    }
+
+    ctx.client.subscriptions.push(applicationId)
+    return SubscriptionsPresenter.render(ctx.client.subscriptions.map((subscription) => {
+      return {
+        id: subscription
+      }
+    }), {})
+  }
+
+  static unsubscribe (ctx) {
+    let applicationId = ctx.query.id
+    if (!applicationId || applicationId.length === 0) {
+      throw Error.template('missing_required_field', 'id')
+    }
+
+    if (!ctx.client.subscriptions.includes(applicationId)) {
+      throw Error.template('invalid_parameter', 'id')
+    }
+
+    let subscriptionPosition = ctx.client.subscriptions.indexOf(applicationId)
+    ctx.client.subscriptions.splice(subscriptionPosition, 1)
+
+    return SubscriptionsPresenter.render(ctx.client.subscriptions.map((subscription) => {
+      return {
+        id: subscription
+      }
+    }), {})
+  }
+
+  static broadcast (ctx) {
+    let applicationId = ctx.query.id
+    if (!applicationId || applicationId.length === 0) {
+      throw Error.template('missing_required_field', 'id')
+    }
+
+    let event = ctx.query.event
+    if (!event || event.length === 0) {
+      throw Error.template('missing_required_field', 'event')
+    }
+
+    let result = CustomPresenter.render(ctx.data, {
+      event: event
+    })
+    process.emit('apiBroadcast', applicationId, ctx, result)
+    return result
+  }
 }
 
-exports.unsubscribe = function (data, client, query) {
-  return new Promise(function (resolve, reject) {
-    let meta = {}
-
-    let applicationId = websocket.retrieveCaseInsensitiveProperty('applicationId', query)
-
-    if (applicationId && applicationId.length > 0) {
-      let positionInSubscribeList = client.subscribedStreams.indexOf(applicationId)
-      if (positionInSubscribeList !== -1) {
-        client.subscribedStreams.splice(positionInSubscribeList, 1)
-        resolve({
-          data: client.subscribedStreams,
-          meta: meta
-        })
-      } else {
-        reject({
-          error: Error.throw('invalid_parameter', 'Not subscribed to this stream'),
-          meta: {}
-        })
-      }
-    } else {
-      reject({
-        error: Error.throw('invalid_parameter', 'applicationId'),
-        meta: {}
-      })
-    }
-  })
-}
+module.exports = Stream

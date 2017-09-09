@@ -1,125 +1,124 @@
 'use strict'
-let winston = require('winston')
+const Anope = require('./index')
+const Error = require('../errors')
+const { AnopeRequestCacheItem, AnopeWebhook } = require('../controllers/anope-webhook')
 
-let client = require('./index').client
-
+/**
+ * Class to manage requests to NickServ
+ * @class
+ */
 class NickServ {
+  /**
+   * Verify authentication credentials for an account
+   * @param nickname the nickname to verify the password of
+   * @param password the password to verify
+   * @returns {Promise}
+   */
   static identify (nickname, password) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('checkAuthentication', [[nickname, password]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (data.result === 'Success' && data.account !== null) {
-            resolve(data.account)
-          } else {
-            reject(data)
-          }
-        }
-      })
-    })
+    return Anope.checkAuthentication(nickname, password)
   }
 
-  static register (nickname, password, email) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', nickname, `REGISTER ${password} ${email}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (data && /Nickname .* registered/.test(data.return) === true) {
-            resolve(nickname)
-          } else {
-            reject(data.return)
-          }
-        }
-      })
-    })
+  /**
+   * Register a nickname
+   * @param nickname the nickname to register
+   * @param password the password to use for the nickname
+   * @param email the email to use for the nickname
+   * @returns {Promise.<*>}
+   */
+  static async register (nickname, password, email) {
+    AnopeWebhook.cacheRequest('ns_register', nickname)
+    let result = await Anope.command('NickServ', nickname, `REGISTER ${password} ${email}`)
+    if (result && /Nickname [A-Za-z0-9_\-\[\]\{\}\`]* registered./.test(result.return) === true) {
+      return nickname
+    } else {
+      throw Error.template('bad_request', result)
+    }
   }
 
-  static groupList (account) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', account, `GLIST ${account}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (data.return.includes('Password authentication required')) {
-            reject(data.return)
-          } else {
-            // Split into array by line breaks
-            let nicknames = data.return.split('#xA;')
+  /**
+   * Group a nickname to an existing account
+   * @param nickname The nickname to group
+   * @param account The base account to grup the nickname to
+   * @param password The password of the base account
+   * @returns {Promise.<*>}
+   */
+  static async group (nickname, account, password) {
+    AnopeWebhook.cacheRequest('ns_group', nickname, account)
+    let result = await Anope.command('NickServ', nickname, `GROUP ${account} ${password}`)
+    if (result && /You are now in the group of/.test(result.return) === true) {
 
-            // Remove column headers and footer
-            nicknames = nicknames.slice(2, nicknames.length - 2)
-
-            // Retrieve only the actual nickname from each nickname line
-            nicknames = nicknames.map(function (nickname) {
-              return nickname.split(' ')[0]
-            })
-            resolve (nicknames)
-          }
-        }
-      })
-    })
+      return nickname
+    }
   }
 
-  static drop (nickname) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', 'API', `DROP ${nickname}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (data.return.includes('has been dropped')) {
-            resolve(nickname)
-          } else {
-            reject(data.return)
-          }
-        }
-      })
+  /**
+   * List the group names of an account
+   * @param account the account nickname to get the group names form
+   * @returns {Promise.<*|Array>}
+   */
+  static async list (account) {
+    let result = await Anope.command('NickServ', account, `GLIST ${account}`)
+    if (result.return.includes('Password authentication required')) {
+      throw Error.template('not_authenticated', 'NickServ Password missing or incorrect')
+    }
+
+    let nicknames = result.return.split('#xA;')
+    // Remove column headers and footer
+    nicknames = nicknames.slice(2, nicknames.length - 2)
+
+    // Retrieve only the actual nickname from each nickname line
+    nicknames = nicknames.map(function (nickname) {
+      return nickname.split(' ')[0]
     })
+    return nicknames
   }
 
-  static info (nickname) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', nickname, `INFO ${nickname}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (data.return.includes('isn&#39;t registered')) {
-            resolve(null)
-          } else {
-            resolve(new IRCUserInfo(data.return.split('#xA;')))
-          }
-        }
-      })
-    })
+  /**
+   * Drop a registered nickname from NickServ
+   * @param nickname The nickname to drop
+   * @returns {Promise.<*>}
+   */
+  static async drop (nickname) {
+    AnopeWebhook.cacheRequest('ns_drop', nickname)
+    let result = await Anope.command('NickServ', 'API', `DROP ${nickname}`)
+    if (result.return.includes('has been dropped')) {
+      return nickname
+    }
   }
 
-  static confirm (nickname) {
-    return new Promise(function (resolve, reject) {
-      client.methodCall('command', [['NickServ', 'API', `CONFIRM ${nickname}`]], function (error, data) {
-        if (error) {
-          winston.error(error)
-          reject(error)
-        } else {
-          winston.info(data)
-          if (data.return.includes('has been confirmed')) {
-            resolve(nickname)
-          } else {
-            reject(data.return)
-          }
-        }
-      })
-    })
+  /**
+   * Get info about a registered nickname
+   * @param nickname the nickname to get information about
+   * @returns {Promise.<*>}
+   */
+  static async info (nickname) {
+    let result = await Anope.command('NickServ', nickname, `INFO ${nickname}`)
+    if (result.return.includes('isn&#39;t registered')) {
+      return null
+    }
+    return new IRCUserInfo(result.return.split('#xA;'))
+  }
+
+  /**
+   * Confirm the registration of a nickname
+   * @param nickname the nickname to confirm
+   * @returns {Promise.<*>}
+   */
+  static async confirm (nickname) {
+    let result = await Anope.command('NickServ', 'API', `CONFIRM ${nickname}`)
+    if (result.return.includes('has been confirmed')) {
+      return nickname
+    }
+  }
+
+  /**
+   * Update hostmasks, usermodes and state of a nickname on the server
+   * @param nickname the nickname to update
+   * @returns {Promise.<*>}
+   */
+  static async update (nickname) {
+    await Anope.command('NickServ', nickname, 'UPDATE')
+    return nickname
   }
 }
 

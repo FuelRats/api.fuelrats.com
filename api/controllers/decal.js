@@ -1,72 +1,42 @@
 'use strict'
 
-let Errors = require('../errors')
-let Decal = require('../classes/Decal')
-let User = require('../db').User
-let Permission = require('../permission')
+const Error = require('../errors')
+const Decal = require('../classes/Decal')
+const User = require('../db').User
+const Permission = require('../permission')
+const DecalsPresenter = require('../classes/Presenters').DecalsPresenter
 
-class HTTP {
-  static check (request, response, next) {
-    if (Object.keys(request.query).length > 0) {
-      Permission.require('user.read', request.user).then(function () {
-        User.findOne({
-          where: request.query
-        }).then(function (user) {
-          if (!user) {
-            let error = Error.throw('not_found', 'user')
-            response.model.errors.push(error)
-            response.status(error.code)
-            next()
-          }
-
-          Decal.checkEligble(user).then(function () {
-            response.model.data = {
-              eligble: true
-            }
-            response.status = 200
-            next()
-          }).catch(function (error) {
-            response.model.errors.push(error)
-            response.status(error.code)
-            next()
-          })
+class Decals {
+  static async check (ctx) {
+    if (Object.keys(ctx.query).length > 0) {
+      if (Permission.require(['user.read'], ctx.state.user, ctx.state.scope)) {
+        let user = await User.findOne({
+          where: ctx.query
         })
-      }).catch(function (error) {
-        response.model.errors.push(error)
-        response.status(error.error.code)
-        next()
-      })
-    } else {
-      Decal.checkEligble(request.user).then(function () {
-        response.model.data = {
-          eligble: true
+
+        if (!user) {
+          throw Error.template('not_found', 'user')
         }
-        response.status = 200
-        next()
-      }).catch(function (error) {
-        response.model.errors.push(error)
-        response.status(error.code)
-        next()
-      })
+
+        await Decal.checkEligble(user)
+        return {
+          eligible: true
+        }
+      }
+    } else {
+      await Decal.checkEligble(ctx.user)
+      return {
+        eligible: true
+      }
     }
   }
 
-  static redeem (request, response, next) {
-    Decal.getDecalForUser(request.user).then(function (decal) {
-      response.model.data = decal
-      response.status = 200
-      next()
-    }).catch(function (errorData) {
-      let error = Errors.throw('server_error', errorData)
-      response.model.errors.push(error.error)
-      response.status(error.error.code)
-      next()
-    })
+  static async redeem (ctx) {
+    let decal = await Decal.getDecalForUser(ctx.user)
+    return DecalsPresenter.render(decal)
   }
 }
 
 
 
-module.exports = {
-  HTTP
-}
+module.exports = Decals

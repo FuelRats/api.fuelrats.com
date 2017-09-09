@@ -1,145 +1,75 @@
 'use strict'
 
-let User = require('../db').User
-let Rat = require('../db').Rat
-let Errors = require('../errors')
-let bcrypt = require('bcrypt')
-let passport = require('passport')
-let BotServ = require('../Anope/BotServ')
+const { User, Rat, db} = require('../db')
+const Errors = require('../errors')
+const bcrypt = require('bcrypt')
+const NickServ = require('../Anope/NickServ')
+const HostServ = require('../Anope/NickServ')
+const UserQuery = require('../Query/UserQuery')
+const UserPresenter = require('../classes/Presenters').UsersPresenter
+const { POST, Request } = require('../classes/Request')
+const config = require('../../config.json')
 
+const platforms = ['pc', 'xb', 'ps']
 
-exports.get = function (request, response) {
-  response.redirect('/login')
-}
+class Register {
+  static async create (ctx, next) {
+    // let captcha = ctx.data['g-recaptcha-response']
+    // let captchaResult = await new Request(POST, {
+    //   host: 'www.google.com',
+    //   path: '/recaptcha/api/siteverify'
+    // }, {
+    //   secret: config.recaptcha.secret,
+    //   response: captcha,
+    //   remoteip: ctx.inet
+    // })
+    //
+    // if (captchaResult.body.success === false) {
+    //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
+    // }
 
-exports.post = function (request, response, next) {
-  let referer = request.get('Referer')
+    let transaction = await db.transaction()
 
-  new Promise(function (resolve, reject) {
-    let email = request.body.email
-    let platform = request.body.platform
-    let CMDRname = request.body.CMDRname
-    let password = request.body.password
+    let email = ctx.data.email
 
-    let fields = {
+    let password = await bcrypt.hash(ctx.data.password, 12)
+
+    let user = await User.create({
       email: email,
-      platform: platform,
-      CMDRname: CMDRname,
       password: password
-    }
-
-    for (let fieldName of Object.keys(fields)) {
-      let field = fields[fieldName]
-      if (!field) {
-        reject(Errors.throw('missing_required_field', fieldName))
-        return
-      }
-    }
-
-    let platforms = ['pc', 'xb', 'ps']
-
-    email = email.trim()
-    if (platforms.indexOf(platform) === -1) {
-      reject(Errors.throw('invalid_parameter', 'platform'))
-      return
-    }
-
-    if (CMDRname.indexOf('CMDR') !== -1) {
-      BotServ.say('#rattech', `[API] Attempted registration of name containing "CMDR" by ${email} has been rejected`)
-      return reject(Errors.throw('invalid_parameter', 'CMDRname'))
-    }
-
-    User.findOne({ where: {
-      email: { $iLike: email }
-    }}).then(function (user) {
-      if (user) {
-        reject(Errors.throw('already_exists', 'email'))
-        return
-      }
-
-      bcrypt.hash(password, 16, function (error, hash) {
-        User.create({
-          email: email,
-          password: hash
-        }).then(function (user) {
-          Rat.findOne({
-            where: { CMDRname: { $iLike: CMDRname } }
-          }).then(function (rat) {
-            if (rat) {
-              if (rat.UserId !== null) {
-                user.destroy()
-                reject(Errors.throw('already_exists', 'CMDRname'))
-                return
-              }
-
-              authenticateAndReturnUser(request, rat, user).then(function (user) {
-                BotServ.say('#rat-ops', `[API] A new user has been registered on fuelrats.com, email: ${user.email}, CMDR: ${rat.CMDRname}, Platform: ${rat.platform}`)
-                resolve(user)
-              }).catch(function (error) {
-                user.destroy()
-                reject(Errors.throw('server_error', error))
-              })
-            } else {
-              Rat.create({
-                CMDRname: CMDRname,
-                platform: platform
-              }).then(function (rat) {
-                authenticateAndReturnUser(request, rat, user).then(function (user) {
-                  BotServ.say('#rat-ops', `[API] A new user has been registered on fuelrats.com, email: ${user.email}, CMDR: ${rat.CMDRname}, Platform: ${rat.platform}`)
-                  resolve(user)
-                }).catch(function (error) {
-                  user.destroy()
-                  reject(Errors.throw('server_error', error))
-                })
-              }).catch(function (error) {
-                user.destroy()
-                reject(Errors.throw('server_error', error))
-              })
-            }
-          }).catch(function (error) {
-            reject(Errors.throw('server_error', error))
-          })
-        }).catch(function (error) {
-          reject(Errors.throw('server_error', error))
-        })
-      })
-
-    }).catch(function (error) {
-      reject(Errors.throw('server_error', error))
+    }, {
+      transaction: transaction
     })
-  }).then(function (user) {
-    if (referer) {
-      response.redirect('/welcome')
-    } else {
-      response.model.data = user
-      response.status = 201
-      next()
+
+    let name = ctx.data.name.replace(/CMDR/i, '')
+    let platform = ctx.data.platform
+    if (platforms.includes(platform) === false) {
+      throw Errors.template('invalid_parameter', 'platform')
     }
-  }).catch(function (error) {
-    console.log(error)
-    if (referer) {
-      response.redirect('/login?registrationError=1')
-    } else {
-      response.model.errors.push(error)
-      response.status(error.code)
-      next()
-    }
-  })
+
+    await Rat.create({
+      name: name,
+      platform: platform,
+      userId: user.id
+    }, {
+      transaction: transaction
+    })
+
+    let nickname = ctx.data.nickname
+    await NickServ.register(nickname, ctx.data.password, email)
+
+    await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
+      where: { id: user.id }
+    })
+
+    await transaction.commit()
+
+    let userQuery = new UserQuery({ id: user.id }, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    await HostServ.update(user[0])
+
+    ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
+  }
 }
 
-function authenticateAndReturnUser (req, rat, user) {
-  return new Promise(function (resolve, reject) {
-    user.addRat(rat).then(function () {
-      req.login(user, function (err) {
-        if (err) {
-          reject(Errors.throw('server_error', err))
-          return
-        }
-
-        resolve(req.user)
-      })
-    }).catch(function (error) {
-      reject(Errors.throw('server_error', error))
-    })
-  })
-}
+module.exports = Register

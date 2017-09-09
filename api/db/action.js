@@ -16,13 +16,11 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: 'login'
     }
-  }, {
-    classMethods: {
-      associate: function (models) {
-        Action.belongsTo(models.User, { as: 'user' })
-      }
-    }
   })
+
+  Action.associate = function (models) {
+    models.Action.belongsTo(models.User, { as: 'user' })
+  }
 
   return Action
 }

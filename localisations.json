@@ -1,0 +1,42 @@
+{
+  "en": {
+    "translation": {
+      "requestingAccess": "<b>{{client}}</b> is requesting access to your Fuel Rats Account",
+      "authoriseTitle": "Authorise Application",
+      "authoriseAllow": "Allow",
+      "authoriseDeny": "Deny",
+      "requestingAccessTo": "This application will be able to:",
+
+      "rescue": "rescue",
+      "rescue_plural": "rescues",
+      "client": "OAuth Client",
+      "client_plural": "OAuth Clients",
+      "rat": "rat",
+      "rat_plural": "rats",
+      "user": "user profile",
+      "user_plural": "user profiles",
+      "groups_plural": "user permissions",
+      "decal": "decal",
+      "decal_plural": "decals",
+      "ship": "ship",
+      "ship_plural": "ships",
+
+      "permissionReadAll": "View {{group}}",
+      "permissionReadAll_plural": "View all {{group}}",
+      "permissionReadOwn": "View your {{group}}",
+      "permissionReadOwn_plural": "View all your {{group}}",
+      "permissionWriteAll": "Modify {{group}}",
+      "permissionWriteAll_plural": "Modify all {{group}}",
+      "permissionWriteOwn": "Modify your {{group}}",
+      "permissionWriteOwn_plural": "Modify all your {{group}}",
+      "permissionDeleteAll": "Delete {{group}}",
+      "permissionDeleteAll_plural": "Delete all {{group}}",
+      "permissionDeleteOwn": "Delete your {{group}}",
+      "permissionDeleteOwn_plural": "Delete all your {{group}}",
+      "permissionGroupAll": "Modify user permissions",
+      "permissionGroupAll_plural": "Modify all user permissions",
+      "permissionGroupOwn": "Modify your permissions",
+      "permissionGroupOwn_plural": "Modify your permissions"
+    }
+  }
+}
