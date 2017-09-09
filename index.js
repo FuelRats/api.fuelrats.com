@@ -22,11 +22,7 @@ const uid = require('uid-safe')
 const npid = require('npid')
 
 // Import config
-const config = require('./config-example')
-
-if (fs.existsSync('./config.json')) {
-  Object.assign(config, require('./config'))
-}
+const config = require('./config')
 
 const Error = require('./api/errors')
 
