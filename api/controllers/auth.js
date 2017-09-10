@@ -117,6 +117,8 @@ class Authentication {
         ctx.state.user = bearerCheck.user
         ctx.state.scope = bearerCheck.scope
         return next()
+      } else {
+        throw Error.template('not_authenticated')
       }
     }
     await next()
