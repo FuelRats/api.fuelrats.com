@@ -10,7 +10,10 @@ if (process.env.NODE_ENV === 'testing') {
 let db = new Sequelize(config.postgres.database, config.postgres.username, config.postgres.password, {
   host: config.postgres.hostname,
   port: config.postgres.port,
-  dialect: 'postgres'
+  dialect: 'postgres',
+  pool: {
+    maxIdleTime: 10000
+  },
 })
 
 db.sync()
