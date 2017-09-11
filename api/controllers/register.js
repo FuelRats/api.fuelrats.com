@@ -30,45 +30,50 @@ class Register {
 
     let transaction = await db.transaction()
 
-    let email = ctx.data.email
+    try {
+      let email = ctx.data.email
 
-    let password = await bcrypt.hash(ctx.data.password, 12)
+      let password = await bcrypt.hash(ctx.data.password, 12)
 
-    let user = await User.create({
-      email: email,
-      password: password
-    }, {
-      transaction: transaction
-    })
+      let user = await User.create({
+        email: email,
+        password: password
+      }, {
+        transaction: transaction
+      })
 
-    let name = ctx.data.name.replace(/CMDR/i, '')
-    let platform = ctx.data.platform
-    if (platforms.includes(platform) === false) {
-      throw Errors.template('invalid_parameter', 'platform')
+      let name = ctx.data.name.replace(/CMDR/i, '')
+      let platform = ctx.data.platform
+      if (platforms.includes(platform) === false) {
+        throw Errors.template('invalid_parameter', 'platform')
+      }
+
+      await Rat.create({
+        name: name,
+        platform: platform,
+        userId: user.id
+      }, {
+        transaction: transaction
+      })
+
+      let nickname = ctx.data.nickname
+      await NickServ.register(nickname, ctx.data.password, email)
+
+      await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
+        where: { id: user.id }
+      })
+
+      await transaction.commit()
+
+      let userQuery = new UserQuery({ id: user.id }, ctx)
+      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+      await HostServ.update(user[0])
+
+      ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
+    } catch (ex) {
+      transaction.rollback()
+      throw ex
     }
-
-    await Rat.create({
-      name: name,
-      platform: platform,
-      userId: user.id
-    }, {
-      transaction: transaction
-    })
-
-    let nickname = ctx.data.nickname
-    await NickServ.register(nickname, ctx.data.password, email)
-
-    await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
-      where: { id: user.id }
-    })
-
-    await transaction.commit()
-
-    let userQuery = new UserQuery({ id: user.id }, ctx)
-    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    await HostServ.update(user[0])
-
-    ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
   }
 }
 
