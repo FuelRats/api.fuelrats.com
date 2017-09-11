@@ -3,8 +3,8 @@ const Permissions = require('./permission')
 
 const hour = 60 * 60 * 1000
 
-const allowedUnauthenticatedRequestCount = 150
-const allowedAuthenticatedRequestCount = 1000
+const allowedUnauthenticatedRequestCount = 360
+const allowedAuthenticatedRequestCount = 3600
 const allowedAdminRequestCount = 10000
 
 
