@@ -118,7 +118,7 @@ class WebSocketManager {
       if (!error.code) {
         error = Error.template('server_error', error)
       }
-      this.send(client, ex)
+      this.send(client, error)
     }
   }
 
@@ -206,7 +206,8 @@ class Context {
     this.state.scope = client.scope
     this.state.user = client.user
 
-    this.query = request
+    this.query = {}
+    Object.assign(this.query, request)
     Object.assign(this.meta, this.query)
     this.data = request.data
 
