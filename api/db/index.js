@@ -11,9 +11,10 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
   host: config.postgres.hostname,
   port: config.postgres.port,
   dialect: 'postgres',
+
   pool: {
-    maxIdleTime: 10000
-  },
+    idle: 10000
+  }
 })
 
 db.sync()
