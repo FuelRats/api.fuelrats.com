@@ -144,23 +144,20 @@ class OAuth2 {
     await next()
   }
 
-  static async authorizationRender (ctx) {
-    let translation = {
-      requestingAccess: i18next.t('requestingAccess', { client: ctx.state.oauth2.client.data.attributes.name }),
-      requestingAccessTo: i18next.t('requestingAccessTo', { client: ctx.state.oauth2.client.data.attributes.name }),
-      authoriseTitle: i18next.t('authoriseTitle'),
-      authoriseAllow: i18next.t('authoriseAllow'),
-      authoriseDeny: i18next.t('authoriseDeny'),
-      scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.user)
-    }
+  static async authorizationRender (ctx, next) {
+    let client = {}
+    Object.assign(client, ctx.state.oauth2.client)
+    delete client.secret
 
-    await ctx.render('authorise', {
+    ctx.body = {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
-      client: ctx.state.oauth2.client,
-      translation: translation,
+      client: client,
+      scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.user),
       scope: ctx.state.oauth2.req.scope.join(' ')
-    })
+    }
+
+    await next()
   }
 }
 

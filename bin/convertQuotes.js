@@ -17,7 +17,8 @@ db.sync().then(async function () {
         message: quote,
         author: null,
         createdAt: null,
-        updatedAt: null
+        updatedAt: null,
+        lastAuthor: null
       }
     })
 

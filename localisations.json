@@ -1,12 +1,6 @@
 {
   "en": {
     "translation": {
-      "requestingAccess": "<b>{{client}}</b> is requesting access to your Fuel Rats Account",
-      "authoriseTitle": "Authorise Application",
-      "authoriseAllow": "Allow",
-      "authoriseDeny": "Deny",
-      "requestingAccessTo": "This application will be able to:",
-
       "rescue": "rescue",
       "rescue_plural": "rescues",
       "client": "OAuth Client",
