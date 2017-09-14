@@ -48,3 +48,9 @@ deploy:
   script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR/ travis-deployment@cheddar.fuelrats.com:/var/www/dev.api.fuelrats.com/
   on:
     branch: develop
+
+- provider: script
+  skip_cleanup: true
+  script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR/ travis-deployment@cheddar.fuelrats.com:/var/www/api.fuelrats.com/
+  on:
+    branch: master
