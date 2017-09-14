@@ -66,14 +66,17 @@ class Permission {
   /**
    * Check whether a user has the required permissions
    * @param {string[]} permissions - The permissions to validate
-   * @param {Object} user - The user object of the user to validate
+   * @param {Object} origUser - The user object of the user to validate
    * @param {Object} scope - Optional oauth2 client object to validate
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
-  static granted (permissions, user, scope = null) {
-    if (!user) {
+  static granted (permissions, origUser, scope = null) {
+    if (!origUser) {
       return false
     }
+
+    let user = {}
+    Object.assign(user, origUser)
 
     let hasPermission = false
 
