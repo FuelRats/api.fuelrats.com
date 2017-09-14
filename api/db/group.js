@@ -29,11 +29,10 @@ module.exports = function (sequelize, DataTypes) {
   })
 
   Group.associate = function (models) {
-    models.Group.belongsToMany(models.User, {
-      as: 'users',
-      through: {
-        model: models.UserGroups
-      }
+    models.Group.hasMany(models.UserGroups)
+
+    models.Group.addScope('stats', {
+      attributes: []
     })
   }
 
