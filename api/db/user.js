@@ -217,6 +217,9 @@ module.exports = function (db, DataTypes) {
       ]
     })
 
+
+    models.User.hasMany(models.UserGroups)
+
     models.User.addScope('stats', {
       include: [
         {

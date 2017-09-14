@@ -4,6 +4,8 @@ const StatisticsQuery = require('./StatisticsQuery')
 const Rescue = require('../db').Rescue
 const User = require('../db').User
 const Rat = require('../db').Rat
+const Group = require('../db').Group
+const UserGroups = require('../db').UserGroups
 
 /**
  * A class representing a rescue query
@@ -18,6 +20,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
   constructor (params, connection) {
     super(params, connection)
     this._query.raw = true
+
     this._query.include = [
       {
         model: Rescue,
@@ -41,6 +44,12 @@ class RatsStatisticsQuery extends StatisticsQuery {
             'id',
             'name'
           ]
+        }, {
+          model: UserGroups,
+          duplicating: false,
+          required: false,
+          attributes: [
+          ]
         }],
         required: false,
         duplicating: false,
@@ -53,6 +62,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
     this._query.attributes = [
       [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'id'],
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
+      [db.literal('array_agg(DISTINCT "user->UserGroups"."GroupId")'), 'groups'],
       [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
       [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed'],
       [db.fn('COUNT', db.literal('CASE WHEN "firstLimpet"."platform" = \'pc\' THEN 1 END')), 'pc'],
@@ -60,7 +70,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
 
     this._query.attributes = this._query.attributes.concat(this.compare('firstLimpet', this.comparators))
 
-    this._query.group = [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'user.id', 'user.displayRat.id']
+    this._query.group = [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'user.id', 'user->displayRat.id']
   }
 
   /**

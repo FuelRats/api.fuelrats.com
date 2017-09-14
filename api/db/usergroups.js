@@ -19,5 +19,10 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
+  UserGroups.associate = function (models) {
+    models.UserGroups.belongsTo(models.User)
+    models.UserGroups.belongsTo(models.Group)
+  }
+
   return UserGroups
 }

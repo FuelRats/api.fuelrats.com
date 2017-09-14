@@ -71,7 +71,7 @@ class Rescues {
         let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
         let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
         let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
-        process.emit('rescueUpdated', ctx, renderedResult, ctx.data)
+        process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
         return renderedResult
       }
     } else {
@@ -203,7 +203,7 @@ class Rescues {
   }
 }
 
-process.on('rescueUpdated', (ctx, result, changedValues) => {
+process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
   if (!changedValues) {
     return
   }
