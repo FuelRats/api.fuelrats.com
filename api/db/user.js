@@ -110,7 +110,8 @@ module.exports = function (db, DataTypes) {
         ],
         exclude: [
           'nicknames',
-          'image'
+          'image',
+          'deletedAt'
         ]
       },
       include: [
