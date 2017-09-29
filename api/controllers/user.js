@@ -13,7 +13,7 @@ const gm = require('gm')
 class Users {
   static async search (ctx) {
     let userQuery = new UserQuery(ctx.query, ctx)
-    let result = await User.findAndCountAll(userQuery.toSequelize)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
