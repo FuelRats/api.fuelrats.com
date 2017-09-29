@@ -31,6 +31,16 @@ module.exports = function (sequelize, DataTypes) {
 
   Rat.associate = function (models) {
     models.Rat.addScope('stats', {})
+    models.Rat.addScope('defaultScope', {
+      model: models.Ship,
+      as: 'ships',
+      attributes: {
+        exclude: [
+          'deletedAt'
+        ]
+      }
+    })
+
     models.Rat.belongsTo(models.User, {
       as: 'user',
       foreignKey: 'userId'
