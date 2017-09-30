@@ -207,6 +207,11 @@ router.post('/ships', fields('name', 'shipType', 'ratId'), clean('shipId'), ship
 router.put('/ships/:id', clean('shipId'), ship.update)
 router.delete('/ships/:id', rat.delete)
 
+router.get('/welcome', (ctx) => {
+  ctx.redirect('https://fuelrats.com/profile')
+  ctx.status = 301
+})
+
 router.post('/login', fields('email', 'password'), login.login)
 router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
   register.create)
@@ -245,7 +250,6 @@ router.post('/reset/:token', fields('password'), reset.resetPassword)
 router.get('/decals/check', Authentication.isAuthenticated, decal.check)
 router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
 router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.update']), jiraDrill.update)
-
 
 /*
 
