@@ -10,7 +10,7 @@ const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const rescueParticipationRequirement = 10
 
 class Decal {
-  static async checkEligble (user) {
+  static async checkEligible (user) {
     let decal = await Decals.findOne({
       where: {
         userId: user.id

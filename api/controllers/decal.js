@@ -18,13 +18,13 @@ class Decals {
           throw Error.template('not_found', 'user')
         }
 
-        await Decal.checkEligble(user)
+        await Decal.checkEligible(user)
         return {
           eligible: true
         }
       }
     } else {
-      await Decal.checkEligble(ctx.user)
+      await Decal.checkEligible(ctx.user)
       return {
         eligible: true
       }
