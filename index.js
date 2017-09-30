@@ -49,7 +49,7 @@ const statistics = require('./api/controllers/statistics')
 const user = require('./api/controllers/user')
 const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
-const jiraDrill = require('./api/controllers/jira/drill').HTTP
+const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
 
 
@@ -244,6 +244,8 @@ router.post('/reset/:token', fields('password'), reset.resetPassword)
 
 router.get('/decals/check', Authentication.isAuthenticated, decal.check)
 router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
+router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.update']), jiraDrill.update)
+
 
 /*
 
@@ -253,7 +255,6 @@ router.get('/news', API.route(news.list))
 router.get('/logout', logout.post)
 router.post('/logout', logout.post)
 
-router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
