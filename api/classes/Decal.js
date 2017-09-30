@@ -90,7 +90,7 @@ function checkEligibleForOriginalDecal (user) {
           createdAt: {
             $lt: originalDecalDeadline
           },
-          successful: true
+          outcome: 'success'
         },
         model: Rescue,
         as: 'firstLimpet'
@@ -114,7 +114,7 @@ function checkEligibleForRescueDecal (user) {
           createdAt: {
             $lt: getLastMonthTurnover()
           },
-          successful: true
+          outcome: 'success'
         },
         model: Rescue,
         as: 'firstLimpet'
