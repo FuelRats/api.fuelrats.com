@@ -215,7 +215,7 @@ router.get('/profile', Authentication.isAuthenticated, Permission.required(['use
 router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
 
 router.get('/oauth2/authorize',
-  Authentication.isAuthenticatedRedirect,
+  Authentication.isAuthenticated,
   oauth2.authorizationValidateFields,
   oauth2.authorizationValidateRedirect,
   oauth2.authorizationRender

@@ -164,7 +164,6 @@ class OAuth2 {
 OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId, redirectUri) {
   let client = await Client.findById(clientId)
   if (!client) {
-
     return false
   }
   if (client.redirectUri === null || client.redirectUri === redirectUri) {
