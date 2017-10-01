@@ -24,7 +24,7 @@ class Decals {
         }
       }
     } else {
-      await Decal.checkEligible(ctx.state.user)
+      await Decal.checkEligible(ctx.state.user.data)
       return {
         eligible: true
       }
@@ -32,7 +32,7 @@ class Decals {
   }
 
   static async redeem (ctx) {
-    let decal = await Decal.getDecalForUser(ctx.state.user)
+    let decal = await Decal.getDecalForUser(ctx.state.user.data)
     return DecalsPresenter.render(decal)
   }
 }
