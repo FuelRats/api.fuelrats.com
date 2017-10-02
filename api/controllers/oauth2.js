@@ -155,7 +155,7 @@ class OAuth2 {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
       client: client,
-      scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.user),
+      scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
       scope: ctx.state.oauth2.req.scope.join(' ')
     }
 
