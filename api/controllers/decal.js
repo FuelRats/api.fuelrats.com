@@ -18,16 +18,10 @@ class Decals {
           throw Error.template('not_found', 'user')
         }
 
-        await Decal.checkEligible(user)
-        return {
-          eligible: true
-        }
+        return await Decal.checkEligible(user)
       }
     } else {
-      await Decal.checkEligible(ctx.state.user.data)
-      return {
-        eligible: true
-      }
+      return await Decal.checkEligible(ctx.state.user.data)
     }
   }
 

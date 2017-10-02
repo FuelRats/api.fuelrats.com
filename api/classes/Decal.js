@@ -34,7 +34,7 @@ class Decal {
     if (eligible && eligible.rats) {
       for (let rat of eligible.rats) {
         if (rat.firstLimpet.length >= rescueParticipationRequirement) {
-          return true
+          return { eligible: true }
         }
       }
     }
