@@ -18,21 +18,23 @@ class Decals {
           throw Error.template('not_found', 'user')
         }
 
-        await Decal.checkEligble(user)
-        return {
-          eligible: true
+        let eligible = await Decal.checkEligible(user)
+        if (eligible.id) {
+          return DecalsPresenter.render(eligible)
         }
+        return eligible
       }
     } else {
-      await Decal.checkEligble(ctx.user)
-      return {
-        eligible: true
+      let eligible = await Decal.checkEligible(ctx.state.user.data)
+      if (eligible.id) {
+        return DecalsPresenter.render(eligible)
       }
+      return eligible
     }
   }
 
   static async redeem (ctx) {
-    let decal = await Decal.getDecalForUser(ctx.user)
+    let decal = await Decal.getDecalForUser(ctx.state.user.data)
     return DecalsPresenter.render(decal)
   }
 }

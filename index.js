@@ -49,7 +49,7 @@ const statistics = require('./api/controllers/statistics')
 const user = require('./api/controllers/user')
 const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
-const jiraDrill = require('./api/controllers/jira/drill').HTTP
+const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
 
 
@@ -207,6 +207,11 @@ router.post('/ships', fields('name', 'shipType', 'ratId'), clean('shipId'), ship
 router.put('/ships/:id', clean('shipId'), ship.update)
 router.delete('/ships/:id', rat.delete)
 
+router.get('/welcome', (ctx) => {
+  ctx.redirect('https://fuelrats.com/profile')
+  ctx.status = 301
+})
+
 router.post('/login', fields('email', 'password'), login.login)
 router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
   register.create)
@@ -215,7 +220,7 @@ router.get('/profile', Authentication.isAuthenticated, Permission.required(['use
 router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
 
 router.get('/oauth2/authorize',
-  Authentication.isAuthenticatedRedirect,
+  Authentication.isAuthenticated,
   oauth2.authorizationValidateFields,
   oauth2.authorizationValidateRedirect,
   oauth2.authorizationRender
@@ -244,6 +249,7 @@ router.post('/reset/:token', fields('password'), reset.resetPassword)
 
 router.get('/decals/check', Authentication.isAuthenticated, decal.check)
 router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
+router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.update']), jiraDrill.update)
 
 /*
 
@@ -253,7 +259,6 @@ router.get('/news', API.route(news.list))
 router.get('/logout', logout.post)
 router.post('/logout', logout.post)
 
-router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
 
 
 router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)

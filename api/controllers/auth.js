@@ -132,15 +132,6 @@ class Authentication {
     }
   }
 
-  static isAuthenticatedRedirect (ctx, next) {
-    if (ctx.state.user) {
-      return next()
-    } else {
-      ctx.session.redirect = ctx.request.path
-      ctx.redirect('/login')
-    }
-  }
-
   static isWhitelisted (ctx, next) {
     if (config.whitelist.includes(ctx.inet)) {
       return next()

@@ -10,7 +10,7 @@ const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const rescueParticipationRequirement = 10
 
 class Decal {
-  static async checkEligble (user) {
+  static async checkEligible (user) {
     let decal = await Decals.findOne({
       where: {
         userId: user.id
@@ -34,7 +34,7 @@ class Decal {
     if (eligible && eligible.rats) {
       for (let rat of eligible.rats) {
         if (rat.firstLimpet.length >= rescueParticipationRequirement) {
-          return true
+          return { eligible: true }
         }
       }
     }
@@ -42,8 +42,8 @@ class Decal {
   }
 
   static async getDecalForUser (user) {
-    let decalEligible = await Decal.checkEligble(user)
-    if (decalEligible === true) {
+    let decalEligible = await Decal.checkEligible(user)
+    if (decalEligible) {
       let decal = await Decal.redeem(user, 'Rescues')
       if (!decal) {
         throw('Could not find decal')
@@ -90,7 +90,7 @@ function checkEligibleForOriginalDecal (user) {
           createdAt: {
             $lt: originalDecalDeadline
           },
-          successful: true
+          outcome: 'success'
         },
         model: Rescue,
         as: 'firstLimpet'
@@ -114,7 +114,7 @@ function checkEligibleForRescueDecal (user) {
           createdAt: {
             $lt: getLastMonthTurnover()
           },
-          successful: true
+          outcome: 'success'
         },
         model: Rescue,
         as: 'firstLimpet'
