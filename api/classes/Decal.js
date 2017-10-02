@@ -42,7 +42,7 @@ class Decal {
   }
 
   static async getDecalForUser (user) {
-    let decalEligible = await Decal.checkEligble(user)
+    let decalEligible = await Decal.checkEligible(user)
     if (decalEligible === true) {
       let decal = await Decal.redeem(user, 'Rescues')
       if (!decal) {
