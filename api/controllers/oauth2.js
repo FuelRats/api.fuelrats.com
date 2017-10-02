@@ -39,6 +39,8 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
     }
   }
 
+  redirectUri = redirectUri || client.redirectUri
+
   let code = await Code.create({
     value: crypto.randomBytes(24).toString('hex'),
     scope: areq.scope,
@@ -166,7 +168,8 @@ OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId
   if (!client) {
     return false
   }
-  if (client.redirectUri === null || client.redirectUri === redirectUri) {
+  if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
+    redirectUri = redirectUri || client.redirectUri
     return [ClientsPresenter.render(client, {}), redirectUri]
   } else {
     throw Errors.template('server_error', 'redirectUri mismatch')
