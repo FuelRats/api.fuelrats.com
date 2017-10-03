@@ -79,7 +79,7 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
   let token = await Token.create({
     scope: auth.scope,
     value: crypto.randomBytes(32).toString('hex'),
-    clientId: client.id,
+    clientId: client.data.id,
     userId: auth.userId
   })
   return token.value

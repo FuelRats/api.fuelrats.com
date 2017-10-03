@@ -99,7 +99,6 @@ class Authentication {
     if (clientId) {
       ctx.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
       ctx.state.user = ctx.state.client
-      return next()
     }
 
     if (ctx.session.userId) {

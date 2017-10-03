@@ -9,6 +9,7 @@ const stream = require('./controllers/stream')
 const client = require('./controllers/client')
 const user = require('./controllers/user')
 const profile = require('./controllers/profile')
+const version = require('./controllers/version')
 const ObjectPresenter = require('./classes/Presenters').ObjectPresenter
 
 const controllers = {
@@ -45,6 +46,10 @@ const controllers = {
     subscribe: [stream.subscribe],
     unsubscribe: [stream.unsubscribe],
     broadcast: [stream.broadcast]
+  },
+
+  version: {
+    read: [version.read]
   }
 }
 
@@ -63,7 +68,8 @@ const apiEvents = [
   'clientDeleted',
   'shipCreated',
   'shipUpdated',
-  'shipDeleted'
+  'shipDeleted',
+  'connection'
 ]
 
 class WebSocketManager {
@@ -120,6 +126,23 @@ class WebSocketManager {
       }
       this.send(client, error)
     }
+  }
+
+  async onConnection (client) {
+    let ctx = new Context(client, {})
+    let result = await version.read(ctx)
+    let meta = {
+      event: 'connection'
+    }
+
+    let rateLimit = this.traffic.validateRateLimit(ctx, false)
+    Object.assign(meta, {
+      'API-Version': 'v2.0',
+      'Rate-Limit-Limit': rateLimit.total,
+      'Rate-Limit-Remaining': rateLimit.remaining,
+      'Rate-Limit-Reset':  this.traffic.nextResetDate
+    })
+    this.send(client, { result:  result.data, meta: meta })
   }
 
   async process (client, request) {
