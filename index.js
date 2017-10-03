@@ -318,6 +318,8 @@ wss.on('connection', async function connection (client) {
     }
   }
 
+  websocketManager.onConnection(client)
+
   client.on('message', (message) => {
     client.websocket = wss
     let request = JSON.parse(message)
