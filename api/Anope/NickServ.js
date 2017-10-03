@@ -109,6 +109,8 @@ class NickServ {
     let result = await Anope.command('NickServ', 'API', `CONFIRM ${nickname}`)
     if (result.return.includes('has been confirmed')) {
       return nickname
+    } else {
+      throw Error.template('bad_request', result)
     }
   }
 
