@@ -102,7 +102,7 @@ function getIRCSafeName (rat) {
 
 function getHighestPriorityGroup (user) {
   let groups = user.included.filter((include) => {
-    return include.type === 'groups'
+    return include.type === 'groups' && include.attributes.vhost
   })
 
   let defaultGroup = Permissions.groups.find((group) => {
