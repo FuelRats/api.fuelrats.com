@@ -50,7 +50,7 @@ class Nicknames {
     })
 
     await HostServ.update(ctx.state.user)
-    return ctx.data.nickname
+    return true
   }
 
   static async connect (ctx) {
@@ -80,7 +80,7 @@ class Nicknames {
 
 
     await HostServ.update(ctx.state.user)
-    return ctx.data.nickname
+    return true
   }
 
   static async search (ctx) {
