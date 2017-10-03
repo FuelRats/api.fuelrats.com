@@ -10,7 +10,13 @@ const sslRootCAs = require('ssl-root-cas/latest')
 sslRootCAs.inject()
 
 const anopeXMLRPCUrl = config.xmlrpc
-const client = xmlrpc.createSecureClient(anopeXMLRPCUrl)
+
+let client = null
+if (config.xmlrpc.insecure) {
+  client = xmlrpc.createClient(anopeXMLRPCUrl)
+} else {
+  client = xmlrpc.createSecureClient(anopeXMLRPCUrl)
+}
 
 /**
  * Anope XMLRPC connection client
