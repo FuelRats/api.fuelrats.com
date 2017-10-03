@@ -5,6 +5,7 @@ module.exports = {
     'domain': process.env.FRAPI_COOKIE_DOMAIN || 'localhost',
     'secret': process.env.FRAPI_COOKIE_SECRET || 'oUAAAAAMkdpS2l6E'
   },
+  'xmlrpc': process.env.FRAPI_XMLRPC || 'https://irc.eu.fuelrats.com:6080/xmlrpc',
   'hostname': process.env.FRAPI_HOSTNAME || 'localhost',
   'port': process.env.FRAPI_PORT || 8082,
   'proxyEnabled': process.env.FRAPI_PROXY_ENABLED || false,
