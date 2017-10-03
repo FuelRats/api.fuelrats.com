@@ -9,7 +9,7 @@ const sslRootCAs = require('ssl-root-cas/latest')
   .addFile(__dirname + '/../../ca/lets-encrypt-x4-cross-signed.pem')
 sslRootCAs.inject()
 
-const anopeXMLRPCUrl = config.xmlrpc
+const anopeXMLRPCUrl = config.xmlrpc.url
 
 let client = null
 if (config.xmlrpc.insecure) {
