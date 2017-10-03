@@ -1,4 +1,5 @@
 'use strict'
+let config = require('../../config')
 
 const xmlrpc = require('homematic-xmlrpc')
 const sslRootCAs = require('ssl-root-cas/latest')
@@ -8,8 +9,14 @@ const sslRootCAs = require('ssl-root-cas/latest')
   .addFile(__dirname + '/../../ca/lets-encrypt-x4-cross-signed.pem')
 sslRootCAs.inject()
 
-const anopeXMLRPCUrl = 'https://irc.eu.fuelrats.com:6080/xmlrpc'
-const client = xmlrpc.createSecureClient(anopeXMLRPCUrl)
+const anopeXMLRPCUrl = config.xmlrpc.url
+
+let client = null
+if (config.xmlrpc.insecure) {
+  client = xmlrpc.createClient(anopeXMLRPCUrl)
+} else {
+  client = xmlrpc.createSecureClient(anopeXMLRPCUrl)
+}
 
 /**
  * Anope XMLRPC connection client

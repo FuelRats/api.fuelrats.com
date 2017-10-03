@@ -46,8 +46,9 @@ class NickServ {
     AnopeWebhook.cacheRequest('ns_group', nickname, account)
     let result = await Anope.command('NickServ', nickname, `GROUP ${account} ${password}`)
     if (result && /You are now in the group of/.test(result.return) === true) {
-
       return nickname
+    } else {
+      throw Error.template('bad_request', result)
     }
   }
 
@@ -108,6 +109,8 @@ class NickServ {
     let result = await Anope.command('NickServ', 'API', `CONFIRM ${nickname}`)
     if (result.return.includes('has been confirmed')) {
       return nickname
+    } else {
+      throw Error.template('bad_request', result)
     }
   }
 

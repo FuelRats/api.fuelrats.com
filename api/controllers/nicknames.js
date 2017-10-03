@@ -43,14 +43,14 @@ class Nicknames {
       await NickServ.confirm(ctx.data.nickname)
     }
 
-    nicknames.push(ctx.data.nickname)
+    nicknames = await NickServ.list(ctx.data.nickname)
 
     await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
       where: { id: ctx.state.user.data.id }
     })
 
     await HostServ.update(ctx.state.user)
-    return ctx.data.nickname
+    return true
   }
 
   static async connect (ctx) {
@@ -72,7 +72,7 @@ class Nicknames {
       await NickServ.group(ctx.data.nickname, nicknames[0], ctx.data.password)
     }
 
-    nicknames.push(ctx.data.nickname)
+    nicknames = await NickServ.list(ctx.data.nickname)
 
     await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
       where: { id: ctx.state.user.data.id }
@@ -80,7 +80,7 @@ class Nicknames {
 
 
     await HostServ.update(ctx.state.user)
-    return ctx.data.nickname
+    return true
   }
 
   static async search (ctx) {
