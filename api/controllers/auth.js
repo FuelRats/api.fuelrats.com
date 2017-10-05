@@ -94,7 +94,7 @@ class Authentication {
     return false
   }
 
-  static async authenticate (ctx, next) {
+  static async authenticate (ctx) {
     let [ clientId, clientSecret ] = getBasicAuth(ctx)
     if (clientId) {
       ctx.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
@@ -105,7 +105,7 @@ class Authentication {
       let user = await User.scope('internal').findOne({where: { id: ctx.session.userId }})
       if (user) {
         ctx.state.user = UsersPresenter.render(user, {})
-        return next()
+        return true
       }
     }
 
@@ -115,12 +115,12 @@ class Authentication {
       if (bearerCheck) {
         ctx.state.user = bearerCheck.user
         ctx.state.scope = bearerCheck.scope
-        return next()
+        return true
       } else {
         throw Error.template('not_authenticated')
       }
     }
-    await next()
+    return false
   }
 
   static isAuthenticated (ctx, next) {

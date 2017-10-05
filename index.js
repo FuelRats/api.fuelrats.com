@@ -100,12 +100,12 @@ app.use(async function (ctx, next) {
   await next()
 })
 
-app.use(Authentication.authenticate)
-
 const traffic = new TrafficControl()
 
 app.use(async (ctx, next) => {
   try {
+    await Authentication.authenticate(ctx)
+
     let rateLimit = traffic.validateRateLimit(ctx)
 
     ctx.set('X-API-Version', '2.0')
