@@ -181,11 +181,11 @@ router.get('/users', Authentication.isAuthenticated, Permission.required(['user.
 router.get('/users/:id', Authentication.isAuthenticated, user.findById)
 router.get('/users/image/:id', user.image)
 router.post('/users', Authentication.isAuthenticated, user.create)
-router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
 router.put('/users/setpassword', Authentication.isAuthenticated, user.setpassword)
 router.post('/users/image/:id', Authentication.isAuthenticated, user.setimage)
 router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
   Permission.required(['user.write']), user.updatevirtualhost)
+router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
 router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
 
 router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, nicknames.info)
@@ -322,8 +322,12 @@ wss.on('connection', async function connection (client) {
 
   client.on('message', (message) => {
     client.websocket = wss
-    let request = JSON.parse(message)
-    websocketManager.onMessage(client, request)
+    try {
+      let request = JSON.parse(message)
+      websocketManager.onMessage(client, request)
+    } catch (ex) {
+      logger.info('Failed to parse incoming websocket message')
+    }
   })
 })
 

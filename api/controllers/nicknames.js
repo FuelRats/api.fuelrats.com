@@ -24,6 +24,10 @@ class Nicknames {
   }
 
   static async register (ctx) {
+    if (Permission.isAdmin(ctx.state.user)) {
+      throw Error.template('operation_failed', 'Admin nicknames cannot be registered')
+    }
+
     let fields = ['nickname', 'password']
     for (let field of fields) {
       if (!ctx.data[field]) {
