@@ -120,6 +120,20 @@ class Permission {
   }
 
   /**
+   * Returns whether a given user is an administrator
+   * @param user The user to check
+   * @returns {boolean} Whether the user is an administrator
+   */
+  static isAdmin (user) {
+    return user.included.some((include => {
+      if (include.type === 'groups') {
+        return include.attributes.isAdministrator
+      }
+      return false
+    }))
+  }
+
+  /**
    * Get the available permissions/oauth scopes
    * @returns [Object]
    */
