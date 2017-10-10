@@ -322,8 +322,12 @@ wss.on('connection', async function connection (client) {
 
   client.on('message', (message) => {
     client.websocket = wss
-    let request = JSON.parse(message)
-    websocketManager.onMessage(client, request)
+    try {
+      let request = JSON.parse(message)
+      websocketManager.onMessage(client, request)
+    } catch (ex) {
+      logger.info('Failed to parse incoming websocket message')
+    }
   })
 })
 
