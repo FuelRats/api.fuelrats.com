@@ -52,6 +52,7 @@ const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
 
+const db = require('./api/db').db
 
 try {
   npid.remove('api.pid')
@@ -331,12 +332,15 @@ wss.on('connection', async function connection (client) {
   })
 })
 
-server.listen(port, config.hostname, (error) => {
-  if (error) {
-
-  }
-  logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
-})
+// only listen once the DB is sync'd
+db.sync().then( () => {
+  server.listen(port, config.hostname, (error) => {
+    if (error) {
+  
+    }
+    logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
+  })
+}).catch(logger.error)
 
 function censor (obj) {
   let censoredObj = {}

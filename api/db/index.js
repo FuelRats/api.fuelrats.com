@@ -17,7 +17,9 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
   }
 })
 
-db.sync()
+// we should be exposing db.sync() so the app can wait for
+// the DB to be ready before listening
+//db.sync()
 
 let models = {
   db
