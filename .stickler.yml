@@ -1,5 +1,6 @@
 linters:
-  csslint: {  }
+    eslint:
+        config: './eslintrc.json'
   shellcheck:
     shell: bash
 files:
