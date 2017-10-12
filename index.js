@@ -15,6 +15,7 @@ const http = require('http')
 const ws = require('ws')
 const { URL } = require('url')
 const logger = require('./api/logger')
+const { promisify } = require('util');
 
 const fs = require('fs')
 const Permission = require('./api/permission')
@@ -372,12 +373,9 @@ function clean (...cleanFields) {
 (async function startServer() {
   try {
     await db.sync()
-    server.listen(port, config.hostname, (error) => {
-      if (error) {
-        return logger.error(error)
-      }
-      logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
-    })
+    const listen = promisify(server.listen.bind(server))
+    await listen(port, config.hostname)
+    logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
   } catch(error) {
     logger.error(error)
   }
