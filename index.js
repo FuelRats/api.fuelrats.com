@@ -332,16 +332,6 @@ wss.on('connection', async function connection (client) {
   })
 })
 
-// only listen once the DB is sync'd
-db.sync().then( () => {
-  server.listen(port, config.hostname, (error) => {
-    if (error) {
-  
-    }
-    logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
-  })
-}).catch(logger.error)
-
 function censor (obj) {
   let censoredObj = {}
   Object.assign(censoredObj, obj)
@@ -378,3 +368,17 @@ function clean (...cleanFields) {
     await next()
   }
 }
+
+(async function startServer() {
+  try {
+    await db.sync()
+    server.listen(port, config.hostname, (error) => {
+      if (error) {
+        return logger.error(error)
+      }
+      logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
+    })
+  } catch(error) {
+    logger.error(error)
+  }
+})()

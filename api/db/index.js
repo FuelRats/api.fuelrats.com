@@ -17,8 +17,6 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
   }
 })
 
-//db.sync()
-
 let models = {
   db
 }
