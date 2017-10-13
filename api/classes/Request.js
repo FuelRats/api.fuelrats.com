@@ -67,7 +67,7 @@ class Request {
       let options = {
         host: config.hostname,
         path: '',
-        port: 8080
+        port: config.port
       }
 
       Object.assign(options, overrideOptions)
@@ -108,7 +108,7 @@ class Request {
     return new Promise(function (resolve) {
       let options = {
         host: config.hostname,
-        port: 8080,
+        port: config.port,
         path: '/',
         method: 'POST',
         headers: {
