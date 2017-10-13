@@ -41,8 +41,8 @@ module.exports = {
         path: '/login',
         insecure: true
       }, {
-        email: db.user.admin.email,
-        password: db.user.admin.password
+        email: db.user.test.email,
+        password: db.user.test.password
       })
   
       test.strictEqual(post.response.statusCode, 200)
