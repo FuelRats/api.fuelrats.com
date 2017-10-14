@@ -15,7 +15,7 @@ const http = require('http')
 const ws = require('ws')
 const { URL } = require('url')
 const logger = require('./api/logger')
-const { promisify } = require('util');
+const { promisify } = require('util')
 
 const fs = require('fs')
 const Permission = require('./api/permission')
@@ -370,7 +370,7 @@ function clean (...cleanFields) {
   }
 }
 
-(async function startServer() {
+(async function startServer () {
   try {
     await db.sync()
     const listen = promisify(server.listen.bind(server))
@@ -380,3 +380,6 @@ function clean (...cleanFields) {
     logger.error(error)
   }
 })()
+
+// allow launch of app from unit tests
+module.exports = server

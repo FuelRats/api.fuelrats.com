@@ -5,6 +5,7 @@ process.env.NODE_ENV = 'testing'
 
 const DB = require('../../../api/db')
 const db = DB.db
+db.options.logging = false
 const User = DB.User
 const Group = DB.Group
 
@@ -38,10 +39,10 @@ async function createUser (user) {
     email: user.email,
     password: user.hash,
     nicknames: db.literal(nicknames)
-  }, { logging: false })
+  })
 
   if(user.groups.length) {
-    await testUser.addGroups(user.groups.map(g => group[g]), { logging: false })
+    await testUser.addGroups(user.groups.map(g => group[g]))
   }
     
   return testUser
@@ -51,7 +52,7 @@ async function createUser (user) {
 async function init () {
 
   // clear out the database
-  await db.sync({ force: true, logging: false })
+  await db.sync({ force: true })
 
   // create all the groups
   group.default = await Group.create({
@@ -71,7 +72,7 @@ async function init () {
       'user.read.me',
       'user.write.me'
     ]
-  }, { logging: false })
+  })
 
   group.rat = await Group.create({
     id: 'rat',
@@ -79,7 +80,7 @@ async function init () {
     isAdministrator: false,
     priority: 10,
     permissions: []
-  }, { logging: false })
+  })
 
   group.dispatch = await Group.create({
     id: 'dispatch',
@@ -87,7 +88,7 @@ async function init () {
     isAdministrator: false,
     priority: 10,
     permissions: []
-  }, { logging: false })
+  })
 
   group.overseer = await Group.create({
     id: 'overseer',
@@ -99,7 +100,7 @@ async function init () {
       'rat.write',
       'rescue.delete'
     ]
-  }, { logging: false })
+  })
 
   group.moderator = await Group.create({
     id: 'moderator',
@@ -114,7 +115,7 @@ async function init () {
       'client.read',
       'rescue.delete'
     ]
-  }, { logging: false })
+  })
 
   group.netadmin = await Group.create({
     id: 'netadmin',
@@ -137,7 +138,7 @@ async function init () {
       'client.write',
       'client.delete'
     ]
-  }, { logging: false })
+  })
 
   group.admin = await Group.create({
     id: 'admin',
@@ -160,7 +161,7 @@ async function init () {
       'client.write',
       'client.delete'
     ]
-  }, { logging: false })
+  })
 
   await createUser(exports.user.admin)
   await createUser(exports.user.test)

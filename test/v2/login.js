@@ -2,11 +2,13 @@
 const { GET, POST, Request } = require('../../api/classes/Request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
+const app = require('./support/app')
 
 module.exports = {
 
   setUp: async function (test) {
     await db.init()
+    await app.init()
     test()
   },
 

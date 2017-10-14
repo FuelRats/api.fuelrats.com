@@ -114,10 +114,11 @@ $RECYCLE.BIN/
 
 views/docs.hbs
 
-.eslintrc.json
-
 static/style.min.css
 bin/testinfo.json
 .idea/
 js/
 static/fonts/
+
+## VSCode
+.vscode
