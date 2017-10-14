@@ -88,6 +88,7 @@
     "node": "6.4.3"
   },
   "devDependencies": {
-    "grunt-contrib-nodeunit": "^1.0.0"
+    "grunt-contrib-nodeunit": "^1.0.0",
+    "validator": "^9.0.0"
   }
 }
