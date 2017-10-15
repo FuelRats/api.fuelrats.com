@@ -23,3 +23,4 @@ default:
 test:
   description: Run the tests
   tasks:
+  - 'nodeunit:v2'

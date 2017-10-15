@@ -24,8 +24,8 @@ services:
 before_script:
 - psql -c 'create database fuelratstest;' -U postgres
 - psql -c 'create extension citext;' -U postgres fuelratstest
-- npm install webpack@^2.1.0-beta
-- npm install -g grunt-cli
+- psql -c 'CREATE USER fuelrats;' -U postgres
+- psql -c "ALTER USER fuelrats PASSWORD 'fuelrats';" -U postgres
 notifications:
   irc:
     on_success: always
