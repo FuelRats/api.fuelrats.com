@@ -18,6 +18,7 @@ const http = require('http')
 const ws = require('ws')
 const { URL } = require('url')
 const logger = require('./api/logger')
+const { promisify } = require('util')
 
 const Permission = require('./api/permission')
 const uid = require('uid-safe')
@@ -48,6 +49,7 @@ const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
+const db = require('./api/db').db
 
 try {
   npid.remove('api.pid')
@@ -326,10 +328,6 @@ wss.on('connection', async function connection (client) {
   })
 })
 
-server.listen(port, config.hostname, () => {
-  logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
-})
-
 function censor (obj) {
   let censoredObj = {}
   Object.assign(censoredObj, obj)
@@ -366,3 +364,17 @@ function clean (...cleanFields) {
     await next()
   }
 }
+
+(async function startServer () {
+  try {
+    await db.sync()
+    const listen = promisify(server.listen.bind(server))
+    await listen(port, config.hostname)
+    logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
+  } catch(error) {
+    logger.error(error)
+  }
+})()
+
+// allow launch of app from unit tests
+module.exports = server

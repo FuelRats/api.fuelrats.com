@@ -3,7 +3,7 @@ linters:
     config: './eslintrc.json'
   shellcheck:
     shell: bash
-  files:
-    ignore:
-      - 'bower_components/*'
-      - 'node_modules/*'
+files:
+  ignore:
+    - 'bower_components/*'
+    - 'node_modules/*'
