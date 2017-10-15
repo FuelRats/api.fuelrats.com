@@ -1,24 +1,18 @@
 'use strict'
 
-// hacky way to stop the app ogging
+const { pick } = require('underscore')
+
+// hacky way to stop the app logging
 const config = require('../../../config')
 config.loggly = false
 
 // gag ssl-root-cas
 // gotta be a better way...
-let pconsole = {
-  log: console.log, // eslint-disable-line no-console
-  info: console.info, // eslint-disable-line no-console
-  warn: console.warn // eslint-disable-line no-console
-}
-Object.assign(console, {
-  log: () => {},
-  info: () => {},
-  warn: () => {}
-})
-
+const cm = ['log', 'info', 'warn', 'error']
+const pc = pick(console, cm)
+cm.reduce((n, v) => { n[v] = () => {}; return n }, console)
 require('ssl-root-cas/latest')
-Object.assign(console, pconsole)
+Object.assign(console, pc)
 
 let app
 
