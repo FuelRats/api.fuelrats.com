@@ -5,9 +5,11 @@ const Permission = require('../permission')
 const Errors = require('../errors')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
-const BotServ = require('../Anope/BotServ')
 const ClientQuery = require('../Query/ClientQuery')
 const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
+
+const CLIENT_SECRET_LENGTH = 32
+const BCRYPT_ROUNDS_COUNT = 12
 
 class Clients {
   static async search (ctx) {
@@ -31,8 +33,8 @@ class Clients {
   }
 
   static async create (ctx) {
-    let secret = crypto.randomBytes(32).toString('hex')
-    let encryptedSecret = await bcrypt.hash(secret, 12)
+    let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
+    let encryptedSecret = await bcrypt.hash(secret, BCRYPT_ROUNDS_COUNT)
 
     ctx.data = Object.assign(ctx.data, {
       secret: encryptedSecret,

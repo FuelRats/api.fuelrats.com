@@ -18,6 +18,10 @@ class AnopeWebhook {
 
         case 'ns_group':
           console.log('group', ctx.data.user, ctx.data.account)
+          break
+
+        default:
+          break
       }
     }
     return true

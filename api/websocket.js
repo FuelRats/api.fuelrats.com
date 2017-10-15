@@ -1,4 +1,7 @@
 'use strict'
+
+const MIN_ACTION_LENGTH = 2
+
 const Error = require('./errors')
 
 // Import controllers
@@ -10,7 +13,6 @@ const client = require('./controllers/client')
 const user = require('./controllers/user')
 const profile = require('./controllers/profile')
 const version = require('./controllers/version')
-const ObjectPresenter = require('./classes/Presenters').ObjectPresenter
 
 const controllers = {
   rats: {
@@ -147,7 +149,7 @@ class WebSocketManager {
 
   async process (client, request) {
     client.websocket = this
-    if (!request.action || request.action.length < 2 || !Array.isArray(request.action)) {
+    if (!request.action || request.action.length < MIN_ACTION_LENGTH || !Array.isArray(request.action)) {
       throw Error.template('missing_required_field', 'action')
     }
 
@@ -182,7 +184,7 @@ class WebSocketManager {
     }
   }
 
-  send (client, message) {
+  static send (client, message) {
     client.send(JSON.stringify(message))
   }
 

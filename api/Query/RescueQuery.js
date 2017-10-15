@@ -66,6 +66,7 @@ class RescueQuery extends Query {
         required: false
       },
       {
+        where: epics,
         model: Epic,
         as: 'epics',
         required: false

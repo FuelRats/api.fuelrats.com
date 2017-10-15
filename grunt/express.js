@@ -1,12 +1,11 @@
-var config, fs
+'use strict'
+const fs = require('fs')
 
-fs = require( 'fs' )
+let config
 
 // Import config
-if ( fs.existsSync( '../config.json' ) ) {
-  config = require( '../config' )
-} else {
-  config = require( '../config-example' )
+if (fs.existsSync('../config.json')) {
+  config = require('../config')
 }
 
 module.exports = {

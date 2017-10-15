@@ -1,5 +1,8 @@
 'use strict'
 
+const SERVER_ERROR_CODE = 500
+const WEBSOCKET_IDENTIFIER_ROUNDS = 16
+
 // IMPORT
 // =============================================================================
 const Koa = require('koa')
@@ -16,7 +19,6 @@ const ws = require('ws')
 const { URL } = require('url')
 const logger = require('./api/logger')
 
-const fs = require('fs')
 const Permission = require('./api/permission')
 const uid = require('uid-safe')
 const npid = require('npid')
@@ -31,12 +33,7 @@ const Error = require('./api/errors')
 const Authentication = require('./api/controllers/auth')
 const client = require('./api/controllers/client')
 const decal = require('./api/controllers/decal')
-const irc = require('./api/controllers/irc').HTTP
-const leaderboard = require('./api/controllers/leaderboard')
 const login = require('./api/controllers/login')
-const ssologin = require('./api/controllers/ssologin')
-const logout = require('./api/controllers/logout')
-const news = require('./api/controllers/news')
 const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
 const profile = require('./api/controllers/profile')
@@ -51,7 +48,6 @@ const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
-
 
 try {
   npid.remove('api.pid')
@@ -81,7 +77,6 @@ let port = config.port || process.env.PORT
 app.use(async function (ctx, next) {
   ctx.data = ctx.request.body
   ctx.meta = WebSocketManager.meta
-  ctx.requireFields = WebSocketManager.requireFields
   ctx.client = {}
 
   let query = ctx.query
@@ -111,7 +106,7 @@ app.use(async (ctx, next) => {
     ctx.set('X-API-Version', '2.0')
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
-    ctx.set('X-Rate-Limit-Reset', traffic.nextResetDate)
+    ctx.set('X-Rate-Limit-Reset', TrafficControl.nextResetDate)
 
     logger.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
       'ip': ctx.inet,
@@ -143,7 +138,7 @@ app.use(async (ctx, next) => {
     }
 
     ctx.status = error.code
-    if (error.code === 500) {
+    if (error.code === SERVER_ERROR_CODE) {
       logger.error(error)
       ctx.app.emit('error', ex, ctx)
     }
@@ -306,7 +301,7 @@ const websocketManager = new WebSocketManager(wss, traffic)
 
 wss.on('connection', async function connection (client) {
   let url = new URL(`http://localhost:8082${client.upgradeReq.url}`)
-  client.clientId = uid.sync(16)
+  client.clientId = uid.sync(WEBSOCKET_IDENTIFIER_ROUNDS)
   client.subscriptions = []
 
   let bearer = url.searchParams.get('bearer')
@@ -331,10 +326,7 @@ wss.on('connection', async function connection (client) {
   })
 })
 
-server.listen(port, config.hostname, (error) => {
-  if (error) {
-
-  }
+server.listen(port, config.hostname, () => {
   logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
 })
 

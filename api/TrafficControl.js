@@ -1,7 +1,10 @@
 'use strict'
 const Permissions = require('./permission')
+const SECONDS = 60
+const HOUR = 60
+const MS_TO_SECONDS = 1000
 
-const hour = 60 * 60 * 1000
+const HOUR_TIMER = SECONDS * HOUR * MS_TO_SECONDS
 
 const allowedUnauthenticatedRequestCount = 360
 const allowedAuthenticatedRequestCount = 3600
@@ -78,8 +81,8 @@ class TrafficControl {
    * Get the next time all rate limits will be reset (The next full hour)
    * @returns {Date} A date object containing the next time all rate limits will be reset
    */
-  get nextResetDate () {
-    return new Date(Math.ceil(new Date().getTime() / hour) * hour)
+  static get nextResetDate () {
+    return new Date(Math.ceil(new Date().getTime() / HOUR_TIMER) * HOUR_TIMER)
   }
 
   /**

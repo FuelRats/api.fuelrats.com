@@ -1,5 +1,7 @@
 'use strict'
 
+const OAUTH_SCOPE_MAX_LENGTH = 128
+
 module.exports = function (sequelize, DataTypes) {
   let Token = sequelize.define('Token', {
     id: {
@@ -8,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV4
     },
     scope: {
-      type: DataTypes.ARRAY(DataTypes.STRING(128)),
+      type: DataTypes.ARRAY(DataTypes.STRING(OAUTH_SCOPE_MAX_LENGTH)),
       allowNull: false,
       defaultValue: []
     },

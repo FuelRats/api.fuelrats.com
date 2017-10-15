@@ -2,7 +2,6 @@
 const config = require('../../config')
 const https = require('https')
 const http = require('http')
-const querystring = require('querystring')
 
 /**
  * Symbol representing HTTP GET method requests

@@ -12,17 +12,3 @@ body {
 
   margin: 0 !important;
 }
-.Aligner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
-}
-
-.logo {
-  margin: auto;
-  display:block;
-  width: 250px;
-  height: auto;
-  margin-bottom: 30px;
-}

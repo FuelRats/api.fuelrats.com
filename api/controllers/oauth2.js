@@ -12,6 +12,9 @@ const localisationResources = require('../../localisations.json')
 const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
 const Authentication = require('./auth')
 
+const OAUTH_CODE_LENGTH = 24
+const OAUTH_TOKEN_LENTH = 32
+
 i18next.init({
   lng: 'en',
   resources:  localisationResources,
@@ -42,7 +45,7 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
   redirectUri = redirectUri || client.redirectUri
 
   let code = await Code.create({
-    value: crypto.randomBytes(24).toString('hex'),
+    value: crypto.randomBytes(OAUTH_CODE_LENGTH).toString('hex'),
     scope: areq.scope,
     redirectUri: redirectUri,
     clientId: client.id,
@@ -59,7 +62,7 @@ server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
   }
 
   let token = await Token.create({
-    value: crypto.randomBytes(32).toString('hex'),
+    value: crypto.randomBytes(OAUTH_TOKEN_LENTH).toString('hex'),
     scope: areq.scope,
     clientId: client.id,
     userId: user.data.id
@@ -78,7 +81,7 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
 
   let token = await Token.create({
     scope: auth.scope,
-    value: crypto.randomBytes(32).toString('hex'),
+    value: crypto.randomBytes(OAUTH_TOKEN_LENTH).toString('hex'),
     clientId: client.data.id,
     userId: auth.userId
   })
@@ -93,7 +96,7 @@ server.exchange(oauth2orize.exchange.password(
     }
 
     let token = await Token.create({
-      value: crypto.randomBytes(32).toString('hex'),
+      value: crypto.randomBytes(OAUTH_TOKEN_LENTH).toString('hex'),
       clientId: client.data.id,
       userId: user.data.id,
       scope: ['*']

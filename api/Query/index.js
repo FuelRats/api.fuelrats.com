@@ -1,6 +1,4 @@
 'use strict'
-const Rat = require('./../db/index').Rat
-const Epic = require('./../db/index').Epic
 const QueryOptions = require('./QueryOptions')
 
 const defaultRequestLimit = 25

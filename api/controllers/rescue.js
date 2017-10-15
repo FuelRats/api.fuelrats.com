@@ -1,19 +1,16 @@
 'use strict'
 
-const db = require('../db').db
-const Rat = require('../db').Rat
 const Rescue = require('../db').Rescue
-const Epic = require('../db').Epic
 const RescueQuery = require('../Query/RescueQuery')
 const { RescuesPresenter, CustomPresenter } = require('../classes/Presenters')
-const EventEmitter = require('events')
 
 const Error = require('../errors')
 const Permission = require('../permission')
 const BotServ = require('../Anope/BotServ')
-const Statistics = require('../classes/Statistics')
 
-const bold = String.fromCharCode(0x02)
+const BOLD_ASCII_CODE = 0x02
+const bold = String.fromCharCode(BOLD_ASCII_CODE)
+const RESCUE_ACCESS_TIME = 3600000
 
 class Rescues {
   static async search (ctx) {
@@ -224,7 +221,7 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
 const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
 function getRescuePermissionType (rescue, user) {
-  if (user && rescue.createdAt - Date.now() < 3600000) {
+  if (user && rescue.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
     for (let rat of user.data.relationships.rats.data) {
       if (rescue.rats.find((fRat) => { return fRat.id === rat.id }) || rescue.firstLimpetId === rat.id) {
         return selfWriteAllowedPermissions

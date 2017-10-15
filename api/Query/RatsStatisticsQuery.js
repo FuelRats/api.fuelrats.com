@@ -4,7 +4,6 @@ const StatisticsQuery = require('./StatisticsQuery')
 const Rescue = require('../db').Rescue
 const User = require('../db').User
 const Rat = require('../db').Rat
-const Group = require('../db').Group
 const UserGroups = require('../db').UserGroups
 
 /**

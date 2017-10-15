@@ -1,9 +1,7 @@
 'use strict'
 
-const winston = require('winston')
 const HostServ = require('../../Anope/HostServ')
 const BotServ = require('../../Anope/BotServ')
-const db = require('../../db').db
 const User = require('../../db').User
 const Rat = require('../../db').Rat
 const Errors = require('../../errors')

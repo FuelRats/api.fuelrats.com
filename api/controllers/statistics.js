@@ -1,9 +1,7 @@
 'use strict'
 
-const db = require('../db').db
 const Rat = require('../db').Rat
 const Rescue = require('../db').Rescue
-const Epic = require('../db').Epic
 const RescueStatisticsQuery = require('../Query/RescueStatisticsQuery')
 const SystemStatisticsQuery = require('../Query/SystemStatisticsQuery')
 const RatsStatisticsQuery = require('../Query/RatsStatisticsQuery')
@@ -11,7 +9,6 @@ const RescueStatisticsPresenter = require('../classes/Presenters').RescueStatist
 const SystemStatisticsPresenter = require('../classes/Presenters').SystemStatisticsPresenter
 const RatStatisticsPresenter = require('../classes/Presenters').RatStatisticsPresenter
 
-const Errors = require('../errors')
 
 class Statistics {
   static async rescues (ctx) {

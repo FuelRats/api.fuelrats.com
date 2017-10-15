@@ -7,8 +7,12 @@ const Permission = require('../permission')
 const UserQuery = require('../Query/UserQuery')
 const HostServ = require('../Anope/HostServ')
 const bcrypt = require('bcrypt')
-const { UsersPresenter, CustomPresenter } = require('../classes/Presenters')
+const { UsersPresenter } = require('../classes/Presenters')
 const gm = require('gm')
+
+const BCRYPT_ROUNDS_COUNT = 12
+const PROFILE_IMAGE_MIN = 64
+const PROFILE_IMAGE_MAX = 100
 
 class Users {
   static async search (ctx) {
@@ -48,8 +52,7 @@ class Users {
 
     ctx.response.status = 201
 
-    let renderedResult = UsersPresenter.render(result, ctx.meta(result))
-    return renderedResult
+    return UsersPresenter.render(result, ctx.meta(result))
   }
 
   static async update (ctx) {
@@ -77,8 +80,7 @@ class Users {
 
         let userQuery = new UserQuery({id: ctx.params.id}, ctx)
         let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-        let renderedResult = UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-        return renderedResult
+        return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
       }
     } else {
       throw Error.template('missing_required_field', 'id')
@@ -128,7 +130,7 @@ class Users {
       throw Error.template('no_permission', 'Password is incorrect')
     }
 
-    let newPassword = await bcrypt.hash(ctx.data.new, 12)
+    let newPassword = await bcrypt.hash(ctx.data.new, BCRYPT_ROUNDS_COUNT)
     await User.update({
       password: newPassword
     }, {
@@ -191,11 +193,11 @@ function formatImage (imageData) {
         reject(Error.template('invalid_image_format', 'Expected image/jpeg'))
       }
 
-      if (data.size.width < 64 || data.size.height < 64) {
+      if (data.size.width < PROFILE_IMAGE_MIN || data.size.height < PROFILE_IMAGE_MIN) {
         reject(Error.template('invalid_image_format', 'Image must be at least 64x64'))
       }
 
-      gm(imageData).resize(100, 100, '!').toBuffer('JPG', (err, buffer) => {
+      gm(imageData).resize(PROFILE_IMAGE_MAX, PROFILE_IMAGE_MAX, '!').toBuffer('JPG', (err, buffer) => {
         if (err) {
           reject(Error.template('invalid_image_format', 'Your image could not be saved in a valid format'))
         }

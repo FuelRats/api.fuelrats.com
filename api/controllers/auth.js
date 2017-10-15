@@ -6,13 +6,13 @@ const Token = require('../db').Token
 const Client = require('../db').Client
 const Error = require('../errors')
 const bcrypt = require('bcrypt')
-const Permission = require('../permission')
 const UsersPresenter = require('../classes/Presenters').UsersPresenter
 const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
 let config = require('../../config')
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
+const BCRYPT_ROUNDS_COUNT = 12
 
 class Authentication {
   static async passwordAuthenticate (email, password) {
@@ -29,8 +29,8 @@ class Authentication {
     if (result === false) {
       return null
     } else {
-      if (bcrypt.getRounds(user.password) > 12) {
-        let newRoundPassword = await bcrypt.hash(password, 12)
+      if (bcrypt.getRounds(user.password) > BCRYPT_ROUNDS_COUNT) {
+        let newRoundPassword = await bcrypt.hash(password, BCRYPT_ROUNDS_COUNT)
         User.update({
           password: newRoundPassword
         }, {
@@ -81,8 +81,8 @@ class Authentication {
 
     let authorised = await bcrypt.compare(secret, client.secret)
     if (authorised) {
-      if (bcrypt.getRounds(client.secret) > 12) {
-        let newRoundSecret = await bcrypt.hash(secret, 12)
+      if (bcrypt.getRounds(client.secret) > BCRYPT_ROUNDS_COUNT) {
+        let newRoundSecret = await bcrypt.hash(secret, BCRYPT_ROUNDS_COUNT)
         Client.update({
           secret: newRoundSecret
         }, {

@@ -1,6 +1,4 @@
 'use strict'
-
-const _ = require('underscore')
 const Ship = require('../db').Ship
 const ShipQuery = require('../Query/ShipQuery')
 const ShipsPresenter = require('../classes/Presenters').ShipsPresenter

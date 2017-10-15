@@ -66,12 +66,11 @@ class Decal {
       throw('Could not find any available decals')
     }
 
-    let decal = await availableDecal.update({
+    return availableDecal.update({
       userId: user.id,
       notes: notes,
       claimedAt: Date.now()
     })
-    return decal
   }
 }
 

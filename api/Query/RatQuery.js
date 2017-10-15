@@ -1,6 +1,4 @@
 'use strict'
-const Rat = require('./../db').Rat
-const Epic = require('./../db').Epic
 const Query = require('./index')
 
 /**
