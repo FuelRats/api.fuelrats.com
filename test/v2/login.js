@@ -46,7 +46,7 @@ module.exports = {
 
   }),
 
-  testAuthFail: asyncWrap(async function (test) {
+  failAuth: asyncWrap(async function (test) {
 
     test.expect(2)
 

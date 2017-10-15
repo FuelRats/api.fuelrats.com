@@ -3,28 +3,28 @@ const { GET, POST, Request } = require('../../api/classes/Request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
+const auth = require('./support/auth')
+const rescue = require('./support/rescue')
 
-let loginCookie = null
-let adminLoginCookie = null
 
 module.exports = {
   setUp: async function (test) {
     await db.init()
     await app.init()
-    loginCookie = await Request.login('testuser@fuelrats.com', 'testuser')
-    adminLoginCookie = await Request.login('admintestuser@fuelrats.com', 'testuser')
     test()
   },
 
-  testRescuesCreate: asyncWrap(async function (test) {
+  rescueCreate: asyncWrap(async function (test) {
 
     test.expect(5)
+
+    const adminUser = await auth.adminUser()
 
     let post = await new Request(POST, {
       path: '/rescues',
       insecure: true,
       headers: {
-        'Cookie': adminLoginCookie
+        'Cookie': adminUser
       }
     }, {
       platform: 'xb',
@@ -43,6 +43,24 @@ module.exports = {
       test.notStrictEqual(Date.parse(attributes.updatedAt), NaN)
 
     }
+
+  }),
+  rescueFindById: asyncWrap(async function (test) {
+    test.expect(1)
+
+    const adminUser = await auth.adminUser()
+
+    const r = await rescue.create(adminUser, {plaform: 'xb', system: 'sol'})
+
+    let get = await new Request(GET, {
+      path: '/rescues/' + r.id,
+      insecure: true,
+      headers: {
+        'Cookie': adminUser
+      }
+    })
+
+    test.strictEqual(get.response.statusCode, 200)
 
   })
 }

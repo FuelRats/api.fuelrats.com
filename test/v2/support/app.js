@@ -4,6 +4,22 @@
 const config = require('../../../config')
 config.loggly = false
 
+// gag ssl-root-cas
+// gotta be a better way...
+let pconsole = {
+  log: console.log, // eslint-disable-line no-console
+  info: console.info, // eslint-disable-line no-console
+  warn: console.warn // eslint-disable-line no-console
+}
+Object.assign(console, {
+  log: () => {},
+  info: () => {},
+  warn: () => {}
+})
+
+require('ssl-root-cas/latest')
+Object.assign(console, pconsole)
+
 let app
 
 async function init () {
