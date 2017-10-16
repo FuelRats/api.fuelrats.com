@@ -36,11 +36,7 @@ server.deserializeClient(async function (id) {
 })
 
 server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, ares, areq) {
-  for (let scope of areq.scope) {
-    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
-      throw Errors.template('invalid_scope', scope)
-    }
-  }
+  validateScopes(areq.scope)
 
   redirectUri = redirectUri || client.redirectUri
 
@@ -55,11 +51,7 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
 }))
 
 server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
-  for (let scope of areq.scope) {
-    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
-      throw Errors.template('invalid_scope', scope)
-    }
-  }
+  validateScopes(areq.scope)
 
   let token = await Token.create({
     value: crypto.randomBytes(OAUTH_TOKEN_LENTH).toString('hex'),
@@ -178,6 +170,14 @@ OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId
     throw Errors.template('server_error', 'redirectUri mismatch')
   }
 })
+
+function validateScopes (scopes) {
+  for (let scope of scopes) {
+    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
+      throw Errors.template('invalid_scope', scope)
+    }
+  }
+}
 
 OAuth2.server = server
 
