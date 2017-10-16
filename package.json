@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "$(npm bin)/grunt api",
-    "test": "node_modules/.bin/nodeunit test/v2"
+    "test": ""
   },
   "license": "MIT",
   "dependencies": {
