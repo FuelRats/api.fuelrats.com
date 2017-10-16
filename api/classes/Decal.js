@@ -46,7 +46,7 @@ class Decal {
     if (decalEligible) {
       let decal = await Decal.redeem(user, 'Rescues')
       if (!decal) {
-        throw('Could not find decal')
+        throw 'Could not find decal'
       }
       return decal
     } else {
@@ -63,7 +63,7 @@ class Decal {
     })
 
     if (!availableDecal) {
-      throw('Could not find any available decals')
+      throw 'Could not find any available decals'
     }
 
     return availableDecal.update({

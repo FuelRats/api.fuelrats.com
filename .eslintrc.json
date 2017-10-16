@@ -81,6 +81,12 @@
       "error",
       "always"
     ],
+    "space-unary-ops": [
+      "error"
+    ],
+    "keyword-spacing": [
+      "error"
+    ],
     "guard-for-in": [
       "warn"
     ],
@@ -165,6 +171,9 @@
     ],
     "yoda": [
       "warn"
+    ],
+    "no-plusplus": [
+      "error"
     ]
   }
 }

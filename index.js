@@ -371,7 +371,7 @@ function clean (...cleanFields) {
     const listen = promisify(server.listen.bind(server))
     await listen(port, config.hostname)
     logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
-  } catch(error) {
+  } catch (error) {
     logger.error(error)
   }
 })()
