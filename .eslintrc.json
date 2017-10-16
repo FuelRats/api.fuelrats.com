@@ -82,7 +82,7 @@
       "always"
     ],
     "guard-for-in": [
-      "error"
+      "warn"
     ],
     "require-await": [
       "warn"
@@ -100,71 +100,71 @@
       "error"
     ],
     "eqeqeq": [
-      "error"
+      "warn"
     ],
     "no-eq-null": [
-      "error"
+      "warn"
     ],
     "no-eval": [
       "error"
     ],
     "no-empty-function": [
-      "error"
+      "warn"
     ],
     "no-extra-bind": [
-      "error"
+      "warn"
     ],
     "no-implied-eval": [
       "error"
     ],
     "complexity": [
-      "error",
+      "warn",
       {
         "max": 15
       }
     ],
     "no-implicit-coercion": [
-      "error"
+      "warn"
     ],
     "no-implicit-globals": [
-      "error"
+      "warn"
     ],
     "no-invalid-this": [
-      "error"
+      "warn"
     ],
     "no-lone-blocks": [
-      "error"
+      "warn"
     ],
     "no-loop-func": [
-      "error"
+      "warn"
     ],
     "no-magic-numbers": [
-      "error",
+      "warn",
       {
         "ignore": [0, 1],
         "enforceConst": true
       }
     ],
     "no-return-assign": [
-      "error"
+      "warn"
     ],
     "no-self-compare": [
-      "error"
+      "warn"
     ],
     "no-unused-expressions": [
-      "error"
+      "warn"
     ],
     "no-useless-concat": [
-      "error"
+      "warn"
     ],
     "no-useless-return": [
-      "error"
+      "warn"
     ],
     "no-with": [
       "error"
     ],
     "yoda": [
-      "error"
+      "warn"
     ]
   }
 }
