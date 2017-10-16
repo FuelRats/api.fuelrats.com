@@ -184,7 +184,7 @@ class WebSocketManager {
     }
   }
 
-  static send (client, message) {
+  send (client, message) {
     client.send(JSON.stringify(message))
   }
 
