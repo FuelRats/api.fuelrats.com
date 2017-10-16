@@ -10,6 +10,10 @@
   },
   "extends": "eslint:recommended",
   "rules": {
+    "no-restricted-syntax": [
+      "error",
+      "ForStatement"
+    ],
     "indent": [
       "error",
       2, {
