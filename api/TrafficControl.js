@@ -1,10 +1,7 @@
 'use strict'
 const Permissions = require('./permission')
-const SECONDS = 60
-const HOUR = 60
-const MS_TO_SECONDS = 1000
 
-const HOUR_TIMER = SECONDS * HOUR * MS_TO_SECONDS
+const HOUR_TIMER = 60 * 60 * 1000
 
 const allowedUnauthenticatedRequestCount = 360
 const allowedAuthenticatedRequestCount = 3600
@@ -193,7 +190,7 @@ class RemoteAddressEntity extends TrafficEntity {
    * @returns {number} the number of remaining requests this entity has in this period
    */
   get remainingRequests () {
-    return allowedUnauthenticatedRequestCount - this._requestCount
+    return allowedUnauthenticatedRequestCount - this.count
   }
 
   get totalRequests () {
