@@ -108,7 +108,7 @@ app.use(async (ctx, next) => {
     ctx.set('X-API-Version', '2.0')
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
-    ctx.set('X-Rate-Limit-Reset', TrafficControl.nextResetDate)
+    ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)
 
     logger.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
       'ip': ctx.inet,

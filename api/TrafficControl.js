@@ -81,7 +81,7 @@ class TrafficControl {
    * Get the next time all rate limits will be reset (The next full hour)
    * @returns {Date} A date object containing the next time all rate limits will be reset
    */
-  static get nextResetDate () {
+  get nextResetDate () {
     return new Date(Math.ceil(new Date().getTime() / HOUR_TIMER) * HOUR_TIMER)
   }
 
