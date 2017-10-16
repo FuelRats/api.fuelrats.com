@@ -59,7 +59,7 @@ function logglyAppender (config, layout) {
 
   function app (loggingEvent) {
     const result = processTags(loggingEvent.data)
-    const [ deTaggedData, additionalTags ] = result
+    const { deTaggedData, additionalTags } = result
 
     // Replace the data property with the deTaggedData
     loggingEvent.data = deTaggedData
