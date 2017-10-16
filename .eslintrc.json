@@ -17,154 +17,154 @@
       }
     ],
     "linebreak-style": [
-      2,
+      "error",
       "unix"
     ],
     "quotes": [
-      2,
+      "error",
       "single",
       "avoid-escape"
     ],
     "semi": [
-      2,
+      "error",
       "never"
     ],
     "strict": [
-      2,
+      "error",
       "global"
     ],
     "curly": [
-      2
+      "error"
     ],
     "no-cond-assign": [
-      2,
+      "error",
       "always"
     ],
     "no-dupe-keys": [
-      2
+      "error"
     ],
     "no-duplicate-case": [
-      2
+      "error"
     ],
     "no-sparse-arrays": [
-      1
+      "warn"
     ],
     "no-obj-calls": [
-      2
+      "error"
     ],
     "no-unexpected-multiline": [
-      2
+      "error"
     ],
     "valid-typeof": [
-      2
+      "error"
     ],
     "no-irregular-whitespace": [
-      2
+      "error"
     ],
     "vars-on-top": [
-      1
+      "warn"
     ],
     "space-before-function-paren": [
-      2
+      "error"
     ],
     "space-before-blocks": [
-      2
+      "error"
     ],
     "space-in-parens": [
-      2,
+      "error",
       "never"
     ],
     "space-infix-ops": [
-      2
+      "error"
     ],
     "spaced-comment": [
-      2,
+      "error",
       "always"
     ],
     "guard-for-in": [
-      2
+      "error"
     ],
     "require-await": [
-      1
+      "warn"
     ],
     "require-yield": [
-      1
+      "warn"
     ],
     "no-return-await": [
-      1
+      "warn"
     ],
     "no-await-in-loop": [
-      1
+      "warn"
     ],
     "default-case": [
-      2
+      "error"
     ],
     "eqeqeq": [
-      2
+      "error"
     ],
     "no-eq-null": [
-      2
+      "error"
     ],
     "no-eval": [
-      2
+      "error"
     ],
     "no-empty-function": [
-      2
+      "error"
     ],
     "no-extra-bind": [
-      2
+      "error"
     ],
     "no-implied-eval": [
-      2
+      "error"
     ],
     "complexity": [
-      2,
+      "error",
       {
         "max": 15
       }
     ],
     "no-implicit-coercion": [
-      2
+      "error"
     ],
     "no-implicit-globals": [
-      2
+      "error"
     ],
     "no-invalid-this": [
-      2
+      "error"
     ],
     "no-lone-blocks": [
-      2
+      "error"
     ],
     "no-loop-func": [
-      2
+      "error"
     ],
     "no-magic-numbers": [
-      2,
+      "error",
       {
         "ignore": [0, 1],
         "enforceConst": true
       }
     ],
     "no-return-assign": [
-      2
+      "error"
     ],
     "no-self-compare": [
-      2
+      "error"
     ],
     "no-unused-expressions": [
-      2
+      "error"
     ],
     "no-useless-concat": [
-      2
+      "error"
     ],
     "no-useless-return": [
-      2
+      "error"
     ],
     "no-with": [
-      2
+      "error"
     ],
     "yoda": [
-      2
+      "error"
     ]
   }
 }
