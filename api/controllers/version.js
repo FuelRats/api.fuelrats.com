@@ -1,6 +1,6 @@
 'use strict'
 const gitrev = require('git-rev-promises')
-const ObjectPresenter = require('../classes/Presenters').ObjectPresenter
+const { ObjectPresenter } = require('../classes/Presenters')
 const packageInfo = require('../../package.json')
 
 class Version  {

@@ -1,9 +1,6 @@
 'use strict'
 
-const Rescue = require('../db').Rescue
-const User = require('../db').User
-const Rat = require('../db').Rat
-const Decals = require('../db').Decal
+const { Rescue, User, Rat, Decal: Decals } = require('../db')
 const Error = require('../errors')
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'

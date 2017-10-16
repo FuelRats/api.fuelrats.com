@@ -1,8 +1,7 @@
 'use strict'
 
 const nodemailer = require('nodemailer')
-const User = require('../db').User
-const Reset = require('../db').Reset
+const { User, Reset } = require('../db')
 const crypto = require('crypto')
 const Error = require('../errors')
 const bcrypt = require('bcrypt')

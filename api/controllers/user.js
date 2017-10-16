@@ -1,6 +1,6 @@
 'use strict'
 
-const User = require('../db').User
+const { User } = require('../db')
 
 const Error = require('../errors')
 const Permission = require('../permission')

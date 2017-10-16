@@ -2,7 +2,7 @@
 const Anope = require('./index')
 const NickServ = require('./NickServ')
 const Permissions = require('../permission')
-const GroupsPresenter = require('../classes/Presenters').GroupsPresenter
+const { GroupsPresenter } = require('../classes/Presenters')
 
 
 /**

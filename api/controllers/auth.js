@@ -1,13 +1,8 @@
 'use strict'
-const User = require('../db').User
-const Rat = require('../db').Rat
-const db = require('../db').db
-const Token = require('../db').Token
-const Client = require('../db').Client
+const { User, Rat, db, Token, Client } = require('../db')
 const Error = require('../errors')
 const bcrypt = require('bcrypt')
-const UsersPresenter = require('../classes/Presenters').UsersPresenter
-const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
+const { UsersPresenter, ClientsPresenter } = require('../classes/Presenters')
 let config = require('../../config')
 
 const bearerTokenHeaderOffset = 7

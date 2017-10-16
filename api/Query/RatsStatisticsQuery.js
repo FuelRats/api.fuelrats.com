@@ -1,10 +1,7 @@
 'use strict'
-const db = require('./../db').db
+const { db } = require('./../db')
 const StatisticsQuery = require('./StatisticsQuery')
-const Rescue = require('../db').Rescue
-const User = require('../db').User
-const Rat = require('../db').Rat
-const UserGroups = require('../db').UserGroups
+const { Rescue, User, Rat, UserGroups } = require('../db')
 
 /**
  * A class representing a rescue query

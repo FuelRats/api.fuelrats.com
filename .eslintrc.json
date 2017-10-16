@@ -178,6 +178,13 @@
     ],
     "no-plusplus": [
       "error"
+    ],
+    "prefer-destructuring": [
+      "error",
+      {
+        "array": true,
+        "object": true
+      }
     ]
   }
 }

@@ -49,7 +49,7 @@ const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
-const db = require('./api/db').db
+const { db } = require('./api/db')
 
 try {
   npid.remove('api.pid')
@@ -81,7 +81,7 @@ app.use(async function (ctx, next) {
   ctx.meta = WebSocketManager.meta
   ctx.client = {}
 
-  let query = ctx.query
+  let { query } = ctx
   ctx.query = parseQuery(query)
 
   ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
@@ -280,7 +280,7 @@ function parseQuery (query) {
 
     // Iterate over the period delimited arrays to construct a nested hierarchy
     for (let keyPair of keys.entries()) {
-      let subkey = keyPair[1]
+      let [, subkey ] = keyPair
       if (keyPair[0] === keys.length - 1) {
         // We have reached the end of the delimited array which means we can insert the value
 

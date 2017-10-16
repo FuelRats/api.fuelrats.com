@@ -2,10 +2,9 @@
 
 const HostServ = require('../../Anope/HostServ')
 const BotServ = require('../../Anope/BotServ')
-const User = require('../../db').User
-const Rat = require('../../db').Rat
+const { User, Rat } = require('../../db')
 const Errors = require('../../errors')
-const UsersPresenter = require('../../classes/Presenters').UsersPresenter
+const { UsersPresenter } = require('../../classes/Presenters')
 
 const DrillType = {
   10200: 'rat',
@@ -20,7 +19,7 @@ class JiraDrill {
       throw Errors.template('missing_required_field', 'issue.fields.issuetype.id')
     }
 
-    let fields = ctx.data.issue.fields
+    let { fields } = ctx.data.issue
 
     let email = fields[emailAddressField]
     if (!email) {

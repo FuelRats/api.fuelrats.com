@@ -1,7 +1,7 @@
 'use strict'
-const Ship = require('../db').Ship
+const { Ship } = require('../db')
 const ShipQuery = require('../Query/ShipQuery')
-const ShipsPresenter = require('../classes/Presenters').ShipsPresenter
+const { ShipsPresenter } = require('../classes/Presenters')
 
 const Errors = require('../errors')
 const Permission = require('../permission')

@@ -1,6 +1,5 @@
 'use strict'
-const db = require('../db').db
-const Rat = require('../db').Rat
+const { db, Rat } = require('../db')
 const Query = require('./index')
 
 /**

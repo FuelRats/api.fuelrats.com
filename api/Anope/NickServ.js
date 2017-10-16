@@ -142,7 +142,7 @@ class IRCUserInfo {
         this.privilege = components.slice(INFO_SECOND_ITEM, components.length).join(' ')
       } else if (components[1] === 'is') {
         // Nickname and real name line
-        this.nickname = components[0]
+        [ this.nickname ] = components
         this.realname = components.slice(INFO_FIRST_ITEM, components.length).join(' ')
       } else {
         switch (components[0]) {

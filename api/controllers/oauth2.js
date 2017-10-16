@@ -2,14 +2,12 @@
 
 const oauth2orize = require('oauth2orize-koa-fr')
 const crypto = require('crypto')
-const Token = require('../db').Token
-const Client = require('../db').Client
-const Code = require('../db').Code
+const { Token, Client, Code } = require('../db')
 const Permission = require('../permission')
 const Errors = require('../errors')
 const i18next = require('i18next')
 const localisationResources = require('../../localisations.json')
-const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
+const { ClientsPresenter } = require('../classes/Presenters')
 const Authentication = require('./auth')
 
 const OAUTH_CODE_LENGTH = 24

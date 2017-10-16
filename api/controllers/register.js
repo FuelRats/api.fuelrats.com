@@ -30,7 +30,7 @@ class Register {
     let transaction = await db.transaction()
 
     try {
-      let email = ctx.data.email
+      let { email } = ctx.data
 
       let password = await bcrypt.hash(ctx.data.password, BCRYPT_ENCRYPTION_ROUNDS)
 
@@ -42,7 +42,7 @@ class Register {
       })
 
       let name = ctx.data.name.replace(/CMDR/i, '')
-      let platform = ctx.data.platform
+      let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
         throw Errors.template('invalid_parameter', 'platform')
@@ -56,7 +56,7 @@ class Register {
         transaction: transaction
       })
 
-      let nickname = ctx.data.nickname
+      let { nickname } = ctx.data
       await NickServ.register(nickname, ctx.data.password, email)
 
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {

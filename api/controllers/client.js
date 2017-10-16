@@ -1,12 +1,12 @@
 'use strict'
 
-const Client = require('../db').Client
+const { Client } = require('../db')
 const Permission = require('../permission')
 const Errors = require('../errors')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
 const ClientQuery = require('../Query/ClientQuery')
-const ClientsPresenter = require('../classes/Presenters').ClientsPresenter
+const { ClientsPresenter } = require('../classes/Presenters')
 
 const CLIENT_SECRET_LENGTH = 32
 const BCRYPT_ROUNDS_COUNT = 12

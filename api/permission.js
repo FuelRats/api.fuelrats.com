@@ -3,7 +3,7 @@
 const Errors = require('./errors')
 const i18next = require('i18next')
 const localisationResources = require('../localisations.json')
-const Group = require('./db').Group
+const { Group } = require('./db')
 
 i18next.init({
   lng: 'en',

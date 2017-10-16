@@ -1,6 +1,6 @@
 'use strict'
 
-const Rescue = require('../db').Rescue
+const { Rescue } = require('../db')
 const RescueQuery = require('../Query/RescueQuery')
 const { RescuesPresenter, CustomPresenter } = require('../classes/Presenters')
 
@@ -205,7 +205,7 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
     return
   }
   if (changedValues.hasOwnProperty('outcome')) {
-    let boardIndex = result.data[0].attributes.data.boardIndex
+    let { boardIndex } = result.data[0].attributes.data
     let caseNumber = boardIndex !== null ? `#${boardIndex}` : result.data[0].id
 
     let client = ctx.state.user.data.attributes.client || ''
