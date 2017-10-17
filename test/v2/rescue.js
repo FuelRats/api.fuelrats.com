@@ -7,6 +7,8 @@ const auth = require('./support/auth')
 const rescue = require('./support/rescue')
 const { HTTP_CREATED, HTTP_OK } = require('./support/const')
 
+/* eslint-disable no-magic-numbers */
+
 module.exports = {
   setUp: async function (test) {
     await db.init()
@@ -16,7 +18,7 @@ module.exports = {
 
   rescueCreate: asyncWrap(async function (test) {
 
-    test.expect(5) // eslint-disable-line no-magic-numbers
+    test.expect(5)
 
     const adminUser = await auth.adminUser()
 

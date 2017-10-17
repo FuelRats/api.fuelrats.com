@@ -1,6 +1,10 @@
 'use strict'
 process.env.NODE_ENV = 'testing'
 
+// we are deliberately doing all async functions sequentially to aid
+// debugging of the process
+/* eslint-disable no-await-in-loop */
+
 const logger = require('winston')
 // update the logging to go to the console with timestamp
 logger.remove(logger.transports.Console)
@@ -49,7 +53,7 @@ const seed = {
 // https://stackoverflow.com/a/19303725/3785845
 function prand (seed = 1, m = DEFAULT_PRAND_SEED) {
   return function (min, max) {
-    if (max == null) { // eslint-disable-line
+    if (!max && max !== 0) {
       max = min
       min = 0
     }
@@ -248,9 +252,9 @@ async function init () {
       const rats = []
 
       logger.info('creating %d clients for %s', size.rescues, p)
-      for (let client = 0; client < size.rescues; client++) { // eslint-disable-line
+      for (let client of _.range(size.rescues)) {
         let clientName = 'client-' + p + '-' + String(client).padStart(ID_PAD_LEN, '0')
-        clients.push(await createClient({ // eslint-disable-line no-await-in-loop
+        clients.push(await createClient({ 
           name: clientName,
           hash: hash,
           adminUser: adminUser.id
@@ -258,16 +262,16 @@ async function init () {
       }
 
       logger.info('creating %d rats for %s', size.rats, p)
-      for (let rat = 0; rat < size.rats; rat++) { // eslint-disable-line
+      for (let rat of _.range(size.rats)) {
         let ratName = 'rat-' + p + '-' + String(rat).padStart(ID_PAD_LEN, '0')
-        await createUser({ // eslint-disable-line no-await-in-loop
+        await createUser({ 
           email: ratName + '@fuelrats.com',
           hash: hash,
           groups: [group.rat],
           nicknames: [ratName]
         }) 
         // create a rat for the user
-        rats.push(await Rat.create({ // eslint-disable-line no-await-in-loop
+        rats.push(await Rat.create({ 
           name: ratName,
           platform: p,
           joined: seed.start
@@ -275,7 +279,7 @@ async function init () {
       }
 
       logger.info('creating %d rescues for %s', size.rescues, p)
-      for (let rescue = 0; rescue < size.rescues; rescue++) { // eslint-disable-line
+      for (let rescue of _.range(size.rescues)) {
         // get the client
 
         let outcome = (rescue < MAX_RESCUE_RATS) ? null : _.random(SUCCESS_PROBABILITY) ? 'success' : 'failure'
@@ -288,7 +292,7 @@ async function init () {
 
         let createdAt = seed.start.valueOf() + _.random(seed.timespan)
         
-        const r = await Rescue.create({ // eslint-disable-line no-await-in-loop
+        const r = await Rescue.create({ 
           client: clients[rescue].name,
           codeRed: _.random(CODE_RED_PROBABILTY) !== 0,
           status: outcome ? 'closed' : _.random(INACTIVE_PROBABILITY) ? 'closed' : 'inactive',
@@ -301,7 +305,7 @@ async function init () {
           updatedAt: createdAt + _.random(RESCUE_DURATION * MILLISECONDS) // 15 mins
         }, {silent:true})
 
-        await r.addRats(rescueRats) // eslint-disable-line no-await-in-loop
+        await r.addRats(rescueRats) 
 
       }
 
