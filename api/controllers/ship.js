@@ -93,6 +93,12 @@ class Ships {
   }
 }
 
+/**
+ * Checks wether the user has permission to edit this ship
+ * @param ctx the request object to validate
+ * @param ship the ship to validate
+ * @returns {T|boolean} Returns a truthy value if the user has write permission
+ */
 function isSelShipOrHasPermission (ctx, ship) {
   let rat = ctx.state.user.included.find((included) => {
     return included.id === ship.ratId

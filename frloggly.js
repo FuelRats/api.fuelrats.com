@@ -5,10 +5,20 @@
 const debug = require('debug')('log4js:loggly')
 const loggly = require('loggly')
 
+/**
+ * Checks wether the argument is any form of javascript object
+ * @param value The value to check
+ * @returns {boolean} whether the argument is any javascript object
+ */
 function isAnyObject (value) {
   return value !== null && (typeof value === 'object' || typeof value === 'function')
 }
 
+/**
+ * Returns the number of keys in this javascript object
+ * @param obj the javascript object to count
+ * @returns {Number} The number of keys in the object
+ */
 function numKeys (obj) {
   return Object.keys(obj).length
 }
@@ -57,6 +67,10 @@ function logglyAppender (config, layout) {
 
   debug('creating appender.')
 
+  /**
+   * Process a logging event from loggly
+   * @param loggingEvent the logging event to parse
+   */
   function app (loggingEvent) {
     const result = processTags(loggingEvent.data)
     const { deTaggedData, additionalTags } = result
@@ -110,6 +124,11 @@ function logglyAppender (config, layout) {
   return app
 }
 
+/**
+ * Configure the loggly module
+ * @param config the configuration options
+ * @param layouts the layouts to use
+ */
 function configure (config, layouts) {
   let layout = layouts.messagePassThroughLayout
   if (config.layout) {
