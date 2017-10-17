@@ -1,8 +1,8 @@
 'use strict'
 
-const Presenter = require('yayson')({
+const { Presenter } = require('yayson')({
   adapter: 'sequelize'
-}).Presenter
+})
 
 const ObjectPresenter = require('yayson')({
   adapter: 'default'

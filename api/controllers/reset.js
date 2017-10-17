@@ -1,11 +1,14 @@
 'use strict'
 
 const nodemailer = require('nodemailer')
-const User = require('../db').User
-const Reset = require('../db').Reset
+const { User, Reset } = require('../db')
 const crypto = require('crypto')
 const Error = require('../errors')
 const bcrypt = require('bcrypt')
+
+const BCRYPT_ROUNDS_COUNT = 12
+const RESET_TOKEN_LENGTH = 16
+const EXPIRE_LENGTH = 86400000
 
 class Resets {
   static async requestReset (ctx, next) {
@@ -30,8 +33,8 @@ class Resets {
     })
 
     let reset = await Reset.create({
-      value: crypto.randomBytes(16).toString('hex'),
-      expires: new Date(Date.now() + 86400000).getTime(),
+      value: crypto.randomBytes(RESET_TOKEN_LENGTH).toString('hex'),
+      expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
       userId: user.id
     })
 
@@ -87,7 +90,7 @@ class Resets {
       throw Error.template('not_found', 'reset link invalid or expired')
     }
 
-    let newPassword = await bcrypt.hash(ctx.data.password, 12)
+    let newPassword = await bcrypt.hash(ctx.data.password, BCRYPT_ROUNDS_COUNT)
     await User.update({
       password: newPassword
     }, {

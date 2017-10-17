@@ -1,5 +1,7 @@
 'use strict'
 
+const MAX_INGAME_SHIP_NAME_LENGTH = 22
+
 module.exports = function (sequelize, DataTypes) {
   let Ship = sequelize.define('Ship', {
     id: {
@@ -8,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV4
     },
     name: {
-      type: DataTypes.CHAR(22),
+      type: DataTypes.CHAR(MAX_INGAME_SHIP_NAME_LENGTH),
       allowNull: false
     },
     shipId:  {

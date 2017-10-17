@@ -1,8 +1,6 @@
 'use strict'
 
-const Rat = require('../db').Rat
-
-const Errors = require('../errors')
+const { Rat } = require('../db')
 const Permission = require('../permission')
 const RatQuery = require('../Query/RatQuery')
 const { RatsPresenter, CustomPresenter } = require('../classes/Presenters')

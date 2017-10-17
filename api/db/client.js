@@ -1,5 +1,7 @@
 'use strict'
 
+const CLIENT_SECRET_MAX_LENGTH = 1024
+
 module.exports = function (sequelize, DataTypes) {
   let Client = sequelize.define('Client', {
     id: {
@@ -12,7 +14,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false
     },
     secret: {
-      type: DataTypes.STRING(1024),
+      type: DataTypes.STRING(CLIENT_SECRET_MAX_LENGTH),
       allowNull: false
     },
     redirectUri: {

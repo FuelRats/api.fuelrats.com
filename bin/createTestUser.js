@@ -1,13 +1,13 @@
 'use strict'
 process.env.NODE_ENV = 'testing'
 
-let db = require('../api/db').db
-let User = require('../api/db').User
-let Client = require('../api/db').Client
-let Group = require('../api/db').Group
+let { db, User, Client, Group } = require('../api/db').db
 let bcrypt = require('bcrypt')
 let fs = require('fs')
 let crypto = require('crypto')
+
+const BCRYPT_ROUNDS = 12
+const PASSWORD_LEN = 24
 
 
 db.sync({ force: true }).then(async function () {
@@ -122,14 +122,12 @@ db.sync({ force: true }).then(async function () {
   ]
 
   await Promise.all(groups)
-  console.log('User Groups Created')
-
 
   let adminGroup = await Group.findById('admin')
   let ratGroup = await Group.findById('rat')
   let dispatchGroup = await Group.findById('dispatch')
 
-  let hash = await bcrypt.hash('testuser', 16)
+  let hash = await bcrypt.hash('testuser', BCRYPT_ROUNDS)
   let adminTestUser = {
     email: 'admintestuser@fuelrats.com',
     password: hash,
@@ -139,10 +137,9 @@ db.sync({ force: true }).then(async function () {
   let adminUser = await User.create(adminTestUser)
   adminUser.addGroups([adminGroup, ratGroup, dispatchGroup])
 
-  console.log('Admin Test User Created')
-  let secret = await crypto.randomBytes(24).toString('hex')
+  let secret = await crypto.randomBytes(PASSWORD_LEN).toString('hex')
 
-  bcrypt.hash(secret, 16)
+  bcrypt.hash(secret, BCRYPT_ROUNDS)
 
   let client = await Client.create({
     name: 'API Test Client',
@@ -152,10 +149,8 @@ db.sync({ force: true }).then(async function () {
 
   fs.writeFile('testinfo.json', JSON.stringify(client.toJSON()), function (err) {
     if (err) {
-      return console.log(err)
+      return console.error(err) // eslint-disable-line no-console
     }
-
-    console.log('Test data file written')
   })
 
 
@@ -166,6 +161,5 @@ db.sync({ force: true }).then(async function () {
   }
 
   await User.create(testUser)
-  console.log('Test User Created')
 
 })

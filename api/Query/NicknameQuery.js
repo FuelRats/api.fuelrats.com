@@ -1,6 +1,5 @@
 'use strict'
-const db = require('../db').db
-const Rat = require('../db').Rat
+const { db, Rat } = require('../db')
 const Query = require('./index')
 
 /**
@@ -17,7 +16,7 @@ class NicknameQuery extends Query {
     super(params, connection)
 
     if (params.nickname) {
-      let formattedNickname = params.nickname.replace(/\[(.*?)\]$/g, '')
+      let formattedNickname = params.nickname.replace(/\[(.*?)]$/g, '')
       this._query.where.nicknames = {
         $overlap:  db.literal(`ARRAY[${db.escape(params.nickname)}, ${db.escape(formattedNickname)}]::citext[]`)
       }

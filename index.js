@@ -1,5 +1,8 @@
 'use strict'
 
+const SERVER_ERROR_CODE = 500
+const WEBSOCKET_IDENTIFIER_ROUNDS = 16
+
 // IMPORT
 // =============================================================================
 const Koa = require('koa')
@@ -15,8 +18,8 @@ const http = require('http')
 const ws = require('ws')
 const { URL } = require('url')
 const logger = require('./api/logger')
+const { promisify } = require('util')
 
-const fs = require('fs')
 const Permission = require('./api/permission')
 const uid = require('uid-safe')
 const npid = require('npid')
@@ -31,12 +34,7 @@ const Error = require('./api/errors')
 const Authentication = require('./api/controllers/auth')
 const client = require('./api/controllers/client')
 const decal = require('./api/controllers/decal')
-const irc = require('./api/controllers/irc').HTTP
-const leaderboard = require('./api/controllers/leaderboard')
 const login = require('./api/controllers/login')
-const ssologin = require('./api/controllers/ssologin')
-const logout = require('./api/controllers/logout')
-const news = require('./api/controllers/news')
 const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
 const profile = require('./api/controllers/profile')
@@ -51,7 +49,7 @@ const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
-
+const { db } = require('./api/db')
 
 try {
   npid.remove('api.pid')
@@ -81,10 +79,9 @@ let port = config.port || process.env.PORT
 app.use(async function (ctx, next) {
   ctx.data = ctx.request.body
   ctx.meta = WebSocketManager.meta
-  ctx.requireFields = WebSocketManager.requireFields
   ctx.client = {}
 
-  let query = ctx.query
+  let { query } = ctx
   ctx.query = parseQuery(query)
 
   ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
@@ -111,7 +108,7 @@ app.use(async (ctx, next) => {
     ctx.set('X-API-Version', '2.0')
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
-    ctx.set('X-Rate-Limit-Reset', traffic.nextResetDate)
+    ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)
 
     logger.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
       'ip': ctx.inet,
@@ -143,7 +140,7 @@ app.use(async (ctx, next) => {
     }
 
     ctx.status = error.code
-    if (error.code === 500) {
+    if (error.code === SERVER_ERROR_CODE) {
       logger.error(error)
       ctx.app.emit('error', ex, ctx)
     }
@@ -283,7 +280,7 @@ function parseQuery (query) {
 
     // Iterate over the period delimited arrays to construct a nested hierarchy
     for (let keyPair of keys.entries()) {
-      let subkey = keyPair[1]
+      let [, subkey ] = keyPair
       if (keyPair[0] === keys.length - 1) {
         // We have reached the end of the delimited array which means we can insert the value
 
@@ -306,7 +303,7 @@ const websocketManager = new WebSocketManager(wss, traffic)
 
 wss.on('connection', async function connection (client) {
   let url = new URL(`http://localhost:8082${client.upgradeReq.url}`)
-  client.clientId = uid.sync(16)
+  client.clientId = uid.sync(WEBSOCKET_IDENTIFIER_ROUNDS)
   client.subscriptions = []
 
   let bearer = url.searchParams.get('bearer')
@@ -329,13 +326,6 @@ wss.on('connection', async function connection (client) {
       logger.info('Failed to parse incoming websocket message')
     }
   })
-})
-
-server.listen(port, config.hostname, (error) => {
-  if (error) {
-
-  }
-  logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
 })
 
 function censor (obj) {
@@ -374,3 +364,17 @@ function clean (...cleanFields) {
     await next()
   }
 }
+
+(async function startServer () {
+  try {
+    await db.sync()
+    const listen = promisify(server.listen.bind(server))
+    await listen(port, config.hostname)
+    logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
+  } catch (error) {
+    logger.error(error)
+  }
+})()
+
+// allow launch of app from unit tests
+module.exports = server

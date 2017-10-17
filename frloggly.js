@@ -4,7 +4,6 @@
 
 const debug = require('debug')('log4js:loggly')
 const loggly = require('loggly')
-const os = require('os')
 
 function isAnyObject (value) {
   return value !== null && (typeof value === 'object' || typeof value === 'function')
@@ -60,8 +59,7 @@ function logglyAppender (config, layout) {
 
   function app (loggingEvent) {
     const result = processTags(loggingEvent.data)
-    const deTaggedData = result.deTaggedData
-    const additionalTags = result.additionalTags
+    const { deTaggedData, additionalTags } = result
 
     // Replace the data property with the deTaggedData
     loggingEvent.data = deTaggedData
@@ -83,6 +81,7 @@ function logglyAppender (config, layout) {
       additionalTags,
       (error) => {
         if (error) {
+// eslint-disable-next-line no-console
           console.error('log4js.logglyAppender - error occurred: ', error)
         }
 

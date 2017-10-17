@@ -2,18 +2,6 @@ api:
   description: Start the api
   tasks:
   - 'express:dev'
-  - 'watch'
-
-prep:
-  description: Run pre processing tasks
-  tasks:
-  - 'cssmin:production'
-  - 'buildJS'
-  - 'uglify:production'
-
-buildJS:
-  tasks:
-  - 'babel'
 
 default:
   description: Default Grunt task
@@ -23,3 +11,4 @@ default:
 test:
   description: Run the tests
   tasks:
+  - 'nodeunit:v2'

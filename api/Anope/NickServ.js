@@ -1,7 +1,12 @@
 'use strict'
 const Anope = require('./index')
 const Error = require('../errors')
-const { AnopeRequestCacheItem, AnopeWebhook } = require('../controllers/anope-webhook')
+const { AnopeWebhook } = require('../controllers/anope-webhook')
+
+const NICKNAME_PARSE_PADDING = 2
+const INFO_FIRST_ITEM = 2
+const INFO_SECOND_ITEM = 3
+const INFO_DATE_ITEM = 5
 
 /**
  * Class to manage requests to NickServ
@@ -28,7 +33,7 @@ class NickServ {
   static async register (nickname, password, email) {
     AnopeWebhook.cacheRequest('ns_register', nickname)
     let result = await Anope.command('NickServ', nickname, `REGISTER ${password} ${email}`)
-    if (result && /Nickname [A-Za-z0-9_\-\[\]\{\}\`]* registered./.test(result.return) === true) {
+    if (result && /Nickname [A-Za-z0-9_\-\[\]{}`]* registered./.test(result.return) === true) {
       return nickname
     } else {
       throw Error.template('bad_request', result)
@@ -65,7 +70,7 @@ class NickServ {
 
     let nicknames = result.return.split('#xA;')
     // Remove column headers and footer
-    nicknames = nicknames.slice(2, nicknames.length - 2)
+    nicknames = nicknames.slice(NICKNAME_PARSE_PADDING, nicknames.length - NICKNAME_PARSE_PADDING)
 
     // Retrieve only the actual nickname from each nickname line
     nicknames = nicknames.map(function (nickname) {
@@ -129,40 +134,40 @@ class IRCUserInfo {
   constructor (info) {
     for (let line of info) {
       // Trim spaces from line and remove superflous & at the end
-      line = line.trim().replace(/\&/g, '')
+      line = line.trim().replace(/&/g, '')
       let components = line.split(' ')
 
-      if (components[1] === 'is' && components[2] === 'a') {
+      if (components[1] === 'is' && components[INFO_FIRST_ITEM] === 'a') {
         // User privilege / ircop line
-        this.privilege = components.slice(3, components.length).join(' ')
+        this.privilege = components.slice(INFO_SECOND_ITEM, components.length).join(' ')
       } else if (components[1] === 'is') {
         // Nickname and real name line
-        this.nickname = components[0]
-        this.realname = components.slice(2, components.length).join(' ')
+        [ this.nickname ] = components
+        this.realname = components.slice(INFO_FIRST_ITEM, components.length).join(' ')
       } else {
         switch (components[0]) {
           case 'Email':
             // Email line
-            this.email = components[2]
+            this.email = components[INFO_FIRST_ITEM]
             break
 
           case 'Online':
             // Hostmask line
             if (this.hostmask) {
-              this.vhost = components[2]
+              this.vhost = components[INFO_FIRST_ITEM]
             } else {
-              this.hostmask = components[2]
+              this.hostmask = components[INFO_FIRST_ITEM]
             }
             break
 
           case 'Registered:':
             // Registered date line
-            this.registered = Date.parse(components.slice(1, 5).join(' '))
+            this.registered = Date.parse(components.slice(1, INFO_DATE_ITEM).join(' '))
             break
 
           case 'Expires:':
             // Expire date line
-            this.expires = Date.parse(components.slice(1, 5).join(' '))
+            this.expires = Date.parse(components.slice(1, INFO_DATE_ITEM).join(' '))
             break
 
           case 'Options:':
@@ -175,6 +180,9 @@ class IRCUserInfo {
                 this.options.push(option)
               }
             }
+            break
+
+          default:
             break
         }
       }

@@ -1,23 +1,30 @@
 'use strict'
+const logger = require('../logger')
+
+const CACHE_EXPIRE = 5000
 
 class AnopeWebhook {
   static update (ctx) {
     if (AnopeWebhook.matchesCachedRequestItem(ctx.data)) {
-      console.log('matches cache')
+      logger.info('matches cache')
     }
 
     if (ctx.data.event) {
       switch (ctx.data.event) {
         case 'ns_register':
-          console.log('register', ctx.data.user)
+          logger.info('register', ctx.data.user)
           break
 
         case 'ns_drop':
-          console.log('drop', ctx.data.user)
+          logger.info('drop', ctx.data.user)
           break
 
         case 'ns_group':
-          console.log('group', ctx.data.user, ctx.data.account)
+          logger.info('group', ctx.data.user, ctx.data.account)
+          break
+
+        default:
+          break
       }
     }
     return true
@@ -28,7 +35,7 @@ class AnopeWebhook {
     AnopeWebhook.recentAnopeRequestsCache.push(cacheItem)
     setTimeout(() => {
       cacheItem.remove()
-    }, 5000)
+    }, CACHE_EXPIRE)
   }
 
   static matchesCachedRequestItem (ctx) {

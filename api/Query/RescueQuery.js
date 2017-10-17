@@ -1,6 +1,5 @@
 'use strict'
-const Rat = require('./../db').Rat
-const Epic = require('./../db').Epic
+const { Rat, Epic } = require('./../db')
 const Query = require('./index')
 
 /**
@@ -66,6 +65,7 @@ class RescueQuery extends Query {
         required: false
       },
       {
+        where: epics,
         model: Epic,
         as: 'epics',
         required: false

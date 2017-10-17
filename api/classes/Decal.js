@@ -1,9 +1,6 @@
 'use strict'
 
-const Rescue = require('../db').Rescue
-const User = require('../db').User
-const Rat = require('../db').Rat
-const Decals = require('../db').Decal
+const { Rescue, User, Rat, Decal: Decals } = require('../db')
 const Error = require('../errors')
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
@@ -46,7 +43,7 @@ class Decal {
     if (decalEligible) {
       let decal = await Decal.redeem(user, 'Rescues')
       if (!decal) {
-        throw('Could not find decal')
+        throw 'Could not find decal'
       }
       return decal
     } else {
@@ -63,15 +60,14 @@ class Decal {
     })
 
     if (!availableDecal) {
-      throw('Could not find any available decals')
+      throw 'Could not find any available decals'
     }
 
-    let decal = await availableDecal.update({
+    return availableDecal.update({
       userId: user.id,
       notes: notes,
       claimedAt: Date.now()
     })
-    return decal
   }
 }
 

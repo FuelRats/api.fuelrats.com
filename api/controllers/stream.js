@@ -1,8 +1,7 @@
 'use strict'
 
 const Error = require('../errors')
-const SubscriptionsPresenter = require('../classes/Presenters').SubscriptionsPresenter
-const CustomPresenter = require('../classes/Presenters').CustomPresenter
+const { SubscriptionsPresenter, CustomPresenter } = require('../classes/Presenters')
 
 class Stream {
   static subscribe (ctx) {
@@ -49,7 +48,7 @@ class Stream {
       throw Error.template('missing_required_field', 'id')
     }
 
-    let event = ctx.query.event
+    let { event } = ctx.query
     if (!event || event.length === 0) {
       throw Error.template('missing_required_field', 'event')
     }

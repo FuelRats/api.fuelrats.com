@@ -1,6 +1,6 @@
 'use strict'
-const User = require('../db').User
-const ProfilesPresenter = require('../classes/Presenters').ProfilesPresenter
+const { User } = require('../db')
+const { ProfilesPresenter } = require('../classes/Presenters')
 
 class Profile {
   static async read (ctx) {
