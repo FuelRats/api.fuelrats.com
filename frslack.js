@@ -1,6 +1,7 @@
 'use strict'
 
 const Slack = require('slack-node')
+const MS_TO_SECONDS = 1000
 
 const levelToSlackColor = {
   TRACE: '#8f8f8f',
@@ -42,7 +43,7 @@ function slackAppender (_config, layout, slack) {
       thumb_url: 'http://example.com/path/to/thumb.png',
       footer: _config.footer,
       footer_icon: 'https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2017-08-08/223124196241_3037525c66a75a1f0441_96.png',
-      ts: Math.floor(loggingEvent.startTime.getTime() / 1000)
+      ts: Math.floor(loggingEvent.startTime.getTime() / MS_TO_SECONDS)
     }])
 
     slack.api('chat.postMessage', {

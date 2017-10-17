@@ -1,6 +1,4 @@
 'use strict'
-const Rat = require('./../db/index').Rat
-const Epic = require('./../db/index').Epic
 const QueryOptions = require('./QueryOptions')
 
 const defaultRequestLimit = 25
@@ -94,7 +92,7 @@ class Query {
    * Create a Sequelize offset parameter from a v2 page query
    * @param {number} page - The number of pages to offset by
    * @param {number} limit - The number of results per page
-   * @returns {number} - An offset parameter
+   * @returns {?number} - An offset parameter
    */
   page (page, limit) {
     page = Number(page)

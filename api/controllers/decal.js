@@ -2,9 +2,9 @@
 
 const Error = require('../errors')
 const Decal = require('../classes/Decal')
-const User = require('../db').User
+const { User } = require('../db')
 const Permission = require('../permission')
-const DecalsPresenter = require('../classes/Presenters').DecalsPresenter
+const { DecalsPresenter } = require('../classes/Presenters')
 
 class Decals {
   static async check (ctx) {

@@ -1,6 +1,4 @@
 'use strict'
-const User = require('./../db').User
-const Epic = require('./../db').Epic
 const Query = require('./index')
 
 /**

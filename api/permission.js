@@ -3,7 +3,7 @@
 const Errors = require('./errors')
 const i18next = require('i18next')
 const localisationResources = require('../localisations.json')
-const Group = require('./db').Group
+const { Group } = require('./db')
 
 i18next.init({
   lng: 'en',
@@ -39,7 +39,7 @@ class Permission {
    * @param {string[]} permissions - The permissions to validate
    * @param {Object} user - The user object of the user to validate
    * @param {Object} scope - Optional scope array of an oauth2 client to validate
-   * @returns {Promise}
+   * @returns {boolean}
    */
   static require (permissions, user, scope = null) {
     if (Permission.granted(permissions, user, scope)) {
@@ -107,14 +107,6 @@ class Permission {
     return hasPermission
   }
 
-  static authenticationError (permission) {
-    if (permission) {
-      return Errors.template('not_authenticated', permission)
-    } else {
-      return Errors.template('not_authenticated')
-    }
-  }
-
   static permissionError (permissions) {
     return Errors.template('no_permission', permissions)
   }
@@ -135,7 +127,7 @@ class Permission {
 
   /**
    * Get the available permissions/oauth scopes
-   * @returns [Object]
+   * @returns {Object}
    */
   static get groups () {
     return groups

@@ -1,20 +1,9 @@
 'use strict'
 const Anope = require('./index')
-const ChanServ = require('./ChanServ')
 const NickServ = require('./NickServ')
 const Permissions = require('../permission')
-const GroupsPresenter = require('../classes/Presenters').GroupsPresenter
+const { GroupsPresenter } = require('../classes/Presenters')
 
-const officialChannels = [
-  '#fuelrats',
-  '#drillrats',
-  '#drillrats2',
-  '#drillrats3',
-  '#ratchat',
-  '#rat-ops',
-  '#rattech',
-  '#doersofstuff'
-]
 
 /**
  * Class for managing requests to HostServ
@@ -49,7 +38,6 @@ class HostServ {
 
     await HostServ.set(user.data.attributes.nicknames[0], virtualHost)
 
-    //officialChannels.forEach(ChanServ.sync)
     NickServ.update(user.data.attributes.nicknames[0])
     return virtualHost
   }

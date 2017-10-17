@@ -10,91 +10,181 @@
   },
   "extends": "eslint:recommended",
   "rules": {
+    "no-restricted-syntax": [
+      "error",
+      "ForStatement"
+    ],
     "indent": [
-      2,
+      "error",
       2, {
         "SwitchCase": 1
       }
     ],
     "linebreak-style": [
-      2,
+      "error",
       "unix"
     ],
     "quotes": [
-      2,
+      "error",
       "single",
       "avoid-escape"
     ],
     "semi": [
-      2,
+      "error",
       "never"
     ],
     "strict": [
-      2,
+      "error",
       "global"
     ],
     "curly": [
-      2
+      "error"
     ],
     "no-cond-assign": [
-      2,
+      "error",
       "always"
     ],
     "no-dupe-keys": [
-      2
+      "error"
     ],
     "no-duplicate-case": [
-      2
+      "error"
     ],
     "no-sparse-arrays": [
-      1
+      "warn"
     ],
     "no-obj-calls": [
-      2
+      "error"
     ],
     "no-unexpected-multiline": [
-      2
+      "error"
     ],
     "valid-typeof": [
-      2
+      "error"
     ],
     "no-irregular-whitespace": [
-      2
+      "error"
     ],
     "vars-on-top": [
-      1
+      "warn"
     ],
     "space-before-function-paren": [
-      2
+      "error"
     ],
     "space-before-blocks": [
-      2
+      "error"
     ],
     "space-in-parens": [
-      2,
+      "error",
       "never"
     ],
     "space-infix-ops": [
-      2
+      "error"
     ],
     "spaced-comment": [
-      2,
+      "error",
       "always"
     ],
+    "space-unary-ops": [
+      "error"
+    ],
+    "keyword-spacing": [
+      "error"
+    ],
     "guard-for-in": [
-      2
+      "warn"
     ],
     "require-await": [
-      1
+      "warn"
     ],
     "require-yield": [
-      1
+      "warn"
     ],
     "no-return-await": [
-      1
+      "warn"
     ],
     "no-await-in-loop": [
-      1
+      "warn"
+    ],
+    "default-case": [
+      "error"
+    ],
+    "eqeqeq": [
+      "warn"
+    ],
+    "no-eq-null": [
+      "warn"
+    ],
+    "no-eval": [
+      "error"
+    ],
+    "no-empty-function": [
+      "warn"
+    ],
+    "no-extra-bind": [
+      "warn"
+    ],
+    "no-implied-eval": [
+      "error"
+    ],
+    "complexity": [
+      "warn",
+      {
+        "max": 15
+      }
+    ],
+    "no-implicit-coercion": [
+      "warn"
+    ],
+    "no-implicit-globals": [
+      "warn"
+    ],
+    "no-invalid-this": [
+      "warn"
+    ],
+    "no-lone-blocks": [
+      "warn"
+    ],
+    "no-loop-func": [
+      "warn"
+    ],
+    "no-magic-numbers": [
+      "warn",
+      {
+        "ignore": [0, 1, 60, 1000],
+        "enforceConst": true
+      }
+    ],
+    "no-return-assign": [
+      "warn"
+    ],
+    "no-self-compare": [
+      "warn"
+    ],
+    "no-unused-expressions": [
+      "warn"
+    ],
+    "no-useless-concat": [
+      "warn"
+    ],
+    "no-useless-return": [
+      "warn"
+    ],
+    "no-with": [
+      "error"
+    ],
+    "yoda": [
+      "warn"
+    ],
+    "no-plusplus": [
+      "error"
+    ],
+    "prefer-destructuring": [
+      "error",
+      {
+        "array": true,
+        "object": true
+      }
     ]
   }
 }

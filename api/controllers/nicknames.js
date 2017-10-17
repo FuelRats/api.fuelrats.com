@@ -1,10 +1,9 @@
 'use strict'
 const Permission = require('../permission')
 const Error = require('../errors')
-const User = require('../db').User
-const db = require('../db').db
+const { User, db } = require('../db')
 const NicknameQuery = require('../Query/NicknameQuery')
-const NicknamesPresenter = require('../classes/Presenters').NicknamesPresenter
+const { NicknamesPresenter } = require('../classes/Presenters')
 
 const NickServ = require('../Anope/NickServ')
 const HostServ = require('../Anope/HostServ')
@@ -35,7 +34,7 @@ class Nicknames {
       }
     }
 
-    let nicknames = ctx.state.user.data.attributes.nicknames
+    let { nicknames } = ctx.state.user.data.attributes
     if (nicknames.includes(ctx.data.nickname)) {
       throw Error.template('already_exists', 'Nickname is already registered')
     }
@@ -66,7 +65,7 @@ class Nicknames {
       }
     }
 
-    let nicknames = ctx.state.user.data.attributes.nicknames
+    let { nicknames } = ctx.state.user.data.attributes
     if (nicknames.includes(ctx.data.nickname)) {
       throw Error.template('already_exists', 'Nickname is already registered to you')
     }

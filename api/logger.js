@@ -4,7 +4,7 @@ let config = require('../config')
 
 const log4js = require('log4js')
 
-log4js.addLayout('frloggly', function (config) {
+log4js.addLayout('frloggly', function () {
   return function (logEvent) {
     let obj =  {
       msg: logEvent.data[0],

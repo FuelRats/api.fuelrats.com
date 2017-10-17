@@ -1,5 +1,5 @@
 'use strict'
-const Action = require('../db').Action
+const { Action } = require('../db')
 
 class SSOLogin  {
   static loginWithCredentials (request, response) {

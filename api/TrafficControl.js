@@ -1,7 +1,7 @@
 'use strict'
 const Permissions = require('./permission')
 
-const hour = 60 * 60 * 1000
+const HOUR_TIMER = 60 * 60 * 1000
 
 const allowedUnauthenticatedRequestCount = 360
 const allowedAuthenticatedRequestCount = 3600
@@ -79,7 +79,7 @@ class TrafficControl {
    * @returns {Date} A date object containing the next time all rate limits will be reset
    */
   get nextResetDate () {
-    return new Date(Math.ceil(new Date().getTime() / hour) * hour)
+    return new Date(Math.ceil(new Date().getTime() / HOUR_TIMER) * HOUR_TIMER)
   }
 
   /**
@@ -190,7 +190,7 @@ class RemoteAddressEntity extends TrafficEntity {
    * @returns {number} the number of remaining requests this entity has in this period
    */
   get remainingRequests () {
-    return allowedUnauthenticatedRequestCount - this._requestCount
+    return allowedUnauthenticatedRequestCount - this.count
   }
 
   get totalRequests () {

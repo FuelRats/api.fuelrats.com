@@ -1,4 +1,5 @@
 'use strict'
+const BCRYPT_ENCRYPTION_ROUNDS = 12
 
 const { User, Rat, db} = require('../db')
 const Errors = require('../errors')
@@ -7,13 +8,11 @@ const NickServ = require('../Anope/NickServ')
 const HostServ = require('../Anope/NickServ')
 const UserQuery = require('../Query/UserQuery')
 const UserPresenter = require('../classes/Presenters').UsersPresenter
-const { POST, Request } = require('../classes/Request')
-const config = require('../../config')
 
 const platforms = ['pc', 'xb', 'ps']
 
 class Register {
-  static async create (ctx, next) {
+  static async create (ctx) {
     // let captcha = ctx.data['g-recaptcha-response']
     // let captchaResult = await new Request(POST, {
     //   host: 'www.google.com',
@@ -31,9 +30,9 @@ class Register {
     let transaction = await db.transaction()
 
     try {
-      let email = ctx.data.email
+      let { email } = ctx.data
 
-      let password = await bcrypt.hash(ctx.data.password, 12)
+      let password = await bcrypt.hash(ctx.data.password, BCRYPT_ENCRYPTION_ROUNDS)
 
       let user = await User.create({
         email: email,
@@ -43,8 +42,9 @@ class Register {
       })
 
       let name = ctx.data.name.replace(/CMDR/i, '')
-      let platform = ctx.data.platform
+      let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
+        // noinspection ExceptionCaughtLocallyJS
         throw Errors.template('invalid_parameter', 'platform')
       }
 
@@ -56,7 +56,7 @@ class Register {
         transaction: transaction
       })
 
-      let nickname = ctx.data.nickname
+      let { nickname } = ctx.data
       await NickServ.register(nickname, ctx.data.password, email)
 
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {

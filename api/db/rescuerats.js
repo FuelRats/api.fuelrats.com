@@ -1,7 +1,7 @@
 'use strict'
 
 module.exports = function (sequelize, DataTypes) {
-  let RescueRats = sequelize.define('RescueRats', {
+  return sequelize.define('RescueRats', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -18,6 +18,4 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV4
     }
   })
-
-  return RescueRats
 }

@@ -1,5 +1,7 @@
 'use strict'
 
+const PASSWORD_MAX_LENGTH = 1024
+
 module.exports = function (db, DataTypes) {
   let User = db.define('User', {
     id: {
@@ -17,7 +19,7 @@ module.exports = function (db, DataTypes) {
       isEmail: true
     },
     password: {
-      type: DataTypes.STRING(1024),
+      type: DataTypes.STRING(PASSWORD_MAX_LENGTH),
       allowNull: false
     },
     nicknames: {
