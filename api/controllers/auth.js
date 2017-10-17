@@ -143,6 +143,11 @@ class Authentication {
   }
 }
 
+/**
+ * Retrieve bearer token from a request object
+ * @param ctx the request object to retrieve a bearer token from
+ * @returns {*} A string with the bearer token or null if none was found.
+ */
 function getBearerToken (ctx) {
   if (ctx.query.bearer) {
     return ctx.query.bearer
@@ -155,6 +160,11 @@ function getBearerToken (ctx) {
   return null
 }
 
+/**
+ * Get basic auth credentials from a request object
+ * @param ctx the requset object to retrieve basic auth credentials from
+ * @returns {Array} An array containing the username and password, or an empty array if none was found.
+ */
 function getBasicAuth (ctx) {
   let authorizationHeader = ctx.get('Authorization')
   if (authorizationHeader.startsWith('Basic ') && authorizationHeader.length > basicAuthHeaderOffset) {

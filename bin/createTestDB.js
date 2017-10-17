@@ -49,8 +49,12 @@ const seed = {
   alpha: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 }
 
-// predictable simple semi psuedo random generator
-// https://stackoverflow.com/a/19303725/3785845
+/**
+ * predictable simple semi psuedo random generator (https://stackoverflow.com/a/19303725/3785845)
+ * @param seed the random seed
+ * @param m prand seed
+ * @returns {Function} a random generator
+ */
 function prand (seed = 1, m = DEFAULT_PRAND_SEED) {
   return function (min, max) {
     if (!max && max !== 0) {
@@ -67,6 +71,11 @@ function prand (seed = 1, m = DEFAULT_PRAND_SEED) {
 // override the underscore random so we can use shuffle and sample
 _.random = prand()
 
+/**
+ * Create a test user
+ * @param user user info
+ * @returns {Promise.<*>} a test user
+ */
 async function createUser (user) {
 
   if (!user.hash) {
@@ -92,6 +101,11 @@ async function createUser (user) {
     
 }
 
+/**
+ * Create a test client
+ * @param client client info
+ * @returns {Promise.<*>} a test client
+ */
 async function createClient (client) {
 
   if (!client.hash) {
@@ -109,6 +123,10 @@ async function createClient (client) {
 
 }
 
+/**
+ * Initialize the test
+ * @returns {Promise.<void>}
+ */
 async function init () {
 
   const group = {}

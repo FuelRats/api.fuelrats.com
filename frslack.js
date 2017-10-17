@@ -12,6 +12,13 @@ const levelToSlackColor = {
   FATAL: 'danger'
 }
 
+/**
+ * The loggly appender for notificaitons to slack
+ * @param _config the configuration options
+ * @param layout the layout to use
+ * @param slack the slack framework
+ * @returns {function(*=)}
+ */
 function slackAppender (_config, layout, slack) {
   return (loggingEvent) => {
     const data = {
@@ -59,6 +66,12 @@ function slackAppender (_config, layout, slack) {
   }
 }
 
+/**
+ * Configure the loggly extension
+ * @param _config configuration options
+ * @param layouts the layouts to use
+ * @returns {function(*=)}
+ */
 function configure (_config, layouts) {
   const slack = new Slack(_config.token)
 

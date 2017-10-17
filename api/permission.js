@@ -20,6 +20,10 @@ const permissionLocaleKeys = {
 
 let groups = {}
 
+/**
+ * Fetches all the permissions from the database
+ * @returns {Promise.<void>}
+ */
 async function fetchPermissions () {
   groups = await Group.findAll({})
   groups.sort((group1, group2) => {

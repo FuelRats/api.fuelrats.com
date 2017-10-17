@@ -3,6 +3,12 @@ const { POST, Request } = require('../../../api/classes/Request')
 
 const HTTP_CREATED = 201
 
+/**
+ * Create a rescue payload
+ * @param auth authentication credentials
+ * @param r request
+ * @returns {Promise.<void>}
+ */
 async function create (auth, r) {
 
   const payload = Object.assign({

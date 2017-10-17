@@ -28,6 +28,11 @@ exports.user = {
   }
 }
 
+/**
+ * Create a test user
+ * @param user user information
+ * @returns {Promise.<*>} a test user
+ */
 async function createUser (user) {
 
   const nicknames = "ARRAY['" + user.nicknames.join("','") + "']::citext[]"
@@ -46,6 +51,10 @@ async function createUser (user) {
     
 }
 
+/**
+ * Initialize the testing
+ * @returns {Promise.<void>}
+ */
 async function init () {
 
   // clear out the database

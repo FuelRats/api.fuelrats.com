@@ -220,6 +220,12 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
 
 const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
 
+/**
+ * Get the required permission for writing to this rescue
+ * @param rescue the rescue to get permission for
+ * @param user the user to check permission against
+ * @returns {*} the required permission for writing to this rescue
+ */
 function getRescuePermissionType (rescue, user) {
   if (user && rescue.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
     for (let rat of user.data.relationships.rats.data) {

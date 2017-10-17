@@ -88,6 +88,11 @@ function getIRCSafeName (rat) {
   return ratName.toLowerCase()
 }
 
+/**
+ * Gets the group the user is a part of that has the highest priority defined
+ * @param user the user to get the highest priority group from
+ * @returns {T} the highest priority group
+ */
 function getHighestPriorityGroup (user) {
   let groups = user.included.filter((include) => {
     return include.type === 'groups' && include.attributes.vhost
