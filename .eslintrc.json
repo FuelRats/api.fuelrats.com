@@ -185,6 +185,12 @@
         "array": true,
         "object": true
       }
+    ],
+    "no-warning-comments": [
+      "error",
+      {
+        "terms": ["todo", "fixme"]
+      }
     ]
   }
 }
