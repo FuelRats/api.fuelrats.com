@@ -100,7 +100,7 @@ function getHighestPriorityGroup (user) {
   groups.push(GroupsPresenter.render(defaultGroup).data)
 
   groups.sort((a, b) => {
-    return a.priority > b.priority
+    return a.priority - b.priority
   })
   return groups[0]
 }
