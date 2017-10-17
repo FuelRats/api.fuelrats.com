@@ -6,16 +6,16 @@ const HTTP_CREATED = 201
 /**
  * Create a rescue payload
  * @param auth authentication credentials
- * @param r request
+ * @param rescue rescue details
  * @returns {Promise.<void>}
  */
-async function create (auth, r) {
+async function create (auth, rescue) {
 
   const payload = Object.assign({
     client: 'scarlet_pimpernel',
     platform: 'pc',
     system: 'LHS 3447'
-  }, r)
+  }, rescue)
 
   const post = await new Request(POST, {
     path: '/rescues',

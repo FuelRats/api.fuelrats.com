@@ -44,7 +44,7 @@ async function createUser (user) {
   })
 
   if (user.groups.length) {
-    await testUser.addGroups(user.groups.map(g => group[g]))
+    await testUser.addGroups(user.groups.map(gid => group[gid]))
   }
     
   return testUser

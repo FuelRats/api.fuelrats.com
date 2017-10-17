@@ -52,10 +52,10 @@ module.exports = {
 
     const adminUser = await auth.adminUser()
 
-    const r = await rescue.create(adminUser, {plaform: 'xb', system: 'sol'})
+    const res = await rescue.create(adminUser, {plaform: 'xb', system: 'sol'})
 
     let get = await new Request(GET, {
-      path: '/rescues/' + r.id,
+      path: '/rescues/' + res.id,
       insecure: true,
       headers: {
         'Cookie': adminUser
