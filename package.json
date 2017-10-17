@@ -58,6 +58,7 @@
     "loggly": "^1.1.1",
     "markdown-escape": "^1.0.2",
     "mocha": "^2.3.4",
+    "mock-require": "^2.0.2",
     "moment": "^2.18.1",
     "node-dev": "^2.7.1",
     "node-feedparser": "^1.0.1",

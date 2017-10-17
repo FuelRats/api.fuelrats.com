@@ -5,7 +5,9 @@ const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
 const auth = require('./support/auth')
 const rescue = require('./support/rescue')
+const { HTTP_CREATED, HTTP_OK } = require('./support/const')
 
+/* eslint-disable no-magic-numbers */
 
 module.exports = {
   setUp: async function (test) {
@@ -33,11 +35,11 @@ module.exports = {
 
     let res = post.body
 
-    test.strictEqual(post.response.statusCode, 201)
+    test.strictEqual(post.response.statusCode, HTTP_CREATED)
     test.equal(res.error, null)
 
-    if(res.data) {
-      let attributes = res.data.attributes
+    if (res.data) {
+      let { attributes } = res.data
       test.notEqual(res.data.id, null)
       test.notStrictEqual(Date.parse(attributes.createdAt), NaN)
       test.notStrictEqual(Date.parse(attributes.updatedAt), NaN)
@@ -60,7 +62,7 @@ module.exports = {
       }
     })
 
-    test.strictEqual(get.response.statusCode, 200)
+    test.strictEqual(get.response.statusCode, HTTP_OK)
 
   })
 }

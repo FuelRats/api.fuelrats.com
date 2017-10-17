@@ -1,6 +1,6 @@
 'use strict'
 
-const { GET, POST, Request } = require('../../../api/classes/Request')
+const { Request } = require('../../../api/classes/Request')
 const db = require('./db')
 
 /**
