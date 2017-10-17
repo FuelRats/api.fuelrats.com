@@ -100,6 +100,13 @@ class Rats {
   }
 }
 
+/**
+ * Check whether the user has permission to perform the specified action for this rat
+ * @param ctx the request object to validate
+ * @param rat the rat to check permissions for
+ * @param action the action to perform
+ * @returns {boolean} Whether the user has permission
+ */
 function hasValidPermissionsForRat (ctx, rat, action = 'write') {
   let permissions = [`rat.${action}`]
   if (rat.userId === ctx.state.user.data.id) {

@@ -112,6 +112,13 @@ class Clients {
   }
 }
 
+/**
+ * Check whether the user has permission to perform the required action for this client
+ * @param ctx the request object to validate
+ * @param client the client to check permission for
+ * @param action the action to perform
+ * @returns {boolean} Whether the user has access to perform the action
+ */
 function hasValidPermissionsForClient (ctx, client, action = 'read') {
   let permissions = [`client.${action}`]
   if (client.id === ctx.state.user.data.id) {
