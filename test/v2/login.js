@@ -1,8 +1,9 @@
 'use strict'
-const { GET, POST, Request } = require('../../api/classes/Request')
+const { POST, Request } = require('../../api/classes/Request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
+const { HTTP_OK, HTTP_UNAUTHORIZED} = require('./support/const')
 
 module.exports = {
 
@@ -14,7 +15,7 @@ module.exports = {
 
   adminAuth: asyncWrap(async function (test) {
 
-    test.expect(2)
+    test.expect(2)  // eslint-disable-line no-magic-numbers
 
     let post = await new Request(POST, {
       path: '/login',
@@ -24,14 +25,14 @@ module.exports = {
       password: db.user.admin.password
     })
       
-    test.strictEqual(post.response.statusCode, 200)
+    test.strictEqual(post.response.statusCode, HTTP_OK)
     test.equal(post.body, 'OK')
 
   }),
 
   testAuth: asyncWrap(async function (test) {
 
-    test.expect(2)
+    test.expect(2) // eslint-disable-line no-magic-numbers
 
     let post = await new Request(POST, {
       path: '/login',
@@ -41,14 +42,14 @@ module.exports = {
       password: db.user.test.password
     })
 
-    test.strictEqual(post.response.statusCode, 200)
+    test.strictEqual(post.response.statusCode, HTTP_OK)
     test.equal(post.body, 'OK')
 
   }),
 
   failAuth: asyncWrap(async function (test) {
 
-    test.expect(2)
+    test.expect(2) // eslint-disable-line no-magic-numbers
 
     let post = await new Request(POST, {
       path: '/login',
@@ -60,10 +61,10 @@ module.exports = {
 
     let res = post.body
   
-    test.strictEqual(post.response.statusCode, 401)
+    test.strictEqual(post.response.statusCode, HTTP_UNAUTHORIZED)
 
     test.deepEqual(res.errors, [{
-      code: 401,
+      code: HTTP_UNAUTHORIZED,
       detail: 'Authentication failed',
       status: 'Unauthorized',
       title: 'Not Authenticated'

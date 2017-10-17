@@ -3,11 +3,8 @@
 // safety net as we are going to be trashing the DB
 process.env.NODE_ENV = 'testing'
 
-const DB = require('../../../api/db')
-const db = DB.db
+const { db, User, Group } = require('../../../api/db')
 db.options.logging = false
-const User = DB.User
-const Group = DB.Group
 
 const group = {}
 
@@ -41,7 +38,7 @@ async function createUser (user) {
     nicknames: db.literal(nicknames)
   })
 
-  if(user.groups.length) {
+  if (user.groups.length) {
     await testUser.addGroups(user.groups.map(g => group[g]))
   }
     

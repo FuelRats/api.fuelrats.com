@@ -1,6 +1,7 @@
 'use strict'
-const { GET, POST, Request } = require('../../../api/classes/Request')
+const { POST, Request } = require('../../../api/classes/Request')
 
+const HTTP_CREATED = 201
 
 async function create (auth, r) {
 
@@ -16,7 +17,7 @@ async function create (auth, r) {
     headers: { 'Cookie': auth }
   }, payload)
 
-  if((post.response.statusCode !== 201) ||
+  if ((post.response.statusCode !== HTTP_CREATED) ||
       !post.body || !post.body.data) {
     throw new Error('Failed to create rescue')
   }
@@ -24,6 +25,5 @@ async function create (auth, r) {
   return post.body.data
 
 }
-
 
 module.exports.create = create
