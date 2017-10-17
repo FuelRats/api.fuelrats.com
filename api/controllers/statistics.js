@@ -12,7 +12,7 @@ class Statistics {
     let rescuesQuery = new RescueStatisticsQuery(ctx.query, ctx)
     let stats = rescuesQuery.toSequelize
     let result = await Rescue.scope(null).findAll(stats)
-    let results = result.map((r) => { return r.toJSON() })
+    let results = result.map((result) => { return result.toJSON() })
     return RescueStatisticsPresenter.render(results, ctx.meta(result, rescuesQuery))
   }
 
@@ -20,7 +20,7 @@ class Statistics {
     let systemQuery = new SystemStatisticsQuery(ctx.query, ctx)
     let stats = systemQuery.toSequelize
     let result = await Rescue.scope(null).findAll(stats)
-    let results = result.map((r) => { return r.toJSON() })
+    let results = result.map((result) => { return result.toJSON() })
     return SystemStatisticsPresenter.render(results, ctx.meta(result, systemQuery))
   }
 
