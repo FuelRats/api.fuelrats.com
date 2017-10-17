@@ -194,6 +194,13 @@
     ],
     "require-jsdoc": [
       "error"
+    ],
+    "id-length": [
+      "error",
+      {
+        "min": 2,
+        "max": 35
+      }
     ]
   }
 }
