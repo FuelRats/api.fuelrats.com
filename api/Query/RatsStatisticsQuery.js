@@ -103,7 +103,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
       fields: ['platform'],
       options: [
         ['pc', 'pc'],
-        ['pc', 'ps'],
+        ['ps', 'ps'],
         ['xb', 'xb']
       ]
     }]
