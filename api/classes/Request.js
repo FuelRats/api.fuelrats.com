@@ -2,6 +2,7 @@
 const config = require('../../config')
 const https = require('https')
 const http = require('http')
+const deepAssign = require('deep-assign')
 
 /**
  * Symbol representing HTTP GET method requests
@@ -69,7 +70,7 @@ class Request {
         port: config.port
       }
 
-      Object.assign(options, overrideOptions)
+      deepAssign(options, overrideOptions)
 
       httpEngine.get(options, function (response) {
         let body = ''
@@ -116,7 +117,7 @@ class Request {
         }
       }
 
-      Object.assign(options, overrideOptions)
+      deepAssign(options, overrideOptions)
 
 
       let post = httpEngine.request(options, function (response) {
