@@ -5,8 +5,6 @@ const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
 const { HTTP_OK, HTTP_UNAUTHORIZED} = require('./support/const')
 
-/* eslint-disable no-magic-numbers */
-
 module.exports = {
 
   setUp: async function (test) {
@@ -17,7 +15,8 @@ module.exports = {
 
   adminAuth: asyncWrap(async function (test) {
 
-    test.expect(2)
+    const NUM_TESTS = 2
+    test.expect(NUM_TESTS)
 
     let post = await new Request(POST, {
       path: '/login',
@@ -34,7 +33,8 @@ module.exports = {
 
   testAuth: asyncWrap(async function (test) {
 
-    test.expect(2)
+    const NUM_TESTS = 2
+    test.expect(NUM_TESTS)
 
     let post = await new Request(POST, {
       path: '/login',
@@ -51,7 +51,8 @@ module.exports = {
 
   failAuth: asyncWrap(async function (test) {
 
-    test.expect(2) // eslint-disable-line no-magic-numbers
+    const NUM_TESTS = 2
+    test.expect(NUM_TESTS)
 
     let post = await new Request(POST, {
       path: '/login',
