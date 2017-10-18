@@ -73,7 +73,7 @@ class Resets {
     return true
   }
 
-  static async resetPassword (ctx) {
+  static async resetPassword (ctx, next) {
     if (!ctx.params.token) {
       throw Error.template('missing_required_field', 'token')
     }
@@ -99,7 +99,8 @@ class Resets {
 
     reset.destroy()
 
-    return true
+    ctx.body = 'OK'
+    next()
   }
 
   static getPlainTextEmail (resetToken) {
