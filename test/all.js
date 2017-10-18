@@ -1,6 +1,5 @@
 'use strict'
 
-process.env.NODE_ENV = 'testing'
 const { promisify } = require('util')
 const { join } = require('path')
 
