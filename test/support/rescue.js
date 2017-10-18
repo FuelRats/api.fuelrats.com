@@ -1,15 +1,21 @@
 'use strict'
-const { POST, Request } = require('../../../api/classes/Request')
+const { POST, Request } = require('../../api/classes/Request')
 
 const HTTP_CREATED = 201
 
-async function create (auth, r) {
+/**
+ * Create a rescue payload
+ * @param auth authentication credentials
+ * @param rescue rescue details
+ * @returns {Promise.<void>}
+ */
+async function create (auth, rescue) {
 
   const payload = Object.assign({
     client: 'scarlet_pimpernel',
     platform: 'pc',
     system: 'LHS 3447'
-  }, r)
+  }, rescue)
 
   const post = await new Request(POST, {
     path: '/rescues',

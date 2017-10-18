@@ -1,9 +1,11 @@
 'use strict'
 
 // safety net as we are going to be trashing the DB
-process.env.NODE_ENV = 'testing'
+if (process.env.NODE_ENV !== 'testing') {
+  throw new Error('Please use NODE_ENV=testing')
+}
 
-const { db, User, Group } = require('../../../api/db')
+const { db, User, Group } = require('../../api/db')
 db.options.logging = false
 
 const group = {}
@@ -28,6 +30,11 @@ exports.user = {
   }
 }
 
+/**
+ * Create a test user
+ * @param user user information
+ * @returns {Promise.<*>} a test user
+ */
 async function createUser (user) {
 
   const nicknames = "ARRAY['" + user.nicknames.join("','") + "']::citext[]"
@@ -39,13 +46,17 @@ async function createUser (user) {
   })
 
   if (user.groups.length) {
-    await testUser.addGroups(user.groups.map(g => group[g]))
+    await testUser.addGroups(user.groups.map(gid => group[gid]))
   }
     
   return testUser
     
 }
 
+/**
+ * Initialize the testing
+ * @returns {Promise.<void>}
+ */
 async function init () {
 
   // clear out the database

@@ -177,6 +177,13 @@ class Users {
   }
  }
 
+/**
+ * Check whether the user has permissions to perform the required action to this user
+ * @param ctx the request object to validate
+ * @param user the user to check
+ * @param action the action to perform
+ * @returns {boolean} Whether the user has permission to perform the required action
+ */
 function hasValidPermissionsForUser (ctx, user, action = 'read') {
   let permissions = [`user.${action}`]
   if (user.id === ctx.state.user.data.id) {
@@ -186,6 +193,11 @@ function hasValidPermissionsForUser (ctx, user, action = 'read') {
   return Permission.require(permissions, ctx.state.user, ctx.state.scope)
 }
 
+/**
+ * Resize the image to the required format for fuelrats.com profile images
+ * @param imageData Original image data
+ * @returns {Promise} A resized image
+ */
 function formatImage (imageData) {
   return new Promise(function (resolve, reject) {
     gm(imageData).identify((err, data) => {
