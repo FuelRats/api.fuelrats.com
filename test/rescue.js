@@ -1,13 +1,11 @@
 'use strict'
-const { GET, POST, Request } = require('../../api/classes/Request')
+const { GET, POST, Request } = require('../api/classes/Request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
 const auth = require('./support/auth')
 const rescue = require('./support/rescue')
 const { HTTP_CREATED, HTTP_OK } = require('./support/const')
-
-/* eslint-disable no-magic-numbers */
 
 module.exports = {
   setUp: async function (test) {
@@ -18,7 +16,8 @@ module.exports = {
 
   rescueCreate: asyncWrap(async function (test) {
 
-    test.expect(5)
+    const NUM_TESTS = 5
+    test.expect(NUM_TESTS)
 
     const adminUser = await auth.adminUser()
 
@@ -48,11 +47,13 @@ module.exports = {
 
   }),
   rescueFindById: asyncWrap(async function (test) {
-    test.expect(1)
+
+    const NUM_TESTS = 5
+    test.expect(NUM_TESTS)
 
     const adminUser = await auth.adminUser()
 
-    const res = await rescue.create(adminUser, {plaform: 'xb', system: 'sol'})
+    const res = await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
 
     let get = await new Request(GET, {
       path: '/rescues/' + res.id,
@@ -63,6 +64,13 @@ module.exports = {
     })
 
     test.strictEqual(get.response.statusCode, HTTP_OK)
-
+    if (get.body) {
+      let { data } = get.body
+      test.strictEqual(data.length, 1) // should have only one rescue returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.system, 'sol')
+      test.strictEqual(attr.platform, 'xb')
+    }
   })
 }

@@ -1,5 +1,5 @@
 'use strict'
-const { POST, Request } = require('../../../api/classes/Request')
+const { POST, Request } = require('../../api/classes/Request')
 
 const HTTP_CREATED = 201
 
