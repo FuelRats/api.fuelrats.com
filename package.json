@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "dev": "$(npm bin)/grunt api",
-    "test": "NODE_ENV=testing node test/all.js"
+    "test": "NODE_ENV=testing node test/all.js",
+    "nodeunit": "NODE_ENV=testing nodeunit"
   },
   "license": "MIT",
   "dependencies": {
