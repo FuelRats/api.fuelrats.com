@@ -60,13 +60,15 @@ class RatsStatisticsQuery extends StatisticsQuery {
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
       [db.literal('array_agg(DISTINCT "user->UserGroups"."GroupId")'), 'groups'],
       [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
-      [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed'],
-      [db.fn('COUNT', db.literal('CASE WHEN "firstLimpet"."platform" = \'pc\' THEN 1 END')), 'pc'],
+      [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed']
     ]
 
     this._query.attributes = this._query.attributes.concat(this.compare('firstLimpet', this.comparators))
 
-    this._query.group = [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'user.id', 'user->displayRat.id']
+    this._query.group = [
+      db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 
+      'user.id', 'user->displayRat.id', 'user->displayRat->ships.id'
+    ]
   }
 
   /**

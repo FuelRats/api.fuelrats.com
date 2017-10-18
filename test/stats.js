@@ -45,5 +45,27 @@ module.exports = {
     }
 
 
+  }),
+  rats: asyncWrap(async function (test) {
+
+    const NUM_TESTS = 1
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUser()
+    await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
+    await rescue.create(adminUser, {platform: 'pc', system: 'maia'})
+    await rescue.create(adminUser, {platform: 'pc', system: 'fuelum'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'ps', system: 'beagles point'})
+
+    let get = await new Request(GET, {
+      path: '/statistics/rats',
+      insecure: true,
+      headers: {
+        'Cookie': adminUser
+      }
+    })
+
+    test.strictEqual(get.response.statusCode, HTTP_OK)
+
   })
 }
