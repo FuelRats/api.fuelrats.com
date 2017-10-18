@@ -17,7 +17,7 @@ logger.add(logger.transports.Console, {
 
 const { db, User, Client, Group, Rescue, Rat } = require('../api/db')
 const bcrypt = require('bcrypt')
-const _ = require('underscore')
+const underscore = require('underscore')
 
 // let fs = require('fs')
 // let crypto = require('crypto')
@@ -27,7 +27,7 @@ const DEFAULT_TIMESPAN = 30
 const DEFAULT_START_YEAR = 2017
 const DEFAULT_START_MONTH = 6
 const DEFAULT_START_DAY = 1
-const DEFAULT_PRAND_SEED = 10000
+const DEFAULT_PRAND_BIAS = 10000
 const BCRYPT_ROUNDS = 12
 const ID_PAD_LEN = 3
 const MAX_RESCUE_RATS = 3
@@ -49,24 +49,33 @@ const seed = {
   alpha: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 }
 
-// predictable simple semi psuedo random generator
-// https://stackoverflow.com/a/19303725/3785845
-function prand (seed = 1, m = DEFAULT_PRAND_SEED) {
+/**
+ * predictable simple semi psuedo random generator (https://stackoverflow.com/a/19303725/3785845)
+ * @param seed the random seed
+ * @param bias prand bias factor
+ * @returns {Function} a random generator
+ */
+function prand (seed = 1, bias = DEFAULT_PRAND_BIAS) {
   return function (min, max) {
     if (!max && max !== 0) {
       max = min
       min = 0
     }
-    let r = Math.sin(seed) * m
+    let rand = Math.sin(seed) * bias
     seed += 1
-    r = r - Math.floor(r)
-    return min + Math.floor(r * (max - min + 1))
+    rand = rand - Math.floor(rand)
+    return min + Math.floor(rand * (max - min + 1))
   }
 }
 
 // override the underscore random so we can use shuffle and sample
-_.random = prand()
+underscore.random = prand()
 
+/**
+ * Create a test user
+ * @param user user info
+ * @returns {Promise.<*>} a test user
+ */
 async function createUser (user) {
 
   if (!user.hash) {
@@ -92,6 +101,11 @@ async function createUser (user) {
     
 }
 
+/**
+ * Create a test client
+ * @param client client info
+ * @returns {Promise.<*>} a test client
+ */
 async function createClient (client) {
 
   if (!client.hash) {
@@ -109,6 +123,10 @@ async function createClient (client) {
 
 }
 
+/**
+ * Initialize the test
+ * @returns {Promise.<void>}
+ */
 async function init () {
 
   const group = {}
@@ -240,9 +258,9 @@ async function init () {
      * create rats, clients and rescues for each platform
      */
 
-    for (let p of Object.keys(seed.platforms)) {
+    for (let plat of Object.keys(seed.platforms)) {
 
-      let size = seed.platforms[p]
+      let size = seed.platforms[plat]
       
       /**
        * create a list of clients
@@ -251,9 +269,9 @@ async function init () {
       const clients = []
       const rats = []
 
-      logger.info('creating %d clients for %s', size.rescues, p)
-      for (let client of _.range(size.rescues)) {
-        let clientName = 'client-' + p + '-' + String(client).padStart(ID_PAD_LEN, '0')
+      logger.info('creating %d clients for %s', size.rescues, plat)
+      for (let client of underscore.range(size.rescues)) {
+        let clientName = 'client-' + plat + '-' + String(client).padStart(ID_PAD_LEN, '0')
         clients.push(await createClient({ 
           name: clientName,
           hash: hash,
@@ -261,9 +279,9 @@ async function init () {
         }))
       }
 
-      logger.info('creating %d rats for %s', size.rats, p)
-      for (let rat of _.range(size.rats)) {
-        let ratName = 'rat-' + p + '-' + String(rat).padStart(ID_PAD_LEN, '0')
+      logger.info('creating %d rats for %s', size.rats, plat)
+      for (let rat of underscore.range(size.rats)) {
+        let ratName = 'rat-' + plat + '-' + String(rat).padStart(ID_PAD_LEN, '0')
         await createUser({ 
           email: ratName + '@fuelrats.com',
           hash: hash,
@@ -273,39 +291,39 @@ async function init () {
         // create a rat for the user
         rats.push(await Rat.create({ 
           name: ratName,
-          platform: p,
+          platform: plat,
           joined: seed.start
         }))
       }
 
-      logger.info('creating %d rescues for %s', size.rescues, p)
-      for (let rescue of _.range(size.rescues)) {
+      logger.info('creating %d rescues for %s', size.rescues, plat)
+      for (let rescue of underscore.range(size.rescues)) {
         // get the client
 
-        let outcome = (rescue < MAX_RESCUE_RATS) ? null : _.random(SUCCESS_PROBABILITY) ? 'success' : 'failure'
+        let outcome = (rescue < MAX_RESCUE_RATS) ? null : underscore.random(SUCCESS_PROBABILITY) ? 'success' : 'failure'
         // create a list of rat indicies we can pull from
-        let rescueRats = _.sample(rats.map(r => r.id), _.random(1, MAX_RESCUE_RATS))
+        let rescueRats = underscore.sample(rats.map(rat => rat.id), underscore.random(1, MAX_RESCUE_RATS))
 
         // for(let rat = 0; rat < (rescue % 3) + 1; rat++) {
         //  rescueRats.push(rats[(rescue * rat) % rats.length].id)
         // }
 
-        let createdAt = seed.start.valueOf() + _.random(seed.timespan)
+        let createdAt = seed.start.valueOf() + underscore.random(seed.timespan)
         
-        const r = await Rescue.create({ 
+        const newRescue = await Rescue.create({ 
           client: clients[rescue].name,
-          codeRed: _.random(CODE_RED_PROBABILTY) !== 0,
-          status: outcome ? 'closed' : _.random(INACTIVE_PROBABILITY) ? 'closed' : 'inactive',
-          system: 'vaguely ' + _.sample(seed.alpha, SYSTEM_ID_LEN).join('') 
-                  + '-' + _.sample(seed.alpha, 1),
+          codeRed: underscore.random(CODE_RED_PROBABILTY) !== 0,
+          status: outcome ? 'closed' : underscore.random(INACTIVE_PROBABILITY) ? 'closed' : 'inactive',
+          system: 'vaguely ' + underscore.sample(seed.alpha, SYSTEM_ID_LEN).join('') 
+                  + '-' + underscore.sample(seed.alpha, 1),
           outcome: outcome,
-          platform: p,
+          platform: plat,
           firstLimpetId: outcome === 'success' ? rescueRats[0] : null,
           createdAt: createdAt,
-          updatedAt: createdAt + _.random(RESCUE_DURATION * MILLISECONDS) // 15 mins
+          updatedAt: createdAt + underscore.random(RESCUE_DURATION * MILLISECONDS) // 15 mins
         }, {silent:true})
 
-        await r.addRats(rescueRats) 
+        await newRescue.addRats(rescueRats) 
 
       }
 

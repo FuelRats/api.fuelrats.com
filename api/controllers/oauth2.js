@@ -169,6 +169,10 @@ OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId
   }
 })
 
+/**
+ * Check wether these scopes are valid scopes that represent a permission in the API
+ * @param scopes
+ */
 function validateScopes (scopes) {
   for (let scope of scopes) {
     if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
