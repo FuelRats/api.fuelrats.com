@@ -1,5 +1,5 @@
 'use strict'
-const { GET, POST, Request } = require('../../api/classes/Request')
+const { GET, POST, Request } = require('../api/classes/Request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
@@ -52,7 +52,7 @@ module.exports = {
 
     const adminUser = await auth.adminUser()
 
-    const res = await rescue.create(adminUser, {plaform: 'xb', system: 'sol'})
+    const res = await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
 
     let get = await new Request(GET, {
       path: '/rescues/' + res.id,

@@ -1,5 +1,5 @@
 'use strict'
-const { POST, Request } = require('../../api/classes/Request')
+const { POST, Request } = require('../api/classes/Request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')

@@ -3,7 +3,7 @@
 // safety net as we are going to be trashing the DB
 process.env.NODE_ENV = 'testing'
 
-const { db, User, Group } = require('../../../api/db')
+const { db, User, Group } = require('../../api/db')
 db.options.logging = false
 
 const group = {}

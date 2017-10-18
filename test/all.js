@@ -1,10 +1,12 @@
 'use strict'
 
 process.env.NODE_ENV = 'testing'
-
 const { promisify } = require('util')
+const { join } = require('path')
 
-const tests = ['v2']
+// we want to explicity run the test in order of complexity
+// not their alphabetical order 
+const tests = ['login.js', 'rescue.js']
 
 /**
  * run against all the files/dirs defined in tests
@@ -14,7 +16,7 @@ async function start () {
 
   const reporter = require('nodeunit').reporters.default
   const run = promisify(reporter.run)
-  await run(tests.map((test) => 'test/' + test), undefined)
+  await run(tests.map((test) => join(__dirname, test)), undefined)
   process.exit(0)
 
 }
