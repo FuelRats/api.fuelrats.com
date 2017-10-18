@@ -96,6 +96,9 @@ class Resets {
     }, {
       where: { id: reset.userId }
     })
+
+    reset.destroy()
+
     return true
   }
 
