@@ -246,7 +246,7 @@ router.post('/reset/:token', fields('password'), reset.resetPassword)
 
 router.get('/decals/check', Authentication.isAuthenticated, decal.check)
 router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
-router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.update']), jiraDrill.update)
+router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.write']), jiraDrill.update)
 
 /*
 
