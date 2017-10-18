@@ -44,8 +44,8 @@ class Resets {
     })
 
     let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
-    transporter.sendMail({
-      from: 'Fuel Rats (Do Not Reply) <fuelrats@localecho.net>',
+    await transporter.sendMail({
+      from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
       to: user.email,
       subject: 'Fuel Rats Password Reset Requested',
       text: Resets.getPlainTextEmail(reset.value),
