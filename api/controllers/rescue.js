@@ -206,9 +206,9 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
   }
   if (changedValues.hasOwnProperty('outcome')) {
     let { boardIndex } = result.data[0].attributes.data || {}
-    let caseNumber = boardIndex !== null ? `#${boardIndex}` : result.data[0].id
+    let caseNumber = boardIndex || boardIndex === 0 ? `#${boardIndex}` : result.data[0].id
 
-    let client = ctx.state.user.data.attributes.client || ''
+    let client = result.data[0].attributes.client || ''
     let author = ctx.state.user.data.attributes.nicknames[0] || ctx.state.user.data.id
     if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
       author = ctx.req.headers['x-command-by']
