@@ -6,8 +6,12 @@ const Errors = require('../errors')
 const bcrypt = require('bcrypt')
 const NickServ = require('../Anope/NickServ')
 const HostServ = require('../Anope/NickServ')
+const BotServ = require('../Anope/BotServ')
 const UserQuery = require('../Query/UserQuery')
 const UserPresenter = require('../classes/Presenters').UsersPresenter
+
+const BOLD_ASCII_CODE = 0x02
+const bold = String.fromCharCode(BOLD_ASCII_CODE)
 
 const platforms = ['pc', 'xb', 'ps']
 
@@ -27,10 +31,22 @@ class Register {
     //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
     // }
 
+    let { email, name, nickname } = ctx.data
+
+    let existingUser = await User.findOne({
+      where: {
+        email: {
+          $iLike: email
+        }
+      }
+    })
+    if (existingUser) {
+      throw Error.template('operation_failed', 'email already exists')
+    }
+
     let transaction = await db.transaction()
 
     try {
-      let { email } = ctx.data
 
       let password = await bcrypt.hash(ctx.data.password, BCRYPT_ENCRYPTION_ROUNDS)
 
@@ -41,7 +57,7 @@ class Register {
         transaction: transaction
       })
 
-      let name = ctx.data.name.replace(/CMDR/i, '')
+      name = name.replace(/CMDR/i, '')
       let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
@@ -56,7 +72,6 @@ class Register {
         transaction: transaction
       })
 
-      let { nickname } = ctx.data
       await NickServ.register(nickname, ctx.data.password, email)
 
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
@@ -68,6 +83,7 @@ class Register {
       let userQuery = new UserQuery({ id: user.id }, ctx)
       let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
       await HostServ.update(user[0])
+      process.emit('registration', ctx, ctx.data)
 
       ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
     } catch (ex) {
@@ -76,5 +92,10 @@ class Register {
     }
   }
 }
+
+process.on('registration', (values) => {
+  BotServ.say('#rat-ops',
+    `${bold}[API]${bold} User with email ${values.email} registered. IRC Nickname: ${values.nickname}. CMDR name: ${values.name}`)
+})
 
 module.exports = Register
