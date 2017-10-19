@@ -185,6 +185,22 @@
         "array": true,
         "object": true
       }
+    ],
+    "no-warning-comments": [
+      "error",
+      {
+        "terms": ["todo", "fixme"]
+      }
+    ],
+    "require-jsdoc": [
+      "error"
+    ],
+    "id-length": [
+      "error",
+      {
+        "min": 2,
+        "max": 35
+      }
     ]
   }
 }

@@ -71,6 +71,12 @@ class Decal {
   }
 }
 
+/**
+ * Check wether a user was eligible for the origina 3301 decals issued by Frontier on April 1st as a present for
+ * the Fuel Rats completing 10,000 rescues.
+ * @param user The user to check eligibility for
+ * @returns {*} A user if the user is eligible, null if not.
+ */
 function checkEligibleForOriginalDecal (user) {
   return User.findOne({
     where: {
@@ -95,6 +101,11 @@ function checkEligibleForOriginalDecal (user) {
   })
 }
 
+/**
+ * Check wether the user is eligible for a new rescue decal
+ * @param user the user to check eligibility for
+ * @returns {*} A user if the user is eligible, null if not.
+ */
 function checkEligibleForRescueDecal (user) {
   return User.findOne({
     where: {
@@ -119,6 +130,10 @@ function checkEligibleForRescueDecal (user) {
   })
 }
 
+/**
+ * Get a date object for the last time decals were issued (1st of every month)
+ * @returns {Date} A date object for midnight UTC on the 1st of the current month.
+ */
 function getLastMonthTurnover () {
   let foo = new Date()
   foo.setUTCDate(1)

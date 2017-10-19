@@ -246,7 +246,7 @@ router.post('/reset/:token', fields('password'), reset.resetPassword)
 
 router.get('/decals/check', Authentication.isAuthenticated, decal.check)
 router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
-router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.update']), jiraDrill.update)
+router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.write']), jiraDrill.update)
 
 /*
 
@@ -269,6 +269,11 @@ app.use(router.routes())
 app.use(router.allowedMethods())
 
 
+/**
+ * Parses an object of URL query parameters and builds a nested object by delimiting periods into sub objects.
+ * @param query an array of URL query parameters
+ * @returns {{}} a nested object
+ */
 function parseQuery (query) {
   let queryObj = {}
 
@@ -328,6 +333,11 @@ wss.on('connection', async function connection (client) {
   })
 })
 
+/**
+ * Goes through an object and sets properties commonly usde to hold sensitive information to a static value.
+ * @param obj The object to censor
+ * @returns {{}} A censored object
+ */
 function censor (obj) {
   let censoredObj = {}
   Object.assign(censoredObj, obj)
@@ -342,6 +352,11 @@ function censor (obj) {
   return censoredObj
 }
 
+/**
+ * Makes sure the request object has the required data fields specified
+ * @param requiredFields The data fields to require
+ * @returns {Function} A promise
+ */
 function fields (...requiredFields) {
   return async function (ctx, next) {
     let missingFields = requiredFields.filter((requiredField) => {
@@ -354,6 +369,11 @@ function fields (...requiredFields) {
   }
 }
 
+/**
+ * Removes the specified data fields from the request object
+ * @param cleanFields The data fields to clean away
+ * @returns {Function} A promise
+ */
 function clean (...cleanFields) {
   return async function (ctx, next) {
     if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {

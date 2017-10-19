@@ -44,8 +44,8 @@ class Resets {
     })
 
     let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
-    transporter.sendMail({
-      from: 'Fuel Rats (Do Not Reply) <fuelrats@localecho.net>',
+    await transporter.sendMail({
+      from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
       to: user.email,
       subject: 'Fuel Rats Password Reset Requested',
       text: Resets.getPlainTextEmail(reset.value),
@@ -73,7 +73,7 @@ class Resets {
     return true
   }
 
-  static async resetPassword (ctx) {
+  static async resetPassword (ctx, next) {
     if (!ctx.params.token) {
       throw Error.template('missing_required_field', 'token')
     }
@@ -96,7 +96,11 @@ class Resets {
     }, {
       where: { id: reset.userId }
     })
-    return true
+
+    reset.destroy()
+
+    ctx.body = 'OK'
+    next()
   }
 
   static getPlainTextEmail (resetToken) {
