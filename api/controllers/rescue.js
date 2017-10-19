@@ -205,7 +205,7 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
     return
   }
   if (changedValues.hasOwnProperty('outcome')) {
-    let { boardIndex } = result.data[0].attributes.data
+    let { boardIndex } = result.data[0].attributes.data || {}
     let caseNumber = boardIndex !== null ? `#${boardIndex}` : result.data[0].id
 
     let client = ctx.state.user.data.attributes.client || ''
