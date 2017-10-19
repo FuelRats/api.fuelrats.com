@@ -27,10 +27,22 @@ class Register {
     //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
     // }
 
+    let { email, name, nickname } = ctx.data
+
+    let existingUser = await User.findOne({
+      where: {
+        email: {
+          $iLike: email
+        }
+      }
+    })
+    if (existingUser) {
+      throw Error.template('operation_failed', 'email already exists')
+    }
+
     let transaction = await db.transaction()
 
     try {
-      let { email } = ctx.data
 
       let password = await bcrypt.hash(ctx.data.password, BCRYPT_ENCRYPTION_ROUNDS)
 
@@ -41,7 +53,7 @@ class Register {
         transaction: transaction
       })
 
-      let name = ctx.data.name.replace(/CMDR/i, '')
+      name = name.replace(/CMDR/i, '')
       let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
@@ -56,7 +68,6 @@ class Register {
         transaction: transaction
       })
 
-      let { nickname } = ctx.data
       await NickServ.register(nickname, ctx.data.password, email)
 
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
