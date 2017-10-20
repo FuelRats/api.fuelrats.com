@@ -71,7 +71,7 @@ class JiraDrill {
     })
 
     let userResponse = UsersPresenter.render(userInstance, {})
-    //await HostServ.update(userResponse)
+    await HostServ.update(userResponse)
 
     let displayRat = User.preferredRat(userResponse)
     BotServ.say('#doersofstuff', `[API] Drilled status and IRC permissions updated for ${displayRat.attributes.name} (user ${user.id})`)
