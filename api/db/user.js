@@ -36,6 +36,17 @@ module.exports = function (db, DataTypes) {
     paranoid: true
   })
 
+  User.preferredRat = function (user) {
+    let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])
+    if (!ratRef) {
+      return null
+    }
+
+    return user.included.find((include) => {
+      return include.id === ratRef.id
+    })
+  }
+
   User.associate = function (models) {
     models.User.hasMany(models.Rat, {
       as: 'rats',

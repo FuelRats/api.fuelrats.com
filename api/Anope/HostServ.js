@@ -2,6 +2,7 @@
 const Anope = require('./index')
 const NickServ = require('./NickServ')
 const Permissions = require('../permission')
+const { User } = require('../db')
 const { GroupsPresenter } = require('../classes/Presenters')
 
 
@@ -54,26 +55,11 @@ function generateVirtualHost (user) {
   if (group.attributes.isAdministrator) {
     return group.attributes.vhost
   } else {
-    let preferredRat = getPreferredRat(user)
+    let preferredRat = User.preferredRat(user)
     let ircSafeName = getIRCSafeName(preferredRat)
 
     return `${ircSafeName}.${group.attributes.vhost}`
   }
-}
-/**
- * Get the preferred display rat of an account
- * @param user the user account to get the display rat of
- * @returns {*}
- */
-function getPreferredRat (user) {
-  let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])
-  if (!ratRef) {
-    return null
-  }
-
-  return user.included.find((include) => {
-    return include.id === ratRef.id
-  })
 }
 
 /**
