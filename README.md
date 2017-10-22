@@ -33,7 +33,7 @@ So you wanna do it the hard way? Fine. Make sure you install all of the dependen
 So, first of you need to fetch a few things and install. These should be available as packages from you favorite package manager.
 
 1. [`nvm`](https://github.com/creationix/nvm)
-1. [`node v6.3.1`](https://nodejs.org/en/)
+2. [`yarn`](https://yarnpkg.com/lang/en/docs/install/)
 1. [`Postgres v9.4`](https://www.postgresql.org/)
 
 Grab the repo:
@@ -43,17 +43,18 @@ Grab the repo:
 Install all of the required Node modules:
 
     cd api.fuelrats.com
-    npm install webpack@^2.1.0-beta
-    npm install -g grunt-cli
-    npm install
+    nvm install 8.0.0
+    yarn
 
 Make sure that you have created the databases required:
 
     su postgres
     psql -c 'CREATE DATABASE fuelrats;' -U postgres
+    psql -c 'CREATE EXTENSION citext;' -U postgres fuelrats
     psql -c 'CREATE DATABASE fuelratsTest;' -U postgres
+    psql -c 'CREATE EXTENSION citext;' -U postgres fuelratstest
     psql -c 'CREATE USER fuelrats;' -U postgres
-    psql -c "ALTER USER fuelrats PASSWORD 'fuelrats';" -U postgres
+    psql -c "ALTER USER fuelrats PASSWORD 'SqueakBaby';" -U postgres
     exit
 
 And if you want to use a different username or password, you can use them instead and set the new ones in your `config.json`
@@ -62,7 +63,7 @@ Now start the server!
 
     npm run dev
 
-This will ensure that Postgres is running as a service and start the API itself on either port 8080 or whatever port you've set in `config.json`.
+This will ensure that Postgres is running as a service and start the API itself on either port 8082 or whatever port you've set in `config.json`.
 
 ### Common Problems
 
