@@ -1,7 +1,6 @@
 'use strict'
 const { POST, Request } = require('../../api/classes/Request')
-
-const HTTP_CREATED = 201
+const { HTTP_CREATED } = require('./const')
 
 /**
  * Create a rescue payload
@@ -9,7 +8,7 @@ const HTTP_CREATED = 201
  * @param rescue rescue details
  * @returns {Promise.<void>}
  */
-async function create (auth, rescue) {
+exports.create = async function create (auth, rescue) {
 
   const payload = Object.assign({
     client: 'scarlet_pimpernel',
@@ -31,5 +30,3 @@ async function create (auth, rescue) {
   return post.body.data
 
 }
-
-module.exports.create = create

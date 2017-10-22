@@ -3,9 +3,9 @@ const { POST, Request } = require('../../api/classes/Request')
 const { HTTP_CREATED } = require('./const')
 
 /**
- * Create a rescue payload
+ * Create a rat payload
  * @param auth authentication credentials
- * @param rescue rescue details
+ * @param rat rat details
  * @returns {Promise.<void>}
  */
 exports.create = async function create (auth, rat) {
