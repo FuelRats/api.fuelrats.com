@@ -13,6 +13,13 @@ module.exports = {
     await app.init()
     test()
   },
+  /**
+   * @api {get} /statistics/rescues Get rescue stats
+   * @apiName StatsRescue
+   * @apiGroup Statistics
+   * 
+   * @apiHeader {String} Cookie auth token
+   */
   rescues: asyncWrap(async function (test) {
 
     const NUM_TESTS = 6

@@ -13,7 +13,17 @@ module.exports = {
     await app.init()
     test()
   },
-
+  /**
+   * @api {post} /rescues Create rescue
+   * @apiName CreateRescue
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * @apiParam {String} client
+   * @apiParam {String} platform
+   * @apiParam {String} system
+   * @apiSuccess (201) {Object} data Rescue data 
+   */
   rescueCreate: asyncWrap(async function (test) {
 
     const NUM_TESTS = 5
@@ -46,6 +56,14 @@ module.exports = {
     }
 
   }),
+  /**
+   * @api {get} /rescues/:id Find rescue
+   * @apiName FindRescueById
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * @apiParam {String} id rescue id
+   */
   rescueFindById: asyncWrap(async function (test) {
 
     const NUM_TESTS = 5

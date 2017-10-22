@@ -11,7 +11,7 @@
     "test": "NODE_ENV=testing node test/all.js",
     "nodeunit": "NODE_ENV=testing nodeunit",
     "jsdoc": "jsdoc -d static/docs/js -r api",
-    "apidoc": ""
+    "apidoc": "apidoc -o static/docs/api/ -i test/"
   },
   "license": "MIT",
   "dependencies": {
