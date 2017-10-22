@@ -10,7 +10,7 @@
     "dev": "node index.js",
     "test": "NODE_ENV=testing node test/all.js",
     "nodeunit": "NODE_ENV=testing nodeunit",
-    "jsdoc": "",
+    "jsdoc": "jsdoc -d static/docs/js -r api",
     "apidoc": ""
   },
   "license": "MIT",

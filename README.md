@@ -34,7 +34,7 @@ So, first of you need to fetch a few things and install. These should be availab
 
 1. [`nvm`](https://github.com/creationix/nvm)
 2. [`yarn`](https://yarnpkg.com/lang/en/docs/install/)
-1. [`Postgres v9.4`](https://www.postgresql.org/)
+3. [`Postgres v9.4`](https://www.postgresql.org/)
 
 Grab the repo:
 
@@ -65,9 +65,11 @@ Now start the server!
 
 This will ensure that Postgres is running as a service and start the API itself on either port 8082 or whatever port you've set in `config.json`.
 
-### Common Problems
+## Common Problems
 
-#### "Missing indexes" or an empty object is returned
+
+
+### "Missing indexes" or an empty object is returned
 
 Your databases are empty, home slice. You can use our [import script](bin/import.js) to grab a bunch of archived FuelRats data.
 
@@ -82,9 +84,13 @@ The `npm run dev` task starts the API and will automatically restart it when you
 
 ## Generating the docs
 
-It's so easy a DerryBear could do it! Just run the generator script:
+It's so easy a DerryBear could do it! Just run the generator scripts:
 
-    node bin/compile-docs.js
+    npm run jsdoc
+    npm run apidoc
+
+The docs will be created under static/docs and therefore accessible
+via http://<server>:<port>/docs/ e.g. http://localhost:8081/docs/
 
 ## License
 Copyright 2017 The Fuel Rats Mischief
