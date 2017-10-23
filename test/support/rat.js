@@ -1,5 +1,5 @@
 'use strict'
-const { POST, Request } = require('../../api/classes/Request')
+const { GET, POST, Request } = require('../../api/classes/Request')
 const { HTTP_CREATED } = require('./const')
 
 /**
@@ -8,7 +8,7 @@ const { HTTP_CREATED } = require('./const')
  * @param rat rat details
  * @returns {Promise.<void>}
  */
-exports.create = async function create (auth, rat) {
+async function create (auth, rat) {
 
   const payload = Object.assign({
     name: 'kevin',
@@ -29,3 +29,35 @@ exports.create = async function create (auth, rat) {
   return post.body.data
 
 }
+
+/**
+ * Find a rat by name
+ * @param auth authentication credentials
+ * @param name rat name
+ * @returns {Promise.<void>}
+ */
+async function findByName (auth, name) {
+  const get = await new Request(GET, {
+    path: '/rats?name=' + name,
+    insecure: true,
+    headers: { 'Cookie': auth }
+  })
+
+  return get.body ? get.body.data : null
+
+}
+
+/**
+ * Find or create a rat by name
+ * @param auth authentication credentials
+ * @param rat rat details
+ * @returns {Promise.<void>}
+ */
+async function findOrCreate (auth, rat) {
+  let fr = await findByName(auth, rat.name)
+  return fr.length ? fr[0] : create(auth, rat)
+}
+
+exports.create = create
+exports.findByName = findByName
+exports.findOrCreate = findOrCreate
