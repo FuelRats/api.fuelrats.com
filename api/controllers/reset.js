@@ -63,7 +63,9 @@ class Resets {
     }
 
     let reset = await Reset.findOne({
-      value: ctx.params.token
+      where: {
+        value: ctx.params.token
+      }
     })
 
     if (!reset) {
@@ -83,7 +85,9 @@ class Resets {
     }
 
     let reset = await Reset.findOne({
-      value: ctx.params.token
+      where: {
+        value: ctx.params.token
+      }
     })
 
     if (!reset) {
