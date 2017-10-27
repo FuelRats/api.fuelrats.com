@@ -2,7 +2,7 @@ language: node_js
 cache:
   yarn: true
   directories:
-    - node_modules
+  - node_modules
 branches:
   except:
   - v2
@@ -11,7 +11,7 @@ env:
 - CXX=g++-4.8
 addons:
   ssh_known_hosts:
-    - cheddar.fuelrats.com
+  - cheddar.fuelrats.com
   postgresql: '9.5'
   apt:
     sources:
@@ -32,24 +32,25 @@ notifications:
     on_success: always
     on_failure: always
     channels:
-    - irc.us.fuelrats.com#rattech
-    nick: TravisCI
+    - ircs://sorlie.co.uk:4242/#rattech
+    nick: TravisCI,
+    password:
+      secure: WDlI9BeJuVYV+M6ZwpYU2ZJGWuyoqYt6V8l7DsEbeXJ7kPh85ftIKk8Q9zxIZC0sI7oNnHbJ7MzEtEZIGZke8X7YvC3dpAg3KLIbWqL5moNkEpVcC4QL/wXMiDJTvwbLuZh0Xj3v4Zu85Ezg09wHooM7FBrJg4yVxz6SAy1s6mDjOKg43wr1RNiDOdildJuRvaASc1UiRmsxMq6SP54GCZEofMjqcZ7VHACoI5wCq3+klEs0L+E8EUFSXUYG4KmlG44jbs+xl6CtKdyzf3WmKKmEZzzZ7tZ7OkUptBgfL2aJ1FI8T3DF5ggmV2NdbQkXnI+KjBVxxsZW/4aD11AMlNARgkhNSRayATMu8ZmHdRe/zNA9u+1k+CvFMkDBVGPh8Hx/s1FtELPrMJfAUETb1+O+wMUUe8thxY6svLFlRI4cKe2Ajn/M0x2CdKhHPeT9/9ddcXgxRv+3d34d1lrt259MGavbw63sxaLvoERocXnZ/+vVpigV2ZvE04Zbc1kb/iZgAUctXNuvbmHavMVpPtO/qp+CRRnVJyCJNW4mm8jMMe9dz5l+0ohmv3Zu+8jKe8/BAMUkB1eoh/h9uyk/PRBC3xX0ayBYm+Xezy9W3+fNlsWeut7TDj8HWjoQ5tbtYm2/87CINZkI44io2soaWVz2tQkbEkd0NVJxhzM2Inw=
     template:
-    - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{result}'
+    - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{result}"
     - 'Change view : %{compare_url}  Build details : %{build_url}'
 before_deploy:
-  - openssl aes-256-cbc -K $encrypted_1c3e6d732708_key -iv $encrypted_1c3e6d732708_iv -in deploy_rsa.enc -out /tmp/deploy_rsa -d
-  - eval "$(ssh-agent -s)"
-  - chmod 600 /tmp/deploy_rsa
-  - ssh-add /tmp/deploy_rsa
-
+- openssl aes-256-cbc -K $encrypted_1c3e6d732708_key -iv $encrypted_1c3e6d732708_iv
+  -in deploy_rsa.enc -out /tmp/deploy_rsa -d
+- eval "$(ssh-agent -s)"
+- chmod 600 /tmp/deploy_rsa
+- ssh-add /tmp/deploy_rsa
 deploy:
 - provider: script
   skip_cleanup: true
   script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR/ travis-deployment@cheddar.fuelrats.com:/var/www/dev.api.fuelrats.com/
   on:
     branch: develop
-
 - provider: script
   skip_cleanup: true
   script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR/ travis-deployment@cheddar.fuelrats.com:/var/www/api.fuelrats.com/
