@@ -13,6 +13,16 @@ module.exports = {
     test()
   },
 
+  /**
+   * @api {post} /login Authenticate as user
+   * @apiName Login
+   * @apiGroup User
+   * @apiParam {String} email
+   * @apiParam {String} password
+   * @apiSuccess (200) {String} SetCookie Authentication token 
+   */
+
+
   adminAuth: asyncWrap(async function (test) {
 
     const NUM_TESTS = 2

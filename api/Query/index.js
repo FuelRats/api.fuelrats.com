@@ -51,7 +51,7 @@ class Query {
 
   /**
    * Return an object containing a Sequelize-compatible query generated from the parameters
-   * @returns {{where: (Object|*), order: *[], limit: number, offset: number}|*} A sequelize compatible query
+   * @returns {{where: (Object|*), order: (Array|*), limit: number, offset: number}|*} A sequelize compatible query
    */
   get toSequelize () {
     return this._query

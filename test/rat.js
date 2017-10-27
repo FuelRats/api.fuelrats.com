@@ -4,7 +4,7 @@ const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
 const auth = require('./support/auth')
-const rescue = require('./support/rescue')
+const rat = require('./support/rat')
 const { HTTP_CREATED, HTTP_OK } = require('./support/const')
 
 module.exports = {
@@ -14,67 +14,72 @@ module.exports = {
     test()
   },
   /**
-   * @api {post} /rescues Create rescue
-   * @apiName CreateRescue
-   * @apiGroup Rescue
+   * @api {post} /rats Create rat
+   * @apiName CreateRat
+   * @apiGroup Rat
    * 
    * @apiHeader {String} Cookie auth token
-   * @apiParam {String} client
+   * @apiParam {String} name
    * @apiParam {String} platform
-   * @apiParam {String} system
-   * @apiSuccess (201) {Object} data Rescue data 
+   * @apiPermission user.write
+   * @apiSuccess (201) {Object} data Rat data 
    */
-  rescueCreate: asyncWrap(async function (test) {
+  ratCreate: asyncWrap(async function (test) {
 
     const NUM_TESTS = 5
     test.expect(NUM_TESTS)
 
     const adminUser = await auth.adminUser()
+    const data = {
+      name: 'roland',
+      platform: 'xb'
+    }
 
     let post = await new Request(POST, {
-      path: '/rescues',
+      path: '/rats',
       insecure: true,
       headers: {
         'Cookie': adminUser
       }
-    }, {
-      platform: 'xb',
-      system: 'NLTT 48288'
-    })
+    }, data)
 
     let res = post.body
 
     test.strictEqual(post.response.statusCode, HTTP_CREATED)
-    test.equal(res.error, null)
+    test.ifError(res.error)
 
     if (res.data) {
       let { attributes } = res.data
       test.notEqual(res.data.id, null)
-      test.notStrictEqual(Date.parse(attributes.createdAt), NaN)
-      test.notStrictEqual(Date.parse(attributes.updatedAt), NaN)
-
+      test.strictEqual(attributes.name, data.name)
+      test.strictEqual(attributes.platform, data.platform)
     }
 
   }),
   /**
-   * @api {get} /rescues/:id Find rescue
-   * @apiName FindRescueById
-   * @apiGroup Rescue
+   * @api {get} /rats/:id Find rat
+   * @apiName FindRatById
+   * @apiGroup Rat
    * 
    * @apiHeader {String} Cookie auth token
-   * @apiParam {String} id rescue id
+   * @apiParam {String} id rat id
    */
-  rescueFindById: asyncWrap(async function (test) {
-
+  ratFindById: asyncWrap(async function (test) {
+    
     const NUM_TESTS = 5
     test.expect(NUM_TESTS)
 
     const adminUser = await auth.adminUser()
 
-    const res = await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
+    const newRat = {
+      name: 'roland',
+      platform: 'xb'
+    }
+
+    const res = await rat.create(adminUser, newRat)
 
     let get = await new Request(GET, {
-      path: '/rescues/' + res.id,
+      path: '/rats/' + res.id,
       insecure: true,
       headers: {
         'Cookie': adminUser
@@ -84,11 +89,11 @@ module.exports = {
     test.strictEqual(get.response.statusCode, HTTP_OK)
     if (get.body) {
       let { data } = get.body
-      test.strictEqual(data.length, 1) // should have only one rescue returned
+      test.strictEqual(data.length, 1) // should have only one rat returned
       test.strictEqual(data[0].id, res.id)
       const attr = data[0].attributes
-      test.strictEqual(attr.system, 'sol')
-      test.strictEqual(attr.platform, 'xb')
+      test.strictEqual(attr.name, newRat.name)
+      test.strictEqual(attr.platform, newRat.platform)
     }
   })
 }
