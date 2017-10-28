@@ -199,6 +199,9 @@ class Rescues {
 }
 
 process.on('rescueCreated', (ctx, rescue) => {
+  if (!rescue.system) {
+    return
+  }
   if (rescue.system.includes('NLTT 48288') || rescue.system.includes('MCC 811')) {
     BotServ.say('#ratchat', 'DRINK!')
   }
