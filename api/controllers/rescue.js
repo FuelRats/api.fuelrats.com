@@ -8,8 +8,6 @@ const Error = require('../errors')
 const Permission = require('../permission')
 const BotServ = require('../Anope/BotServ')
 
-const BOLD_ASCII_CODE = 0x02
-const bold = String.fromCharCode(BOLD_ASCII_CODE)
 const RESCUE_ACCESS_TIME = 3600000
 
 class Rescues {
@@ -214,7 +212,7 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
       author = ctx.req.headers['x-command-by']
     }
     BotServ.say('#ratchat',
-      `${bold}[Paperwork]${bold} Paperwork for rescue ${caseNumber} ${client} has been completed by ${author}`)
+      `[Paperwork]Paperwork for rescue ${caseNumber} ${client} has been completed by ${author}`)
   }
 })
 

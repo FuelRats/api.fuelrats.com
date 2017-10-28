@@ -10,6 +10,8 @@ db.options.logging = false
 
 const group = {}
 
+exports.idRegExp = /^[0-9a-f]+-[0-9a-f]+-[0-9a-f]+-[0-9a-f]+$/
+
 // expose some user details for auth requests etc..
 exports.user = {
   admin : {

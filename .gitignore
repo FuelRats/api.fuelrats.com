@@ -6,6 +6,7 @@ test/bundle.js
 npm-debug.log.*
 views/docs.hbs
 static/js/
+static/docs/
 
 .idea/*
 
