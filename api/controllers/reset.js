@@ -5,6 +5,7 @@ const { User, Reset } = require('../db')
 const crypto = require('crypto')
 const Error = require('../errors')
 const bcrypt = require('bcrypt')
+const BotServ = require('../Anope/BotServ')
 
 const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16
@@ -44,13 +45,18 @@ class Resets {
     })
 
     let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
-    await transporter.sendMail({
-      from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
-      to: user.email,
-      subject: 'Fuel Rats Password Reset Requested',
-      text: Resets.getPlainTextEmail(reset.value),
-      html: html
-    })
+    try {
+      await transporter.sendMail({
+        from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
+        to: user.email,
+        subject: 'Fuel Rats Password Reset Requested',
+        text: Resets.getPlainTextEmail(reset.value),
+        html: html
+      })
+    } catch (ex) {
+      BotServ.say('#rattech', `Password reset requested for ${user.email} by ${ctx.inet}`)
+      return
+    }
 
     ctx.body = 'OK'
 
