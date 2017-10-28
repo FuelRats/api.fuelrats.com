@@ -198,6 +198,12 @@ class Rescues {
   }
 }
 
+process.on('rescueCreated', (ctx, rescue) => {
+  if (rescue.system.includes('NLTT 48288') || rescue.system.includes('MCC 811')) {
+    BotServ.say('#ratchat', 'DRINK!')
+  }
+})
+
 process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
   if (!changedValues) {
     return
