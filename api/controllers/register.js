@@ -91,7 +91,7 @@ class Register {
   }
 }
 
-process.on('registration', (values) => {
+process.on('registration', (ctx, values) => {
   BotServ.say('#rat-ops',
     `[API] User with email ${values.email} registered. IRC Nickname: ${values.nickname}. CMDR name: ${values.name}`)
 })

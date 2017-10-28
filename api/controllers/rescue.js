@@ -212,7 +212,7 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
       author = ctx.req.headers['x-command-by']
     }
     BotServ.say('#ratchat',
-      `[Paperwork]Paperwork for rescue ${caseNumber} ${client} has been completed by ${author}`)
+      `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
   }
 })
 
