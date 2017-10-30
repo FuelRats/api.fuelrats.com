@@ -19,10 +19,18 @@ module.exports = {
    * @apiGroup User
    * @apiParam {String} email
    * @apiParam {String} password
-   * @apiSuccess (200) {String} SetCookie Authentication token 
+   * @apiSuccess (200) {String} Set-Cookie Authentication token 
+   * 
+   * @apiExample
+   * POST /login HTTP/1.1 
+   * Content-Type: application/json
+   * 
+   * {
+   *  "email": "roland@fuelrats.com",
+   *  "password": "SqueakBaby"
+   * }
+   * 
    */
-
-
   adminAuth: asyncWrap(async function (test) {
 
     const NUM_TESTS = 2
