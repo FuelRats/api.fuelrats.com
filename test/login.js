@@ -1,5 +1,5 @@
 'use strict'
-const { POST, Request } = require('../api/classes/Request')
+const { post } = require('./support/request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
@@ -28,16 +28,13 @@ module.exports = {
     const NUM_TESTS = 2
     test.expect(NUM_TESTS)
 
-    let post = await new Request(POST, {
-      path: '/login',
-      insecure: true
-    }, {
+    let login = await post(null, '/login', {
       email: db.user.admin.email,
       password: db.user.admin.password
     })
       
-    test.strictEqual(post.response.statusCode, HTTP_OK)
-    test.equal(post.body, 'OK')
+    test.strictEqual(login.response.statusCode, HTTP_OK)
+    test.equal(login.body, 'OK')
 
   }),
 
@@ -46,16 +43,13 @@ module.exports = {
     const NUM_TESTS = 2
     test.expect(NUM_TESTS)
 
-    let post = await new Request(POST, {
-      path: '/login',
-      insecure: true
-    }, {
+    let login = await post(null, '/login', {
       email: db.user.test.email,
       password: db.user.test.password
     })
 
-    test.strictEqual(post.response.statusCode, HTTP_OK)
-    test.equal(post.body, 'OK')
+    test.strictEqual(login.response.statusCode, HTTP_OK)
+    test.equal(login.body, 'OK')
 
   }),
 
@@ -64,19 +58,13 @@ module.exports = {
     const NUM_TESTS = 2
     test.expect(NUM_TESTS)
 
-    let post = await new Request(POST, {
-      path: '/login',
-      insecure: true
-    }, {
+    let login = await post(null, '/login', {
       email: 'blackrats@fuelrats.com',
       password: 'testuser'
     })
 
-    let res = post.body
-  
-    test.strictEqual(post.response.statusCode, HTTP_UNAUTHORIZED)
-
-    test.deepEqual(res.errors, [{
+    test.strictEqual(login.response.statusCode, HTTP_UNAUTHORIZED)
+    test.deepEqual(login.body.errors, [{
       code: HTTP_UNAUTHORIZED,
       detail: 'Authentication failed',
       status: 'Unauthorized',

@@ -3,7 +3,7 @@
 // ensure determistic testing
 /* eslint-disable no-await-in-loop */
 const { extend, omit } = require('underscore')
-const { POST, PUT, Request } = require('../../api/classes/Request')
+const { post, put } = require('./request')
 const { HTTP_CREATED, HTTP_OK } = require('./const')
 const rat = require('./rat')
 const { idRegExp } = require('./db')
@@ -12,29 +12,26 @@ const BotServ = require('../../api/Anope/BotServ')
 /**
  * Create a rescue payload
  * @param auth authentication credentials
- * @param rescue rescue details
+ * @param data rescue details
  * @returns {Promise.<void>}
  */
 async function create (auth, rescue) {
 
-  const payload = extend({
+  const createData = extend({
     client: 'scarlet_pimpernel',
     platform: 'pc',
-    system: 'LHS 3447'
-  }, omit(rescue, 'rats', 'firstLimpet', 'status', 'outcome'))
+    system: 'LHS 3447',
+    status: 'open'
+  }, omit(rescue, 'rats', 'firstLimpet'))
 
-  const post = await new Request(POST, {
-    path: '/rescues',
-    insecure: true,
-    headers: { 'Cookie': auth }
-  }, payload)
+  const createReq = await post(auth, '/rescues', createData)
 
-  if ((post.response.statusCode !== HTTP_CREATED) ||
-      !post.body || !post.body.data) {
+  if ((createReq.response.statusCode !== HTTP_CREATED) ||
+      !createReq.body || !createReq.body.data) {
     throw new Error('Failed to create rescue')
   }
 
-  const newRescue = post.body.data
+  const newRescue = createReq.body.data
 
   // assign any rats
   if (rescue.rats && rescue.rats.length) {
@@ -43,83 +40,79 @@ async function create (auth, rescue) {
     for (let rr of rescue.rats) {
       rats.push(  
         rr.match(idRegExp) ? rr :
-         (await rat.findOrCreate(auth, { name: rr, platform: payload.platform })).id
+         (await rat.findOrCreate(auth, { name: rr, platform: createData.platform })).id
       )
     }
-    await assign(auth, { id: newRescue.id, rats: rats })    
-  }
-
-  const rUpdate = {
-    status: rescue.status || 'open',
-    outcome: rescue.outcome
+    await assign(auth, newRescue.id, rats)    
   }
 
   if (rescue.firstLimpet) {
-    rUpdate.firstLimpetId = rescue.firstLimpet.match(idRegExp) ?
-    rescue.firstLimpet : (await rat.findOrCreate(auth, { name: rescue.firstLimpet, platform: payload.platform })).id
+    // there was a first limpet, so it should be closed
+    const updateData = { status: 'closed' }
+
+    if (rescue.firstLimpet.match(idRegExp)) {
+      updateData.firstLimpetId = rescue.firstLimpet
+    } else {
+      // lookup the rat by name for the first limpet
+      const firstLimpetRat = await rat.findOrCreate(auth, { name: rescue.firstLimpet, platform: createData.platform })
+      updateData.firstLimpetId = firstLimpetRat.id
+    }
+
+    // by default the rescue was a success
     if (!rescue.outcome) {
-      rUpdate.outcome = 'success'
+      updateData.outcome = 'success'
     }
-    if (!rescue.status) {
-      rUpdate.status = 'closed'
-    }
+    await update(auth, newRescue.id, updateData)
   }
 
-  await update(auth, { id: newRescue.id, data: rUpdate})
-
-  return post.body.data
+  return createReq.body.data
 
 }
 
 /**
  * Assign rat(s) to a rescue 
  * @param auth authentication credentials
- * @param rats[] rescue rats
+ * @param id rescue id
+ * @param rats[] rats to assign
  * @returns {Promise.<void>}
  */
-async function assign (auth, rescue) {
+async function assign (auth, id, rats) {
 
-  const put = await new Request(PUT, {
-    path: '/rescues/assign/' + rescue.id,
-    insecure: true,
-    headers: { 'Cookie': auth }
-  }, rescue.rats)
+  const assignReq = await put(auth, '/rescues/assign/' + id, rats)
 
-  if ((put.response.statusCode !== HTTP_OK) ||
-    !put.body || !put.body.data) {
+  if ((assignReq.response.statusCode !== HTTP_OK) ||
+    !assignReq.body || !assignReq.body.data) {
     throw new Error('Failed to assign rats')
   }
 
-  return put.body.data
+  return assignReq.body.data
 
 }
 
 /**
  * Update rescue 
  * @param auth authentication credentials
- * @param rescue.id
- * @param rescue.data
+ * @param id rescue id
+ * @param data rescue data
  * @returns {Promise.<void>}
  */
-async function update (auth, rescue) {
+async function update (auth, id, data) {
 
+  // stub out BotServ
   const oldSay = BotServ.say
   BotServ.say = function () { return null }
 
-  const put = await new Request(PUT, {
-    path: '/rescues/' + rescue.id,
-    insecure: true,
-    headers: { 'Cookie': auth }
-  }, rescue.data)
+  const updateReq = await put(auth, '/rescues/' + id, data)
 
+  // restore BotServ
   BotServ.say = oldSay
 
-  if ((put.response.statusCode !== HTTP_OK) ||
-    !put.body || !put.body.data) {
+  if ((updateReq.response.statusCode !== HTTP_OK) ||
+    !updateReq.body || !updateReq.body.data) {
     throw new Error('Failed to update rescue')
   }
 
-  return put.body.data
+  return updateReq.body.data
 }
 
 exports.create = create

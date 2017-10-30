@@ -1,5 +1,5 @@
 'use strict'
-const { GET, Request } = require('../api/classes/Request')
+const { get } = require('./support/request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
@@ -32,16 +32,10 @@ module.exports = {
     await rescue.create(adminUser, {platform: 'pc', system: 'fuelum'})
     await rescue.create(adminUser, {codeRed: true, platform: 'ps', system: 'beagles point'})
 
-    let get = await new Request(GET, {
-      path: '/statistics/rescues',
-      insecure: true,
-      headers: {
-        'Cookie': adminUser
-      }
-    })
+    const stats = await get(adminUser, '/statistics/rescues')
 
-    test.strictEqual(get.response.statusCode, HTTP_OK)
-    let res = get.body
+    test.strictEqual(stats.response.statusCode, HTTP_OK)
+    let res = stats.body
     if (res.data) {
       test.strictEqual(res.data.length, 1) // should have only one rescue stats
       let attr = res.data[0].attributes
@@ -64,18 +58,12 @@ module.exports = {
     await rescue.create(adminUser, {platform: 'pc', system: 'fuelum', rats: ['kim', 'bin'], firstLimpet: 'kim'})
     await rescue.create(adminUser, {codeRed: true, platform: 'ps', system: 'beagles point', rats: ['huey', 'louis', 'dewey'], firstLimpet: 'louis'})
 
-    let get = await new Request(GET, {
-      path: '/statistics/rats',
-      insecure: true,
-      headers: {
-        'Cookie': adminUser
-      }
-    })
+    const stats = await get(adminUser, '/statistics/rats')
 
     const NUM_RATS = 9
 
-    test.strictEqual(get.response.statusCode, HTTP_OK)
-    const res = get.body
+    test.strictEqual(stats.response.statusCode, HTTP_OK)
+    const res = stats.body
     if (res.data) {
       test.strictEqual(res.data.length, NUM_RATS)
     }

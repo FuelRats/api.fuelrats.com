@@ -1,5 +1,5 @@
 'use strict'
-const { GET, POST, Request } = require('../api/classes/Request')
+const { get, post } = require('./support/request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
@@ -35,17 +35,11 @@ module.exports = {
       platform: 'xb'
     }
 
-    let post = await new Request(POST, {
-      path: '/rats',
-      insecure: true,
-      headers: {
-        'Cookie': adminUser
-      }
-    }, data)
+    let create = await new post(adminUser, '/rats', data)
 
-    let res = post.body
+    let res = create.body
 
-    test.strictEqual(post.response.statusCode, HTTP_CREATED)
+    test.strictEqual(create.response.statusCode, HTTP_CREATED)
     test.ifError(res.error)
 
     if (res.data) {
@@ -78,17 +72,11 @@ module.exports = {
 
     const res = await rat.create(adminUser, newRat)
 
-    let get = await new Request(GET, {
-      path: '/rats/' + res.id,
-      insecure: true,
-      headers: {
-        'Cookie': adminUser
-      }
-    })
+    const find = await get(adminUser, '/rats/' + res.id)
 
-    test.strictEqual(get.response.statusCode, HTTP_OK)
-    if (get.body) {
-      let { data } = get.body
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
       test.strictEqual(data.length, 1) // should have only one rat returned
       test.strictEqual(data[0].id, res.id)
       const attr = data[0].attributes
