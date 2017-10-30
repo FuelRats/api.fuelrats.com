@@ -23,6 +23,16 @@ module.exports = {
    * @apiParam {String} platform
    * @apiPermission user.write
    * @apiSuccess (201) {Object} data Rat data 
+   * 
+   * @apiExample
+   * POST /rats HTTP/1.1 
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   * Content-Type: application/json
+   * 
+   * {
+   *  "name": "roland",
+   *  "platform": "xb"
+   * }
    */
   ratCreate: asyncWrap(async function (test) {
 
@@ -57,6 +67,11 @@ module.exports = {
    * 
    * @apiHeader {String} Cookie auth token
    * @apiParam {String} id rat id
+   *    
+   * @apiExample
+   * GET /rats/afd9d83c-3b4b-4ad5-844b-4719850becff HTTP/1.1 
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   * Content-Type: application/json
    */
   ratFindById: asyncWrap(async function (test) {
     
@@ -73,6 +88,45 @@ module.exports = {
     const res = await rat.create(adminUser, newRat)
 
     const find = await get(adminUser, '/rats/' + res.id)
+
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
+      test.strictEqual(data.length, 1) // should have only one rat returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.name, newRat.name)
+      test.strictEqual(attr.platform, newRat.platform)
+    }
+  }),
+  /**
+   * @api {get} /rats Find rat by attribute
+   * @apiName FindRat
+   * @apiGroup Rat
+   * 
+   * @apiHeader {String} Cookie auth token
+   * 
+   * @apiExample
+   * GET /rats?name=roland HTTP/1.1 
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   * Content-Type: application/json
+   * 
+   */
+  ratFindByName: asyncWrap(async function (test) {
+    
+    const NUM_TESTS = 5
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUser()
+
+    const newRat = {
+      name: 'roland',
+      platform: 'xb'
+    }
+
+    const res = await rat.create(adminUser, newRat)
+
+    const find = await get(adminUser, '/rats?name=' + newRat.name)
 
     test.strictEqual(find.response.statusCode, HTTP_OK)
     if (find.body) {
