@@ -5,61 +5,61 @@ const WEBSOCKET_IDENTIFIER_ROUNDS = 16
 
 // IMPORT
 // =============================================================================
-const Koa = require('koa')
-const session = require('koa-session')
-const router = require('koa-router')()
-const app = new Koa()
-require('koa-qs')(app)
-const koaBody = require('koa-body')
-const TrafficControl = require('./api/TrafficControl')
-const render = require('koa-ejs')
-const path = require('path')
-const http = require('http')
-const ws = require('ws')
+const a = require('koa')
+const b = require('koa-session')
+const c = require('koa-router')()
+const d = new a()
+require('koa-qs')(d)
+const e = require('koa-body')
+const f = require('./api/TrafficControl')
+const g = require('koa-ejs')
+const h = require('path')
+const i = require('http')
+const j = require('ws')
 const { URL } = require('url')
-const logger = require('./api/logger')
+const k = require('./api/logger')
 const { promisify } = require('util')
 
-const Permission = require('./api/permission')
-const uid = require('uid-safe')
-const npid = require('npid')
+const l = require('./api/permission')
+const m = require('uid-safe')
+const n = require('npid')
 
 // Import config
-const config = require('./config')
+const o = require('./config')
 
-const Error = require('./api/errors')
+const p = require('./api/errors')
 
 
 // Import controllers
-const Authentication = require('./api/controllers/auth')
-const client = require('./api/controllers/client')
-const decal = require('./api/controllers/decal')
-const login = require('./api/controllers/login')
-const nicknames = require('./api/controllers/nicknames')
-const oauth2 = require('./api/controllers/oauth2')
-const profile = require('./api/controllers/profile')
-const rat = require('./api/controllers/rat')
-const register = require('./api/controllers/register')
-const reset = require('./api/controllers/reset')
-const rescue = require('./api/controllers/rescue')
-const ship = require('./api/controllers/ship')
-const statistics = require('./api/controllers/statistics')
-const user = require('./api/controllers/user')
-const version = require('./api/controllers/version')
-const WebSocketManager = require('./api/websocket')
-const jiraDrill = require('./api/controllers/jira/drill')
+const q = require('./api/controllers/auth')
+const r = require('./api/controllers/client')
+const s = require('./api/controllers/decal')
+const t = require('./api/controllers/login')
+const u = require('./api/controllers/nicknames')
+const v = require('./api/controllers/oauth2')
+const w = require('./api/controllers/profile')
+const x = require('./api/controllers/rat')
+const y = require('./api/controllers/register')
+const z = require('./api/controllers/reset')
+const aa = require('./api/controllers/rescue')
+const ab = require('./api/controllers/ship')
+const ac = require('./api/controllers/statistics')
+const ad = require('./api/controllers/user')
+const ae = require('./api/controllers/version')
+const af = require('./api/websocket')
+const ag = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
 const { db } = require('./api/db')
 
 try {
-  npid.remove('api.pid')
-  let pid = npid.create('api.pid')
+  n.remove('api.pid')
+  let pid = n.create('api.pid')
   pid.removeOnExit()
 } catch (err) {
   process.exit(1)
 }
 
-app.keys = [config.cookie.secret]
+d.keys = [o.cookie.secret]
 
 let sessionConfiguration = {
   key: 'fuelrats:session',
@@ -67,18 +67,18 @@ let sessionConfiguration = {
   signed: true
 }
 
-app.use(session(sessionConfiguration, app))
-app.use(require('koa-static')('static', {
+d.use(b(sessionConfiguration, d))
+d.use(require('koa-static')('static', {
   hidden: false,
   gzip: true
 }))
-app.use(koaBody())
+d.use(e())
 
-let port = config.port || process.env.PORT
+let port = o.port || process.env.PORT
 
-app.use(async function (ctx, next) {
+d.use(async function (ctx, next) {
   ctx.data = ctx.request.body
-  ctx.meta = WebSocketManager.meta
+  ctx.meta = af.meta
   ctx.client = {}
 
   let { query } = ctx
@@ -88,7 +88,7 @@ app.use(async function (ctx, next) {
   await next()
 })
 
-app.use(async function (ctx, next) {
+d.use(async function (ctx, next) {
   if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
     ['id', 'createdAt', 'updatedAt', 'deletedAt'].map((cleanField) => {
       delete ctx.data[cleanField]
@@ -97,11 +97,11 @@ app.use(async function (ctx, next) {
   await next()
 })
 
-const traffic = new TrafficControl()
+const traffic = new f()
 
-app.use(async (ctx, next) => {
+d.use(async (ctx, next) => {
   try {
-    await Authentication.authenticate(ctx)
+    await q.authenticate(ctx)
 
     let rateLimit = traffic.validateRateLimit(ctx)
 
@@ -110,7 +110,7 @@ app.use(async (ctx, next) => {
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
     ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)
 
-    logger.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
+    k.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
       'ip': ctx.inet,
       'path': ctx.request.path,
       'rate-limit-limit': rateLimit.total,
@@ -121,7 +121,7 @@ app.use(async (ctx, next) => {
     })
 
     if (rateLimit.exceeded) {
-      return next(Error.template('rate_limit_exceeded'))
+      return next(p.template('rate_limit_exceeded'))
     }
 
     let result = await next()
@@ -133,7 +133,7 @@ app.use(async (ctx, next) => {
   } catch (ex) {
     let error = ex
     if (!error.code) {
-      error = Error.template('server_error', error)
+      error = p.template('server_error', error)
     }
     ctx.body = {
       errors: [error]
@@ -141,14 +141,14 @@ app.use(async (ctx, next) => {
 
     ctx.status = error.code
     if (error.code === SERVER_ERROR_CODE) {
-      logger.error(error)
+      k.error(error)
       ctx.app.emit('error', ex, ctx)
     }
   }
 })
 
-render(app, {
-  root: path.join(__dirname, 'views'),
+g(d, {
+  root: h.join(__dirname, 'views'),
   layout: false,
   viewExt: 'html',
   cache: false,
@@ -157,96 +157,96 @@ render(app, {
 
 // ROUTES
 // =============================================================================
-router.get('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.search)
-router.get('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.findById)
-router.post('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.write']), rescue.create)
-router.put('/rescues/:id', Authentication.isAuthenticated, rescue.update)
-router.put('/rescues/assign/:id', Authentication.isAuthenticated, rescue.assign)
-router.put('/rescues/addquote/:id', Authentication.isAuthenticated, rescue.assign)
-router.put('/rescues/unassign/:id', Authentication.isAuthenticated, rescue.unassign)
-router.delete('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.delete']), rescue.delete)
+c.get('/rescues', q.isAuthenticated, l.required(['rescue.read']), aa.search)
+c.get('/rescues/:id', q.isAuthenticated, l.required(['rescue.read']), aa.findById)
+c.post('/rescues', q.isAuthenticated, l.required(['rescue.write']), aa.create)
+c.put('/rescues/:id', q.isAuthenticated, aa.update)
+c.put('/rescues/assign/:id', q.isAuthenticated, aa.assign)
+c.put('/rescues/addquote/:id', q.isAuthenticated, aa.assign)
+c.put('/rescues/unassign/:id', q.isAuthenticated, aa.unassign)
+c.delete('/rescues/:id', q.isAuthenticated, l.required(['rescue.delete']), aa.delete)
 
 
-router.get('/clients', Authentication.isAuthenticated, Permission.required(['client.read']), client.search)
-router.get('/clients/:id', Authentication.isAuthenticated, client.findById)
-router.post('/clients', Authentication.isAuthenticated, client.create)
-router.put('/clients/:id', Authentication.isAuthenticated, client.update)
-router.delete('/clients/:id', Authentication.isAuthenticated, Permission.required(['client.delete']), client.delete)
+c.get('/clients', q.isAuthenticated, l.required(['client.read']), r.search)
+c.get('/clients/:id', q.isAuthenticated, r.findById)
+c.post('/clients', q.isAuthenticated, r.create)
+c.put('/clients/:id', q.isAuthenticated, r.update)
+c.delete('/clients/:id', q.isAuthenticated, l.required(['client.delete']), r.delete)
 
 
-router.get('/users', Authentication.isAuthenticated, Permission.required(['user.read']), user.search)
-router.get('/users/:id', Authentication.isAuthenticated, user.findById)
-router.get('/users/image/:id', user.image)
-router.post('/users', Authentication.isAuthenticated, user.create)
-router.put('/users/setpassword', Authentication.isAuthenticated, user.setpassword)
-router.post('/users/image/:id', Authentication.isAuthenticated, user.setimage)
-router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
-  Permission.required(['user.write']), user.updatevirtualhost)
-router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
-router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
+c.get('/users', q.isAuthenticated, l.required(['user.read']), ad.search)
+c.get('/users/:id', q.isAuthenticated, ad.findById)
+c.get('/users/image/:id', ad.image)
+c.post('/users', q.isAuthenticated, ad.create)
+c.put('/users/setpassword', q.isAuthenticated, ad.setpassword)
+c.post('/users/image/:id', q.isAuthenticated, ad.setimage)
+c.put('/users/:id/updatevirtualhost', q.isAuthenticated,
+  l.required(['user.write']), ad.updatevirtualhost)
+c.put('/users/:id', clean('image', 'password'), q.isAuthenticated, ad.update)
+c.delete('/users/:id', q.isAuthenticated, l.required(['user.delete']), ad.delete)
 
-router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, nicknames.info)
-router.get('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.search)
-router.post('/nicknames', Authentication.isAuthenticated, nicknames.register)
-router.put('/nicknames', Authentication.isAuthenticated, nicknames.connect)
-router.delete('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.delete)
+c.get('/nicknames/info/:nickname', q.isAuthenticated, u.info)
+c.get('/nicknames/:nickname', q.isAuthenticated, u.search)
+c.post('/nicknames', q.isAuthenticated, u.register)
+c.put('/nicknames', q.isAuthenticated, u.connect)
+c.delete('/nicknames/:nickname', q.isAuthenticated, u.delete)
 
 
-router.get('/rats', rat.search)
-router.get('/rats/:id', rat.findById)
-router.post('/rats', rat.create)
-router.put('/rats/:id', rat.update)
-router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
+c.get('/rats', x.search)
+c.get('/rats/:id', x.findById)
+c.post('/rats', x.create)
+c.put('/rats/:id', x.update)
+c.delete('/rats/:id', l.required(['rat.delete']), x.delete)
 
-router.get('/ships', ship.search)
-router.get('/ships/:id', ship.findById)
-router.post('/ships', fields('name', 'shipType', 'ratId'), clean('shipId'), ship.create)
-router.put('/ships/:id', clean('shipId'), ship.update)
-router.delete('/ships/:id', rat.delete)
+c.get('/ships', ab.search)
+c.get('/ships/:id', ab.findById)
+c.post('/ships', fields('name', 'shipType', 'ratId'), clean('shipId'), ab.create)
+c.put('/ships/:id', clean('shipId'), ab.update)
+c.delete('/ships/:id', x.delete)
 
-router.get('/welcome', (ctx) => {
+c.get('/welcome', (ctx) => {
   ctx.redirect('https://fuelrats.com/profile')
   ctx.status = 301
 })
 
-router.post('/login', fields('email', 'password'), login.login)
-router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
-  register.create)
-router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
+c.post('/login', fields('email', 'password'), t.login)
+c.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
+  y.create)
+c.get('/profile', q.isAuthenticated, l.required(['user.read.me']), w.read)
 
-router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
+c.post('/anope', q.isWhitelisted, AnopeWebhook.update)
 
-router.get('/oauth2/authorize',
-  Authentication.isAuthenticated,
-  oauth2.authorizationValidateFields,
-  oauth2.authorizationValidateRedirect,
-  oauth2.authorizationRender
+c.get('/oauth2/authorize',
+  q.isAuthenticated,
+  v.authorizationValidateFields,
+  v.authorizationValidateRedirect,
+  v.authorizationRender
 )
 
-router.post('/oauth2/authorize', Authentication.isAuthenticated, ...oauth2.server.decision())
+c.post('/oauth2/authorize', q.isAuthenticated, ...v.server.decision())
 
 // Create endpoint handlers for oauth2 token
-router.post('/oauth2/token',
-  Authentication.isClientAuthenticated,
-  oauth2.server.token(),
-  oauth2.server.errorHandler())
+c.post('/oauth2/token',
+  q.isClientAuthenticated,
+  v.server.token(),
+  v.server.errorHandler())
 
-router.post('/oauth2/revoke', Authentication.isClientAuthenticated, oauth2.revoke)
-router.post('/oauth2/revokeall', Authentication.isClientAuthenticated, oauth2.revokeAll)
+c.post('/oauth2/revoke', q.isClientAuthenticated, v.revoke)
+c.post('/oauth2/revokeall', q.isClientAuthenticated, v.revokeAll)
 
-router.get('/statistics/rescues', statistics.rescues)
-router.get('/statistics/systems', statistics.systems)
-router.get('/statistics/rats', statistics.rats)
+c.get('/statistics/rescues', ac.rescues)
+c.get('/statistics/systems', ac.systems)
+c.get('/statistics/rats', ac.rats)
 
-router.get('/version', version.read)
-router.post('/reset', fields('email'), reset.requestReset)
-router.get('/reset/:token', reset.validateReset)
-router.post('/reset/:token', fields('password'), reset.resetPassword)
+c.get('/version', ae.read)
+c.post('/reset', fields('email'), z.requestReset)
+c.get('/reset/:token', z.validateReset)
+c.post('/reset/:token', fields('password'), z.resetPassword)
 
 
-router.get('/decals/check', Authentication.isAuthenticated, decal.check)
-router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
-router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.write']), jiraDrill.update)
+c.get('/decals/check', q.isAuthenticated, s.check)
+c.get('/decals/redeem', q.isAuthenticated, s.redeem)
+c.post('/jira/drill', q.isAuthenticated, l.required(['user.write']), ag.update)
 
 /*
 
@@ -265,8 +265,8 @@ router.post('/irc/action', auth.isAuthenticated(false), Permission.required('irc
  */
 
 
-app.use(router.routes())
-app.use(router.allowedMethods())
+d.use(c.routes())
+d.use(c.allowedMethods())
 
 
 /**
@@ -301,19 +301,19 @@ function parseQuery (query) {
   return queryObj
 }
 
-let server = http.createServer(app.callback())
-const wss = new ws.Server({ server })
+let server = i.createServer(d.callback())
+const wss = new j.Server({ server })
 
-const websocketManager = new WebSocketManager(wss, traffic)
+const websocketManager = new af(wss, traffic)
 
 wss.on('connection', async function connection (client) {
   let url = new URL(`http://localhost:8082${client.upgradeReq.url}`)
-  client.clientId = uid.sync(WEBSOCKET_IDENTIFIER_ROUNDS)
+  client.clientId = m.sync(WEBSOCKET_IDENTIFIER_ROUNDS)
   client.subscriptions = []
 
   let bearer = url.searchParams.get('bearer')
   if (bearer) {
-    let { user, scope } = await Authentication.bearerAuthenticate(bearer)
+    let { user, scope } = await q.bearerAuthenticate(bearer)
     if (user) {
       client.user = user
       client.scope = scope
@@ -328,7 +328,7 @@ wss.on('connection', async function connection (client) {
       let request = JSON.parse(message)
       websocketManager.onMessage(client, request)
     } catch (ex) {
-      logger.info('Failed to parse incoming websocket message')
+      k.info('Failed to parse incoming websocket message')
     }
   })
 })
@@ -363,7 +363,7 @@ function fields (...requiredFields) {
       return ctx.data.hasOwnProperty(requiredField) === false
     })
     if (missingFields.length > 0) {
-      throw Error.template('missing_required_fields', missingFields)
+      throw p.template('missing_required_fields', missingFields)
     }
     await next()
   }
@@ -389,10 +389,10 @@ function clean (...cleanFields) {
   try {
     await db.sync()
     const listen = promisify(server.listen.bind(server))
-    await listen(port, config.hostname)
-    logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
+    await listen(port, o.hostname)
+    k.info(`HTTP Server listening on ${o.hostname} port ${port}`)
   } catch (error) {
-    logger.error(error)
+    k.error(error)
   }
 })()
 
