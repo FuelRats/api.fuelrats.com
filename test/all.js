@@ -5,7 +5,7 @@ const { join } = require('path')
 
 // we want to explicity run the test in order of complexity
 // not their alphabetical order 
-const tests = ['login.js', 'rat.js', 'rescue.js', 'stats.js']
+const tests = ['login.js', 'user.js', 'rat.js', 'rescue.js', 'stats.js']
 
 /**
  * run against all the files/dirs defined in tests
