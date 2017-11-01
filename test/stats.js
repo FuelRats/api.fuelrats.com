@@ -19,6 +19,10 @@ module.exports = {
    * @apiGroup Statistics
    * 
    * @apiHeader {String} Cookie auth token
+   * @apiExample
+   * GET /rescues/rescues HTTP/1.1
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   * Content-Type: application/json
    */
   rescues: asyncWrap(async function (test) {
 
@@ -47,7 +51,18 @@ module.exports = {
 
 
   }),
-  rats: asyncWrap(async function (test) {
+  /**
+   * @api {get} /statistics/rats Get rat rescue stats
+   * @apiName StatsRats
+   * @apiGroup Statistics
+   * 
+   * @apiHeader {String} Cookie auth token
+   * @apiExample
+   * GET /rescues/rats HTTP/1.1
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   * Content-Type: application/json
+   */
+  ratsWithNoUser: asyncWrap(async function (test) {
 
     const NUM_TESTS = 2
     test.expect(NUM_TESTS)
