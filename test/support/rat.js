@@ -1,32 +1,28 @@
 'use strict'
-const { GET, POST, Request } = require('../../api/classes/Request')
+const { get, post } = require('./request')
 const { HTTP_CREATED } = require('./const')
 
 /**
- * Create a rat payload
+ * Create a rat createData
  * @param auth authentication credentials
  * @param rat rat details
  * @returns {Promise.<void>}
  */
 async function create (auth, rat) {
 
-  const payload = Object.assign({
+  const createData = Object.assign({
     name: 'kevin',
     platform: 'pc'
   }, rat)
 
-  const post = await new Request(POST, {
-    path: '/rats',
-    insecure: true,
-    headers: { 'Cookie': auth }
-  }, payload)
+  const createReq = await post(auth, '/rats', createData)
 
-  if ((post.response.statusCode !== HTTP_CREATED) ||
-      !post.body || !post.body.data) {
+  if ((createReq.response.statusCode !== HTTP_CREATED) ||
+      !createReq.body || !createReq.body.data) {
     throw new Error('Failed to create rescue')
   }
 
-  return post.body.data
+  return createReq.body.data
 
 }
 
@@ -37,13 +33,9 @@ async function create (auth, rat) {
  * @returns {Promise.<void>}
  */
 async function findByName (auth, name) {
-  const get = await new Request(GET, {
-    path: '/rats?name=' + name,
-    insecure: true,
-    headers: { 'Cookie': auth }
-  })
+  const findReq = await get(auth, '/rats?name=' + name)
 
-  return get.body ? get.body.data : null
+  return findReq.body ? findReq.body.data : null
 
 }
 
