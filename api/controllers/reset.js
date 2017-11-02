@@ -5,6 +5,7 @@ const { User, Reset } = require('../db')
 const crypto = require('crypto')
 const Error = require('../errors')
 const bcrypt = require('bcrypt')
+const BotServ = require('../Anope/BotServ')
 
 const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16
@@ -44,13 +45,19 @@ class Resets {
     })
 
     let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
-    await transporter.sendMail({
-      from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
-      to: user.email,
-      subject: 'Fuel Rats Password Reset Requested',
-      text: Resets.getPlainTextEmail(reset.value),
-      html: html
-    })
+    try {
+      await transporter.sendMail({
+        from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
+        to: user.email,
+        subject: 'Fuel Rats Password Reset Requested',
+        text: Resets.getPlainTextEmail(reset.value),
+        html: html
+      })
+      BotServ.say('#rattech', `[API Password reset for ${user.email} requested by ${ctx.inet}`)
+    } catch (ex) {
+      BotServ.say('#rattech', '[API] Password reset failed due to error from SMTP server')
+      return
+    }
 
     ctx.body = 'OK'
 
@@ -63,7 +70,9 @@ class Resets {
     }
 
     let reset = await Reset.findOne({
-      value: ctx.params.token
+      where: {
+        value: ctx.params.token
+      }
     })
 
     if (!reset) {
@@ -83,7 +92,9 @@ class Resets {
     }
 
     let reset = await Reset.findOne({
-      value: ctx.params.token
+      where: {
+        value: ctx.params.token
+      }
     })
 
     if (!reset) {

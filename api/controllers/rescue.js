@@ -8,8 +8,6 @@ const Error = require('../errors')
 const Permission = require('../permission')
 const BotServ = require('../Anope/BotServ')
 
-const BOLD_ASCII_CODE = 0x02
-const bold = String.fromCharCode(BOLD_ASCII_CODE)
 const RESCUE_ACCESS_TIME = 3600000
 
 class Rescues {
@@ -200,6 +198,15 @@ class Rescues {
   }
 }
 
+process.on('rescueCreated', (ctx, rescue) => {
+  if (!rescue.system) {
+    return
+  }
+  if (rescue.system.includes('NLTT 48288') || rescue.system.includes('MCC 811')) {
+    BotServ.say('#ratchat', 'DRINK!')
+  }
+})
+
 process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
   if (!changedValues) {
     return
@@ -214,7 +221,7 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
       author = ctx.req.headers['x-command-by']
     }
     BotServ.say('#ratchat',
-      `${bold}[Paperwork]${bold} Paperwork for rescue ${caseNumber} ${client} has been completed by ${author}`)
+      `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
   }
 })
 

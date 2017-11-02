@@ -10,8 +10,6 @@ const BotServ = require('../Anope/BotServ')
 const UserQuery = require('../Query/UserQuery')
 const UserPresenter = require('../classes/Presenters').UsersPresenter
 
-const BOLD_ASCII_CODE = 0x02
-const bold = String.fromCharCode(BOLD_ASCII_CODE)
 
 const platforms = ['pc', 'xb', 'ps']
 
@@ -93,9 +91,9 @@ class Register {
   }
 }
 
-process.on('registration', (values) => {
+process.on('registration', (ctx, values) => {
   BotServ.say('#rat-ops',
-    `${bold}[API]${bold} User with email ${values.email} registered. IRC Nickname: ${values.nickname}. CMDR name: ${values.name}`)
+    `[API] User with email ${values.email} registered. IRC Nickname: ${values.nickname}. CMDR name: ${values.name}`)
 })
 
 module.exports = Register
