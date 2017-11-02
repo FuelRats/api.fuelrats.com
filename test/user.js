@@ -5,56 +5,28 @@ const auth = require('./support/auth')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
 const { HTTP_BAD_REQUEST, HTTP_OK } = require('./support/const')
+const sinon = require('sinon')
+const sandbox = sinon.createSandbox()
 
-/**
- * Create simple function stub for testing
- */
-function stub () {
 
-  const func = function () {
-    func.called += 1
-  }
-  func.called = 0
-  return func
-}
-
-// stub all the external calls
 const NickServ = require('../api/Anope/NickServ')
 const HostServ = require('../api/Anope/NickServ')
 const BotServ = require('../api/Anope/BotServ')
-
-const orig = {
-  register: NickServ.register,
-  update: HostServ.update,
-  say: BotServ.say
-}
-
-const stubs = {
-  register: stub(),
-  update: stub(),
-  say: stub()
-}
-
 
 module.exports = {
   setUp: async function (test) {
     await db.init()
     await app.init()
 
-    stubs.register.called = 0
-    stubs.update.called = 0
-    stubs.say.called = 0
-
-    NickServ.register = stubs.register
-    HostServ.update = stubs.update
-    BotServ.say = stubs.say
+    // stub all the external calls
+    sandbox.stub(NickServ, 'register')
+    sandbox.stub(HostServ, 'update')
+    sandbox.stub(BotServ, 'say')
 
     test()
   },
   tearDown: function (test) {
-    NickServ.register = orig.register
-    HostServ.update = orig.update
-    BotServ.say = orig.say
+    sandbox.restore()
     test()
   },
   /**
@@ -86,9 +58,9 @@ module.exports = {
       password: 'SqueakBaby'
     })
     test.strictEqual(register.response.statusCode, HTTP_OK)
-    test.strictEqual(stubs.register.called, 1)
-    test.strictEqual(stubs.update.called, 1)
-    test.strictEqual(stubs.say.called, 1)
+    test.strictEqual(NickServ.register.callCount, 1)
+    test.strictEqual(HostServ.update.callCount, 1)
+    test.strictEqual(BotServ.say.callCount, 1)
 
   }),
   registerExisting: asyncWrap(async function (test) {
@@ -100,9 +72,9 @@ module.exports = {
       email: db.user.test.email
     })
     test.strictEqual(register.response.statusCode, HTTP_BAD_REQUEST)
-    test.strictEqual(stubs.register.called, 0)
-    test.strictEqual(stubs.update.called, 0)
-    test.strictEqual(stubs.say.called, 0)
+    test.strictEqual(NickServ.register.callCount, 0)
+    test.strictEqual(HostServ.update.callCount, 0)
+    test.strictEqual(BotServ.say.callCount, 0)
 
   }),
   invalidPlatform: asyncWrap(async function (test) {
@@ -114,9 +86,9 @@ module.exports = {
       platform: 'PC'
     })
     test.strictEqual(register.response.statusCode, HTTP_BAD_REQUEST)
-    test.strictEqual(stubs.register.called, 0)
-    test.strictEqual(stubs.update.called, 0)
-    test.strictEqual(stubs.say.called, 0)
+    test.strictEqual(NickServ.register.callCount, 0)
+    test.strictEqual(HostServ.update.callCount, 0)
+    test.strictEqual(BotServ.say.callCount, 0)
 
   }),
   /**
