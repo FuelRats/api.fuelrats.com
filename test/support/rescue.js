@@ -40,7 +40,7 @@ async function create (auth, rescue) {
     for (let rr of rescue.rats) {
       rats.push(  
         rr.match(idRegExp) ? rr :
-         (await rat.findOrCreate(auth, { name: rr, platform: createData.platform })).id
+          (await rat.findOrCreate(auth, { name: rr, platform: createData.platform })).id
       )
     }
     await assign(auth, newRescue.id, rats)    
