@@ -10,7 +10,7 @@ const sandbox = sinon.createSandbox()
 
 
 const NickServ = require('../api/Anope/NickServ')
-const HostServ = require('../api/Anope/NickServ')
+const HostServ = require('../api/Anope/HostServ')
 const BotServ = require('../api/Anope/BotServ')
 
 module.exports = {
