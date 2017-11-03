@@ -79,5 +79,41 @@ module.exports = {
       title: 'Not Authenticated'
     }])
 
+  }),
+  /**
+   * @api {post} /oauth2/token Request OAuth token
+   * @apiName OAuthToken
+   * @apiGroup User
+   * @apiParam {string} grant_type 'password'
+   * @apiParam {String} email
+   * @apiParam {String} password
+   * 
+   * @apiExample
+   * POST /oauth2/token HTTP/1.1 
+   * Content-Type: application/json
+   * Authorization: Basic OWM1ZjhkMzItNGU5ZS00MjgxLTk0MzItNzk4ODBjMDBhMGU5OnRlc3R1c2Vy
+   * 
+   * {
+   *  "grant_type": "password",
+   *  "email": "roland@fuelrats.com",
+   *  "password": "SqueakBaby"
+   * }
+   * 
+   */
+  oauthToken: asyncWrap(async function (test) {
+    const NUM_TESTS = 2
+    test.expect(NUM_TESTS)
+
+    const token = await post({ 
+      Authorization: 'Basic ' + Buffer(db.client.admin.id + ':' + db.client.admin.password).toString('base64')
+    }, '/oauth2/token', {
+      grant_type: 'password',
+      password: db.user.admin.password,
+      username: db.user.admin.email
+    })
+
+    test.strictEqual(token.response.statusCode, HTTP_OK)
+    test.ok(token.body.access_token)
+
   })
 }
