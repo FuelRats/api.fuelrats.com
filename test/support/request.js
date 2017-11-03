@@ -2,6 +2,13 @@
 const { GET, POST, PUT, Request } = require('../../api/classes/Request')
 
 /**
+ * get auth login token
+ */
+function login (email, password) {
+  return Request.login(email, password)
+}
+
+/**
  * Test helper function to perform a local HTTP GET
  * @param {*} auth authentication token
  * @param {*} path 
@@ -45,6 +52,7 @@ function put (auth, path, payload) {
 module.exports = {
   get: get,
   post: post,
-  put: put
+  put: put,
+  login: login
 }
 

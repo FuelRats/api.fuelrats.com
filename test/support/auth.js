@@ -1,13 +1,12 @@
 'use strict'
-
-const { Request } = require('../../api/classes/Request')
+const { post, login } = require('./request')
 const db = require('./db')
 
 /**
  * get the auth token/cookie for the test user
  */
 async function testUserCookie () {
-  const token = await Request.login(db.user.test.email, db.user.test.password)
+  const token = await login(db.user.test.email, db.user.test.password)
   return { Cookie: token }
 }
 
@@ -15,21 +14,28 @@ async function testUserCookie () {
  * get the auth cookie token for the admin user
  */
 async function adminUserCookie () {
-  const token = await Request.login(db.user.admin.email, db.user.admin.password)
+  const token = await login(db.user.admin.email, db.user.admin.password)
   return { Cookie: token }
 }
 
 /**
- * get the basic token for the admin oauth client
+ * get the OAuth token for the admin user
  */
-function adminClientBasic () {
-  return {
-    Authorization: 'Basic ' + Buffer(db.client.admin.name + ':' + db.client.admin.password).toString('base64')
-  }
+async function adminUserToken () {
+
+  const token = await post({ 
+    Authorization: 'Basic ' + Buffer(db.client.admin.id + ':' + db.client.admin.password).toString('base64')
+  }, '/oauth2/token', {
+    grant_type: 'password',
+    password: db.user.admin.password,
+    username: db.user.admin.email
+  })
+
+  return { Authorization: 'Bearer '+token.body.access_token }
 }
 
 module.exports = {
   testUserCookie: testUserCookie,
   adminUserCookie: adminUserCookie,
-  adminClientBasic: adminClientBasic
+  adminUserToken: adminUserToken
 }
