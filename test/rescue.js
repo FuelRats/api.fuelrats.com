@@ -29,7 +29,7 @@ module.exports = {
     const NUM_TESTS = 5
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
     const create = await post(adminUser, '/rescues', {
       platform: 'xb',
@@ -63,7 +63,7 @@ module.exports = {
     const NUM_TESTS = 6
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
     const res = await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
     test.notEqual(res.id, null)
@@ -102,7 +102,7 @@ module.exports = {
     const NUM_TESTS = 7
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
     const res = await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
     test.notEqual(res.id, null)

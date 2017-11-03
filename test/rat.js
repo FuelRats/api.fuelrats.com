@@ -39,7 +39,8 @@ module.exports = {
     const NUM_TESTS = 5
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
+
     const data = {
       name: 'roland',
       platform: 'xb'
@@ -76,7 +77,7 @@ module.exports = {
     const NUM_TESTS = 5
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
     const newRat = {
       name: 'roland',
@@ -113,7 +114,7 @@ module.exports = {
     const NUM_TESTS = 5
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
     const newRat = {
       name: 'roland',

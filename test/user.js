@@ -119,7 +119,7 @@ module.exports = {
     test.strictEqual(register.response.statusCode, HTTP_OK)
 
     // login as the same user
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
     const find = await get(adminUser, '/users?email=' + userData.email)
     test.strictEqual(find.response.statusCode, HTTP_OK)
 
@@ -157,7 +157,7 @@ module.exports = {
     test.strictEqual(register.response.statusCode, HTTP_OK)
 
     // login as the same user
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
     const find = await get(adminUser, '/users/' + register.body.data[0].id)
     test.strictEqual(find.response.statusCode, HTTP_OK)
 

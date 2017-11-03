@@ -5,15 +5,15 @@ if (process.env.NODE_ENV !== 'testing') {
   throw new Error('Please use NODE_ENV=testing')
 }
 
-const { db, User, Group } = require('../../api/db')
+const { db, User, Client, Group } = require('../../api/db')
 db.options.logging = false
 
 const group = {}
 
-exports.idRegExp = /^[0-9a-f]+-[0-9a-f]+-[0-9a-f]+-[0-9a-f]+$/
+const idRegExp = /^[0-9a-f]+-[0-9a-f]+-[0-9a-f]+-[0-9a-f]+$/
 
 // expose some user details for auth requests etc..
-exports.user = {
+const user = {
   admin : {
     password: 'testuser',
     // this is the result of bcrypt.hash('testuser', 12)
@@ -32,6 +32,15 @@ exports.user = {
   }
 }
 
+const client = {
+  admin : {
+    name: 'admin-oauth-client',
+    password: 'testuser',
+    // this is the result of bcrypt.hash('testuser', 12)
+    hash: '$2a$12$QM4/plOu7n9BThFGbG8USO1jWnwJq6Lk7GnPtzhb./o2jHhbXayTy'
+  }
+}
+
 /**
  * Create a test user
  * @param user user information
@@ -47,12 +56,31 @@ async function createUser (user) {
     nicknames: db.literal(nicknames)
   })
 
+  // save the ID
+  user.id = testUser.id
+
   if (user.groups.length) {
     await testUser.addGroups(user.groups.map(gid => group[gid]))
   }
     
   return testUser
     
+}
+/**
+ * Create an OAuth client for a user
+ * @param {*} user 
+ */
+async function createClient (user, client) {
+
+  const testClient = await Client.create({
+    name: client.name,
+    userId: user.id,
+    secret: client.hash
+  })
+
+  client.id = testClient.id
+  return testClient
+
 }
 
 /**
@@ -173,10 +201,17 @@ async function init () {
     ]
   })
 
-  await createUser(exports.user.admin)
-  await createUser(exports.user.test)
+  await createUser(user.admin)
+  await createClient(user.admin, client.admin)
+  await createUser(user.test)
 
 }
 
-module.exports.init = init
+module.exports = {
+  init: init,
+  user: user,
+  client: client,
+  group: group,
+  idRegExp: idRegExp
+}
 

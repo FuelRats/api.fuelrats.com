@@ -10,7 +10,7 @@ function get (auth, path) {
   return new Request(GET, {
     path: path,
     insecure: true,
-    headers: auth ? { 'Cookie': auth } : null
+    headers: auth
   })
 }
 
@@ -24,7 +24,7 @@ function post (auth, path, payload) {
   return new Request(POST, {
     path: path,
     insecure: true,
-    headers: auth ? { 'Cookie': auth } : null
+    headers: auth
   }, payload)
 }
 
@@ -38,7 +38,7 @@ function put (auth, path, payload) {
   return new Request(PUT, {
     path: path,
     insecure: true,
-    headers: auth ? { 'Cookie': auth } : null
+    headers: auth
   }, payload)
 }
 

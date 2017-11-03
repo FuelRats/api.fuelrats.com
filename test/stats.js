@@ -26,7 +26,7 @@ module.exports = {
     const NUM_TESTS = 6
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
     await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
     await rescue.create(adminUser, {platform: 'pc', system: 'maia'})
@@ -61,7 +61,7 @@ module.exports = {
     const NUM_TESTS = 2
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
     await rescue.create(adminUser, {platform: 'xb', system: 'sol', rats: ['bill', 'bob','sue'], firstLimpet: 'sue'})
     await rescue.create(adminUser, {platform: 'pc', system: 'maia', rats: ['jim', 'kim'], firstLimpet: 'kim'})
     await rescue.create(adminUser, {platform: 'pc', system: 'fuelum', rats: ['kim', 'bin'], firstLimpet: 'kim'})
