@@ -18,11 +18,8 @@ module.exports = {
    * @apiName StatsRescue
    * @apiGroup Statistics
    * 
-   * @apiHeader {String} Cookie auth token
    * @apiExample
    * GET /rescues/rescues HTTP/1.1
-   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
-   * Content-Type: application/json
    */
   rescues: asyncWrap(async function (test) {
 
@@ -36,7 +33,7 @@ module.exports = {
     await rescue.create(adminUser, {platform: 'pc', system: 'fuelum'})
     await rescue.create(adminUser, {codeRed: true, platform: 'ps', system: 'beagles point'})
 
-    const stats = await get(adminUser, '/statistics/rescues')
+    const stats = await get(null, '/statistics/rescues')
 
     test.strictEqual(stats.response.statusCode, HTTP_OK)
     let res = stats.body
@@ -56,11 +53,8 @@ module.exports = {
    * @apiName StatsRats
    * @apiGroup Statistics
    * 
-   * @apiHeader {String} Cookie auth token
    * @apiExample
    * GET /rescues/rats HTTP/1.1
-   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
-   * Content-Type: application/json
    */
   ratsWithNoUser: asyncWrap(async function (test) {
 
@@ -73,7 +67,7 @@ module.exports = {
     await rescue.create(adminUser, {platform: 'pc', system: 'fuelum', rats: ['kim', 'bin'], firstLimpet: 'kim'})
     await rescue.create(adminUser, {codeRed: true, platform: 'ps', system: 'beagles point', rats: ['huey', 'louis', 'dewey'], firstLimpet: 'louis'})
 
-    const stats = await get(adminUser, '/statistics/rats')
+    const stats = await get(null, '/statistics/rats')
 
     const NUM_RATS = 9
 
