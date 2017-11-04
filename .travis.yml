@@ -28,15 +28,11 @@ before_script:
 - psql -c 'CREATE USER fuelrats;' -U postgres
 - psql -c "ALTER USER fuelrats PASSWORD 'fuelrats';" -U postgres
 notifications:
-  irc:
+  webhooks:
+    urls:
+      - http://orthanc.localecho.net/cgi-bin/webhook.py
     on_success: always
     on_failure: always
-    channels:
-    - irc.us.fuelrats.com#rattech
-    nick: TravisCI
-    template:
-    - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{result}'
-    - 'Change view : %{compare_url}  Build details : %{build_url}'
 before_deploy:
   - openssl aes-256-cbc -K $encrypted_1c3e6d732708_key -iv $encrypted_1c3e6d732708_iv -in deploy_rsa.enc -out /tmp/deploy_rsa -d
   - eval "$(ssh-agent -s)"
