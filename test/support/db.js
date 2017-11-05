@@ -5,7 +5,7 @@ if (process.env.NODE_ENV !== 'testing') {
   throw new Error('Please use NODE_ENV=testing')
 }
 
-const { db, User, Client, Group } = require('../../api/db')
+const { db, User, Client, Group, Reset } = require('../../api/db')
 db.options.logging = false
 
 const group = {}
@@ -212,6 +212,7 @@ module.exports = {
   user: user,
   client: client,
   group: group,
-  idRegExp: idRegExp
+  idRegExp: idRegExp,
+  Reset: Reset
 }
 

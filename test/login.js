@@ -1,9 +1,9 @@
 'use strict'
-const { post } = require('./support/request')
+const { post, get } = require('./support/request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
-const { HTTP_OK, HTTP_UNAUTHORIZED} = require('./support/const')
+const { HTTP_OK, HTTP_NO_CONTENT, HTTP_UNAUTHORIZED} = require('./support/const')
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
@@ -133,6 +133,21 @@ module.exports = {
     test.ok(token.body.access_token)
 
   }),
+  /**
+   * @api {post} /reset Request Password reset
+   * @apiName RequestReset
+   * @apiGroup User
+   * @apiParam {String} email
+   * 
+   * @apiExample
+   * POST /reset HTTP/1.1 
+   * Content-Type: application/json
+   * 
+   * {
+   *  "email": "roland@fuelrats.com",
+   * }
+   * 
+   */
   resetPassword: asyncWrap(async function (test) {
     const NUM_TESTS = 4
     test.expect(NUM_TESTS)
@@ -145,6 +160,37 @@ module.exports = {
     test.equal(reset.body, 'OK')
     test.strictEqual(BotServ.say.callCount, 1)
     test.strictEqual(stub.sendMail.callCount, 1)
+
+  }),
+  /**
+   * @api {get} /reset/:token Validate Password reset token
+   * @apiName ValidateReset
+   * @apiGroup User
+   * @apiParam {String} token
+   * 
+   * @apiExample
+   * GET /reset/730294b7224cacfc174941c26362acea HTTP/1.1 
+   * 
+   */
+  resetValidate: asyncWrap(async function (test) {
+    const NUM_TESTS = 3
+    test.expect(NUM_TESTS)
+
+    const MS_IN_DAY = 86400000
+
+    const resetData = {
+      value: 'somerandomstringofhex',
+      expires: new Date(Date.now() + MS_IN_DAY).getTime(),
+      userId: db.user.test.id
+    }
+
+    const create = await db.Reset.create(resetData)
+    test.ok(create)
+
+    const reset = await get(null, '/reset/' + resetData.value)
+
+    test.strictEqual(reset.response.statusCode, HTTP_NO_CONTENT)
+    test.equal(reset.body, '')
 
   })
 }
