@@ -4,12 +4,29 @@ const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
 const { HTTP_OK, HTTP_UNAUTHORIZED} = require('./support/const')
+const sinon = require('sinon')
+const sandbox = sinon.createSandbox()
+
+const BotServ = require('../api/Anope/BotServ')
+const nodemailer = require('nodemailer')
+
+const stub = {}
 
 module.exports = {
 
   setUp: async function (test) {
     await db.init()
     await app.init()
+    sandbox.stub(BotServ, 'say')
+    stub.sendMail = sandbox.stub()
+    sandbox.stub(nodemailer, 'createTransport').returns({
+      sendMail: stub.sendMail
+    })
+
+    test()
+  },
+  tearDown: function (test) {
+    sandbox.restore()
     test()
   },
 
@@ -114,6 +131,20 @@ module.exports = {
 
     test.strictEqual(token.response.statusCode, HTTP_OK)
     test.ok(token.body.access_token)
+
+  }),
+  resetPassword: asyncWrap(async function (test) {
+    const NUM_TESTS = 4
+    test.expect(NUM_TESTS)
+
+    const reset = await post(null, '/reset', {
+      email: db.user.test.email
+    })
+
+    test.strictEqual(reset.response.statusCode, HTTP_OK)
+    test.equal(reset.body, 'OK')
+    test.strictEqual(BotServ.say.callCount, 1)
+    test.strictEqual(stub.sendMail.callCount, 1)
 
   })
 }
