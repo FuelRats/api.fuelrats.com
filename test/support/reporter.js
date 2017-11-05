@@ -17,7 +17,7 @@ exports.info = 'FuelRats tests reporter'
 
 // override console.log to prevent any output other than from nodeunit
 const { log } = console
-const NOOP = function () {}
+const NOOP = function () {} // eslint-disable-line no-empty-function
 const override = ['log', 'warn', 'error', 'debug']
 override.forEach((func) => { console[func] = NOOP }) // eslint-disable-line no-console
 
@@ -33,7 +33,7 @@ exports.run = function (files, options, callback) {
   if (!options) {
     // load default options
     const content = fs.readFileSync(
-        __dirname + '/nodeunit-default.json', 'utf8'
+      __dirname + '/nodeunit-default.json', 'utf8'
     )
     options = JSON.parse(content)
   }
@@ -58,7 +58,7 @@ exports.run = function (files, options, callback) {
     if (tracker.unfinished()) {
       log('')
       log(error(bold(
-          'FAILURES: Undone tests (or their setups/teardowns): '
+        'FAILURES: Undone tests (or their setups/teardowns): '
       )))
       const names = tracker.names()
       for (let name of names) {
