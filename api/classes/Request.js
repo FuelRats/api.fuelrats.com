@@ -91,7 +91,7 @@ class Request {
         response.on('end', function () {
           resolve({
             response,
-            body: JSON.parse(body)
+            body: body ? JSON.parse(body) : body
           })
         })
       })
