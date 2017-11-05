@@ -31,7 +31,7 @@ async function adminUserToken () {
     username: db.user.admin.email
   })
 
-  return { Authorization: 'Bearer '+token.body.access_token }
+  return { Authorization: 'Bearer ' + token.body.access_token }
 }
 
 module.exports = {
