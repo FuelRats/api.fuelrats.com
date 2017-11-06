@@ -90,7 +90,23 @@ It's so easy a DerryBear could do it! Just run the generator scripts:
     npm run apidoc
 
 The docs will be created under static/docs and therefore accessible
-via http://<server>:<port>/docs/ e.g. http://localhost:8081/docs/
+via `http://[server]:[port]/docs/` e.g. http://localhost:8081/docs/js or http://localhost:8081/docs/api
+
+## Running Tests
+
+The test suite is comprised of a number of [nodeunit](https://github.com/caolan/nodeunit) tests.  To run the enite suite, simply use:
+
+    npm test
+
+If you wish to run individual tests, you can launch either an individual group:
+
+    npm test login
+
+or even specify a single test withing the group:
+
+    npm test login resetPassword
+
+When running the entire test suite, any ouput to stderr or stdout is muted to keep the build process clean.  If you run the tests individually, this output is restored to aid test development.
 
 ## License
 Copyright 2017 The Fuel Rats Mischief
