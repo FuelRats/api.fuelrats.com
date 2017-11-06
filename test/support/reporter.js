@@ -8,18 +8,13 @@ const fs = require('fs')
 const track = require('nodeunit/lib/track')
 const path = require('path')
 const { AssertionError } = require('nodeunit/lib/assert')
+const { mute, unmute, log } = require('./mute')
 
 /**
  * Reporter info string
  */
 
 exports.info = 'FuelRats tests reporter'
-
-// override console.log to prevent any output other than from nodeunit
-const { log } = console
-const NOOP = function () {} // eslint-disable-line no-empty-function
-const override = ['log', 'warn', 'error', 'debug']
-override.forEach((func) => { console[func] = NOOP }) // eslint-disable-line no-console
 
 /**
  * Run all tests within each module, reporting the results to the command-line.
@@ -36,6 +31,10 @@ exports.run = function (files, options, callback) {
       __dirname + '/nodeunit-default.json', 'utf8'
     )
     options = JSON.parse(content)
+  }
+
+  if (options.mute) {
+    mute()
   }
 
   const error = function (str) {
@@ -115,6 +114,8 @@ exports.run = function (files, options, callback) {
           ' assertions (' + assertions.duration + 'ms)'
         )
       }
+
+      unmute()
 
       if (callback) {
         callback(assertions.failures() ? new Error('We have got test failures.') : undefined)

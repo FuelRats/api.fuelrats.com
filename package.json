@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "dev": "node index.js",
-    "test": "NODE_ENV=testing NO_DEPRECATION=sequelize node test/all.js",
-    "nodeunit": "NODE_ENV=testing NO_DEPRECATION=sequelize nodeunit --reporter ../../../test/support/reporter",
+    "test": "NODE_ENV=testing node test/all.js",
+    "nodeunit": "NODE_ENV=testing nodeunit --reporter ../../../test/support/reporter",
     "jsdoc": "jsdoc -d static/docs/js -r api",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
     "eslint": "eslint api test"
