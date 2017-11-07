@@ -91,7 +91,9 @@ class Request {
         response.on('end', function () {
           resolve({
             response,
-            body: JSON.parse(body)
+            // only try to parse the body if we actually recieved
+            // something to parse, otherwise let it though verbatim
+            body: body ? JSON.parse(body) : body
           })
         })
       })

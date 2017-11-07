@@ -2,6 +2,13 @@
 const { GET, POST, PUT, Request } = require('../../api/classes/Request')
 
 /**
+ * get auth login token
+ */
+function login (email, password) {
+  return Request.login(email, password)
+}
+
+/**
  * Test helper function to perform a local HTTP GET
  * @param {*} auth authentication token
  * @param {*} path 
@@ -10,7 +17,7 @@ function get (auth, path) {
   return new Request(GET, {
     path: path,
     insecure: true,
-    headers: auth ? { 'Cookie': auth } : null
+    headers: auth
   })
 }
 
@@ -24,7 +31,7 @@ function post (auth, path, payload) {
   return new Request(POST, {
     path: path,
     insecure: true,
-    headers: auth ? { 'Cookie': auth } : null
+    headers: auth
   }, payload)
 }
 
@@ -38,13 +45,14 @@ function put (auth, path, payload) {
   return new Request(PUT, {
     path: path,
     insecure: true,
-    headers: auth ? { 'Cookie': auth } : null
+    headers: auth
   }, payload)
 }
 
 module.exports = {
   get: get,
   post: post,
-  put: put
+  put: put,
+  login: login
 }
 
