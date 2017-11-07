@@ -62,7 +62,7 @@ module.exports = {
 
   }),
   /**
-   * @api {get} /rats/:id Find rat
+   * @api {get} /rats/:id Find rat by id
    * @apiName FindRatById
    * @apiGroup Rat
    * 
@@ -99,8 +99,8 @@ module.exports = {
     }
   }),
   /**
-   * @api {get} /rats Find rat by attribute
-   * @apiName FindRat
+   * @api {get} /rats Find rat by name
+   * @apiName FindRatByName
    * @apiGroup Rat
    * 
    * @apiHeader {String} Cookie auth token
@@ -124,6 +124,45 @@ module.exports = {
     const res = await rat.create(adminUser, newRat)
 
     const find = await get(null, '/rats?name=' + newRat.name)
+
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
+      test.strictEqual(data.length, 1) // should have only one rat returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.name, newRat.name)
+      test.strictEqual(attr.platform, newRat.platform)
+    }
+  }),
+  /**
+   * @api {get} /rats Find rat by name and platform
+   * @apiName FindRatByNameAndPlatform
+   * @apiGroup Rat
+   * @apiExample
+   * GET /rats?name=roland&platform=xb HTTP/1.1 
+   * 
+   */
+  ratFindByNameAndPlatform: asyncWrap(async function (test) {
+    
+    const NUM_TESTS = 5
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+
+    const newRat = {
+      name: 'roland',
+      platform: 'xb'
+    }
+
+    await rat.create(adminUser, newRat)
+
+    // same rat name, different platform
+    newRat.platform = 'pc'
+    const res = await rat.create(adminUser, newRat)
+    
+
+    const find = await get(null, '/rats?name=' + newRat.name + '&platform=' + newRat.platform)
 
     test.strictEqual(find.response.statusCode, HTTP_OK)
     if (find.body) {
