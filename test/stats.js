@@ -56,15 +56,18 @@ module.exports = {
    * @apiExample
    * GET /rescues/rats HTTP/1.1
    */
-  ratsWithNoUser: asyncWrap(async function (test) {
+  ratsWithOnlyOnePlatform: asyncWrap(async function (test) {
 
-    const NUM_TESTS = 2
+    const NUM_TESTS = 8
     test.expect(NUM_TESTS)
 
     const adminUser = await auth.adminUserCookie()
-    await rescue.create(adminUser, {platform: 'xb', system: 'sol', rats: ['bill', 'bob','sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'sol', rats: ['bill', 'bob','sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'maia', rats: ['bill','sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'maia', rats: ['bob','sue'], outcome: 'failure'})
     await rescue.create(adminUser, {platform: 'pc', system: 'maia', rats: ['jim', 'kim'], firstLimpet: 'kim'})
     await rescue.create(adminUser, {platform: 'pc', system: 'fuelum', rats: ['kim', 'bin'], firstLimpet: 'kim'})
+    await rescue.create(adminUser, {platform: 'pc', system: 'HIP 101', rats: ['kim'], firstLimpet: 'kim'})
     await rescue.create(adminUser, {codeRed: true, platform: 'ps', system: 'beagles point', rats: ['huey', 'louis', 'dewey'], firstLimpet: 'louis'})
 
     const stats = await get(null, '/statistics/rats')
@@ -72,9 +75,55 @@ module.exports = {
     const NUM_RATS = 9
 
     test.strictEqual(stats.response.statusCode, HTTP_OK)
+    const KIM = 0
+    const SUE = 1
+
     const res = stats.body
     if (res.data) {
       test.strictEqual(res.data.length, NUM_RATS)
+      const kim = res.data[KIM].attributes
+      test.strictEqual(kim.pc, '3')
+      test.strictEqual(kim.rescueCount, '3')
+      test.strictEqual(kim.rats[0], 'kim')
+
+      const sue = res.data[SUE].attributes
+      test.strictEqual(sue.xb, '2')
+      test.strictEqual(sue.rescueCount, '2')
+      test.strictEqual(sue.rats[0], 'sue')
+      
+    }
+  }),
+  ratsWithMultiplePlatforms: asyncWrap(async function (test) {
+  
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'sol', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'maia', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'pc', system: 'sol', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'pc', system: 'fuelum', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'pc', system: 'maia', rats: ['sue'], outcome: 'failure'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'ps', system: 'maia', rats: ['sue'], outcome: 'failure'})
+    await rescue.create(adminUser, {platform: 'ps', system: 'maia', rats: ['sue'], firstLimpet: 'sue'})
+    
+    const stats = await get(null, '/statistics/rats')
+
+    const NUM_RATS = 1
+
+    test.strictEqual(stats.response.statusCode, HTTP_OK)
+    const SUE = 0
+
+    const res = stats.body
+    if (res.data) {
+      test.strictEqual(res.data.length, NUM_RATS)
+
+      const sue = res.data[SUE].attributes
+      test.strictEqual(sue.xb, '2')
+      test.strictEqual(sue.pc, '2')
+      test.strictEqual(sue.ps, '1')
+      test.strictEqual(sue.rescueCount, '5')
+      
     }
   })
 }

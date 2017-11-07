@@ -178,7 +178,7 @@ module.exports = {
     const res = await rescue.create(adminUser, {client: 'damsel', platform: 'xb', system: 'sol', rats: ['roland']})
     test.notEqual(res.id, null)
 
-    const find = await get(adminUser, '/rescues?rats.name=roland')
+    const find = await get(adminUser, '/rescues?rats.name.ilike=roland')
     test.strictEqual(find.response.statusCode, HTTP_OK)
     if (find.body) {
       let { data } = find.body
