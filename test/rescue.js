@@ -162,13 +162,10 @@ module.exports = {
    * @apiHeader {String} Cookie auth token
    * 
    * @apiExample
-   * GET /rescues?rats.ilike=damsel HTTP/1.1
+   * GET /rescues?rats.name.ilike=roland HTTP/1.1
    * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
    */
   rescueFindByRatName: asyncWrap(async function (test) {
-
-    const SKIP = true
-    if (SKIP) { return }
 
     const NUM_TESTS = 6
     test.expect(NUM_TESTS)
