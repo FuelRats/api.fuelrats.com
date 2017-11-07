@@ -20,7 +20,6 @@ exports.info = 'FuelRats tests reporter'
  * Run all tests within each module, reporting the results to the command-line.
  *
  * @param {Array} files
- * @api public
  */
 
 exports.run = function (files, options, callback) {
