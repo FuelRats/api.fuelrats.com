@@ -6,7 +6,6 @@ if (process.env.NODE_ENV !== 'testing') {
 }
 
 const { db, User, Client, Group, Reset } = require('../../api/db')
-db.options.logging = false
 
 const group = {}
 

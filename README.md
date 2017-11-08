@@ -106,7 +106,7 @@ or even specify a single test withing the group:
 
     npm test login resetPassword
 
-When running the entire test suite, any ouput to stderr or stdout is muted to keep the build process clean.  If you run the tests individually, this output is restored to aid test development.
+When running the entire test suite or a test group, any ouput to stderr or stdout is muted to keep the build process clean.  If you run the tests individually, this output is restored to aid test development.
 
 ## License
 Copyright 2017 The Fuel Rats Mischief
