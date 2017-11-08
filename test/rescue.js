@@ -172,6 +172,7 @@ module.exports = {
 
     const adminUser = await auth.adminUserCookie()
     
+    await rescue.create(adminUser, {rats: ['kevin', 'clive']})
     const res = await rescue.create(adminUser, {client: 'damsel', platform: 'xb', system: 'sol', rats: ['roland']})
     test.notEqual(res.id, null)
 
