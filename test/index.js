@@ -23,6 +23,11 @@ const options = {
   mute: true
 }
 
+process.on('unhandledRejection', err => {
+  error('unhandledRejection' + err.message + '\n' + err.stack)
+  process.exit(1)
+})
+
 /**
  * run against all the files/dirs defined in tests
  * @returns {Promise.<void>}
