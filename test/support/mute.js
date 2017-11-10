@@ -3,7 +3,8 @@
 // remember where we parked
 const _stdout = process.stdout.write
 const _stderr = process.stdout.write
-const bwrite = process.stdout.write.bind(process.stdout)
+const boutwrite = process.stdout.write.bind(process.stdout)
+const berrwrite = process.stderr.write.bind(process.stderr)
 
 /**
  * 
@@ -41,9 +42,17 @@ function unmute () {
  * @param {*} msg 
  */
 function log (msg) {
-  bwrite(msg + '\n', 'utf8')
+  boutwrite(msg + '\n', 'utf8')
+}
+
+/**
+ * 
+ * @param {*} msg 
+ */
+function error (msg) {
+  berrwrite(msg + '\n', 'utf8')
 }
 
 module.exports = {
-  mute, unmute, log
+  mute, unmute, log, error
 }

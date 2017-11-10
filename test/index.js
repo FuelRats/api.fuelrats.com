@@ -2,12 +2,11 @@
 const fs = require('fs')
 const { promisify } = require('util')
 const { join } = require('path')
+const { error } = require('./support/mute')
 
 // we want to explicity run the test in order of complexity
 // not their alphabetical order 
 const defaultTests = ['login', 'user', 'rat', 'rescue', 'stats']
-
-const bwrite = process.stderr.write.bind(process.stderr)
 
 const START_OF_ARGS = 2
 const args = (process.ARGV || process.argv).slice(START_OF_ARGS)
@@ -24,6 +23,11 @@ const options = {
   mute: true
 }
 
+process.on('unhandledRejection', err => {
+  error('unhandledRejection' + err.message + '\n' + err.stack)
+  process.exit(1)
+})
+
 /**
  * run against all the files/dirs defined in tests
  * @returns {Promise.<void>}
@@ -35,9 +39,11 @@ async function start () {
     let tests
 
     if (args.length) {
-      // must have specified a specific test
+      // must have specified what we want to run
       tests = [ args.shift() ]
       options.testspec = args.shift()
+      // unmumte if we have specified a single test to run
+      options.mute = !options.testspec
     } else {
       // just run the default tests
       tests = defaultTests
@@ -54,8 +60,7 @@ async function start () {
       throw Error('cannot find test file: ' + file)
     }), options)
   } catch (err) {
-    // just in case we have failed to restore stderr
-    bwrite(err + '\n', 'utf8')
+    error(err)
   }
 
   process.exit(0)

@@ -172,10 +172,45 @@ module.exports = {
 
     const adminUser = await auth.adminUserCookie()
     
+    await rescue.create(adminUser, {rats: ['kevin', 'clive']})
     const res = await rescue.create(adminUser, {client: 'damsel', platform: 'xb', system: 'sol', rats: ['roland']})
     test.notEqual(res.id, null)
 
     const find = await get(adminUser, '/rescues?rats.name.ilike=roland')
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
+      test.strictEqual(data.length, 1) // should have only one rescue returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.system, 'sol')
+      test.strictEqual(attr.platform, 'xb')
+    }
+
+  }),
+  /**
+   * @api {get} /rescues Find rescue firstLimpet by rat name
+   * @apiName FindRescueFirstLimpetByRatName
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * 
+   * @apiExample
+   * GET /rescues?firstLimpet.name.ilike=roland HTTP/1.1
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   */
+  rescueFindFirstLimpetByRatName: asyncWrap(async function (test) {
+
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+    
+    await rescue.create(adminUser, {rats: ['kevin', 'clive', 'roland'], firstLimpet: 'clive'})
+    const res = await rescue.create(adminUser, {client: 'damsel', platform: 'xb', system: 'sol', rats: ['kevin', 'roland'], firstLimpet: 'roland'})
+    test.notEqual(res.id, null)
+
+    const find = await get(adminUser, '/rescues?firstLimpet.name.ilike=roland')
     test.strictEqual(find.response.statusCode, HTTP_OK)
     if (find.body) {
       let { data } = find.body
