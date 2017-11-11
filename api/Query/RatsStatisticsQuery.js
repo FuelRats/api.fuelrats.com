@@ -59,7 +59,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
       [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'id'],
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
       [db.literal('array_agg(DISTINCT "user->UserGroups"."GroupId")'), 'groups'],
-      [db.fn('COUNT', 'Rescue.id'), 'rescueCount'],
+      [db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)'), 'rescueCount'],
       [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed']
     ]
 
@@ -110,7 +110,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
   }
 
   get _countField () {
-    return db.fn('COUNT', 'Rescue.id')
+    return db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)')
   }
 }
 
