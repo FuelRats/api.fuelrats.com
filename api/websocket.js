@@ -229,7 +229,7 @@ class Context {
   constructor (client, request) {
     this.meta = WebSocketManager.meta
 
-    this.inet = client.upgradeReq.headers['X-Forwarded-for'] || client.upgradeReq.connection.remoteAddress
+    this.inet = client.req.headers['X-Forwarded-for'] || client.req.connection.remoteAddress
 
     this.client = client
     this.state = {}
