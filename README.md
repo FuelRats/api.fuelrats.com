@@ -30,7 +30,7 @@ Once Vagrant finishes doing its thing you should be able to hit the API at `http
 So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
 -->
 
-So, first of you need to fetch a few things and install. These should be available as packages from you favorite package manager.
+So, first of you need to fetch a few things and install. These should be available as packages from your favorite package manager.
 
 1. [`nvm`](https://github.com/creationix/nvm)
 2. [`yarn`](https://yarnpkg.com/lang/en/docs/install/)
@@ -43,10 +43,10 @@ Grab the repo:
 Install all of the required Node modules:
 
     cd api.fuelrats.com
-    nvm install 8.0.0
+    nvm install 8.8.1
     yarn
 
-Make sure that you have created the databases required:
+Start postgres and create the databases required:
 
     su postgres
     psql -c 'CREATE DATABASE fuelrats;' -U postgres
@@ -57,30 +57,20 @@ Make sure that you have created the databases required:
     psql -c "ALTER USER fuelrats PASSWORD 'SqueakBaby';" -U postgres
     exit
 
-And if you want to use a different username or password, you can use them instead and set the new ones in your `config.json`
+If you want to use a different username or password, you can use them instead and set the new ones in your `config.json`
 
 Now start the server!
 
-    npm run dev
+    node index.js
 
-This will ensure that Postgres is running as a service and start the API itself on either port 8082 or whatever port you've set in `config.json`.
+This will start the API service on either port 8082 or whatever port you've set in `config.json`.
 
 ## Common Problems
 
-
-
 ### "Missing indexes" or an empty object is returned
 
-Your databases are empty, home slice. You can use our [import script](bin/import.js) to grab a bunch of archived FuelRats data.
-
-## Development
-
-To work for realsies you need to copy the `config-example.json` file and update any settings you need changed:
-
-    cp config-example.json config.json
-
-
-The `npm run dev` task starts the API and will automatically restart it when you change a file. Simply kill the process when you're done. Good luck, and may the force be with you.
+Your databases are empty.  You will need to either import some archived data or create some random test data
+with the example [generator script](bin/createTestDB.js)
 
 ## Generating the docs
 
@@ -94,7 +84,7 @@ via `http://[server]:[port]/docs/` e.g. http://localhost:8081/docs/js or http://
 
 ## Running Tests
 
-The test suite is comprised of a number of [nodeunit](https://github.com/caolan/nodeunit) tests.  To run the enite suite, simply use:
+The test suite is comprised of a number of [nodeunit](https://github.com/caolan/nodeunit) tests.  To run the entire suite, simply use:
 
     npm test
 
@@ -102,7 +92,7 @@ If you wish to run individual tests, you can launch either an individual group:
 
     npm test login
 
-or even specify a single test withing the group:
+or even specify a single test within the group:
 
     npm test login resetPassword
 
