@@ -93,14 +93,14 @@ class WebSocketManager {
   }
 
   onBroadcast (id, ctx, result) {
-    let clients = this.socket.clients.filter((client) => {
+    let clients = [...this.socket.clients].filter((client) => {
       return client.subscriptions.includes(id)
     })
     this.broadcast(clients, result)
   }
 
   onEvent (event, ctx, result, permissions = null) {
-    let clients = this.socket.clients.filter((client) => {
+    let clients = [...this.socket.clients].filter((client) => {
       if (client.clientId !== ctx.client.clientId) {
         return (!permissions || Permission.granted(permissions, client.user, client.scope))
       }
