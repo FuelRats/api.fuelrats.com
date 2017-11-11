@@ -306,8 +306,9 @@ const wss = new ws.Server({ server })
 
 const websocketManager = new WebSocketManager(wss, traffic)
 
-wss.on('connection', async function connection (client) {
-  let url = new URL(`http://localhost:8082${client.upgradeReq.url}`)
+wss.on('connection', async function connection (client, req) {
+  let url = new URL(`http://localhost:8082${req.url}`)
+  client.req = req
   client.clientId = uid.sync(WEBSOCKET_IDENTIFIER_ROUNDS)
   client.subscriptions = []
 
