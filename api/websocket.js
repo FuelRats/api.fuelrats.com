@@ -3,6 +3,7 @@
 const MIN_ACTION_LENGTH = 2
 
 const Error = require('./errors')
+const logger = require('./logger')
 
 // Import controllers
 const rat = require('./controllers/rat')
