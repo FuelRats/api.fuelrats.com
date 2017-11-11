@@ -3,6 +3,7 @@
 const MIN_ACTION_LENGTH = 2
 
 const Error = require('./errors')
+const logger = require('./logger')
 
 // Import controllers
 const rat = require('./controllers/rat')
@@ -185,7 +186,11 @@ class WebSocketManager {
   }
 
   send (client, message) {
-    client.send(JSON.stringify(message))
+    try {
+      client.send(JSON.stringify(message))
+    } catch (ex) {
+      logger.info('Failed to send websocket message')
+    }
   }
 
   broadcast (clients, message) {
