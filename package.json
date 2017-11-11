@@ -8,10 +8,10 @@
   ],
   "scripts": {
     "dev": "node index.js",
-    "test": "NODE_ENV=testing node test/all.js",
-    "nodeunit": "NODE_ENV=testing nodeunit",
+    "test": "NODE_ENV=testing node test",
     "jsdoc": "jsdoc -d static/docs/js -r api",
-    "apidoc": "apidoc -o static/docs/api/ -i test/"
+    "apidoc": "apidoc -o static/docs/api/ -i test/",
+    "eslint": "eslint api test"
   },
   "license": "MIT",
   "dependencies": {
@@ -25,7 +25,7 @@
     "deep-assign": "^2.0.0",
     "download": "^4.4.3",
     "ejs-promise": "^0.3.3",
-    "eslint": "^3.3.1",
+    "eslint": "^4.0.0",
     "flatmap": "0.0.3",
     "generic-pool": "^3.1.8",
     "git-rev": "^0.2.1",
@@ -76,6 +76,7 @@
     "oauth2orize-koa-fr": "^1.3.3",
     "pg": "^6.4.1",
     "sequelize": "^4.8.3",
+    "sinon": "^4.0.2",
     "slack-node": "^0.1.8",
     "ssl-root-cas": "^1.2.1",
     "supertest": "^1.2.0",

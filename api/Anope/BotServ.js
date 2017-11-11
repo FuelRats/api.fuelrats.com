@@ -12,7 +12,7 @@ class BotServ {
    * @param message the message to send
    */
   static say (channel, message) {
-    Anope.command('BotServ', 'API', `SAY ${channel} ${message}`)
+    return Anope.command('BotServ', 'API', `SAY ${channel} ${message}`)
   }
 
   /**
@@ -21,7 +21,7 @@ class BotServ {
    * @param message the action message to send
    */
   static act (channel, message) {
-    Anope.command('BotServ', 'API', `ACT ${channel} ${message}`)
+    return Anope.command('BotServ', 'API', `ACT ${channel} ${message}`)
   }
 }
 

@@ -89,10 +89,10 @@ class Request {
         })
 
         response.on('end', function () {
-          resolve({
-            response,
-            body: JSON.parse(body)
-          })
+          try {
+            body = JSON.parse(body)
+          } catch (ex) { /* failed to parse - send verbatim */ }
+          resolve({ response, body })
         })
       })
     })
@@ -139,17 +139,9 @@ class Request {
 
         response.on('end', function () {
           try {
-            let jsonBody = JSON.parse(body)
-            resolve({
-              response,
-              body: jsonBody
-            })
-          } catch (ex) {
-            resolve({
-              response,
-              body
-            })
-          }
+            body = JSON.parse(body)
+          } catch (ex) { /* failed to parse - send verbatim */ }
+          resolve({ response, body })
         })
       })
 
@@ -198,17 +190,9 @@ class Request {
 
         response.on('end', function () {
           try {
-            let jsonBody = JSON.parse(body)
-            resolve({
-              response,
-              body: jsonBody
-            })
-          } catch (ex) {
-            resolve({
-              response,
-              body
-            })
-          }
+            body = JSON.parse(body)
+          } catch (ex) { /* failed to parse - send verbatim */ }
+          resolve({ response, body })
         })
       })
 
