@@ -1,5 +1,5 @@
 'use strict'
-const { GET, POST, Request } = require('../api/classes/Request')
+const { get, post, put } = require('./support/request')
 const db = require('./support/db')
 const { asyncWrap } = require('./support/nodeunit')
 const app = require('./support/app')
@@ -13,28 +13,32 @@ module.exports = {
     await app.init()
     test()
   },
-
+  /**
+   * @api {post} /rescues Create rescue
+   * @apiName CreateRescue
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * @apiParam {String} client
+   * @apiParam {String} platform
+   * @apiParam {String} system
+   * @apiSuccess (201) {Object} data Rescue data 
+   */
   rescueCreate: asyncWrap(async function (test) {
 
     const NUM_TESTS = 5
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
-    let post = await new Request(POST, {
-      path: '/rescues',
-      insecure: true,
-      headers: {
-        'Cookie': adminUser
-      }
-    }, {
+    const create = await post(adminUser, '/rescues', {
       platform: 'xb',
       system: 'NLTT 48288'
     })
 
-    let res = post.body
+    let res = create.body
 
-    test.strictEqual(post.response.statusCode, HTTP_CREATED)
+    test.strictEqual(create.response.statusCode, HTTP_CREATED)
     test.equal(res.error, null)
 
     if (res.data) {
@@ -46,31 +50,176 @@ module.exports = {
     }
 
   }),
-  rescueFindById: asyncWrap(async function (test) {
 
-    const NUM_TESTS = 5
+  /**
+   * @api {put} /rescues/:id Update rescue
+   * @apiName UpdateRescue
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * @apiParam {String} id rescue id
+   * 
+   * @apiExample
+   * PUT /rescues/bb702e64-c0a2-4569-8b37-2d44132fbc1b HTTP/1.1
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   * Content-Type: application/json
+   * 
+   * {
+   *  "system": "NLTT 48288"
+   * }
+   */
+  rescueUpdateSystem: asyncWrap(async function (test) {
+
+    const NUM_TESTS = 7
     test.expect(NUM_TESTS)
 
-    const adminUser = await auth.adminUser()
+    const adminUser = await auth.adminUserCookie()
 
     const res = await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
+    test.notEqual(res.id, null)
 
-    let get = await new Request(GET, {
-      path: '/rescues/' + res.id,
-      insecure: true,
-      headers: {
-        'Cookie': adminUser
-      }
-    })
+    const update = await put(adminUser, '/rescues/' + res.id, { system: 'NLTT 48288'})
+    test.strictEqual(update.response.statusCode, HTTP_OK)
 
-    test.strictEqual(get.response.statusCode, HTTP_OK)
-    if (get.body) {
-      let { data } = get.body
+    const find = await get(adminUser, '/rescues/' + res.id)
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
+      test.strictEqual(data.length, 1) // should have only one rescue returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.system, 'NLTT 48288')
+      test.strictEqual(attr.platform, 'xb')
+    }
+  }),
+  /**
+   * @api {get} /rescues/:id Find rescue
+   * @apiName FindRescueById
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * @apiParam {String} id rescue id
+   */
+  rescueFindById: asyncWrap(async function (test) {
+    
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+
+    const res = await rescue.create(adminUser, {platform: 'xb', system: 'sol'})
+    test.notEqual(res.id, null)
+
+    const find = await get(adminUser, '/rescues/' + res.id)
+
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
       test.strictEqual(data.length, 1) // should have only one rescue returned
       test.strictEqual(data[0].id, res.id)
       const attr = data[0].attributes
       test.strictEqual(attr.system, 'sol')
       test.strictEqual(attr.platform, 'xb')
     }
+  }),
+  /**
+   * @api {get} /rescues Find rescue by client name
+   * @apiName FindRescueByClientName
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * 
+   * @apiExample
+   * GET /rescues?client.ilike=damsel HTTP/1.1
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   */
+  rescueFindByClientName: asyncWrap(async function (test) {
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+    
+    const res = await rescue.create(adminUser, {client: 'damsel', platform: 'xb', system: 'sol'})
+    test.notEqual(res.id, null)
+
+    const find = await get(adminUser, '/rescues?client.ilike=damsel')
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
+      test.strictEqual(data.length, 1) // should have only one rescue returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.system, 'sol')
+      test.strictEqual(attr.platform, 'xb')
+    }
+
+  }),
+  /**
+   * @api {get} /rescues Find rescue by rat name
+   * @apiName FindRescueByRatName
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * 
+   * @apiExample
+   * GET /rescues?rats.name.ilike=roland HTTP/1.1
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   */
+  rescueFindByRatName: asyncWrap(async function (test) {
+
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+    
+    await rescue.create(adminUser, {rats: ['kevin', 'clive']})
+    const res = await rescue.create(adminUser, {client: 'damsel', platform: 'xb', system: 'sol', rats: ['roland']})
+    test.notEqual(res.id, null)
+
+    const find = await get(adminUser, '/rescues?rats.name.ilike=roland')
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
+      test.strictEqual(data.length, 1) // should have only one rescue returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.system, 'sol')
+      test.strictEqual(attr.platform, 'xb')
+    }
+
+  }),
+  /**
+   * @api {get} /rescues Find rescue firstLimpet by rat name
+   * @apiName FindRescueFirstLimpetByRatName
+   * @apiGroup Rescue
+   * 
+   * @apiHeader {String} Cookie auth token
+   * 
+   * @apiExample
+   * GET /rescues?firstLimpet.name.ilike=roland HTTP/1.1
+   * Cookie: fuelrats:session=eyJ1c2VySWQiOiJiYTZmN2ViMy0zYzFjLTQ0MDktOWEwZS1iM2IwYjRjMzdjN2IiLCJfZXhwaXJlIjoxNTA5NDg0MDMwODg1LCJfbWF4QWdlIjo4NjQwMDAwMH0=; path=/; httponly;
+   */
+  rescueFindFirstLimpetByRatName: asyncWrap(async function (test) {
+
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+    
+    await rescue.create(adminUser, {rats: ['kevin', 'clive', 'roland'], firstLimpet: 'clive'})
+    const res = await rescue.create(adminUser, {client: 'damsel', platform: 'xb', system: 'sol', rats: ['kevin', 'roland'], firstLimpet: 'roland'})
+    test.notEqual(res.id, null)
+
+    const find = await get(adminUser, '/rescues?firstLimpet.name.ilike=roland')
+    test.strictEqual(find.response.statusCode, HTTP_OK)
+    if (find.body) {
+      let { data } = find.body
+      test.strictEqual(data.length, 1) // should have only one rescue returned
+      test.strictEqual(data[0].id, res.id)
+      const attr = data[0].attributes
+      test.strictEqual(attr.system, 'sol')
+      test.strictEqual(attr.platform, 'xb')
+    }
+
   })
 }

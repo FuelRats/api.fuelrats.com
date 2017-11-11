@@ -33,7 +33,7 @@ class NickServ {
   static async register (nickname, password, email) {
     AnopeWebhook.cacheRequest('ns_register', nickname)
     let result = await Anope.command('NickServ', nickname, `REGISTER ${password} ${email}`)
-    if (result && /Nickname [A-Za-z0-9_\-\[\]{}`]* registered./.test(result.return) === true) {
+    if (result && /Nickname [A-Za-z0-9_\-[\]{}`]* registered./.test(result.return) === true) {
       return nickname
     } else {
       throw Error.template('bad_request', result)

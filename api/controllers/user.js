@@ -175,7 +175,7 @@ class Users {
       throw Error.template('missing_required_field', 'id')
     }
   }
- }
+}
 
 /**
  * Check whether the user has permissions to perform the required action to this user

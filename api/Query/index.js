@@ -20,6 +20,7 @@ class Query {
   constructor (params, connection) {
     this._params = Object.assign({}, params)
     this._connection = connection
+    this.options = new QueryOptions()
 
     delete this._params.fields
 
@@ -51,7 +52,7 @@ class Query {
 
   /**
    * Return an object containing a Sequelize-compatible query generated from the parameters
-   * @returns {{where: (Object|*), order: *[], limit: number, offset: number}|*} A sequelize compatible query
+   * @returns {{where: (Object|*), order: (Array|*), limit: number, offset: number}|*} A sequelize compatible query
    */
   get toSequelize () {
     return this._query
@@ -167,12 +168,6 @@ class Query {
     return 'DESC'
   }
 
-  /**
-   * Returns the Options class used to generate a sequelize query from API subqueries, may be overriden
-   */
-  get options () {
-    return QueryOptions
-  }
 }
 
 module.exports = Query

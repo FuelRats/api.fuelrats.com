@@ -1,6 +1,7 @@
 'use strict'
 const { Rat, Epic } = require('./../db')
 const Query = require('./index')
+const { isEmpty } = require('underscore')
 
 /**
  * A class representing a rescue query
@@ -53,7 +54,7 @@ class RescueQuery extends Query {
         where: rats,
         model: Rat,
         as: 'rats',
-        required: false,
+        required: !isEmpty(rats),
         through: {
           attributes: []
         }
@@ -62,13 +63,13 @@ class RescueQuery extends Query {
         where: firstLimpet,
         model: Rat,
         as: 'firstLimpet',
-        required: false
+        required: !isEmpty(firstLimpet)
       },
       {
         where: epics,
         model: Epic,
         as: 'epics',
-        required: false
+        required: !isEmpty(epics)
       }
     ]
   }
