@@ -185,7 +185,11 @@ class WebSocketManager {
   }
 
   send (client, message) {
-    client.send(JSON.stringify(message))
+    try {
+      client.send(JSON.stringify(message))
+    } catch (ex) {
+      logger.info('Failed to send websocket message')
+    }
   }
 
   broadcast (clients, message) {
