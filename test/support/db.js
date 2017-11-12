@@ -196,7 +196,10 @@ async function init () {
       'user.groups',
       'client.read',
       'client.write',
-      'client.delete'
+      'client.delete',
+      'ship.read',
+      'ship.write',
+      'ship.delete'
     ]
   })
 
