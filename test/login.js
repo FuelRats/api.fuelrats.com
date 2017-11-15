@@ -50,7 +50,7 @@ module.exports = {
    */
   adminAuth: asyncWrap(async function (test) {
 
-    const NUM_TESTS = 2
+    const NUM_TESTS = 4
     test.expect(NUM_TESTS)
 
     let login = await post(null, '/login', {
@@ -59,13 +59,21 @@ module.exports = {
     })
       
     test.strictEqual(login.response.statusCode, HTTP_OK)
-    test.equal(login.body, 'OK')
+
+    let res = login.body
+    test.equal(res.error, null)
+    
+    if (res.data) {
+      let { attributes } = res.data
+      test.notEqual(res.data.id, null)
+      test.strictEqual(attributes.email, db.user.admin.email)
+    }
 
   }),
 
   testAuth: asyncWrap(async function (test) {
 
-    const NUM_TESTS = 2
+    const NUM_TESTS = 4
     test.expect(NUM_TESTS)
 
     let login = await post(null, '/login', {
@@ -74,7 +82,14 @@ module.exports = {
     })
 
     test.strictEqual(login.response.statusCode, HTTP_OK)
-    test.equal(login.body, 'OK')
+    let res = login.body
+    test.equal(res.error, null)
+    
+    if (res.data) {
+      let { attributes } = res.data
+      test.notEqual(res.data.id, null)
+      test.strictEqual(attributes.email, db.user.test.email)
+    }
 
   }),
 
