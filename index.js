@@ -84,7 +84,9 @@ app.use(async function (ctx, next) {
   let { query } = ctx
   ctx.query = parseQuery(query)
 
-  ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
+  let [forwardedIp] = ctx.request.req.headers['x-forwarded-for'] || []
+  ctx.inet =  forwardedIp || ctx.request.ip
+
   await next()
 })
 
@@ -139,7 +141,7 @@ app.use(async (ctx, next) => {
       errors: [error]
     }
 
-    ctx.status = error.code
+    ctx.status = error.code || SERVER_ERROR_CODE
     if (error.code === SERVER_ERROR_CODE) {
       logger.error(error)
       ctx.app.emit('error', ex, ctx)
