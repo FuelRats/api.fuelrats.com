@@ -84,10 +84,9 @@ app.use(async function (ctx, next) {
   let { query } = ctx
   ctx.query = parseQuery(query)
 
-  ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
-  if (Object.isArray(ctx.inet)) {
-    [ctx.inet] = ctx.inet
-  }
+  let [forwardedIp] = ctx.request.req.headers['x-forwarded-for']
+  ctx.inet =  forwardedIp || ctx.request.ip
+
   await next()
 })
 
