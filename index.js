@@ -139,10 +139,10 @@ app.use(async (ctx, next) => {
       errors: [error]
     }
 
-    ctx.status = error.code
+    ctx.status = error.code || SERVER_ERROR_CODE
     if (error.code === SERVER_ERROR_CODE) {
       logger.error(error)
-      ctx.app.emit('error', ex, ctx)
+      ctx.app.emit('error', ex, ctx) 
     }
   }
 })
