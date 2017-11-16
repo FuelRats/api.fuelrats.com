@@ -84,7 +84,7 @@ app.use(async function (ctx, next) {
   let { query } = ctx
   ctx.query = parseQuery(query)
 
-  let [forwardedIp] = ctx.request.req.headers['x-forwarded-for']
+  let [forwardedIp] = ctx.request.req.headers['x-forwarded-for'] || []
   ctx.inet =  forwardedIp || ctx.request.ip
 
   await next()
