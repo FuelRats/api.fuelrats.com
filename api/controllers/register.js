@@ -39,7 +39,7 @@ class Register {
       }
     })
     if (existingUser) {
-      throw Error.template('operation_failed', 'email already exists')
+      throw Errors.template('operation_failed', 'email already exists')
     }
 
     let transaction = await db.transaction()
