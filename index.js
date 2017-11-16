@@ -85,6 +85,9 @@ app.use(async function (ctx, next) {
   ctx.query = parseQuery(query)
 
   ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
+  if (Object.isArray(ctx.inet)) {
+    [ctx.inet] = ctx.inet
+  }
   await next()
 })
 
@@ -142,7 +145,7 @@ app.use(async (ctx, next) => {
     ctx.status = error.code || SERVER_ERROR_CODE
     if (error.code === SERVER_ERROR_CODE) {
       logger.error(error)
-      ctx.app.emit('error', ex, ctx) 
+      ctx.app.emit('error', ex, ctx)
     }
   }
 })
