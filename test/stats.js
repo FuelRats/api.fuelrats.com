@@ -6,6 +6,7 @@ const app = require('./support/app')
 const { HTTP_OK } = require('./support/const')
 const rescue = require('./support/rescue')
 const auth = require('./support/auth')
+const rat = require('./support/rat')
 
 module.exports = {
   setUp: async function (test) {
@@ -122,6 +123,42 @@ module.exports = {
       test.strictEqual(sue.xb, '2')
       test.strictEqual(sue.pc, '2')
       test.strictEqual(sue.ps, '1')
+      test.strictEqual(sue.rescueCount, '5')
+      
+    }
+  }),
+  ratsWithMultipleShips: asyncWrap(async function (test) {
+  
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const adminUser = await auth.adminUserCookie()
+
+    await rat.create(adminUser, { platform: 'xb', name: 'sue' , ships: ['serenity', 'reliant']})
+    
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'sol', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'maia', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'sol', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'fuelum', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'maia', rats: ['sue'], outcome: 'failure'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'maia', rats: ['sue'], outcome: 'failure'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'maia', rats: ['sue'], firstLimpet: 'sue'})
+    
+    const stats = await get(null, '/statistics/rats')
+
+    const NUM_RATS = 1
+
+    test.strictEqual(stats.response.statusCode, HTTP_OK)
+    const SUE = 0
+
+    const res = stats.body
+    if (res.data) {
+      test.strictEqual(res.data.length, NUM_RATS)
+
+      const sue = res.data[SUE].attributes
+      test.strictEqual(sue.xb, '5')
+      test.strictEqual(sue.pc, '0')
+      test.strictEqual(sue.ps, '0')
       test.strictEqual(sue.rescueCount, '5')
       
     }

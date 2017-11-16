@@ -359,14 +359,14 @@ function censor (obj) {
  * @returns {Function} A promise
  */
 function fields (...requiredFields) {
-  return async function (ctx, next) {
+  return function (ctx, next) {
     let missingFields = requiredFields.filter((requiredField) => {
       return ctx.data.hasOwnProperty(requiredField) === false
     })
     if (missingFields.length > 0) {
       throw Error.template('missing_required_fields', missingFields)
     }
-    await next()
+    return next()
   }
 }
 
@@ -376,13 +376,13 @@ function fields (...requiredFields) {
  * @returns {Function} A promise
  */
 function clean (...cleanFields) {
-  return async function (ctx, next) {
+  return function (ctx, next) {
     if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
       cleanFields.map((cleanField) => {
         ctx.data[cleanField] = undefined
       })
     }
-    await next()
+    return next()
   }
 }
 
