@@ -1,7 +1,12 @@
 'use strict'
+// we are deliberately doing all async functions sequentially to 
+// ensure determistic testing
+/* eslint-disable no-await-in-loop */
 const { get, post } = require('./request')
 const { HTTP_CREATED } = require('./const')
 const user = require('./user')
+const ship = require('./ship')
+const { isString } = require('underscore')
 
 /**
  * Create a rat createData
@@ -18,7 +23,7 @@ async function create (auth, rat) {
 
   // check if we have a user
   if (!createData.userId) {
-    createData.userId = (await user.findOrCreate(auth, rat.name + '@fuelrats.com')).id
+    createData.userId = (await user.findOrCreate(auth, createData.name + '@fuelrats.com')).id
   }
 
   const createReq = await post(auth, '/rats', createData)
@@ -27,6 +32,20 @@ async function create (auth, rat) {
       !createReq.body || !createReq.body.data) {
     throw new Error('Failed to create rescue')
   }
+
+  // check if we need to create ships
+  if (createData.ships) {
+    for (let ratShip of createData.ships) {
+      let shipData = { ratId: createReq.body.data.id }
+      if (isString(ratShip)) {
+        shipData.name = ratShip
+      } else {
+        Object.assign(shipData, ratShip)
+      }
+      await ship.findOrCreate(auth, shipData)
+    }
+  }
+
 
   return createReq.body.data
 

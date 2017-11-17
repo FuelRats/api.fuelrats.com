@@ -84,7 +84,9 @@ app.use(async function (ctx, next) {
   let { query } = ctx
   ctx.query = parseQuery(query)
 
-  ctx.inet = ctx.request.req.headers['x-forwarded-for'] || ctx.request.ip
+  let [forwardedIp] = ctx.request.req.headers['x-forwarded-for'] || []
+  ctx.inet =  forwardedIp || ctx.request.ip
+
   await next()
 })
 
@@ -139,7 +141,7 @@ app.use(async (ctx, next) => {
       errors: [error]
     }
 
-    ctx.status = error.code
+    ctx.status = error.code || SERVER_ERROR_CODE
     if (error.code === SERVER_ERROR_CODE) {
       logger.error(error)
       ctx.app.emit('error', ex, ctx)
@@ -359,14 +361,14 @@ function censor (obj) {
  * @returns {Function} A promise
  */
 function fields (...requiredFields) {
-  return async function (ctx, next) {
+  return function (ctx, next) {
     let missingFields = requiredFields.filter((requiredField) => {
       return ctx.data.hasOwnProperty(requiredField) === false
     })
     if (missingFields.length > 0) {
       throw Error.template('missing_required_fields', missingFields)
     }
-    await next()
+    return next()
   }
 }
 
@@ -376,13 +378,13 @@ function fields (...requiredFields) {
  * @returns {Function} A promise
  */
 function clean (...cleanFields) {
-  return async function (ctx, next) {
+  return function (ctx, next) {
     if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
       cleanFields.map((cleanField) => {
         ctx.data[cleanField] = undefined
       })
     }
-    await next()
+    return next()
   }
 }
 

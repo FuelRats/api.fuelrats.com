@@ -61,6 +61,7 @@ async function start () {
     }), options)
   } catch (err) {
     error(err)
+    process.exit(1)
   }
 
   process.exit(0)
