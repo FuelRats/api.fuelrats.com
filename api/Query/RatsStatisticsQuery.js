@@ -1,7 +1,7 @@
 'use strict'
 const { db } = require('./../db')
 const StatisticsQuery = require('./StatisticsQuery')
-const { Rescue, User, Rat, UserGroups } = require('../db')
+const { Rescue, User, Rat } = require('../db')
 
 /**
  * A class representing a rescue query
@@ -40,12 +40,6 @@ class RatsStatisticsQuery extends StatisticsQuery {
             'id',
             'name'
           ]
-        }, {
-          model: UserGroups,
-          duplicating: false,
-          required: false,
-          attributes: [
-          ]
         }],
         required: false,
         duplicating: false,
@@ -58,7 +52,6 @@ class RatsStatisticsQuery extends StatisticsQuery {
     this._query.attributes = [
       [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'id'],
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
-      [db.literal('array_agg(DISTINCT "user->UserGroups"."GroupId")'), 'groups'],
       [db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)'), 'rescueCount'],
       [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed']
     ]

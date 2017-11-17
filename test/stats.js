@@ -162,5 +162,50 @@ module.exports = {
       test.strictEqual(sue.rescueCount, '5')
       
     }
+  }),
+  ratsWithMultipleGroups: asyncWrap(async function (test) {
+  
+    const NUM_TESTS = 6
+    test.expect(NUM_TESTS)
+
+    const user = db.createUser({
+      password: 'testuser',
+      // this is the result of bcrypt.hash('testuser', 12)
+      hash: '$2a$12$QM4/plOu7n9BThFGbG8USO1jWnwJq6Lk7GnPtzhb./o2jHhbXayTy',
+      email: 'sue@fuelrats.com',
+      groups: ['admin', 'rat', 'dispatch'],
+      nicknames: ['sue']
+    })
+
+    const adminUser = await auth.adminUserCookie()
+
+    await rat.create(adminUser, { platform: 'xb', name: 'sue' , userId: user.id, ships: ['serenity', 'reliant']})
+    
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'sol', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'maia', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'sol', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'fuelum', rats: ['sue'], firstLimpet: 'sue'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'maia', rats: ['sue'], outcome: 'failure'})
+    await rescue.create(adminUser, {codeRed: true, platform: 'xb', system: 'maia', rats: ['sue'], outcome: 'failure'})
+    await rescue.create(adminUser, {platform: 'xb', system: 'maia', rats: ['sue'], firstLimpet: 'sue'})
+    
+    const stats = await get(null, '/statistics/rats')
+
+    const NUM_RATS = 1
+
+    test.strictEqual(stats.response.statusCode, HTTP_OK)
+    const SUE = 0
+
+    const res = stats.body
+    if (res.data) {
+      test.strictEqual(res.data.length, NUM_RATS)
+
+      const sue = res.data[SUE].attributes
+      test.strictEqual(sue.xb, '5')
+      test.strictEqual(sue.pc, '0')
+      test.strictEqual(sue.ps, '0')
+      test.strictEqual(sue.rescueCount, '5')
+      
+    }
   })
 }
