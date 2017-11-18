@@ -17,7 +17,12 @@ module.exports = {
   setUp: async function (test) {
     await db.init()
     await app.init()
-    sandbox.stub(BotServ, 'say')
+    // make a new remember say
+    stub.say = function (channel, message) {
+      stub.say.channel = channel
+      stub.say.message = message
+    }
+    sandbox.stub(BotServ, 'say').callsFake(stub.say)
     stub.sendMail = sandbox.stub()
     sandbox.stub(nodemailer, 'createTransport').returns({
       sendMail: stub.sendMail
@@ -177,6 +182,25 @@ module.exports = {
     test.strictEqual(stub.sendMail.callCount, 1)
 
   }),
+  resetPasswordViaProxy: asyncWrap(async function (test) {
+    const NUM_TESTS = 7
+    test.expect(NUM_TESTS)
+
+    // abuse the fact that auth is actually just raw headers
+    const reset = await post({'x-forwarded-for': ['192.168.172.122', '10.32.64.128']}, '/reset', {
+      email: db.user.test.email
+    })
+
+    test.strictEqual(reset.response.statusCode, HTTP_OK)
+    test.equal(reset.body, 'OK')
+    test.strictEqual(BotServ.say.callCount, 1)
+    test.strictEqual(stub.sendMail.callCount, 1)
+    test.ok(stub.say.message.includes('192.168.172.122'), 'failed to report correct IP')
+    test.ok(!stub.say.message.includes('10.32.64.128'), 'failed to report correct IP')
+    test.ok(stub.say.message.includes(db.user.test.email), 'failed to report correct email address')
+
+  }),
+
   /**
    * @api {get} /reset/:token Validate Password reset token
    * @apiName ValidateReset
