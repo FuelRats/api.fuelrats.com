@@ -3,7 +3,7 @@
 const Errors = require('./errors')
 const i18next = require('i18next')
 const localisationResources = require('../localisations.json')
-const { Group } = require('./db')
+const { Group, User } = require('./db')
 
 i18next.init({
   lng: 'en',
@@ -75,7 +75,7 @@ class Permission {
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
   static granted (permissions, origUser, scope = null) {
-    if (!origUser) {
+    if (!origUser || User.isSuspended(origUser)) {
       return false
     }
 
