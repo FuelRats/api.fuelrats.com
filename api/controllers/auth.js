@@ -24,6 +24,10 @@ class Authentication {
     if (result === false) {
       return null
     } else {
+      if (user.isSuspended() === true) {
+        throw Error.template('suspended')
+      }
+
       if (bcrypt.getRounds(user.password) > BCRYPT_ROUNDS_COUNT) {
         let newRoundPassword = await bcrypt.hash(password, BCRYPT_ROUNDS_COUNT)
         User.update({
@@ -60,6 +64,10 @@ class Authentication {
         }
       ]
     })
+
+    if (userInstance && userInstance.isSuspended()) {
+      throw Error.template('suspended')
+    }
 
     let user = UsersPresenter.render(userInstance, {})
     return {

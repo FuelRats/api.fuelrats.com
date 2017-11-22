@@ -46,16 +46,23 @@ module.exports = function (db, DataTypes) {
     paranoid: true
   })
 
-  User.isSuspended = function (user) {
-    if (!user.suspended) {
+  User.prototype.isSuspended = function () {
+    if (!this.suspended) {
       return false
     }
 
-    if (user.suspended === Infinity) {
-      return true
-    }
-    return Date.now() > user.suspended
+    return this.suspended - new Date() > 0
   }
+
+  User.isSuspended = function (user) {
+    if (!user.data.attributes.suspended) {
+      return false
+    }
+
+    return user.data.attributes.suspended - Date.now() > 0
+  }
+
+
 
   User.preferredRat = function (user) {
     let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])

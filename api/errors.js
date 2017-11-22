@@ -105,6 +105,13 @@ let errors = {
     'title': 'Rate Limit Exceeded'
   },
 
+  'suspended': {
+    'code': 410,
+    'detail': 'This account has been suspended',
+    'status': 'Gone',
+    'title': 'Account has been suspended'
+  },
+
   template: function (type, detail) {
     let errorModel = errors[type]
     if (detail) {
