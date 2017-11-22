@@ -31,10 +31,31 @@ module.exports = function (db, DataTypes) {
       type: DataTypes.BLOB(),
       allowNull: true,
       defaultValue: null
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'inactive', 'unconfirmed', 'legacy'),
+      allowNull: false,
+      defaultValue: 'unconfirmed'
+    },
+    suspended: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null
     }
   }, {
     paranoid: true
   })
+
+  User.isSuspended = function (user) {
+    if (!user.suspended) {
+      return false
+    }
+
+    if (user.suspended === Infinity) {
+      return true
+    }
+    return Date.now() > user.suspended
+  }
 
   User.preferredRat = function (user) {
     let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])
@@ -76,6 +97,7 @@ module.exports = function (db, DataTypes) {
           'image',
           'nicknames',
           'password',
+          'suspended',
           'deletedAt'
         ]
       },
