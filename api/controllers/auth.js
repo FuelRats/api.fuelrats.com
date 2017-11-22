@@ -84,6 +84,10 @@ class Authentication {
 
     let authorised = await bcrypt.compare(secret, client.secret)
     if (authorised) {
+      if (client.user.isSuspended()) {
+        throw Error.template('suspended', 'The account managing this OAuth client is suspended')
+      }
+
       if (bcrypt.getRounds(client.secret) > BCRYPT_ROUNDS_COUNT) {
         let newRoundSecret = await bcrypt.hash(secret, BCRYPT_ROUNDS_COUNT)
         Client.update({
