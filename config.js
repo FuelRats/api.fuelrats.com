@@ -2,12 +2,14 @@
 'use strict'
 
 
+// noinspection SpellCheckingInspection
 module.exports = {
   'cookie': {
     'domain': process.env.FRAPI_COOKIE_DOMAIN || 'localhost',
     'secret': process.env.FRAPI_COOKIE_SECRET || 'oUAAAAAMkdpS2l6E'
   },
   'xmlrpc': {
+
     'url': process.env.FRAPI_XMLRPC_URL || 'https://irc.eu.fuelrats.com:6080/xmlrpc',
     'insecure': process.env.FRAPI_XMLRPC_INSECURE || false
   },

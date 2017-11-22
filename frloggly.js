@@ -95,7 +95,7 @@ function logglyAppender (config, layout) {
       additionalTags,
       (error) => {
         if (error) {
-// eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
           console.error('log4js.logglyAppender - error occurred: ', error)
         }
 
