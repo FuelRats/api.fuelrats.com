@@ -45,7 +45,6 @@ class Register {
     let transaction = await db.transaction()
 
     try {
-
       let password = await bcrypt.hash(ctx.data.password, BCRYPT_ENCRYPTION_ROUNDS)
 
       let user = await User.create({
@@ -69,6 +68,8 @@ class Register {
       }, {
         transaction: transaction
       })
+
+      nickname = nickname.replace(/\[.*\]/i, '')
 
       await NickServ.register(nickname, ctx.data.password, email)
 
