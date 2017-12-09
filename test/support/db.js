@@ -210,11 +210,6 @@ async function init () {
 }
 
 module.exports = {
-  init: init,
-  user: user,
-  client: client,
-  group: group,
-  idRegExp: idRegExp,
-  Reset: Reset
+  init, user, client, group, idRegExp, Reset, createClient, createUser 
 }
 
