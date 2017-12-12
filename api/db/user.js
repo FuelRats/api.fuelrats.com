@@ -33,7 +33,7 @@ module.exports = function (db, DataTypes) {
       defaultValue: null
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive', 'unconfirmed', 'legacy'),
+      type: DataTypes.ENUM('active', 'inactive', 'legacy'),
       allowNull: false,
       defaultValue: 'unconfirmed'
     },
@@ -191,19 +191,6 @@ module.exports = function (db, DataTypes) {
           required: false,
           through: {
             attributes: []
-          },
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
-          }
-        },
-        {
-          model: models.Group,
-          as: 'groups',
-          required: false,
-          where: {
-            id: 'default'
           },
           attributes: {
             exclude: [

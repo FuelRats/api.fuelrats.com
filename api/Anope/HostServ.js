@@ -84,12 +84,6 @@ function getHighestPriorityGroup (user) {
     return include.type === 'groups' && include.attributes.vhost
   })
 
-  let defaultGroup = Permissions.groups.find((group) => {
-    return group.id === 'default'
-  })
-
-  groups.push(GroupsPresenter.render(defaultGroup).data)
-
   groups.sort((group1, group2) => {
     return group1.priority - group2.priority
   })

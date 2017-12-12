@@ -135,8 +135,8 @@ async function init () {
     // do the init sequentially to make debugging a little easier
     await db.sync({ force: true })
         
-    group.default = await Group.create({
-      id: 'default',
+    group.confirmed = await Group.create({
+      id: 'confirmed',
       vhost: 'recruit.fuelrats.com',
       isAdministrator: false,
       priority: 0,

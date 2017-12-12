@@ -13,7 +13,7 @@ const PASSWORD_LEN = 24
 db.sync({ force: true }).then(async function () {
   let groups = [
     Group.create({
-      id: 'default',
+      id: 'confirmed',
       vhost: 'recruit.fuelrats.com',
       isAdministrator: false,
       priority: 0,

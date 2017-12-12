@@ -84,11 +84,6 @@ class Permission {
 
     let hasPermission = false
 
-    user.data.relationships.groups.data.push({
-      id: 'default',
-      type: 'groups'
-    })
-
     for (let permission of permissions) {
       for (let groupRelation of user.data.relationships.groups.data) {
         let group = groups.find((group) => {
