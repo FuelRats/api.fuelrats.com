@@ -6,6 +6,7 @@ cache:
 branches:
   except:
   - v2
+  - 2.1
 sudo: false
 env:
 - CXX=g++-4.8
