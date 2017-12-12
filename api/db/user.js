@@ -41,6 +41,15 @@ module.exports = function (db, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null
+    },
+    permissions: {
+      type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
+      get: function () {
+        return this.groups.reduce((accumulator, value) => {
+          return accumulator.concat(value.permissions)
+        }, [])
+      },
+      include: []
     }
   }, {
     paranoid: true
@@ -95,6 +104,7 @@ module.exports = function (db, DataTypes) {
       }
     })
 
+
     models.User.addScope('public', {
       attributes: {
         include: [
@@ -105,7 +115,8 @@ module.exports = function (db, DataTypes) {
           'nicknames',
           'password',
           'suspended',
-          'deletedAt'
+          'deletedAt',
+          'permissions'
         ]
       },
       include: [
@@ -153,7 +164,8 @@ module.exports = function (db, DataTypes) {
         exclude: [
           'nicknames',
           'image',
-          'deletedAt'
+          'deletedAt',
+          'permissions'
         ]
       },
       include: [
@@ -185,6 +197,19 @@ module.exports = function (db, DataTypes) {
               'deletedAt'
             ]
           }
+        },
+        {
+          model: models.Group,
+          as: 'groups',
+          required: false,
+          where: {
+            id: 'default'
+          },
+          attributes: {
+            exclude: [
+              'deletedAt'
+            ]
+          }
         }
       ]
     }, {
@@ -194,6 +219,7 @@ module.exports = function (db, DataTypes) {
     models.User.addScope('profile', {
       attributes: {
         include: [
+          'permissions',
           [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']
         ],
         exclude: [
