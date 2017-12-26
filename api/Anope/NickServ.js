@@ -1,7 +1,7 @@
 'use strict'
 const Anope = require('./index')
-const Error = require('../errors')
 const { AnopeWebhook } = require('../controllers/anope-webhook')
+const { BadRequestAPIError, UnauthorizedAPIError } = require('../APIError')
 
 const NICKNAME_PARSE_PADDING = 2
 const INFO_FIRST_ITEM = 2
@@ -36,7 +36,7 @@ class NickServ {
     if (result && /Nickname [A-Za-z0-9_\-[\]{}`]* registered./.test(result.return) === true) {
       return nickname
     } else {
-      throw Error.template('bad_request', result)
+      throw new BadRequestAPIError({})
     }
   }
 
@@ -53,7 +53,7 @@ class NickServ {
     if (result && /You are now in the group of/.test(result.return) === true) {
       return nickname
     } else {
-      throw Error.template('bad_request', result)
+      throw new BadRequestAPIError({})
     }
   }
 
@@ -65,7 +65,7 @@ class NickServ {
   static async list (account) {
     let result = await Anope.command('NickServ', account, `GLIST ${account}`)
     if (result.return.includes('Password authentication required')) {
-      throw Error.template('not_authenticated', 'NickServ Password missing or incorrect')
+      throw new UnauthorizedAPIError({})
     }
 
     let nicknames = result.return.split('#xA;')
@@ -115,7 +115,7 @@ class NickServ {
     if (result.return.includes('has been confirmed')) {
       return nickname
     } else {
-      throw Error.template('bad_request', result)
+      throw new BadRequestAPIError({})
     }
   }
 

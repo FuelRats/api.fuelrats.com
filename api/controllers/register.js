@@ -2,19 +2,19 @@
 const BCRYPT_ENCRYPTION_ROUNDS = 12
 
 const { User, Rat, db} = require('../db')
-const Errors = require('../errors')
 const bcrypt = require('bcrypt')
 const NickServ = require('../Anope/NickServ')
 const HostServ = require('../Anope/HostServ')
 const BotServ = require('../Anope/BotServ')
 const UserQuery = require('../Query/UserQuery')
-const UserPresenter = require('../classes/Presenters').UsersPresenter
-
+const APIEndpoint = require('../APIEndpoint')
+const Users = require('./user')
+const { ConflictAPIError,UnprocessableEntityAPIError } = require('../APIError')
 
 const platforms = ['pc', 'xb', 'ps']
 
-class Register {
-  static async create (ctx) {
+class Register extends APIEndpoint {
+  async create (ctx) {
     // let captcha = ctx.data['g-recaptcha-response']
     // let captchaResult = await new Request(POST, {
     //   host: 'www.google.com',
@@ -39,7 +39,9 @@ class Register {
       }
     })
     if (existingUser) {
-      throw Errors.template('operation_failed', 'email already exists')
+      throw ConflictAPIError({
+        pointer: '/data/attributes/email'
+      })
     }
 
     let transaction = await db.transaction()
@@ -58,7 +60,9 @@ class Register {
       let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
-        throw Errors.template('invalid_parameter', 'platform')
+        throw UnprocessableEntityAPIError({
+          pointer: '/data/attributes/platform'
+        })
       }
 
       await Rat.create({
@@ -69,7 +73,7 @@ class Register {
         transaction: transaction
       })
 
-      nickname = nickname.replace(/\[.*\]/i, '')
+      nickname = nickname.replace(/\[.*]/i, '')
 
       await NickServ.register(nickname, ctx.data.password, email)
 
@@ -84,7 +88,7 @@ class Register {
       await HostServ.update(user[0])
       process.emit('registration', ctx, ctx.data)
 
-      ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
+      ctx.body = Users.presenter.render(result.rows, ctx.meta(result, userQuery))
     } catch (ex) {
       transaction.rollback()
       throw ex

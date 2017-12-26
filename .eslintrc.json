@@ -1,8 +1,6 @@
 {
   "env": {
-    "browser": true,
     "node": true,
-    "jquery": true,
     "es6": true
   },
   "parserOptions": {
@@ -140,7 +138,7 @@
       "warn"
     ],
     "no-invalid-this": [
-      "warn"
+      "error"
     ],
     "no-lone-blocks": [
       "warn"

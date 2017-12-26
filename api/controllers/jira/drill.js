@@ -3,8 +3,8 @@
 const HostServ = require('../../Anope/HostServ')
 const BotServ = require('../../Anope/BotServ')
 const { User, Rat } = require('../../db')
-const Errors = require('../../errors')
 const { UsersPresenter } = require('../../classes/Presenters')
+const { UnprocessableEntityAPIError } = require('../../APIError')
 
 const DrillType = {
   10200: 'rat',
@@ -16,7 +16,7 @@ const emailAddressField = 'customfield_10502'
 class JiraDrill {
   static async update (ctx) {
     if (!ctx.data.issue || !ctx.data.issue.fields.issuetype || !ctx.data.issue.fields.issuetype.id) {
-      throw Errors.template('missing_required_field', 'issue.fields.issuetype.id')
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/issue/fields/issuetype/id' })
     }
 
     let { fields } = ctx.data.issue
@@ -24,13 +24,13 @@ class JiraDrill {
     let email = fields[emailAddressField]
     if (!email) {
       BotServ.say('#doersofstuff', '[API] Unable to update drilled status or IRC permissions. Email was not provided')
-      throw Errors.template('missing_required_field', `'issue.fields.${emailAddressField}`)
+      throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${emailAddressField}` })
     }
 
     let CMDRname = fields[CMDRnameField]
     if (!CMDRname) {
       BotServ.say('#doersofstuff', '[API] Unable to update IRC permissions. CMDR name was not provided')
-      throw Errors.template('missing_required_field', `'issue.fields.${CMDRnameField}`)
+      throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${CMDRnameField}` })
     }
 
     let user = await User.findOne({
@@ -60,7 +60,7 @@ class JiraDrill {
     if (!user) {
       BotServ.say('#doersofstuff',
         'Unable to update drilled status or IRC permissions, could not find user by either CMDR name or email')
-      throw Errors.template('not_found', `'issue.fields.${CMDRnameField}`)
+      throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${CMDRnameField}` })
     }
 
     let groupId = DrillType[fields.issuetype.id]

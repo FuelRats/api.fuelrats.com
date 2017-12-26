@@ -1,119 +1,112 @@
 'use strict'
 
 const { Rat } = require('../db')
-const Permission = require('../permission')
 const RatQuery = require('../Query/RatQuery')
-const { RatsPresenter, CustomPresenter } = require('../classes/Presenters')
+const { CustomPresenter } = require('../classes/Presenters')
+const APIEndpoint = require('../APIEndpoint')
+const { Ships } = require('./ship')
+const { NotFoundAPIError } = require('../APIError')
 
-class Rats {
-  static async search (ctx) {
+
+class Rats extends APIEndpoint {
+  async search (ctx) {
     let ratsQuery = new RatQuery(ctx.query, ctx)
     let result = await Rat.findAndCountAll(ratsQuery.toSequelize)
-    return RatsPresenter.render(result.rows, ctx.meta(result, ratsQuery))
+    return Rats.presenter.render(result.rows, ctx.meta(result, ratsQuery))
   }
 
-  static async findById (ctx) {
-    if (ctx.params.id) {
-      let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
-      let result = await Rat.findAndCountAll(ratQuery.toSequelize)
+  async findById (ctx) {
+    let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
+    let result = await Rat.findAndCountAll(ratQuery.toSequelize)
 
-      return RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
+    return Rats.presenter.render(result.rows, ctx.meta(result, ratQuery))
   }
 
-  static async create (ctx) {
-    if (!Permission.granted(['user.write'], ctx.state.user, ctx.state.scope)) {
+  async create (ctx) {
+    this.requireWritePermission(ctx, ctx.data)
+
+    if (!ctx.data.userId) {
       ctx.data.userId = ctx.state.user.data.id
     }
 
     let result = await Rat.create(ctx.data)
-    if (!result) {
-      throw Error.template('operation_failed')
-    }
 
     ctx.response.status = 201
-    let renderedResult = RatsPresenter.render(result, ctx.meta(result))
+    let renderedResult = Rats.presenter.render(result, ctx.meta(result))
     process.emit('ratCreated', ctx, renderedResult)
     return renderedResult
   }
 
-  static async update (ctx) {
-    if (ctx.params.id) {
-      let rat = await Rat.findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
+  async update (ctx) {
+    this.requireWritePermission(ctx, ctx.data)
 
-      if (!rat) {
-        throw Error.template('not_found', ctx.params.id)
-      }
+    let rat = await Rat.findOne({
+      where: { id: ctx.params.id }
+    })
 
-      if (hasValidPermissionsForRat(ctx, rat, 'write')) {
-        if (!Permission.granted(['rat.write'], ctx.state.user, ctx.state.scope)) {
-          delete ctx.data.userId
-        }
-
-        let rescue = await Rat.update(ctx.data, {
-          where: {
-            id: ctx.params.id
-          }
-        })
-
-        if (!rescue) {
-          throw Error.template('operation_failed')
-        }
-
-        let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
-        let result = await Rat.findAndCountAll(ratQuery.toSequelize)
-        let renderedResult = RatsPresenter.render(result.rows, ctx.meta(result, ratQuery))
-        process.emit('ratUpdated', ctx, renderedResult)
-        return renderedResult
-      }
-    } else {
-      throw Error.template('missing_required_field', 'id')
+    if (!rat) {
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
-  }
 
-  static async delete (ctx) {
-    if (ctx.params.id) {
-      let rat = await Rat.findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
+    this.requireWritePermission(ctx, rat)
 
-      if (!rat) {
-        throw Error.template('not_found', ctx.params.id)
-      }
-
-      rat.destroy()
-
-      process.emit('ratDeleted', ctx, CustomPresenter.render({
+    await Rat.update(ctx.data, {
+      where: {
         id: ctx.params.id
-      }))
-      ctx.status = 204
-      return true
+      }
+    })
+
+    let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
+    let result = await Rat.findAndCountAll(ratQuery.toSequelize)
+    let renderedResult = Rats.presenter.render(result.rows, ctx.meta(result, ratQuery))
+    process.emit('ratUpdated', ctx, renderedResult)
+    return renderedResult
+  }
+
+  async delete (ctx) {
+    let rat = await Rat.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!rat) {
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
-  }
-}
 
-/**
- * Check whether the user has permission to perform the specified action for this rat
- * @param ctx the request object to validate
- * @param rat the rat to check permissions for
- * @param action the action to perform
- * @returns {boolean} Whether the user has permission
- */
-function hasValidPermissionsForRat (ctx, rat, action = 'write') {
-  let permissions = [`rat.${action}`]
-  if (rat.userId === ctx.state.user.data.id) {
-    permissions.push(`rat.${action}.me`)
+    rat.destroy()
+
+    process.emit('ratDeleted', ctx, CustomPresenter.render({
+      id: ctx.params.id
+    }))
+    ctx.status = 204
+    return true
   }
 
-  return Permission.require(permissions, ctx.state.user, ctx.state.scope)
+  getReadPermissionForEntity (ctx, entity) {
+    if (entity.userId === ctx.state.user.data.id) {
+      return ['rat.write', 'rat.write.me']
+    }
+    return ['rat.write']
+  }
+
+  getWritePermissionForEntity (ctx, entity) {
+    if (entity.userId === ctx.state.user.data.id) {
+      return ['rat.write', 'rat.write.me']
+    }
+    return ['rat.write']
+  }
+
+  static get presenter () {
+    class RatsPresenter extends APIEndpoint.presenter {
+      relationships () {
+        return {
+          ships: Ships.presenter
+        }
+      }
+    }
+    RatsPresenter.prototype.type = 'rats'
+  }
 }
 
 module.exports = Rats

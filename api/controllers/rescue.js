@@ -1,102 +1,86 @@
 'use strict'
 
 const { Rescue } = require('../db')
+const { CustomPresenter} = require('../classes/Presenters')
 const RescueQuery = require('../Query/RescueQuery')
-const { RescuesPresenter, CustomPresenter } = require('../classes/Presenters')
+const Rats = require('./rat')
+const Epics = require('./epic')
+const { NotFoundAPIError } = require('../APIError')
 
-const Error = require('../errors')
-const Permission = require('../permission')
 const BotServ = require('../Anope/BotServ')
+const APIEndpoint = require('../APIEndpoint')
 
 const RESCUE_ACCESS_TIME = 3600000
 
-class Rescues {
-  static async search (ctx) {
+class Rescues extends APIEndpoint {
+  async search (ctx) {
     let rescueQuery = new RescueQuery(ctx.query, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+    return this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
   }
 
-  static async findById (ctx) {
-    if (ctx.params.id) {
-      let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-      let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-      return RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
+  async findById (ctx) {
+    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    return this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
   }
 
-  static async create (ctx) {
+  async create (ctx) {
     let result = await Rescue.scope('rescue').create(ctx.data)
-    if (!result) {
-      throw Error.template('operation_failed')
-    }
 
     ctx.response.status = 201
-    let rescue = RescuesPresenter.render(result, ctx.meta(result))
+    let rescue = this.presenter.render(result, ctx.meta(result))
     process.emit('rescueCreated', ctx, rescue)
     return rescue
   }
 
-  static async update (ctx) {
-    if (ctx.params.id) {
-      let rescue = await Rescue.scope('rescue').findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
-
-      if (!rescue) {
-        throw Error.template('not_found', ctx.params.id)
-      }
-
-      let permission = getRescuePermissionType(rescue, ctx.state.user)
-      if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
-        let rescue = await Rescue.scope('rescue').update(ctx.data, {
-          where: {
-            id: ctx.params.id
-          }
-        })
-
-        if (!rescue) {
-          throw Error.template('operation_failed')
-        }
-
-        let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
-        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
-        process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
-        return renderedResult
-      }
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
-  }
-
-  static async delete (ctx) {
-    if (ctx.params.id) {
-      let rescue = await Rescue.scope('rescue').findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
-
-      if (!rescue) {
-        throw Error.template('not_found', ctx.params.id)
-      }
-
-      rescue.destroy()
-
-      process.emit('rescueDeleted', ctx, CustomPresenter.render({
+  async update (ctx) {
+    let rescue = await Rescue.scope('rescue').findOne({
+      where: {
         id: ctx.params.id
-      }, {}))
-      ctx.status = 204
-      return true
+      }
+    })
+
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
+
+    this.requireWritePermission(ctx, rescue)
+
+    await Rescue.scope('rescue').update(ctx.data, {
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
+    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
+    return renderedResult
   }
 
-  static async assign (ctx) {
+  async delete (ctx) {
+    let rescue = await Rescue.scope('rescue').findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    rescue.destroy()
+
+    process.emit('rescueDeleted', ctx, CustomPresenter.render({
+      id: ctx.params.id
+    }, {}))
+    ctx.status = 204
+    return true
+  }
+
+  async assign (ctx) {
     if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
       ctx.data = ctx.data.data
     }
@@ -109,27 +93,26 @@ class Rescues {
       })
 
       if (!rescue) {
-        throw Error.template('not_found', ctx.params.id)
+        throw new NotFoundAPIError({ parameter: 'id' })
       }
 
-      let permission = getRescuePermissionType(rescue, ctx.state.user)
-      if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
-        let rats = ctx.data.map((rat) => {
-          return rescue.addRat(rat)
-        })
+      this.requireWritePermission(ctx, rescue)
 
-        await Promise.all(rats)
+      let rats = ctx.data.map((rat) => {
+        return rescue.addRat(rat)
+      })
 
-        let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
-        process.emit('rescueUpdated', ctx, renderedResult)
-        return renderedResult
-      }
+      await Promise.all(rats)
+
+      let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+      let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+      let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+      process.emit('rescueUpdated', ctx, renderedResult)
+      return renderedResult
     }
   }
 
-  static async unassign (ctx) {
+  async unassign (ctx) {
     if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
       ctx.data = ctx.data.data
     }
@@ -142,59 +125,93 @@ class Rescues {
       })
 
       if (!rescue) {
-        throw Error.template('not_found', ctx.params.id)
+        throw new NotFoundAPIError({ parameter: 'id' })
       }
 
-      let permission = getRescuePermissionType(rescue, ctx.state.user)
-      if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
-        let rats = ctx.data.map((rat) => {
-          return rescue.removeRat(rat)
-        })
+      this.requireWritePermission(ctx, rescue)
 
-        await Promise.all(rats)
+      let rats = ctx.data.map((rat) => {
+        return rescue.removeRat(rat)
+      })
 
-        let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
-        process.emit('rescueUpdated', ctx, renderedResult)
-        return renderedResult
-      }
+      await Promise.all(rats)
+
+      let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+      let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+      let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+      process.emit('rescueUpdated', ctx, renderedResult)
+      return renderedResult
     }
   }
 
-  static async addquote (ctx) {
+  async addquote (ctx) {
     if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
       ctx.data = ctx.data.data
     }
 
-    if (ctx.params.id) {
-      let rescue = await Rescue.scope('rescue').findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
+    let rescue = await Rescue.scope('rescue').findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
 
-      if (!rescue) {
-        throw Error.template('not_found', ctx.params.id)
+    if (!rescue) {
+      throw NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission(ctx, rescue)
+
+    await Rescue.update({
+      quotes: rescue.quotes.concat(ctx.data)
+    }, {
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    process.emit('rescueUpdated', ctx, renderedResult)
+    return renderedResult
+  }
+
+  getWritePermissionForEntity (ctx, entity) {
+    if (ctx.state.user && entity.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
+      for (let rat of ctx.state.user.data.relationships.rats.data) {
+        if (entity.rats.find((fRat) => { return fRat.id === rat.id }) || entity.firstLimpetId === rat.id) {
+          return ['rescue.write.me', 'rescue.write']
+        }
+      }
+    }
+    return ['rescue.write']
+  }
+
+  static get presenter () {
+    class RescuesPresenter extends APIEndpoint.presenter {
+      relationships () {
+        return {
+          rats: Rats.presenter,
+          firstLimpet: Rats.presenter,
+          epics: Epics.presenter
+        }
       }
 
-      let permission = getRescuePermissionType(rescue, ctx.state.user)
-      if (Permission.require(permission, ctx.state.user, ctx.scope)) {
-        await Rescue.update({
-          quotes: rescue.quotes.concat(ctx.data)
-        }, {
-          where: {
-            id: ctx.params.id
+      selfLinks (instance) {
+        return `/rescues/${this.id(instance)}`
+      }
+
+      links (instance) {
+        return {
+          rescues: {
+            self: this.selfLinks(instance),
+            related: this.selfLinks(instance)
           }
-        })
-
-        let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
-        process.emit('rescueUpdated', ctx, renderedResult)
-        return renderedResult
+        }
       }
     }
+    RescuesPresenter.prototype.type = 'rescues'
+    return RescuesPresenter
   }
 }
 
@@ -224,23 +241,4 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
       `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
   }
 })
-
-const selfWriteAllowedPermissions = ['rescue.write.me', 'rescue.write']
-
-/**
- * Get the required permission for writing to this rescue
- * @param rescue the rescue to get permission for
- * @param user the user to check permission against
- * @returns {*} the required permission for writing to this rescue
- */
-function getRescuePermissionType (rescue, user) {
-  if (user && rescue.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
-    for (let rat of user.data.relationships.rats.data) {
-      if (rescue.rats.find((fRat) => { return fRat.id === rat.id }) || rescue.firstLimpetId === rat.id) {
-        return selfWriteAllowedPermissions
-      }
-    }
-  }
-  return ['rescue.write']
-}
 module.exports = Rescues

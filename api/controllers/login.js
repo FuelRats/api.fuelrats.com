@@ -1,12 +1,13 @@
 'use strict'
 const Authentication = require('./auth')
-const Error = require('../errors')
+const { UnauthorizedAPIError } = require('../APIError')
+const APIEndpoint = require('../APIEndpoint')
 
-class Login {
-  static async login (ctx) {
+class Login extends APIEndpoint {
+  async login (ctx) {
     let user = await Authentication.passwordAuthenticate(ctx.data.email, ctx.data.password)
     if (!user) {
-      throw Error.template('not_authenticated', 'Authentication failed')
+      throw new UnauthorizedAPIError({})
     }
 
     ctx.session.userId = user.data.id

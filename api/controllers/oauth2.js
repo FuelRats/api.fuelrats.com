@@ -4,14 +4,11 @@ const oauth2orize = require('oauth2orize-koa-fr')
 const crypto = require('crypto')
 const { Token, Client, Code } = require('../db')
 const Permission = require('../permission')
-const Errors = require('../errors')
+const { NotFoundAPIError, UnprocessableEntityAPIError } = require('../APIError')
 const i18next = require('i18next')
 const localisationResources = require('../../localisations.json')
 const { ClientsPresenter } = require('../classes/Presenters')
 const Authentication = require('./auth')
-
-const OAUTH_CODE_LENGTH = 24
-const OAUTH_TOKEN_LENTH = 32
 
 i18next.init({
   lng: 'en',
@@ -39,7 +36,7 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
   redirectUri = redirectUri || client.redirectUri
 
   let code = await Code.create({
-    value: crypto.randomBytes(OAUTH_CODE_LENGTH).toString('hex'),
+    value: crypto.randomBytes(GLOBAL.OAUTH_CODE_LENGTH).toString('hex'),
     scope: areq.scope,
     redirectUri: redirectUri,
     clientId: client.id,
@@ -52,7 +49,7 @@ server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
   validateScopes(areq.scope)
 
   let token = await Token.create({
-    value: crypto.randomBytes(OAUTH_TOKEN_LENTH).toString('hex'),
+    value: crypto.randomBytes(GLOBAL.OAUTH_TOKEN_LENTH).toString('hex'),
     scope: areq.scope,
     clientId: client.id,
     userId: user.data.id
@@ -71,7 +68,7 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
 
   let token = await Token.create({
     scope: auth.scope,
-    value: crypto.randomBytes(OAUTH_TOKEN_LENTH).toString('hex'),
+    value: crypto.randomBytes(GLOBAL.OAUTH_TOKEN_LENTH).toString('hex'),
     clientId: client.data.id,
     userId: auth.userId
   })
@@ -86,7 +83,7 @@ server.exchange(oauth2orize.exchange.password(
     }
 
     let token = await Token.create({
-      value: crypto.randomBytes(OAUTH_TOKEN_LENTH).toString('hex'),
+      value: crypto.randomBytes(GLOBAL.OAUTH_TOKEN_LENTH).toString('hex'),
       clientId: client.data.id,
       userId: user.data.id,
       scope: ['*']
@@ -98,16 +95,12 @@ server.exchange(oauth2orize.exchange.password(
 
 class OAuth2 {
   static async revoke (ctx) {
-    if (!ctx.data.token) {
-      throw Errors.template('missing_required_field', 'token')
-    }
-
     let token = await Token.findOne({ where: { value: ctx.data.token } })
     if (!token) {
-      throw Errors.template('not_found')
+      throw NotFoundAPIError({ pointer: '/data/attributes/token' })
     }
     if (token.clientId !== ctx.state.client.data.id) {
-      throw Errors.template('invalid_parameter', 'token')
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/clientId' })
     }
 
     token.destroy()
@@ -126,17 +119,6 @@ class OAuth2 {
     })
 
     return true
-  }
-
-  static async authorizationValidateFields (ctx, next) {
-    if (!ctx.query.scope) {
-      return next(Errors.template('missing_required_field', 'scope'))
-    } else if (!ctx.query.client_id) {
-      return next(Errors.template('missing_required_field', 'client_id'))
-    } else if (!ctx.query.response_type) {
-      return next(Errors.template('missing_required_field', 'response_type'))
-    }
-    await next()
   }
 
   static async authorizationRender (ctx, next) {
@@ -165,7 +147,7 @@ OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId
     redirectUri = redirectUri || client.redirectUri
     return [ClientsPresenter.render(client, {}), redirectUri]
   } else {
-    throw Errors.template('server_error', 'redirectUri mismatch')
+    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
   }
 })
 
@@ -176,7 +158,7 @@ OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId
 function validateScopes (scopes) {
   for (let scope of scopes) {
     if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
-      throw Errors.template('invalid_scope', scope)
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
     }
   }
 }

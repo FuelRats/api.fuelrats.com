@@ -2,18 +2,22 @@
 
 const MIN_ACTION_LENGTH = 2
 
-const Error = require('./errors')
 const logger = require('./logger')
+const {
+  BadRequestAPIError,
+  UnprocessableEntityAPIError,
+  UnauthorizedAPIError
+} = require('./APIError')
 
 // Import controllers
-const rat = require('./controllers/rat')
+const rat = new (require('./controllers/rat'))()
 const Permission = require('./permission')
-const rescue = require('./controllers/rescue')
-const stream = require('./controllers/stream')
-const client = require('./controllers/client')
-const user = require('./controllers/user')
-const profile = require('./controllers/profile')
-const version = require('./controllers/version')
+const rescue = new (require('./controllers/rescue'))()
+const stream = new (require('./controllers/stream'))()
+const client = new (require('./controllers/client'))()
+const user = new (require('./controllers/user'))()
+const profile = new (require('./controllers/profile'))()
+const version = new (require('./controllers/version'))()
 
 const controllers = {
   rats: {
@@ -123,11 +127,7 @@ class WebSocketManager {
       Object.assign(result.meta, meta)
       this.send(client, result)
     } catch (ex) {
-      let error = ex
-      if (!error.code) {
-        error = Error.template('server_error', error)
-      }
-      this.send(client, error)
+      this.send(client, ex)
     }
   }
 
@@ -151,14 +151,14 @@ class WebSocketManager {
   async process (client, request) {
     client.websocket = this
     if (!request.action || request.action.length < MIN_ACTION_LENGTH || !Array.isArray(request.action)) {
-      throw Error.template('missing_required_field', 'action')
+      throw new BadRequestAPIError({ parameter: 'action' })
     }
 
     let [controller, method] = request.action
 
 
     if (controllers.hasOwnProperty(controller) === false || controllers[controller].hasOwnProperty(method) === false) {
-      throw Error.template('invalid_parameter', 'action')
+      throw new UnprocessableEntityAPIError({ parameter: 'action' })
     }
 
     let [endpoint, authenticationRequired, requiredPermissions] = controllers[controller][method]
@@ -181,7 +181,7 @@ class WebSocketManager {
         return { result:  result, meta: meta }
       }
     } else if (authenticationRequired) {
-      throw Error.template('not_authenticated')
+      throw new UnauthorizedAPIError({})
     }
   }
 

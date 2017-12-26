@@ -2,41 +2,39 @@
 
 const { User } = require('../db')
 
-const Error = require('../errors')
-const Permission = require('../permission')
 const UserQuery = require('../Query/UserQuery')
 const HostServ = require('../Anope/HostServ')
 const bcrypt = require('bcrypt')
-const { UsersPresenter } = require('../classes/Presenters')
 const gm = require('gm')
+const APIEndpoint = require('../APIEndpoint')
+const Rats = require('./rat')
+const Groups = require('./group')
+const {
+  NotFoundAPIError,
+  UnauthorizedAPIError,
+  UnsupportedMediaAPIError,
+  BadRequestAPIError
+} = require('../APIError')
 
 const BCRYPT_ROUNDS_COUNT = 12
 const PROFILE_IMAGE_MIN = 64
 const PROFILE_IMAGE_MAX = 100
 
-class Users {
-  static async search (ctx) {
+class Users extends APIEndpoint {
+  async search (ctx) {
     let userQuery = new UserQuery(ctx.query, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
-  static async findById (ctx) {
-    if (ctx.params.id) {
-      let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
-      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+  async findById (ctx) {
+    let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
 
-      if (result.rows.length === 0 || hasValidPermissionsForUser(ctx, result.rows[0], 'read')) {
-        return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-      }
-
-      throw Error.template('no_permission', 'user.read')
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
+    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
-  static async image (ctx, next) {
+  async image (ctx, next) {
     let user = await User.scope('image').findById(ctx.params.id)
     ctx.type = 'image/jpeg'
     ctx.body = user.image
@@ -44,50 +42,16 @@ class Users {
   }
 
 
-  static async create (ctx) {
+  async create (ctx) {
     let result = await User.create(ctx.data)
-    if (!result) {
-      throw Error.template('operation_failed')
-    }
-
     ctx.response.status = 201
 
-    return UsersPresenter.render(result, ctx.meta(result))
+    return Users.presenter.render(result, ctx.meta(result))
   }
 
-  static async update (ctx) {
-    if (ctx.params.id) {
-      let user = await User.findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
+  async update (ctx) {
+    this.requireWritePermission(ctx, ctx.data)
 
-      if (!user) {
-        throw Error.template('not_found', ctx.params.id)
-      }
-
-      if (hasValidPermissionsForUser(ctx, user, 'write')) {
-        let rescue = await User.update(ctx.data, {
-          where: {
-            id: ctx.params.id
-          }
-        })
-
-        if (!rescue) {
-          throw Error.template('operation_failed')
-        }
-
-        let userQuery = new UserQuery({id: ctx.params.id}, ctx)
-        let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-        return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-      }
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
-  }
-
-  static async setimage (ctx) {
     let user = await User.findOne({
       where: {
         id: ctx.params.id
@@ -95,39 +59,59 @@ class Users {
     })
 
     if (!user) {
-      throw Error.template('not_found', ctx.params.id)
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    if (hasValidPermissionsForUser(ctx, user, 'write')) {
-      let imageData = ctx.req._readableState.buffer.head.data
+    this.requireWritePermission(ctx, user)
 
-      let formattedImageData = await formatImage(imageData)
-      await User.update({
-        image: formattedImageData
-      }, {
-        where: {id: ctx.params.id}
-      })
+    await User.update(ctx.data, {
+      where: {
+        id: ctx.params.id
+      }
+    })
 
-      let userQuery = new UserQuery({id: ctx.params.id}, ctx)
-      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
-    } else {
-      throw Error.template('no_permission', 'user.write')
-    }
+    let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
-  static async setpassword (ctx) {
+  async setimage (ctx) {
+    let user = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission(ctx, user)
+
+    let imageData = ctx.req._readableState.buffer.head.data
+
+    let formattedImageData = await formatImage(imageData)
+    await User.update({
+      image: formattedImageData
+    }, {
+      where: {id: ctx.params.id}
+    })
+
+    let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
+  }
+
+  async setpassword (ctx) {
     let user = await User.findOne({
       where: {
         id: ctx.state.user.data.id
       }
     })
 
-
-
     let validatePassword = await bcrypt.compare(ctx.data.password, user.password)
     if (!validatePassword) {
-      throw Error.template('no_permission', 'Password is incorrect')
+      throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
     }
 
     let newPassword = await bcrypt.hash(ctx.data.new, BCRYPT_ROUNDS_COUNT)
@@ -139,58 +123,62 @@ class Users {
 
     let userQuery = new UserQuery({id: ctx.state.user.data.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return UsersPresenter.render(result.rows, ctx.meta(result, userQuery))
+    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
-  static async delete (ctx) {
-    if (ctx.params.id) {
-      let rescue = await User.findOne({
-        where: {
-          id: ctx.params.id
+  async delete (ctx) {
+    let rescue = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    rescue.destroy()
+
+    ctx.status = 204
+    return true
+  }
+
+  async updatevirtualhost (ctx) {
+    let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    if (result) {
+      return HostServ.update(result)
+    }
+    throw new NotFoundAPIError({ parameter: 'id' })
+  }
+
+  getReadPermissionForEntity (ctx, entity) {
+    if (entity.id === ctx.state.user.data.id) {
+      return ['user.write.me', 'user.write']
+    }
+    return ['user.write']
+  }
+
+  getWritePermissionForEntity (ctx, entity) {
+    if (entity.id === ctx.state.user.data.id) {
+      return ['user.write.me', 'user.write']
+    }
+    return ['user.write']
+  }
+
+  static get presenter () {
+    class UsersPresenter extends APIEndpoint.presenter {
+      relationships () {
+        return {
+          rats: Rats.presenter,
+          groups: Groups.presenter,
+          displayRat: Rats.presenter
         }
-      })
-
-      if (!rescue) {
-        throw Error.template('not_found', ctx.params.id)
       }
-
-      rescue.destroy()
-
-      ctx.status = 204
-      return true
-    } else {
-      throw Error.template('missing_required_field', 'id')
     }
+    UsersPresenter.prototype.type = 'users'
+    return UsersPresenter
   }
-
-  static async updatevirtualhost (ctx) {
-    if (ctx.params.id) {
-      let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
-      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      if (result) {
-        return HostServ.update(result)
-      }
-      throw Error.template('not_found', 'id')
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
-  }
-}
-
-/**
- * Check whether the user has permissions to perform the required action to this user
- * @param ctx the request object to validate
- * @param user the user to check
- * @param action the action to perform
- * @returns {boolean} Whether the user has permission to perform the required action
- */
-function hasValidPermissionsForUser (ctx, user, action = 'read') {
-  let permissions = [`user.${action}`]
-  if (user.id === ctx.state.user.data.id) {
-    permissions.push(`user.${action}.me`)
-  }
-
-  return Permission.require(permissions, ctx.state.user, ctx.state.scope)
 }
 
 /**
@@ -202,16 +190,16 @@ function formatImage (imageData) {
   return new Promise(function (resolve, reject) {
     gm(imageData).identify((err, data) => {
       if (err || data.format !== 'JPEG') {
-        reject(Error.template('invalid_image_format', 'Expected image/jpeg'))
+        reject(new UnsupportedMediaAPIError({ pointer: '/data' }))
       }
 
       if (data.size.width < PROFILE_IMAGE_MIN || data.size.height < PROFILE_IMAGE_MIN) {
-        reject(Error.template('invalid_image_format', 'Image must be at least 64x64'))
+        reject(new BadRequestAPIError({ pointer: '/data' }))
       }
 
       gm(imageData).resize(PROFILE_IMAGE_MAX, PROFILE_IMAGE_MAX, '!').toBuffer('JPG', (err, buffer) => {
         if (err) {
-          reject(Error.template('invalid_image_format', 'Your image could not be saved in a valid format'))
+          reject(new BadRequestAPIError(({ pointer: '/data' })))
         }
         resolve(buffer)
       })

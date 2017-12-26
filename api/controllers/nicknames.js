@@ -1,42 +1,32 @@
 'use strict'
 const Permission = require('../permission')
-const Error = require('../errors')
 const { User, db } = require('../db')
 const NicknameQuery = require('../Query/NicknameQuery')
-const { NicknamesPresenter } = require('../classes/Presenters')
+const { CustomPresenter} = require('../classes/Presenters')
+const APIEndpoint = require('../APIEndpoint')
+const { UnprocessableEntityAPIError, NotFoundAPIError, ConflictAPIError } = require('../APIError')
 
 const NickServ = require('../Anope/NickServ')
 const HostServ = require('../Anope/HostServ')
 
-class Nicknames {
-  static async info (ctx) {
-    if (!ctx.params.nickname || ctx.params.nickname.length === 0) {
-      throw Error.template('missing_required_field', 'nickname')
-    }
-
+class Nicknames extends APIEndpoint {
+  async info (ctx) {
     let info = await NickServ.info(ctx.params.nickname)
     if (!info) {
-      throw Error.template('not_found')
+      throw new NotFoundAPIError({ parameter: 'nickname' })
     }
 
-    return NicknamesPresenter.render(info)
+    return Nicknames.presenter.render(info)
   }
 
-  static async register (ctx) {
+  async register (ctx) {
     if (Permission.isAdmin(ctx.state.user)) {
-      throw Error.template('operation_failed', 'Admin nicknames cannot be registered')
-    }
-
-    let fields = ['nickname', 'password']
-    for (let field of fields) {
-      if (!ctx.data[field]) {
-        throw Error.template('missing_required_field', field)
-      }
+      throw new UnprocessableEntityAPIError({})
     }
 
     let { nicknames } = ctx.state.user.data.attributes
     if (nicknames.includes(ctx.data.nickname)) {
-      throw Error.template('already_exists', 'Nickname is already registered')
+      throw new ConflictAPIError({ pointer: '/data/attributes/nickname' })
     }
 
     if (nicknames.length > 0) {
@@ -56,18 +46,10 @@ class Nicknames {
     return true
   }
 
-  static async connect (ctx) {
-    let fields = ['nickname', 'password']
-
-    for (let field of fields) {
-      if (!ctx.data[field]) {
-        throw Error.template('missing_required_field', field)
-      }
-    }
-
+  async connect (ctx) {
     let { nicknames } = ctx.state.user.data.attributes
     if (nicknames.includes(ctx.data.nickname)) {
-      throw Error.template('already_exists', 'Nickname is already registered to you')
+      throw new ConflictAPIError({ pointer: '/data/attributes/nickname' })
     }
 
     await NickServ.identify(ctx.data.nickname, ctx.data.password)
@@ -86,20 +68,12 @@ class Nicknames {
     return true
   }
 
-  static async search (ctx) {
-    if (!ctx.params.nickname) {
-      throw Error.template('missing_required_field', 'nickname')
-    }
-
+  async search (ctx) {
     let result = await User.scope('public').findAndCountAll(new NicknameQuery(ctx.params, ctx).toSequelize)
-    return NicknamesPresenter.render(result)
+    return Nicknames.presenter.render(result)
   }
 
-  static async delete (ctx) {
-    if (!ctx.params.nickname) {
-      throw Error.template('missing_required_field', 'nickname')
-    }
-
+  async delete (ctx) {
     if (ctx.state.user.data.attributes.nicknames.includes(ctx.params.nickname) ||
       Permission.require(['nickname.delete'], ctx.state.user, ctx.state.scope)) {
       await NickServ.drop(ctx.params.nickname)
@@ -116,6 +90,16 @@ class Nicknames {
 
       return true
     }
+  }
+
+  static get presenter () {
+    class NicknamesPresenter extends CustomPresenter {
+      id (instance) {
+        return instance.nickname
+      }
+    }
+    NicknamesPresenter.prototype.type = 'nicknames'
+    return NicknamesPresenter
   }
 }
 module.exports = Nicknames

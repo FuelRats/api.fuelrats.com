@@ -1,10 +1,8 @@
 'use strict'
 
-const SERVER_ERROR_CODE = 500
-const WEBSOCKET_IDENTIFIER_ROUNDS = 16
-
 // IMPORT
 // =============================================================================
+require('./globals')
 const Koa = require('koa')
 const session = require('koa-session')
 const router = require('koa-router')()
@@ -19,6 +17,12 @@ const ws = require('ws')
 const { URL } = require('url')
 const logger = require('./api/logger')
 const { promisify } = require('util')
+const {
+  APIError,
+  InternalServerError,
+  TooManyRequestsAPIError,
+  BadRequestAPIError
+} = require('./api/APIError')
 
 const Permission = require('./api/permission')
 const uid = require('uid-safe')
@@ -27,25 +31,23 @@ const npid = require('npid')
 // Import config
 const config = require('./config')
 
-const Error = require('./api/errors')
-
 
 // Import controllers
 const Authentication = require('./api/controllers/auth')
-const client = require('./api/controllers/client')
-const decal = require('./api/controllers/decal')
-const login = require('./api/controllers/login')
-const nicknames = require('./api/controllers/nicknames')
+const client = new (require('./api/controllers/client'))()
+const decal = new (require('./api/controllers/decal'))()
+const login = new (require('./api/controllers/login'))()
+const nicknames = new (require('./api/controllers/nicknames'))()
 const oauth2 = require('./api/controllers/oauth2')
-const profile = require('./api/controllers/profile')
-const rat = require('./api/controllers/rat')
-const register = require('./api/controllers/register')
-const reset = require('./api/controllers/reset')
-const rescue = require('./api/controllers/rescue')
-const ship = require('./api/controllers/ship')
-const statistics = require('./api/controllers/statistics')
-const user = require('./api/controllers/user')
-const version = require('./api/controllers/version')
+const profile = new (require('./api/controllers/profile'))()
+const rat = new (require('./api/controllers/rat'))()
+const register = new (require('./api/controllers/register'))()
+const reset = new (require('./api/controllers/reset'))()
+const rescue = new (require('./api/controllers/rescue'))()
+const ship = new (require('./api/controllers/ship'))()
+const statistics = new (require('./api/controllers/statistics'))()
+const user = new (require('./api/controllers/user'))()
+const version = new (require('./api/controllers/version'))()
 const WebSocketManager = require('./api/websocket')
 const jiraDrill = require('./api/controllers/jira/drill')
 const { AnopeWebhook } = require('./api/controllers/anope-webhook')
@@ -126,7 +128,7 @@ app.use(async (ctx, next) => {
     })
 
     if (rateLimit.exceeded) {
-      return next(Error.template('rate_limit_exceeded'))
+      return next(new TooManyRequestsAPIError({}))
     }
 
     let result = await next()
@@ -137,17 +139,13 @@ app.use(async (ctx, next) => {
     }
   } catch (ex) {
     let error = ex
-    if (!error.code) {
-      error = Error.template('server_error', error)
+
+    if ((error instanceof APIError) === false) {
+      error = new InternalServerError({})
     }
+    ctx.status = error.code
     ctx.body = {
       errors: [error]
-    }
-
-    ctx.status = error.code || SERVER_ERROR_CODE
-    if (error.code === SERVER_ERROR_CODE) {
-      logger.error(error)
-      ctx.app.emit('error', ex, ctx)
     }
   }
 })
@@ -162,112 +160,286 @@ render(app, {
 
 // ROUTES
 // =============================================================================
-router.get('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.search)
-router.get('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.findById)
-router.post('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.write']), rescue.create)
-router.put('/rescues/:id', Authentication.isAuthenticated, rescue.update)
-router.put('/rescues/assign/:id', Authentication.isAuthenticated, rescue.assign)
-router.put('/rescues/addquote/:id', Authentication.isAuthenticated, rescue.assign)
-router.put('/rescues/unassign/:id', Authentication.isAuthenticated, rescue.unassign)
-router.delete('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.delete']), rescue.delete)
+
+// RESCUES
+router.get('/rescues',
+  Authentication.isAuthenticated,
+  Permission.required(['rescue.read']),
+  rescue.search)
+
+router.get('/rescues/:id',
+  Authentication.isAuthenticated,
+  Permission.required(['rescue.read']),
+  params('id'),
+  rescue.findById)
+
+router.post('/rescues',
+  Authentication.isAuthenticated,
+  Permission.required(['rescue.write']),
+  rescue.create)
+
+router.put('/rescues/:id',
+  Authentication.isAuthenticated,
+  params('id'),
+  rescue.update)
+
+router.put('/rescues/assign/:id',
+  Authentication.isAuthenticated,
+  params('id'),
+  rescue.assign)
+
+router.put('/rescues/addquote/:id',
+  Authentication.isAuthenticated,
+  params('id'),
+  rescue.assign)
+
+router.put('/rescues/unassign/:id',
+  Authentication.isAuthenticated,
+  params('id'),
+  rescue.unassign)
+
+router.delete('/rescues/:id',
+  Authentication.isAuthenticated,
+  Permission.required(['rescue.delete']),
+  params('id'),
+  rescue.delete)
 
 
-router.get('/clients', Authentication.isAuthenticated, Permission.required(['client.read']), client.search)
-router.get('/clients/:id', Authentication.isAuthenticated, client.findById)
-router.post('/clients', Authentication.isAuthenticated, client.create)
-router.put('/clients/:id', Authentication.isAuthenticated, client.update)
-router.delete('/clients/:id', Authentication.isAuthenticated, Permission.required(['client.delete']), client.delete)
+// CLIENTS
+router.get('/clients',
+  Authentication.isAuthenticated,
+  Permission.required(['client.read']),
+  client.search)
+
+router.get('/clients/:id',
+  Authentication.isAuthenticated,
+  params('id'),
+  client.findById)
+
+router.post('/clients',
+  Authentication.isAuthenticated,
+  client.create)
+
+router.put('/clients/:id',
+  Authentication.isAuthenticated,
+  params('id'),
+  client.update)
+
+router.delete('/clients/:id',
+  Authentication.isAuthenticated,
+  Permission.required(['client.delete']),
+  params('id'),
+  client.delete)
 
 
-router.get('/users', Authentication.isAuthenticated, Permission.required(['user.read']), user.search)
-router.get('/users/:id', Authentication.isAuthenticated, user.findById)
-router.get('/users/image/:id', user.image)
-router.post('/users', Authentication.isAuthenticated, user.create)
-router.put('/users/setpassword', Authentication.isAuthenticated, user.setpassword)
-router.post('/users/image/:id', Authentication.isAuthenticated, user.setimage)
-router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
-  Permission.required(['user.write']), user.updatevirtualhost)
-router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
-router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
+// USERS
+router.get('/users',
+  Authentication.isAuthenticated,
+  Permission.required(['user.read']),
+  user.search)
 
-router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, nicknames.info)
-router.get('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.search)
-router.post('/nicknames', Authentication.isAuthenticated, nicknames.register)
-router.put('/nicknames', Authentication.isAuthenticated, nicknames.connect)
-router.delete('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.delete)
+router.get('/users/:id',
+  Authentication.isAuthenticated,
+  params('id'),
+  user.findById)
+
+router.get('/users/image/:id',
+  params('id'),
+  user.image)
+
+router.post('/users',
+  Authentication.isAuthenticated,
+  user.create)
+
+router.put('/users/setpassword',
+  Authentication.isAuthenticated,
+  fields('password', 'new'),
+  user.setpassword)
+
+router.post('/users/image/:id',
+  Authentication.isAuthenticated,
+  user.setimage)
+router.put('/users/:id/updatevirtualhost',
+  Authentication.isAuthenticated,
+  Permission.required(['user.write']),
+  params('id'),
+  user.updatevirtualhost)
+
+router.put('/users/:id',
+  clean('image', 'password'),
+  Authentication.isAuthenticated,
+  params('id'),
+  user.update)
+
+router.delete('/users/:id',
+  Authentication.isAuthenticated,
+  Permission.required(['user.delete']),
+  params('id'),
+  user.delete)
+
+router.get('/nicknames/info/:nickname',
+  Authentication.isAuthenticated,
+  params('nickname'),
+  nicknames.info)
+
+router.get('/nicknames/:nickname',
+  Authentication.isAuthenticated,
+  params('nickname'),
+  nicknames.search)
+
+router.post('/nicknames',
+  Authentication.isAuthenticated,
+  nicknames.register)
+
+router.put('/nicknames',
+  Authentication.isAuthenticated,
+  nicknames.connect)
+
+router.delete('/nicknames/:nickname',
+  Authentication.isAuthenticated,
+  params('nickname'),
+  nicknames.delete)
 
 
-router.get('/rats', rat.search)
-router.get('/rats/:id', rat.findById)
-router.post('/rats', rat.create)
-router.put('/rats/:id', rat.update)
-router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
+// RATS
+router.get('/rats',
+  rat.search)
 
-router.get('/ships', ship.search)
-router.get('/ships/:id', ship.findById)
-router.post('/ships', fields('name', 'shipType', 'ratId'), clean('shipId'), ship.create)
-router.put('/ships/:id', clean('shipId'), ship.update)
-router.delete('/ships/:id', rat.delete)
+router.get('/rats/:id',
+  params('id'),
+  rat.findById)
 
+router.post('/rats',
+  rat.create)
+
+router.put('/rats/:id',
+  params('id'),
+  rat.update)
+
+router.delete('/rats/:id',
+  Permission.required(['rat.delete']),
+  params('id'),
+  rat.delete)
+
+
+// SHIPS
+router.get('/ships',
+  ship.search)
+
+router.get('/ships/:id',
+  params('id'),
+  ship.findById)
+
+router.post('/ships',
+  fields('name', 'shipType', 'ratId'),
+  clean('shipId'),
+  ship.create)
+
+router.put('/ships/:id',
+  clean('shipId'),
+  params('id'),
+  ship.update)
+
+router.delete('/ships/:id',
+  params('id'),
+  rat.delete)
+
+
+// WELCOME
 router.get('/welcome', (ctx) => {
   ctx.redirect('https://fuelrats.com/profile')
   ctx.status = 301
 })
 
-router.post('/login', fields('email', 'password'), login.login)
-router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
+// LOGIN
+router.post('/login',
+  fields('email', 'password'),
+  login.login)
+
+// REGISTER
+router.post('/register',
+  fields('email', 'password', 'name', 'platform', 'nickname'),
   register.create)
-router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
 
-router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
+// PROFILE
+router.get('/profile',
+  Authentication.isAuthenticated, Permission.required(['user.read.me']),
+  profile.read)
 
+// ANOPE
+router.post('/anope',
+  Authentication.isWhitelisted,
+  AnopeWebhook.update)
+
+// OAUTH2
 router.get('/oauth2/authorize',
   Authentication.isAuthenticated,
-  oauth2.authorizationValidateFields,
   oauth2.authorizationValidateRedirect,
   oauth2.authorizationRender
 )
 
-router.post('/oauth2/authorize', Authentication.isAuthenticated, ...oauth2.server.decision())
+router.post('/oauth2/authorize',
+  Authentication.isAuthenticated,
+  ...oauth2.server.decision())
 
-// Create endpoint handlers for oauth2 token
 router.post('/oauth2/token',
   Authentication.isClientAuthenticated,
   oauth2.server.token(),
   oauth2.server.errorHandler())
 
-router.post('/oauth2/revoke', Authentication.isClientAuthenticated, oauth2.revoke)
-router.post('/oauth2/revokeall', Authentication.isClientAuthenticated, oauth2.revokeAll)
+router.post('/oauth2/revoke',
+  Authentication.isClientAuthenticated,
+  oauth2.revoke)
+router.post('/oauth2/revokeall',
+  Authentication.isClientAuthenticated,
+  oauth2.revokeAll)
 
-router.get('/statistics/rescues', statistics.rescues)
-router.get('/statistics/systems', statistics.systems)
-router.get('/statistics/rats', statistics.rats)
 
+// STATISTICS
+router.get('/statistics/rescues',
+  statistics.rescues)
+
+router.get('/statistics/systems',
+  statistics.systems)
+
+router.get('/statistics/rats',
+  statistics.rats)
+
+
+// VERSION
 router.get('/version', version.read)
-router.post('/reset', fields('email'), reset.requestReset)
-router.get('/reset/:token', reset.validateReset)
-router.post('/reset/:token', fields('password'), reset.resetPassword)
 
 
-router.get('/decals/check', Authentication.isAuthenticated, decal.check)
-router.get('/decals/redeem', Authentication.isAuthenticated, decal.redeem)
-router.post('/jira/drill', Authentication.isAuthenticated, Permission.required(['user.write']), jiraDrill.update)
+// RESET
+router.post('/reset',
+  fields('email'),
+  reset.requestReset)
 
-/*
+router.get('/reset/:token',
+  params('token'),
+  reset.validateReset)
+
+router.post('/reset/:token',
+  params('token'),
+  fields('password'),
+  reset.resetPassword)
 
 
-router.get('/news', API.route(news.list))
+// DECALS
+router.get('/decals/check',
+  Authentication.isAuthenticated,
+  decal.check)
 
-router.get('/logout', logout.post)
-router.post('/logout', logout.post)
+router.get('/decals/redeem',
+  Authentication.isAuthenticated,
+  decal.redeem)
 
 
-
-router.post('/jira/drill', auth.isJiraAuthenticated(), Permission.required('user.update', false), jiraDrill.post)
-router.post('/irc/message', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.message)
-router.post('/irc/action', auth.isAuthenticated(false), Permission.required('irc.oper', false), irc.action)
-
- */
+// JIRA
+router.post('/jira/drill',
+  Authentication.isAuthenticated,
+  Permission.required(['user.write']),
+  jiraDrill.update)
 
 
 app.use(router.routes())
@@ -314,7 +486,7 @@ const websocketManager = new WebSocketManager(wss, traffic)
 wss.on('connection', async function connection (client, req) {
   let url = new URL(`http://localhost:8082${req.url}`)
   client.req = req
-  client.clientId = uid.sync(WEBSOCKET_IDENTIFIER_ROUNDS)
+  client.clientId = uid.sync(GLOBAL.WEBSOCKET_IDENTIFIER_ROUNDS)
   client.subscriptions = []
 
   let bearer = url.searchParams.get('bearer')
@@ -369,7 +541,28 @@ function fields (...requiredFields) {
       return ctx.data.hasOwnProperty(requiredField) === false
     })
     if (missingFields.length > 0) {
-      throw Error.template('missing_required_fields', missingFields)
+      throw missingFields.map((field) => {
+        return new BadRequestAPIError({ pointer: `/data/attributes/${field}` })
+      })
+    }
+    return next()
+  }
+}
+
+/**
+ * Makes sure the request object has the required params specified
+ * @param requiredFields The data fields to require
+ * @returns {Function} A promise
+ */
+function params (...requiredFields) {
+  return function (ctx, next) {
+    let missingFields = requiredFields.filter((requiredField) => {
+      return ctx.query.hasOwnProperty(requiredField) === false
+    })
+    if (missingFields.length > 0) {
+      throw missingFields.map((field) => {
+        return new BadRequestAPIError({ parameter: field })
+      })
     }
     return next()
   }

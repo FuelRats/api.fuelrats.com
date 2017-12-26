@@ -2,15 +2,16 @@
 const gitrev = require('git-rev-promises')
 const { ObjectPresenter } = require('../classes/Presenters')
 const packageInfo = require('../../package.json')
+const APIEndpoint = require('../APIEndpoint')
 
-class Version  {
-  static async read () {
+class Version extends APIEndpoint {
+  async read () {
     const githash = await gitrev.long()
     const gitbranch = await gitrev.branch()
     const gittags = await gitrev.tags()
     const gitdate = await gitrev.date()
 
-    return VersionPresenter.render({
+    return Version.presenter.render({
       version: packageInfo.version,
       commit: githash,
       branch: gitbranch,
@@ -18,19 +19,24 @@ class Version  {
       date: gitdate
     })
   }
-}
 
-class VersionPresenter extends ObjectPresenter {
-  id (instance) {
-    return instance.commit
-  }
+  static get presenter () {
+    class VersionPresenter extends ObjectPresenter {
+      id (instance) {
+        return instance.commit
+      }
 
-  attributes (instance) {
-    if (instance) {
-      return instance
+      attributes (instance) {
+        if (instance) {
+          return instance
+        }
+        return null
+      }
     }
-    return null
+
+    return VersionPresenter
   }
 }
+
 
 module.exports = Version

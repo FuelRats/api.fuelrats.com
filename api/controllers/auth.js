@@ -1,13 +1,13 @@
 'use strict'
 const { User, Rat, db, Token, Client } = require('../db')
-const Error = require('../errors')
 const bcrypt = require('bcrypt')
-const { UsersPresenter, ClientsPresenter } = require('../classes/Presenters')
+const { GoneAPIError, UnauthorizedAPIError } = require('../APIError')
 let config = require('../../config')
+const Users = require('./user')
+const Clients = require('./client')
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
-const BCRYPT_ROUNDS_COUNT = 12
 
 class Authentication {
   static async passwordAuthenticate (email, password) {
@@ -25,11 +25,11 @@ class Authentication {
       return null
     } else {
       if (user.isSuspended() === true) {
-        throw Error.template('suspended')
+        throw new GoneAPIError({ pointer: '/data/attributes/email' })
       }
 
-      if (bcrypt.getRounds(user.password) > BCRYPT_ROUNDS_COUNT) {
-        let newRoundPassword = await bcrypt.hash(password, BCRYPT_ROUNDS_COUNT)
+      if (bcrypt.getRounds(user.password) > GLOBAL.BCRYPT_ROUNDS_COUNT) {
+        let newRoundPassword = await bcrypt.hash(password, GLOBAL.BCRYPT_ROUNDS_COUNT)
         User.update({
           password: newRoundPassword
         }, {
@@ -37,7 +37,7 @@ class Authentication {
         })
       }
 
-      return UsersPresenter.render(user, {})
+      return Users.presenter.render(user, {})
     }
   }
 
@@ -66,10 +66,10 @@ class Authentication {
     })
 
     if (userInstance && userInstance.isSuspended()) {
-      throw Error.template('suspended')
+      throw new GoneAPIError({})
     }
 
-    let user = UsersPresenter.render(userInstance, {})
+    let user = Users.presenter.render(userInstance, {})
     return {
       user: user,
       scope: token.scope
@@ -85,18 +85,18 @@ class Authentication {
     let authorised = await bcrypt.compare(secret, client.secret)
     if (authorised) {
       if (client.user.isSuspended()) {
-        throw Error.template('suspended', 'The account managing this OAuth client is suspended')
+        throw new GoneAPIError({})
       }
 
-      if (bcrypt.getRounds(client.secret) > BCRYPT_ROUNDS_COUNT) {
-        let newRoundSecret = await bcrypt.hash(secret, BCRYPT_ROUNDS_COUNT)
+      if (bcrypt.getRounds(client.secret) > GLOBAL.BCRYPT_ROUNDS_COUNT) {
+        let newRoundSecret = await bcrypt.hash(secret, GLOBAL.BCRYPT_ROUNDS_COUNT)
         Client.update({
           secret: newRoundSecret
         }, {
           where: { id: client.id }
         })
       }
-      return ClientsPresenter.render(client, {})
+      return Clients.presenter.render(client, {})
     }
     return false
   }
@@ -111,7 +111,7 @@ class Authentication {
     if (ctx.session.userId) {
       let user = await User.scope('internal').findOne({where: { id: ctx.session.userId }})
       if (user) {
-        ctx.state.user = UsersPresenter.render(user, {})
+        ctx.state.user = Users.presenter.render(user, {})
         return true
       }
     }
@@ -132,7 +132,7 @@ class Authentication {
     if (ctx.state.user) {
       return next()
     } else {
-      throw Error.template('not_authenticated')
+      throw new UnauthorizedAPIError({})
     }
   }
 
@@ -140,7 +140,7 @@ class Authentication {
     if (config.whitelist.includes(ctx.inet)) {
       return next()
     } else {
-      throw Error.template('webhook_unauthorised')
+      throw new UnauthorizedAPIError({})
     }
   }
 
@@ -148,7 +148,7 @@ class Authentication {
     if (ctx.state.client) {
       await next()
     } else {
-      throw Error.template('client_unauthorised')
+      throw new UnauthorizedAPIError({})
     }
   }
 }

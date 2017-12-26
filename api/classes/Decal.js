@@ -1,7 +1,7 @@
 'use strict'
 
 const { Rescue, User, Rat, Decal: Decals } = require('../db')
-const Error = require('../errors')
+const BadRequestAPIError = require('../APIError')
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const rescueParticipationRequirement = 10
@@ -22,7 +22,7 @@ class Decal {
     if (previouslyEligible && previouslyEligible.rats) {
       for (let rat of previouslyEligible.rats) {
         if (rat.firstLimpet.length > 0) {
-          throw Error.template('bad_request', 'User qualifies for originally issued decal')
+          throw new BadRequestAPIError({})
         }
       }
     }
@@ -35,7 +35,7 @@ class Decal {
         }
       }
     }
-    throw Error.template('bad_request', 'User does not qualify for any decal')
+    throw new BadRequestAPIError({})
   }
 
   static async getDecalForUser (user) {

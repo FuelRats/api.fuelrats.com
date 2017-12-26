@@ -3,16 +3,17 @@
 const nodemailer = require('nodemailer')
 const { User, Reset } = require('../db')
 const crypto = require('crypto')
-const Error = require('../errors')
 const bcrypt = require('bcrypt')
 const BotServ = require('../Anope/BotServ')
+const APIEndpoint = require('../APIEndpoint')
+const { NotFoundAPIError } = require('../APIError')
 
 const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000
 
-class Resets {
-  static async requestReset (ctx, next) {
+class Resets extends APIEndpoint {
+  async requestReset (ctx, next) {
     let user = await User.findOne({
       where: {
         email: { $iLike: ctx.data.email }
@@ -20,7 +21,7 @@ class Resets {
     })
 
     if (!user) {
-      throw Error.template('not_found', 'email does not exist')
+      throw new NotFoundAPIError({ pointer: '/data/attributes/email' })
     }
 
     let resets = await Reset.findAll({
@@ -64,11 +65,7 @@ class Resets {
     next()
   }
 
-  static async validateReset (ctx) {
-    if (!ctx.params.token) {
-      throw Error.template('missing_required_field', 'token')
-    }
-
+  async validateReset (ctx) {
     let reset = await Reset.findOne({
       where: {
         value: ctx.params.token
@@ -76,21 +73,13 @@ class Resets {
     })
 
     if (!reset) {
-      throw Error.template('not_found', 'reset link invalid or expired')
+      throw new NotFoundAPIError({ parameter: 'token' })
     }
 
     return true
   }
 
-  static async resetPassword (ctx, next) {
-    if (!ctx.params.token) {
-      throw Error.template('missing_required_field', 'token')
-    }
-
-    if (!ctx.data.password) {
-      throw Error.template('missing_required_field', 'password')
-    }
-
+  async resetPassword (ctx, next) {
     let reset = await Reset.findOne({
       where: {
         value: ctx.params.token
@@ -98,7 +87,7 @@ class Resets {
     })
 
     if (!reset) {
-      throw Error.template('not_found', 'reset link invalid or expired')
+      throw new NotFoundAPIError({ parameter: 'token' })
     }
 
     let newPassword = await bcrypt.hash(ctx.data.password, BCRYPT_ROUNDS_COUNT)

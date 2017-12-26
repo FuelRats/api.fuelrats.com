@@ -1,9 +1,9 @@
 'use strict'
 
-const Errors = require('./errors')
 const i18next = require('i18next')
 const localisationResources = require('../localisations.json')
 const { Group, User } = require('./db')
+const { ForbiddenAPIError } = require('./APIError')
 
 i18next.init({
   lng: 'en',
@@ -49,7 +49,7 @@ class Permission {
     if (Permission.granted(permissions, user, scope)) {
       return true
     }
-    throw Permission.permissionError(permissions)
+    throw ForbiddenAPIError({})
   }
 
   /**
@@ -62,7 +62,7 @@ class Permission {
       if (Permission.granted(permissions, ctx.state.user, ctx.state.scope)) {
         return next()
       } else {
-        throw Permission.permissionError(permissions)
+        throw ForbiddenAPIError({})
       }
     }
   }
@@ -104,10 +104,6 @@ class Permission {
       }
     }
     return hasPermission
-  }
-
-  static permissionError (permissions) {
-    return Errors.template('no_permission', permissions)
   }
 
   /**

@@ -1,9 +1,7 @@
 'use strict'
 const Anope = require('./index')
 const NickServ = require('./NickServ')
-const Permissions = require('../permission')
 const { User } = require('../db')
-const { GroupsPresenter } = require('../classes/Presenters')
 
 
 /**

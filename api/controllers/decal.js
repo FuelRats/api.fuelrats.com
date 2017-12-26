@@ -1,41 +1,60 @@
 'use strict'
 
-const Error = require('../errors')
 const Decal = require('../classes/Decal')
 const { User } = require('../db')
-const Permission = require('../permission')
-const { DecalsPresenter } = require('../classes/Presenters')
+const APIEndpoint = require('../APIEndpoint')
+const { NotFoundAPIError } = require('../APIError')
 
-class Decals {
-  static async check (ctx) {
+class Decals extends APIEndpoint {
+  async check (ctx) {
     if (Object.keys(ctx.query).length > 0) {
-      if (Permission.require(['user.read'], ctx.state.user, ctx.state.scope)) {
-        let user = await User.findOne({
-          where: ctx.query
-        })
+      let user = await User.findOne({
+        where: ctx.query
+      })
 
-        if (!user) {
-          throw Error.template('not_found', 'user')
-        }
-
-        let eligible = await Decal.checkEligible(user)
-        if (eligible.id) {
-          return DecalsPresenter.render(eligible)
-        }
-        return eligible
+      if (!user) {
+        throw new NotFoundAPIError({ parameter: 'id' })
       }
+
+      this.requireReadPermission(ctx, user)
+
+      let eligible = await Decal.checkEligible(user)
+      if (eligible.id) {
+        return Decals.presenter.render(eligible)
+      }
+      return eligible
     } else {
       let eligible = await Decal.checkEligible(ctx.state.user.data)
       if (eligible.id) {
-        return DecalsPresenter.render(eligible)
+        return Decals.presenter.render(eligible)
       }
       return eligible
     }
   }
 
-  static async redeem (ctx) {
+  async redeem (ctx) {
     let decal = await Decal.getDecalForUser(ctx.state.user.data)
-    return DecalsPresenter.render(decal)
+    return Decals.presenter.render(decal)
+  }
+
+  getReadPermissionForEntity (ctx, entity) {
+    if (entity.id === ctx.state.user.data.id) {
+      return ['user.write.me', 'user.write']
+    }
+    return ['user.write']
+  }
+
+  getWritePermissionForEntity (ctx, entity) {
+    if (entity.id === ctx.state.user.data.id) {
+      return ['user.write.me', 'user.write']
+    }
+    return ['user.write']
+  }
+
+  static get presenter () {
+    class DecalsPresenter extends APIEndpoint.presenter {}
+    DecalsPresenter.prototype.type = 'decals'
+    return DecalsPresenter
   }
 }
 

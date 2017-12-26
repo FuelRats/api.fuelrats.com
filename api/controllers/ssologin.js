@@ -1,6 +1,7 @@
 'use strict'
 const { Action } = require('../db')
 
+
 class SSOLogin  {
   static loginWithCredentials (request, response) {
     if (request.user) {

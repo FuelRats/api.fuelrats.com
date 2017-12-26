@@ -1,131 +1,118 @@
 'use strict'
 
 const { Client } = require('../db')
-const Permission = require('../permission')
-const Errors = require('../errors')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
 const ClientQuery = require('../Query/ClientQuery')
-const { ClientsPresenter } = require('../classes/Presenters')
+const APIEndpoint = require('../APIEndpoint')
+const Users = require('./user')
+const { NotFoundAPIError } = require('../APIError')
 
 const CLIENT_SECRET_LENGTH = 32
 const BCRYPT_ROUNDS_COUNT = 12
 
-class Clients {
-  static async search (ctx) {
+class Clients extends APIEndpoint {
+  async search (ctx) {
     let clientQuery = new ClientQuery(ctx.query, ctx)
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
-    return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
+    return Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
   }
 
-  static async findById (ctx) {
-    if (ctx.params.id) {
-      let clientQuery = new ClientQuery({ id: ctx.params.id }, ctx)
-      let result = await Client.findAndCountAll(clientQuery.toSequelize)
+  async findById (ctx) {
+    let clientQuery = new ClientQuery({ id: ctx.params.id }, ctx)
+    let result = await Client.findAndCountAll(clientQuery.toSequelize)
 
-      if (result.length === 0 || hasValidPermissionsForClient(ctx, result.rows[0], 'read')) {
-        return ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
-      }
-      throw Errors.template('no_permission', 'client.read')
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
+    this.requireWritePermission(ctx, result)
+
+    return Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
   }
 
-  static async create (ctx) {
+  async create (ctx) {
+    this.requireWritePermission(ctx, ctx.data)
     let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
-    let encryptedSecret = await bcrypt.hash(secret, BCRYPT_ROUNDS_COUNT)
-
-    ctx.data = Object.assign(ctx.data, {
-      secret: encryptedSecret,
-      userId: ctx.state.user.data.id
-    })
+    ctx.data.secret = await bcrypt.hash(secret, BCRYPT_ROUNDS_COUNT)
+    if (!ctx.data.userId) {
+      ctx.data.userId = ctx.state.user.data.id
+    }
     let result = await Client.create(ctx.data)
     result.secret = secret
-    if (!result) {
-      throw Error.template('operation_failed')
-    }
 
     ctx.response.status = 201
-    let renderedResult = ClientsPresenter.render(result, ctx.meta(result))
+    let renderedResult = Clients.presenter.render(result, ctx.meta(result))
     process.emit('clientCreated', ctx, renderedResult)
     return renderedResult
   }
 
-  static async update (ctx) {
-    if (ctx.params.id) {
-      let client = await Client.findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
-
-      if (!client) {
-        throw Error.template('not_found', ctx.params.id)
+  async update (ctx) {
+    this.requireWritePermission(ctx, ctx.data)
+    let client = await Client.findOne({
+      where: {
+        id: ctx.params.id
       }
+    })
 
-      if (hasValidPermissionsForClient(ctx, client, 'write')) {
-        if (!Permission.granted(['client.write'], ctx.state.user, ctx.state.scope)) {
-          delete ctx.data.userId
-          delete ctx.data.secret
-        }
-
-        let rescue = await Client.update(ctx.data, {
-          where: {
-            id: ctx.params.id
-          }
-        })
-
-        if (!rescue) {
-          throw Error.template('operation_failed')
-        }
-
-        let clientQuery = new ClientQuery({id: ctx.params.id}, ctx)
-        let result = await Client.findAndCountAll(clientQuery.toSequelize)
-        let renderedResult = ClientsPresenter.render(result.rows, ctx.meta(result, clientQuery))
-        process.emit('clientUpdated', ctx, renderedResult)
-        return renderedResult
-      }
-    } else {
-      throw Error.template('missing_required_field', 'id')
+    if (!client) {
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
-  }
 
-  static async delete (ctx) {
-    if (ctx.params.id) {
-      let rescue = await Client.findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
+    this.requireWritePermission(ctx, client)
 
-      if (!rescue) {
-        throw Error.template('not_found', ctx.params.id)
+    await Client.update(ctx.data, {
+      where: {
+        id: ctx.params.id
       }
+    })
 
-      rescue.destroy()
+    let clientQuery = new ClientQuery({id: ctx.params.id}, ctx)
+    let result = await Client.findAndCountAll(clientQuery.toSequelize)
+    let renderedResult = Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
+    process.emit('clientUpdated', ctx, renderedResult)
+    return renderedResult
+  }
 
-      process.emit('clientDeleted', ctx, ctx.params.id)
-      ctx.status = 204
-      return true
+  async delete (ctx) {
+    let rescue = await Client.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
-  }
-}
 
-/**
- * Check whether the user has permission to perform the required action for this client
- * @param ctx the request object to validate
- * @param client the client to check permission for
- * @param action the action to perform
- * @returns {boolean} Whether the user has access to perform the action
- */
-function hasValidPermissionsForClient (ctx, client, action = 'read') {
-  let permissions = [`client.${action}`]
-  if (client.id === ctx.state.user.data.id) {
-    permissions.push(`client.${action}.me`)
+    rescue.destroy()
+
+    process.emit('clientDeleted', ctx, ctx.params.id)
+    ctx.status = 204
+    return true
   }
 
-  return Permission.require(permissions, ctx.state.user, ctx.state.scope)
+  getReadPermissionForEntity (ctx, entity) {
+    if (entity.userId === ctx.state.user.data.id) {
+      return ['client.write.me', 'client.write']
+    }
+    return ['client.write']
+  }
+
+  getWritePermissionForEntity (ctx, entity) {
+    if (entity.userId === ctx.state.user.data.id) {
+      return ['client.write.me', 'client.write']
+    }
+    return ['client.write']
+  }
+
+  static get presenter () {
+    class ClientsPresenter extends APIEndpoint.presenter {
+      relationships () {
+        return {
+          user: Users.presenter
+        }
+      }
+    }
+    ClientsPresenter.prototype.type = 'clients'
+    return ClientsPresenter
+  }
 }
 
 module.exports = Clients

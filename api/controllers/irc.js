@@ -1,25 +1,13 @@
 'use strict'
-const Errors = require('../errors')
 const BotServ = require('../Anope/BotServ')
+const APIEndpoint = require('../APIEndpoint')
 
-class IRC {
-  static message (ctx) {
-    if (!ctx.data.channel || ctx.data.channel.length === 0) {
-      throw Errors.template('missing_required_field', 'channel')
-    } else if (!ctx.data.message || ctx.data.message.length === 0) {
-      throw Errors.template('missing_required_field', 'message')
-    }
-
+class IRC extends APIEndpoint {
+  message (ctx) {
     return BotServ.say(ctx.data.channel, ctx.data.message)
   }
 
-  static action (ctx) {
-    if (!ctx.data.channel || ctx.data.channel.length === 0) {
-      throw Errors.template('missing_required_field', 'channel')
-    } else if (!ctx.data.message || ctx.data.message.length === 0) {
-      throw Errors.template('missing_required_field', 'message')
-    }
-
+  action (ctx) {
     return BotServ.act(ctx.data.channel, ctx.data.message)
   }
 }

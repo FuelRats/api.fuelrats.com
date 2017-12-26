@@ -1,46 +1,38 @@
 'use strict'
 const { Ship } = require('../db')
 const ShipQuery = require('../Query/ShipQuery')
-const { ShipsPresenter } = require('../classes/Presenters')
+const { NotFoundAPIError } = require('../APIError')
+const APIEndpoint = require('../APIEndpoint')
 
-const Errors = require('../errors')
-const Permission = require('../permission')
 
-class Ships {
-  static async search (ctx) {
+class Ships extends APIEndpoint {
+  async search (ctx) {
     let shipsQuery = new ShipQuery(ctx.query, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
-    return ShipsPresenter.render(result.rows, ctx.meta(result, shipsQuery))
+    return Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
   }
 
-  static async findById (ctx) {
-    if (ctx.params.id) {
-      let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
-      let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
+  async findById (ctx) {
+    let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
+    let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
 
-      return ShipsPresenter.render(result.rows, ctx.meta(result, shipsQuery))
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
+    return Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
   }
 
-  static async create (ctx) {
-    if (!isSelShipOrHasPermission(ctx, ctx.data)) {
-      throw Errors.template('no_permission', ['ship.write'])
-    }
+  async create (ctx) {
+    this.requireWritePermission(ctx, ctx.data)
 
     let result = await Ship.create(ctx.data)
-    if (!result) {
-      throw Error.template('operation_failed')
-    }
 
     ctx.response.status = 201
-    let renderedResult = ShipsPresenter.render(result, ctx.meta(result))
+    let renderedResult = Ships.presenter.render(result, ctx.meta(result))
     process.emit('shipCreated', ctx, renderedResult)
     return renderedResult
   }
 
-  static async update (ctx) {
+  async update (ctx) {
+    this.requireWritePermission(ctx, ctx.data)
+
     let ship = await Ship.findOne({
       where: {
         id: ctx.params.id
@@ -48,16 +40,10 @@ class Ships {
     })
 
     if (!ship) {
-      throw Error.template('not_found', ctx.params.id)
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    if (!isSelShipOrHasPermission(ctx, ship)) {
-      throw Errors.template('no_permission', ['ship.write'])
-    }
-
-    if (ctx.data.ratId && !isSelShipOrHasPermission(ctx, ctx.data)) {
-      throw Errors.template('no_permission', ['ship.write'])
-    }
+    this.requireWritePermission(ctx, ship)
 
     await Ship.update(ctx.data, {
       where: {
@@ -68,12 +54,12 @@ class Ships {
     let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
 
-    let renderedResult = ShipsPresenter.render(result.rows, ctx.meta(result, shipsQuery))
+    let renderedResult = Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
     process.emit('shipUpdated', ctx, renderedResult)
     return renderedResult
   }
 
-  static async delete (ctx) {
+  async delete (ctx) {
     let ship = await Ship.findOne({
       where: {
         id: ctx.params.id
@@ -81,30 +67,32 @@ class Ships {
     })
 
     if (!ship) {
-      throw Error.template('not_found', ctx.params.id)
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    if (!isSelShipOrHasPermission(ctx, ctx.data)) {
-      throw Errors.template('no_permission', ['ship.write'])
-    }
+    this.requireWritePermission(ctx, ship)
 
     await ship.destroy()
     return true
   }
-}
 
-/**
- * Checks wether the user has permission to edit this ship
- * @param ctx the request object to validate
- * @param ship the ship to validate
- * @returns {T|boolean} Returns a truthy value if the user has write permission
- */
-function isSelShipOrHasPermission (ctx, ship) {
-  let rat = ctx.state.user.included.find((included) => {
-    return included.id === ship.ratId
-  })
+  getWritePermissionForEntity (ctx, entity) {
+    let rat = ctx.state.user.included.find((included) => {
+      return included.id === entity.ratId
+    })
 
-  return rat || Permission.granted(['ship.write'], ctx.state.user, ctx.state.scope)
+    if (rat) {
+      return ['ship.write.me', 'ship.write']
+    } else {
+      return ['ship.write.me']
+    }
+  }
+
+  static get presenter () {
+    class ShipsPresenter extends APIEndpoint.presenter {}
+    ShipsPresenter.prototype.type = 'ships'
+    return ShipsPresenter
+  }
 }
 
 module.exports = Ships
