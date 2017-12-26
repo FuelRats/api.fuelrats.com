@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "fuelrats",
+    "password": "SqueakBaby",
+    "database": "fuelratsdev",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "fuelrats",
+    "password": "SqueakBaby",
+    "database": "fuelratstest",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "fuelrats",
+    "password": "SqueakBaby",
+    "database": "fuelrats",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}

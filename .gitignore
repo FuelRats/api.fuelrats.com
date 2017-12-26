@@ -7,6 +7,7 @@ npm-debug.log.*
 views/docs.hbs
 static/js/
 static/docs/
+database.json
 
 .idea/*
 

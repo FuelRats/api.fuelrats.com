@@ -18,7 +18,9 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
 })
 
 let models = {
-  db
+  db,
+  sequelize: db,
+  Sequelize
 }
 
 models.Rat = db.import(__dirname + '/rat')
