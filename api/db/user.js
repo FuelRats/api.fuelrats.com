@@ -71,7 +71,13 @@ module.exports = function (db, DataTypes) {
     return user.data.attributes.suspended - Date.now() > 0
   }
 
+  User.prototype.isConfirmed = function () {
+    return this.groups.length > 0
+  }
 
+  User.isConfirmed = function (user) {
+    return user.data.relationships.groups.data.length > 0
+  }
 
   User.preferredRat = function (user) {
     let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])
