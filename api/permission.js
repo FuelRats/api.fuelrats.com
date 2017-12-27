@@ -49,7 +49,7 @@ class Permission {
     if (Permission.granted(permissions, user, scope)) {
       return true
     }
-    throw ForbiddenAPIError({})
+    throw new ForbiddenAPIError({})
   }
 
   /**
@@ -62,7 +62,7 @@ class Permission {
       if (Permission.granted(permissions, ctx.state.user, ctx.state.scope)) {
         return next()
       } else {
-        throw ForbiddenAPIError({})
+        throw new ForbiddenAPIError({})
       }
     }
   }
