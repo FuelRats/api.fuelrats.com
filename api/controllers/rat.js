@@ -4,7 +4,7 @@ const { Rat } = require('../db')
 const RatQuery = require('../Query/RatQuery')
 const { CustomPresenter } = require('../classes/Presenters')
 const APIEndpoint = require('../APIEndpoint')
-const { Ships } = require('./ship')
+const Ships = require('./ship')
 const { NotFoundAPIError } = require('../APIError')
 
 
@@ -106,6 +106,7 @@ class Rats extends APIEndpoint {
       }
     }
     RatsPresenter.prototype.type = 'rats'
+    return RatsPresenter
   }
 }
 
