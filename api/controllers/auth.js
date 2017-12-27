@@ -36,7 +36,7 @@ class Authentication {
           where: { id: user.id }
         })
       }
-
+      user = await User.scope('profile').findOne({where: {email: {$iLike: email}}})
       return Users.presenter.render(user, {})
     }
   }
@@ -69,6 +69,7 @@ class Authentication {
       throw new GoneAPIError({})
     }
 
+    userInstance = await User.scope('profile').findOne({where: { id: token.userId }})
     let user = Users.presenter.render(userInstance, {})
     return {
       user: user,
@@ -111,6 +112,7 @@ class Authentication {
     if (ctx.session.userId) {
       let user = await User.scope('internal').findOne({where: { id: ctx.session.userId }})
       if (user) {
+        user = await User.scope('profile').findOne({where: { id: ctx.session.userId }})
         ctx.state.user = Users.presenter.render(user, {})
         return true
       }
