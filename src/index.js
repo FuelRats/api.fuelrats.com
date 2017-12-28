@@ -8,6 +8,7 @@ import session from 'koa-session'
 import Router from 'koa-router'
 const app = new Koa()
 import querystring from 'koa-qs'
+import koaStatic from 'koa-static'
 querystring(app)
 import koaBody from 'koa-body'
 import TrafficControl from './TrafficControl'
@@ -73,7 +74,7 @@ let sessionConfiguration = {
 }
 
 app.use(session(sessionConfiguration, app))
-app.use(require('koa-static')('static', {
+app.use(koaStatic('static', {
   hidden: false,
   gzip: true
 }))
