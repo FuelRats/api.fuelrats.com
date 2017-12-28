@@ -1,6 +1,7 @@
 
 import Permission from './permission'
 import { ForbiddenAPIError } from './APIError'
+import { Presenter } from 'yayson'
 
 /**
  * @class
@@ -36,7 +37,7 @@ class APIEndpoint {
   }
 
   static get presenter () {
-    import { Presenter } from 'yayson'({
+    Presenter({
       adapter: 'sequelize'
     })
     return Presenter

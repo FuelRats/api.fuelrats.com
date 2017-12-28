@@ -37,7 +37,7 @@ fetchPermissions()
 /**
  * Class for managing user permissions
  */
-class Permission {
+export default class Permission {
   /**
    * Promise to validate whether a user has the appropriate permissions
    * @param {string[]} permissions - The permissions to validate
@@ -206,5 +206,3 @@ class Permission {
     ]
   }
 }
-
-module.exports = Permission
