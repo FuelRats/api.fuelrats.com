@@ -5,9 +5,10 @@
 require('./globals')
 import Koa from 'koa'
 import session from 'koa-session'
-import router from 'koa-router')(
+import Router from 'koa-router'
 const app = new Koa()
-require('koa-qs')(app)
+import querystring from 'koa-qs'
+querystring(app)
 import koaBody from 'koa-body'
 import TrafficControl from './TrafficControl'
 import render from 'koa-ejs'
@@ -27,6 +28,8 @@ const {
 import Permission from './permission'
 import uid from 'uid-safe'
 import npid from 'npid'
+
+let router = Router()
 
 // Import config
 import config from '../../config'
