@@ -1,6 +1,6 @@
-'use strict'
-const { Rat, Epic } = require('./../db')
-const Query = require('./index')
+
+import { Rat, Epic } from './../db'
+import Query from './index'
 
 /**
  * A class representing a rescue query

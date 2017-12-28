@@ -1,6 +1,6 @@
-'use strict'
-const { db } = require('./../db')
-const Query = require('./index')
+
+import { db } from './../db'
+import Query from './index'
 
 /**
  * A class representing a rescue query

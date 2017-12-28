@@ -1,12 +1,10 @@
-'use strict'
-
-const { Client } = require('../db')
-const crypto = require('crypto')
-const bcrypt = require('bcrypt')
-const ClientQuery = require('../Query/ClientQuery')
-const APIEndpoint = require('../APIEndpoint')
-const Users = require('./user')
-const { NotFoundAPIError } = require('../APIError')
+import { Client } from '../db'
+import crypto from 'crypto'
+import bcrypt from 'bcrypt'
+import ClientQuery from '../Query/ClientQuery'
+import APIEndpoint from '../APIEndpoint'
+import Users from './user'
+import { NotFoundAPIError } from '../APIError'
 
 const CLIENT_SECRET_LENGTH = 32
 const BCRYPT_ROUNDS_COUNT = 12

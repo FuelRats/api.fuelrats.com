@@ -1,7 +1,7 @@
-'use strict'
-const Anope = require('./index')
-const NickServ = require('./NickServ')
-const { User } = require('../db')
+
+import Anope from './index'
+import NickServ from './NickServ'
+import { User } from '../db'
 
 
 /**

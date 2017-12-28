@@ -1,14 +1,14 @@
-'use strict'
 
-const oauth2orize = require('oauth2orize-koa-fr')
-const crypto = require('crypto')
-const { Token, Client, Code } = require('../db')
-const Permission = require('../permission')
-const { NotFoundAPIError, UnprocessableEntityAPIError } = require('../APIError')
-const i18next = require('i18next')
-const localisationResources = require('../../../localisations.json')
-const { ClientsPresenter } = require('../classes/Presenters')
-const Authentication = require('./auth')
+
+import oauth2orize from 'oauth2orize-koa-fr'
+import crypto from 'crypto'
+import { Token, Client, Code } from '../db'
+import Permission from '../permission'
+import { NotFoundAPIError, UnprocessableEntityAPIError } from '../APIError'
+import i18next from 'i18next'
+import localisationResources from '../../../localisations.json'
+import { ClientsPresenter } from '../classes/Presenters'
+import Authentication from './auth'
 
 i18next.init({
   lng: 'en',

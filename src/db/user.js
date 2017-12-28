@@ -1,4 +1,4 @@
-'use strict'
+
 
 const PASSWORD_MAX_LENGTH = 1024
 

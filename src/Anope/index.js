@@ -1,7 +1,7 @@
-'use strict'
+
 let config = require('../../../config')
 
-const xmlrpc = require('homematic-xmlrpc')
+import xmlrpc from 'homematic-xmlrpc'
 
 const anopeXMLRPCUrl = config.xmlrpc.url
 

@@ -1,7 +1,7 @@
-'use strict'
-const { db } = require('./../db')
-const StatisticsQuery = require('./StatisticsQuery')
-const { Rescue, User, Rat } = require('../db')
+
+import { db } from './../db'
+import StatisticsQuery from './StatisticsQuery'
+import { Rescue, User, Rat } from '../db'
 
 /**
  * A class representing a rescue query

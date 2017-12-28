@@ -1,6 +1,6 @@
-'use strict'
-const Permission = require('./permission')
-const { ForbiddenAPIError } = require('./APIError')
+
+import Permission from './permission'
+import { ForbiddenAPIError } from './APIError'
 
 /**
  * @class
@@ -36,7 +36,7 @@ class APIEndpoint {
   }
 
   static get presenter () {
-    const { Presenter } = require('yayson')({
+    import { Presenter } from 'yayson'({
       adapter: 'sequelize'
     })
     return Presenter

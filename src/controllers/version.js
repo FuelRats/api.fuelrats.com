@@ -1,8 +1,8 @@
-'use strict'
-const gitrev = require('git-rev-promises')
-const { ObjectPresenter } = require('../classes/Presenters')
-const packageInfo = require('../../../package.json')
-const APIEndpoint = require('../APIEndpoint')
+
+import gitrev from 'git-rev-promises'
+import { ObjectPresenter } from '../classes/Presenters'
+import packageInfo from '../../../package.json'
+import APIEndpoint from '../APIEndpoint'
 
 class Version extends APIEndpoint {
   async read () {

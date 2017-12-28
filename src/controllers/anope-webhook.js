@@ -1,5 +1,5 @@
-'use strict'
-const logger = require('../logger')
+
+import logger from '../logger'
 
 const CACHE_EXPIRE = 5000
 

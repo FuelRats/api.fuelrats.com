@@ -1,14 +1,14 @@
-'use strict'
 
-const { User } = require('../db')
 
-const UserQuery = require('../Query/UserQuery')
-const HostServ = require('../Anope/HostServ')
-const bcrypt = require('bcrypt')
-const gm = require('gm')
-const APIEndpoint = require('../APIEndpoint')
-const Rats = require('./rat')
-const Groups = require('./group')
+import { User } from '../db'
+
+import UserQuery from '../Query/UserQuery'
+import HostServ from '../Anope/HostServ'
+import bcrypt from 'bcrypt'
+import gm from 'gm'
+import APIEndpoint from '../APIEndpoint'
+import Rats from './rat'
+import Groups from './group'
 const {
   NotFoundAPIError,
   UnauthorizedAPIError,

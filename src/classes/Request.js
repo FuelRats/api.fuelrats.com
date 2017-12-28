@@ -1,8 +1,8 @@
-'use strict'
-const config = require('../../config')
-const https = require('https')
-const http = require('http')
-const deepAssign = require('deep-assign')
+
+import config from '../../config'
+import https from 'https'
+import http from 'http'
+import deepAssign from 'deep-assign'
 
 /**
  * Symbol representing HTTP GET method requests

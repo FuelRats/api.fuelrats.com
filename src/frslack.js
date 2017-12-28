@@ -1,6 +1,6 @@
-'use strict'
 
-const Slack = require('slack-node')
+
+import Slack from 'slack-node'
 const MS_TO_SECONDS = 1000
 
 const levelToSlackColor = {

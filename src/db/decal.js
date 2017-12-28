@@ -1,4 +1,4 @@
-'use strict'
+
 
 module.exports = function (sequelize, DataTypes) {
   let Decal = sequelize.define('Decal', {

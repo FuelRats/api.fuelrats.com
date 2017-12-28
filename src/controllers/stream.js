@@ -1,8 +1,8 @@
-'use strict'
 
-const { CustomPresenter, ObjectPresenter } = require('../classes/Presenters')
-const APIEndpoint = require('../APIEndpoint')
-const { ConflictAPIError } = require('../APIError')
+
+import { CustomPresenter, ObjectPresenter } from '../classes/Presenters'
+import APIEndpoint from '../APIEndpoint'
+import { ConflictAPIError } from '../APIError'
 
 class Stream extends APIEndpoint {
   subscribe (ctx) {

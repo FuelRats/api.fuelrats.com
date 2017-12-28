@@ -1,8 +1,8 @@
-'use strict'
+
 
 let config = require('../../config')
 
-const log4js = require('log4js')
+import log4js from 'log4js'
 
 log4js.addLayout('frloggly', function () {
   return function (logEvent) {

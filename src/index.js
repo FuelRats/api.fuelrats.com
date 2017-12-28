@@ -1,22 +1,22 @@
-'use strict'
+
 
 // IMPORT
 // =============================================================================
 require('./globals')
-const Koa = require('koa')
-const session = require('koa-session')
-const router = require('koa-router')()
+import Koa from 'koa'
+import session from 'koa-session'
+import router from 'koa-router')(
 const app = new Koa()
 require('koa-qs')(app)
-const koaBody = require('koa-body')
-const TrafficControl = require('./TrafficControl')
-const render = require('koa-ejs')
-const path = require('path')
-const http = require('http')
-const ws = require('ws')
-const { URL } = require('url')
-const logger = require('./logger')
-const { promisify } = require('util')
+import koaBody from 'koa-body'
+import TrafficControl from './TrafficControl'
+import render from 'koa-ejs'
+import path from 'path'
+import http from 'http'
+import ws from 'ws'
+import { URL } from 'url'
+import logger from './logger'
+import { promisify } from 'util'
 const {
   APIError,
   InternalServerError,
@@ -24,21 +24,21 @@ const {
   BadRequestAPIError
 } = require('./APIError')
 
-const Permission = require('./permission')
-const uid = require('uid-safe')
-const npid = require('npid')
+import Permission from './permission'
+import uid from 'uid-safe'
+import npid from 'npid'
 
 // Import config
-const config = require('../../config')
+import config from '../../config'
 
 
 // Import controllers
-const Authentication = require('./controllers/auth')
+import Authentication from './controllers/auth'
 const client = new (require('./controllers/client'))()
 const decal = new (require('./controllers/decal'))()
 const login = new (require('./controllers/login'))()
 const nicknames = new (require('./controllers/nicknames'))()
-const oauth2 = require('./controllers/oauth2')
+import oauth2 from './controllers/oauth2'
 const profile = new (require('./controllers/profile'))()
 const rat = new (require('./controllers/rat'))()
 const register = new (require('./controllers/register'))()
@@ -48,10 +48,10 @@ const ship = new (require('./controllers/ship'))()
 const statistics = new (require('./controllers/statistics'))()
 const user = new (require('./controllers/user'))()
 const version = new (require('./controllers/version'))()
-const WebSocketManager = require('./websocket')
-const jiraDrill = require('./controllers/jira/drill')
-const { AnopeWebhook } = require('./controllers/anope-webhook')
-const { db } = require('./db/index')
+import WebSocketManager from './websocket'
+import jiraDrill from './controllers/jira/drill'
+import { AnopeWebhook } from './controllers/anope-webhook'
+import { db } from './db/index'
 
 try {
   npid.remove('api.pid')

@@ -1,12 +1,12 @@
-'use strict'
 
-const nodemailer = require('nodemailer')
-const { User, Reset } = require('../db')
-const crypto = require('crypto')
-const bcrypt = require('bcrypt')
-const BotServ = require('../Anope/BotServ')
-const APIEndpoint = require('../APIEndpoint')
-const { NotFoundAPIError } = require('../APIError')
+
+import nodemailer from 'nodemailer'
+import { User, Reset } from '../db'
+import crypto from 'crypto'
+import bcrypt from 'bcrypt'
+import BotServ from '../Anope/BotServ'
+import APIEndpoint from '../APIEndpoint'
+import { NotFoundAPIError } from '../APIError'
 
 const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16

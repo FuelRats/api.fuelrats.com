@@ -1,4 +1,4 @@
-'use strict'
+
 
 module.exports = function (sequelize, DataTypes) {
   let Reset = sequelize.define('Reset', {

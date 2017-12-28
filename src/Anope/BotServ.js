@@ -1,5 +1,5 @@
-'use strict'
-const Anope = require('./index')
+
+import Anope from './index'
 
 /**
  * Class to manage requests to BotServ

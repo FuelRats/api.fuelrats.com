@@ -1,10 +1,10 @@
-'use strict'
 
-const HostServ = require('../../Anope/HostServ')
-const BotServ = require('../../Anope/BotServ')
-const { User, Rat } = require('../../db')
-const { UsersPresenter } = require('../../classes/Presenters')
-const { UnprocessableEntityAPIError } = require('../../APIError')
+
+import HostServ from '../../Anope/HostServ'
+import BotServ from '../../Anope/BotServ'
+import { User, Rat } from '../../db'
+import { UsersPresenter } from '../../classes/Presenters'
+import { UnprocessableEntityAPIError } from '../../APIError'
 
 const DrillType = {
   10200: 'rat',

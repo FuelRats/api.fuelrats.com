@@ -1,6 +1,6 @@
-'use strict'
-const { db, Rat } = require('../db')
-const Query = require('./index')
+
+import { db, Rat } from '../db'
+import Query from './index'
 
 /**
  * A class representing a rat query

@@ -1,5 +1,5 @@
-const Authentication = require('./auth')
-const { UnauthorizedAPIError } = require('../APIError')
+import Authentication from './auth'
+import { UnauthorizedAPIError } from '../APIError'
 import APIEndpoint from '../APIEndpoint'
 
 class Login extends APIEndpoint {

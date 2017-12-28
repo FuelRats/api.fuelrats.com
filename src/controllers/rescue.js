@@ -1,14 +1,14 @@
-'use strict'
 
-const { Rescue } = require('../db')
-const { CustomPresenter} = require('../classes/Presenters')
-const RescueQuery = require('../Query/RescueQuery')
-const Rats = require('./rat')
-const Epics = require('./epic')
-const { NotFoundAPIError } = require('../APIError')
 
-const BotServ = require('../Anope/BotServ')
-const APIEndpoint = require('../APIEndpoint')
+import { Rescue } from '../db'
+import { CustomPresenter} from '../classes/Presenters'
+import RescueQuery from '../Query/RescueQuery'
+import Rats from './rat'
+import Epics from './epic'
+import { NotFoundAPIError } from '../APIError'
+
+import BotServ from '../Anope/BotServ'
+import APIEndpoint from '../APIEndpoint'
 
 const RESCUE_ACCESS_TIME = 3600000
 

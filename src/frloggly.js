@@ -1,9 +1,9 @@
 /* eslint no-prototype-builtins:1,no-restricted-syntax:[1, "ForInStatement"] */
 
-'use strict'
 
-const debug = require('debug')('log4js:loggly')
-const loggly = require('loggly')
+
+import debug from 'debug')('log4js:loggly'
+import loggly from 'loggly'
 
 /**
  * Checks wether the argument is any form of javascript object

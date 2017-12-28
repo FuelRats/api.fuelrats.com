@@ -1,8 +1,8 @@
-'use strict'
+
 
 const MIN_ACTION_LENGTH = 2
 
-const logger = require('./logger')
+import logger from './logger'
 const {
   BadRequestAPIError,
   UnprocessableEntityAPIError,
@@ -11,7 +11,7 @@ const {
 
 // Import controllers
 const rat = new (require('./controllers/rat'))()
-const Permission = require('./permission')
+import Permission from './permission'
 const rescue = new (require('./controllers/rescue'))()
 const stream = new (require('./controllers/stream'))()
 const client = new (require('./controllers/client'))()

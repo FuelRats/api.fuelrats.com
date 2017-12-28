@@ -1,9 +1,9 @@
-'use strict'
 
-const i18next = require('i18next')
-const localisationResources = require('../../localisations.json')
-const { Group, User } = require('./db')
-const { ForbiddenAPIError } = require('./APIError')
+
+import i18next from 'i18next'
+import localisationResources from '../../localisations.json'
+import { Group, User } from './db'
+import { ForbiddenAPIError } from './APIError'
 
 i18next.init({
   lng: 'en',

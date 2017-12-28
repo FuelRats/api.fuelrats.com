@@ -1,7 +1,7 @@
-'use strict'
-const Anope = require('./index')
-const { AnopeWebhook } = require('../controllers/anope-webhook')
-const { BadRequestAPIError, UnauthorizedAPIError } = require('../APIError')
+
+import Anope from './index'
+import { AnopeWebhook } from '../controllers/anope-webhook'
+import { BadRequestAPIError, UnauthorizedAPIError } from '../APIError'
 
 const NICKNAME_PARSE_PADDING = 2
 const INFO_FIRST_ITEM = 2

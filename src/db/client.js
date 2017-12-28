@@ -1,4 +1,4 @@
-'use strict'
+
 
 const CLIENT_SECRET_MAX_LENGTH = 1024
 

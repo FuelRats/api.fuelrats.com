@@ -1,5 +1,5 @@
-'use strict'
-const QueryOptions = require('./QueryOptions')
+
+import QueryOptions from './QueryOptions'
 
 const defaultRequestLimit = 25
 const maximumUnauthenticatedLimit = 100

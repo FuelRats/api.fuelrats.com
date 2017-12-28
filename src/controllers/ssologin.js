@@ -1,5 +1,5 @@
-'use strict'
-const { Action } = require('../db')
+
+import { Action } from '../db'
 
 
 class SSOLogin  {

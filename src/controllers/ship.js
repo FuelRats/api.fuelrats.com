@@ -1,8 +1,8 @@
-'use strict'
-const { Ship } = require('../db')
-const ShipQuery = require('../Query/ShipQuery')
-const { NotFoundAPIError } = require('../APIError')
-const APIEndpoint = require('../APIEndpoint')
+
+import { Ship } from '../db'
+import ShipQuery from '../Query/ShipQuery'
+import { NotFoundAPIError } from '../APIError'
+import APIEndpoint from '../APIEndpoint'
 
 
 class Ships extends APIEndpoint {

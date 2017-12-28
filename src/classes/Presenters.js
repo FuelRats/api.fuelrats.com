@@ -1,10 +1,10 @@
-'use strict'
 
-const { Presenter } = require('yayson')({
+
+import { Presenter } from 'yayson'({
   adapter: 'sequelize'
 })
 
-const ObjectPresenter = require('yayson')({
+import ObjectPresenter from 'yayson'({
   adapter: 'default'
 }).Presenter
 

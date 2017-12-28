@@ -1,5 +1,5 @@
-'use strict'
-const Permissions = require('./permission')
+
+import Permissions from './permission'
 
 const HOUR_TIMER = 60 * 60 * 1000
 

@@ -1,15 +1,15 @@
-'use strict'
+
 const BCRYPT_ENCRYPTION_ROUNDS = 12
 
-const { User, Rat, db} = require('../db')
-const bcrypt = require('bcrypt')
-const NickServ = require('../Anope/NickServ')
-const HostServ = require('../Anope/HostServ')
-const BotServ = require('../Anope/BotServ')
-const UserQuery = require('../Query/UserQuery')
-const APIEndpoint = require('../APIEndpoint')
-const Users = require('./user')
-const { ConflictAPIError,UnprocessableEntityAPIError } = require('../APIError')
+import { User, Rat, db} from '../db'
+import bcrypt from 'bcrypt'
+import NickServ from '../Anope/NickServ'
+import HostServ from '../Anope/HostServ'
+import BotServ from '../Anope/BotServ'
+import UserQuery from '../Query/UserQuery'
+import APIEndpoint from '../APIEndpoint'
+import Users from './user'
+import { ConflictAPIError,UnprocessableEntityAPIError } from '../APIError'
 
 const platforms = ['pc', 'xb', 'ps']
 

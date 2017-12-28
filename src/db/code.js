@@ -1,4 +1,4 @@
-'use strict'
+
 
 const OAUTH_SCOPE_MAX_LENGTH = 128
 

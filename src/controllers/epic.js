@@ -1,5 +1,5 @@
-'use strict'
-const APIEndpoint = require('../APIEndpoint')
+
+import APIEndpoint from '../APIEndpoint'
 
 class Epics extends APIEndpoint {
   static get presenter () {

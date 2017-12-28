@@ -1,8 +1,8 @@
-'use strict'
-const { User } = require('../db')
-const APIEndpoint = require('../APIEndpoint')
-const Rats = require('./rat')
-const Groups = require('./group')
+
+import { User } from '../db'
+import APIEndpoint from '../APIEndpoint'
+import Rats from './rat'
+import Groups from './group'
 
 class Profiles extends APIEndpoint {
   async read  (ctx) {

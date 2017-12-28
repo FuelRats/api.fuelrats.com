@@ -1,9 +1,9 @@
-'use strict'
 
-const Decal = require('../classes/Decal')
-const { User } = require('../db')
-const APIEndpoint = require('../APIEndpoint')
-const { NotFoundAPIError } = require('../APIError')
+
+import Decal from '../classes/Decal'
+import { User } from '../db'
+import APIEndpoint from '../APIEndpoint'
+import { NotFoundAPIError } from '../APIError'
 
 class Decals extends APIEndpoint {
   async check (ctx) {

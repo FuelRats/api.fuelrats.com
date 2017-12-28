@@ -1,6 +1,6 @@
-'use strict'
-const BotServ = require('../Anope/BotServ')
-const APIEndpoint = require('../APIEndpoint')
+
+import BotServ from '../Anope/BotServ'
+import APIEndpoint from '../APIEndpoint'
 
 class IRC extends APIEndpoint {
   message (ctx) {

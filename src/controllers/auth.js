@@ -1,10 +1,10 @@
-'use strict'
-const { User, Rat, db, Token, Client } = require('../db')
-const bcrypt = require('bcrypt')
-const { GoneAPIError, UnauthorizedAPIError } = require('../APIError')
+
+import { User, Rat, db, Token, Client } from '../db'
+import bcrypt from 'bcrypt'
+import { GoneAPIError, UnauthorizedAPIError } from '../APIError'
 let config = require('../../../config')
-const Users = require('./user')
-const Clients = require('./client')
+import Users from './user'
+import Clients from './client'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6

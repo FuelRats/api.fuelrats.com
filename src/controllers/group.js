@@ -1,5 +1,5 @@
-'use strict'
-const APIEndpoint = require('../APIEndpoint')
+
+import APIEndpoint from '../APIEndpoint'
 
 class Groups extends APIEndpoint {
   static get presenter () {

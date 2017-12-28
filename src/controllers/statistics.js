@@ -1,11 +1,11 @@
-'use strict'
 
-const { Rat, Rescue } = require('../db')
-const RescueStatisticsQuery = require('../Query/RescueStatisticsQuery')
-const SystemStatisticsQuery = require('../Query/SystemStatisticsQuery')
-const RatsStatisticsQuery = require('../Query/RatsStatisticsQuery')
-const { CustomPresenter } = require('../classes/Presenters')
-const APIEndpoint = require('../APIEndpoint')
+
+import { Rat, Rescue } from '../db'
+import RescueStatisticsQuery from '../Query/RescueStatisticsQuery'
+import SystemStatisticsQuery from '../Query/SystemStatisticsQuery'
+import RatsStatisticsQuery from '../Query/RatsStatisticsQuery'
+import { CustomPresenter } from '../classes/Presenters'
+import APIEndpoint from '../APIEndpoint'
 
 
 class Statistics extends APIEndpoint {

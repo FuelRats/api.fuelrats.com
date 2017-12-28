@@ -1,5 +1,5 @@
-'use strict'
-const Query = require('./index')
+
+import Query from './index'
 
 /**
  * A class representing a rat query

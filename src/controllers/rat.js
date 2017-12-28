@@ -1,11 +1,11 @@
-'use strict'
 
-const { Rat } = require('../db')
-const RatQuery = require('../Query/RatQuery')
-const { CustomPresenter } = require('../classes/Presenters')
-const APIEndpoint = require('../APIEndpoint')
-const Ships = require('./ship')
-const { NotFoundAPIError } = require('../APIError')
+
+import { Rat } from '../db'
+import RatQuery from '../Query/RatQuery'
+import { CustomPresenter } from '../classes/Presenters'
+import APIEndpoint from '../APIEndpoint'
+import Ships from './ship'
+import { NotFoundAPIError } from '../APIError'
 
 
 class Rats extends APIEndpoint {

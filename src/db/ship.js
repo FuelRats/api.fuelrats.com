@@ -1,4 +1,4 @@
-'use strict'
+
 
 const MAX_INGAME_SHIP_NAME_LENGTH = 22
 

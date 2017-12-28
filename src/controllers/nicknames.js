@@ -1,13 +1,13 @@
-'use strict'
-const Permission = require('../permission')
-const { User, db } = require('../db')
-const NicknameQuery = require('../Query/NicknameQuery')
-const { CustomPresenter} = require('../classes/Presenters')
-const APIEndpoint = require('../APIEndpoint')
-const { UnprocessableEntityAPIError, NotFoundAPIError, ConflictAPIError } = require('../APIError')
 
-const NickServ = require('../Anope/NickServ')
-const HostServ = require('../Anope/HostServ')
+import Permission from '../permission'
+import { User, db } from '../db'
+import NicknameQuery from '../Query/NicknameQuery'
+import { CustomPresenter} from '../classes/Presenters'
+import APIEndpoint from '../APIEndpoint'
+import { UnprocessableEntityAPIError, NotFoundAPIError, ConflictAPIError } from '../APIError'
+
+import NickServ from '../Anope/NickServ'
+import HostServ from '../Anope/HostServ'
 
 class Nicknames extends APIEndpoint {
   async info (ctx) {
