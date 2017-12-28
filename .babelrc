@@ -1,0 +1,19 @@
+{
+  "env": {
+    "development": {
+      "sourceMaps": true
+    },
+    "production": {
+      "sourceMaps": false
+    }
+  },
+  "plugins": [
+    "transform-es2015-modules-commonjs",
+    "transform-decorators",
+    "transform-do-expressions",
+    "transform-export-extensions",
+    "transform-function-bind",
+    "transform-class-properties"
+  ],
+  "sourceRoot": "/src"
+}

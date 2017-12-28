@@ -1,6 +1,6 @@
 'use strict'
 const i18next = require('i18next')
-const localisationResources = require('../localisations.json')
+const localisationResources = require('../../localisations.json')
 const uuidV4 = require('uuid/v4')
 
 i18next.init({

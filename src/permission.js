@@ -1,7 +1,7 @@
 'use strict'
 
 const i18next = require('i18next')
-const localisationResources = require('../localisations.json')
+const localisationResources = require('../../localisations.json')
 const { Group, User } = require('./db')
 const { ForbiddenAPIError } = require('./APIError')
 

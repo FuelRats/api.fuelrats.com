@@ -1,7 +1,7 @@
 'use strict'
 process.env.NODE_ENV = 'testing'
 
-let { db, User, Client, Group } = require('../api/db').db
+let { db, User, Client, Group } = require('../src/db').db
 let bcrypt = require('bcrypt')
 let fs = require('fs')
 let crypto = require('crypto')

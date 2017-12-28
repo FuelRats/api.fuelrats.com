@@ -1,7 +1,7 @@
 'use strict'
 const gitrev = require('git-rev-promises')
 const { ObjectPresenter } = require('../classes/Presenters')
-const packageInfo = require('../../package.json')
+const packageInfo = require('../../../package.json')
 const APIEndpoint = require('../APIEndpoint')
 
 class Version extends APIEndpoint {

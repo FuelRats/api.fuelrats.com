@@ -1,5 +1,5 @@
 'use strict'
-const { GET, POST, PUT, Request } = require('../../api/classes/Request')
+const { GET, POST, PUT, Request } = require('../../src/classes/Request')
 
 /**
  * get auth login token

@@ -2,7 +2,7 @@
 const { User, Rat, db, Token, Client } = require('../db')
 const bcrypt = require('bcrypt')
 const { GoneAPIError, UnauthorizedAPIError } = require('../APIError')
-let config = require('../../config')
+let config = require('../../../config')
 const Users = require('./user')
 const Clients = require('./client')
 

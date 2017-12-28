@@ -10,7 +10,7 @@ exports.init = async function () {
 
   // start the app if not already
   if (!app) {
-    app = require('../../index')
+    app = require('../../src/index')
     await new Promise((resolve, reject) => {
       app.on('listening', (err) => {
         if (err) {

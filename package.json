@@ -7,7 +7,7 @@
     "xlexious <alex@sorlie.co.uk>"
   ],
   "scripts": {
-    "dev": "node index.js",
+    "dev": "node dist/index.js",
     "test": "NODE_ENV=testing node test",
     "jsdoc": "jsdoc -d static/docs/js -r api",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
@@ -94,5 +94,14 @@
   },
   "engines": {
     "node": "8.8.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-decorators": "^6.24.1",
+    "babel-plugin-transform-do-expressions": "^6.22.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "babel-plugin-transform-export-extensions": "^6.22.0",
+    "babel-plugin-transform-function-bind": "^6.22.0"
   }
 }

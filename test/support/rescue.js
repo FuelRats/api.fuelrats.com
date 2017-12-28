@@ -7,7 +7,7 @@ const { post, put } = require('./request')
 const { HTTP_CREATED, HTTP_OK } = require('./const')
 const rat = require('./rat')
 const { idRegExp } = require('./db')
-const BotServ = require('../../api/Anope/BotServ')
+const BotServ = require('../../src/Anope/BotServ')
 
 /**
  * Create a rescue payload

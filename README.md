@@ -70,7 +70,7 @@ This will start the API service on either port 8082 or whatever port you've set 
 ### "Missing indexes" or an empty object is returned
 
 Your databases are empty.  You will need to either import some archived data or create some random test data
-with the example [generator script](bin/createTestDB.js)
+with the example [generator script](tools/createTestDB.js)
 
 ## Generating the docs
 

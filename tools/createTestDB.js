@@ -15,7 +15,7 @@ logger.add(logger.transports.Console, {
   depth: 5
 })
 
-const { db, User, Client, Group, Rescue, Rat } = require('../api/db')
+const { db, User, Client, Group, Rescue, Rat } = require('../src/db')
 const bcrypt = require('bcrypt')
 const underscore = require('underscore')
 

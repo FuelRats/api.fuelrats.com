@@ -6,7 +6,7 @@ const { Token, Client, Code } = require('../db')
 const Permission = require('../permission')
 const { NotFoundAPIError, UnprocessableEntityAPIError } = require('../APIError')
 const i18next = require('i18next')
-const localisationResources = require('../../localisations.json')
+const localisationResources = require('../../../localisations.json')
 const { ClientsPresenter } = require('../classes/Presenters')
 const Authentication = require('./auth')
 

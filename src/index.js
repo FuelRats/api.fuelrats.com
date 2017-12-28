@@ -9,49 +9,49 @@ const router = require('koa-router')()
 const app = new Koa()
 require('koa-qs')(app)
 const koaBody = require('koa-body')
-const TrafficControl = require('./api/TrafficControl')
+const TrafficControl = require('./TrafficControl')
 const render = require('koa-ejs')
 const path = require('path')
 const http = require('http')
 const ws = require('ws')
 const { URL } = require('url')
-const logger = require('./api/logger')
+const logger = require('./logger')
 const { promisify } = require('util')
 const {
   APIError,
   InternalServerError,
   TooManyRequestsAPIError,
   BadRequestAPIError
-} = require('./api/APIError')
+} = require('./APIError')
 
-const Permission = require('./api/permission')
+const Permission = require('./permission')
 const uid = require('uid-safe')
 const npid = require('npid')
 
 // Import config
-const config = require('./config')
+const config = require('../../config')
 
 
 // Import controllers
-const Authentication = require('./api/controllers/auth')
-const client = new (require('./api/controllers/client'))()
-const decal = new (require('./api/controllers/decal'))()
-const login = new (require('./api/controllers/login'))()
-const nicknames = new (require('./api/controllers/nicknames'))()
-const oauth2 = require('./api/controllers/oauth2')
-const profile = new (require('./api/controllers/profile'))()
-const rat = new (require('./api/controllers/rat'))()
-const register = new (require('./api/controllers/register'))()
-const reset = new (require('./api/controllers/reset'))()
-const rescue = new (require('./api/controllers/rescue'))()
-const ship = new (require('./api/controllers/ship'))()
-const statistics = new (require('./api/controllers/statistics'))()
-const user = new (require('./api/controllers/user'))()
-const version = new (require('./api/controllers/version'))()
-const WebSocketManager = require('./api/websocket')
-const jiraDrill = require('./api/controllers/jira/drill')
-const { AnopeWebhook } = require('./api/controllers/anope-webhook')
-const { db } = require('./api/db')
+const Authentication = require('./controllers/auth')
+const client = new (require('./controllers/client'))()
+const decal = new (require('./controllers/decal'))()
+const login = new (require('./controllers/login'))()
+const nicknames = new (require('./controllers/nicknames'))()
+const oauth2 = require('./controllers/oauth2')
+const profile = new (require('./controllers/profile'))()
+const rat = new (require('./controllers/rat'))()
+const register = new (require('./controllers/register'))()
+const reset = new (require('./controllers/reset'))()
+const rescue = new (require('./controllers/rescue'))()
+const ship = new (require('./controllers/ship'))()
+const statistics = new (require('./controllers/statistics'))()
+const user = new (require('./controllers/user'))()
+const version = new (require('./controllers/version'))()
+const WebSocketManager = require('./websocket')
+const jiraDrill = require('./controllers/jira/drill')
+const { AnopeWebhook } = require('./controllers/anope-webhook')
+const { db } = require('./db/index')
 
 try {
   npid.remove('api.pid')
@@ -148,7 +148,7 @@ app.use(async (ctx, next) => {
       errors: [error]
     }
   }
-})
+}) 
 
 render(app, {
   root: path.join(__dirname, 'views'),

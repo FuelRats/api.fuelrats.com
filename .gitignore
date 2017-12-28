@@ -8,6 +8,7 @@ views/docs.hbs
 static/js/
 static/docs/
 database.json
+dist/
 
 .idea/*
 

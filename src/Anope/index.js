@@ -1,5 +1,5 @@
 'use strict'
-let config = require('../../config')
+let config = require('../../../config')
 
 const xmlrpc = require('homematic-xmlrpc')
 

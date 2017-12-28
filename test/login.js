@@ -7,7 +7,7 @@ const { HTTP_OK, HTTP_NO_CONTENT, HTTP_UNAUTHORIZED} = require('./support/const'
 const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
-const BotServ = require('../api/Anope/BotServ')
+const BotServ = require('../src/Anope/BotServ')
 const nodemailer = require('nodemailer')
 
 const stub = {}

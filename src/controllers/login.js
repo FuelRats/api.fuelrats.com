@@ -1,7 +1,6 @@
-'use strict'
 const Authentication = require('./auth')
 const { UnauthorizedAPIError } = require('../APIError')
-const APIEndpoint = require('../APIEndpoint')
+import APIEndpoint from '../APIEndpoint'
 
 class Login extends APIEndpoint {
   async login (ctx) {

@@ -1,6 +1,6 @@
 'use strict'
 
-let config = require('../config')
+let config = require('../../config')
 
 const log4js = require('log4js')
 

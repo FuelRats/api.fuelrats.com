@@ -9,9 +9,9 @@ const sinon = require('sinon')
 const sandbox = sinon.createSandbox()
 
 
-const NickServ = require('../api/Anope/NickServ')
-const HostServ = require('../api/Anope/HostServ')
-const BotServ = require('../api/Anope/BotServ')
+const NickServ = require('../src/Anope/NickServ')
+const HostServ = require('../src/Anope/HostServ')
+const BotServ = require('../src/Anope/BotServ')
 
 module.exports = {
   setUp: async function (test) {
