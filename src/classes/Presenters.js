@@ -1,12 +1,13 @@
+import yayson from 'yayson'
 
-
-import { Presenter } from 'yayson'({
+let { Presenter } = yayson({
   adapter: 'sequelize'
 })
 
-import ObjectPresenter from 'yayson'({
+let ObjectPresenter = yayson({
   adapter: 'default'
 }).Presenter
+
 
 class CustomPresenter extends ObjectPresenter {
   id (instance) {

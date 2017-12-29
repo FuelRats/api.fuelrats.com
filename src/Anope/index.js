@@ -1,5 +1,5 @@
 
-let config = require('../../../config')
+let config = require('../../config')
 
 import xmlrpc from 'homematic-xmlrpc'
 

@@ -1,6 +1,6 @@
 
 import i18next from 'i18next'
-import localisationResources from '../../localisations.json'
+import localisationResources from '../localisations.json'
 import uuidV4 from 'uuid/v4'
 
 i18next.init({

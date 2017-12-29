@@ -8,12 +8,14 @@
     }
   },
   "plugins": [
-    "transform-es2015-modules-commonjs",
-    "transform-decorators-legacy",
+    ["transform-es2015-modules-commonjs", { "loose": false }],
+    "transform-decorators",
     "transform-do-expressions",
     "transform-export-extensions",
     "transform-function-bind",
-    "transform-class-properties"
+    "transform-optional-catch-binding",
+    "transform-optional-chaining",
+    "transform-strict-mode"
   ],
   "sourceRoot": "/src"
 }

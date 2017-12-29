@@ -1,6 +1,6 @@
 
 
-import { Rescue, User, Rat, Decal: Decals } from '../db'
+import { Rescue, User, Rat, Decal as Decals } from '../db'
 import BadRequestAPIError from '../APIError'
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'

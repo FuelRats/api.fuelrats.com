@@ -1,5 +1,5 @@
 
-import config from '../../config'
+import config from '../config'
 import https from 'https'
 import http from 'http'
 import deepAssign from 'deep-assign'

@@ -1,6 +1,6 @@
 
 import Sequelize from 'sequelize'
-let config = require('../../../config')
+let config = require('../../config')
 
 if (process.env.NODE_ENV === 'testing') {
   config = config.test

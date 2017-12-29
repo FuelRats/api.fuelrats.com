@@ -6,8 +6,8 @@ import { Token, Client, Code } from '../db'
 import Permission from '../permission'
 import { NotFoundAPIError, UnprocessableEntityAPIError } from '../APIError'
 import i18next from 'i18next'
-import localisationResources from '../../../localisations.json'
-import { ClientsPresenter } from '../classes/Presenters'
+import localisationResources from '../../localisations.json'
+import Clients from './client'
 import Authentication from './auth'
 
 i18next.init({
@@ -145,7 +145,7 @@ OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId
   }
   if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
     redirectUri = redirectUri || client.redirectUri
-    return [ClientsPresenter.render(client, {}), redirectUri]
+    return [Clients.presenter.render(client, {}), redirectUri]
   } else {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
   }

@@ -3,7 +3,7 @@
 import HostServ from '../../Anope/HostServ'
 import BotServ from '../../Anope/BotServ'
 import { User, Rat } from '../../db'
-import { UsersPresenter } from '../../classes/Presenters'
+import Users from '../user'
 import { UnprocessableEntityAPIError } from '../../APIError'
 
 const DrillType = {
@@ -70,7 +70,7 @@ class JiraDrill {
       where: {id: user.id}
     })
 
-    let userResponse = UsersPresenter.render(userInstance, {})
+    let userResponse = Users.presenter.render(userInstance, {})
     await HostServ.update(userResponse)
 
     let displayRat = User.preferredRat(userResponse)

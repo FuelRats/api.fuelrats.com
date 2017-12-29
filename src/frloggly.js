@@ -2,7 +2,8 @@
 
 
 
-import debug from 'debug')('log4js:loggly'
+import log4js from 'debug'
+let debug = log4js('log4js:loggly')
 import loggly from 'loggly'
 
 /**

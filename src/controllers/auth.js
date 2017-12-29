@@ -2,7 +2,7 @@
 import { User, Rat, db, Token, Client } from '../db'
 import bcrypt from 'bcrypt'
 import { GoneAPIError, UnauthorizedAPIError } from '../APIError'
-let config = require('../../../config')
+let config = require('../../config')
 import Users from './user'
 import Clients from './client'
 
