@@ -39,7 +39,8 @@ class HostServ {
 
     await HostServ.set(user.data.attributes.nicknames[0], virtualHost)
 
-    NickServ.update(user.data.attributes.nicknames[0])
+    /*  Temporarily removed due to a bug in Anope causing crashes in certain unknown circumstances  */
+    // NickServ.update(user.data.attributes.nicknames[0])
     return virtualHost
   }
 }
