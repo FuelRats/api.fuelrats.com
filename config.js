@@ -46,7 +46,8 @@ module.exports = {
     },
     'categories': {
       'default': {
-        'appenders': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS ? JSON.parse(process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS) : [ 'console' ],
+        'appenders': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS ?
+          JSON.parse(process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS) : [ 'console' ],
         'level': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_LEVEL || 'info'
       }
     }

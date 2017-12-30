@@ -1,4 +1,4 @@
-import Authentication from '../classes/auth'
+import Authentication from '../classes/Authentication'
 import { UnauthorizedAPIError } from '../classes/APIError'
 import API, {
   POST,

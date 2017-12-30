@@ -1,10 +1,14 @@
 
 
-import HostServ from '../../Anope/HostServ'
-import BotServ from '../../Anope/BotServ'
-import { User, Rat } from '../../db'
-import Users from '../Users'
-import { UnprocessableEntityAPIError } from '../../classes/APIError'
+import HostServ from '../Anope/HostServ'
+import BotServ from '../Anope/BotServ'
+import { User, Rat } from '../db/index'
+import Users from './Users'
+import { UnprocessableEntityAPIError } from '../classes/APIError'
+import API, {
+  IPAuthenticated,
+  POST
+} from '../classes/API'
 
 const DrillType = {
   10200: 'rat',
@@ -13,8 +17,10 @@ const DrillType = {
 const CMDRnameField = 'customfield_10205'
 const emailAddressField = 'customfield_10502'
 
-class JiraDrill {
-  static async update (ctx) {
+export default class JiraDrillWebhook extends API {
+  @POST('/jira/drill')
+  @IPAuthenticated
+  async update (ctx) {
     if (!ctx.data.issue || !ctx.data.issue.fields.issuetype || !ctx.data.issue.fields.issuetype.id) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/issue/fields/issuetype/id' })
     }
@@ -78,5 +84,3 @@ class JiraDrill {
     return userResponse
   }
 }
-
-module.exports = JiraDrill

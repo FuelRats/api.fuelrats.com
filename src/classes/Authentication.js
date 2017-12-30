@@ -2,7 +2,6 @@
 import { User, Rat, db, Token, Client } from '../db/index'
 import bcrypt from 'bcrypt'
 import { GoneAPIError, UnauthorizedAPIError } from './APIError'
-let config = require('../../config')
 import Users from '../routes/Users'
 import Clients from '../routes/Clients'
 
@@ -132,14 +131,6 @@ class Authentication {
 
   static isAuthenticated (ctx, next) {
     if (ctx.state.user) {
-      return next()
-    } else {
-      throw new UnauthorizedAPIError({})
-    }
-  }
-
-  static isWhitelisted (ctx, next) {
-    if (config.whitelist.includes(ctx.inet)) {
       return next()
     } else {
       throw new UnauthorizedAPIError({})

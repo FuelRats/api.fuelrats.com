@@ -1,10 +1,16 @@
 
 import logger from '../loggly/logger'
+import API, {
+  IPAuthenticated,
+  POST
+} from '../classes/API'
 
 const CACHE_EXPIRE = 5000
 
-class AnopeWebhook {
-  static update (ctx) {
+export default class AnopeWebhook extends API {
+  @POST('/anope')
+  @IPAuthenticated
+  update (ctx) {
     if (AnopeWebhook.matchesCachedRequestItem(ctx.data)) {
       logger.info('matches cache')
     }
@@ -47,7 +53,7 @@ class AnopeWebhook {
 
 AnopeWebhook.recentAnopeRequestsCache = []
 
-class AnopeRequestCacheItem {
+export class AnopeRequestCacheItem {
   constructor (type, nickname, account = null) {
     this.type = type
     this.nickname = nickname
@@ -66,9 +72,4 @@ class AnopeRequestCacheItem {
     }
     return false
   }
-}
-
-module.exports = {
-  AnopeWebhook,
-  AnopeRequestCacheItem
 }

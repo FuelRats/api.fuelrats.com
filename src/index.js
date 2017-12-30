@@ -9,7 +9,7 @@ import session from 'koa-session'
 const app = new Koa()
 import querystring from 'koa-qs'
 import koaStatic from 'koa-static'
-import router from './Router'
+import router from './classes/Router'
 querystring(app)
 import koaBody from 'koa-body'
 import TrafficControl from './classes/TrafficControl'
@@ -27,7 +27,6 @@ const {
   BadRequestAPIError
 } = require('./classes/APIError')
 
-import Permission from './classes/Permission'
 import uid from 'uid-safe'
 import npid from 'npid'
 
@@ -36,15 +35,10 @@ import config from '../config'
 
 
 // Import controllers
-import Authentication from './classes/auth'
-const decal = new (require('./routes/Decals'))()
+import Authentication from './classes/Authentication'
 import oauth2 from './routes/OAuth2'
 
-const statistics = new (require('./routes/Statistics'))()
-const version = new (require('./routes/Version'))()
 import WebSocketManager from './classes/Websocket'
-import jiraDrill from './routes/jira/drill'
-import { AnopeWebhook } from './routes/anope-webhook'
 import { db } from './db/index'
 
 try {
@@ -165,6 +159,11 @@ import Login from './routes/Login'
 import Register from './routes/Register'
 import Profile from './routes/Profiles'
 import Reset from './routes/Resets'
+import AnopeWebhook from './routes/AnopeWebhook'
+import Statistics from './routes/Statistics'
+import Version from './routes/Version'
+import Decals from './routes/Decals'
+import JiraDrillWebhook from './routes/JiraDrillWebhook'
 
 export let routes = [
   new Rescue(),
@@ -176,19 +175,13 @@ export let routes = [
   new Login(),
   new Register(),
   new Profile(),
-  new Reset()
+  new Reset(),
+  new AnopeWebhook(),
+  new Statistics(),
+  new Version(),
+  new Decals(),
+  new JiraDrillWebhook()
 ]
-
-// WELCOME
-router.get('/welcome', (ctx) => {
-  ctx.redirect('https://fuelrats.com/profile')
-  ctx.status = 301
-})
-
-// ANOPE
-router.post('/anope',
-  Authentication.isWhitelisted,
-  AnopeWebhook.update)
 
 // OAUTH2
 router.get('/oauth2/authorize',
@@ -212,38 +205,6 @@ router.post('/oauth2/revoke',
 router.post('/oauth2/revokeall',
   Authentication.isClientAuthenticated,
   oauth2.revokeAll)
-
-
-// STATISTICS
-router.get('/statistics/rescues',
-  statistics.rescues)
-
-router.get('/statistics/systems',
-  statistics.systems)
-
-router.get('/statistics/rats',
-  statistics.rats)
-
-
-// VERSION
-router.get('/version', version.read)
-
-
-// DECALS
-router.get('/decals/check',
-  Authentication.isAuthenticated,
-  decal.check)
-
-router.get('/decals/redeem',
-  Authentication.isAuthenticated,
-  decal.redeem)
-
-
-// JIRA
-router.post('/jira/drill',
-  Authentication.isAuthenticated,
-  Permission.required(['user.write']),
-  jiraDrill.update)
 
 
 app.use(router.routes())

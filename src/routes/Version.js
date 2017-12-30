@@ -2,9 +2,12 @@
 import gitrev from 'git-rev-promises'
 import { ObjectPresenter } from '../classes/Presenters'
 import packageInfo from '../../../package.json'
-import API from '../classes/API'
+import API, {
+  GET
+} from '../classes/API'
 
-class Version extends API {
+export default class Version extends API {
+  @GET('/version')
   async read () {
     const githash = await gitrev.long()
     const gitbranch = await gitrev.branch()
@@ -37,6 +40,3 @@ class Version extends API {
     return VersionPresenter
   }
 }
-
-
-module.exports = Version

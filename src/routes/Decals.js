@@ -2,10 +2,15 @@
 
 import Decal from '../classes/Decal'
 import { User } from '../db'
-import API from '../classes/API'
+import API, {
+  authenticated,
+  GET
+} from '../classes/API'
 import { NotFoundAPIError } from '../classes/APIError'
 
-class Decals extends API {
+export default class Decals extends API {
+  @GET('/decals/check')
+  @authenticated
   async check (ctx) {
     if (Object.keys(ctx.query).length > 0) {
       let user = await User.findOne({
@@ -32,6 +37,8 @@ class Decals extends API {
     }
   }
 
+  @GET('/decals/redeem')
+  @authenticated
   async redeem (ctx) {
     let decal = await Decal.getDecalForUser(ctx.state.user.data)
     return Decals.presenter.render(decal)
@@ -57,7 +64,3 @@ class Decals extends API {
     return DecalsPresenter
   }
 }
-
-
-
-module.exports = Decals

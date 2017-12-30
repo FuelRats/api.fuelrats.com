@@ -5,10 +5,13 @@ import RescueStatisticsQuery from '../query/RescueStatisticsQuery'
 import SystemStatisticsQuery from '../query/SystemStatisticsQuery'
 import RatsStatisticsQuery from '../query/RatsStatisticsQuery'
 import { CustomPresenter } from '../classes/Presenters'
-import API from '../classes/API'
+import API, {
+  GET
+} from '../classes/API'
 
 
-class Statistics extends API {
+export default class Statistics extends API {
+  @GET('/statistics/rescues')
   async rescues (ctx) {
     let rescuesQuery = new RescueStatisticsQuery(ctx.query, ctx)
     let result = await Rescue.scope(null).findAll(rescuesQuery.toSequelize)
@@ -16,6 +19,7 @@ class Statistics extends API {
     return RescueStatisticsPresenter.render(results, ctx.meta(result, rescuesQuery))
   }
 
+  @GET('/statistics/systems')
   async systems (ctx) {
     let systemQuery = new SystemStatisticsQuery(ctx.query, ctx)
     let result = await Rescue.scope(null).findAll(systemQuery.toSequelize)
@@ -23,6 +27,7 @@ class Statistics extends API {
     return SystemStatisticsPresenter.render(results, ctx.meta(result, systemQuery))
   }
 
+  @GET('/statistics/rats')
   async rats (ctx) {
     let ratsQuery = new RatsStatisticsQuery(ctx.query, ctx)
     let result = await Rat.scope('stats').findAll(ratsQuery.toSequelize)
@@ -51,5 +56,3 @@ class RatStatisticsPresenter extends CustomPresenter {
   }
 }
 RatStatisticsPresenter.prototype.type = 'ratstatistics'
-
-module.exports = Statistics

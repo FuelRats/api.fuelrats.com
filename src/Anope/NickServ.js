@@ -1,6 +1,6 @@
 
 import Anope from './index'
-import { AnopeWebhook } from '../routes/anope-webhook'
+import { AnopeWebhook } from '../routes/AnopeWebhook'
 import { BadRequestAPIError, UnauthorizedAPIError } from '../classes/APIError'
 
 const NICKNAME_PARSE_PADDING = 2

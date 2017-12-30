@@ -8,7 +8,7 @@ import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIErr
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Clients from './Clients'
-import Authentication from '../classes/auth'
+import Authentication from '../classes/Authentication'
 import API, {
   permissions,
   authenticated,
@@ -109,7 +109,7 @@ export default class OAuth2 extends API {
   @POST('/oauth2/revoke')
   @clientAuthenticated
   @required('token')
-  static async revoke (ctx) {
+  async revoke (ctx) {
     let token = await Token.findOne({ where: { value: ctx.data.token } })
     if (!token) {
       throw NotFoundAPIError({ pointer: '/data/attributes/token' })
@@ -124,7 +124,7 @@ export default class OAuth2 extends API {
 
   @POST('/oauth2/revokeall')
   @clientAuthenticated
-  static async revokeAll (ctx) {
+  async revokeAll (ctx) {
     let tokens = await Token.findAll({
       where: {
         clientId: ctx.state.client.id
@@ -138,7 +138,8 @@ export default class OAuth2 extends API {
     return true
   }
 
-  static async authorizationRender (ctx, next) {
+  @GET('/oauth2/authorize')
+  async authorizationRender (ctx, next) {
     let client = {}
     Object.assign(client, ctx.state.oauth2.client)
     delete client.secret

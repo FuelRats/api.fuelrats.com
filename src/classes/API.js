@@ -2,8 +2,9 @@
 import Permission from './Permission'
 import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './APIError'
 import yayson from 'yayson'
-import router from '../Router'
+import router from './Router'
 import Router from 'koa-router'
+let config = require('../../config')
 
 /**
  * @class
@@ -128,6 +129,21 @@ export function clientAuthenticated (target, name, descriptor) {
 
   descriptor.value = function (ctx) {
     if (ctx.state.client) {
+      return endpoint.apply(this, arguments)
+    } else {
+      throw new UnauthorizedAPIError({})
+    }
+  }
+}
+
+/**
+ * ESNext Decorator for requiring IP address authentication on an endpoint
+ */
+export function IPAuthenticated (target, name, descriptor) {
+  let endpoint = descriptor.value
+
+  descriptor.value = function (ctx) {
+    if (config.whitelist.includes(ctx.inet)) {
       return endpoint.apply(this, arguments)
     } else {
       throw new UnauthorizedAPIError({})
