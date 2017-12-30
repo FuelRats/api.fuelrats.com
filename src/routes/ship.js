@@ -1,7 +1,7 @@
 
 import { Ship } from '../db'
 import ShipQuery from '../Query/ShipQuery'
-import { NotFoundAPIError } from '../APIError'
+import { NotFoundAPIError } from '../classes/APIError'
 import APIEndpoint, {
   authenticated,
   GET,
@@ -11,9 +11,9 @@ import APIEndpoint, {
   parameters,
   disallow,
   required
-} from '../APIEndpoint'
+} from '../classes/API'
 
-export default class Ships extends APIEndpoint {
+export default class Ships extends API {
   @GET('/ships')
   async search (ctx) {
     let shipsQuery = new ShipQuery(ctx.query, ctx)
@@ -110,7 +110,7 @@ export default class Ships extends APIEndpoint {
   }
 
   static get presenter () {
-    class ShipsPresenter extends APIEndpoint.presenter {}
+    class ShipsPresenter extends API.presenter {}
     ShipsPresenter.prototype.type = 'ships'
     return ShipsPresenter
   }

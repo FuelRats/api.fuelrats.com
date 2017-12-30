@@ -1,10 +1,10 @@
 
 
 import { CustomPresenter, ObjectPresenter } from '../classes/Presenters'
-import APIEndpoint from '../APIEndpoint'
-import { ConflictAPIError } from '../APIError'
+import API from '../classes/API'
+import { ConflictAPIError } from '../classes/APIError'
 
-class Stream extends APIEndpoint {
+class Stream extends API {
   subscribe (ctx) {
     let applicationId = ctx.query.id
 

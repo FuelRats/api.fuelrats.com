@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import ClientQuery from '../Query/ClientQuery'
 import Users from './user'
-import { NotFoundAPIError } from '../APIError'
+import { NotFoundAPIError } from '../classes/APIError'
 import APIEndpoint, {
   permissions,
   authenticated,
@@ -14,12 +14,12 @@ import APIEndpoint, {
   parameters,
   disallow,
   required
-} from '../APIEndpoint'
+} from '../classes/API'
 
 const CLIENT_SECRET_LENGTH = 32
 const BCRYPT_ROUNDS_COUNT = 12
 
-export default class Clients extends APIEndpoint {
+export default class Clients extends API {
   @GET('/clients')
   @authenticated
   @permissions('client.read')
@@ -129,7 +129,7 @@ export default class Clients extends APIEndpoint {
   }
 
   static get presenter () {
-    class ClientsPresenter extends APIEndpoint.presenter {
+    class ClientsPresenter extends API.presenter {
       relationships () {
         return {
           user: Users.presenter

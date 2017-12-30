@@ -1,6 +1,6 @@
 
 
-let config = require('../config')
+let config = require('../../config')
 
 import log4js from 'log4js'
 

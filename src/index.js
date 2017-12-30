@@ -3,7 +3,7 @@
 // IMPORT
 // =============================================================================
 
-require('./globals')
+require('./Global')
 import Koa from 'koa'
 import session from 'koa-session'
 const app = new Koa()
@@ -12,22 +12,22 @@ import koaStatic from 'koa-static'
 import router from './Router'
 querystring(app)
 import koaBody from 'koa-body'
-import TrafficControl from './TrafficControl'
+import TrafficControl from './classes/TrafficControl'
 import render from 'koa-ejs'
 import path from 'path'
 import http from 'http'
 import ws from 'ws'
 import { URL } from 'url'
-import logger from './logger'
+import logger from './loggly/logger'
 import { promisify } from 'util'
 const {
   APIError,
   InternalServerError,
   TooManyRequestsAPIError,
   BadRequestAPIError
-} = require('./APIError')
+} = require('./classes/APIError')
 
-import Permission from './permission'
+import Permission from './classes/Permission'
 import uid from 'uid-safe'
 import npid from 'npid'
 
@@ -36,15 +36,15 @@ import config from '../config'
 
 
 // Import controllers
-import Authentication from './controllers/auth'
-const decal = new (require('./controllers/decal'))()
-import oauth2 from './controllers/oauth2'
+import Authentication from './classes/auth'
+const decal = new (require('./routes/decal'))()
+import oauth2 from './routes/oauth2'
 
-const statistics = new (require('./controllers/statistics'))()
-const version = new (require('./controllers/version'))()
-import WebSocketManager from './websocket'
-import jiraDrill from './controllers/jira/drill'
-import { AnopeWebhook } from './controllers/anope-webhook'
+const statistics = new (require('./routes/statistics'))()
+const version = new (require('./routes/version'))()
+import WebSocketManager from './classes/Websocket'
+import jiraDrill from './routes/jira/drill'
+import { AnopeWebhook } from './routes/anope-webhook'
 import { db } from './db/index'
 
 try {
@@ -155,16 +155,16 @@ render(app, {
 // ROUTES
 // =============================================================================
 
-import Rescue from './controllers/rescue'
-import User from './controllers/user'
-import Rats from './controllers/rat'
-import Clients from './controllers/client'
-import Nicknames from './controllers/nicknames'
-import Ships from './controllers/ship'
-import Login from './controllers/login'
-import Register from './controllers/register'
-import Profile from './controllers/profile'
-import Reset from './controllers/reset'
+import Rescue from './routes/rescue'
+import User from './routes/user'
+import Rats from './routes/rat'
+import Clients from './routes/client'
+import Nicknames from './routes/nicknames'
+import Ships from './routes/ship'
+import Login from './routes/login'
+import Register from './routes/register'
+import Profile from './routes/profile'
+import Reset from './routes/reset'
 
 export let routes = [
   new Rescue(),

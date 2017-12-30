@@ -6,9 +6,9 @@ import Groups from './group'
 import APIEndpoint, {
   authenticated,
   GET
-} from '../APIEndpoint'
+} from '../classes/API'
 
-export default class Profiles extends APIEndpoint {
+export default class Profiles extends API {
   @GET('/profile')
   @authenticated
   async read  (ctx) {
@@ -21,7 +21,7 @@ export default class Profiles extends APIEndpoint {
   }
 
   static get presenter () {
-    class ProfilesPresenter extends APIEndpoint.presenter {
+    class ProfilesPresenter extends API.presenter {
       relationships () {
         return {
           rats: Rats.presenter,

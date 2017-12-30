@@ -1,5 +1,5 @@
 
-import logger from '../logger'
+import logger from '../loggly/logger'
 
 const CACHE_EXPIRE = 5000
 

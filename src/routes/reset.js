@@ -5,7 +5,7 @@ import { User, Reset } from '../db'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import BotServ from '../Anope/BotServ'
-import { NotFoundAPIError } from '../APIError'
+import { NotFoundAPIError } from '../classes/APIError'
 import APIEndpoint, {
   authenticated,
   GET,
@@ -15,13 +15,13 @@ import APIEndpoint, {
   parameters,
   disallow,
   required
-} from '../APIEndpoint'
+} from '../classes/API'
 
 const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000
 
-export default class Resets extends APIEndpoint {
+export default class Resets extends API {
   @POST('/reset')
   @required('email')
   async requestReset (ctx, next) {

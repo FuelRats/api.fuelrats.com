@@ -4,7 +4,7 @@ import HostServ from '../../Anope/HostServ'
 import BotServ from '../../Anope/BotServ'
 import { User, Rat } from '../../db'
 import Users from '../user'
-import { UnprocessableEntityAPIError } from '../../APIError'
+import { UnprocessableEntityAPIError } from '../../classes/APIError'
 
 const DrillType = {
   10200: 'rat',

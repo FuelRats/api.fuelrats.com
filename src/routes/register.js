@@ -10,13 +10,13 @@ import UserQuery from '../Query/UserQuery'
 import APIEndpoint, {
   POST,
   required
-} from '../APIEndpoint'
+} from '../classes/API'
 import Users from './user'
-import { ConflictAPIError,UnprocessableEntityAPIError } from '../APIError'
+import { ConflictAPIError,UnprocessableEntityAPIError } from '../classes/APIError'
 
 const platforms = ['pc', 'xb', 'ps']
 
-export default class Register extends APIEndpoint {
+export default class Register extends API {
   @POST('/register')
   @required('email', 'password', 'name', 'platform', 'nickname')
   async create (ctx) {

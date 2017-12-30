@@ -2,7 +2,7 @@
 
 const MIN_ACTION_LENGTH = 2
 
-import logger from './logger'
+import logger from '../loggly/logger'
 const {
   BadRequestAPIError,
   UnprocessableEntityAPIError,
@@ -10,8 +10,8 @@ const {
 } = require('./APIError')
 
 // Import controllers
-import Permission from './permission'
-const version = new (require('./controllers/version'))()
+import Permission from './Permission'
+const version = new (require('../routes/version'))()
 
 const apiEvents = [
   'rescueCreated',

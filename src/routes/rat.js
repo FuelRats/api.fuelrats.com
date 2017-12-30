@@ -4,7 +4,7 @@ import { Rat } from '../db'
 import RatQuery from '../Query/RatQuery'
 import { CustomPresenter } from '../classes/Presenters'
 import Ships from './ship'
-import { NotFoundAPIError } from '../APIError'
+import { NotFoundAPIError } from '../classes/APIError'
 
 import APIEndpoint, {
   permissions,
@@ -14,9 +14,9 @@ import APIEndpoint, {
   PUT,
   DELETE,
   parameters
-} from '../APIEndpoint'
+} from '../classes/API'
 
-export default class Rats extends APIEndpoint {
+export default class Rats extends API {
   @GET('/rats')
   async search (ctx) {
     let ratsQuery = new RatQuery(ctx.query, ctx)
@@ -118,7 +118,7 @@ export default class Rats extends APIEndpoint {
   }
 
   static get presenter () {
-    class RatsPresenter extends APIEndpoint.presenter {
+    class RatsPresenter extends API.presenter {
       relationships () {
         return {
           ships: Ships.presenter

@@ -1,9 +1,9 @@
 
-import Permission from '../permission'
+import Permission from '../classes/Permission'
 import { User, db } from '../db'
 import NicknameQuery from '../Query/NicknameQuery'
 import { CustomPresenter} from '../classes/Presenters'
-import { UnprocessableEntityAPIError, NotFoundAPIError, ConflictAPIError } from '../APIError'
+import { UnprocessableEntityAPIError, NotFoundAPIError, ConflictAPIError } from '../classes/APIError'
 
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
@@ -14,9 +14,9 @@ import APIEndpoint, {
   PUT,
   DELETE,
   parameters
-} from '../APIEndpoint'
+} from '../classes/API'
 
-export default class Nicknames extends APIEndpoint {
+export default class Nicknames extends API {
   @GET('/nicknames/info/:nickname')
   @authenticated
   @parameters('nickname')

@@ -1,5 +1,5 @@
 
-import Permissions from './permission'
+import Permissions from './Permission'
 
 const HOUR_TIMER = 60 * 60 * 1000
 

@@ -5,7 +5,7 @@ import { CustomPresenter} from '../classes/Presenters'
 import RescueQuery from '../Query/RescueQuery'
 import Rats from './rat'
 import Epics from './epic'
-import { NotFoundAPIError } from '../APIError'
+import { NotFoundAPIError } from '../classes/APIError'
 
 import BotServ from '../Anope/BotServ'
 import APIEndpoint, {
@@ -16,11 +16,11 @@ import APIEndpoint, {
   PUT,
   DELETE,
   parameters
-} from '../APIEndpoint'
+} from '../classes/API'
 
 const RESCUE_ACCESS_TIME = 3600000
 
-export default class Rescues extends APIEndpoint {
+export default class Rescues extends API {
   constructor () {
     super()
   }
@@ -222,7 +222,7 @@ export default class Rescues extends APIEndpoint {
   }
 
   static get presenter () {
-    class RescuesPresenter extends APIEndpoint.presenter {
+    class RescuesPresenter extends API.presenter {
       relationships () {
         return {
           rats: Rats.presenter,

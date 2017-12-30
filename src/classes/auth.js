@@ -1,10 +1,10 @@
 
-import { User, Rat, db, Token, Client } from '../db'
+import { User, Rat, db, Token, Client } from '../db/index'
 import bcrypt from 'bcrypt'
-import { GoneAPIError, UnauthorizedAPIError } from '../APIError'
+import { GoneAPIError, UnauthorizedAPIError } from './APIError'
 let config = require('../../config')
-import Users from './user'
-import Clients from './client'
+import Users from '../routes/user'
+import Clients from '../routes/client'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6

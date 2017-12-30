@@ -1,11 +1,11 @@
-import Authentication from './auth'
-import { UnauthorizedAPIError } from '../APIError'
+import Authentication from '../classes/auth'
+import { UnauthorizedAPIError } from '../classes/APIError'
 import APIEndpoint, {
   POST,
   required
-} from '../APIEndpoint'
+} from '../classes/API'
 
-export default class Login extends APIEndpoint {
+export default class Login extends API {
   @POST('/login')
   @required('email', 'password')
   async login (ctx) {

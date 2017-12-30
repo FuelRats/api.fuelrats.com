@@ -2,10 +2,10 @@
 
 import Decal from '../classes/Decal'
 import { User } from '../db'
-import APIEndpoint from '../APIEndpoint'
-import { NotFoundAPIError } from '../APIError'
+import API from '../classes/API'
+import { NotFoundAPIError } from '../classes/APIError'
 
-class Decals extends APIEndpoint {
+class Decals extends API {
   async check (ctx) {
     if (Object.keys(ctx.query).length > 0) {
       let user = await User.findOne({
@@ -52,7 +52,7 @@ class Decals extends APIEndpoint {
   }
 
   static get presenter () {
-    class DecalsPresenter extends APIEndpoint.presenter {}
+    class DecalsPresenter extends API.presenter {}
     DecalsPresenter.prototype.type = 'decals'
     return DecalsPresenter
   }

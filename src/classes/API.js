@@ -1,15 +1,15 @@
 
-import Permission from './permission'
+import Permission from './Permission'
 import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './APIError'
 import yayson from 'yayson'
-import router from './Router'
+import router from '../Router'
 import Router from 'koa-router'
 
 /**
  * @class
  * Base class for FuelRats API endpoints
  */
-export default class APIEndpoint {
+export default class API {
 
   getReadPermissionForEntity () {
     return []

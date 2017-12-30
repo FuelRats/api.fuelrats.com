@@ -2,9 +2,9 @@
 import gitrev from 'git-rev-promises'
 import { ObjectPresenter } from '../classes/Presenters'
 import packageInfo from '../../../package.json'
-import APIEndpoint from '../APIEndpoint'
+import API from '../classes/API'
 
-class Version extends APIEndpoint {
+class Version extends API {
   async read () {
     const githash = await gitrev.long()
     const gitbranch = await gitrev.branch()

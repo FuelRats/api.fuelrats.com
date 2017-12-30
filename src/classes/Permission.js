@@ -1,8 +1,8 @@
 
 
 import i18next from 'i18next'
-import localisationResources from '../localisations.json'
-import { Group, User } from './db'
+import localisationResources from '../../localisations.json'
+import { Group, User } from '../db/index'
 import { ForbiddenAPIError } from './APIError'
 
 i18next.init({

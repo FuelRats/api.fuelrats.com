@@ -13,7 +13,7 @@ const {
   UnauthorizedAPIError,
   UnsupportedMediaAPIError,
   BadRequestAPIError
-} = require('../APIError')
+} = require('../classes/APIError')
 
 import APIEndpoint, {
   permissions,
@@ -25,13 +25,13 @@ import APIEndpoint, {
   parameters,
   disallow,
   required
-} from '../APIEndpoint'
+} from '../classes/API'
 
 const BCRYPT_ROUNDS_COUNT = 12
 const PROFILE_IMAGE_MIN = 64
 const PROFILE_IMAGE_MAX = 100
 
-export default class Users extends APIEndpoint {
+export default class Users extends API {
   @GET('/users')
   @authenticated
   @permissions('user.read')
@@ -202,7 +202,7 @@ export default class Users extends APIEndpoint {
   }
 
   static get presenter () {
-    class UsersPresenter extends APIEndpoint.presenter {
+    class UsersPresenter extends API.presenter {
       relationships () {
         return {
           rats: Rats.presenter,

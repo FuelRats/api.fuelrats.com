@@ -3,12 +3,12 @@
 import oauth2orize from 'oauth2orize-koa-fr'
 import crypto from 'crypto'
 import { Token, Client, Code } from '../db'
-import Permission from '../permission'
-import { NotFoundAPIError, UnprocessableEntityAPIError } from '../APIError'
+import Permission from '../classes/Permission'
+import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Clients from './client'
-import Authentication from './auth'
+import Authentication from '../classes/auth'
 import APIEndpoint, {
   permissions,
   authenticated,
@@ -20,7 +20,7 @@ import APIEndpoint, {
   parameters,
   disallow,
   required
-} from '../APIEndpoint'
+} from '../classes/API'
 
 i18next.init({
   lng: 'en',
@@ -105,7 +105,7 @@ server.exchange(oauth2orize.exchange.password(
   }
 ))
 
-export default class OAuth2 extends APIEndpoint {
+export default class OAuth2 extends API {
   @POST('/oauth2/revoke')
   @clientAuthenticated
   @required('token')

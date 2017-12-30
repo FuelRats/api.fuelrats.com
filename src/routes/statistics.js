@@ -5,10 +5,10 @@ import RescueStatisticsQuery from '../Query/RescueStatisticsQuery'
 import SystemStatisticsQuery from '../Query/SystemStatisticsQuery'
 import RatsStatisticsQuery from '../Query/RatsStatisticsQuery'
 import { CustomPresenter } from '../classes/Presenters'
-import APIEndpoint from '../APIEndpoint'
+import API from '../classes/API'
 
 
-class Statistics extends APIEndpoint {
+class Statistics extends API {
   async rescues (ctx) {
     let rescuesQuery = new RescueStatisticsQuery(ctx.query, ctx)
     let result = await Rescue.scope(null).findAll(rescuesQuery.toSequelize)

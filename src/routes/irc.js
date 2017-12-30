@@ -1,8 +1,8 @@
 
 import BotServ from '../Anope/BotServ'
-import APIEndpoint from '../APIEndpoint'
+import API from '../classes/API'
 
-class IRC extends APIEndpoint {
+class IRC extends API {
   message (ctx) {
     return BotServ.say(ctx.data.channel, ctx.data.message)
   }
