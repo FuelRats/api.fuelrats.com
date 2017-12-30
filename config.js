@@ -1,6 +1,4 @@
 /* eslint-disable no-magic-numbers */
-'use strict'
-
 
 // noinspection SpellCheckingInspection
 module.exports = {
@@ -44,21 +42,11 @@ module.exports = {
     'appenders': {
       'console': {
         'type': process.env.FRAPI_LOGGLY_TEST_APPENDERS_CONSOLE_TYPE || 'console'
-      },
-      'loggly': {
-        'type': process.env.FRAPI_LOGGLY_TEST_APPENDERS_LOGGLY_TYPE || 'frloggly',
-        'token': process.env.FRAPI_LOGGLY_TEST_APPENDERS_LOGGLY_TOKEN || 'ce4d2f29-0a0d-4dd5-ad17-e19bc51311a7',
-        'subdomain': process.env.FRAPI_LOGGLY_TEST_APPENDERS_LOGGLY_SUBDOMAIN || 'fuelrats',
-        'tags': process.env.FRAPI_LOGGLY_TEST_APPENDERS_LOGGLY_TAGS || ['local-dev', 'nodejs'],
-        'json': process.env.FRAPI_LOGGLY_TEST_APPENDERS_LOGGLY_JSON || true,
-        'layout': {
-          'type': process.env.FRAPI_LOGGLY_TEST_APPENDERS_LOGGLY_LAYOUT_TYPE || 'frloggly'
-        }
       }
     },
     'categories': {
       'default': {
-        'appenders': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS ? JSON.parse(process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS) : [ 'console', 'loggly' ],
+        'appenders': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS ? JSON.parse(process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_APPENDERS) : [ 'console' ],
         'level': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_LEVEL || 'info'
       }
     }
