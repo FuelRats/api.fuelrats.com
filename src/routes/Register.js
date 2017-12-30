@@ -6,12 +6,12 @@ import bcrypt from 'bcrypt'
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
 import BotServ from '../Anope/BotServ'
-import UserQuery from '../Query/UserQuery'
-import APIEndpoint, {
+import UserQuery from '../query/UserQuery'
+import API, {
   POST,
   required
 } from '../classes/API'
-import Users from './user'
+import Users from './Users'
 import { ConflictAPIError,UnprocessableEntityAPIError } from '../classes/APIError'
 
 const platforms = ['pc', 'xb', 'ps']

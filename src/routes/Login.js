@@ -1,6 +1,6 @@
 import Authentication from '../classes/auth'
 import { UnauthorizedAPIError } from '../classes/APIError'
-import APIEndpoint, {
+import API, {
   POST,
   required
 } from '../classes/API'

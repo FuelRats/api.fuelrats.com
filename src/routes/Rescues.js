@@ -2,13 +2,13 @@
 
 import { Rescue } from '../db'
 import { CustomPresenter} from '../classes/Presenters'
-import RescueQuery from '../Query/RescueQuery'
-import Rats from './rat'
-import Epics from './epic'
+import RescueQuery from '../query/RescueQuery'
+import Rats from './Rats'
+import Epics from './Epics'
 import { NotFoundAPIError } from '../classes/APIError'
 
 import BotServ from '../Anope/BotServ'
-import APIEndpoint, {
+import API, {
   permissions,
   authenticated,
   GET,

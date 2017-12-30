@@ -1,12 +1,12 @@
 
 
 import { Rat } from '../db'
-import RatQuery from '../Query/RatQuery'
+import RatQuery from '../query/RatQuery'
 import { CustomPresenter } from '../classes/Presenters'
-import Ships from './ship'
+import Ships from './Ships'
 import { NotFoundAPIError } from '../classes/APIError'
 
-import APIEndpoint, {
+import API, {
   permissions,
   authenticated,
   GET,

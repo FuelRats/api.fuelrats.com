@@ -3,7 +3,7 @@
 import HostServ from '../../Anope/HostServ'
 import BotServ from '../../Anope/BotServ'
 import { User, Rat } from '../../db'
-import Users from '../user'
+import Users from '../Users'
 import { UnprocessableEntityAPIError } from '../../classes/APIError'
 
 const DrillType = {

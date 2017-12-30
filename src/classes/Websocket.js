@@ -11,7 +11,7 @@ const {
 
 // Import controllers
 import Permission from './Permission'
-const version = new (require('../routes/version'))()
+const version = new (require('../routes/Version'))()
 
 const apiEvents = [
   'rescueCreated',

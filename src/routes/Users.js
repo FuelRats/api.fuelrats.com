@@ -2,12 +2,12 @@
 
 import { User } from '../db'
 
-import UserQuery from '../Query/UserQuery'
+import UserQuery from '../query/UserQuery'
 import HostServ from '../Anope/HostServ'
 import bcrypt from 'bcrypt'
 import gm from 'gm'
-import Rats from './rat'
-import Groups from './group'
+import Rats from './Rats'
+import Groups from './Groups'
 const {
   NotFoundAPIError,
   UnauthorizedAPIError,
@@ -15,7 +15,7 @@ const {
   BadRequestAPIError
 } = require('../classes/APIError')
 
-import APIEndpoint, {
+import API, {
   permissions,
   authenticated,
   GET,

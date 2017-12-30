@@ -1,8 +1,8 @@
 
 import { Ship } from '../db'
-import ShipQuery from '../Query/ShipQuery'
+import ShipQuery from '../query/ShipQuery'
 import { NotFoundAPIError } from '../classes/APIError'
-import APIEndpoint, {
+import API, {
   authenticated,
   GET,
   POST,

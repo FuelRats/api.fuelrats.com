@@ -6,7 +6,7 @@ import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import BotServ from '../Anope/BotServ'
 import { NotFoundAPIError } from '../classes/APIError'
-import APIEndpoint, {
+import API, {
   authenticated,
   GET,
   POST,

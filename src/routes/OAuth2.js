@@ -7,9 +7,9 @@ import Permission from '../classes/Permission'
 import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
-import Clients from './client'
+import Clients from './Clients'
 import Authentication from '../classes/auth'
-import APIEndpoint, {
+import API, {
   permissions,
   authenticated,
   clientAuthenticated,

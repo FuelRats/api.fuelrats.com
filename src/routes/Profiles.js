@@ -1,9 +1,9 @@
 
 import { User } from '../db'
-import Rats from './rat'
-import Groups from './group'
+import Rats from './Rats'
+import Groups from './Groups'
 
-import APIEndpoint, {
+import API, {
   authenticated,
   GET
 } from '../classes/API'

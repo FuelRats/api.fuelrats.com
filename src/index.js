@@ -3,7 +3,7 @@
 // IMPORT
 // =============================================================================
 
-require('./Global')
+require('./Globals')
 import Koa from 'koa'
 import session from 'koa-session'
 const app = new Koa()
@@ -37,11 +37,11 @@ import config from '../config'
 
 // Import controllers
 import Authentication from './classes/auth'
-const decal = new (require('./routes/decal'))()
-import oauth2 from './routes/oauth2'
+const decal = new (require('./routes/Decals'))()
+import oauth2 from './routes/OAuth2'
 
-const statistics = new (require('./routes/statistics'))()
-const version = new (require('./routes/version'))()
+const statistics = new (require('./routes/Statistics'))()
+const version = new (require('./routes/Version'))()
 import WebSocketManager from './classes/Websocket'
 import jiraDrill from './routes/jira/drill'
 import { AnopeWebhook } from './routes/anope-webhook'
@@ -155,16 +155,16 @@ render(app, {
 // ROUTES
 // =============================================================================
 
-import Rescue from './routes/rescue'
-import User from './routes/user'
-import Rats from './routes/rat'
-import Clients from './routes/client'
-import Nicknames from './routes/nicknames'
-import Ships from './routes/ship'
-import Login from './routes/login'
-import Register from './routes/register'
-import Profile from './routes/profile'
-import Reset from './routes/reset'
+import Rescue from './routes/Rescues'
+import User from './routes/Users'
+import Rats from './routes/Rats'
+import Clients from './routes/Clients'
+import Nicknames from './routes/Nicknames'
+import Ships from './routes/Ships'
+import Login from './routes/Login'
+import Register from './routes/Register'
+import Profile from './routes/Profiles'
+import Reset from './routes/Resets'
 
 export let routes = [
   new Rescue(),

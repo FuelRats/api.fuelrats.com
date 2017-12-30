@@ -1,10 +1,10 @@
 import { Client } from '../db'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
-import ClientQuery from '../Query/ClientQuery'
-import Users from './user'
+import ClientQuery from '../query/ClientQuery'
+import Users from './Users'
 import { NotFoundAPIError } from '../classes/APIError'
-import APIEndpoint, {
+import API, {
   permissions,
   authenticated,
   GET,
