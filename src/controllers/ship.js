@@ -2,16 +2,27 @@
 import { Ship } from '../db'
 import ShipQuery from '../Query/ShipQuery'
 import { NotFoundAPIError } from '../APIError'
-import APIEndpoint from '../APIEndpoint'
+import APIEndpoint, {
+  authenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters,
+  disallow,
+  required
+} from '../APIEndpoint'
 
-
-class Ships extends APIEndpoint {
+export default class Ships extends APIEndpoint {
+  @GET('/ships')
   async search (ctx) {
     let shipsQuery = new ShipQuery(ctx.query, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
     return Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
   }
 
+  @GET('/ships/:id')
+  @parameters('id')
   async findById (ctx) {
     let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
@@ -19,6 +30,10 @@ class Ships extends APIEndpoint {
     return Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
   }
 
+  @POST('/ships')
+  @authenticated
+  @required('name', 'shipType', 'ratId')
+  @disallow('shipId')
   async create (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
@@ -30,6 +45,9 @@ class Ships extends APIEndpoint {
     return renderedResult
   }
 
+  @PUT('/ships')
+  @authenticated
+  @disallow('shipId')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
@@ -59,6 +77,9 @@ class Ships extends APIEndpoint {
     return renderedResult
   }
 
+  @DELETE('/ships/:id')
+  @authenticated
+  @parameters('id')
   async delete (ctx) {
     let ship = await Ship.findOne({
       where: {
@@ -94,5 +115,3 @@ class Ships extends APIEndpoint {
     return ShipsPresenter
   }
 }
-
-module.exports = Ships

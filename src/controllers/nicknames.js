@@ -3,13 +3,23 @@ import Permission from '../permission'
 import { User, db } from '../db'
 import NicknameQuery from '../Query/NicknameQuery'
 import { CustomPresenter} from '../classes/Presenters'
-import APIEndpoint from '../APIEndpoint'
 import { UnprocessableEntityAPIError, NotFoundAPIError, ConflictAPIError } from '../APIError'
 
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
+import APIEndpoint, {
+  authenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters
+} from '../APIEndpoint'
 
-class Nicknames extends APIEndpoint {
+export default class Nicknames extends APIEndpoint {
+  @GET('/nicknames/info/:nickname')
+  @authenticated
+  @parameters('nickname')
   async info (ctx) {
     let info = await NickServ.info(ctx.params.nickname)
     if (!info) {
@@ -19,6 +29,8 @@ class Nicknames extends APIEndpoint {
     return Nicknames.presenter.render(info)
   }
 
+  @POST('/nicknames')
+  @authenticated
   async register (ctx) {
     if (Permission.isAdmin(ctx.state.user)) {
       throw new UnprocessableEntityAPIError({})
@@ -46,6 +58,8 @@ class Nicknames extends APIEndpoint {
     return true
   }
 
+  @PUT('/nicknames')
+  @authenticated
   async connect (ctx) {
     let { nicknames } = ctx.state.user.data.attributes
     if (nicknames.includes(ctx.data.nickname)) {
@@ -68,11 +82,17 @@ class Nicknames extends APIEndpoint {
     return true
   }
 
+  @GET('/nicknames/:nickname')
+  @authenticated
+  @parameters('nickname')
   async search (ctx) {
     let result = await User.scope('public').findAndCountAll(new NicknameQuery(ctx.params, ctx).toSequelize)
     return Nicknames.presenter.render(result)
   }
 
+  @DELETE('/nicknames/:nickname')
+  @authenticated
+  @parameters('nickname')
   async delete (ctx) {
     if (ctx.state.user.data.attributes.nicknames.includes(ctx.params.nickname) ||
       Permission.require(['nickname.delete'], ctx.state.user, ctx.state.scope)) {
@@ -102,4 +122,3 @@ class Nicknames extends APIEndpoint {
     return NicknamesPresenter
   }
 }
-module.exports = Nicknames

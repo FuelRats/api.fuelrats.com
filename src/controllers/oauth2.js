@@ -9,6 +9,18 @@ import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Clients from './client'
 import Authentication from './auth'
+import APIEndpoint, {
+  permissions,
+  authenticated,
+  clientAuthenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters,
+  disallow,
+  required
+} from '../APIEndpoint'
 
 i18next.init({
   lng: 'en',
@@ -93,7 +105,10 @@ server.exchange(oauth2orize.exchange.password(
   }
 ))
 
-class OAuth2 {
+export default class OAuth2 extends APIEndpoint {
+  @POST('/oauth2/revoke')
+  @clientAuthenticated
+  @required('token')
   static async revoke (ctx) {
     let token = await Token.findOne({ where: { value: ctx.data.token } })
     if (!token) {
@@ -107,6 +122,8 @@ class OAuth2 {
     return true
   }
 
+  @POST('/oauth2/revokeall')
+  @clientAuthenticated
   static async revokeAll (ctx) {
     let tokens = await Token.findAll({
       where: {
@@ -165,5 +182,4 @@ function validateScopes (scopes) {
 
 OAuth2.server = server
 
-module.exports = OAuth2
 

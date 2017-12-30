@@ -1,8 +1,13 @@
 import Authentication from './auth'
 import { UnauthorizedAPIError } from '../APIError'
-import APIEndpoint from '../APIEndpoint'
+import APIEndpoint, {
+  POST,
+  required
+} from '../APIEndpoint'
 
-class Login extends APIEndpoint {
+export default class Login extends APIEndpoint {
+  @POST('/login')
+  @required('email', 'password')
   async login (ctx) {
     let user = await Authentication.passwordAuthenticate(ctx.data.email, ctx.data.password)
     if (!user) {
@@ -19,5 +24,3 @@ class Login extends APIEndpoint {
     return user
   }
 }
-
-module.exports = Login

@@ -1,10 +1,16 @@
 
 import { User } from '../db'
-import APIEndpoint from '../APIEndpoint'
 import Rats from './rat'
 import Groups from './group'
 
-class Profiles extends APIEndpoint {
+import APIEndpoint, {
+  authenticated,
+  GET
+} from '../APIEndpoint'
+
+export default class Profiles extends APIEndpoint {
+  @GET('/profile')
+  @authenticated
   async read  (ctx) {
     let profile = await User.scope('defaultScope', 'profile').findOne({
       where: {
@@ -28,5 +34,3 @@ class Profiles extends APIEndpoint {
     return ProfilesPresenter
   }
 }
-
-module.exports = Profiles

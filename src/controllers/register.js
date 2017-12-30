@@ -7,13 +7,18 @@ import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
 import BotServ from '../Anope/BotServ'
 import UserQuery from '../Query/UserQuery'
-import APIEndpoint from '../APIEndpoint'
+import APIEndpoint, {
+  POST,
+  required
+} from '../APIEndpoint'
 import Users from './user'
 import { ConflictAPIError,UnprocessableEntityAPIError } from '../APIError'
 
 const platforms = ['pc', 'xb', 'ps']
 
-class Register extends APIEndpoint {
+export default class Register extends APIEndpoint {
+  @POST('/register')
+  @required('email', 'password', 'name', 'platform', 'nickname')
   async create (ctx) {
     // let captcha = ctx.data['g-recaptcha-response']
     // let captchaResult = await new Request(POST, {
@@ -100,5 +105,3 @@ process.on('registration', (ctx, values) => {
   BotServ.say('#rat-ops',
     `[API] User with email ${values.email} registered. IRC Nickname: ${values.nickname}. CMDR name: ${values.name}`)
 })
-
-module.exports = Register

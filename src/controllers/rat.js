@@ -3,18 +3,29 @@
 import { Rat } from '../db'
 import RatQuery from '../Query/RatQuery'
 import { CustomPresenter } from '../classes/Presenters'
-import APIEndpoint from '../APIEndpoint'
 import Ships from './ship'
 import { NotFoundAPIError } from '../APIError'
 
+import APIEndpoint, {
+  permissions,
+  authenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters
+} from '../APIEndpoint'
 
-class Rats extends APIEndpoint {
+export default class Rats extends APIEndpoint {
+  @GET('/rats')
   async search (ctx) {
     let ratsQuery = new RatQuery(ctx.query, ctx)
     let result = await Rat.findAndCountAll(ratsQuery.toSequelize)
     return Rats.presenter.render(result.rows, ctx.meta(result, ratsQuery))
   }
 
+  @GET('/rats/:id')
+  @parameters('id')
   async findById (ctx) {
     let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
     let result = await Rat.findAndCountAll(ratQuery.toSequelize)
@@ -22,6 +33,8 @@ class Rats extends APIEndpoint {
     return Rats.presenter.render(result.rows, ctx.meta(result, ratQuery))
   }
 
+  @POST('/rats')
+  @authenticated
   async create (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
@@ -37,6 +50,9 @@ class Rats extends APIEndpoint {
     return renderedResult
   }
 
+  @PUT('/rats')
+  @authenticated
+  @parameters('id')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
@@ -63,6 +79,10 @@ class Rats extends APIEndpoint {
     return renderedResult
   }
 
+  @DELETE('/rats/:id')
+  @authenticated
+  @permissions('rat.delete')
+  @parameters('id')
   async delete (ctx) {
     let rat = await Rat.findOne({
       where: {
@@ -109,5 +129,3 @@ class Rats extends APIEndpoint {
     return RatsPresenter
   }
 }
-
-module.exports = Rats

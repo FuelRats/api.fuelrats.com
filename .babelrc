@@ -15,7 +15,8 @@
     "transform-function-bind",
     "transform-optional-catch-binding",
     "transform-optional-chaining",
-    "transform-strict-mode"
+    "transform-strict-mode",
+    "transform-class-properties"
   ],
   "sourceRoot": "/src"
 }

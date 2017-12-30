@@ -2,20 +2,36 @@ import { Client } from '../db'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import ClientQuery from '../Query/ClientQuery'
-import APIEndpoint from '../APIEndpoint'
 import Users from './user'
 import { NotFoundAPIError } from '../APIError'
+import APIEndpoint, {
+  permissions,
+  authenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters,
+  disallow,
+  required
+} from '../APIEndpoint'
 
 const CLIENT_SECRET_LENGTH = 32
 const BCRYPT_ROUNDS_COUNT = 12
 
-class Clients extends APIEndpoint {
+export default class Clients extends APIEndpoint {
+  @GET('/clients')
+  @authenticated
+  @permissions('client.read')
   async search (ctx) {
     let clientQuery = new ClientQuery(ctx.query, ctx)
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
     return Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
   }
 
+  @GET('/clients/:id')
+  @authenticated
+  @parameters('id')
   async findById (ctx) {
     let clientQuery = new ClientQuery({ id: ctx.params.id }, ctx)
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
@@ -25,6 +41,10 @@ class Clients extends APIEndpoint {
     return Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
   }
 
+  @POST('/clients')
+  @authenticated
+  @required('name')
+  @disallow('secret')
   async create (ctx) {
     this.requireWritePermission(ctx, ctx.data)
     let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
@@ -41,6 +61,10 @@ class Clients extends APIEndpoint {
     return renderedResult
   }
 
+  @PUT('/clients/:id')
+  @authenticated
+  @parameters('id')
+  @disallow('secret')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
     let client = await Client.findOne({
@@ -68,6 +92,10 @@ class Clients extends APIEndpoint {
     return renderedResult
   }
 
+  @DELETE('/clients/:id')
+  @authenticated
+  @permissions('client.delete')
+  @parameters('id')
   async delete (ctx) {
     let rescue = await Client.findOne({
       where: {
@@ -112,5 +140,3 @@ class Clients extends APIEndpoint {
     return ClientsPresenter
   }
 }
-
-module.exports = Clients

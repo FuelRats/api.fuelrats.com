@@ -6,7 +6,6 @@ import UserQuery from '../Query/UserQuery'
 import HostServ from '../Anope/HostServ'
 import bcrypt from 'bcrypt'
 import gm from 'gm'
-import APIEndpoint from '../APIEndpoint'
 import Rats from './rat'
 import Groups from './group'
 const {
@@ -16,17 +15,36 @@ const {
   BadRequestAPIError
 } = require('../APIError')
 
+import APIEndpoint, {
+  permissions,
+  authenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters,
+  disallow,
+  required
+} from '../APIEndpoint'
+
 const BCRYPT_ROUNDS_COUNT = 12
 const PROFILE_IMAGE_MIN = 64
 const PROFILE_IMAGE_MAX = 100
 
-class Users extends APIEndpoint {
+export default class Users extends APIEndpoint {
+  @GET('/users')
+  @authenticated
+  @permissions('user.read')
   async search (ctx) {
     let userQuery = new UserQuery(ctx.query, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
+  @GET('/users/:id')
+  @authenticated
+  @permissions('user.read')
+  @parameters('id')
   async findById (ctx) {
     let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
@@ -41,7 +59,10 @@ class Users extends APIEndpoint {
     next()
   }
 
-
+  @POST('/users')
+  @authenticated
+  @permissions('user.create')
+  @disallow('image', 'password')
   async create (ctx) {
     let result = await User.create(ctx.data)
     ctx.response.status = 201
@@ -49,6 +70,9 @@ class Users extends APIEndpoint {
     return Users.presenter.render(result, ctx.meta(result))
   }
 
+  @PUT('/users/:id')
+  @authenticated
+  @disallow('image', 'password')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
@@ -75,6 +99,8 @@ class Users extends APIEndpoint {
     return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
+  @POST('/users/image/:id')
+  @authenticated
   async setimage (ctx) {
     let user = await User.findOne({
       where: {
@@ -102,6 +128,9 @@ class Users extends APIEndpoint {
     return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
+  @PUT('/users/setpassword')
+  @authenticated
+  @required('password', 'new')
   async setpassword (ctx) {
     let user = await User.findOne({
       where: {
@@ -126,6 +155,9 @@ class Users extends APIEndpoint {
     return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
   }
 
+  @DELETE('/users/:id')
+  @authenticated
+  @permissions('user.delete')
   async delete (ctx) {
     let rescue = await User.findOne({
       where: {
@@ -143,6 +175,9 @@ class Users extends APIEndpoint {
     return true
   }
 
+  @PUT('/users/updatevirtualhost/:id')
+  @authenticated
+  @permissions('user.write')
   async updatevirtualhost (ctx) {
     let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
@@ -206,5 +241,3 @@ function formatImage (imageData) {
     })
   })
 }
-
-module.exports = Users

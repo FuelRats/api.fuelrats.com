@@ -2,13 +2,14 @@
 
 // IMPORT
 // =============================================================================
+
 require('./globals')
 import Koa from 'koa'
 import session from 'koa-session'
-import Router from 'koa-router'
 const app = new Koa()
 import querystring from 'koa-qs'
 import koaStatic from 'koa-static'
+import router from './Router'
 querystring(app)
 import koaBody from 'koa-body'
 import TrafficControl from './TrafficControl'
@@ -30,27 +31,16 @@ import Permission from './permission'
 import uid from 'uid-safe'
 import npid from 'npid'
 
-let router = Router()
-
 // Import config
-import config from '../../config'
+import config from '../config'
 
 
 // Import controllers
 import Authentication from './controllers/auth'
-const client = new (require('./controllers/client'))()
 const decal = new (require('./controllers/decal'))()
-const login = new (require('./controllers/login'))()
-const nicknames = new (require('./controllers/nicknames'))()
 import oauth2 from './controllers/oauth2'
-const profile = new (require('./controllers/profile'))()
-const rat = new (require('./controllers/rat'))()
-const register = new (require('./controllers/register'))()
-const reset = new (require('./controllers/reset'))()
-const rescue = new (require('./controllers/rescue'))()
-const ship = new (require('./controllers/ship'))()
+
 const statistics = new (require('./controllers/statistics'))()
-const user = new (require('./controllers/user'))()
 const version = new (require('./controllers/version'))()
 import WebSocketManager from './websocket'
 import jiraDrill from './controllers/jira/drill'
@@ -165,210 +155,35 @@ render(app, {
 // ROUTES
 // =============================================================================
 
-// RESCUES
-router.get('/rescues',
-  Authentication.isAuthenticated,
-  Permission.required(['rescue.read']),
-  rescue.search)
+import Rescue from './controllers/rescue'
+import User from './controllers/user'
+import Rats from './controllers/rat'
+import Clients from './controllers/client'
+import Nicknames from './controllers/nicknames'
+import Ships from './controllers/ship'
+import Login from './controllers/login'
+import Register from './controllers/register'
+import Profile from './controllers/profile'
+import Reset from './controllers/reset'
 
-router.get('/rescues/:id',
-  Authentication.isAuthenticated,
-  Permission.required(['rescue.read']),
-  params('id'),
-  rescue.findById)
-
-router.post('/rescues',
-  Authentication.isAuthenticated,
-  Permission.required(['rescue.write']),
-  rescue.create)
-
-router.put('/rescues/:id',
-  Authentication.isAuthenticated,
-  params('id'),
-  rescue.update)
-
-router.put('/rescues/assign/:id',
-  Authentication.isAuthenticated,
-  params('id'),
-  rescue.assign)
-
-router.put('/rescues/addquote/:id',
-  Authentication.isAuthenticated,
-  params('id'),
-  rescue.assign)
-
-router.put('/rescues/unassign/:id',
-  Authentication.isAuthenticated,
-  params('id'),
-  rescue.unassign)
-
-router.delete('/rescues/:id',
-  Authentication.isAuthenticated,
-  Permission.required(['rescue.delete']),
-  params('id'),
-  rescue.delete)
-
-
-// CLIENTS
-router.get('/clients',
-  Authentication.isAuthenticated,
-  Permission.required(['client.read']),
-  client.search)
-
-router.get('/clients/:id',
-  Authentication.isAuthenticated,
-  params('id'),
-  client.findById)
-
-router.post('/clients',
-  Authentication.isAuthenticated,
-  client.create)
-
-router.put('/clients/:id',
-  Authentication.isAuthenticated,
-  params('id'),
-  client.update)
-
-router.delete('/clients/:id',
-  Authentication.isAuthenticated,
-  Permission.required(['client.delete']),
-  params('id'),
-  client.delete)
-
-
-// USERS
-router.get('/users',
-  Authentication.isAuthenticated,
-  Permission.required(['user.read']),
-  user.search)
-
-router.get('/users/:id',
-  Authentication.isAuthenticated,
-  params('id'),
-  user.findById)
-
-router.get('/users/image/:id',
-  params('id'),
-  user.image)
-
-router.post('/users',
-  Authentication.isAuthenticated,
-  user.create)
-
-router.put('/users/setpassword',
-  Authentication.isAuthenticated,
-  fields('password', 'new'),
-  user.setpassword)
-
-router.post('/users/image/:id',
-  Authentication.isAuthenticated,
-  user.setimage)
-router.put('/users/:id/updatevirtualhost',
-  Authentication.isAuthenticated,
-  Permission.required(['user.write']),
-  params('id'),
-  user.updatevirtualhost)
-
-router.put('/users/:id',
-  clean('image', 'password'),
-  Authentication.isAuthenticated,
-  params('id'),
-  user.update)
-
-router.delete('/users/:id',
-  Authentication.isAuthenticated,
-  Permission.required(['user.delete']),
-  params('id'),
-  user.delete)
-
-router.get('/nicknames/info/:nickname',
-  Authentication.isAuthenticated,
-  params('nickname'),
-  nicknames.info)
-
-router.get('/nicknames/:nickname',
-  Authentication.isAuthenticated,
-  params('nickname'),
-  nicknames.search)
-
-router.post('/nicknames',
-  Authentication.isAuthenticated,
-  nicknames.register)
-
-router.put('/nicknames',
-  Authentication.isAuthenticated,
-  nicknames.connect)
-
-router.delete('/nicknames/:nickname',
-  Authentication.isAuthenticated,
-  params('nickname'),
-  nicknames.delete)
-
-
-// RATS
-router.get('/rats',
-  rat.search)
-
-router.get('/rats/:id',
-  params('id'),
-  rat.findById)
-
-router.post('/rats',
-  rat.create)
-
-router.put('/rats/:id',
-  params('id'),
-  rat.update)
-
-router.delete('/rats/:id',
-  Permission.required(['rat.delete']),
-  params('id'),
-  rat.delete)
-
-
-// SHIPS
-router.get('/ships',
-  ship.search)
-
-router.get('/ships/:id',
-  params('id'),
-  ship.findById)
-
-router.post('/ships',
-  fields('name', 'shipType', 'ratId'),
-  clean('shipId'),
-  ship.create)
-
-router.put('/ships/:id',
-  clean('shipId'),
-  params('id'),
-  ship.update)
-
-router.delete('/ships/:id',
-  params('id'),
-  rat.delete)
-
+export let routes = [
+  new Rescue(),
+  new User(),
+  new Rats(),
+  new Clients(),
+  new Nicknames(),
+  new Ships(),
+  new Login(),
+  new Register(),
+  new Profile(),
+  new Reset()
+]
 
 // WELCOME
 router.get('/welcome', (ctx) => {
   ctx.redirect('https://fuelrats.com/profile')
   ctx.status = 301
 })
-
-// LOGIN
-router.post('/login',
-  fields('email', 'password'),
-  login.login)
-
-// REGISTER
-router.post('/register',
-  fields('email', 'password', 'name', 'platform', 'nickname'),
-  register.create)
-
-// PROFILE
-router.get('/profile',
-  Authentication.isAuthenticated, Permission.required(['user.read.me']),
-  profile.read)
 
 // ANOPE
 router.post('/anope',
@@ -412,21 +227,6 @@ router.get('/statistics/rats',
 
 // VERSION
 router.get('/version', version.read)
-
-
-// RESET
-router.post('/reset',
-  fields('email'),
-  reset.requestReset)
-
-router.get('/reset/:token',
-  params('token'),
-  reset.validateReset)
-
-router.post('/reset/:token',
-  params('token'),
-  fields('password'),
-  reset.resetPassword)
 
 
 // DECALS
@@ -532,60 +332,6 @@ function censor (obj) {
   }
 
   return censoredObj
-}
-
-/**
- * Makes sure the request object has the required data fields specified
- * @param requiredFields The data fields to require
- * @returns {Function} A promise
- */
-function fields (...requiredFields) {
-  return function (ctx, next) {
-    let missingFields = requiredFields.filter((requiredField) => {
-      return ctx.data.hasOwnProperty(requiredField) === false
-    })
-    if (missingFields.length > 0) {
-      throw missingFields.map((field) => {
-        return new BadRequestAPIError({ pointer: `/data/attributes/${field}` })
-      })
-    }
-    return next()
-  }
-}
-
-/**
- * Makes sure the request object has the required params specified
- * @param requiredFields The data fields to require
- * @returns {Function} A promise
- */
-function params (...requiredFields) {
-  return function (ctx, next) {
-    let missingFields = requiredFields.filter((requiredField) => {
-      return ctx.query.hasOwnProperty(requiredField) === false
-    })
-    if (missingFields.length > 0) {
-      throw missingFields.map((field) => {
-        return new BadRequestAPIError({ parameter: field })
-      })
-    }
-    return next()
-  }
-}
-
-/**
- * Removes the specified data fields from the request object
- * @param cleanFields The data fields to clean away
- * @returns {Function} A promise
- */
-function clean (...cleanFields) {
-  return function (ctx, next) {
-    if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
-      cleanFields.map((cleanField) => {
-        ctx.data[cleanField] = undefined
-      })
-    }
-    return next()
-  }
 }
 
 (async function startServer () {

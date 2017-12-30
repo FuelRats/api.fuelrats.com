@@ -10,55 +10,8 @@ const {
 } = require('./APIError')
 
 // Import controllers
-const rat = new (require('./controllers/rat'))()
 import Permission from './permission'
-const rescue = new (require('./controllers/rescue'))()
-const stream = new (require('./controllers/stream'))()
-const client = new (require('./controllers/client'))()
-const user = new (require('./controllers/user'))()
-const profile = new (require('./controllers/profile'))()
 const version = new (require('./controllers/version'))()
-
-const controllers = {
-  rats: {
-    create: [rat.create],
-    read: [rat.search],
-    update: [rat.update, true],
-    delete: [rat.delete, true, 'rat.delete']
-  },
-
-  rescues: {
-    create: [rescue.create, true],
-    read: [rescue.search],
-    update: [rescue.update, true],
-    delete: [rescue.delete, true]
-  },
-
-  users: {
-    create: [user.create, true],
-    read: [user.search, true, 'user.read'],
-    update: [user.update, true],
-    delete: [user.delete, true, 'user.delete'],
-    profile: [profile.read, true]
-  },
-
-  client: {
-    create: [client.create, true, 'self.client.create'],
-    read: [client.search, true, 'client.read'],
-    update: [client.update, true, 'client.update'],
-    delete: [client.delete, true, 'client.delete']
-  },
-
-  stream: {
-    subscribe: [stream.subscribe],
-    unsubscribe: [stream.unsubscribe],
-    broadcast: [stream.broadcast]
-  },
-
-  version: {
-    read: [version.read]
-  }
-}
 
 const apiEvents = [
   'rescueCreated',
@@ -78,6 +31,7 @@ const apiEvents = [
   'shipDeleted',
   'connection'
 ]
+
 
 class WebSocketManager {
   constructor (socket, trafficManager) {
@@ -152,36 +106,6 @@ class WebSocketManager {
     client.websocket = this
     if (!request.action || request.action.length < MIN_ACTION_LENGTH || !Array.isArray(request.action)) {
       throw new BadRequestAPIError({ parameter: 'action' })
-    }
-
-    let [controller, method] = request.action
-
-
-    if (controllers.hasOwnProperty(controller) === false || controllers[controller].hasOwnProperty(method) === false) {
-      throw new UnprocessableEntityAPIError({ parameter: 'action' })
-    }
-
-    let [endpoint, authenticationRequired, requiredPermissions] = controllers[controller][method]
-
-    if (!authenticationRequired || client.user) {
-      if (!requiredPermissions || Permission.require(requiredPermissions, client.user, client.scope)) {
-        let ctx = new Context(client, request)
-
-        let rateLimit = this.traffic.validateRateLimit(ctx)
-
-        let meta = Object.assign(request.meta || {}, {
-          'API-Version': 'v2.0',
-          'Rate-Limit-Limit': rateLimit.total,
-          'Rate-Limit-Remaining': rateLimit.remaining,
-          'Rate-Limit-Reset':  this.traffic.nextResetDate
-        })
-
-        let result = await endpoint(ctx)
-
-        return { result:  result, meta: meta }
-      }
-    } else if (authenticationRequired) {
-      throw new UnauthorizedAPIError({})
     }
   }
 

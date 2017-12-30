@@ -5,14 +5,25 @@ import { User, Reset } from '../db'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import BotServ from '../Anope/BotServ'
-import APIEndpoint from '../APIEndpoint'
 import { NotFoundAPIError } from '../APIError'
+import APIEndpoint, {
+  authenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters,
+  disallow,
+  required
+} from '../APIEndpoint'
 
 const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000
 
-class Resets extends APIEndpoint {
+export default class Resets extends APIEndpoint {
+  @POST('/reset')
+  @required('email')
   async requestReset (ctx, next) {
     let user = await User.findOne({
       where: {
@@ -65,6 +76,8 @@ class Resets extends APIEndpoint {
     next()
   }
 
+  @GET('/reset/:token')
+  @parameters('token')
   async validateReset (ctx) {
     let reset = await Reset.findOne({
       where: {
@@ -79,6 +92,9 @@ class Resets extends APIEndpoint {
     return true
   }
 
+  @POST('/reset/:token')
+  @parameters('token')
+  @required('password')
   async resetPassword (ctx, next) {
     let reset = await Reset.findOne({
       where: {
@@ -122,5 +138,3 @@ class Resets extends APIEndpoint {
     return `https://fuelrats.com/password-reset?t=${resetToken}`
   }
 }
-
-module.exports = Resets

@@ -8,32 +8,57 @@ import Epics from './epic'
 import { NotFoundAPIError } from '../APIError'
 
 import BotServ from '../Anope/BotServ'
-import APIEndpoint from '../APIEndpoint'
+import APIEndpoint, {
+  permissions,
+  authenticated,
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  parameters
+} from '../APIEndpoint'
 
 const RESCUE_ACCESS_TIME = 3600000
 
-class Rescues extends APIEndpoint {
+export default class Rescues extends APIEndpoint {
+  constructor () {
+    super()
+  }
+
+  @GET('/rescues')
+  @authenticated
+  @permissions('rescue.read')
   async search (ctx) {
     let rescueQuery = new RescueQuery(ctx.query, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    return this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    return Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
   }
 
+  @GET('/rescues/:id')
+  @authenticated
+  @permissions('rescue.read')
+  @parameters('id')
   async findById (ctx) {
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    return this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    return Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
   }
 
+  @POST('/rescues')
+  @authenticated
+  @permissions('rescue.write')
   async create (ctx) {
     let result = await Rescue.scope('rescue').create(ctx.data)
 
     ctx.response.status = 201
-    let rescue = this.presenter.render(result, ctx.meta(result))
+    let rescue = Rescues.presenter.render(result, ctx.meta(result))
     process.emit('rescueCreated', ctx, rescue)
     return rescue
   }
 
+  @PUT('/rescues/:id')
+  @authenticated
+  @parameters('id')
   async update (ctx) {
     let rescue = await Rescue.scope('rescue').findOne({
       where: {
@@ -55,11 +80,15 @@ class Rescues extends APIEndpoint {
 
     let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
     return renderedResult
   }
 
+  @DELETE('/rescues/:id')
+  @authenticated
+  @permissions('rescue.delete')
+  @parameters('id')
   async delete (ctx) {
     let rescue = await Rescue.scope('rescue').findOne({
       where: {
@@ -80,70 +109,75 @@ class Rescues extends APIEndpoint {
     return true
   }
 
+  @PUT('/rescues/assign/:id')
+  @authenticated
+  @parameters('id')
   async assign (ctx) {
     if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
       ctx.data = ctx.data.data
     }
 
-    if (ctx.params.id) {
-      let rescue = await Rescue.scope('rescue').findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
-
-      if (!rescue) {
-        throw new NotFoundAPIError({ parameter: 'id' })
+    let rescue = await Rescue.scope('rescue').findOne({
+      where: {
+        id: ctx.params.id
       }
+    })
 
-      this.requireWritePermission(ctx, rescue)
-
-      let rats = ctx.data.map((rat) => {
-        return rescue.addRat(rat)
-      })
-
-      await Promise.all(rats)
-
-      let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-      let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-      let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
-      process.emit('rescueUpdated', ctx, renderedResult)
-      return renderedResult
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
+
+    this.requireWritePermission(ctx, rescue)
+
+    let rats = ctx.data.map((rat) => {
+      return rescue.addRat(rat)
+    })
+
+    await Promise.all(rats)
+
+    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    process.emit('rescueUpdated', ctx, renderedResult)
+    return renderedResult
   }
 
+  @PUT('/rescues/unassign/:id')
+  @authenticated
+  @parameters('id')
   async unassign (ctx) {
     if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
       ctx.data = ctx.data.data
     }
 
-    if (ctx.params.id) {
-      let rescue = await Rescue.scope('rescue').findOne({
-        where: {
-          id: ctx.params.id
-        }
-      })
-
-      if (!rescue) {
-        throw new NotFoundAPIError({ parameter: 'id' })
+    let rescue = await Rescue.scope('rescue').findOne({
+      where: {
+        id: ctx.params.id
       }
+    })
 
-      this.requireWritePermission(ctx, rescue)
-
-      let rats = ctx.data.map((rat) => {
-        return rescue.removeRat(rat)
-      })
-
-      await Promise.all(rats)
-
-      let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-      let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-      let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
-      process.emit('rescueUpdated', ctx, renderedResult)
-      return renderedResult
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
+
+    this.requireWritePermission(ctx, rescue)
+
+    let rats = ctx.data.map((rat) => {
+      return rescue.removeRat(rat)
+    })
+
+    await Promise.all(rats)
+
+    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    process.emit('rescueUpdated', ctx, renderedResult)
+    return renderedResult
   }
 
+  @PUT('/rescues/addquote/:id')
+  @authenticated
+  @parameters('id')
   async addquote (ctx) {
     if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
       ctx.data = ctx.data.data
@@ -171,7 +205,7 @@ class Rescues extends APIEndpoint {
 
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = this.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
     return renderedResult
   }
@@ -241,4 +275,3 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
       `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
   }
 })
-module.exports = Rescues

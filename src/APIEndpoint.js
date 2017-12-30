@@ -1,13 +1,16 @@
 
 import Permission from './permission'
-import { ForbiddenAPIError } from './APIError'
+import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './APIError'
 import yayson from 'yayson'
+import router from './Router'
+import Router from 'koa-router'
 
 /**
  * @class
  * Base class for FuelRats API endpoints
  */
-class APIEndpoint {
+export default class APIEndpoint {
+
   getReadPermissionForEntity () {
     return []
   }
@@ -43,4 +46,178 @@ class APIEndpoint {
   }
 }
 
-module.exports = APIEndpoint
+/**
+ *
+ * @param endpoint
+ * @returns {Function}
+ */
+export function endpoint (endpoint) {
+  return function (target) {
+    target.router = new Router({
+      prefix: endpoint
+    })
+
+    router.use(target.router.routes())
+  }
+}
+
+/**
+ * ESNext Decorator for routing this method through a koa router GET endpoint
+ * @param route
+ * @returns {Function}
+ */
+export function GET (route) {
+  return function (target, name, descriptor) {
+    router.get(route, descriptor.value)
+  }
+}
+
+/**
+ * ESNext Decorator for routing this method through a koa router post endpoint
+ * @param route
+ * @returns {Function}
+ */
+export function POST (route) {
+  return function (target, name, descriptor) {
+    router.post(route, descriptor.value)
+  }
+}
+
+/**
+ * ESNext Decorator for routing this method through a koa router PUT endpoint
+ * @param route
+ * @returns {Function}
+ */
+export function PUT (route) {
+  return function (target, name, descriptor) {
+    router.put(route, descriptor.value)
+  }
+}
+
+/**
+ * ESNext Decorator for routing this method through a koa router DELETE endpoint
+ * @param route
+ * @returns {Function}
+ */
+export function DELETE (route) {
+  return function (target, name, descriptor) {
+    router.del(route, descriptor.value)
+  }
+}
+
+/**
+ * ESNext Decorator for requiring authentication on an endpoint
+ */
+export function authenticated (target, name, descriptor) {
+  let endpoint = descriptor.value
+
+  descriptor.value = function (ctx) {
+    if (ctx.state.user) {
+      return endpoint.apply(this, arguments)
+    } else {
+      throw new UnauthorizedAPIError({})
+    }
+  }
+}
+
+/**
+ * ESNext Decorator for requiring client authentication on an endpoint
+ */
+export function clientAuthenticated (target, name, descriptor) {
+  let endpoint = descriptor.value
+
+  descriptor.value = function (ctx) {
+    if (ctx.state.client) {
+      return endpoint.apply(this, arguments)
+    } else {
+      throw new UnauthorizedAPIError({})
+    }
+  }
+}
+
+/**
+ * ESNext Decorator requiring a set of permissions for an API endpoint
+ * @param permissions the permissions to require
+ * @returns {Function} A decorator function
+ */
+export function permissions (...permissions) {
+  return function (target, name, descriptor) {
+    let endpoint = descriptor.value
+
+    descriptor.value = function (ctx) {
+      if (Permission.granted(permissions, ctx.state.user, ctx.state.scope)) {
+        return endpoint.apply(this, arguments)
+      } else {
+        throw new ForbiddenAPIError({})
+      }
+    }
+  }
+}
+
+/**
+ * ESNext Decorator for requiring query parameters in an endpoint
+ * @param fields The query parameters to require
+ * @returns {Function} A decorator function
+ */
+export function parameters (fields) {
+  return function (target, name, descriptor) {
+    let endpoint = descriptor.value
+
+    descriptor.value = function (ctx) {
+      let missingFields = fields.filter((requiredField) => {
+        return ctx.query.hasOwnProperty(requiredField) === false
+      })
+      if (missingFields.length > 0) {
+        throw missingFields.map((field) => {
+          return new BadRequestAPIError({ parameter: field })
+        })
+      }
+      return endpoint.apply(this, arguments)
+    }
+  }
+}
+
+/**
+ * ESNext Decorator for requiring data fields in an endpoint
+ * @param fields The data fields to require
+ * @returns {Function} A decorator function
+ *
+ */
+export function required (fields) {
+  return function (target, name, descriptor) {
+    let endpoint = descriptor.value
+
+    descriptor.value = function (ctx) {
+      let missingFields = fields.filter((requiredField) => {
+        return ctx.data.hasOwnProperty(requiredField) === false
+      })
+      if (missingFields.length > 0) {
+        throw missingFields.map((field) => {
+          return new BadRequestAPIError({ pointer: `/data/attributes/${field}` })
+        })
+      }
+      return endpoint.apply(this, arguments)
+    }
+  }
+}
+
+/**
+ * ESNext Decorator for disallowing a set of data fields in an endpoint
+ * @param fields The data fields to disallow
+ * @returns {Function} A decorator function
+ */
+export function disallow (fields) {
+  return function (target, name, descriptor) {
+    let endpoint = descriptor.value
+
+    descriptor.value = function (ctx) {
+      if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
+        fields.map((cleanField) => {
+          ctx.data[cleanField] = undefined
+        })
+      }
+      return endpoint.apply(this, arguments)
+    }
+  }
+}
+
