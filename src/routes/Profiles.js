@@ -5,11 +5,13 @@ import Groups from './Groups'
 
 import API, {
   authenticated,
-  GET
+  GET,
+  websocket
 } from '../classes/API'
 
 export default class Profiles extends API {
   @GET('/profile')
+  @websocket('profiles', 'read')
   @authenticated
   async read  (ctx) {
     let profile = await User.scope('defaultScope', 'profile').findOne({

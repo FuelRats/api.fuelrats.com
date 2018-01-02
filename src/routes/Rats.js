@@ -13,11 +13,13 @@ import API, {
   POST,
   PUT,
   DELETE,
-  parameters
+  parameters,
+  websocket
 } from '../classes/API'
 
 export default class Rats extends API {
   @GET('/rats')
+  @websocket('rats', 'search')
   async search (ctx) {
     let ratsQuery = new RatQuery(ctx.query, ctx)
     let result = await Rat.findAndCountAll(ratsQuery.toSequelize)
@@ -25,6 +27,7 @@ export default class Rats extends API {
   }
 
   @GET('/rats/:id')
+  @websocket('rats', 'read')
   @parameters('id')
   async findById (ctx) {
     let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
@@ -34,6 +37,7 @@ export default class Rats extends API {
   }
 
   @POST('/rats')
+  @websocket('rats', 'create')
   @authenticated
   async create (ctx) {
     this.requireWritePermission(ctx, ctx.data)
@@ -51,6 +55,7 @@ export default class Rats extends API {
   }
 
   @PUT('/rats')
+  @websocket('rats', 'update')
   @authenticated
   @parameters('id')
   async update (ctx) {
@@ -80,6 +85,7 @@ export default class Rats extends API {
   }
 
   @DELETE('/rats/:id')
+  @websocket('rats', 'delete')
   @authenticated
   @permissions('rat.delete')
   @parameters('id')

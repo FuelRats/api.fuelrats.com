@@ -3,11 +3,13 @@ import gitrev from 'git-rev-promises'
 import { ObjectPresenter } from '../classes/Presenters'
 import packageInfo from '../../../package.json'
 import API, {
-  GET
+  GET,
+  websocket
 } from '../classes/API'
 
 export default class Version extends API {
   @GET('/version')
+  @websocket('version', 'read')
   async read () {
     const githash = await gitrev.long()
     const gitbranch = await gitrev.branch()

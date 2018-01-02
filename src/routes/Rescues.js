@@ -27,6 +27,7 @@ export default class Rescues extends API {
   }
 
   @GET('/rescues')
+  @websocket('rescues', 'search')
   @authenticated
   @permissions('rescue.read')
   async search (ctx) {
@@ -36,6 +37,7 @@ export default class Rescues extends API {
   }
 
   @GET('/rescues/:id')
+  @websocket('rescues', 'read')
   @authenticated
   @permissions('rescue.read')
   @parameters('id')
@@ -46,6 +48,7 @@ export default class Rescues extends API {
   }
 
   @POST('/rescues')
+  @websocket('rescues', 'create')
   @authenticated
   @permissions('rescue.write')
   async create (ctx) {
@@ -58,6 +61,7 @@ export default class Rescues extends API {
   }
 
   @PUT('/rescues/:id')
+  @websocket('rescues', 'update')
   @authenticated
   @parameters('id')
   async update (ctx) {

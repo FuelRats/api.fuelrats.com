@@ -6,7 +6,7 @@ import { BadRequestAPIError } from './APIError'
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const rescueParticipationRequirement = 10
 
-class Decal {
+export default class Decal {
   static async checkEligible (user) {
     let decal = await Decals.findOne({
       where: {
@@ -142,4 +142,3 @@ function getLastMonthTurnover () {
   foo.setUTCSeconds(0)
   return foo
 }
-module.exports = Decal

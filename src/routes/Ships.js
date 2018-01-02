@@ -10,11 +10,13 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required
+  required,
+  websocket
 } from '../classes/API'
 
 export default class Ships extends API {
   @GET('/ships')
+  @websocket('ships', 'search')
   async search (ctx) {
     let shipsQuery = new ShipQuery(ctx.query, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
@@ -22,6 +24,7 @@ export default class Ships extends API {
   }
 
   @GET('/ships/:id')
+  @websocket('ships', 'read')
   @parameters('id')
   async findById (ctx) {
     let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
@@ -31,6 +34,7 @@ export default class Ships extends API {
   }
 
   @POST('/ships')
+  @websocket('ships', 'create')
   @authenticated
   @required('name', 'shipType', 'ratId')
   @disallow('shipId')
@@ -46,6 +50,7 @@ export default class Ships extends API {
   }
 
   @PUT('/ships')
+  @websocket('ships', 'update')
   @authenticated
   @disallow('shipId')
   async update (ctx) {
@@ -78,6 +83,7 @@ export default class Ships extends API {
   }
 
   @DELETE('/ships/:id')
+  @websocket('ships', 'delete')
   @authenticated
   @parameters('id')
   async delete (ctx) {

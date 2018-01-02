@@ -13,7 +13,8 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required
+  required,
+  websocket
 } from '../classes/API'
 
 const CLIENT_SECRET_LENGTH = 32
@@ -21,6 +22,7 @@ const BCRYPT_ROUNDS_COUNT = 12
 
 export default class Clients extends API {
   @GET('/clients')
+  @websocket('clients', 'search')
   @authenticated
   @permissions('client.read')
   async search (ctx) {
@@ -30,6 +32,7 @@ export default class Clients extends API {
   }
 
   @GET('/clients/:id')
+  @websocket('clients', 'read')
   @authenticated
   @parameters('id')
   async findById (ctx) {
@@ -42,6 +45,7 @@ export default class Clients extends API {
   }
 
   @POST('/clients')
+  @websocket('clients', 'create')
   @authenticated
   @required('name')
   @disallow('secret')
@@ -62,6 +66,7 @@ export default class Clients extends API {
   }
 
   @PUT('/clients/:id')
+  @websocket('clients', 'update')
   @authenticated
   @parameters('id')
   @disallow('secret')
@@ -93,6 +98,7 @@ export default class Clients extends API {
   }
 
   @DELETE('/clients/:id')
+  @websocket('clients', 'delete')
   @authenticated
   @permissions('client.delete')
   @parameters('id')

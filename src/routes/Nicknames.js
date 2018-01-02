@@ -13,11 +13,13 @@ import API, {
   POST,
   PUT,
   DELETE,
-  parameters
+  parameters,
+  websocket
 } from '../classes/API'
 
 export default class Nicknames extends API {
   @GET('/nicknames/info/:nickname')
+  @websocket('nicknames', 'info')
   @authenticated
   @parameters('nickname')
   async info (ctx) {
@@ -30,6 +32,7 @@ export default class Nicknames extends API {
   }
 
   @POST('/nicknames')
+  @websocket('nicknames', 'register')
   @authenticated
   async register (ctx) {
     if (Permission.isAdmin(ctx.state.user)) {
@@ -59,6 +62,7 @@ export default class Nicknames extends API {
   }
 
   @PUT('/nicknames')
+  @websocket('nicknames', 'connect')
   @authenticated
   async connect (ctx) {
     let { nicknames } = ctx.state.user.data.attributes
@@ -83,6 +87,7 @@ export default class Nicknames extends API {
   }
 
   @GET('/nicknames/:nickname')
+  @websocket('nicknames', 'search')
   @authenticated
   @parameters('nickname')
   async search (ctx) {
@@ -91,6 +96,7 @@ export default class Nicknames extends API {
   }
 
   @DELETE('/nicknames/:nickname')
+  @websocket('nicknames', 'delete')
   @authenticated
   @parameters('nickname')
   async delete (ctx) {

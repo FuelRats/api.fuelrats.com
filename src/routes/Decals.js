@@ -4,12 +4,14 @@ import Decal from '../classes/Decal'
 import { User } from '../db'
 import API, {
   authenticated,
-  GET
+  GET,
+  websocket
 } from '../classes/API'
 import { NotFoundAPIError } from '../classes/APIError'
 
 export default class Decals extends API {
   @GET('/decals/check')
+  @websocket('decals', 'check')
   @authenticated
   async check (ctx) {
     if (Object.keys(ctx.query).length > 0) {
@@ -38,6 +40,7 @@ export default class Decals extends API {
   }
 
   @GET('/decals/redeem')
+  @websocket('decals', 'redeem')
   @authenticated
   async redeem (ctx) {
     let decal = await Decal.getDecalForUser(ctx.state.user.data)

@@ -10,15 +10,16 @@ import API, {
   GET,
   POST,
   parameters,
-  required
+  required,
+  websocket
 } from '../classes/API'
 
-const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000
 
 export default class Resets extends API {
   @POST('/reset')
+  @websocket('resets', 'request')
   @required('email')
   async requestReset (ctx, next) {
     let user = await User.findOne({
@@ -73,6 +74,7 @@ export default class Resets extends API {
   }
 
   @GET('/reset/:token')
+  @websocket('resets', 'validate')
   @parameters('token')
   async validateReset (ctx) {
     let reset = await Reset.findOne({
@@ -89,6 +91,7 @@ export default class Resets extends API {
   }
 
   @POST('/reset/:token')
+  @websocket('resets', 'set')
   @parameters('token')
   @required('password')
   async resetPassword (ctx, next) {
@@ -102,7 +105,7 @@ export default class Resets extends API {
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 
-    let newPassword = await bcrypt.hash(ctx.data.password, BCRYPT_ROUNDS_COUNT)
+    let newPassword = await bcrypt.hash(ctx.data.password, global.BCRYPT_ROUNDS_COUNT)
     await User.update({
       password: newPassword
     }, {

@@ -34,6 +34,7 @@ const PROFILE_IMAGE_MAX = 100
 
 export default class Users extends API {
   @GET('/users')
+  @websocket('users', 'search')
   @authenticated
   @permissions('user.read')
   async search (ctx) {
@@ -43,6 +44,7 @@ export default class Users extends API {
   }
 
   @GET('/users/:id')
+  @websocket('users', 'read')
   @authenticated
   @permissions('user.read')
   @parameters('id')
@@ -61,6 +63,7 @@ export default class Users extends API {
   }
 
   @POST('/users')
+  @websocket('users', 'create')
   @authenticated
   @permissions('user.create')
   @disallow('image', 'password')
@@ -72,6 +75,7 @@ export default class Users extends API {
   }
 
   @PUT('/users/:id')
+  @websocket('users', 'update')
   @authenticated
   @disallow('image', 'password')
   async update (ctx) {
@@ -159,6 +163,7 @@ export default class Users extends API {
   }
 
   @DELETE('/users/:id')
+  @websocket('users', 'delete')
   @authenticated
   @permissions('user.delete')
   async delete (ctx) {
@@ -179,6 +184,7 @@ export default class Users extends API {
   }
 
   @PUT('/users/updatevirtualhost/:id')
+  @websocket('users', 'updatevirtualhost')
   @authenticated
   @permissions('user.write')
   async updatevirtualhost (ctx) {
