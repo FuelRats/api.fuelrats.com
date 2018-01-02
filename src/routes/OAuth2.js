@@ -10,15 +10,9 @@ import localisationResources from '../../localisations.json'
 import Clients from './Clients'
 import Authentication from '../classes/Authentication'
 import API, {
-  permissions,
-  authenticated,
   clientAuthenticated,
   GET,
   POST,
-  PUT,
-  DELETE,
-  parameters,
-  disallow,
   required
 } from '../classes/API'
 

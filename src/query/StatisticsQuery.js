@@ -58,6 +58,7 @@ class StatisticsQuery extends Query {
     return {field: order, direction: direction}
   }
 
+  // noinspection JSCheckFunctionSignatures
   limit (limit) {
     return Number(limit) || null
   }

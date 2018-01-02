@@ -1,7 +1,7 @@
 
 
 module.exports = function (sequelize, DataTypes) {
-  let UserGroups = sequelize.define('UserGroups', {
+  let usergroups = sequelize.define('UserGroups', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -19,10 +19,10 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
-  UserGroups.associate = function (models) {
+  usergroups.associate = function (models) {
     models.UserGroups.belongsTo(models.User)
     models.UserGroups.belongsTo(models.Group)
   }
 
-  return UserGroups
+  return usergroups
 }

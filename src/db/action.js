@@ -1,7 +1,7 @@
 
 
 module.exports = function (sequelize, DataTypes) {
-  let Action = sequelize.define('Action', {
+  let action = sequelize.define('Action', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -18,9 +18,9 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
-  Action.associate = function (models) {
+  action.associate = function (models) {
     models.Action.belongsTo(models.User, { as: 'user' })
   }
 
-  return Action
+  return action
 }

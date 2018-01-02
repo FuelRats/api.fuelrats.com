@@ -2,7 +2,7 @@
 
 let config = require('../../config')
 
-import log4js from 'log4js'
+import { log4js } from 'log4js'
 
 /*
 log4js.addLayout('loggly/frloggly', function () {

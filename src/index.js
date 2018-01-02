@@ -16,18 +16,14 @@ import TrafficControl from './classes/TrafficControl'
 import render from 'koa-ejs'
 import path from 'path'
 import http from 'http'
-import ws from 'ws'
-import { URL } from 'url'
 import logger from './loggly/logger'
 import { promisify } from 'util'
 const {
   APIError,
   InternalServerError,
-  TooManyRequestsAPIError,
-  BadRequestAPIError
+  TooManyRequestsAPIError
 } = require('./classes/APIError')
 
-import uid from 'uid-safe'
 import npid from 'npid'
 
 // Import config
@@ -38,7 +34,7 @@ import config from '../config'
 import Authentication from './classes/Authentication'
 import oauth2 from './routes/OAuth2'
 
-import WebSocketManager from './classes/Websocket'
+import WebSocket from './classes/WebSocket'
 import { db } from './db/index'
 
 try {
@@ -68,7 +64,7 @@ let port = config.port || process.env.PORT
 
 app.use(async function (ctx, next) {
   ctx.data = ctx.request.body
-  ctx.meta = WebSocketManager.meta
+  // ctx.meta = WebSocketManager.meta
   ctx.client = {}
 
   let { query } = ctx
@@ -116,7 +112,8 @@ app.use(async (ctx, next) => {
     })
 
     if (rateLimit.exceeded) {
-      return next(new TooManyRequestsAPIError({}))
+      next(new TooManyRequestsAPIError({}))
+      return
     }
 
     let result = await next()
@@ -163,6 +160,7 @@ import AnopeWebhook from './routes/AnopeWebhook'
 import Statistics from './routes/Statistics'
 import Version from './routes/Version'
 import Decals from './routes/Decals'
+import Stream from './routes/Stream'
 import JiraDrillWebhook from './routes/JiraDrillWebhook'
 
 export let routes = [
@@ -180,6 +178,7 @@ export let routes = [
   new Statistics(),
   new Version(),
   new Decals(),
+  new Stream(),
   new JiraDrillWebhook()
 ]
 
@@ -209,7 +208,6 @@ router.post('/oauth2/revokeall',
 
 app.use(router.routes())
 app.use(router.allowedMethods())
-
 
 /**
  * Parses an object of URL query parameters and builds a nested object by delimiting periods into sub objects.
@@ -244,37 +242,7 @@ function parseQuery (query) {
 }
 
 let server = http.createServer(app.callback())
-const wss = new ws.Server({ server })
-
-const websocketManager = new WebSocketManager(wss, traffic)
-
-wss.on('connection', async function connection (client, req) {
-  let url = new URL(`http://localhost:8082${req.url}`)
-  client.req = req
-  client.clientId = uid.sync(GLOBAL.WEBSOCKET_IDENTIFIER_ROUNDS)
-  client.subscriptions = []
-
-  let bearer = url.searchParams.get('bearer')
-  if (bearer) {
-    let { user, scope } = await Authentication.bearerAuthenticate(bearer)
-    if (user) {
-      client.user = user
-      client.scope = scope
-    }
-  }
-
-  websocketManager.onConnection(client)
-
-  client.on('message', (message) => {
-    client.websocket = wss
-    try {
-      let request = JSON.parse(message)
-      websocketManager.onMessage(client, request)
-    } catch (ex) {
-      logger.info('Failed to parse incoming websocket message')
-    }
-  })
-})
+new WebSocket(server, traffic)
 
 /**
  * Goes through an object and sets properties commonly usde to hold sensitive information to a static value.

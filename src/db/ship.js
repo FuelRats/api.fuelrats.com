@@ -3,7 +3,7 @@
 const MAX_INGAME_SHIP_NAME_LENGTH = 22
 
 module.exports = function (sequelize, DataTypes) {
-  let Ship = sequelize.define('Ship', {
+  let ship = sequelize.define('Ship', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -61,9 +61,9 @@ module.exports = function (sequelize, DataTypes) {
     paranoid: true
   })
 
-  Ship.associate = function (models) {
+  ship.associate = function (models) {
     models.Ship.belongsTo(models.Rat, { as: 'rat' })
   }
 
-  return Ship
+  return ship
 }

@@ -1,7 +1,7 @@
 
 
 module.exports = function (sequelize, DataTypes) {
-  let Decal = sequelize.define('Decal', {
+  let decal = sequelize.define('Decal', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -29,9 +29,9 @@ module.exports = function (sequelize, DataTypes) {
     paranoid: true
   })
 
-  Decal.associate = function (models) {
+  decal.associate = function (models) {
     models.Decal.belongsTo(models.User, { as: 'user' })
   }
 
-  return Decal
+  return decal
 }

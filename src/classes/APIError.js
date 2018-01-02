@@ -8,7 +8,7 @@ i18next.init({
   resources:  localisationResources,
 })
 
-class APIError  extends Error {
+export class APIError  extends Error {
   constructor (status, source) {
     super()
 
@@ -48,97 +48,80 @@ class APIError  extends Error {
   }
 }
 
-class BadRequestAPIError extends APIError {
+export class BadRequestAPIError extends APIError {
   constructor (source) {
     super('bad_request', source)
   }
 }
 
-class UnauthorizedAPIError extends APIError {
+export class UnauthorizedAPIError extends APIError {
   constructor (source) {
     super('unauthorized', source)
   }
 }
 
-class ForbiddenAPIError extends APIError {
+export class ForbiddenAPIError extends APIError {
   constructor (source) {
     super('forbidden', source)
   }
 }
 
-class NotFoundAPIError extends APIError {
+export class NotFoundAPIError extends APIError {
   constructor (source) {
     super('not_found', source)
   }
 }
 
-class ConflictAPIError extends APIError {
+export class ConflictAPIError extends APIError {
   constructor (source) {
     super('conflict', source)
   }
 }
 
-class GoneAPIError extends APIError {
+export class GoneAPIError extends APIError {
   constructor (source) {
     super('gone', source)
   }
 }
 
-class PayloadTooLargeAPIError extends APIError {
+export class PayloadTooLargeAPIError extends APIError {
   constructor (source) {
     super('payload_too_large', source)
   }
 }
 
-class UnsupportedMediaAPIError extends APIError {
+export class UnsupportedMediaAPIError extends APIError {
   constructor (source) {
     super('unsupported_media_type', source)
   }
 }
 
-class ImATeapotAPIError extends APIError {
+export class ImATeapotAPIError extends APIError {
   constructor (source) {
     super('im_a_teapot', source)
   }
 }
 
-class UnprocessableEntityAPIError extends APIError {
+export class UnprocessableEntityAPIError extends APIError {
   constructor (source) {
     super('unprocessable_entity', source)
   }
 }
 
-class TooManyRequestsAPIError extends APIError {
+export class TooManyRequestsAPIError extends APIError {
   constructor (source) {
     super('too_many_requests', source)
   }
 }
 
-class InternalServerError extends APIError {
+export class InternalServerError extends APIError {
   constructor (source) {
     super('internal_server', source)
   }
 }
 
-class NotImplementedAPIError extends APIError {
+export class NotImplementedAPIError extends APIError {
   constructor (source) {
     super('not_implemented', source)
   }
-}
-
-module.exports = {
-  APIError,
-  BadRequestAPIError,
-  UnauthorizedAPIError,
-  ForbiddenAPIError,
-  NotFoundAPIError,
-  ConflictAPIError,
-  GoneAPIError,
-  PayloadTooLargeAPIError,
-  UnsupportedMediaAPIError,
-  ImATeapotAPIError,
-  UnprocessableEntityAPIError,
-  TooManyRequestsAPIError,
-  InternalServerError,
-  NotImplementedAPIError
 }

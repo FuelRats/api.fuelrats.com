@@ -3,7 +3,7 @@
 const PASSWORD_MAX_LENGTH = 1024
 
 module.exports = function (db, DataTypes) {
-  let User = db.define('User', {
+  let user = db.define('User', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -55,7 +55,7 @@ module.exports = function (db, DataTypes) {
     paranoid: true
   })
 
-  User.prototype.isSuspended = function () {
+  user.prototype.isSuspended = function () {
     if (!this.suspended) {
       return false
     }
@@ -63,7 +63,7 @@ module.exports = function (db, DataTypes) {
     return this.suspended - new Date() > 0
   }
 
-  User.isSuspended = function (user) {
+  user.isSuspended = function (user) {
     if (!user.data.attributes.suspended) {
       return false
     }
@@ -71,15 +71,15 @@ module.exports = function (db, DataTypes) {
     return user.data.attributes.suspended - Date.now() > 0
   }
 
-  User.prototype.isConfirmed = function () {
+  user.prototype.isConfirmed = function () {
     return this.groups.length > 0
   }
 
-  User.isConfirmed = function (user) {
+  user.isConfirmed = function (user) {
     return user.data.relationships.groups.data.length > 0
   }
 
-  User.preferredRat = function (user) {
+  user.preferredRat = function (user) {
     let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])
     if (!ratRef) {
       return null
@@ -90,7 +90,7 @@ module.exports = function (db, DataTypes) {
     })
   }
 
-  User.associate = function (models) {
+  user.associate = function (models) {
     models.User.hasMany(models.Rat, {
       as: 'rats',
       foreignKey: 'userId'
@@ -301,5 +301,5 @@ module.exports = function (db, DataTypes) {
       ]
     })
   }
-  return User
+  return user
 }

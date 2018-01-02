@@ -15,7 +15,8 @@ import API, {
   POST,
   PUT,
   DELETE,
-  parameters
+  parameters,
+  websocket
 } from '../classes/API'
 
 const RESCUE_ACCESS_TIME = 3600000
@@ -86,6 +87,7 @@ export default class Rescues extends API {
   }
 
   @DELETE('/rescues/:id')
+  @websocket('rescues', 'delete')
   @authenticated
   @permissions('rescue.delete')
   @parameters('id')

@@ -24,7 +24,8 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required
+  required,
+  websocket
 } from '../classes/API'
 
 const BCRYPT_ROUNDS_COUNT = 12
@@ -100,6 +101,7 @@ export default class Users extends API {
   }
 
   @POST('/users/image/:id')
+  @websocket('users', 'image')
   @authenticated
   async setimage (ctx) {
     let user = await User.findOne({
@@ -129,6 +131,7 @@ export default class Users extends API {
   }
 
   @PUT('/users/setpassword')
+  @websocket('users', 'setpassword')
   @authenticated
   @required('password', 'new')
   async setpassword (ctx) {

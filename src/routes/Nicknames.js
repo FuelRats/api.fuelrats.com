@@ -48,9 +48,9 @@ export default class Nicknames extends API {
       await NickServ.confirm(ctx.data.nickname)
     }
 
-    nicknames = await NickServ.list(ctx.data.nickname)
+    let updatedNicknames = await NickServ.list(ctx.data.nickname)
 
-    await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
+    await User.update({ nicknames: db.cast(updatedNicknames, 'citext[]') }, {
       where: { id: ctx.state.user.data.id }
     })
 
@@ -71,9 +71,9 @@ export default class Nicknames extends API {
       await NickServ.group(ctx.data.nickname, nicknames[0], ctx.data.password)
     }
 
-    nicknames = await NickServ.list(ctx.data.nickname)
+    let updatedNicknames = await NickServ.list(ctx.data.nickname)
 
-    await User.update({ nicknames: db.cast(nicknames, 'citext[]') }, {
+    await User.update({ nicknames: db.cast(updatedNicknames, 'citext[]') }, {
       where: { id: ctx.state.user.data.id }
     })
 
@@ -110,6 +110,7 @@ export default class Nicknames extends API {
 
       return true
     }
+    return null
   }
 
   static get presenter () {

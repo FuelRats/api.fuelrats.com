@@ -1,7 +1,7 @@
 
 
 module.exports = function (sequelize, DataTypes) {
-  let Rat = sequelize.define('Rat', {
+  let rat = sequelize.define('Rat', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -29,7 +29,7 @@ module.exports = function (sequelize, DataTypes) {
     paranoid: true
   })
 
-  Rat.associate = function (models) {
+  rat.associate = function (models) {
     models.Rat.addScope('stats', {})
     models.Rat.addScope('defaultScope', {
       include: [{
@@ -65,5 +65,5 @@ module.exports = function (sequelize, DataTypes) {
     models.Rat.hasMany(models.Epic, { foreignKey: 'ratId', as: 'epics' })
   }
 
-  return Rat
+  return rat
 }

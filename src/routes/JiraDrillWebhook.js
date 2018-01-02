@@ -33,8 +33,8 @@ export default class JiraDrillWebhook extends API {
       throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${emailAddressField}` })
     }
 
-    let CMDRname = fields[CMDRnameField]
-    if (!CMDRname) {
+    let cmdrName = fields[CMDRnameField]
+    if (!cmdrName) {
       BotServ.say('#doersofstuff', '[API] Unable to update IRC permissions. CMDR name was not provided')
       throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${CMDRnameField}` })
     }
@@ -55,7 +55,7 @@ export default class JiraDrillWebhook extends API {
             required: true,
             where: {
               CMDRname: {
-                $iLike: CMDRname
+                $iLike: cmdrName
               }
             }
           }

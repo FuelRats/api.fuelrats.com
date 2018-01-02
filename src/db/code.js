@@ -3,7 +3,7 @@
 const OAUTH_SCOPE_MAX_LENGTH = 128
 
 module.exports = function (sequelize, DataTypes) {
-  let Code = sequelize.define('Code', {
+  let code = sequelize.define('Code', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -24,7 +24,7 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
-  Code.associate = function (models) {
+  code.associate = function (models) {
     models.Code.belongsTo(models.User, { as: 'user' })
     models.Code.belongsTo(models.Client, { as: 'client' })
 
@@ -41,5 +41,5 @@ module.exports = function (sequelize, DataTypes) {
     })
   }
 
-  return Code
+  return code
 }

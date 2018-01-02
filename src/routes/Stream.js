@@ -1,10 +1,15 @@
 
 
 import { CustomPresenter, ObjectPresenter } from '../classes/Presenters'
-import API from '../classes/API'
+import API, {
+  authenticated,
+  websocket
+} from '../classes/API'
 import { ConflictAPIError } from '../classes/APIError'
 
-class Stream extends API {
+export default class Stream extends API {
+  @websocket('stream', 'subscribe')
+  @authenticated
   subscribe (ctx) {
     let applicationId = ctx.query.id
 
@@ -20,6 +25,7 @@ class Stream extends API {
     }), {})
   }
 
+  @websocket('stream', 'unsubscribe')
   unsubscribe (ctx) {
     let applicationId = ctx.query.id
 
@@ -33,6 +39,8 @@ class Stream extends API {
     }), {})
   }
 
+  @websocket('stream', 'broadcast')
+  @authenticated
   broadcast (ctx) {
     let applicationId = ctx.query.id
 
@@ -60,5 +68,3 @@ class Stream extends API {
     return SubscriptionsPresenter
   }
 }
-
-module.exports = Stream

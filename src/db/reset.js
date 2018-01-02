@@ -1,7 +1,7 @@
 
 
 module.exports = function (sequelize, DataTypes) {
-  let Reset = sequelize.define('Reset', {
+  let reset = sequelize.define('Reset', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -17,9 +17,9 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
-  Reset.associate = function (models) {
+  reset.associate = function (models) {
     models.Reset.belongsTo(models.User, { as: 'user' })
   }
 
-  return Reset
+  return reset
 }

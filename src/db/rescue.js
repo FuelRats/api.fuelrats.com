@@ -1,7 +1,7 @@
 
 
 module.exports = function (sequelize, DataTypes) {
-  let Rescue = sequelize.define('Rescue', {
+  let rescue = sequelize.define('Rescue', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -68,7 +68,7 @@ module.exports = function (sequelize, DataTypes) {
     }]
   })
 
-  Rescue.associate = function (models) {
+  rescue.associate = function (models) {
     models.Rescue.belongsTo(models.Rat, {
       as: 'firstLimpet',
       foreignKey: 'firstLimpetId'
@@ -109,5 +109,5 @@ module.exports = function (sequelize, DataTypes) {
     })
   }
 
-  return Rescue
+  return rescue
 }

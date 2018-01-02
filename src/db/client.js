@@ -3,7 +3,7 @@
 const CLIENT_SECRET_MAX_LENGTH = 1024
 
 module.exports = function (sequelize, DataTypes) {
-  let Client = sequelize.define('Client', {
+  let client = sequelize.define('Client', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -23,7 +23,7 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
-  Client.associate = function (models) {
+  client.associate = function (models) {
     models.Client.belongsTo(models.User, { as: 'user' })
 
     models.Client.addScope('defaultScope', {
@@ -39,5 +39,5 @@ module.exports = function (sequelize, DataTypes) {
     })
   }
 
-  return Client
+  return client
 }

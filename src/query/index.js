@@ -80,7 +80,7 @@ class Query {
 
   /**
    * Create a JSONB contains comparison from an API query
-   * @param {Object} data - the JSON object to compare against
+   * @param {string} data - the JSON object to compare against
    * @returns {{$contains}} A sequelize JSONB contains query
    */
   data (data) {
@@ -122,7 +122,7 @@ class Query {
    * @param {Object} user - A user object to use for validating permission level
    * @returns {number} A limit parameter
    */
-  limit (limit, user) {
+  limit (limit, user = null) {
     limit = Number(limit)
     if (!limit) {
       return defaultRequestLimit

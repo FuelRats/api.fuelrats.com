@@ -7,13 +7,9 @@ import bcrypt from 'bcrypt'
 import BotServ from '../Anope/BotServ'
 import { NotFoundAPIError } from '../classes/APIError'
 import API, {
-  authenticated,
   GET,
   POST,
-  PUT,
-  DELETE,
   parameters,
-  disallow,
   required
 } from '../classes/API'
 

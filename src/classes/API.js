@@ -3,8 +3,8 @@ import Permission from './Permission'
 import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './APIError'
 import yayson from 'yayson'
 import router from './Router'
-import Router from 'koa-router'
 let config = require('../../config')
+import WebSocket from './WebSocket'
 
 /**
  * @class
@@ -48,24 +48,21 @@ export default class API {
 }
 
 /**
- *
- * @param endpoint
- * @returns {Function}
+ * ESNext Decorator for routing this method for websocket requests
+ * @param endpointName The endpoint name to route websocket requests for
+ * @param methodName The method name to route websocket requests for
+ * @returns {Function} An ESNext decorator function
  */
-export function endpoint (endpoint) {
-  return function (target) {
-    target.router = new Router({
-      prefix: endpoint
-    })
-
-    router.use(target.router.routes())
+export function websocket (endpointName, methodName) {
+  return function (target, name, descriptor) {
+    WebSocket.addRoute(endpointName, methodName, descriptor.value)
   }
 }
 
 /**
  * ESNext Decorator for routing this method through a koa router GET endpoint
- * @param route
- * @returns {Function}
+ * @param route the http path to route
+ * @returns {Function} An ESNExt decorator function
  */
 export function GET (route) {
   return function (target, name, descriptor) {
@@ -175,7 +172,7 @@ export function permissions (...permissions) {
  * @param fields The query parameters to require
  * @returns {Function} A decorator function
  */
-export function parameters (fields) {
+export function parameters (...fields) {
   return function (target, name, descriptor) {
     let endpoint = descriptor.value
 
@@ -199,7 +196,7 @@ export function parameters (fields) {
  * @returns {Function} A decorator function
  *
  */
-export function required (fields) {
+export function required (...fields) {
   return function (target, name, descriptor) {
     let endpoint = descriptor.value
 
@@ -222,7 +219,7 @@ export function required (fields) {
  * @param fields The data fields to disallow
  * @returns {Function} A decorator function
  */
-export function disallow (fields) {
+export function disallow (...fields) {
   return function (target, name, descriptor) {
     let endpoint = descriptor.value
 
