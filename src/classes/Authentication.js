@@ -8,7 +8,7 @@ import Clients from '../routes/Clients'
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
 
-class Authentication {
+export default class Authentication {
   static async passwordAuthenticate (email, password) {
     if (!email || !password) {
       return null
@@ -176,5 +176,3 @@ function getBasicAuth (ctx) {
   }
   return []
 }
-
-module.exports = Authentication

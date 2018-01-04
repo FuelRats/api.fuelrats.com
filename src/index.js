@@ -64,7 +64,6 @@ let port = config.port || process.env.PORT
 
 app.use(async function (ctx, next) {
   ctx.data = ctx.request.body
-  // ctx.meta = WebSocketManager.meta
   ctx.client = {}
 
   let { query } = ctx

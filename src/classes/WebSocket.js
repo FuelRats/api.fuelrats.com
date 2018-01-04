@@ -9,6 +9,8 @@ import uid from 'uid-safe'
 import Authentication from './Authentication'
 import Permission from './Permission'
 
+const PRETTY_PRINT_SPACING = 2
+
 const apiEvents = [
   'rescueCreated',
   'rescueUpdated',
@@ -145,7 +147,11 @@ export default class WebSocket {
 
   send (client, message) {
     try {
-      client.send(JSON.stringify(message))
+      if (process.env.NODE_ENV === 'production') {
+        client.send(JSON.stringify(message))
+      } else {
+        client.send(JSON.stringify(message, null, PRETTY_PRINT_SPACING))
+      }
     } catch (ex) {
       logger.info('Failed to send websocket message')
     }
@@ -166,7 +172,7 @@ export default class WebSocket {
   }
 
   static getRoute (endpointName, methodName) {
-    if (routes.hasOwnProperty(endpointName) === false || routes[endpointName].hasOwnProperty(methodName)) {
+    if (routes.hasOwnProperty(endpointName) === false || routes[endpointName].hasOwnProperty(methodName) === false) {
       throw NotFoundAPIError({ parameter: 'action' })
     }
     return routes[endpointName][methodName]
@@ -184,7 +190,7 @@ export class Context {
 
     this.query = {}
     Object.assign(this.query, request)
-    Object.assign(this.meta, this.query)
+    Object.assign(new Meta(), this.query)
     this.data = request.data
 
     delete this.query.data
