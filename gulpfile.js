@@ -1,6 +1,9 @@
 const gulp = require('gulp')
 const babel = require('gulp-babel')
 const sourcemaps = require('gulp-sourcemaps')
+const path = require('path')
+
+const sourceRoot = path.join(__dirname, 'src')
 
 gulp.task('default', () =>
   gulp.src('src/**/*.js')
@@ -23,9 +26,11 @@ gulp.task('default', () =>
         'transform-optional-catch-binding',
         'transform-optional-chaining',
         'transform-strict-mode'
-      ],
-      'sourceRoot': '/src'
+      ]
     }))
-    .pipe(sourcemaps.write('.'))
+    .pipe(sourcemaps.write('.', {
+      includeContent: false,
+      sourceRoot: sourceRoot
+    }))
     .pipe(gulp.dest('dist'))
 )
