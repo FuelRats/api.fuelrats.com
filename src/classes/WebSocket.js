@@ -8,10 +8,6 @@ import { URL } from 'url'
 import uid from 'uid-safe'
 import Authentication from './Authentication'
 import Permission from './Permission'
-import Version from '../routes/Version'
-
-let version = new Version()
-
 
 const apiEvents = [
   'rescueCreated',
@@ -79,7 +75,7 @@ export default class WebSocket {
 
   async onConnection (client) {
     let ctx = new Context(client, {})
-    let result = await version.read(ctx)
+    let result = await WebSocket.getRoute('version', 'read')
     let meta = {
       event: 'connection'
     }
@@ -222,5 +218,18 @@ export class Meta {
 
     meta.meta = Object.assign(meta.meta, additionalParameters)
     return meta
+  }
+}
+
+
+/**
+ * ESNext Decorator for routing this method for websocket requests
+ * @param endpointName The endpoint name to route websocket requests for
+ * @param methodName The method name to route websocket requests for
+ * @returns {Function} An ESNext decorator function
+ */
+export function websocket (endpointName, methodName) {
+  return function (target, name, descriptor) {
+    WebSocket.addRoute(endpointName, methodName, descriptor.value)
   }
 }

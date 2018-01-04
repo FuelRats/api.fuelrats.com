@@ -14,8 +14,8 @@ import API, {
   parameters,
   disallow,
   required,
-  websocket
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 const CLIENT_SECRET_LENGTH = 32
 const BCRYPT_ROUNDS_COUNT = 12

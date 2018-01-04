@@ -2,10 +2,10 @@
 import BotServ from '../Anope/BotServ'
 import API, {
   POST,
-  websocket,
   authenticated,
   permissions
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 class IRC extends API {
   @POST('/irc/message')

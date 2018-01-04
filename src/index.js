@@ -184,26 +184,16 @@ export let routes = [
 
 // OAUTH2
 router.get('/oauth2/authorize',
-  Authentication.isAuthenticated,
   oauth2.authorizationValidateRedirect,
   oauth2.authorizationRender
 )
 
 router.post('/oauth2/authorize',
-  Authentication.isAuthenticated,
   ...oauth2.server.decision())
 
 router.post('/oauth2/token',
-  Authentication.isClientAuthenticated,
   oauth2.server.token(),
   oauth2.server.errorHandler())
-
-router.post('/oauth2/revoke',
-  Authentication.isClientAuthenticated,
-  oauth2.revoke)
-router.post('/oauth2/revokeall',
-  Authentication.isClientAuthenticated,
-  oauth2.revokeAll)
 
 
 app.use(router.routes())

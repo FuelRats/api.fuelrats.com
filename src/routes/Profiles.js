@@ -5,9 +5,9 @@ import Groups from './Groups'
 
 import API, {
   authenticated,
-  GET,
-  websocket
+  GET
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 export default class Profiles extends API {
   @GET('/profile')

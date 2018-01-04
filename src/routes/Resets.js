@@ -10,9 +10,9 @@ import API, {
   GET,
   POST,
   parameters,
-  required,
-  websocket
+  required
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000

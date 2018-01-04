@@ -10,9 +10,9 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required,
-  websocket
+  required
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 export default class Ships extends API {
   @GET('/ships')

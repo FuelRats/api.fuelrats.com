@@ -5,9 +5,9 @@ import { User } from '../db'
 import API, {
   authenticated,
   GET,
-  websocket
 } from '../classes/API'
 import { NotFoundAPIError } from '../classes/APIError'
+import { websocket } from '../classes/WebSocket'
 
 export default class Decals extends API {
   @GET('/decals/check')

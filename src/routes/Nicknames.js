@@ -14,8 +14,8 @@ import API, {
   PUT,
   DELETE,
   parameters,
-  websocket
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 export default class Nicknames extends API {
   @GET('/nicknames/info/:nickname')

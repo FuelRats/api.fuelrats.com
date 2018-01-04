@@ -4,7 +4,6 @@ import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './API
 import yayson from 'yayson'
 import router from './Router'
 let config = require('../../config')
-import WebSocket from './WebSocket'
 
 /**
  * @class
@@ -44,18 +43,6 @@ export default class API {
     return yayson({
       adapter: 'sequelize'
     }).Presenter
-  }
-}
-
-/**
- * ESNext Decorator for routing this method for websocket requests
- * @param endpointName The endpoint name to route websocket requests for
- * @param methodName The method name to route websocket requests for
- * @returns {Function} An ESNext decorator function
- */
-export function websocket (endpointName, methodName) {
-  return function (target, name, descriptor) {
-    WebSocket.addRoute(endpointName, methodName, descriptor.value)
   }
 }
 

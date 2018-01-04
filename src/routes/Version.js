@@ -3,9 +3,9 @@ import gitrev from 'git-rev-promises'
 import { ObjectPresenter } from '../classes/Presenters'
 import packageInfo from '../../../package.json'
 import API, {
-  GET,
-  websocket
+  GET
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 export default class Version extends API {
   @GET('/version')

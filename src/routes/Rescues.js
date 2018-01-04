@@ -15,9 +15,9 @@ import API, {
   POST,
   PUT,
   DELETE,
-  parameters,
-  websocket
+  parameters
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 const RESCUE_ACCESS_TIME = 3600000
 

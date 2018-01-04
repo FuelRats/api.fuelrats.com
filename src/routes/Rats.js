@@ -13,9 +13,9 @@ import API, {
   POST,
   PUT,
   DELETE,
-  parameters,
-  websocket
+  parameters
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 export default class Rats extends API {
   @GET('/rats')

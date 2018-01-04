@@ -6,9 +6,9 @@ import SystemStatisticsQuery from '../query/SystemStatisticsQuery'
 import RatsStatisticsQuery from '../query/RatsStatisticsQuery'
 import { CustomPresenter } from '../classes/Presenters'
 import API, {
-  GET,
-  websocket
+  GET
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 
 export default class Statistics extends API {

@@ -2,9 +2,9 @@
 
 import { CustomPresenter, ObjectPresenter } from '../classes/Presenters'
 import API, {
-  authenticated,
-  websocket
+  authenticated
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 import { ConflictAPIError } from '../classes/APIError'
 
 export default class Stream extends API {

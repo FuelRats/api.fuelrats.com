@@ -24,9 +24,9 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required,
-  websocket
+  required
 } from '../classes/API'
+import { websocket } from '../classes/WebSocket'
 
 const BCRYPT_ROUNDS_COUNT = 12
 const PROFILE_IMAGE_MIN = 64
