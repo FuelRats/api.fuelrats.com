@@ -183,10 +183,6 @@ export let routes = [
 ]
 
 // OAUTH2
-router.get('/oauth2/authorize',
-  oauth2.authorizationValidateRedirect,
-  oauth2.authorizationRender
-)
 
 router.post('/oauth2/authorize',
   ...oauth2.server.decision())

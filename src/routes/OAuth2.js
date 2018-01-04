@@ -4,16 +4,18 @@ import oauth2orize from 'oauth2orize-koa-fr'
 import crypto from 'crypto'
 import { Token, Client, Code } from '../db'
 import Permission from '../classes/Permission'
-import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import {NotFoundAPIError, UnauthorizedAPIError, UnprocessableEntityAPIError} from '../classes/APIError'
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Clients from './Clients'
 import Authentication from '../classes/Authentication'
 import API, {
   clientAuthenticated,
+  authenticated,
   GET,
   POST,
-  required
+  required,
+  parameters
 } from '../classes/API'
 
 i18next.init({
@@ -133,6 +135,9 @@ export default class OAuth2 extends API {
   }
 
   @GET('/oauth2/authorize')
+  @authenticated
+  @parameters('scope', 'client_id', 'response_type')
+  @validateRedirectUri
   async authorizationRender (ctx, next) {
     let client = {}
     Object.assign(client, ctx.state.oauth2.client)
@@ -150,18 +155,35 @@ export default class OAuth2 extends API {
   }
 }
 
-OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId, redirectUri) {
-  let client = await Client.findById(clientId)
-  if (!client) {
-    return false
+/**
+ *
+ * @param target
+ * @param name
+ * @param descriptor
+ */
+export function validateRedirectUri (target, name, descriptor) {
+  let endpoint = descriptor.value
+
+  descriptor.value = async function (ctx) {
+    if (ctx.state.client) {
+      await server.authorize(async function (clientId, redirectUri) {
+        let client = await Client.findById(clientId)
+        if (!client) {
+          return false
+        }
+        if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
+          redirectUri = redirectUri || client.redirectUri
+          return [Clients.presenter.render(client, {}), redirectUri]
+        } else {
+          throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
+        }
+      })
+      return endpoint.apply(this, arguments)
+    } else {
+      throw new UnauthorizedAPIError({})
+    }
   }
-  if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
-    redirectUri = redirectUri || client.redirectUri
-    return [Clients.presenter.render(client, {}), redirectUri]
-  } else {
-    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
-  }
-})
+}
 
 /**
  * Check wether these scopes are valid scopes that represent a permission in the API
