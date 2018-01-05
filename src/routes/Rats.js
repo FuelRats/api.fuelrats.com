@@ -23,7 +23,7 @@ export default class Rats extends API {
   async search (ctx) {
     let ratsQuery = new RatQuery(ctx.query, ctx)
     let result = await Rat.findAndCountAll(ratsQuery.toSequelize)
-    return Rats.presenter.render(result.rows, ctx.meta(result, ratsQuery))
+    return Rats.presenter.render(result.rows, API.meta(result, ratsQuery))
   }
 
   @GET('/rats/:id')
@@ -33,7 +33,7 @@ export default class Rats extends API {
     let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
     let result = await Rat.findAndCountAll(ratQuery.toSequelize)
 
-    return Rats.presenter.render(result.rows, ctx.meta(result, ratQuery))
+    return Rats.presenter.render(result.rows, API.meta(result, ratQuery))
   }
 
   @POST('/rats')
@@ -49,7 +49,7 @@ export default class Rats extends API {
     let result = await Rat.create(ctx.data)
 
     ctx.response.status = 201
-    let renderedResult = Rats.presenter.render(result, ctx.meta(result))
+    let renderedResult = Rats.presenter.render(result, API.meta(result))
     process.emit('ratCreated', ctx, renderedResult)
     return renderedResult
   }
@@ -79,7 +79,7 @@ export default class Rats extends API {
 
     let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
     let result = await Rat.findAndCountAll(ratQuery.toSequelize)
-    let renderedResult = Rats.presenter.render(result.rows, ctx.meta(result, ratQuery))
+    let renderedResult = Rats.presenter.render(result.rows, API.meta(result, ratQuery))
     process.emit('ratUpdated', ctx, renderedResult)
     return renderedResult
   }

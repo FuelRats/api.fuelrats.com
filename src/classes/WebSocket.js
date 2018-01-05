@@ -8,6 +8,7 @@ import { URL } from 'url'
 import uid from 'uid-safe'
 import Authentication from './Authentication'
 import Permission from './Permission'
+import Meta from './Meta'
 
 const PRETTY_PRINT_SPACING = 2
 
@@ -118,7 +119,8 @@ export default class WebSocket {
     })
 
     let [endpointName, methodName] = request.action || []
-    let result = await WebSocket.getRoute(endpointName, methodName)(ctx)
+    let route = WebSocket.getRoute(endpointName, methodName)
+    let result = await route(ctx)
 
     return { result:  result, meta: meta }
   }
@@ -190,40 +192,14 @@ export class Context {
 
     this.query = {}
     Object.assign(this.query, request)
-    Object.assign(new Meta(), this.query)
+    this.meta = new Meta()
+    Object.assign(this.meta, this.query)
     this.data = request.data
 
     delete this.query.data
     delete this.query.meta
     delete this.query.action
     this.params = this.query
-  }
-}
-
-export class Meta {
-  constructor (result, query = null, additionalParameters = {}) {
-    let meta = {
-      meta: {}
-    }
-    if (query) {
-      if (Array.isArray(result)) {
-        meta.meta = {
-          count: result.length,
-          limit: query._limit || 0,
-          offset: query._offset || 0,
-        }
-      } else {
-        meta.meta = {
-          count: result.rows.length,
-          limit: query._limit || 0,
-          offset: query._offset || 0,
-          total: result.count
-        }
-      }
-    }
-
-    meta.meta = Object.assign(meta.meta, additionalParameters)
-    return meta
   }
 }
 

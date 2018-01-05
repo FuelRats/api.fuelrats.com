@@ -18,7 +18,7 @@ export default class Statistics extends API {
     let rescuesQuery = new RescueStatisticsQuery(ctx.query, ctx)
     let result = await Rescue.scope(null).findAll(rescuesQuery.toSequelize)
     let results = result.map((result) => { return result.toJSON() })
-    return RescueStatisticsPresenter.render(results, ctx.meta(result, rescuesQuery))
+    return RescueStatisticsPresenter.render(results, API.meta(result, rescuesQuery))
   }
 
   @GET('/statistics/systems')
@@ -27,7 +27,7 @@ export default class Statistics extends API {
     let systemQuery = new SystemStatisticsQuery(ctx.query, ctx)
     let result = await Rescue.scope(null).findAll(systemQuery.toSequelize)
     let results = result.map((result) => { return result.toJSON() })
-    return SystemStatisticsPresenter.render(results, ctx.meta(result, systemQuery))
+    return SystemStatisticsPresenter.render(results, API.meta(result, systemQuery))
   }
 
   @GET('/statistics/rats')
@@ -35,7 +35,7 @@ export default class Statistics extends API {
   async rats (ctx) {
     let ratsQuery = new RatsStatisticsQuery(ctx.query, ctx)
     let result = await Rat.scope('stats').findAll(ratsQuery.toSequelize)
-    return RatStatisticsPresenter.render(result, ctx.meta(result, ratsQuery))
+    return RatStatisticsPresenter.render(result, API.meta(result, ratsQuery))
   }
 }
 

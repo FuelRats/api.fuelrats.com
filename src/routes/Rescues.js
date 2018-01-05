@@ -33,7 +33,7 @@ export default class Rescues extends API {
   async search (ctx) {
     let rescueQuery = new RescueQuery(ctx.query, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    return Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
   }
 
   @GET('/rescues/:id')
@@ -44,7 +44,7 @@ export default class Rescues extends API {
   async findById (ctx) {
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    return Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
   }
 
   @POST('/rescues')
@@ -55,7 +55,7 @@ export default class Rescues extends API {
     let result = await Rescue.scope('rescue').create(ctx.data)
 
     ctx.response.status = 201
-    let rescue = Rescues.presenter.render(result, ctx.meta(result))
+    let rescue = Rescues.presenter.render(result, API.meta(result))
     process.emit('rescueCreated', ctx, rescue)
     return rescue
   }
@@ -85,7 +85,7 @@ export default class Rescues extends API {
 
     let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
     return renderedResult
   }
@@ -143,7 +143,7 @@ export default class Rescues extends API {
 
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
     return renderedResult
   }
@@ -176,7 +176,7 @@ export default class Rescues extends API {
 
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
     return renderedResult
   }
@@ -211,7 +211,7 @@ export default class Rescues extends API {
 
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, ctx.meta(result, rescueQuery))
+    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
     return renderedResult
   }

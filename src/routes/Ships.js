@@ -20,7 +20,7 @@ export default class Ships extends API {
   async search (ctx) {
     let shipsQuery = new ShipQuery(ctx.query, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
-    return Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
+    return Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
   }
 
   @GET('/ships/:id')
@@ -30,7 +30,7 @@ export default class Ships extends API {
     let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
 
-    return Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
+    return Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
   }
 
   @POST('/ships')
@@ -44,7 +44,7 @@ export default class Ships extends API {
     let result = await Ship.create(ctx.data)
 
     ctx.response.status = 201
-    let renderedResult = Ships.presenter.render(result, ctx.meta(result))
+    let renderedResult = Ships.presenter.render(result, API.meta(result))
     process.emit('shipCreated', ctx, renderedResult)
     return renderedResult
   }
@@ -77,7 +77,7 @@ export default class Ships extends API {
     let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
 
-    let renderedResult = Ships.presenter.render(result.rows, ctx.meta(result, shipsQuery))
+    let renderedResult = Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
     process.emit('shipUpdated', ctx, renderedResult)
     return renderedResult
   }

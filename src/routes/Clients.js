@@ -28,7 +28,7 @@ export default class Clients extends API {
   async search (ctx) {
     let clientQuery = new ClientQuery(ctx.query, ctx)
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
-    return Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
+    return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
   }
 
   @GET('/clients/:id')
@@ -41,7 +41,7 @@ export default class Clients extends API {
 
     this.requireWritePermission(ctx, result)
 
-    return Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
+    return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
   }
 
   @POST('/clients')
@@ -60,7 +60,7 @@ export default class Clients extends API {
     result.secret = secret
 
     ctx.response.status = 201
-    let renderedResult = Clients.presenter.render(result, ctx.meta(result))
+    let renderedResult = Clients.presenter.render(result, API.meta(result))
     process.emit('clientCreated', ctx, renderedResult)
     return renderedResult
   }
@@ -92,7 +92,7 @@ export default class Clients extends API {
 
     let clientQuery = new ClientQuery({id: ctx.params.id}, ctx)
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
-    let renderedResult = Clients.presenter.render(result.rows, ctx.meta(result, clientQuery))
+    let renderedResult = Clients.presenter.render(result.rows, API.meta(result, clientQuery))
     process.emit('clientUpdated', ctx, renderedResult)
     return renderedResult
   }

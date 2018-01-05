@@ -3,6 +3,7 @@ import Permission from './Permission'
 import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './APIError'
 import yayson from 'yayson'
 import router from './Router'
+import Meta from './Meta'
 let config = require('../../config')
 
 /**
@@ -43,6 +44,10 @@ export default class API {
     return yayson({
       adapter: 'sequelize'
     }).Presenter
+  }
+
+  static meta (result, query = null, additionalParameters = {}) {
+    return new Meta(result, query, additionalParameters)
   }
 }
 

@@ -40,7 +40,7 @@ export default class Users extends API {
   async search (ctx) {
     let userQuery = new UserQuery(ctx.query, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
+    return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   @GET('/users/:id')
@@ -52,7 +52,7 @@ export default class Users extends API {
     let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
 
-    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
+    return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   async image (ctx, next) {
@@ -71,7 +71,7 @@ export default class Users extends API {
     let result = await User.create(ctx.data)
     ctx.response.status = 201
 
-    return Users.presenter.render(result, ctx.meta(result))
+    return Users.presenter.render(result, API.meta(result))
   }
 
   @PUT('/users/:id')
@@ -101,7 +101,7 @@ export default class Users extends API {
 
     let userQuery = new UserQuery({id: ctx.params.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
+    return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   @POST('/users/image/:id')
@@ -131,7 +131,7 @@ export default class Users extends API {
 
     let userQuery = new UserQuery({id: ctx.params.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
+    return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   @PUT('/users/setpassword')
@@ -159,7 +159,7 @@ export default class Users extends API {
 
     let userQuery = new UserQuery({id: ctx.state.user.data.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, ctx.meta(result, userQuery))
+    return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   @DELETE('/users/:id')

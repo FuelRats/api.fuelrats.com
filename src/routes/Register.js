@@ -93,7 +93,7 @@ export default class Register extends API {
       await HostServ.update(user[0])
       process.emit('registration', ctx, ctx.data)
 
-      ctx.body = Users.presenter.render(result.rows, ctx.meta(result, userQuery))
+      ctx.body = Users.presenter.render(result.rows, API.meta(result, userQuery))
     } catch (ex) {
       transaction.rollback()
       throw ex
