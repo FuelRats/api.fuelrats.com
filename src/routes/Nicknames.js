@@ -3,7 +3,7 @@ import Permission from '../classes/Permission'
 import { User, db } from '../db'
 import NicknameQuery from '../query/NicknameQuery'
 import { CustomPresenter} from '../classes/Presenters'
-import { UnprocessableEntityAPIError, NotFoundAPIError, ConflictAPIError } from '../classes/APIError'
+import { NotFoundAPIError, ConflictAPIError, ForbiddenAPIError } from '../classes/APIError'
 
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
@@ -36,7 +36,7 @@ export default class Nicknames extends API {
   @authenticated
   async register (ctx) {
     if (Permission.isAdmin(ctx.state.user)) {
-      throw new UnprocessableEntityAPIError({})
+      throw new ForbiddenAPIError({})
     }
 
     let { nicknames } = ctx.state.user.data.attributes
