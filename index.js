@@ -384,7 +384,7 @@ function clean (...cleanFields) {
   return function (ctx, next) {
     if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
       cleanFields.map((cleanField) => {
-        ctx.data[cleanField] = undefined
+        delete ctx.data[cleanField]
       })
     }
     return next()
