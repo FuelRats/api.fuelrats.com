@@ -170,7 +170,7 @@ export function parameters (...fields) {
 
     descriptor.value = function (ctx) {
       let missingFields = fields.filter((requiredField) => {
-        return ctx.query.hasOwnProperty(requiredField) === false
+        return ctx.params.hasOwnProperty(requiredField) === false
       })
       if (missingFields.length > 0) {
         throw missingFields.map((field) => {

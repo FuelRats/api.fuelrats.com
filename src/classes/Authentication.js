@@ -88,8 +88,8 @@ export default class Authentication {
         throw new GoneAPIError({})
       }
 
-      if (bcrypt.getRounds(client.secret) > GLOBAL.BCRYPT_ROUNDS_COUNT) {
-        let newRoundSecret = await bcrypt.hash(secret, GLOBAL.BCRYPT_ROUNDS_COUNT)
+      if (bcrypt.getRounds(client.secret) > global.BCRYPT_ROUNDS_COUNT) {
+        let newRoundSecret = await bcrypt.hash(secret, global.BCRYPT_ROUNDS_COUNT)
         Client.update({
           secret: newRoundSecret
         }, {
