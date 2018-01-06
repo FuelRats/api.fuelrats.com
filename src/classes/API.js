@@ -103,7 +103,7 @@ export function authenticated (target, name, descriptor) {
 
   descriptor.value = function (ctx) {
     if (ctx.state.user) {
-      return endpoint.apply(this, arguments)
+      return endpoint.apply(target, arguments)
     } else {
       throw new UnauthorizedAPIError({})
     }
@@ -218,10 +218,10 @@ export function disallow (...fields) {
     descriptor.value = function (ctx) {
       if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
         fields.map((cleanField) => {
-          ctx.data[cleanField] = undefined
+          delete ctx.data[cleanField]
         })
       }
-      return endpoint.apply(this, arguments)
+      return endpoint.apply(target, arguments)
     }
   }
 }
