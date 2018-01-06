@@ -122,14 +122,22 @@ app.use(async (ctx, next) => {
       ctx.body = result
     }
   } catch (ex) {
-    let error = ex
-
-    if ((error instanceof APIError) === false) {
-      error = new InternalServerError({})
+    let errors = ex
+    if (Array.isArray(ex) === false) {
+      errors = [errors]
     }
-    ctx.status = error.code
+
+    errors = errors.map(error => {
+      if ((error instanceof APIError) === false) {
+        return new InternalServerError({})
+      }
+      return error
+    })
+
+
+    ctx.status = errors[0].code
     ctx.body = {
-      errors: [error]
+      errors
     }
   }
 }) 
