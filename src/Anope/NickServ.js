@@ -1,6 +1,5 @@
 
 import Anope from './index'
-import AnopeWebhook from '../routes/AnopeWebhook'
 import { BadRequestAPIError, UnauthorizedAPIError } from '../classes/APIError'
 
 const NICKNAME_PARSE_PADDING = 2
@@ -31,7 +30,6 @@ class NickServ {
    * @returns {Promise.<*>}
    */
   static async register (nickname, password, email) {
-    AnopeWebhook.cacheRequest('ns_register', nickname)
     let result = await Anope.command('NickServ', nickname, `REGISTER ${password} ${email}`)
     if (result && /Nickname [A-Za-z0-9_\-[\]{}`]* registered./.test(result.return) === true) {
       return nickname
@@ -48,7 +46,6 @@ class NickServ {
    * @returns {Promise.<*>}
    */
   static async group (nickname, account, password) {
-    AnopeWebhook.cacheRequest('ns_group', nickname, account)
     let result = await Anope.command('NickServ', nickname, `GROUP ${account} ${password}`)
     if (result && /You are now in the group of/.test(result.return) === true) {
       return nickname
@@ -85,7 +82,6 @@ class NickServ {
    * @returns {Promise.<*>}
    */
   static async drop (nickname) {
-    AnopeWebhook.cacheRequest('ns_drop', nickname)
     let result = await Anope.command('NickServ', 'API', `DROP ${nickname}`)
     if (result.return.includes('has been dropped')) {
       return nickname
