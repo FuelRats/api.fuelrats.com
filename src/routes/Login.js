@@ -1,6 +1,7 @@
 import Authentication from '../classes/Authentication'
 import { UnauthorizedAPIError } from '../classes/APIError'
 import API, {
+  GET,
   POST,
   required
 } from '../classes/API'
@@ -22,5 +23,15 @@ export default class Login extends API {
       ctx.redirect(redirectUrl)
     }
     return user
+  }
+
+  @GET('/logout')
+  logout (ctx) {
+    if (!ctx.state.user) {
+      throw new UnauthorizedAPIError({})
+    }
+
+    ctx.session.userId = null
+    return null
   }
 }

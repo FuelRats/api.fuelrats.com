@@ -9,7 +9,7 @@ import API, {
   permissions,
   required
 } from '../classes/API'
-import websocket from '../classes/WebSocket'
+import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
 import Query from '../query'
 import {NotFoundAPIError} from '../classes/APIError'
