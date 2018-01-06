@@ -1,5 +1,7 @@
 import logger from '../loggly/logger'
 import {
+  APIError,
+  InternalServerError,
   NotFoundAPIError
 } from './APIError'
 import ws from 'ws'
@@ -102,7 +104,11 @@ export default class WebSocket {
       Object.assign(result.meta, meta)
       this.send(client, result)
     } catch (ex) {
-      this.send(client, ex)
+      let error = ex
+      if ((error instanceof APIError) === false) {
+        error = new InternalServerError({})
+      }
+      this.send(client, error)
     }
   }
 
