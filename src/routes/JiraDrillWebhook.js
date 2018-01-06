@@ -29,13 +29,15 @@ export default class JiraDrillWebhook extends API {
 
     let email = fields[emailAddressField]
     if (!email) {
-      BotServ.say('#doersofstuff', '[API] Unable to update drilled status or IRC permissions. Email was not provided')
+      BotServ.say(global.OVERSEER_CHANNEL,
+        '[API] Unable to update drilled status or IRC permissions. Email was not provided')
       throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${emailAddressField}` })
     }
 
     let cmdrName = fields[CMDRnameField]
     if (!cmdrName) {
-      BotServ.say('#doersofstuff', '[API] Unable to update IRC permissions. CMDR name was not provided')
+      BotServ.say(global.OVERSEER_CHANNEL,
+        '[API] Unable to update IRC permissions. CMDR name was not provided')
       throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${CMDRnameField}` })
     }
 
@@ -64,7 +66,7 @@ export default class JiraDrillWebhook extends API {
     }
 
     if (!user) {
-      BotServ.say('#doersofstuff',
+      BotServ.say(global.OVERSEER_CHANNEL,
         'Unable to update drilled status or IRC permissions, could not find user by either CMDR name or email')
       throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${CMDRnameField}` })
     }
@@ -80,7 +82,8 @@ export default class JiraDrillWebhook extends API {
     await HostServ.update(userResponse)
 
     let displayRat = User.preferredRat(userResponse)
-    BotServ.say('#doersofstuff', `[API] Drilled status and IRC permissions updated for ${displayRat.attributes.name} (user ${user.id})`)
+    BotServ.say(global.OVERSEER_CHANNEL,
+      `[API] Drilled status and IRC permissions updated for ${displayRat.attributes.name} (user ${user.id})`)
     return userResponse
   }
 }

@@ -260,7 +260,7 @@ process.on('rescueCreated', (ctx, rescue) => {
     return
   }
   if (rescue.system.includes('NLTT 48288') || rescue.system.includes('MCC 811')) {
-    BotServ.say('#ratchat', 'DRINK!')
+    BotServ.say(global.PAPERWORK_CHANNEL, 'DRINK!')
   }
 })
 
@@ -277,7 +277,7 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
     if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
       author = ctx.req.headers['x-command-by']
     }
-    BotServ.say('#ratchat',
+    BotServ.say(global.PAPERWORK_CHANNEL,
       `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
   }
 })
