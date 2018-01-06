@@ -16,6 +16,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
   constructor (params, connection) {
     super(params, connection)
     this._query.raw = true
+    this._query.subQuery = false
 
     this._query.include = [
       {
@@ -35,11 +36,11 @@ class RatsStatisticsQuery extends StatisticsQuery {
         include: [{
           model: Rat,
           as: 'displayRat',
-          duplicating: false,
           attributes: [
             'id',
             'name'
-          ]
+          ],
+          include: []
         }],
         required: false,
         duplicating: false,

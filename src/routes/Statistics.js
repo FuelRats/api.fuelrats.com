@@ -34,7 +34,7 @@ export default class Statistics extends API {
   @websocket('statistics', 'rats')
   async rats (ctx) {
     let ratsQuery = new RatsStatisticsQuery(ctx.query, ctx)
-    let result = await Rat.scope('stats').findAll(ratsQuery.toSequelize)
+    let result = await Rat.scope(null).findAll(ratsQuery.toSequelize)
     return RatStatisticsPresenter.render(result, API.meta(result, ratsQuery))
   }
 }
