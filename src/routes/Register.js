@@ -34,7 +34,7 @@ export default class Register extends API {
     //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
     // }
 
-    let { email, name, nickname, password, IRCpassword } = ctx.data
+    let { email, name, nickname, password, ircPassword } = ctx.data
 
     let existingUser = await User.findOne({
       where: {
@@ -80,10 +80,10 @@ export default class Register extends API {
 
       nickname = nickname.replace(/\[.*]/i, '')
 
-      if (!IRCpassword) {
-        IRCpassword = password
+      if (!ircPassword) {
+        ircPassword = password
       }
-      await NickServ.register(nickname, IRCpassword, email)
+      await NickServ.register(nickname, ircPassword, email)
 
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
         where: { id: user.id }
