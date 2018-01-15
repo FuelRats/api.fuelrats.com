@@ -13,7 +13,8 @@ import API, {
   POST,
   PUT,
   DELETE,
-  parameters
+  parameters,
+  protect
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 
@@ -58,6 +59,7 @@ export default class Rats extends API {
   @websocket('rats', 'update')
   @authenticated
   @parameters('id')
+  @protect('rat.write', 'platform')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
