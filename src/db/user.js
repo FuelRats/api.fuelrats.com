@@ -71,6 +71,14 @@ module.exports = function (db, DataTypes) {
     return user.data.attributes.suspended - Date.now() > 0
   }
 
+  user.prototype.isDeactivated = function () {
+    return this.status === 'deactivated'
+  }
+
+  user.isDeactivated = function (user) {
+    return user.data.attributes.status === 'deactivated'
+  }
+
   user.prototype.isConfirmed = function () {
     return this.groups.length > 0
   }

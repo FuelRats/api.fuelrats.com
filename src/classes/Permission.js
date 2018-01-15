@@ -75,7 +75,7 @@ export default class Permission {
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
   static granted (permissions, origUser, scope = null) {
-    if (!origUser || User.isSuspended(origUser) || !User.isConfirmed(origUser)) {
+    if (!origUser || User.isDecativated(origUser) || User.isSuspended(origUser) || !User.isConfirmed(origUser)) {
       return false
     }
 
