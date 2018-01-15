@@ -1,6 +1,7 @@
-
+import bcrypt from 'bcrypt'
 
 const PASSWORD_MAX_LENGTH = 1024
+
 
 module.exports = function (db, DataTypes) {
   let user = db.define('User', {
@@ -58,6 +59,18 @@ module.exports = function (db, DataTypes) {
   }, {
     paranoid: true
   })
+
+  let hashPasswordHook = async function (instance, done) {
+    if (!instance.changed('password')) {
+      done()
+      return
+    }
+    let hash = await bcrypt.hash(instance.get('password'), global.BCRYPT_ROUNDS_COUNT)
+    instance.set('password', hash)
+    done()
+  }
+  user.beforeCreate(hashPasswordHook)
+  user.beforeUpdate(hashPasswordHook)
 
   user.prototype.toJSON = function () {
     let values = this.get()

@@ -141,9 +141,8 @@ export default class Resets extends API {
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 
-    let newPassword = await bcrypt.hash(ctx.data.password, global.BCRYPT_ROUNDS_COUNT)
     await User.update({
-      password: newPassword
+      password: ctx.data.password
     }, {
       where: { id: reset.userId }
     })

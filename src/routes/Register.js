@@ -1,8 +1,4 @@
-
-const BCRYPT_ENCRYPTION_ROUNDS = 12
-
 import { User, Rat, db} from '../db'
-import bcrypt from 'bcrypt'
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
 import BotServ from '../Anope/BotServ'
@@ -52,11 +48,10 @@ export default class Register extends API {
     let transaction = await db.transaction()
 
     try {
-      let encryptedPassword = await bcrypt.hash(password, BCRYPT_ENCRYPTION_ROUNDS)
 
       let user = await User.create({
         email: email,
-        password: encryptedPassword
+        password: password
       }, {
         transaction: transaction
       })

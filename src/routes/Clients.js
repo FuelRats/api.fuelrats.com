@@ -1,6 +1,5 @@
 import { Client } from '../db'
 import crypto from 'crypto'
-import bcrypt from 'bcrypt'
 import ClientQuery from '../query/ClientQuery'
 import Users from './Users'
 import { NotFoundAPIError } from '../classes/APIError'
@@ -18,7 +17,6 @@ import API, {
 import { websocket } from '../classes/WebSocket'
 
 const CLIENT_SECRET_LENGTH = 32
-const BCRYPT_ROUNDS_COUNT = 12
 
 export default class Clients extends API {
   @GET('/clients')
@@ -52,7 +50,7 @@ export default class Clients extends API {
   async create (ctx) {
     this.requireWritePermission(ctx, ctx.data)
     let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
-    ctx.data.secret = await bcrypt.hash(secret, BCRYPT_ROUNDS_COUNT)
+    ctx.data.secret = secret
     if (!ctx.data.userId) {
       ctx.data.userId = ctx.state.user.data.id
     }

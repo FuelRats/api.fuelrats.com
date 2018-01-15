@@ -29,7 +29,6 @@ import API, {
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 
-const BCRYPT_ROUNDS_COUNT = 12
 const PROFILE_IMAGE_MIN = 64
 const PROFILE_IMAGE_MAX = 100
 
@@ -153,9 +152,8 @@ export default class Users extends API {
       throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
     }
 
-    let newPassword = await bcrypt.hash(ctx.data.new, BCRYPT_ROUNDS_COUNT)
     await User.update({
-      password: newPassword
+      password: ctx.data.new
     }, {
       where: { id: user.id }
     })
