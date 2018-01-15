@@ -204,6 +204,14 @@ export default class Users extends API {
   }
 
   getWritePermissionForEntity (ctx, entity) {
+    if (entity.displayRatId) {
+      let rat = ctx.state.user.included.find((include) => {
+        return include.id === entity.displayRatId
+      })
+      if (!rat) {
+        return ['user.write']
+      }
+    }
     if (entity.id === ctx.state.user.data.id) {
       return ['user.write.me', 'user.write']
     }
