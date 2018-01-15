@@ -25,7 +25,11 @@ module.exports = function (db, DataTypes) {
     nicknames: {
       type: DataTypes.ARRAY(DataTypes.TEXT),
       allowNull: true,
-      defaultValue: []
+      defaultValue: [],
+      set (value) {
+        value = value.map(nickname => nickname.toLowerCase())
+        this.setDataValue('nicknames', value)
+      }
     },
     image: {
       type: DataTypes.BLOB(),
