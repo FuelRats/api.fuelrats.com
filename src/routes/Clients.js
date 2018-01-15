@@ -69,7 +69,6 @@ export default class Clients extends API {
   @websocket('clients', 'update')
   @authenticated
   @parameters('id')
-  @disallow('secret')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
     let client = await Client.findOne({
