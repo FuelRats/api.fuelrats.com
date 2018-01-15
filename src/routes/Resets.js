@@ -10,9 +10,10 @@ import API, {
   GET,
   POST,
   parameters,
-  required
+  required, permissions
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import Users from './Users'
 
 const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000
@@ -71,6 +72,41 @@ export default class Resets extends API {
     ctx.body = 'OK'
 
     next()
+  }
+
+  @GET('/reset/generate/:email')
+  @websocket('resets', 'generate')
+  @parameters('email')
+  @permissions('user.write')
+  async generateReset (ctx) {
+    let user = await User.findOne({
+      where: {
+        email: { $iLike: ctx.data.email }
+      }
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ pointer: '/data/attributes/email' })
+    }
+
+    let resets = await Reset.findAll({
+      where: {
+        userId: user.id
+      }
+    })
+
+    resets.map((reset) => {
+      reset.destroy()
+    })
+
+    let reset = await Reset.create({
+      value: crypto.randomBytes(RESET_TOKEN_LENGTH).toString('hex'),
+      expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
+      userId: user.id
+    })
+
+    ctx.response.status = 201
+    return Resets.presenter.render(reset, API.meta(reset))
   }
 
   @GET('/reset/:token')
@@ -135,5 +171,17 @@ export default class Resets extends API {
 
   static getResetLink (resetToken) {
     return `https://fuelrats.com/password-reset?t=${resetToken}`
+  }
+
+  static get presenter () {
+    class ResetsPresenter extends API.presenter {
+      relationships () {
+        return {
+          users: Users.presenter
+        }
+      }
+    }
+    ResetsPresenter.prototype.type = 'resets'
+    return ResetsPresenter
   }
 }
