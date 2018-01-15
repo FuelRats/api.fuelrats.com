@@ -33,7 +33,7 @@ module.exports = function (db, DataTypes) {
       defaultValue: null
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive', 'legacy'),
+      type: DataTypes.ENUM('active', 'inactive', 'legacy', 'deactivated'),
       allowNull: false,
       defaultValue: 'unconfirmed'
     },
