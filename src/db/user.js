@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 
 const PASSWORD_MAX_LENGTH = 1024
+const NICKNAME_MAX_LENGTH = 30
 
 
 module.exports = function (db, DataTypes) {
@@ -24,7 +25,7 @@ module.exports = function (db, DataTypes) {
       allowNull: false
     },
     nicknames: {
-      type: DataTypes.ARRAY(DataTypes.TEXT),
+      type: DataTypes.ARRAY(DataTypes.STRING(NICKNAME_MAX_LENGTH)),
       allowNull: true,
       defaultValue: [],
       set (value) {
