@@ -10,7 +10,8 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required
+  required,
+  protect
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 
@@ -37,7 +38,7 @@ export default class Ships extends API {
   @websocket('ships', 'create')
   @authenticated
   @required('name', 'shipType', 'ratId')
-  @disallow('shipId')
+  @protect('ship.write', 'shipId')
   async create (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
@@ -52,7 +53,7 @@ export default class Ships extends API {
   @PUT('/ships')
   @websocket('ships', 'update')
   @authenticated
-  @disallow('shipId')
+  @protect('ship.write', 'shipId')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
 
