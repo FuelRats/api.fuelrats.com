@@ -27,8 +27,8 @@ export default class Authentication {
         throw new GoneAPIError({ pointer: '/data/attributes/email' })
       }
 
-      if (bcrypt.getRounds(user.password) > GLOBAL.BCRYPT_ROUNDS_COUNT) {
-        let newRoundPassword = await bcrypt.hash(password, GLOBAL.BCRYPT_ROUNDS_COUNT)
+      if (bcrypt.getRounds(user.password) > global.BCRYPT_ROUNDS_COUNT) {
+        let newRoundPassword = await bcrypt.hash(password, global.BCRYPT_ROUNDS_COUNT)
         User.update({
           password: newRoundPassword
         }, {
@@ -47,14 +47,6 @@ export default class Authentication {
     }
     let userInstance = await User.scope('internal').findOne({
       where: { id: token.userId },
-      attributes: {
-        include: [
-          [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
-        ],
-        exclude: [
-          'nicknames'
-        ]
-      },
       include: [
         {
           model: Rat,

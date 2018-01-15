@@ -39,6 +39,8 @@ export default class Nicknames extends API {
       throw new ForbiddenAPIError({})
     }
 
+    ctx.data.nickname = ctx.data.nickname.toLowerCase()
+
     let { nicknames } = ctx.state.user.data.attributes
     if (nicknames.includes(ctx.data.nickname)) {
       throw new ConflictAPIError({ pointer: '/data/attributes/nickname' })
@@ -65,6 +67,7 @@ export default class Nicknames extends API {
   @websocket('nicknames', 'connect')
   @authenticated
   async connect (ctx) {
+    ctx.data.nickname = ctx.data.nickname.toLowerCase()
     let { nicknames } = ctx.state.user.data.attributes
     if (nicknames.includes(ctx.data.nickname)) {
       throw new ConflictAPIError({ pointer: '/data/attributes/nickname' })
@@ -100,6 +103,7 @@ export default class Nicknames extends API {
   @authenticated
   @parameters('nickname')
   async delete (ctx) {
+    ctx.params.nickname = ctx.params.nickname.toLowerCase()
     if (ctx.state.user.data.attributes.nicknames.includes(ctx.params.nickname) ||
       Permission.require(['nickname.delete'], ctx.state.user, ctx.state.scope)) {
       await NickServ.drop(ctx.params.nickname)
