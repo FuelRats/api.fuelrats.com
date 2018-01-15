@@ -55,7 +55,7 @@ export default class Nicknames extends API {
 
     let updatedNicknames = await NickServ.list(ctx.data.nickname)
 
-    await User.update({ nicknames: db.cast(updatedNicknames, 'citext[]') }, {
+    await User.update({ updatedNicknames }, {
       where: { id: ctx.state.user.data.id }
     })
 
@@ -80,7 +80,7 @@ export default class Nicknames extends API {
 
     let updatedNicknames = await NickServ.list(ctx.data.nickname)
 
-    await User.update({ nicknames: db.cast(updatedNicknames, 'citext[]') }, {
+    await User.update({ nicknames: updatedNicknames }, {
       where: { id: ctx.state.user.data.id }
     })
 
