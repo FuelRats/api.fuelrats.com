@@ -24,7 +24,8 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required
+  required,
+  protect
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 
@@ -66,6 +67,7 @@ export default class Users extends API {
   @websocket('users', 'create')
   @authenticated
   @permissions('user.create')
+  @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async create (ctx) {
     let result = await User.create(ctx.data)
@@ -77,6 +79,7 @@ export default class Users extends API {
   @PUT('/users/:id')
   @websocket('users', 'update')
   @authenticated
+  @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async update (ctx) {
     this.requireWritePermission(ctx, ctx.data)
