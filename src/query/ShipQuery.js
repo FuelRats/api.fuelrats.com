@@ -13,12 +13,6 @@ class ShipQuery extends Query {
    */
   constructor (params, connection) {
     super(params, connection)
-
-    this._query.attributes = {
-      exclude: [
-        'deletedAt'
-      ]
-    }
   }
 }
 

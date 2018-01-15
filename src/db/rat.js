@@ -34,12 +34,7 @@ module.exports = function (sequelize, DataTypes) {
     models.Rat.addScope('defaultScope', {
       include: [{
         model: models.Ship,
-        as: 'ships',
-        attributes: {
-          exclude: [
-            'deletedAt'
-          ]
-        }
+        as: 'ships'
       }]
     }, { override: true })
 

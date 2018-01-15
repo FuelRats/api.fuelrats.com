@@ -23,6 +23,12 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
+  client.prototype.toJSON = function () {
+    let values = this.get()
+    delete values.secret
+    return values
+  }
+
   client.associate = function (models) {
     models.Client.belongsTo(models.User, { as: 'user' })
 

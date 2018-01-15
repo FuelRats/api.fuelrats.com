@@ -17,12 +17,6 @@ class RescueQuery extends Query {
 
     this._query.distinct = true
 
-    this._query.attributes = {
-      exclude: [
-        'deletedAt'
-      ]
-    }
-
     let rats = {}
     if (this._params.rats) {
       rats = this.subQuery(this._params.rats)

@@ -23,9 +23,9 @@ module.exports = function (db, DataTypes) {
       allowNull: false
     },
     nicknames: {
-      type: 'citext[]',
+      type: DataTypes.ARRAY(DataTypes.TEXT),
       allowNull: true,
-      defaultValue: db.literal('ARRAY[]::citext[]')
+      defaultValue: []
     },
     image: {
       type: DataTypes.BLOB(),
@@ -54,6 +54,12 @@ module.exports = function (db, DataTypes) {
   }, {
     paranoid: true
   })
+
+  user.prototype.toJSON = function () {
+    let values = this.get()
+    delete values.password
+    return values
+  }
 
   user.prototype.isSuspended = function () {
     if (!this.suspended) {
@@ -121,15 +127,9 @@ module.exports = function (db, DataTypes) {
 
     models.User.addScope('public', {
       attributes: {
-        include: [
-          [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']
-        ],
         exclude: [
           'image',
-          'nicknames',
-          'password',
           'suspended',
-          'deletedAt',
           'permissions'
         ]
       },
@@ -172,13 +172,8 @@ module.exports = function (db, DataTypes) {
     })
     models.User.addScope('internal', {
       attributes: {
-        include: [
-          [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']
-        ],
         exclude: [
-          'nicknames',
           'image',
-          'deletedAt',
           'permissions'
         ]
       },
@@ -221,10 +216,8 @@ module.exports = function (db, DataTypes) {
       attributes: {
         include: [
           'permissions',
-          [models.db.cast(models.db.col('nicknames'), 'text[]'), 'nicknames']
         ],
         exclude: [
-          'nicknames',
           'password',
           'deletedAt',
           'image'
@@ -274,11 +267,6 @@ module.exports = function (db, DataTypes) {
           required: false,
           through: {
             attributes: []
-          },
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
           },
           order: [
             ['priority', 'DESC']
