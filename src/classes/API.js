@@ -226,3 +226,29 @@ export function disallow (...fields) {
   }
 }
 
+/**
+ * Protect a set of fields in an endpoint with a specific permission
+ * @param permission the permission to require
+ * @param fields the fields to require this permission for
+ * @returns {Function} A decorator function
+ */
+export function protect (permission, ...fields) {
+  return function (target, name, descriptor) {
+    let endpoint = descriptor.value
+
+    descriptor.value = function (ctx) {
+      if (ctx.data) {
+        fields.map(field => {
+          if (!ctx.data[field]) {
+            return
+          }
+
+          if (!Permission.Permission.granted(permissions, ctx.state.user, ctx.state.scope)) {
+            throw new ForbiddenAPIError({})
+          }
+        })
+      }
+      return endpoint.apply(target, arguments)
+    }
+  }
+}
