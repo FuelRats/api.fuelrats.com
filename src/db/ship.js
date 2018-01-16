@@ -49,7 +49,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.CHAR(MAX_INGAME_SHIP_NAME_LENGTH),
       allowNull: false,
       validate: {
-        is: /^[\p{L}0-9 ]{3,22}$/u
+        is: /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]{3,22}$/u
       }
     },
     shipId:  {
