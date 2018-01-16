@@ -1,4 +1,4 @@
-Copyright 2017 The Fuel Rats Mischief
+Copyright 2018 The Fuel Rats Mischief
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
