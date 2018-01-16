@@ -38,7 +38,6 @@ export default class Nicknames extends API {
     if (Permission.isAdmin(ctx.state.user)) {
       throw new ForbiddenAPIError({})
     }
-
     ctx.data.nickname = ctx.data.nickname.toLowerCase()
 
     let { nicknames } = ctx.state.user.data.attributes
@@ -93,7 +92,7 @@ export default class Nicknames extends API {
   @websocket('nicknames', 'refresh')
   @authenticated
   async refresh (ctx) {
-    let updatedNicknames = await NickServ.list(ctx.data.nickname)
+    let updatedNicknames = await NickServ.list(ctx.state.user.data.attributes.nicknames[0])
 
     await User.update({ nicknames: updatedNicknames }, {
       where: { id: ctx.state.user.data.id }
