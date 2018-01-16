@@ -75,7 +75,7 @@ export class ForbiddenAPIError extends APIError {
   }
 }
 
-export class ResetRequiredAPIError extends ForbiddenAPIError {
+export class ResetRequiredAPIError extends APIError {
   constructor (source) {
     super('resetrequired', source)
   }
