@@ -1,7 +1,7 @@
 
-import { User, Rat, db, Token, Client } from '../db/index'
+import { User, Rat, Token, Client, Reset } from '../db/index'
 import bcrypt from 'bcrypt'
-import { GoneAPIError, UnauthorizedAPIError } from './APIError'
+import { GoneAPIError, UnauthorizedAPIError, ForbiddenAPIError } from './APIError'
 import Users from '../routes/Users'
 import Clients from '../routes/Clients'
 
@@ -17,6 +17,19 @@ export default class Authentication {
     let user = await User.scope('internal').findOne({where: {email: {$iLike: email}}})
     if (!user) {
       return null
+    }
+
+    let requiredResets = await Reset.findAll({
+      where: {
+        userId: user.id,
+        required: true
+      }
+    })
+
+    if (requiredResets.length > 0) {
+      throw ForbiddenAPIError({
+        pointer: '/data/attributes/email'
+      })
     }
 
     let result = await bcrypt.compare(password, user.password)

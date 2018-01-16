@@ -3,7 +3,6 @@
 import nodemailer from 'nodemailer'
 import { User, Reset } from '../db'
 import crypto from 'crypto'
-import bcrypt from 'bcrypt'
 import BotServ from '../Anope/BotServ'
 import { NotFoundAPIError } from '../classes/APIError'
 import API, {
@@ -39,14 +38,20 @@ export default class Resets extends API {
       }
     })
 
+    let requiredReset = false
+
     resets.map((reset) => {
+      if (reset.required) {
+        requiredReset = true
+      }
       reset.destroy()
     })
 
     let reset = await Reset.create({
       value: crypto.randomBytes(RESET_TOKEN_LENGTH).toString('hex'),
       expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
-      userId: user.id
+      userId: user.id,
+      required: requiredReset
     })
 
     ctx.state.writeResp = false
@@ -102,7 +107,8 @@ export default class Resets extends API {
     let reset = await Reset.create({
       value: crypto.randomBytes(RESET_TOKEN_LENGTH).toString('hex'),
       expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
-      userId: user.id
+      userId: user.id,
+      required: ctx.data.required || false
     })
 
     ctx.response.status = 201

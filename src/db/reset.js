@@ -19,6 +19,11 @@ module.exports = function (sequelize, DataTypes) {
     expires: {
       type: DataTypes.DATE,
       allowNull: false
+    },
+    required: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   })
 
