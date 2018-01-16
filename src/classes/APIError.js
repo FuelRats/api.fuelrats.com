@@ -18,15 +18,15 @@ export class APIError  extends Error {
   }
 
   get status () {
-    return i18next.t(`${this.status}.code`)
+    return i18next.t(`${this.code}.code`)
   }
 
   get title () {
-    return i18next.t(`${this.status}.title`)
+    return i18next.t(`${this.code}.title`)
   }
 
   get detail () {
-    return i18next.t(`${this.status}.detail`)
+    return i18next.t(`${this.code}.detail`)
   }
 
   get links () {

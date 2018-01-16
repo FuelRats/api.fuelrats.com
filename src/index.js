@@ -145,7 +145,7 @@ app.use(async (ctx, next) => {
 
 
 
-    ctx.status = errors[0].code
+    ctx.status = errors[0].status
     ctx.body = {
       errors
     }
