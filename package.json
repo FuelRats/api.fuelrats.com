@@ -13,7 +13,7 @@
     "apidoc": "apidoc -o static/docs/api/ -i test/",
     "eslint": "eslint api test"
   },
-  "license": "MIT",
+  "license": "BSD-3",
   "dependencies": {
     "apidoc": "^0.17.6",
     "bcrypt": "^1.0.2",

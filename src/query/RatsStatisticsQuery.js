@@ -53,8 +53,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
     this._query.attributes = [
       [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'id'],
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
-      [db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)'), 'rescueCount'],
-      [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed']
+      [db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)'), 'rescueCount']
     ]
 
     this._query.attributes = this._query.attributes.concat(this.compare('firstLimpet', this.comparators))
@@ -81,7 +80,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
         direction = 'DESC'
       }
       if (order === 'count') {
-        order = this._countSystemsField
+        order = this._countField
       }
 
       let comparator = this.getComparator(this.comparators, order)
@@ -94,12 +93,42 @@ class RatsStatisticsQuery extends StatisticsQuery {
 
   get comparators () {
     return [{
-      fields: ['platform'],
+      fields: ['outcome'],
+      options: [
+        ['success', 'success'],
+        ['failure', 'failure'],
+        ['invalid', 'invalid'],
+        ['other', 'other']
+      ]
+    }, {
+      fields: ['codeRed', 'platform', 'outcome'],
+      options: [
+        ['codered', true, null],
+        ['coderedsuccess', true, null, 'success'],
+        ['coderedfailure', true, null, 'failure'],
+        ['pccodered', true, 'pc'],
+        ['pccoderedsuccess', true, 'pc', 'success'],
+        ['pccoderedfailure', true, 'pc', 'failure'],
+        ['pscodered', true, 'ps'],
+        ['pscoderedsuccess', true, 'ps', 'success'],
+        ['pscoderedfailure', true, 'ps', 'failure'],
+        ['xbcodered', true, 'xb'],
+        ['xbcoderedsuccess', true, 'xb', 'success'],
+        ['xbcoderedfailure', true, 'xb', 'failure']
+      ]
+    }, {
+      fields: ['platform', 'outcome'],
       options: [
         ['pc', 'pc'],
+        ['pcsuccess', 'pc', 'success'],
+        ['pcfailure', 'pc', 'failure'],
         ['ps', 'ps'],
-        ['xb', 'xb']
-      ]
+        ['pssuccess', 'ps', 'success'],
+        ['psfailure', 'ps', 'failure'],
+        ['xb', 'xb'],
+        ['xbsuccess', 'xb', 'success'],
+        ['xbfailure', 'xb', 'failure']
+      ],
     }]
   }
 
