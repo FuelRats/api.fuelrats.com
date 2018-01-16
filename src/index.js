@@ -6,6 +6,8 @@
 require('./Globals')
 import Koa from 'koa'
 import session from 'koa-session'
+import conditional from 'koa-conditional-get'
+import etag from 'koa-etag'
 const app = new Koa()
 import querystring from 'koa-qs'
 import koaStatic from 'koa-static'
@@ -53,6 +55,8 @@ let sessionConfiguration = {
   signed: true
 }
 
+app.use(conditional())
+app.use(etag())
 app.use(session(sessionConfiguration, app))
 app.use(koaStatic('static', {
   hidden: false,

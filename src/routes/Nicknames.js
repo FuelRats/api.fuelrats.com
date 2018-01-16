@@ -35,9 +35,10 @@ export default class Nicknames extends API {
   @websocket('nicknames', 'register')
   @authenticated
   async register (ctx) {
-    if (Permission.isAdmin(ctx.state.user)) {
+    /* if (Permission.isAdmin(ctx.state.user)) {
       throw new ForbiddenAPIError({})
-    }
+    }*/
+
     ctx.data.nickname = ctx.data.nickname.toLowerCase()
 
     let { nicknames } = ctx.state.user.data.attributes
