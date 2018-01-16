@@ -30,7 +30,7 @@ export default class Register extends API {
     //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
     // }
 
-    let { email, name, nickname, password, ircPassword } = ctx.data
+    let { email, name, nickname, password, ircPassword, platform } = ctx.data
 
     let existingUser = await User.findOne({
       where: {
@@ -45,10 +45,23 @@ export default class Register extends API {
       })
     }
 
+    let existingRat = await Rat.findOne({
+      where: {
+        name: {
+          $iLike: name
+        },
+        platform: platform
+      }
+    })
+    if (existingRat) {
+      throw ConflictAPIError({
+        pointer: '/data/attributes/name'
+      })
+    }
+
     let transaction = await db.transaction()
 
     try {
-
       let user = await User.create({
         email: email,
         password: password
@@ -57,7 +70,6 @@ export default class Register extends API {
       })
 
       name = name.replace(/CMDR/i, '')
-      let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
         throw UnprocessableEntityAPIError({
