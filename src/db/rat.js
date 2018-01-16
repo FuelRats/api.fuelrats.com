@@ -9,7 +9,10 @@ module.exports = function (sequelize, DataTypes) {
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        is: /^[\p{L}0-9 ]{3,64}$/u
+      }
     },
     data: {
       type: DataTypes.JSONB,
@@ -23,7 +26,11 @@ module.exports = function (sequelize, DataTypes) {
     platform: {
       type: DataTypes.ENUM('pc', 'xb', 'ps'),
       allowNull: false,
-      defaultValue: 'pc'
+      defaultValue: 'pc',
+      validate: {
+        notEmpty: true,
+        isIn: ['pc', 'xb', 'ps']
+      }
     }
   }, {
     paranoid: true

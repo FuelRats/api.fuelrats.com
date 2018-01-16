@@ -16,7 +16,13 @@ module.exports = function (sequelize, DataTypes) {
     },
     value: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        min: 24,
+        max: 128,
+        isAlphanumeric: true
+      }
     }
   })
 

@@ -204,6 +204,9 @@
     ],
     "getter-return": [
       "error"
+    ],
+    "no-useless-escape": [
+      "off"
     ]
   }
 }

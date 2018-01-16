@@ -20,7 +20,12 @@ module.exports = function (sequelize, DataTypes) {
     },
     redirectUri: {
       type: DataTypes.TEXT,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        isUrl: true,
+        notEmpty: true,
+        max: 255
+      }
     }
   })
 

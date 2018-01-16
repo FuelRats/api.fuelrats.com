@@ -18,11 +18,17 @@ module.exports = function (db, DataTypes) {
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      isEmail: true
+      validate: {
+        isEmail: true
+      }
     },
     password: {
       type: DataTypes.STRING(PASSWORD_MAX_LENGTH),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        min: 12,
+        max: 1024
+      }
     },
     nicknames: {
       type: DataTypes.ARRAY(DataTypes.STRING(NICKNAME_MAX_LENGTH)),
@@ -41,7 +47,11 @@ module.exports = function (db, DataTypes) {
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'legacy', 'deactivated'),
       allowNull: false,
-      defaultValue: 'unconfirmed'
+      defaultValue: 'unconfirmed',
+      validate: {
+        notEmpty: true,
+        isIn: ['active', 'inactive', 'legacy', 'deactivated']
+      }
     },
     suspended: {
       type: DataTypes.DATE,

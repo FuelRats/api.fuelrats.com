@@ -9,7 +9,11 @@ module.exports = function (sequelize, DataTypes) {
     },
     client: {
       type: DataTypes.STRING,
-      allowNull: true
+      allowNull: true,
+      validate: {
+        min: 1,
+        max: 64
+      }
     },
     codeRed: {
       type: DataTypes.BOOLEAN,
@@ -23,12 +27,19 @@ module.exports = function (sequelize, DataTypes) {
     notes: {
       type: DataTypes.TEXT,
       allowNull: false,
-      defaultValue: ''
+      defaultValue: '',
+      validate: {
+        max: 2048
+      }
     },
     platform: {
       type: DataTypes.ENUM('xb', 'pc', 'ps'),
       allowNull: true,
-      defaultValue: 'pc'
+      defaultValue: 'pc',
+      validate: {
+        notEmpty: true,
+        isIn: ['pc', 'xb', 'ps']
+      }
     },
     quotes: {
       type: DataTypes.ARRAY(DataTypes.JSONB),
@@ -37,22 +48,40 @@ module.exports = function (sequelize, DataTypes) {
     status: {
       type: DataTypes.ENUM('open', 'inactive', 'closed'),
       allowNull: false,
-      defaultValue: 'open'
+      defaultValue: 'open',
+      validate: {
+        notEmpty: true,
+        isIn: ['open', 'inactive', 'closed']
+      }
     },
     system: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: null
+      defaultValue: null,
+      validate: {
+        min: 1,
+        max: 64,
+        isUppercase: true
+      }
     },
     title: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: null
+      defaultValue: null,
+      validate: {
+        min: 3,
+        max: 64,
+        isAlphanumeric: true
+      }
     },
     outcome: {
       type: DataTypes.ENUM('success', 'failure', 'invalid', 'other'),
       allowNull: true,
-      defaultValue:  null
+      defaultValue:  null,
+      validate: {
+        notEmpty: true,
+        isIn: ['success', 'failure', 'invalid', 'other']
+      }
     },
     unidentifiedRats: {
       type: DataTypes.ARRAY(DataTypes.STRING),

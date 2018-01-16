@@ -9,7 +9,12 @@ module.exports = function (sequelize, DataTypes) {
     },
     value: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        isAlphanumeric: true,
+        min: 16,
+        max: 128
+      }
     },
     expires: {
       type: DataTypes.DATE,

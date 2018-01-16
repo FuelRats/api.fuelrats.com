@@ -11,15 +11,29 @@ module.exports = function (sequelize, DataTypes) {
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        isAlphanumeric: true,
+        min: 3,
+        max: 255
+      }
     },
     secret: {
       type: DataTypes.STRING(CLIENT_SECRET_MAX_LENGTH),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        min: 32,
+        max: 255
+      }
     },
     redirectUri: {
       type: DataTypes.STRING,
-      allowNull: true
+      allowNull: true,
+      validate: {
+        isUrl: true,
+        notEmpty: true,
+        max: 255
+      }
     }
   })
 

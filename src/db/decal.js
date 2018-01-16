@@ -11,10 +11,16 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       require: true,
+      validate: {
+        is: /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-FUE[0-9]{2}$/
+      }
     },
     type:  {
       type: DataTypes.ENUM('Rescues', 'Promotional', 'Special'),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        isIn: ['Rescues', 'Promotional', 'Special']
+      }
     },
     claimedAt: {
       type: DataTypes.DATE,
@@ -23,7 +29,10 @@ module.exports = function (sequelize, DataTypes) {
     notes: {
       type: DataTypes.TEXT,
       allowNull: false,
-      defaultValue: ''
+      validate: {
+        defaultValue: '',
+        max: 4096
+      }
     },
   }, {
     paranoid: true

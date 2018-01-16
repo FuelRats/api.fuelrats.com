@@ -1,4 +1,5 @@
-
+import Permissions from '../classes/Permission'
+import { UnprocessableEntityAPIError } from '../classes/APIError'
 
 module.exports = function (sequelize, DataTypes) {
   let group = sequelize.define('Group', {
@@ -9,7 +10,10 @@ module.exports = function (sequelize, DataTypes) {
     },
     vhost: {
       type: DataTypes.STRING,
-      allowNull: true
+      allowNull: true,
+      validate: {
+        is: /^[a-z][a-z0-9.]{3,64}$/
+      }
     },
     isAdministrator: {
       type: DataTypes.BOOLEAN,
@@ -19,10 +23,28 @@ module.exports = function (sequelize, DataTypes) {
     priority: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 0,
+      validate: {
+        isInt: true
+      }
     },
     permissions: {
-      type: DataTypes.ARRAY(DataTypes.STRING)
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      validate: {
+        isPermission (value) {
+          if (!Array.isArray(value)) {
+            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/permissions' })
+          }
+
+          let isValid = value.every(permission => {
+            Permissions.allPermissions.includes(permission)
+          })
+
+          if (!isValid) {
+            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/permissions' })
+          }
+        }
+      }
     }
   }, {
     paranoid: true
