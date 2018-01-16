@@ -50,6 +50,12 @@
         "detail": "Authentication credentials were provided in the request, but the server considers them insufficient to grant access"
       },
 
+      "resetrequired": {
+        "code": 403,
+        "title": "Forbidden",
+        "detail": "Authentication credentials were provided in the request, but the server considers them insufficient to grant access"
+      },
+
       "not_found": {
         "code": 404,
         "title": "Not Found",

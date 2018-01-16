@@ -1,7 +1,7 @@
 
 import { User, Rat, Token, Client, Reset } from '../db/index'
 import bcrypt from 'bcrypt'
-import { GoneAPIError, UnauthorizedAPIError, ForbiddenAPIError } from './APIError'
+import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
 import Users from '../routes/Users'
 import Clients from '../routes/Clients'
 
@@ -27,7 +27,7 @@ export default class Authentication {
     })
 
     if (requiredResets.length > 0) {
-      throw ForbiddenAPIError({
+      throw ResetRequiredAPIError({
         pointer: '/data/attributes/email'
       })
     }

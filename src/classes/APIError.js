@@ -75,6 +75,12 @@ export class ForbiddenAPIError extends APIError {
   }
 }
 
+export class ResetRequiredAPIError extends ForbiddenAPIError {
+  constructor (source) {
+    super('resetrequired', source)
+  }
+}
+
 export class NotFoundAPIError extends APIError {
   constructor (source) {
     super('not_found', source)
