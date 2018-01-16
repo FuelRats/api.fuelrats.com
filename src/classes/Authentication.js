@@ -27,7 +27,7 @@ export default class Authentication {
     })
 
     if (requiredResets.length > 0) {
-      throw ResetRequiredAPIError({
+      throw new ResetRequiredAPIError({
         pointer: '/data/attributes/email'
       })
     }
