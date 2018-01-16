@@ -13,11 +13,11 @@ export class APIError  extends Error {
     super()
 
     this.id = uuidV4()
-    this.status = status
+    this.code = status
     this.source = source
   }
 
-  get code () {
+  get status () {
     return i18next.t(`${this.status}.code`)
   }
 
