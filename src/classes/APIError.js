@@ -42,9 +42,18 @@ export class APIError  extends Error {
       status: this.status,
       code:   this.code,
       title:  this.title,
+
       detail: this.detail,
       source: this.source
     }
+  }
+
+  static fromValidationError (validationError) {
+    return validationError.errors.map(error => {
+      return new UnprocessableEntityAPIError({
+        pointer: `/data/attributes/${error.path}`
+      })
+    })
   }
 }
 

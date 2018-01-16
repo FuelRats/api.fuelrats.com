@@ -123,7 +123,12 @@ app.use(async (ctx, next) => {
     }
   } catch (ex) {
     let errors = ex
-    if (Array.isArray(ex) === false) {
+
+    if (errors.name && errors.name === 'SequelizeValidationError') {
+      errors = APIError.fromValidationError(errors)
+    }
+
+    if (Array.isArray(errors) === false) {
       errors = [errors]
     }
 
@@ -133,6 +138,7 @@ app.use(async (ctx, next) => {
       }
       return error
     })
+
 
 
     ctx.status = errors[0].code
