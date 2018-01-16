@@ -89,6 +89,19 @@ export default class Nicknames extends API {
     return true
   }
 
+  @GET('/nicknames/refresh')
+  @websocket('nicknames', 'refresh')
+  @authenticated
+  async refresh (ctx) {
+    let updatedNicknames = await NickServ.list(ctx.data.nickname)
+
+    await User.update({ nicknames: updatedNicknames }, {
+      where: { id: ctx.state.user.data.id }
+    })
+    await HostServ.update(ctx.state.user)
+    return true
+  }
+
   @GET('/nicknames/:nickname')
   @websocket('nicknames', 'search')
   @authenticated
