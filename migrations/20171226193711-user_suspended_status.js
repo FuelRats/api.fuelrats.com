@@ -6,7 +6,7 @@ module.exports = {
       'Users',
       'status',
       {
-        type: Sequelize.ENUM('active', 'inactive', 'legacy'),
+        type: Sequelize.ENUM('active', 'inactive', 'legacy', 'deactivated'),
         allowNull: false,
         defaultValue: 'unconfirmed'
       }

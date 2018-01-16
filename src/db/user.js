@@ -47,7 +47,7 @@ module.exports = function (db, DataTypes) {
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'legacy', 'deactivated'),
       allowNull: false,
-      defaultValue: 'unconfirmed',
+      defaultValue: 'active',
       validate: {
         notEmpty: true,
         isIn: ['active', 'inactive', 'legacy', 'deactivated']
