@@ -61,6 +61,9 @@ module.exports = function (db, DataTypes) {
     permissions: {
       type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
       get: function () {
+        if (!this.groups) {
+          return []
+        }
         return this.groups.reduce((accumulator, value) => {
           return accumulator.concat(value.permissions)
         }, [])
@@ -138,6 +141,11 @@ module.exports = function (db, DataTypes) {
       foreignKey: 'userId'
     })
 
+    models.User.hasOne(models.npoMembership, {
+      as: 'npoMembership',
+      foreignKey: 'userId'
+    })
+
     models.User.belongsTo(models.Rat, { as: 'displayRat', constraints: false })
 
     models.User.hasOne(models.Decal, {
@@ -151,6 +159,15 @@ module.exports = function (db, DataTypes) {
         model: models.UserGroups
       }
     })
+
+    models.User.addScope('defaultScope', {
+      attributes: {
+        exclude: [
+          'image',
+          'permissions'
+        ]
+      }
+    }, { override: true })
 
 
     models.User.addScope('public', {
@@ -279,6 +296,7 @@ module.exports = function (db, DataTypes) {
               'deletedAt'
             ]
           },
+
           include: [{
             model: models.Ship,
             as: 'ships',
@@ -299,6 +317,9 @@ module.exports = function (db, DataTypes) {
           order: [
             ['priority', 'DESC']
           ]
+        }, {
+          model: models.npoMembership,
+          as: 'npoMembership'
         }
       ]
     })

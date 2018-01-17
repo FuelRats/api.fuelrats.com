@@ -24,6 +24,7 @@ let models = {
 }
 
 models.Rat = db.import(__dirname + '/rat')
+models.npoMembership = db.import(__dirname + '/npomembership')
 models.Rescue = db.import(__dirname + '/rescue')
 models.User = db.import(__dirname + '/user')
 models.RescueRats = db.import(__dirname + '/rescuerats')

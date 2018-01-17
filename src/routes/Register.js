@@ -1,4 +1,4 @@
-import { User, Rat, db} from '../db'
+import { User, Rat, db, npoMembership } from '../db'
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
 import BotServ from '../Anope/BotServ'
@@ -74,6 +74,12 @@ export default class Register extends API {
         // noinspection ExceptionCaughtLocallyJS
         throw UnprocessableEntityAPIError({
           pointer: '/data/attributes/platform'
+        })
+      }
+
+      if (ctx.data.npo === true) {
+        await npoMembership.create({
+          userId: user.id
         })
       }
 

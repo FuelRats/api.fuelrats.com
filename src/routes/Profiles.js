@@ -2,6 +2,7 @@
 import { User } from '../db'
 import Rats from './Rats'
 import Groups from './Groups'
+import NPO from './NPO'
 
 import API, {
   authenticated,
@@ -28,7 +29,8 @@ export default class Profiles extends API {
         return {
           rats: Rats.presenter,
           groups: Groups.presenter,
-          displayRat: Rats.presenter
+          displayRat: Rats.presenter,
+          npoMembership: NPO.presenter
         }
       }
     }

@@ -179,6 +179,7 @@ import Version from './routes/Version'
 import Decals from './routes/Decals'
 import Stream from './routes/Stream'
 import JiraDrillWebhook from './routes/JiraDrillWebhook'
+import NPO from './routes/NPO'
 
 export let routes = [
   new Rescue(),
@@ -196,7 +197,8 @@ export let routes = [
   new Version(),
   new Decals(),
   new Stream(),
-  new JiraDrillWebhook()
+  new JiraDrillWebhook(),
+  new NPO()
 ]
 
 // OAUTH2
