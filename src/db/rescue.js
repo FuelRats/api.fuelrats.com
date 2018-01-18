@@ -7,7 +7,7 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     },
     client: {
@@ -21,14 +21,12 @@ module.exports = function (sequelize, DataTypes) {
     codeRed: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false,
-      validate: {
-        isIn: [true, false]
-      }
+      defaultValue: false
     },
     data: {
       type: DataTypes.JSONB,
       allowNull: false,
+      defaultValue: {},
       validate: {
         JSONObject
       }
@@ -105,7 +103,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.UUID,
       allowNull: true,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     }
   }, {

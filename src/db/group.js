@@ -1,5 +1,3 @@
-import Permissions from '../classes/Permission'
-import { UnprocessableEntityAPIError } from '../classes/APIError'
 import {IRCVirtualHost, OAuthScope} from '../classes/Validators'
 
 module.exports = function (sequelize, DataTypes) {
@@ -9,7 +7,8 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       allowNull: false,
       validate: {
-        isUUID: true
+        isAlphanumeric: true,
+        notEmpty: true
       }
     },
     vhost: {

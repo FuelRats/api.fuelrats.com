@@ -85,6 +85,11 @@ export function RescueQuote (value) {
   }
 }
 
+/**
+ * Validate wether a value is a valid list of IRC nicknames
+ * @param value the list of IRC nicknames to validate
+ * @constructor
+ */
 export function IRCNicknames (value) {
   if (!Array.isArray(value)) {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/nicknames' })

@@ -7,7 +7,7 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     },
     value: {
@@ -29,16 +29,13 @@ module.exports = function (sequelize, DataTypes) {
     required: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false,
-      validate: {
-        isIn: [true, false]
-      }
+      defaultValue: false
     },
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     }
   })

@@ -46,7 +46,7 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     },
     name: {
@@ -78,7 +78,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.UUID,
       allowNull: true,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     }
   }, {

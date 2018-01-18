@@ -10,8 +10,7 @@ module.exports = function (sequelize, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
       validate: {
-        isUUID: true,
-        notEmpty: true
+        isUUID: 4
       }
     },
     scope: {
@@ -45,14 +44,14 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.UUID,
       allowNull: true,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     },
     clientId: {
       type: DataTypes.UUID,
       allowNull: true,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     }
   })

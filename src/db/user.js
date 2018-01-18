@@ -12,12 +12,13 @@ module.exports = function (db, DataTypes) {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     },
     data: {
       type: DataTypes.JSONB,
       allowNull: false,
+      defaultValue: {},
       validate: {
         JSONObject
       }
