@@ -1,4 +1,4 @@
-import {JSONObject} from '../classes/Validators'
+import {JSONObject, RescueQuote} from '../classes/Validators'
 
 module.exports = function (sequelize, DataTypes) {
   let rescue = sequelize.define('Rescue', {
@@ -53,7 +53,10 @@ module.exports = function (sequelize, DataTypes) {
     quotes: {
       type: DataTypes.ARRAY(DataTypes.JSONB),
       allowNull: false,
-      defaultValue: []
+      defaultValue: [],
+      validate: {
+        RescueQuote
+      }
     },
     status: {
       type: DataTypes.ENUM('open', 'inactive', 'closed'),
