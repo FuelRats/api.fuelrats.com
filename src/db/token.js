@@ -1,6 +1,4 @@
-import Permission from '../classes/Permission'
-import {UnprocessableEntityAPIError} from '../classes/APIError'
-
+import {OAuthScope} from '../classes/Validators'
 
 const OAUTH_SCOPE_MAX_LENGTH = 128
 
@@ -19,13 +17,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: [],
       validate: {
-        validateScope: function (value) {
-          for (let scope of value) {
-            if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
-              throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
-            }
-          }
-        }
+        OAuthScope
       }
     },
     value: {

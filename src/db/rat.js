@@ -1,4 +1,4 @@
-import {UnprocessableEntityAPIError} from '../classes/APIError'
+import {CMDRname, JSONObject} from '../classes/Validators'
 
 
 module.exports = function (sequelize, DataTypes) {
@@ -15,18 +15,14 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        is: /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]{3,64}$/u
+        is: CMDRname
       }
     },
     data: {
       type: DataTypes.JSONB,
       allowNull: false,
       validate: {
-        isJSON: function (value) {
-          if (typeof value !== 'object') {
-            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/data' })
-          }
-        }
+        JSONObject
       }
     },
     joined: {

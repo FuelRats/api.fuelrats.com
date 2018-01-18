@@ -1,5 +1,6 @@
 import Permissions from '../classes/Permission'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
+import {IRCVirtualHost, OAuthScope} from '../classes/Validators'
 
 module.exports = function (sequelize, DataTypes) {
   let group = sequelize.define('Group', {
@@ -15,7 +16,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       validate: {
-        is: /^[a-z][a-z0-9.]{3,64}$/
+        is: IRCVirtualHost
       }
     },
     isAdministrator: {
@@ -37,19 +38,7 @@ module.exports = function (sequelize, DataTypes) {
     permissions: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       validate: {
-        isPermission (value) {
-          if (!Array.isArray(value)) {
-            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/permissions' })
-          }
-
-          let isValid = value.every(permission => {
-            Permissions.allPermissions.includes(permission)
-          })
-
-          if (!isValid) {
-            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/permissions' })
-          }
-        }
+        OAuthScope
       }
     }
   }, {

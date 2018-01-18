@@ -1,4 +1,4 @@
-
+import { FrontierRedeemCode } from '../classes/Validators'
 
 module.exports = function (sequelize, DataTypes) {
   let decal = sequelize.define('Decal', {
@@ -16,7 +16,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       require: true,
       validate: {
-        is: /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-FUE[0-9]{2}$/
+        is: FrontierRedeemCode
       }
     },
     type:  {

@@ -1,5 +1,4 @@
-import {UnprocessableEntityAPIError} from '../classes/APIError'
-
+import {JSONObject} from '../classes/Validators'
 
 module.exports = function (sequelize, DataTypes) {
   let rescue = sequelize.define('Rescue', {
@@ -31,11 +30,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.JSONB,
       allowNull: false,
       validate: {
-        isJSON: function (value) {
-          if (typeof value !== 'object') {
-            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/data' })
-          }
-        }
+        JSONObject
       }
     },
     notes: {

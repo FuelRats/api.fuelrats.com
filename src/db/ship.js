@@ -1,3 +1,4 @@
+import {ShipName} from '../classes/Validators'
 
 
 const MAX_INGAME_SHIP_NAME_LENGTH = 22
@@ -52,7 +53,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.CHAR(MAX_INGAME_SHIP_NAME_LENGTH),
       allowNull: false,
       validate: {
-        is: /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]{3,22}$/u
+        is: ShipName
       }
     },
     shipId:  {
