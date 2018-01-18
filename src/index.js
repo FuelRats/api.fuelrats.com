@@ -128,7 +128,7 @@ app.use(async (ctx, next) => {
   } catch (ex) {
     let errors = ex
 
-    if (errors.name && errors.name === 'SequelizeValidationError') {
+    if (errors.name) {
       errors = APIError.fromValidationError(errors)
     }
 

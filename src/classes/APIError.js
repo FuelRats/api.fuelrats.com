@@ -49,11 +49,22 @@ export class APIError  extends Error {
   }
 
   static fromValidationError (validationError) {
-    return validationError.errors.map(error => {
-      return new UnprocessableEntityAPIError({
-        pointer: `/data/attributes/${error.path}`
-      })
-    })
+    switch (validationError.name) {
+      case 'SequelizeValidationError':
+        return validationError.errors.map(error => {
+          return new UnprocessableEntityAPIError({
+            pointer: `/data/attributes/${error.path}`
+          })
+        })
+
+      case 'SequelizeForeignKeyConstraintError':
+        return [new UnprocessableEntityAPIError({
+          pointer: `/data/attributes/${validationError.index.split('_')[1]}`
+        })]
+
+      default:
+        return [new UnprocessableEntityAPIError({})]
+    }
   }
 }
 
