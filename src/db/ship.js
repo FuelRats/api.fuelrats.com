@@ -43,7 +43,10 @@ module.exports = function (sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
+      validate: {
+        isUUID: true
+      }
     },
     name: {
       type: DataTypes.CHAR(MAX_INGAME_SHIP_NAME_LENGTH),
@@ -68,6 +71,13 @@ module.exports = function (sequelize, DataTypes) {
       validate: {
         notEmpty: true,
         isIn: shipTypes
+      }
+    },
+    ratId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      validate: {
+        isUUID: true
       }
     }
   }, {

@@ -6,7 +6,10 @@ module.exports = function (sequelize, DataTypes) {
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        isUUID: true
+      }
     },
     vhost: {
       type: DataTypes.STRING,
@@ -18,7 +21,10 @@ module.exports = function (sequelize, DataTypes) {
     isAdministrator: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false
+      defaultValue: false,
+      validate: {
+        isIn: [true, false]
+      }
     },
     priority: {
       type: DataTypes.INTEGER,

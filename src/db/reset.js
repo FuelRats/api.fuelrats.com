@@ -5,7 +5,10 @@ module.exports = function (sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
+      validate: {
+        isUUID: true
+      }
     },
     value: {
       type: DataTypes.STRING,
@@ -18,12 +21,25 @@ module.exports = function (sequelize, DataTypes) {
     },
     expires: {
       type: DataTypes.DATE,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        isDate: true
+      }
     },
     required: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false
+      defaultValue: false,
+      validate: {
+        isIn: [true, false]
+      }
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      validate: {
+        isUUID: true
+      }
     }
   })
 

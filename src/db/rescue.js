@@ -1,3 +1,4 @@
+import {UnprocessableEntityAPIError} from '../classes/APIError'
 
 
 module.exports = function (sequelize, DataTypes) {
@@ -5,7 +6,10 @@ module.exports = function (sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
+      validate: {
+        isUUID: true
+      }
     },
     client: {
       type: DataTypes.STRING,
@@ -18,11 +22,21 @@ module.exports = function (sequelize, DataTypes) {
     codeRed: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false
+      defaultValue: false,
+      validate: {
+        isIn: [true, false]
+      }
     },
     data: {
       type: DataTypes.JSONB,
-      allowNull: true
+      allowNull: false,
+      validate: {
+        isJSON: function (value) {
+          if (typeof value !== 'object') {
+            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/data' })
+          }
+        }
+      }
     },
     notes: {
       type: DataTypes.TEXT,
@@ -43,7 +57,8 @@ module.exports = function (sequelize, DataTypes) {
     },
     quotes: {
       type: DataTypes.ARRAY(DataTypes.JSONB),
-      allowNull: true
+      allowNull: false,
+      defaultValue: []
     },
     status: {
       type: DataTypes.ENUM('open', 'inactive', 'closed'),
@@ -87,6 +102,13 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
       defaultValue: []
+    },
+    firstLimpetId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      validate: {
+        isUUID: true
+      }
     }
   }, {
     paranoid: true,

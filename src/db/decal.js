@@ -5,7 +5,11 @@ module.exports = function (sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
+      validate: {
+        isUUID: true,
+        notEmpty: true
+      }
     },
     code: {
       type: DataTypes.STRING,
@@ -34,6 +38,13 @@ module.exports = function (sequelize, DataTypes) {
         max: 4096
       }
     },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      validate: {
+        isUUID: true
+      }
+    }
   }, {
     paranoid: true
   })

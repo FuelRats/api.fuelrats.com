@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import {UnprocessableEntityAPIError} from '../classes/APIError'
 
 const PASSWORD_MAX_LENGTH = 1024
 const NICKNAME_MAX_LENGTH = 30
@@ -9,11 +10,21 @@ module.exports = function (db, DataTypes) {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
+      validate: {
+        isUUID: true
+      }
     },
     data: {
       type: DataTypes.JSONB,
-      allowNull: true
+      allowNull: false,
+      validate: {
+        isJSON: function (value) {
+          if (typeof value !== 'object') {
+            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/data' })
+          }
+        }
+      }
     },
     email: {
       type: DataTypes.STRING,

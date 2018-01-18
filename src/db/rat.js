@@ -1,3 +1,4 @@
+import {UnprocessableEntityAPIError} from '../classes/APIError'
 
 
 module.exports = function (sequelize, DataTypes) {
@@ -5,7 +6,10 @@ module.exports = function (sequelize, DataTypes) {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4
+      defaultValue: DataTypes.UUIDV4,
+      validate: {
+        isUUID: true
+      }
     },
     name: {
       type: DataTypes.STRING,
@@ -16,7 +20,14 @@ module.exports = function (sequelize, DataTypes) {
     },
     data: {
       type: DataTypes.JSONB,
-      allowNull: true
+      allowNull: false,
+      validate: {
+        isJSON: function (value) {
+          if (typeof value !== 'object') {
+            throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/data' })
+          }
+        }
+      }
     },
     joined: {
       type: DataTypes.DATE,
@@ -30,6 +41,13 @@ module.exports = function (sequelize, DataTypes) {
       validate: {
         notEmpty: true,
         isIn: ['pc', 'xb', 'ps']
+      }
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      validate: {
+        isUUID: true
       }
     }
   }, {
