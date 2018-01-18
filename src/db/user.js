@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import {JSONObject} from '../classes/Validators'
+import {JSONObject, IRCNicknames} from '../classes/Validators'
 
 const PASSWORD_MAX_LENGTH = 1024
 const NICKNAME_MAX_LENGTH = 30
@@ -44,6 +44,9 @@ module.exports = function (db, DataTypes) {
       set (value) {
         value = value.map(nickname => nickname.toLowerCase())
         this.setDataValue('nicknames', value)
+      },
+      validate: {
+        IRCNicknames
       }
     },
     image: {

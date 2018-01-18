@@ -6,6 +6,7 @@ export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/
 export const CMDRname = /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]{3,64}$/u
 export const ShipName = /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]{3,22}$/u
 export const ISO8601 = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?))?)?$/
+export const IRCNickname = /^[A-Za-z_\\`\[\]{}][A-Za-z0-9_\\`\[\]{}]*/
 
 /**
  * Validate wether a list of OAuth Scopes is valid
@@ -39,8 +40,8 @@ const requiredQuoteFields = [
 ]
 
 /**
- *
- * @param value
+ * Validate wether a value is a valid list of rescue quotes
+ * @param value the list of rescue quotes to validate
  * @constructor
  */
 export function RescueQuote (value) {
@@ -53,7 +54,7 @@ export function RescueQuote (value) {
         }
       })
 
-      Object.entries(quote).forEach(([key, value]) => {
+      for (let [key, value] of Object.entries(quote)) {
         switch (key) {
           case 'message':
             if (typeof value !== 'string') {
@@ -77,9 +78,20 @@ export function RescueQuote (value) {
           default:
             throw Error()
         }
-      })
+      }
     })
   } catch (ex) {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/quotes' })
   }
+}
+
+export function IRCNicknames (value) {
+  if (!Array.isArray(value)) {
+    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/nicknames' })
+  }
+  value.forEach(nickname => {
+    if (!IRCNickname.test(nickname)) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/nicknames' })
+    }
+  })
 }
