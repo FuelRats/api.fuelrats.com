@@ -16,11 +16,7 @@ class HostServ {
    * @returns {Promise.<*>}
    */
   static async set (nickname, host) {
-    let result = await Anope.command('HostServ', 'API', `SETALL ${nickname} ${host}`)
-    if (/not registered/.test(result.return) === true) {
-      throw result.return
-    }
-
+    await Anope.command('HostServ', 'API', `SETALL ${nickname} ${host}`)
     return host
   }
 

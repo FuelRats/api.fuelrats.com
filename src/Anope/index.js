@@ -1,3 +1,8 @@
+import {
+  ConflictAPIError, NotFoundAPIError, UnauthorizedAPIError,
+  UnprocessableEntityAPIError, APIError
+} from '../classes/APIError'
+import { XmlEntities as Entities } from 'html-entities'
 
 let config = require('../../config')
 
@@ -16,7 +21,7 @@ if (config.xmlrpc.insecure) {
  * Anope XMLRPC connection client
  * @class
  */
-class Anope {
+export default class Anope {
   /**
    * Send an Anope formatted XMLRPC command
    * @param service The Anope service to interact with, e.g NickServ
@@ -25,12 +30,19 @@ class Anope {
    * @returns {Promise}
    */
   static command (service, user, command) {
+    service = Entities.encode(service)
+    user = Entities.encode(user)
+    command = Entities.encode(command)
     return new Promise(function (resolve, reject) {
       client.methodCall('command', [[service, user, command]], function (error, data) {
         if (error) {
-          reject(error)
+          return reject(error)
         } else {
-          resolve(data)
+          let response = new AnopeResponse(data)
+          if (response instanceof APIError) {
+            return reject(response)
+          }
+          return resolve(response)
         }
       })
     })
@@ -43,6 +55,8 @@ class Anope {
    * @returns {Promise}
    */
   static checkAuthentication (nickname, password) {
+    nickname = Entities.encodeNonUTF(nickname)
+    password = Entities.encodeNonUTF(password)
     return new Promise(function (resolve, reject) {
       client.methodCall('checkAuthentication', [[nickname, password]], function (error, data) {
         if (error) {
@@ -59,4 +73,25 @@ class Anope {
   }
 }
 
-module.exports = Anope
+export class AnopeResponse {
+  constructor (result) {
+    let [, translation] = Object.entries(responseTranslations).find(([key,]) => {
+      let response = result.return || result.error
+      return new RegExp(key, 'gi').test(response)
+    })
+    if (!translation) {
+      translation = result
+    }
+    return translation
+  }
+}
+
+const responseTranslations = {
+  'isn&#39;t registered': new NotFoundAPIError({ pointer: '/data/attributes/nickname' }),
+  'Password authentication required': new UnauthorizedAPIError({ pointer: '/data/attributes/password' }),
+  'more obscure password': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
+  'password is too long': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
+  'may not be registered': new UnprocessableEntityAPIError({ pointer: '/data/attributes/nickname' }),
+  'is already registered': new ConflictAPIError({ pointer: '/data/attributes/nickname' }),
+  'Invalid parameters': new UnprocessableEntityAPIError({})
+}

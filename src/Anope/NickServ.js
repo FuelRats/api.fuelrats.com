@@ -31,10 +31,8 @@ class NickServ {
    */
   static async register (nickname, password, email) {
     let result = await Anope.command('NickServ', nickname, `REGISTER ${password} ${email}`)
-    if (result && /Nickname [A-Za-z0-9_\-[\]{}`]* registered./.test(result.return) === true) {
+    if (result === true) {
       return nickname
-    } else {
-      throw new BadRequestAPIError({})
     }
   }
 
@@ -46,12 +44,8 @@ class NickServ {
    * @returns {Promise.<*>}
    */
   static async group (nickname, account, password) {
-    let result = await Anope.command('NickServ', nickname, `GROUP ${account} ${password}`)
-    if (result && /You are now in the group of/.test(result.return) === true) {
-      return nickname
-    } else {
-      throw new BadRequestAPIError({})
-    }
+    await Anope.command('NickServ', nickname, `GROUP ${account} ${password}`)
+    return nickname
   }
 
   /**
@@ -61,9 +55,6 @@ class NickServ {
    */
   static async list (account) {
     let result = await Anope.command('NickServ', account, `GLIST ${account}`)
-    if (result.return.includes('Password authentication required')) {
-      throw new UnauthorizedAPIError({})
-    }
 
     let nicknames = result.return.split('#xA;')
     // Remove column headers and footer
@@ -82,10 +73,8 @@ class NickServ {
    * @returns {Promise.<*>}
    */
   static async drop (nickname) {
-    let result = await Anope.command('NickServ', 'API', `DROP ${nickname}`)
-    if (result.return.includes('has been dropped')) {
-      return nickname
-    }
+    await Anope.command('NickServ', 'API', `DROP ${nickname}`)
+    return nickname
   }
 
   /**
@@ -95,9 +84,6 @@ class NickServ {
    */
   static async info (nickname) {
     let result = await Anope.command('NickServ', nickname, `INFO ${nickname}`)
-    if (result.return.includes('isn&#39;t registered')) {
-      return null
-    }
     return new IRCUserInfo(result.return.split('#xA;'))
   }
 
@@ -107,12 +93,8 @@ class NickServ {
    * @returns {Promise.<*>}
    */
   static async confirm (nickname) {
-    let result = await Anope.command('NickServ', 'API', `CONFIRM ${nickname}`)
-    if (result.return.includes('has been confirmed')) {
-      return nickname
-    } else {
-      throw new BadRequestAPIError({})
-    }
+    await Anope.command('NickServ', 'API', `CONFIRM ${nickname}`)
+    return nickname
   }
 
   /**
