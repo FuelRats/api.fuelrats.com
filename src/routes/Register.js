@@ -98,7 +98,7 @@ export default class Register extends API {
       }
       await NickServ.register(nickname, ircPassword, email)
 
-      await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
+      await User.update({ nicknames: nickname }, {
         where: { id: user.id }
       })
 
