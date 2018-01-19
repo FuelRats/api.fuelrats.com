@@ -1,4 +1,4 @@
-import {IRCVirtualHost, OAuthScope} from '../classes/Validators'
+import {IRCVirtualHost, OAuthScope } from '../classes/Validators'
 
 module.exports = function (sequelize, DataTypes) {
   let group = sequelize.define('Group', {
@@ -21,10 +21,7 @@ module.exports = function (sequelize, DataTypes) {
     isAdministrator: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false,
-      validate: {
-        isIn: [true, false]
-      }
+      defaultValue: false
     },
     priority: {
       type: DataTypes.INTEGER,

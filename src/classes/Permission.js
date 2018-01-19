@@ -204,7 +204,9 @@ export default class Permission {
       'ship.write.me',
       'ship.delete.me',
       'decal.read',
-      'decal.read.me'
+      'decal.read.me',
+      'group.read',
+      'group.write'
     ]
   }
 }

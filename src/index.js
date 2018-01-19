@@ -84,7 +84,7 @@ app.use(async function (ctx, next) {
 
 app.use(async function (ctx, next) {
   if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
-    ['id', 'createdAt', 'updatedAt', 'deletedAt'].map((cleanField) => {
+    ['createdAt', 'updatedAt', 'deletedAt'].map((cleanField) => {
       delete ctx.data[cleanField]
     })
   }
