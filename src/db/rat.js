@@ -60,6 +60,16 @@ module.exports = function (sequelize, DataTypes) {
       }]
     }, { override: true })
 
+    models.Rat.addScope('internal', {
+      include: [{
+        model: models.User,
+        as: 'user'
+      }, {
+        model: models.Ship,
+        as: 'ships'
+      }]
+    })
+
     models.Rat.belongsTo(models.User, {
       as: 'user',
       foreignKey: 'userId'

@@ -5,6 +5,7 @@ import { User } from '../db'
 import API, {
   authenticated,
   GET,
+  permissions
 } from '../classes/API'
 import { NotFoundAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
@@ -13,6 +14,7 @@ export default class Decals extends API {
   @GET('/decals/check')
   @websocket('decals', 'check')
   @authenticated
+  @permissions('user.read.me')
   async check (ctx) {
     if (Object.keys(ctx.query).length > 0) {
       let user = await User.findOne({
@@ -42,6 +44,7 @@ export default class Decals extends API {
   @GET('/decals/redeem')
   @websocket('decals', 'redeem')
   @authenticated
+  @permissions('user.write.me')
   async redeem (ctx) {
     let decal = await Decal.getDecalForUser(ctx.state.user.data)
     return Decals.presenter.render(decal)

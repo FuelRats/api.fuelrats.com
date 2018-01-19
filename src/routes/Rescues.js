@@ -1,11 +1,11 @@
 
 
-import { Rescue } from '../db'
+import { Rescue, Rat } from '../db'
 import { CustomPresenter} from '../classes/Presenters'
 import RescueQuery from '../query/RescueQuery'
 import Rats from './Rats'
 import Epics from './Epics'
-import { NotFoundAPIError } from '../classes/APIError'
+import {ForbiddenAPIError, GoneAPIError, NotFoundAPIError} from '../classes/APIError'
 
 import BotServ from '../Anope/BotServ'
 import API, {
@@ -135,7 +135,17 @@ export default class Rescues extends API {
 
     this.requireWritePermission(ctx, rescue)
 
-    let rats = ctx.data.map((rat) => {
+    let rats = ctx.data.map(async (ratId) => {
+      let rat = await Rat.scope('internal').findOne({ where: { id: ratId } })
+      if (rat.user.isSuspended()) {
+        process.emit('suspendedActivity', ctx)
+        throw new ForbiddenAPIError({ pointer: `/data/${ratId}` })
+      }
+
+      if (rat.user.isDeactivated()) {
+        throw new GoneAPIError({ pointer: `/data/${ratId}` })
+      }
+
       return rescue.addRat(rat)
     })
 

@@ -3,7 +3,7 @@ import Permission from '../classes/Permission'
 import { User, db } from '../db'
 import NicknameQuery from '../query/NicknameQuery'
 import { CustomPresenter} from '../classes/Presenters'
-import { NotFoundAPIError, ConflictAPIError, ForbiddenAPIError } from '../classes/APIError'
+import { NotFoundAPIError, ConflictAPIError } from '../classes/APIError'
 
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
