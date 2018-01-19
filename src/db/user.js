@@ -85,14 +85,12 @@ module.exports = function (db, DataTypes) {
     paranoid: true
   })
 
-  let hashPasswordHook = async function (instance, done) {
+  let hashPasswordHook = async function (instance) {
     if (!instance.changed('password')) {
-      done()
       return
     }
     let hash = await bcrypt.hash(instance.get('password'), global.BCRYPT_ROUNDS_COUNT)
     instance.set('password', hash)
-    done()
   }
   user.beforeCreate(hashPasswordHook)
   user.beforeUpdate(hashPasswordHook)

@@ -118,6 +118,6 @@ export default class Register extends API {
 }
 
 process.on('registration', (ctx, values) => {
-  BotServ.say('#rat-ops',
+  BotServ.say(global.MODERATOR_CHANNEL,
     `[API] User with email ${values.email} registered. IRC Nickname: ${values.nickname}. CMDR name: ${values.name}`)
 })
