@@ -206,7 +206,8 @@ export default class Permission {
       'decal.read',
       'decal.read.me',
       'group.read',
-      'group.write'
+      'group.write',
+      'group.delete'
     ]
   }
 }
