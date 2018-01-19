@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import {JSONObject, IRCNicknames} from '../classes/Validators'
 
 const PASSWORD_MAX_LENGTH = 1024
-const NICKNAME_MAX_LENGTH = 30
+const NICKNAME_MAX_LENGTH = 35
 
 
 module.exports = function (db, DataTypes) {
@@ -92,6 +92,7 @@ module.exports = function (db, DataTypes) {
     let hash = await bcrypt.hash(instance.get('password'), global.BCRYPT_ROUNDS_COUNT)
     instance.set('password', hash)
   }
+
   user.beforeCreate(hashPasswordHook)
   user.beforeUpdate(hashPasswordHook)
 
@@ -190,31 +191,16 @@ module.exports = function (db, DataTypes) {
       include: [
         {
           model: models.Rat,
-          as: 'rats',
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
-          }
+          as: 'rats'
         }, {
           model: models.Rat,
-          as: 'displayRat',
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
-          }
+          as: 'displayRat'
         }, {
           model: models.Group,
           as: 'groups',
           required: false,
           through: {
             attributes: []
-          },
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
           },
           order: [
             ['priority', 'DESC']
@@ -242,23 +228,13 @@ module.exports = function (db, DataTypes) {
           }
         }, {
           model: models.Rat,
-          as: 'displayRat',
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
-          }
+          as: 'displayRat'
         }, {
           model: models.Group,
           as: 'groups',
           required: false,
           through: {
             attributes: []
-          },
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
           }
         }
       ]
@@ -281,40 +257,20 @@ module.exports = function (db, DataTypes) {
         {
           model: models.Rat,
           as: 'rats',
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
-          },
           include: [{
             model: models.Ship,
             as: 'ships',
-            required: false,
-            attributes: {
-              exclude: [
-                'deletedAt'
-              ]
-            }
+            required: false
           }]
         },
         {
           model: models.Rat,
           as: 'displayRat',
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
-          },
 
           include: [{
             model: models.Ship,
             as: 'ships',
-            required: false,
-            attributes: {
-              exclude: [
-                'deletedAt'
-              ]
-            }
+            required: false
           }]
         }, {
           model: models.Group,

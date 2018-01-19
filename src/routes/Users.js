@@ -69,7 +69,11 @@ export default class Users extends API {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async create (ctx) {
-    let result = await User.create(ctx.data)
+    let user = await User.create(ctx.data)
+    await user.addGroup('default')
+
+    let userQuery = new UserQuery({ id: user.id }, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     ctx.response.status = 201
 
     return Users.presenter.render(result, API.meta(result))

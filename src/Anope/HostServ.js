@@ -26,6 +26,10 @@ class HostServ {
    * @returns {Promise.<void>}
    */
   static async update (user) {
+    if (Array.isArray(user.data)) {
+      [user.data] = user.data
+    }
+
     let virtualHost = generateVirtualHost(user)
     if (!virtualHost) {
       throw null

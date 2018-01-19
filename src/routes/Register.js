@@ -16,6 +16,7 @@ export default class Register extends API {
   @POST('/register')
   @required('email', 'password', 'name', 'platform', 'nickname')
   async create (ctx) {
+    let userId = null
     // let captcha = ctx.data['g-recaptcha-response']
     // let captchaResult = await new Request(POST, {
     //   host: 'www.google.com',
@@ -66,7 +67,13 @@ export default class Register extends API {
         email: email,
         password: password
       }, {
-        transaction: transaction
+        transaction
+      })
+
+      userId = user.id
+
+      await user.addGroup('default', {
+        transaction
       })
 
       name = name.replace(/CMDR/i, '')
@@ -80,6 +87,8 @@ export default class Register extends API {
       if (ctx.data.npo === true) {
         await npoMembership.create({
           userId: user.id
+        }, {
+          transaction
         })
       }
 
@@ -88,7 +97,7 @@ export default class Register extends API {
         platform: platform,
         userId: user.id
       }, {
-        transaction: transaction
+        transaction
       })
 
       nickname = nickname.replace(/\[.*]/i, '')
@@ -98,22 +107,23 @@ export default class Register extends API {
       }
       await NickServ.register(nickname, ircPassword, email)
 
-      await User.update({ nicknames: nickname }, {
-        where: { id: user.id }
+      await User.update({ nicknames: [nickname] }, {
+        where: { id: user.id },
+        transaction
       })
 
       await transaction.commit()
-
-      let userQuery = new UserQuery({ id: user.id }, ctx)
-      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      await HostServ.update(user[0])
-      process.emit('registration', ctx, ctx.data)
-
-      ctx.body = Users.presenter.render(result.rows, API.meta(result, userQuery))
     } catch (ex) {
       transaction.rollback()
       throw ex
     }
+
+    let userQuery = new UserQuery({ id: userId }, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    process.emit('registration', ctx, ctx.data)
+    let presentedUser = Users.presenter.render(result.rows, API.meta(result, userQuery))
+    await HostServ.update(presentedUser)
+    ctx.body = presentedUser
   }
 }
 
