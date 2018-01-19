@@ -7,7 +7,7 @@ import API, {
   POST,
   required
 } from '../classes/API'
-import Users from './Users'
+import Profile from './Profiles'
 import { ConflictAPIError,UnprocessableEntityAPIError } from '../classes/APIError'
 
 const platforms = ['pc', 'xb', 'ps']
@@ -119,9 +119,9 @@ export default class Register extends API {
     }
 
     let userQuery = new UserQuery({ id: userId }, ctx)
-    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     process.emit('registration', ctx, ctx.data)
-    let presentedUser = Users.presenter.render(result.rows, API.meta(result, userQuery))
+    let presentedUser = Profile.presenter.render(result.rows, API.meta(result, userQuery))
     await HostServ.update(presentedUser)
     ctx.body = presentedUser
   }
