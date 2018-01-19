@@ -3,7 +3,7 @@ import Permission from '../classes/Permission'
 import { User, db } from '../db'
 import NicknameQuery from '../query/NicknameQuery'
 import { CustomPresenter} from '../classes/Presenters'
-import { NotFoundAPIError, ConflictAPIError } from '../classes/APIError'
+import {NotFoundAPIError, ConflictAPIError, ForbiddenAPIError} from '../classes/APIError'
 
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
@@ -16,6 +16,8 @@ import API, {
   parameters,
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import Profile from './Profiles'
+import UserQuery from '../query/UserQuery'
 
 export default class Nicknames extends API {
   @GET('/nicknames/info/:nickname')
@@ -60,7 +62,9 @@ export default class Nicknames extends API {
     })
 
     await HostServ.update(ctx.state.user)
-    return true
+    let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+    let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
+    return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   @PUT('/nicknames')
@@ -86,7 +90,10 @@ export default class Nicknames extends API {
 
 
     await HostServ.update(ctx.state.user)
-    return true
+
+    let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+    let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
+    return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   @GET('/nicknames/refresh')
@@ -99,7 +106,10 @@ export default class Nicknames extends API {
       where: { id: ctx.state.user.data.id }
     })
     await HostServ.update(ctx.state.user)
-    return true
+
+    let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+    let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
+    return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   @GET('/nicknames/:nickname')
@@ -131,9 +141,11 @@ export default class Nicknames extends API {
         }
       })
 
-      return true
+      let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+      let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
+      return Profile.presenter.render(result.rows, API.meta(result, userQuery))
     }
-    return null
+    throw ForbiddenAPIError({ parameter: 'nickname' })
   }
 
   static get presenter () {

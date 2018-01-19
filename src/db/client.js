@@ -25,7 +25,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         min: 32,
-        max: 255
+        max: 512
       }
     },
     redirectUri: {
