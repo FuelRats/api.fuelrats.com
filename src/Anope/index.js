@@ -1,6 +1,6 @@
 import {
   ConflictAPIError, NotFoundAPIError, UnauthorizedAPIError,
-  UnprocessableEntityAPIError, APIError
+  UnprocessableEntityAPIError, APIError, ForbiddenAPIError
 } from '../classes/APIError'
 import { XmlEntities as Entities } from 'html-entities'
 
@@ -78,7 +78,7 @@ export class AnopeResponse {
     let [, translation] = Object.entries(responseTranslations).find(([key,]) => {
       let response = result.return || result.error
       return new RegExp(key, 'gi').test(response)
-    })
+    }) || []
     if (!translation) {
       translation = result
     }
@@ -93,5 +93,6 @@ const responseTranslations = {
   'password is too long': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
   'may not be registered': new UnprocessableEntityAPIError({ pointer: '/data/attributes/nickname' }),
   'is already registered': new ConflictAPIError({ pointer: '/data/attributes/nickname' }),
+  'may not drop other Services Operator': new ForbiddenAPIError({ pointer: '/data/attributes/nickname' }),
   'Invalid parameters': new UnprocessableEntityAPIError({})
 }

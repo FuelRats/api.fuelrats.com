@@ -49,6 +49,14 @@ export default class API {
   static meta (result, query = null, additionalParameters = {}) {
     return new Meta(result, query, additionalParameters)
   }
+
+  static getAuthor (ctx) {
+    let author = ctx.state.user.data.attributes.nicknames[0] || ctx.state.user.data.id
+    if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
+      author = ctx.req.headers['x-command-by']
+    }
+    return author
+  }
 }
 
 /**

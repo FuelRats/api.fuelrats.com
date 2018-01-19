@@ -138,7 +138,7 @@ export default class Rescues extends API {
     let rats = ctx.data.map(async (ratId) => {
       let rat = await Rat.scope('internal').findOne({ where: { id: ratId } })
       if (rat.user.isSuspended()) {
-        process.emit('suspendedActivity', ctx)
+        process.emit('suspendedAssign', ctx, rat)
         throw new ForbiddenAPIError({ pointer: `/data/${ratId}` })
       }
 
@@ -283,11 +283,14 @@ process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
     let caseNumber = boardIndex || boardIndex === 0 ? `#${boardIndex}` : result.data[0].id
 
     let client = result.data[0].attributes.client || ''
-    let author = ctx.state.user.data.attributes.nicknames[0] || ctx.state.user.data.id
-    if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
-      author = ctx.req.headers['x-command-by']
-    }
+    let author = API.getAuthor(ctx)
     BotServ.say(global.PAPERWORK_CHANNEL,
       `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
   }
+})
+
+
+process.on('suspendedAssign', (ctx, rat) => {
+  let author = API.getAuthor(ctx)
+  BotServ.say(global.MODERATOR_CHANNEL, `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author}`)
 })

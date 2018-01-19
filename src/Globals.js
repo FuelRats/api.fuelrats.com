@@ -7,3 +7,5 @@ global.OAUTH_TOKEN_LENTH = 32
 global.OVERSEER_CHANNEL = '#doersofstuff'
 global.RESCUE_CHANNEL = '#fuelrats'
 global.PAPERWORK_CHANNEL = '#ratchat'
+global.MODERATOR_CHANNEL = '#rat-ops'
+global.TECHNICAL_CHANNEL = '#rattech'

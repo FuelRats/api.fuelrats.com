@@ -118,7 +118,7 @@ export default class Nicknames extends API {
   async delete (ctx) {
     ctx.params.nickname = ctx.params.nickname.toLowerCase()
     if (ctx.state.user.data.attributes.nicknames.includes(ctx.params.nickname) ||
-      Permission.require(['nickname.delete'], ctx.state.user, ctx.state.scope)) {
+      Permission.require(['user.write'], ctx.state.user, ctx.state.scope)) {
       await NickServ.drop(ctx.params.nickname)
 
       let nicknames = await NickServ.list(ctx.state.user.data.attributes.nicknames[0])
