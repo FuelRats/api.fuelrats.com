@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import { OAuthClientName } from '../classes/Validators'
 
 const CLIENT_SECRET_MAX_LENGTH = 1024
 
@@ -16,9 +17,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isAlphanumeric: true,
-        min: 3,
-        max: 255
+        is: OAuthClientName
       }
     },
     secret: {
@@ -47,14 +46,12 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
-  let hashPasswordHook = async function (instance, done) {
+  let hashPasswordHook = async function (instance) {
     if (!instance.changed('secret')) {
-      done()
       return
     }
     let hash = await bcrypt.hash(instance.get('secret'), global.BCRYPT_ROUNDS_COUNT)
     instance.set('secret', hash)
-    done()
   }
   client.beforeCreate(hashPasswordHook)
   client.beforeUpdate(hashPasswordHook)
