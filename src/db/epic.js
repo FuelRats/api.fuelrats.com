@@ -30,6 +30,11 @@ module.exports = function (sequelize, DataTypes) {
       validate: {
         isUUID: 4
       }
+    },
+    approved: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   })
 
