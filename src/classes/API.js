@@ -4,6 +4,8 @@ import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './API
 import yayson from 'yayson'
 import router from './Router'
 import Meta from './Meta'
+import { Rat, User } from '../db'
+import { UUID } from './Validators'
 let config = require('../../config')
 
 /**
@@ -50,12 +52,23 @@ export default class API {
     return new Meta(result, query, additionalParameters)
   }
 
-  static getAuthor (ctx) {
-    let author = ctx.state.user.data.attributes.nicknames[0] || ctx.state.user.data.id
+  static async getAuthor (ctx) {
     if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
-      author = ctx.req.headers['x-command-by']
+      let ratId = ctx.req.headers['x-command-by']
+      if (UUID.test(ratId) === false) {
+        return null
+      }
+
+      let rat = await Rat.findOne({
+        where: {
+          id: ratId
+        }
+      })
+
+      return rat.user
+    } else {
+      return ctx.state.user
     }
-    return author
   }
 }
 

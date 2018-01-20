@@ -15,7 +15,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: DataTypes.UUIDV4,
       validate: {
-        isUUID: true
+        isUUID: 4
       }
     },
     RatId: {

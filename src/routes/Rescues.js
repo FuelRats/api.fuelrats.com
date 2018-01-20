@@ -53,7 +53,7 @@ export default class Rescues extends API {
   @permissions('rescue.write')
   async create (ctx) {
     let result = await Rescue.scope('rescue').create(ctx.data, {
-      userId: ctx.state.user.data.id
+      userId: ctx.state.user.id
     })
 
     ctx.response.status = 201
@@ -80,7 +80,7 @@ export default class Rescues extends API {
     this.requireWritePermission(ctx, rescue)
 
     await rescue.update(ctx.data, {
-      userId: ctx.state.user.data.id
+      userId: ctx.state.user.id
     })
 
     let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
@@ -135,21 +135,22 @@ export default class Rescues extends API {
 
     this.requireWritePermission(ctx, rescue)
 
-    let rats = ctx.data.map(async (ratId) => {
-      let rat = await Rat.scope('internal').findOne({ where: { id: ratId } })
+    let rats = await Promise.all(ctx.data.map(ratId => {
+      return Rat.scope('internal').findOne({ where: { id: ratId } })
+    }))
+
+    for (let rat of rats) {
       if (rat.user.isSuspended()) {
         process.emit('suspendedAssign', ctx, rat)
-        throw new ForbiddenAPIError({ pointer: `/data/${ratId}` })
+        throw new ForbiddenAPIError({ pointer: `/data/${rat.id}` })
       }
 
       if (rat.user.isDeactivated()) {
-        throw new GoneAPIError({ pointer: `/data/${ratId}` })
+        throw new GoneAPIError({ pointer: `/data/${rat.id}` })
       }
+    }
 
-      return rescue.addRat(rat)
-    })
-
-    await Promise.all(rats)
+    await rescue.addRats(rats)
 
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
@@ -217,7 +218,7 @@ export default class Rescues extends API {
       where: {
         id: ctx.params.id
       },
-      userId: ctx.state.user.data.id
+      userId: ctx.state.user.id
     })
 
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
@@ -229,7 +230,7 @@ export default class Rescues extends API {
 
   getWritePermissionForEntity (ctx, entity) {
     if (ctx.state.user && entity.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
-      for (let rat of ctx.state.user.data.relationships.rats.data) {
+      for (let rat of ctx.state.user.rats) {
         if (entity.rats.find((fRat) => { return fRat.id === rat.id }) || entity.firstLimpetId === rat.id) {
           return ['rescue.write.me', 'rescue.write']
         }
@@ -275,23 +276,23 @@ process.on('rescueCreated', (ctx, rescue) => {
   }
 })
 
-process.on('rescueUpdated', (ctx, result, permissions, changedValues) => {
+process.on('rescueUpdated', async (ctx, result, permissions, changedValues) => {
   if (!changedValues) {
     return
   }
   if (changedValues.hasOwnProperty('outcome')) {
-    let { boardIndex } = result.data[0].attributes.data || {}
+    let { boardIndex } = result.data[0] || {}
     let caseNumber = boardIndex || boardIndex === 0 ? `#${boardIndex}` : result.data[0].id
 
-    let client = result.data[0].attributes.client || ''
-    let author = API.getAuthor(ctx)
+    let client = result.data[0].client || ''
+    let author = await API.getAuthor(ctx).preferredRat().name
     BotServ.say(global.PAPERWORK_CHANNEL,
-      `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author}`)
+      `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author.preferredRat().name}`)
   }
 })
 
 
-process.on('suspendedAssign', (ctx, rat) => {
-  let author = API.getAuthor(ctx)
-  BotServ.say(global.MODERATOR_CHANNEL, `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author}`)
+process.on('suspendedAssign', async (ctx, rat) => {
+  let author = await API.getAuthor(ctx)
+  BotServ.say(global.MODERATOR_CHANNEL, `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author.preferredRat().name}`)
 })

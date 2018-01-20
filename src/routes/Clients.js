@@ -52,7 +52,7 @@ export default class Clients extends API {
     let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
     ctx.data.secret = secret
     if (!ctx.data.userId) {
-      ctx.data.userId = ctx.state.user.data.id
+      ctx.data.userId = ctx.state.user.id
     }
     let result = await Client.create(ctx.data)
     result.secret = secret
@@ -118,14 +118,14 @@ export default class Clients extends API {
   }
 
   getReadPermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.data.id) {
+    if (entity.userId === ctx.state.user.id) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']
   }
 
   getWritePermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.data.id) {
+    if (entity.userId === ctx.state.user.id) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']

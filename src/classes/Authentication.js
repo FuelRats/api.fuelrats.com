@@ -73,8 +73,7 @@ export default class Authentication {
       throw new GoneAPIError({})
     }
 
-    let updatedUserInstance = await User.scope('profile').findOne({where: { id: token.userId }})
-    let user = Users.presenter.render(updatedUserInstance, {})
+    let user = await User.scope('profile').findOne({where: { id: token.userId }})
     return {
       user: user,
       scope: token.scope
@@ -101,7 +100,7 @@ export default class Authentication {
           where: { id: client.id }
         })
       }
-      return Clients.presenter.render(client, {})
+      return client
     }
     return false
   }
@@ -116,8 +115,7 @@ export default class Authentication {
     if (ctx.session.userId) {
       let user = await User.scope('internal').findOne({where: { id: ctx.session.userId }})
       if (user) {
-        let updatedUser = await User.scope('profile').findOne({where: { id: ctx.session.userId }})
-        ctx.state.user = Users.presenter.render(updatedUser, {})
+        ctx.state.user = await User.scope('profile').findOne({where: { id: ctx.session.userId }})
         return true
       }
     }

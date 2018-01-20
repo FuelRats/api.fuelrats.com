@@ -29,7 +29,7 @@ class TrafficControl {
    */
   validateRateLimit (connection, increase = true) {
     let entity
-    if (connection.state.user && connection.state.user.data.type === 'users') {
+    if (connection.state.user) {
       entity = this.retrieveAuthenticatedEntity(connection.state.user)
     } else {
       entity = this.retrieveUnauthenticatedEntity(connection.inet)
@@ -145,7 +145,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    */
   get isAdmin () {
     return Permissions.groups.find((group) => {
-      return group.isAdministrator && this._user.data.relationships.groups.data.find((uGroup) => {
+      return group.isAdministrator && this._user.groups.find((uGroup) => {
         return uGroup.id === group.id
       })
     })

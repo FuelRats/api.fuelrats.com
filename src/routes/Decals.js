@@ -33,7 +33,7 @@ export default class Decals extends API {
       }
       return eligible
     } else {
-      let eligible = await Decal.checkEligible(ctx.state.user.data)
+      let eligible = await Decal.checkEligible(ctx.state.user)
       if (eligible.id) {
         return Decals.presenter.render(eligible)
       }
@@ -46,19 +46,19 @@ export default class Decals extends API {
   @authenticated
   @permissions('user.write.me')
   async redeem (ctx) {
-    let decal = await Decal.getDecalForUser(ctx.state.user.data)
+    let decal = await Decal.getDecalForUser(ctx.state.user)
     return Decals.presenter.render(decal)
   }
 
   getReadPermissionForEntity (ctx, entity) {
-    if (entity.id === ctx.state.user.data.id) {
+    if (entity.id === ctx.state.user.id) {
       return ['user.write.me', 'user.write']
     }
     return ['user.write']
   }
 
   getWritePermissionForEntity (ctx, entity) {
-    if (entity.id === ctx.state.user.data.id) {
+    if (entity.id === ctx.state.user.id) {
       return ['user.write.me', 'user.write']
     }
     return ['user.write']

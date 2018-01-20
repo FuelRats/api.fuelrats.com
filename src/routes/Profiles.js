@@ -17,7 +17,7 @@ export default class Profiles extends API {
   async read  (ctx) {
     let profile = await User.scope('defaultScope', 'profile').findOne({
       where: {
-        id: ctx.state.user.data.id
+        id: ctx.state.user.id
       }
     })
     return Profiles.presenter.render(profile)

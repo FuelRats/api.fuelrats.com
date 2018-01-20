@@ -75,9 +75,9 @@ export default class Permission {
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
   static granted (permissions, origUser, scope = null) {
-    if (!origUser || User.isDeactivated(origUser)) {
+    if (!origUser || origUser.isDeactivated()) {
       return false
-    } else if (!User.isConfirmed(origUser) || User.isSuspended(origUser)) {
+    } else if (origUser.isDeactivated() || origUser.isSuspended()) {
       return false
     }
 
@@ -87,7 +87,7 @@ export default class Permission {
     let hasPermission = false
 
     for (let permission of permissions) {
-      for (let groupRelation of user.data.relationships.groups.data) {
+      for (let groupRelation of user.groups) {
         let group = groups.find((group) => {
           return group.id === groupRelation.id
         })
@@ -114,11 +114,8 @@ export default class Permission {
    * @returns {boolean} Whether the user is an administrator
    */
   static isAdmin (user) {
-    return user.included.some((include => {
-      if (include.type === 'groups') {
-        return include.attributes.isAdministrator
-      }
-      return false
+    return user.group.some((group => {
+      return group.isAdministrator
     }))
   }
 

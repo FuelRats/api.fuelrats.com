@@ -41,7 +41,7 @@ export default class NPO extends API {
   @authenticated
   async create (ctx) {
     let result = await npoMembership.create({
-      userId: ctx.state.user.data.id
+      userId: ctx.state.user.id
     })
 
     ctx.response.status = 201
@@ -54,7 +54,7 @@ export default class NPO extends API {
   async delete (ctx) {
     let membership = await npoMembership.findOne({
       where: {
-        userId: ctx.state.user.data.id
+        userId: ctx.state.user.id
       }
     })
 
@@ -69,14 +69,14 @@ export default class NPO extends API {
   }
 
   getReadPermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.data.id) {
+    if (entity.userId === ctx.state.user.id) {
       return ['user.write', 'user.write.me']
     }
     return ['user.write']
   }
 
   getWritePermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.data.id) {
+    if (entity.userId === ctx.state.user.id) {
       return ['user.write', 'user.write.me']
     }
     return ['user.write']

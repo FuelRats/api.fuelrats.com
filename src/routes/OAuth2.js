@@ -110,7 +110,7 @@ export default class OAuth2 extends API {
     if (!token) {
       throw NotFoundAPIError({ pointer: '/data/attributes/token' })
     }
-    if (token.clientId !== ctx.state.client.data.id) {
+    if (token.clientId !== ctx.state.client.id) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/clientId' })
     }
 

@@ -5,6 +5,7 @@ import API, {
   POST,
   required
 } from '../classes/API'
+import Profiles from './Profiles'
 
 export default class Login extends API {
   @POST('/login')
@@ -22,7 +23,7 @@ export default class Login extends API {
       ctx.session.redirect = null
       ctx.redirect(redirectUrl)
     }
-    return user
+    return Profiles.presenter.render(user, {})
   }
 
   @GET('/logout')

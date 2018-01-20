@@ -26,18 +26,14 @@ class HostServ {
    * @returns {Promise.<void>}
    */
   static async update (user) {
-    if (Array.isArray(user.data)) {
-      [user.data] = user.data
-    }
-
     let virtualHost = generateVirtualHost(user)
     if (!virtualHost) {
       throw null
     }
 
-    await HostServ.set(user.data.attributes.nicknames[0], virtualHost)
+    await HostServ.set(user.nicknames[0], virtualHost)
 
-    NickServ.update(user.data.attributes.nicknames[0])
+    NickServ.update(user.nicknames[0])
     return virtualHost
   }
 }
@@ -50,13 +46,13 @@ class HostServ {
 function generateVirtualHost (user) {
   let group = getHighestPriorityGroup(user)
 
-  if (group.attributes.isAdministrator) {
-    return group.attributes.vhost
+  if (group.isAdministrator) {
+    return group.vhost
   } else {
     let preferredRat = User.preferredRat(user)
     let ircSafeName = getIRCSafeName(preferredRat)
 
-    return `${ircSafeName}.${group.attributes.vhost}`
+    return `${ircSafeName}.${group.vhost}`
   }
 }
 
@@ -66,7 +62,7 @@ function generateVirtualHost (user) {
  * @returns {string} An IRC safe name
  */
 function getIRCSafeName (rat) {
-  let ratName = rat.attributes.name
+  let ratName = rat.name
   ratName = ratName.replace(/ /g, '')
   ratName = ratName.replace(/[^a-zA-Z0-9\s]/g, '')
   return ratName.toLowerCase()
@@ -78,8 +74,8 @@ function getIRCSafeName (rat) {
  * @returns {T} the highest priority group
  */
 function getHighestPriorityGroup (user) {
-  let groups = user.included.filter((include) => {
-    return include.type === 'groups' && include.attributes.vhost
+  let groups = user.groups.filter((include) => {
+    return include.vhost
   })
 
   groups.sort((group1, group2) => {

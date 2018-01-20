@@ -147,7 +147,7 @@ export default class Users extends API {
   async setpassword (ctx) {
     let user = await User.findOne({
       where: {
-        id: ctx.state.user.data.id
+        id: ctx.state.user.id
       }
     })
 
@@ -162,7 +162,7 @@ export default class Users extends API {
       where: { id: user.id }
     })
 
-    let userQuery = new UserQuery({id: ctx.state.user.data.id}, ctx)
+    let userQuery = new UserQuery({id: ctx.state.user.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -202,7 +202,7 @@ export default class Users extends API {
   }
 
   getReadPermissionForEntity (ctx, entity) {
-    if (entity.id === ctx.state.user.data.id) {
+    if (entity.id === ctx.state.user.id) {
       return ['user.write.me', 'user.write']
     }
     return ['user.write']
@@ -217,7 +217,7 @@ export default class Users extends API {
         return ['user.write']
       }
     }
-    if (entity.id === ctx.state.user.data.id) {
+    if (entity.id === ctx.state.user.id) {
       return ['user.write.me', 'user.write']
     }
     return ['user.write']

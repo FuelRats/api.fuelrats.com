@@ -43,7 +43,7 @@ export default class Nicknames extends API {
 
     ctx.data.nickname = ctx.data.nickname.toLowerCase()
 
-    let { nicknames } = ctx.state.user.data.attributes
+    let { nicknames } = ctx.state.user
     if (nicknames.includes(ctx.data.nickname)) {
       throw new ConflictAPIError({ pointer: '/data/attributes/nickname' })
     }
@@ -51,18 +51,18 @@ export default class Nicknames extends API {
     if (nicknames.length > 0) {
       await NickServ.group(ctx.data.nickname, nicknames[0], ctx.data.password)
     } else {
-      await NickServ.register(ctx.data.nickname, ctx.data.password, ctx.state.user.data.attributes.email)
+      await NickServ.register(ctx.data.nickname, ctx.data.password, ctx.state.user.email)
       await NickServ.confirm(ctx.data.nickname)
     }
 
     let updatedNicknames = await NickServ.list(ctx.data.nickname)
 
     await User.update({ updatedNicknames }, {
-      where: { id: ctx.state.user.data.id }
+      where: { id: ctx.state.user.id }
     })
 
     await HostServ.update(ctx.state.user)
-    let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+    let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -72,7 +72,7 @@ export default class Nicknames extends API {
   @authenticated
   async connect (ctx) {
     ctx.data.nickname = ctx.data.nickname.toLowerCase()
-    let { nicknames } = ctx.state.user.data.attributes
+    let { nicknames } = ctx.state.user
     if (nicknames.includes(ctx.data.nickname)) {
       throw new ConflictAPIError({ pointer: '/data/attributes/nickname' })
     }
@@ -85,13 +85,13 @@ export default class Nicknames extends API {
     let updatedNicknames = await NickServ.list(ctx.data.nickname)
 
     await User.update({ nicknames: updatedNicknames }, {
-      where: { id: ctx.state.user.data.id }
+      where: { id: ctx.state.user.id }
     })
 
 
     await HostServ.update(ctx.state.user)
 
-    let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+    let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -100,14 +100,14 @@ export default class Nicknames extends API {
   @websocket('nicknames', 'refresh')
   @authenticated
   async refresh (ctx) {
-    let updatedNicknames = await NickServ.list(ctx.state.user.data.attributes.nicknames[0])
+    let updatedNicknames = await NickServ.list(ctx.state.user.nicknames[0])
 
     await User.update({ nicknames: updatedNicknames }, {
-      where: { id: ctx.state.user.data.id }
+      where: { id: ctx.state.user.id }
     })
     await HostServ.update(ctx.state.user)
 
-    let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+    let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -127,21 +127,21 @@ export default class Nicknames extends API {
   @parameters('nickname')
   async delete (ctx) {
     ctx.params.nickname = ctx.params.nickname.toLowerCase()
-    if (ctx.state.user.data.attributes.nicknames.includes(ctx.params.nickname) ||
+    if (ctx.state.user.nicknames.includes(ctx.params.nickname) ||
       Permission.require(['user.write'], ctx.state.user, ctx.state.scope)) {
       await NickServ.drop(ctx.params.nickname)
 
-      let nicknames = await NickServ.list(ctx.state.user.data.attributes.nicknames[0])
+      let nicknames = await NickServ.list(ctx.state.user.nicknames[0])
 
       await User.update({
         nicknames: nicknames
       }, {
         where: {
-          id: ctx.state.user.data.id
+          id: ctx.state.user.id
         }
       })
 
-      let userQuery = new UserQuery({ id: ctx.state.user.data.id }, ctx)
+      let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
       let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
       return Profile.presenter.render(result.rows, API.meta(result, userQuery))
     }

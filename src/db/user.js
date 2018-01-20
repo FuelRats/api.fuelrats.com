@@ -110,39 +110,21 @@ module.exports = function (db, DataTypes) {
     return this.suspended - new Date() > 0
   }
 
-  user.isSuspended = function (user) {
-    if (!user.data.attributes.suspended) {
-      return false
-    }
-
-    return user.data.attributes.suspended - Date.now() > 0
-  }
-
   user.prototype.isDeactivated = function () {
     return this.status === 'deactivated'
-  }
-
-  user.isDeactivated = function (user) {
-    return user.data.attributes.status === 'deactivated'
   }
 
   user.prototype.isConfirmed = function () {
     return this.groups.length > 0
   }
 
-  user.isConfirmed = function (user) {
-    return user.data.relationships.groups.data.length > 0
-  }
 
-  user.preferredRat = function (user) {
-    let ratRef = (user.data.relationships.displayRat.data || user.data.relationships.rats.data[0])
-    if (!ratRef) {
-      return null
+
+  user.prototype.preferredRat = function () {
+    if (this.displayRat) {
+      return this.displayRat
     }
-
-    return user.included.find((include) => {
-      return include.id === ratRef.id
-    })
+    return this.rats[0]
   }
 
   user.associate = function (models) {

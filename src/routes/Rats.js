@@ -44,7 +44,7 @@ export default class Rats extends API {
     this.requireWritePermission(ctx, ctx.data)
 
     if (!ctx.data.userId) {
-      ctx.data.userId = ctx.state.user.data.id
+      ctx.data.userId = ctx.state.user.id
     }
 
     let result = await Rat.create(ctx.data)
@@ -112,14 +112,14 @@ export default class Rats extends API {
   }
 
   getReadPermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.data.id) {
+    if (entity.userId === ctx.state.user.id) {
       return ['rat.write', 'rat.write.me']
     }
     return ['rat.write']
   }
 
   getWritePermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.data.id) {
+    if (entity.userId === ctx.state.user.id) {
       return ['rat.write', 'rat.write.me']
     }
     return ['rat.write']
