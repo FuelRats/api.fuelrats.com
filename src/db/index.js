@@ -1,5 +1,8 @@
 
 import Sequelize from 'sequelize'
+import PaperTrail from 'sequelize-paper-trail-fr'
+
+
 let config = require('../../config')
 
 if (process.env.NODE_ENV === 'testing') {
@@ -11,6 +14,7 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
   host: config.postgres.hostname,
   port: config.postgres.port,
   dialect: 'postgres',
+  logging: true,
 
   pool: {
     idle: 10000
@@ -45,5 +49,22 @@ Object.keys(models).forEach(function (modelName) {
     models[modelName].associate(models)
   }
 })
+
+let paperTrail = PaperTrail.init(db, {
+  debug: true,
+  userModel: 'User',
+  exclude: [
+    'createdAt',
+    'updatedAt'
+  ],
+  enableMigration: true,
+  enableRevisionChangeModel: true,
+  UUID: true,
+  continuationKey: 'userId',
+  enableCompression: true
+})
+paperTrail.defineModels({})
+
+models.Rescue.Revisions = models.Rescue.hasPaperTrail()
 
 module.exports = models

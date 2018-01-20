@@ -52,7 +52,9 @@ export default class Rescues extends API {
   @authenticated
   @permissions('rescue.write')
   async create (ctx) {
-    let result = await Rescue.scope('rescue').create(ctx.data)
+    let result = await Rescue.scope('rescue').create(ctx.data, {
+      userId: ctx.state.user.data.id
+    })
 
     ctx.response.status = 201
     let rescue = Rescues.presenter.render(result, API.meta(result))
@@ -77,10 +79,8 @@ export default class Rescues extends API {
 
     this.requireWritePermission(ctx, rescue)
 
-    await Rescue.scope('rescue').update(ctx.data, {
-      where: {
-        id: ctx.params.id
-      }
+    await rescue.update(ctx.data, {
+      userId: ctx.state.user.data.id
     })
 
     let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
@@ -216,7 +216,8 @@ export default class Rescues extends API {
     }, {
       where: {
         id: ctx.params.id
-      }
+      },
+      userId: ctx.state.user.data.id
     })
 
     let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
