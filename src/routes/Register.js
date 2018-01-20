@@ -32,33 +32,7 @@ export default class Register extends API {
     // }
 
     let { email, name, nickname, password, ircPassword, platform } = ctx.data
-
-    let existingUser = await User.findOne({
-      where: {
-        email: {
-          $iLike: email
-        }
-      }
-    })
-    if (existingUser) {
-      throw ConflictAPIError({
-        pointer: '/data/attributes/email'
-      })
-    }
-
-    let existingRat = await Rat.findOne({
-      where: {
-        name: {
-          $iLike: name
-        },
-        platform: platform
-      }
-    })
-    if (existingRat) {
-      throw ConflictAPIError({
-        pointer: '/data/attributes/name'
-      })
-    }
+    Register.checkExisting(ctx)
 
     let transaction = await db.transaction()
 
@@ -66,15 +40,11 @@ export default class Register extends API {
       let user = await User.create({
         email: email,
         password: password
-      }, {
-        transaction
-      })
+      }, { transaction })
 
       userId = user.id
 
-      await user.addGroup('default', {
-        transaction
-      })
+      await user.addGroup('default', { transaction })
 
       name = name.replace(/CMDR/i, '')
       if (platforms.includes(platform) === false) {
@@ -87,18 +57,14 @@ export default class Register extends API {
       if (ctx.data.npo === true) {
         await npoMembership.create({
           userId: user.id
-        }, {
-          transaction
-        })
+        }, { transaction })
       }
 
       await Rat.create({
         name: name,
         platform: platform,
         userId: user.id
-      }, {
-        transaction
-      })
+      }, { transaction })
 
       nickname = nickname.replace(/\[.*]/i, '')
 
@@ -108,9 +74,7 @@ export default class Register extends API {
       await NickServ.register(nickname, ircPassword, email)
 
       await User.update({ nicknames: [nickname] }, {
-        where: { id: user.id },
-        transaction
-      })
+        where: { id: user.id }, transaction })
 
       await transaction.commit()
     } catch (ex) {
@@ -124,6 +88,29 @@ export default class Register extends API {
     let presentedUser = Profile.presenter.render(result.rows, API.meta(result, userQuery))
     await HostServ.update(presentedUser)
     ctx.body = presentedUser
+  }
+
+  static async checkExisting (ctx) {
+    let { email, name, platform } = ctx.data
+
+    let existingUser = await User.findOne({ where: {
+      email: {
+        $iLike: email
+      }
+    }})
+    if (existingUser) {
+      throw ConflictAPIError({ pointer: '/data/attributes/email' })
+    }
+
+    let existingRat = await Rat.findOne({ where: {
+      name: {
+        $iLike: name
+      },
+      platform: platform
+    }})
+    if (existingRat) {
+      throw ConflictAPIError({ pointer: '/data/attributes/name' })
+    }
   }
 }
 
