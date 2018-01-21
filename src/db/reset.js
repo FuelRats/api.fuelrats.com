@@ -1,4 +1,4 @@
-
+const RESET_TOKEN_LENGTH = 32
 
 module.exports = function (sequelize, DataTypes) {
   let reset = sequelize.define('Reset', {
@@ -15,7 +15,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         isAlphanumeric: true,
-        len: [global.RESET_TOKEN_LENGTH, global.RESET_TOKEN_LENGTH]
+        len: [RESET_TOKEN_LENGTH, RESET_TOKEN_LENGTH]
       }
     },
     expires: {

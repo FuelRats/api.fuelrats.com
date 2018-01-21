@@ -9,4 +9,4 @@ global.RESCUE_CHANNEL = '#fuelrats'
 global.PAPERWORK_CHANNEL = '#ratchat'
 global.MODERATOR_CHANNEL = '#rat-ops'
 global.TECHNICAL_CHANNEL = '#rattech'
-global.RESET_TOKEN_LENGTH = 16
+global.RESET_TOKEN_LENGTH = 32

@@ -47,7 +47,7 @@ export default class Resets extends API {
     })
 
     let reset = await Reset.create({
-      value: crypto.randomBytes(global.RESET_TOKEN_LENGTH).toString('hex'),
+      value: crypto.randomBytes(global.RESET_TOKEN_LENGTH / 2).toString('hex'),
       expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
       userId: user.id,
       required: requiredReset

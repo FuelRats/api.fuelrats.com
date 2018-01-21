@@ -157,7 +157,7 @@ app.use(async (ctx, next) => {
 })
 
 render(app, {
-  root: path.join(__dirname, 'views'),
+  root: path.join(__dirname, '../views'),
   layout: false,
   viewExt: 'html',
   cache: false,
