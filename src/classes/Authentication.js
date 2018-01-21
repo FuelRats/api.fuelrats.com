@@ -102,7 +102,7 @@ export default class Authentication {
       }
       return client
     }
-    return false
+    throw UnauthorizedAPIError({})
   }
 
   static async authenticate (ctx) {
