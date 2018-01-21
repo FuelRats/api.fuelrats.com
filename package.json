@@ -16,7 +16,7 @@
   "license": "BSD-3",
   "dependencies": {
     "apidoc": "^0.17.6",
-    "bcrypt": "^1.0.2",
+    "bcrypt": "^1.0.3",
     "chai": "^3.4.1",
     "co-busboy": "^1.4.0",
     "compression": "^1.7.1",

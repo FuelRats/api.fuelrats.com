@@ -754,7 +754,7 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
-bcrypt@^1.0.2:
+bcrypt@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/bcrypt/-/bcrypt-1.0.3.tgz#b02ddc6c0b52ea16b8d3cf375d5a32e780dab548"
   dependencies:
@@ -5223,25 +5223,9 @@ sequelize-auto-ts@^1.0.18:
     script-template ">=1.0.0"
     sequelize "1.7.8"
 
-sequelize-history@^1.3.2:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/sequelize-history/-/sequelize-history-1.3.2.tgz#a2cf654127b0a5aefcc4aa5c03885efc4826b542"
-  dependencies:
-    lodash "^4.17.4"
-
 sequelize-paper-trail-fr@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/sequelize-paper-trail-fr/-/sequelize-paper-trail-fr-2.0.1.tgz#3aad9173d6a65994dafd8bb61a4bf1ebed090c9c"
-  dependencies:
-    continuation-local-storage "^3.1.7"
-    deep-diff "^0.3.4"
-    diff "^2.2.2"
-    lodash "^4.11.1"
-    sequelize "^4.19.0"
-
-sequelize-paper-trail@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/sequelize-paper-trail/-/sequelize-paper-trail-2.0.0.tgz#fc0f75562f9c360fd044d8a7b2934d766855ce7c"
   dependencies:
     continuation-local-storage "^3.1.7"
     deep-diff "^0.3.4"
