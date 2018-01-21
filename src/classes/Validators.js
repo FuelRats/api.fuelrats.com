@@ -51,7 +51,6 @@ const requiredQuoteFields = [
 export function RescueQuote (value) {
   try {
     value.forEach(quote => {
-      quote = JSON.parse(quote)
       requiredQuoteFields.forEach(requiredField => {
         if (quote.hasOwnProperty(requiredField) === false) {
           throw Error()
