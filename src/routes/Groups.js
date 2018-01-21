@@ -17,7 +17,7 @@ import {NotFoundAPIError} from '../classes/APIError'
 import Users from './Users'
 import UserQuery from '../query/UserQuery'
 
-class Groups extends API {
+export default class Groups extends API {
   @GET('/groups')
   @websocket('groups', 'search')
   @authenticated
@@ -163,4 +163,3 @@ class Groups extends API {
   }
 }
 
-module.exports = Groups
