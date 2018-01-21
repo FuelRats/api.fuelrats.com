@@ -37,6 +37,7 @@ export function JSONObject (value) {
 const requiredQuoteFields = [
   'message',
   'author',
+  'lastAuthor',
   'createdAt',
   'updatedAt'
 ]
@@ -65,6 +66,7 @@ export function RescueQuote (value) {
             break
 
           case 'author':
+          case 'lastAuthor':
             if (value !== null && typeof value !== 'string') {
               throw Error()
             }
