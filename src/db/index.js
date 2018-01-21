@@ -60,8 +60,7 @@ let paperTrail = PaperTrail.init(db, {
   enableMigration: true,
   enableRevisionChangeModel: true,
   UUID: true,
-  continuationKey: 'userId',
-  enableCompression: true
+  continuationKey: 'userId'
 })
 paperTrail.defineModels({})
 
