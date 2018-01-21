@@ -62,6 +62,33 @@ export default class Users extends API {
     next()
   }
 
+  @PUT('/users/setpassword')
+  @websocket('users', 'setpassword')
+  @authenticated
+  @required('password', 'new')
+  async setpassword (ctx) {
+    let user = await User.findOne({
+      where: {
+        id: ctx.state.user.id
+      }
+    })
+
+    let validatePassword = await bcrypt.compare(ctx.data.password, user.password)
+    if (!validatePassword) {
+      throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
+    }
+
+    await User.update({
+      password: ctx.data.new
+    }, {
+      where: { id: user.id }
+    })
+
+    let userQuery = new UserQuery({id: ctx.state.user.id}, ctx)
+    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    return Users.presenter.render(result.rows, API.meta(result, userQuery))
+  }
+
   @POST('/users')
   @websocket('users', 'create')
   @authenticated
@@ -136,33 +163,6 @@ export default class Users extends API {
     })
 
     let userQuery = new UserQuery({id: ctx.params.id}, ctx)
-    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
-  }
-
-  @PUT('/users/setpassword')
-  @websocket('users', 'setpassword')
-  @authenticated
-  @required('password', 'new')
-  async setpassword (ctx) {
-    let user = await User.findOne({
-      where: {
-        id: ctx.state.user.id
-      }
-    })
-
-    let validatePassword = await bcrypt.compare(ctx.data.password, user.password)
-    if (!validatePassword) {
-      throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
-    }
-
-    await User.update({
-      password: ctx.data.new
-    }, {
-      where: { id: user.id }
-    })
-
-    let userQuery = new UserQuery({id: ctx.state.user.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
