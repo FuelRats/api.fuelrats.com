@@ -1,5 +1,6 @@
 import Permission from './Permission'
 import {UnprocessableEntityAPIError} from './APIError'
+import { URL } from 'url'
 
 export const FrontierRedeemCode = /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-FUE[0-9]{2}$/
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/
@@ -103,4 +104,17 @@ export function IRCNicknames (value) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/nicknames' })
     }
   })
+}
+
+/**
+ * Validate wether a value is a valid URL
+ * @param value the URL to validate
+ * @constructor
+ */
+export function isURL (value) {
+  try {
+    new URL(value)
+  } catch (ex) {
+    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
+  }
 }

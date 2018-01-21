@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { OAuthClientName } from '../classes/Validators'
+import { OAuthClientName, isURL } from '../classes/Validators'
 
 const CLIENT_SECRET_MAX_LENGTH = 1024
 
@@ -32,9 +32,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       validate: {
-        isUrl: true,
-        notEmpty: true,
-        max: 255
+        isURL
       }
     },
     userId: {
