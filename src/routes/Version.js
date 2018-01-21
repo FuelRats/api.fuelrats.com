@@ -1,7 +1,7 @@
 
 import gitrev from 'git-rev-promises'
 import { ObjectPresenter } from '../classes/Presenters'
-import packageInfo from '../../../package.json'
+import packageInfo from '../../package.json'
 import API, {
   GET
 } from '../classes/API'
