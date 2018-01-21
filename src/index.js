@@ -58,7 +58,7 @@ let sessionConfiguration = {
 app.use(conditional())
 app.use(etag())
 app.use(session(sessionConfiguration, app))
-app.use(koaStatic('static', {
+app.use(koaStatic('../static', {
   hidden: false,
   gzip: true
 }))
