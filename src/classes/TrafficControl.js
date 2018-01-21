@@ -144,8 +144,9 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {boolean} true if the authenticated user this entity belongs to is an admin
    */
   get isAdmin () {
+    let user = this._user
     return Permissions.groups.find((group) => {
-      return group.isAdministrator && this._user.groups.find((uGroup) => {
+      return group.isAdministrator && user.groups.find((uGroup) => {
         return uGroup.id === group.id
       })
     })

@@ -2,8 +2,7 @@
 import { User, Rat, Token, Client, Reset } from '../db/index'
 import bcrypt from 'bcrypt'
 import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
-import Users from '../routes/Users'
-import Clients from '../routes/Clients'
+import Profiles from '../routes/Profiles'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
@@ -48,8 +47,7 @@ export default class Authentication {
           where: { id: user.id }
         })
       }
-      let updatedUser = await User.scope('profile').findOne({where: {email: {$iLike: email}}})
-      return Users.presenter.render(updatedUser, {})
+      return User.scope('profile').findOne({where: {email: {$iLike: email}}})
     }
   }
 
@@ -109,13 +107,12 @@ export default class Authentication {
     let [ clientId, clientSecret ] = getBasicAuth(ctx)
     if (clientId) {
       ctx.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
-      ctx.state.user = ctx.state.client
     }
 
     if (ctx.session.userId) {
-      let user = await User.scope('internal').findOne({where: { id: ctx.session.userId }})
+      let user = await User.scope('profile').findOne({where: { id: ctx.session.userId }})
       if (user) {
-        ctx.state.user = await User.scope('profile').findOne({where: { id: ctx.session.userId }})
+        ctx.state.user = user
         return true
       }
     }

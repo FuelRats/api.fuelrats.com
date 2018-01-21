@@ -119,6 +119,10 @@ app.use(async (ctx, next) => {
       return
     }
 
+    if (ctx.state.client) {
+      ctx.state.user = ctx.state.client
+    }
+
     let result = await next()
     if (result === true) {
       ctx.status = 204

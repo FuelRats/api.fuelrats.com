@@ -26,7 +26,7 @@ i18next.init({
 let server = oauth2orize.createServer()
 
 server.serializeClient(function (client) {
-  return client.data.id
+  return client.id
 })
 
 server.deserializeClient(async function (id) {
@@ -48,7 +48,7 @@ server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, a
     scope: areq.scope,
     redirectUri: redirectUri,
     clientId: client.id,
-    userId: user.data.id
+    userId: user.id
   })
   return code.value
 }))
@@ -60,7 +60,7 @@ server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
     scope: areq.scope,
     clientId: client.id,
-    userId: user.data.id
+    userId: user.id
   })
   return token.value
 }))
@@ -68,7 +68,7 @@ server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
 server.exchange(oauth2orize.exchange.code(async function (client, code, redirectUri) {
   let auth = await Code.findOne({ where: { value: code }})
 
-  if (!auth || client.data.id !== auth.clientId || redirectUri !== auth.redirectUri) {
+  if (!auth || client.id !== auth.clientId || redirectUri !== auth.redirectUri) {
     return false
   }
 
@@ -77,7 +77,7 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
   let token = await Token.create({
     scope: auth.scope,
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
-    clientId: client.data.id,
+    clientId: client.id,
     userId: auth.userId
   })
   return token.value
@@ -92,8 +92,8 @@ server.exchange(oauth2orize.exchange.password(
 
     let token = await Token.create({
       value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
-      clientId: client.data.id,
-      userId: user.data.id,
+      clientId: client.id,
+      userId: user.id,
       scope: ['*']
     })
 

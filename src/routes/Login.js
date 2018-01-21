@@ -16,7 +16,7 @@ export default class Login extends API {
       throw new UnauthorizedAPIError({})
     }
 
-    ctx.session.userId = user.data.id
+    ctx.session.userId = user.id
     ctx.status = 200
     if (ctx.session.redirect) {
       let redirectUrl = ctx.session.redirect
