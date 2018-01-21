@@ -150,7 +150,7 @@ app.use(async (ctx, next) => {
       errors
     }
   }
-}) 
+})
 
 render(app, {
   root: path.join(__dirname, 'views'),
@@ -207,6 +207,7 @@ router.post('/oauth2/authorize',
   ...oauth2.server.decision())
 
 router.post('/oauth2/token',
+  Authentication.isClientAuthenticated,
   oauth2.server.token(),
   oauth2.server.errorHandler())
 
