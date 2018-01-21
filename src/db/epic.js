@@ -1,4 +1,4 @@
-
+const MAX_EPIC_NOTES_LENGTH = 2048
 
 module.exports = function (sequelize, DataTypes) {
   let epic = sequelize.define('Epic', {
@@ -14,7 +14,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: false,
       validate: {
-        max: 2048
+        len: [0, MAX_EPIC_NOTES_LENGTH]
       }
     },
     rescueId: {

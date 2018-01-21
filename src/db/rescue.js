@@ -1,4 +1,8 @@
 import {JSONObject, RescueQuote} from '../classes/Validators'
+const MAX_CLIENT_NAME_LENGTH = 64
+const MAX_NOTES_LENGTH = 2048
+const MAX_SYSTEMLENGTH = 64
+const MAX_TITLE_LENGTH = 64
 
 module.exports = function (sequelize, DataTypes) {
   let rescue = sequelize.define('Rescue', {
@@ -14,8 +18,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       validate: {
-        min: 1,
-        max: 64
+        len: [1, MAX_CLIENT_NAME_LENGTH]
       }
     },
     codeRed: {
@@ -36,7 +39,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: '',
       validate: {
-        max: 2048
+        len: [0, MAX_NOTES_LENGTH]
       }
     },
     platform: {
@@ -70,8 +73,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
       validate: {
-        min: 1,
-        max: 64,
+        len: [1, MAX_SYSTEMLENGTH],
         isUppercase: true
       }
     },
@@ -80,8 +82,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
       validate: {
-        min: 3,
-        max: 64,
+        len: [1, MAX_TITLE_LENGTH],
         isAlphanumeric: true
       }
     },

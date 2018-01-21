@@ -14,7 +14,6 @@ import API, {
 import { websocket } from '../classes/WebSocket'
 import Users from './Users'
 
-const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000
 
 export default class Resets extends API {
@@ -48,7 +47,7 @@ export default class Resets extends API {
     })
 
     let reset = await Reset.create({
-      value: crypto.randomBytes(RESET_TOKEN_LENGTH).toString('hex'),
+      value: crypto.randomBytes(global.RESET_TOKEN_LENGTH).toString('hex'),
       expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
       userId: user.id,
       required: requiredReset
@@ -105,7 +104,7 @@ export default class Resets extends API {
     })
 
     let reset = await Reset.create({
-      value: crypto.randomBytes(RESET_TOKEN_LENGTH).toString('hex'),
+      value: crypto.randomBytes(global.RESET_TOKEN_LENGTH).toString('hex'),
       expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
       userId: user.id,
       required: ctx.data.required || false

@@ -15,8 +15,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         isAlphanumeric: true,
-        min: 16,
-        max: 128
+        len: [global.RESET_TOKEN_LENGTH, global.RESET_TOKEN_LENGTH]
       }
     },
     expires: {

@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 import {JSONObject, IRCNicknames} from '../classes/Validators'
 
+const PASSWORD_MIN_LENGTH = 12
 const PASSWORD_MAX_LENGTH = 1024
 const NICKNAME_MAX_LENGTH = 35
 
@@ -34,8 +35,7 @@ module.exports = function (db, DataTypes) {
       type: DataTypes.STRING(PASSWORD_MAX_LENGTH),
       allowNull: false,
       validate: {
-        min: 12,
-        max: 1024
+        len: [PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH]
       }
     },
     nicknames: {

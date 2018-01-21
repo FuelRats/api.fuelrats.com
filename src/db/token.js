@@ -1,6 +1,8 @@
 import {OAuthScope} from '../classes/Validators'
 
 const OAUTH_SCOPE_MAX_LENGTH = 128
+const MIN_TOKEN_LENGTH = 16
+const MAX_TOKEN_LENGTH = 128
 
 module.exports = function (sequelize, DataTypes) {
   let token = sequelize.define('Token', {
@@ -25,8 +27,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         notEmpty: true,
-        min: 24,
-        max: 128,
+        len: [MIN_TOKEN_LENGTH, MAX_TOKEN_LENGTH],
         isAlphanumeric: true
       }
     },

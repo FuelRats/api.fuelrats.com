@@ -1,7 +1,9 @@
 import { OAuthScope } from '../classes/Validators'
 
-
 const OAUTH_SCOPE_MAX_LENGTH = 128
+const MIN_TOKEN_LENGTH = 24
+const MAX_TOKEN_LENGTH = 128
+const MAX_URL_LENGTH = 255
 
 module.exports = function (sequelize, DataTypes) {
   let code = sequelize.define('Code', {
@@ -26,8 +28,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         isAlphanumeric: true,
-        min: 24,
-        max: 128,
+        len: [MIN_TOKEN_LENGTH, MAX_TOKEN_LENGTH],
         notEmpty: true
       }
     },
@@ -37,7 +38,7 @@ module.exports = function (sequelize, DataTypes) {
       validate: {
         isUrl: true,
         notEmpty: true,
-        max: 255
+        len: [1, MAX_URL_LENGTH]
       }
     },
     userId: {
