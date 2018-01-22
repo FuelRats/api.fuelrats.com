@@ -95,11 +95,15 @@ export default class Resets extends API {
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 
-    await User.update({
-      password: ctx.data.password
-    }, {
-      where: { id: reset.userId }
+    let user = await User.findOne({
+      where: {
+        id: reset.userId
+      }
     })
+
+    user.password = ctx.data.password
+
+    await user.save()
 
     reset.destroy()
 

@@ -78,11 +78,9 @@ export default class Users extends API {
       throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
     }
 
-    await User.update({
-      password: ctx.data.new
-    }, {
-      where: { id: user.id }
-    })
+    user.password = ctx.data.new
+
+    await user.save()
 
     let userQuery = new UserQuery({id: ctx.state.user.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
