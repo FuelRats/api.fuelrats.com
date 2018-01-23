@@ -3,6 +3,8 @@
 // IMPORT
 // =============================================================================
 
+import {UnprocessableEntityAPIError} from './classes/APIError'
+
 require('./Globals')
 import Koa from 'koa'
 import session from 'koa-session'
@@ -239,7 +241,11 @@ function parseQuery (query) {
       if (keyPair[0] === keys.length - 1) {
         // We have reached the end of the delimited array which means we can insert the value
 
-        target[subkey] = query[key]
+        try {
+          target[subkey] = JSON.parse(query[key])
+        } catch (ex) {
+          throw UnprocessableEntityAPIError({ parameter: key })
+        }
       } else if (!target[subkey]) {
         /* We have not reached the end of the delimited array so we need to create a nested object unless
         it already exists */
