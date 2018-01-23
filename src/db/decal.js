@@ -24,7 +24,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.ENUM('Rescues', 'Promotional', 'Special'),
       allowNull: false,
       validate: {
-        isIn: ['Rescues', 'Promotional', 'Special']
+        isIn: [['Rescues', 'Promotional', 'Special']]
       }
     },
     claimedAt: {

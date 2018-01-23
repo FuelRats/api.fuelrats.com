@@ -37,7 +37,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: 'pc',
       validate: {
         notEmpty: true,
-        isIn: ['pc', 'xb', 'ps']
+        isIn: [['pc', 'xb', 'ps']]
       }
     },
     userId: {

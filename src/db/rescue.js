@@ -48,7 +48,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: 'pc',
       validate: {
         notEmpty: true,
-        isIn: ['pc', 'xb', 'ps']
+        isIn: [['pc', 'xb', 'ps']]
       }
     },
     quotes: {
@@ -65,7 +65,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: 'open',
       validate: {
         notEmpty: true,
-        isIn: ['open', 'inactive', 'closed']
+        isIn: [['open', 'inactive', 'closed']]
       }
     },
     system: {
@@ -92,7 +92,7 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue:  null,
       validate: {
         notEmpty: true,
-        isIn: ['success', 'failure', 'invalid', 'other']
+        isIn: [['success', 'failure', 'invalid', 'other']]
       }
     },
     unidentifiedRats: {

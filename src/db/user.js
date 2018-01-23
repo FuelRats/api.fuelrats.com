@@ -61,7 +61,7 @@ module.exports = function (db, DataTypes) {
       defaultValue: 'active',
       validate: {
         notEmpty: true,
-        isIn: ['active', 'inactive', 'legacy', 'deactivated']
+        isIn: [['active', 'inactive', 'legacy', 'deactivated']]
       }
     },
     suspended: {
