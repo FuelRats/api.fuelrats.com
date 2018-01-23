@@ -15,7 +15,7 @@ export default class Profiles extends API {
   @websocket('profiles', 'read')
   @authenticated
   async read  (ctx) {
-    let profile = await User.scope('defaultScope', 'profile').findOne({
+    let profile = await User.scope('profile').findOne({
       where: {
         id: ctx.state.user.id
       }
