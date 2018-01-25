@@ -3,6 +3,7 @@ import { User } from '../db'
 import Rats from './Rats'
 import Groups from './Groups'
 import NPO from './NPO'
+import Client from './Clients'
 
 import API, {
   authenticated,
@@ -30,7 +31,8 @@ export default class Profiles extends API {
           rats: Rats.presenter,
           groups: Groups.presenter,
           displayRat: Rats.presenter,
-          npoMembership: NPO.presenter
+          npoMembership: NPO.presenter,
+          clients: Client.presenter
         }
       }
     }

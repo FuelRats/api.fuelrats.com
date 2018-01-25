@@ -267,6 +267,10 @@ module.exports = function (db, DataTypes) {
         }, {
           model: models.npoMembership,
           as: 'npoMembership'
+        }, {
+          model: models.client,
+          as: 'client',
+          required: false
         }
       ]
     })
