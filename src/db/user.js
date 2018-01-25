@@ -271,9 +271,6 @@ module.exports = function (db, DataTypes) {
       ]
     })
 
-
-    models.User.hasMany(models.UserGroups)
-
     models.User.addScope('stats', {
       include: [
         {
@@ -292,6 +289,10 @@ module.exports = function (db, DataTypes) {
         'image'
       ]
     })
+
+    models.User.hasMany(models.UserGroups)
+    models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
+    models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
   }
   return user
 }

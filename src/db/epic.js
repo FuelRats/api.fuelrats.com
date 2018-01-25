@@ -31,10 +31,21 @@ module.exports = function (sequelize, DataTypes) {
         isUUID: 4
       }
     },
-    approved: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
+    approvedById: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      defaultValue: null,
+      validate: {
+        isUUID: 4
+      }
+    },
+    nominatedById: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      defaultValue: null,
+      validate: {
+        isUUID: 4
+      }
     }
   }, {
     paranoid: true
@@ -43,6 +54,14 @@ module.exports = function (sequelize, DataTypes) {
   epic.associate = function (models) {
     models.Epic.belongsTo(models.Rescue, { as: 'rescue' })
     models.Epic.belongsTo(models.Rat, { as: 'rat' })
+    models.Epic.belongsTo(models.User, {
+      as: 'approvedBy',
+      foreignKey: 'approvedById'
+    })
+    models.Epic.belongsTo(models.User, {
+      as: 'nominatedBy',
+      foreignKey: 'nominatedById'
+    })
   }
 
   return epic
