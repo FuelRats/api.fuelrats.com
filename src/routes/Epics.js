@@ -12,7 +12,7 @@ import API, {
 import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
 import Query from '../query'
-import {NotFoundAPIError} from '../classes/APIError'
+import {ConflictAPIError, NotFoundAPIError} from '../classes/APIError'
 
 class Epics extends API {
   @GET('/epics')
@@ -43,6 +43,20 @@ class Epics extends API {
   @permissions('epic.write')
   @required('notes', 'ratId')
   async create (ctx) {
+    if (ctx.data.rescueId) {
+      let existing = await Epic.findOne({
+        where: {
+          ratId: ctx.data.ratId,
+          rescueId: ctx.data.rescueId
+        }
+      })
+      if (existing) {
+        throw ConflictAPIError({
+          pointer: '/data/attributes/rescueId'
+        })
+      }
+    }
+
     let result = await Epic.create(ctx.data)
 
     ctx.response.status = 201
@@ -60,6 +74,20 @@ class Epics extends API {
 
     if (!epic) {
       throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    if (ctx.data.rescueId) {
+      let existing = await Epic.findOne({
+        where: {
+          ratId: ctx.data.ratId,
+          rescueId: ctx.data.rescueId
+        }
+      })
+      if (existing) {
+        throw ConflictAPIError({
+          pointer: '/data/attributes/rescueId'
+        })
+      }
     }
 
     await Epic.update(ctx.data, {
