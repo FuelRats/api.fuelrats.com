@@ -7,7 +7,8 @@ import API, {
   parameters,
   authenticated,
   permissions,
-  required
+  required,
+  disallow
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
@@ -40,8 +41,8 @@ class Epics extends API {
   @POST('/epics')
   @websocket('epics', 'create')
   @authenticated
-  @permissions('epic.write')
   @required('notes', 'ratId')
+  @disallow('nominatedById', 'approvedById')
   async create (ctx) {
     if (ctx.data.rescueId) {
       let existing = await Epic.findOne({
@@ -56,6 +57,8 @@ class Epics extends API {
         })
       }
     }
+
+    ctx.data.nominatedById = ctx.state.user.id
 
     let result = await Epic.create(ctx.data)
 
