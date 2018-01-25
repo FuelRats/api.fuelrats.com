@@ -1,4 +1,4 @@
-
+const config = require('../../config')
 
 import nodemailer from 'nodemailer'
 import { User, Reset } from '../db'
@@ -30,7 +30,7 @@ export default class Resets extends API {
     ctx.state.writeResp = false
 
     if (user) {
-      let reset = getReset(user, ctx.data.required)
+      let reset = await getReset(user, ctx.data.required)
       let html = await ctx.render('reset-email', {
         resetlink: Resets.getResetLink(reset.value)
       })
@@ -161,7 +161,7 @@ async function getReset (user, required = false) {
   })
 
   return Reset.create({
-    value: crypto.randomBytes(global.RESET_TOKEN_LENGTH).toString('hex'),
+    value: crypto.randomBytes(global.RESET_TOKEN_LENGTH / 2).toString('hex'),
     expires: new Date(Date.now() + EXPIRE_LENGTH).getTime(),
     userId: user.id,
     required: required
@@ -177,17 +177,21 @@ async function getReset (user, required = false) {
  * @returns {Promise<void>}
  */
 async function sendReset (ctx, user, reset, html) {
-  let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
+  let transporter = nodemailer.createTransport({
+    host: config.smtp.host
+  })
+
   try {
     await transporter.sendMail({
-      from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
+      from: `Fuel Rats (Do Not Reply) <${config.smtp.email}>`,
       to: user.email,
-      subject: 'Fuel Rats Password Reset Requested',
+      subject: 'Request to reset your Fuel Rats password',
       text: Resets.getPlainTextEmail(reset.value),
       html: html
     })
     BotServ.say(global.TECHNICAL_CHANNEL, `[API] Password reset for ${user.email} requested by ${ctx.inet}`)
   } catch (ex) {
     BotServ.say(global.TECHNICAL_CHANNEL, '[API] Password reset failed due to error from SMTP server')
+    throw ex
   }
 }

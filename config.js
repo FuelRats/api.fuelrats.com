@@ -22,6 +22,10 @@ module.exports = {
     'password': process.env.FRAPI_POSTGRES_PASSWORD || 'SqueakBaby',
     'port': process.env.FRAPI_POSTGRES_PORT || 5432
   },
+  'smtp': {
+    'host': process.env.SMTP_HOSTNAME || 'smtp-relay.gmail.com',
+    'email': process.env.SMTP_EMAIL || 'blackhole@fuelrats.com'
+  },
   'recaptcha': {
     'secret': process.env.FRAPI_RECAPTCHA_SECRET || '6LdUsBoUAAAAAMkdpS2l6EE29GOZD9MgT1fhB_u6'
   },
