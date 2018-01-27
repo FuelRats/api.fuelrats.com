@@ -268,7 +268,7 @@ module.exports = function (db, DataTypes) {
           model: models.npoMembership,
           as: 'npoMembership'
         }, {
-          model: models.client,
+          model: models.Client,
           as: 'client',
           required: false
         }
@@ -294,6 +294,7 @@ module.exports = function (db, DataTypes) {
       ]
     })
 
+    models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'client' })
     models.User.hasMany(models.UserGroups)
     models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
