@@ -7,8 +7,8 @@
     "xlexious <alex@sorlie.co.uk>"
   ],
   "scripts": {
-    "dev": "node dist/index.js --harmony",
-    "test": "NODE_ENV=testing node test --harmony",
+    "dev": "node --harmony dist/index.js",
+    "test": "NODE_ENV=testing node --harmony test",
     "jsdoc": "jsdoc -d static/docs/js -r api",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
     "eslint": "eslint api test"
