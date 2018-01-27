@@ -48,12 +48,12 @@ export default class Clients extends API {
   @required('name')
   @disallow('secret')
   async create (ctx) {
-    this.requireWritePermission(ctx, ctx.data)
-    let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
-    ctx.data.secret = secret
     if (!ctx.data.userId) {
       ctx.data.userId = ctx.state.user.id
     }
+    this.requireWritePermission(ctx, ctx.data)
+    let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
+    ctx.data.secret = secret
     let result = await Client.create(ctx.data)
     result.secret = secret
 
@@ -118,14 +118,14 @@ export default class Clients extends API {
   }
 
   getReadPermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id) {
+    if (entity.userId === ctx.state.user.id || entity.userId === null) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']
   }
 
   getWritePermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id) {
+    if (entity.userId === ctx.state.user.id || entity.userId === null) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']
