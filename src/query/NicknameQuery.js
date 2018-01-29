@@ -18,7 +18,7 @@ class NicknameQuery extends Query {
     if (params.nickname) {
       let formattedNickname = params.nickname.replace(/\[(.*?)]$/g, '')
       this._query.where.nicknames = {
-        $overlap:  db.literal(`ARRAY[${db.escape(params.nickname)}, ${db.escape(formattedNickname)}]::citext[]`)
+        $overlap:  [params.nickname, formattedNickname]
       }
       delete this._query.where.nickname
     }
@@ -30,7 +30,7 @@ class NicknameQuery extends Query {
       'updatedAt',
       'email',
       'displayRatId',
-      [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
+      'nicknames'
     ]
 
     this._query.include = [{
