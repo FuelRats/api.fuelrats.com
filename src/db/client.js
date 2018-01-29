@@ -69,7 +69,7 @@ module.exports = function (sequelize, DataTypes) {
         {
           model: models.User,
           as: 'user',
-          required: true
+          required: false
         }
       ]
     }, {
