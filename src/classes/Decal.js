@@ -55,6 +55,7 @@ export default class Decal {
     let availableDecal = await Decals.findOne({
       where: {
         userId: null,
+        claimedAt: null,
         type: 'Rescues'
       }
     })
