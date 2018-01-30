@@ -58,9 +58,7 @@ export default class Clients extends API {
     result.secret = secret
 
     ctx.response.status = 201
-    let renderedResult = Clients.presenter.render(result, API.meta(result))
-    process.emit('clientCreated', ctx, renderedResult)
-    return renderedResult
+    return Clients.presenter.render(result, API.meta(result))
   }
 
   @PUT('/clients/:id')
@@ -89,9 +87,7 @@ export default class Clients extends API {
 
     let clientQuery = new ClientQuery({id: ctx.params.id}, ctx)
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
-    let renderedResult = Clients.presenter.render(result.rows, API.meta(result, clientQuery))
-    process.emit('clientUpdated', ctx, renderedResult)
-    return renderedResult
+    return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
   }
 
   @DELETE('/clients/:id')
@@ -112,7 +108,6 @@ export default class Clients extends API {
 
     rescue.destroy()
 
-    process.emit('clientDeleted', ctx, ctx.params.id)
     ctx.status = 204
     return true
   }
