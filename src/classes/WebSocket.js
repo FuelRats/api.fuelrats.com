@@ -77,14 +77,15 @@ export default class WebSocket {
 
   async onConnection (client) {
     let ctx = new Context(client, {})
-    let result = await WebSocket.getRoute('version', 'read')
+    let route = await WebSocket.getRoute('version', 'read')
+    let result = await route(ctx)
     let meta = {
       event: 'connection'
     }
 
     let rateLimit = this.traffic.validateRateLimit(ctx, false)
     Object.assign(meta, {
-      'API-Version': 'v2.0',
+      'API-Version': 'v2.1',
       'Rate-Limit-Limit': rateLimit.total,
       'Rate-Limit-Remaining': rateLimit.remaining,
       'Rate-Limit-Reset':  this.traffic.nextResetDate
@@ -115,7 +116,7 @@ export default class WebSocket {
     let rateLimit = this.traffic.validateRateLimit(ctx)
 
     let meta = Object.assign(request.meta || {}, {
-      'API-Version': 'v2.0',
+      'API-Version': 'v2.1',
       'Rate-Limit-Limit': rateLimit.total,
       'Rate-Limit-Remaining': rateLimit.remaining,
       'Rate-Limit-Reset':  this.traffic.nextResetDate
