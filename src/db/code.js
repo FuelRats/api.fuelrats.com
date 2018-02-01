@@ -1,4 +1,4 @@
-import { OAuthScope } from '../classes/Validators'
+import { OAuthScope, isURL } from '../classes/Validators'
 
 const OAUTH_SCOPE_MAX_LENGTH = 128
 const MIN_TOKEN_LENGTH = 24
@@ -36,7 +36,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: false,
       validate: {
-        isUrl: true,
+        isURL,
         notEmpty: true,
         len: [1, MAX_URL_LENGTH]
       }

@@ -26,7 +26,7 @@ i18next.init({
 let server = oauth2orize.createServer()
 
 server.serializeClient(function (client) {
-  return client.id
+  return client.data.id
 })
 
 server.deserializeClient(async function (id) {
@@ -138,20 +138,18 @@ export default class OAuth2 extends API {
   @authenticated
   @parameters('scope', 'client_id', 'response_type')
   @validateRedirectUri
-  async authorizationRender (ctx, next) {
+  authorizationRender (ctx) {
     let client = {}
     Object.assign(client, ctx.state.oauth2.client)
     delete client.secret
 
-    ctx.body = {
+    return {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
       client: client,
       scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
       scope: ctx.state.oauth2.req.scope.join(' ')
     }
-
-    await next()
   }
 }
 
@@ -164,24 +162,20 @@ export default class OAuth2 extends API {
 export function validateRedirectUri (target, name, descriptor) {
   let endpoint = descriptor.value
 
-  descriptor.value = async function (ctx) {
-    if (ctx.state.client) {
-      await server.authorize(async function (clientId, redirectUri) {
-        let client = await Client.findById(clientId)
-        if (!client) {
-          return false
-        }
-        if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
-          redirectUri = redirectUri || client.redirectUri
-          return [Clients.presenter.render(client, {}), redirectUri]
-        } else {
-          throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
-        }
-      })
-      return endpoint.apply(this, arguments)
-    } else {
-      throw new UnauthorizedAPIError({})
-    }
+  descriptor.value = async function (ctx, next) {
+    await server.authorize(async function (clientId, redirectUri) {
+      let client = await Client.findById(clientId)
+      if (!client) {
+        return false
+      }
+      if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
+        redirectUri = redirectUri || client.redirectUri
+        return [Clients.presenter.render(client, {}), redirectUri]
+      } else {
+        throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
+      }
+    })(ctx, next)
+    return endpoint.apply(this, arguments)
   }
 }
 

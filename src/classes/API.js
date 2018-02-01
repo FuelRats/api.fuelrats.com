@@ -191,7 +191,7 @@ export function parameters (...fields) {
 
     descriptor.value = function (ctx) {
       let missingFields = fields.filter((requiredField) => {
-        return ctx.params.hasOwnProperty(requiredField) === false
+        return (requiredField in ctx.params === false && requiredField in ctx.query === false)
       })
       if (missingFields.length > 0) {
         throw missingFields.map((field) => {
