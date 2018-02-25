@@ -127,7 +127,8 @@ class WebSocketManager {
       if (!error.code) {
         error = Error.template('server_error', error)
       }
-      this.send(client, error)
+
+      this.send(client, Object.assign({'meta': request.meta}, error))
     }
   }
 
