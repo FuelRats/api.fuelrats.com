@@ -106,7 +106,7 @@ export default class WebSocket {
       if ((error instanceof APIError) === false) {
         error = new InternalServerError({})
       }
-      this.send(client, error)
+      this.send(client, Object.assign({'meta': request.meta}, error))
     }
   }
 
