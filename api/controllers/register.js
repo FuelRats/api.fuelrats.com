@@ -80,10 +80,12 @@ class Register {
 
       let userQuery = new UserQuery({ id: user.id }, ctx)
       let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      await HostServ.update(result.rows[0])
+      let presentedUsers = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
+
+      await HostServ.update(presentedUsers.data[0])
       process.emit('registration', ctx, ctx.data)
 
-      ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
+      ctx.body = presentedUsers
     } catch (ex) {
       transaction.rollback()
       throw ex
