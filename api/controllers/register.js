@@ -80,7 +80,7 @@ class Register {
 
       let userQuery = new UserQuery({ id: user.id }, ctx)
       let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      await HostServ.update(result[0])
+      await HostServ.update(result.rows[0])
       process.emit('registration', ctx, ctx.data)
 
       ctx.body = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
