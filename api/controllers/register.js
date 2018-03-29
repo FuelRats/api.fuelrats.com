@@ -29,7 +29,7 @@ class Register {
     //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
     // }
 
-    let { email, name, nickname } = ctx.data
+    let { email, name, nickname, platform } = ctx.data
 
     let existingUser = await User.findOne({
       where: {
@@ -40,6 +40,19 @@ class Register {
     })
     if (existingUser) {
       throw Errors.template('operation_failed', 'email already exists')
+    }
+
+    let existingRat = await Rat.findOne({
+      where: {
+        name: {
+          $iLike: name
+        },
+        platform: platform
+      }
+    })
+
+    if (existingRat) {
+      throw Errors.template('operation_failed', 'name already exists')
     }
 
     let transaction = await db.transaction()
@@ -56,7 +69,6 @@ class Register {
       })
 
       name = name.replace(/CMDR/i, '')
-      let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
         throw Errors.template('invalid_parameter', 'platform')
@@ -70,7 +82,7 @@ class Register {
         transaction: transaction
       })
 
-      await NickServ.register(nickname, ctx.data.password, email)
+      //await NickServ.register(nickname, ctx.data.password, email)
 
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
         where: { id: user.id }
@@ -79,13 +91,13 @@ class Register {
       await transaction.commit()
 
       let userQuery = new UserQuery({ id: user.id }, ctx)
-      let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-      let presentedUsers = UserPresenter.render(result.rows, ctx.meta(result, userQuery))
+      let result = await User.scope('public').findOne(userQuery.toSequelize)
+      let presentedUser = UserPresenter.render(result, {})
 
-      await HostServ.update(presentedUsers.data[0])
+      await HostServ.update(presentedUser)
       process.emit('registration', ctx, ctx.data)
 
-      ctx.body = presentedUsers
+      ctx.body = presentedUser
     } catch (ex) {
       transaction.rollback()
       throw ex
