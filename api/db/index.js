@@ -13,7 +13,9 @@ let db = new Sequelize(config.postgres.database, config.postgres.username, confi
   dialect: 'postgres',
 
   pool: {
-    idle: 10000
+    idle: 1000,
+    min: 0,
+    acquire: 30000
   }
 })
 
