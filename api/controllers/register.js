@@ -29,7 +29,7 @@ class Register {
     //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
     // }
 
-    let { email, name, nickname } = ctx.data
+    let { email, name, nickname, platform } = ctx.data
 
     let existingUser = await User.findOne({
       where: {
@@ -40,6 +40,19 @@ class Register {
     })
     if (existingUser) {
       throw Errors.template('operation_failed', 'email already exists')
+    }
+
+    let existingRat = await User.findOne({
+      where: {
+        name: {
+          $iLike: name
+        },
+        platforms: platform
+      }
+    })
+
+    if (existingRat) {
+      throw Errors.template('operation_failed', 'name already exists')
     }
 
     let transaction = await db.transaction()
@@ -56,7 +69,6 @@ class Register {
       })
 
       name = name.replace(/CMDR/i, '')
-      let { platform } = ctx.data
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
         throw Errors.template('invalid_parameter', 'platform')
