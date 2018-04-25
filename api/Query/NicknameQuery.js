@@ -28,7 +28,6 @@ class NicknameQuery extends Query {
       'id',
       'createdAt',
       'updatedAt',
-      'email',
       'displayRatId',
       [db.cast(db.col('nicknames'), 'text[]'), 'nicknames']
     ]
