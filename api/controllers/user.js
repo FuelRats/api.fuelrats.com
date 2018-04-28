@@ -1,11 +1,13 @@
 'use strict'
 
-const { User } = require('../db')
+const { User, Rat } = require('../db')
 
 const Error = require('../errors')
 const Permission = require('../permission')
+const Authentication = require('./auth')
 const UserQuery = require('../Query/UserQuery')
 const HostServ = require('../Anope/HostServ')
+const BotServ = require('../Anope/BotServ')
 const bcrypt = require('bcrypt')
 const { UsersPresenter } = require('../classes/Presenters')
 const gm = require('gm')
@@ -144,20 +146,39 @@ class Users {
 
   static async delete (ctx) {
     if (ctx.params.id) {
-      let rescue = await User.findOne({
+      let user = await User.findOne({
         where: {
           id: ctx.params.id
         }
       })
 
-      if (!rescue) {
+      if (!user) {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      rescue.destroy()
+      if (hasValidPermissionsForUser(ctx, user, 'delete')) {
+        if (!ctx.data.password) {
+          throw Error.template('missing_required_field', 'password')
+        }
 
-      ctx.status = 204
-      return true
+        let isAuthenticated = await Authentication.passwordAuthenticate(user.email, ctx.data.password)
+        if (!isAuthenticated) {
+          throw Error.template('not_authenticated', 'Authentication failed')
+        }
+
+        let rats = await Rat.findAll({
+          where: {
+            userId: ctx.params.id
+          }
+        })
+
+        rats.forEach(rat => rat.destroy())
+        user.destroy()
+
+        BotServ.say('#rat-ops', `[API] User ${user.id} (${user.email}) has disabled their Fuel Rats account.`)
+        ctx.status = 204
+        return true
+      }
     } else {
       throw Error.template('missing_required_field', 'id')
     }

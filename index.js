@@ -72,7 +72,7 @@ app.use(require('koa-static')('static', {
   hidden: false,
   gzip: true
 }))
-app.use(koaBody())
+app.use(koaBody({ strict: false }))
 
 let port = config.port || process.env.PORT
 
@@ -188,7 +188,7 @@ router.post('/users/image/:id', Authentication.isAuthenticated, user.setimage)
 router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
   Permission.required(['user.write']), user.updatevirtualhost)
 router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
-router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
+router.delete('/users/:id', Authentication.isAuthenticated, user.delete)
 
 router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, nicknames.info)
 router.get('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.search)
