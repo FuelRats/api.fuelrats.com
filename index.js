@@ -190,7 +190,7 @@ router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
 router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
 router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
 
-router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, nicknames.info)
+router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, Permission.required(['user.read.me']), nicknames.info)
 router.get('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.search)
 router.post('/nicknames', Authentication.isAuthenticated, nicknames.register)
 router.put('/nicknames', Authentication.isAuthenticated, nicknames.connect)
