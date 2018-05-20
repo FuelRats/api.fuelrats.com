@@ -53,9 +53,9 @@ class Resets {
         text: Resets.getPlainTextEmail(reset.value),
         html: html
       })
-      BotServ.say('#rattech', `[API] Password reset for ${user.email} requested by ${ctx.inet}`)
+      BotServ.say('#rattech', `[API] Password reset for ${user.email} requested by ${ctx.inet}!`)
     } catch (ex) {
-      BotServ.say('#rattech', '[API] Password reset failed due to error from SMTP server')
+      BotServ.say('#rattech', '[API] Password reset failed due to error from SMTP server!!!!!!!!1')
       return
     }
 
