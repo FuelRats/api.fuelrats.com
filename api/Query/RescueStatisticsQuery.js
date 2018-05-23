@@ -19,11 +19,6 @@ class RescueStatisticsQuery extends StatisticsQuery {
       [this._groupedByDateField, 'date'],
       [db.fn('COUNT', 'id'), 'total']
     ]
-    this._query.having = {
-      having: {
-        $gte: 1
-      }
-    }
     this._query.attributes = this._query.attributes.concat(this.compare('Rescue', this.comparators))
 
     this._query.group = [this._groupedByDateField]
