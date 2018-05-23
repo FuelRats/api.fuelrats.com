@@ -168,6 +168,7 @@ router.post('/rescues', Authentication.isAuthenticated, Permission.required(['re
 router.put('/rescues/:id', Authentication.isAuthenticated, rescue.update)
 router.put('/rescues/assign/:id', Authentication.isAuthenticated, rescue.assign)
 router.put('/rescues/addquote/:id', Authentication.isAuthenticated, rescue.assign)
+router.patch('/rescues/:id/rats', Authentication.isAuthenticated, rescue.patch)
 router.put('/rescues/unassign/:id', Authentication.isAuthenticated, rescue.unassign)
 router.delete('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.delete']), rescue.delete)
 
