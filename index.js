@@ -72,7 +72,7 @@ app.use(require('koa-static')('static', {
   hidden: false,
   gzip: true
 }))
-app.use(koaBody())
+app.use(koaBody({ strict: false }))
 
 let port = config.port || process.env.PORT
 
@@ -168,6 +168,7 @@ router.post('/rescues', Authentication.isAuthenticated, Permission.required(['re
 router.put('/rescues/:id', Authentication.isAuthenticated, rescue.update)
 router.put('/rescues/assign/:id', Authentication.isAuthenticated, rescue.assign)
 router.put('/rescues/addquote/:id', Authentication.isAuthenticated, rescue.assign)
+router.patch('/rescues/:id/rats', Authentication.isAuthenticated, rescue.patch)
 router.put('/rescues/unassign/:id', Authentication.isAuthenticated, rescue.unassign)
 router.delete('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.delete']), rescue.delete)
 
@@ -188,7 +189,7 @@ router.post('/users/image/:id', Authentication.isAuthenticated, user.setimage)
 router.put('/users/:id/updatevirtualhost', Authentication.isAuthenticated,
   Permission.required(['user.write']), user.updatevirtualhost)
 router.put('/users/:id', clean('image', 'password'), Authentication.isAuthenticated, user.update)
-router.delete('/users/:id', Authentication.isAuthenticated, Permission.required(['user.delete']), user.delete)
+router.delete('/users/:id', Authentication.isAuthenticated, user.delete)
 
 router.get('/nicknames/info/:nickname', Authentication.isAuthenticated, Permission.required(['user.read']), nicknames.info)
 router.get('/nicknames/:nickname', Authentication.isAuthenticated, nicknames.search)

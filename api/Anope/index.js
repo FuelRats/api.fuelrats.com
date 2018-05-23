@@ -26,6 +26,10 @@ class Anope {
    */
   static command (service, user, command) {
     return new Promise(function (resolve, reject) {
+      if (!anopeXMLRPCUrl) {
+        return reject()
+      }
+
       client.methodCall('command', [[service, user, command]], function (error, data) {
         if (error) {
           reject(error)
@@ -44,6 +48,10 @@ class Anope {
    */
   static checkAuthentication (nickname, password) {
     return new Promise(function (resolve, reject) {
+      if (!anopeXMLRPCUrl) {
+        return reject()
+      }
+      
       client.methodCall('checkAuthentication', [[nickname, password]], function (error, data) {
         if (error) {
           reject(error)

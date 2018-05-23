@@ -161,6 +161,43 @@ class Rescues {
       }
     }
   }
+  static async patch (ctx) {
+    if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
+      ctx.data = ctx.data.data
+    }
+
+    if (ctx.params.id) {
+      let rescue = await Rescue.scope('rescue').findOne({
+        where: {
+          id: ctx.params.id
+        }
+      })
+
+      if (!rescue) {
+        throw Error.template('not_found', ctx.params.id)
+      }
+
+      let permission = getRescuePermissionType(rescue, ctx.state.user)
+      if (Permission.require(permission, ctx.state.user, ctx.state.scope)) {
+
+        let rats = ctx.data.map((entry) => {
+          if (entry.type !== 'rats' || !entry.id) {
+            throw Error.template('bad_request', 'Invalid list of relationships')
+          }
+
+          return entry.id
+        })
+
+        await rescue.setRats(rats)
+
+        let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+        let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+        let renderedResult = RescuesPresenter.render(result.rows, ctx.meta(result, rescueQuery))
+        process.emit('rescueUpdated', ctx, renderedResult)
+        return renderedResult
+      }
+    }
+  }
 
   static async addquote (ctx) {
     if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
