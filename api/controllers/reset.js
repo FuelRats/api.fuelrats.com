@@ -120,13 +120,10 @@ class Resets {
   static getPlainTextEmail (resetToken) {
     let resetLink = Resets.getResetLink(resetToken)
     return `
-    Someone has requested a password reset to your FuelRats Account
+    A password reset to your Fuel Rats account has been requested
     
     To reset your password copy this link into your browser:
     ${resetLink}
-    
-    If you ignore this link, your password will not be changed.
-    
     
     Regards,
     The Fuel Rats`
