@@ -44,7 +44,10 @@ class Resets {
       resetlink: Resets.getResetLink(reset.value)
     })
 
-    let transporter = nodemailer.createTransport('smtp://orthanc.localecho.net')
+    let transporter = nodemailer.createTransport({
+      host: 'smtp-relay.gmail.com',
+      port: 587
+    })
     try {
       await transporter.sendMail({
         from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
