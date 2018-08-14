@@ -95,9 +95,9 @@ const traffic = new TrafficControl()
 
 app.use(async (ctx, next) => {
   try {
-    await Authentication.authenticate(ctx)
+    await Authentication.authenticate({connection: ctx})
 
-    let rateLimit = traffic.validateRateLimit(ctx)
+    let rateLimit = traffic.validateRateLimit({connection: ctx})
 
     ctx.set('X-API-Version', '2.0')
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
@@ -225,38 +225,16 @@ app.use(router.allowedMethods())
  * @returns {{}} a nested object
  */
 function parseQuery (query) {
-  let queryObj = {}
-
-  // Iterate over each individual query item
-  for (let key of Object.keys(query)) {
-    // Split them into period delimited arrays
-    let keys = key.split('.')
-    let target = queryObj
-
-    // Iterate over the period delimited arrays to construct a nested hierarchy
-    for (let keyPair of keys.entries()) {
-      let [, subkey ] = keyPair
-      if (keyPair[0] === keys.length - 1) {
-        // We have reached the end of the delimited array which means we can insert the value
-
-        try {
-          target[subkey] = JSON.parse(query[key])
-        } catch (ex) {
-          target[subkey] = query[key]
-        }
-      } else if (!target[subkey]) {
-        /* We have not reached the end of the delimited array so we need to create a nested object unless
-        it already exists */
-        target[subkey] = {}
-        target = target[subkey]
-      }
-    }
-  }
-  return queryObj
+  return Object.entries(query).reduce((acc, [key, value]) => {
+    const [last, ...paths] = key.split('.').reverse()
+    let object = paths.reduce((acc, el) => ({ [el]: acc }), { [last]: value })
+    acc = {...acc, ...object}
+    return acc
+  }, {})
 }
 
 let server = http.createServer(app.callback())
-new WebSocket(server, traffic)
+new WebSocket({server, traffic})
 
 /**
  * Goes through an object and sets properties commonly usde to hold sensitive information to a static value.

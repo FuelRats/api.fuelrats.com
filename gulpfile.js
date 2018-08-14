@@ -9,6 +9,14 @@ gulp.task('default', () =>
   gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
     .pipe(babel({
+      'presets': [
+        ['@babel/preset-env', {
+          'targets': {
+            'node': '10.6'
+          },
+          'shippedProposals': true
+        }]
+      ],
       'env': {
         'development': {
           'sourceMaps': true

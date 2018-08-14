@@ -27,12 +27,12 @@ class TrafficControl {
    * @returns {Object} - An object containing whether the rate limit is exceeded, how many requests are left,
    * and the total requests
    */
-  validateRateLimit (connection, increase = true) {
+  validateRateLimit ({connection, increase = true}) {
     let entity
     if (connection.state.user) {
-      entity = this.retrieveAuthenticatedEntity(connection.state.user)
+      entity = this.retrieveAuthenticatedEntity({user: connection.state.user})
     } else {
-      entity = this.retrieveUnauthenticatedEntity(connection.inet)
+      entity = this.retrieveUnauthenticatedEntity({remoteAddress: connection.inet})
     }
 
     let valid = entity.remainingRequests > 0
@@ -51,7 +51,7 @@ class TrafficControl {
    * @param {Object} user - The user associated with this request
    * @returns {Object} An instance of AuthenticatedUserEntity
    */
-  retrieveAuthenticatedEntity (user) {
+  retrieveAuthenticatedEntity ({user}) {
     let entity = this.authenticatedRequests[user.id]
     if (!entity) {
       entity = new AuthenticatedUserEntity(user)
@@ -65,7 +65,7 @@ class TrafficControl {
    * @param {string} remoteAddress - The remote address associated with this request
    * @returns {Object} an instance of RemoteAddressEntity
    */
-  retrieveUnauthenticatedEntity (remoteAddress) {
+  retrieveUnauthenticatedEntity ({remoteAddress}) {
     let entity = this.unauthenticatedRequests[remoteAddress]
     if (!entity) {
       entity = new RemoteAddressEntity(remoteAddress)
@@ -133,7 +133,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @param {Object} user - The user object of the authenticated user this traffic belongs to
    * @param {number} initialCount - Optional parameter containing the number of requests this entity should start with
    */
-  constructor (user, initialCount = 0) {
+  constructor ({user, initialCount = 0}) {
     super()
     this._user = user
     this._requestCount = initialCount
@@ -180,7 +180,7 @@ class RemoteAddressEntity extends TrafficEntity {
    * @param {string} remoteAddress - The remote address this traffic belongs to
    * @param initialCount - Optional parameter containing the number ofrequests this entity should start with
    */
-  constructor (remoteAddress, initialCount = 0) {
+  constructor ({remoteAddress, initialCount = 0}) {
     super()
     this._remoteAddress = remoteAddress
     this._requestCount = initialCount

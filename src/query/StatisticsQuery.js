@@ -12,8 +12,8 @@ class StatisticsQuery extends Query {
    * @param params
    * @param connection
    */
-  constructor (params, connection) {
-    super(params, connection)
+  constructor ({params, connection}) {
+    super({params, connection})
     this._query.include = []
 
     for (let conditional of Object.keys(this._query.where)) {

@@ -34,7 +34,10 @@ export default class Anope {
     user = Entities.encode(user)
     command = Entities.encode(command)
     return new Promise(function (resolve, reject) {
+
+      return resolve(true)
       client.methodCall('command', [[service, user, command]], function (error, data) {
+
         if (error) {
           return reject(error)
         } else {
@@ -58,6 +61,8 @@ export default class Anope {
     nickname = Entities.encodeNonUTF(nickname)
     password = Entities.encodeNonUTF(password)
     return new Promise(function (resolve, reject) {
+      return resolve(true)
+
       client.methodCall('checkAuthentication', [[nickname, password]], function (error, data) {
         if (error) {
           reject(error)

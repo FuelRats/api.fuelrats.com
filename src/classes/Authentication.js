@@ -8,7 +8,7 @@ const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
 
 export default class Authentication {
-  static async passwordAuthenticate (email, password) {
+  static async passwordAuthenticate ({email, password}) {
     if (!email || !password) {
       return null
     }
@@ -51,7 +51,7 @@ export default class Authentication {
     }
   }
 
-  static async bearerAuthenticate (bearer) {
+  static async bearerAuthenticate ({bearer}) {
     let token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
       return false
@@ -78,7 +78,7 @@ export default class Authentication {
     }
   }
 
-  static async clientAuthenticate (clientId, secret) {
+  static async clientAuthenticate ({clientId, secret}) {
     let client = await Client.findById(clientId)
     if (!client) {
       return null
@@ -103,26 +103,26 @@ export default class Authentication {
     throw new UnauthorizedAPIError({})
   }
 
-  static async authenticate (ctx) {
-    let [ clientId, clientSecret ] = getBasicAuth(ctx)
+  static async authenticate ({connection}) {
+    let [ clientId, clientSecret ] = getBasicAuth(connection)
     if (clientId) {
-      ctx.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
+      connection.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
     }
 
-    if (ctx.session.userId) {
-      let user = await User.scope('profile').findOne({where: { id: ctx.session.userId }})
+    if (connection.session.userId) {
+      let user = await User.scope('profile').findOne({where: { id: connection.session.userId }})
       if (user) {
-        ctx.state.user = user
+        connection.state.user = user
         return true
       }
     }
 
-    let bearerToken = getBearerToken(ctx)
+    let bearerToken = getBearerToken(connection)
     if (bearerToken) {
       let bearerCheck = await Authentication.bearerAuthenticate(bearerToken)
       if (bearerCheck) {
-        ctx.state.user = bearerCheck.user
-        ctx.state.scope = bearerCheck.scope
+        connection.state.user = bearerCheck.user
+        connection.state.scope = bearerCheck.scope
         return true
       }
     }

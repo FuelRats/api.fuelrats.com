@@ -7,7 +7,7 @@ const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const rescueParticipationRequirement = 10
 
 export default class Decal {
-  static async checkEligible (user) {
+  static async checkEligible ({user}) {
     let decal = await Decals.findOne({
       where: {
         userId: user.id
@@ -18,7 +18,7 @@ export default class Decal {
       return decal
     }
 
-    let previouslyEligible = await checkEligibleForOriginalDecal(user)
+    let previouslyEligible = await checkEligibleForOriginalDecal({user})
     if (previouslyEligible && previouslyEligible.rats) {
       for (let rat of previouslyEligible.rats) {
         if (rat.firstLimpet.length > 0) {
@@ -27,7 +27,7 @@ export default class Decal {
       }
     }
 
-    let eligible = await checkEligibleForRescueDecal(user)
+    let eligible = await checkEligibleForRescueDecal({user})
     if (eligible && eligible.rats) {
       for (let rat of eligible.rats) {
         if (rat.firstLimpet.length >= rescueParticipationRequirement) {
@@ -38,10 +38,10 @@ export default class Decal {
     throw new BadRequestAPIError({})
   }
 
-  static async getDecalForUser (user) {
-    let decalEligible = await Decal.checkEligible(user)
+  static async getDecalForUser ({user}) {
+    let decalEligible = await Decal.checkEligible({user})
     if (decalEligible) {
-      let decal = await Decal.redeem(user, 'Rescues')
+      let decal = await Decal.redeem({user, type: 'Rescues'})
       if (!decal) {
         throw 'Could not find decal'
       }
@@ -51,12 +51,12 @@ export default class Decal {
     }
   }
 
-  static async redeem (user, type, notes = '') {
+  static async redeem ({user, type, notes = ''}) {
     let availableDecal = await Decals.findOne({
       where: {
         userId: null,
         claimedAt: null,
-        type: 'Rescues'
+        type: type
       }
     })
 
@@ -78,7 +78,7 @@ export default class Decal {
  * @param user The user to check eligibility for
  * @returns {*} A user if the user is eligible, null if not.
  */
-function checkEligibleForOriginalDecal (user) {
+function checkEligibleForOriginalDecal ({user}) {
   return User.findOne({
     where: {
       id: user.id
@@ -107,7 +107,7 @@ function checkEligibleForOriginalDecal (user) {
  * @param user the user to check eligibility for
  * @returns {*} A user if the user is eligible, null if not.
  */
-function checkEligibleForRescueDecal (user) {
+function checkEligibleForRescueDecal ({user}) {
   return User.findOne({
     where: {
       id: user.id

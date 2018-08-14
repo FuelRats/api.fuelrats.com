@@ -11,8 +11,8 @@ class RatQuery extends Query {
    * @param params
    * @param connection
    */
-  constructor (params, connection) {
-    super(params, connection)
+  constructor ({params, connection}) {
+    super({params, connection})
   }
 }
 

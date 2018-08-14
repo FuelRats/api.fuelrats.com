@@ -33,7 +33,7 @@ const apiEvents = [
 const routes = {}
 
 export default class WebSocket {
-  constructor (server, trafficManager) {
+  constructor ({server, trafficManager}) {
     this.wss = new ws.Server({server})
     this.traffic = trafficManager
 
@@ -75,7 +75,7 @@ export default class WebSocket {
     })
   }
 
-  async onConnection (client) {
+  async onConnection ({client}) {
     let ctx = new Context(client, {})
     let route = await WebSocket.getRoute('version', 'read')
     let result = await route(ctx)
@@ -93,7 +93,7 @@ export default class WebSocket {
     this.send(client, { result:  result.data, meta: meta })
   }
 
-  async onMessage (client, request) {
+  async onMessage ({client, request}) {
     try {
       let { result, meta } = await this.route(client, request)
       if (!result.meta) {
@@ -110,7 +110,7 @@ export default class WebSocket {
     }
   }
 
-  async route (client, request) {
+  async route ({client, request}) {
     let ctx = new Context(client, request)
 
     let rateLimit = this.traffic.validateRateLimit(ctx)
@@ -129,7 +129,7 @@ export default class WebSocket {
     return { result:  result, meta: meta }
   }
 
-  onBroadcast (id, ctx, result) {
+  onBroadcast ({id, ctx, result}) {
     let clients = [...this.socket.clients].filter((client) => {
       return client.subscriptions.includes(id)
     })
@@ -151,7 +151,7 @@ export default class WebSocket {
     this.broadcast(clients, result)
   }
 
-  send (client, message) {
+  send ({client, message}) {
     try {
       if (process.env.NODE_ENV === 'production') {
         client.send(JSON.stringify(message))
@@ -163,13 +163,13 @@ export default class WebSocket {
     }
   }
 
-  broadcast (clients, message) {
+  broadcast ({clients, message}) {
     for (let client of clients) {
       this.send(client, message)
     }
   }
 
-  static addRoute (endpointName, methodName, method) {
+  static addRoute ({endpointName, methodName, method}) {
     if (routes.hasOwnProperty(endpointName) === false) {
       routes[endpointName] = {}
     }
@@ -177,7 +177,7 @@ export default class WebSocket {
     routes[endpointName][methodName] = method
   }
 
-  static getRoute (endpointName, methodName) {
+  static getRoute ({endpointName, methodName}) {
     if (routes.hasOwnProperty(endpointName) === false || routes[endpointName].hasOwnProperty(methodName) === false) {
       throw NotFoundAPIError({ parameter: 'action' })
     }
@@ -186,7 +186,7 @@ export default class WebSocket {
 }
 
 export class Context {
-  constructor (client, request) {
+  constructor ({client, request}) {
     this.inet = client.req.headers['X-Forwarded-for'] || client.req.connection.remoteAddress
 
     this.client = client
@@ -214,8 +214,8 @@ export class Context {
  * @param methodName The method name to route websocket requests for
  * @returns {Function} An ESNext decorator function
  */
-export function websocket (endpointName, methodName) {
+export function websocket ({endpointName, methodName}) {
   return function (target, name, descriptor) {
-    WebSocket.addRoute(endpointName, methodName, descriptor.value)
+    WebSocket.addRoute({endpointName, methodName, method: descriptor.value})
   }
 }

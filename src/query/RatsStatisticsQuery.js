@@ -13,8 +13,8 @@ class RatsStatisticsQuery extends StatisticsQuery {
    * @param params
    * @param connection
    */
-  constructor (params, connection) {
-    super(params, connection)
+  constructor ({params, connection}) {
+    super({params, connection})
     this._query.raw = true
     this._query.subQuery = false
 
@@ -59,7 +59,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
     this._query.attributes = this._query.attributes.concat(this.compare('firstLimpet', this.comparators))
 
     this._query.group = [
-      db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 
+      db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'),
       'user.id', 'user->displayRat.id', 'user->displayRat->ships.id'
     ]
   }

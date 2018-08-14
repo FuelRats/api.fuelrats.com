@@ -34,7 +34,7 @@ class Request {
    * @param data Object to send in HTTP post request
    * @returns {Promise} A javascript promise for the request
    */
-  constructor (requestType, options, data = null) {
+  constructor ({requestType, options, data = null}) {
     switch (requestType) {
       case GET:
         return Request._httpGetRequest(options)
@@ -50,7 +50,7 @@ class Request {
     }
   }
 
-  static async login (email, password) {
+  static async login ({email, password}) {
     let post = await new Request(POST, {
       path: '/login',
       insecure: true
@@ -105,7 +105,7 @@ class Request {
    * @returns {Promise} A javascript promise for the request
    * @private
    */
-  static _httpPostRequest (overrideOptions, data = null) {
+  static _httpPostRequest ({overrideOptions, data = null}) {
     let httpEngine = https
     if (overrideOptions.insecure) {
       delete overrideOptions.insecure
@@ -156,7 +156,7 @@ class Request {
    * @returns {Promise} A javascript promise for the request
    * @private
    */
-  static _httpPutRequest (overrideOptions, data = null) {
+  static _httpPutRequest ({overrideOptions, data = null}) {
     let httpEngine = https
     if (overrideOptions.insecure) {
       delete overrideOptions.insecure

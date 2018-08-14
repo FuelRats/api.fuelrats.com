@@ -22,22 +22,22 @@ export default class API {
     return []
   }
 
-  hasReadPermission (ctx, entity) {
+  hasReadPermission ({ctx, entity}) {
     return Permission.granted(this.getReadPermissionForEntity(ctx, entity), ctx.state.user, ctx.state.scope)
   }
 
-  hasWritePermission (ctx, entity) {
+  hasWritePermission ({ctx, entity}) {
     return Permission.granted(this.getWritePermissionForEntity(ctx, entity), ctx.state.user, ctx.state.scope)
   }
 
-  requireReadPermission (ctx, entity) {
-    if (!this.hasReadPermission(ctx, entity)) {
+  requireReadPermission ({ctx, entity}) {
+    if (!this.hasReadPermission({ctx, entity})) {
       throw new ForbiddenAPIError({})
     }
   }
 
-  requireWritePermission (ctx, entity) {
-    if (!this.hasWritePermission(ctx, entity)) {
+  requireWritePermission ({ctx, entity}) {
+    if (!this.hasWritePermission({ctx, entity})) {
       throw new ForbiddenAPIError({})
     }
   }

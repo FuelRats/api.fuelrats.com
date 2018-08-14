@@ -192,42 +192,6 @@ export default class Rescues extends API {
     return renderedResult
   }
 
-  @PUT('/rescues/addquote/:id')
-  @authenticated
-  @parameters('id')
-  async addquote (ctx) {
-    if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
-      ctx.data = ctx.data.data
-    }
-
-    let rescue = await Rescue.scope('rescue').findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    if (!rescue) {
-      throw NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission(ctx, rescue)
-
-    await Rescue.update({
-      quotes: rescue.quotes.concat(ctx.data)
-    }, {
-      where: {
-        id: ctx.params.id
-      },
-      userId: ctx.state.user.id
-    })
-
-    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
-    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
-    process.emit('rescueUpdated', ctx, renderedResult)
-    return renderedResult
-  }
-
   getWritePermissionForEntity (ctx, entity) {
     if (ctx.state.user && entity.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
       for (let rat of ctx.state.user.rats) {
@@ -294,5 +258,6 @@ process.on('rescueUpdated', async (ctx, result, permissions, changedValues) => {
 
 process.on('suspendedAssign', async (ctx, rat) => {
   let author = await API.getAuthor(ctx)
-  BotServ.say(global.MODERATOR_CHANNEL, `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author.preferredRat().name}`)
+  BotServ.say(global.MODERATOR_CHANNEL,
+    `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author.preferredRat().name}`)
 })

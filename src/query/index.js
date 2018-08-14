@@ -17,7 +17,7 @@ class Query {
    * @param {Object} params - API request parameters
    * @param {Object} connection - A websocket or Express connection object
    */
-  constructor (params, connection) {
+  constructor ({params, connection}) {
     this._params = Object.assign({}, params)
     this._connection = connection
     this.options = new QueryOptions()

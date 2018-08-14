@@ -49,7 +49,7 @@ export default class Register extends API {
       name = name.replace(/CMDR/i, '')
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
-        throw UnprocessableEntityAPIError({
+        throw new UnprocessableEntityAPIError({
           pointer: '/data/attributes/platform'
         })
       }
@@ -71,7 +71,6 @@ export default class Register extends API {
       if (!ircPassword) {
         ircPassword = password
       }
-      await NickServ.register(nickname, ircPassword, email)
 
       await User.update({ nicknames: [nickname] }, {
         where: { id: user.id }, transaction })
@@ -82,11 +81,10 @@ export default class Register extends API {
       throw ex
     }
 
-    let userQuery = new UserQuery({ id: userId }, ctx)
+    let userQuery = new UserQuery({query: { id: userId }, connection: ctx})
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     process.emit('registration', ctx, ctx.data)
     let presentedUser = Profile.presenter.render(result.rows, API.meta(result, userQuery))
-    await HostServ.update(presentedUser)
     ctx.body = presentedUser
   }
 
@@ -99,7 +97,7 @@ export default class Register extends API {
       }
     }})
     if (existingUser) {
-      throw ConflictAPIError({ pointer: '/data/attributes/email' })
+      throw new ConflictAPIError({ pointer: '/data/attributes/email' })
     }
 
     let existingRat = await Rat.findOne({ where: {
@@ -109,12 +107,10 @@ export default class Register extends API {
       platform: platform
     }})
     if (existingRat) {
-      throw ConflictAPIError({ pointer: '/data/attributes/name' })
+      throw new ConflictAPIError({ pointer: '/data/attributes/name' })
     }
   }
 }
 
 process.on('registration', (ctx, values) => {
-  BotServ.say(global.MODERATOR_CHANNEL,
-    `[API] User with email ${values.email} registered. IRC Nickname: ${values.nickname}. CMDR name: ${values.name}`)
 })

@@ -12,8 +12,8 @@ class NicknameQuery extends Query {
    * @param params
    * @param connection
    */
-  constructor (params, connection) {
-    super(params, connection)
+  constructor ({params, connection}) {
+    super({params, connection})
 
     if (params.nickname) {
       let formattedNickname = params.nickname.replace(/\[(.*?)]$/g, '')

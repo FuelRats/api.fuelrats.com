@@ -12,8 +12,8 @@ class SystemStatisticsQuery extends StatisticsQuery {
    * @param params
    * @param connection
    */
-  constructor (params, connection) {
-    super(params, connection)
+  constructor ({params, connection}) {
+    super({params, connection})
 
     this._query.attributes = [
       'system',

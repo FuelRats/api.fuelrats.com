@@ -12,8 +12,8 @@ class RescueStatisticsQuery extends StatisticsQuery {
    * @param params
    * @param connection
    */
-  constructor (params, connection) {
-    super(params, connection)
+  constructor ({params, connection}) {
+    super({params, connection})
     this._query.include = []
     this._query.attributes = [
       [this._groupedByDateField, 'date'],
