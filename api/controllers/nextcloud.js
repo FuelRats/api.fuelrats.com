@@ -14,4 +14,4 @@ class NextCloudProfile {
   }
 }
 
-module.exports = NextProfile
+module.exports = NextCloudProfile
