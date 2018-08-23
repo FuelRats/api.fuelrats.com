@@ -38,6 +38,7 @@ const login = require('./api/controllers/login')
 const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
 const profile = require('./api/controllers/profile')
+const nextcloud = require('./api/controllers/nextcloud')
 const rat = require('./api/controllers/rat')
 const register = require('./api/controllers/register')
 const reset = require('./api/controllers/reset')
@@ -219,6 +220,7 @@ router.post('/login', fields('email', 'password'), login.login)
 router.post('/register', fields('email', 'password', 'name', 'platform', 'nickname'),
   register.create)
 router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
+router.get('/nextcloud_profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), nextcloud.read)
 
 router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
 
