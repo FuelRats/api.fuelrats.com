@@ -91,6 +91,11 @@ class Authentication {
 
   static async authenticate (ctx) {
     let [ clientId, clientSecret ] = getBasicAuth(ctx)
+    if (!clientId && ctx.data.client_id) {
+      clientId = ctx.data.client_id
+      clientSecret = ctx.data.client_secret
+    }
+
     if (clientId) {
       ctx.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
       ctx.state.user = ctx.state.client
