@@ -17,7 +17,6 @@ class NextCloudProfile {
     return {
       identifier: profile.id,
       id: profile.id,
-      email: profile.email,
       displayName: displayRat.attributes.name,
       photoURL: `${config.externalUrl}/users/image/${profile.id}`,
     }
