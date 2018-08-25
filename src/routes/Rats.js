@@ -22,7 +22,7 @@ export default class Rats extends API {
   @GET('/rats')
   @websocket('rats', 'search')
   async search (ctx) {
-    let ratsQuery = new RatQuery(ctx.query, ctx)
+    let ratsQuery = new RatQuery({query: ctx.query, connection: ctx})
     let result = await Rat.findAndCountAll(ratsQuery.toSequelize)
     return Rats.presenter.render(result.rows, API.meta(result, ratsQuery))
   }
@@ -31,7 +31,7 @@ export default class Rats extends API {
   @websocket('rats', 'read')
   @parameters('id')
   async findById (ctx) {
-    let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
+    let ratQuery = new RatQuery({query: {id: ctx.params.id}, connection: ctx})
     let result = await Rat.findAndCountAll(ratQuery.toSequelize)
 
     return Rats.presenter.render(result.rows, API.meta(result, ratQuery))

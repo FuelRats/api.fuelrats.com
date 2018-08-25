@@ -14,30 +14,32 @@ let config = require('../../config')
  */
 export default class API {
 
-  getReadPermissionForEntity () {
+  // eslint-disable-next-line no-unused-vars
+  getReadPermissionFor ({connection, entity}) {
     return []
   }
 
-  getWritePermissionForEntity () {
+  // eslint-disable-next-line no-unused-vars
+  getWritePermissionFor ({connection, entity}) {
     return []
   }
 
-  hasReadPermission ({ctx, entity}) {
-    return Permission.granted(this.getReadPermissionForEntity(ctx, entity), ctx.state.user, ctx.state.scope)
+  hasReadPermission ({connection, entity}) {
+    return Permission.granted({permissions: this.getReadPermissionFor({connection, entity}), ...connection.state})
   }
 
-  hasWritePermission ({ctx, entity}) {
-    return Permission.granted(this.getWritePermissionForEntity(ctx, entity), ctx.state.user, ctx.state.scope)
+  hasWritePermission ({connection, entity}) {
+    return Permission.granted({permissions: this.getWritePermissionFor({connection, entity}), ...connection.state})
   }
 
-  requireReadPermission ({ctx, entity}) {
-    if (!this.hasReadPermission({ctx, entity})) {
+  requireReadPermission ({connection, entity}) {
+    if (!this.hasReadPermission({connection, entity})) {
       throw new ForbiddenAPIError({})
     }
   }
 
-  requireWritePermission ({ctx, entity}) {
-    if (!this.hasWritePermission({ctx, entity})) {
+  requireWritePermission ({connection, entity}) {
+    if (!this.hasWritePermission({connection, entity})) {
       throw new ForbiddenAPIError({})
     }
   }
@@ -49,7 +51,7 @@ export default class API {
   }
 
   static meta (result, query = null, additionalParameters = {}) {
-    return new Meta(result, query, additionalParameters)
+    return new Meta({result, query, additionalParameters})
   }
 
   static async getAuthor (ctx) {
@@ -171,7 +173,7 @@ export function permissions (...permissions) {
     let endpoint = descriptor.value
 
     descriptor.value = function (ctx) {
-      if (Permission.granted(permissions, ctx.state.user, ctx.state.scope)) {
+      if (Permission.granted({permissions, ...ctx.state})) {
         return endpoint.apply(this, arguments)
       } else {
         throw new ForbiddenAPIError({})
@@ -264,7 +266,7 @@ export function protect (permission, ...fields) {
             return
           }
 
-          if (!Permission.Permission.granted(permissions, ctx.state.user, ctx.state.scope)) {
+          if (!Permission.granted({permissions: [permission], ...ctx.state})) {
             throw new ForbiddenAPIError({})
           }
         })

@@ -11,7 +11,8 @@ export default class Login extends API {
   @POST('/login')
   @required('email', 'password')
   async login (ctx) {
-    let user = await Authentication.passwordAuthenticate(ctx.data.email, ctx.data.password)
+    let {email, password} = ctx.data
+    let user = await Authentication.passwordAuthenticate({email, password})
     if (!user) {
       throw new UnauthorizedAPIError({})
     }
