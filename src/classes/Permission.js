@@ -74,7 +74,7 @@ export default class Permission {
    * @param {Object} scope - Optional oauth2 client object to validate
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
-  static granted ({permissions, origUser, scope = null}) {
+  static granted ({permissions, user: origUser, scope = null}) {
     if (!origUser || origUser.isDeactivated()) {
       return false
     } else if (origUser.isDeactivated() || origUser.isSuspended()) {
@@ -134,38 +134,32 @@ export default class Permission {
    * @returns {Array} Array of objects with localised human readable permissions
    */
   static humanReadable ({scopes, user})  {
-    let humanReadablePermissions = []
-
     if (scopes.includes('*')) {
       scopes = Permission.allPermissions
     }
 
-    for (let permission of scopes) {
+    return scopes.reduce((acc, permission) => {
       let permissionComponents = permission.split('.')
       let [group, action, isSelf] = permissionComponents
 
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'
-      let accessible = Permission.granted({permissions: [permission], origUser: user, scope: null})
+      let accessible = Permission.granted({permissions: [permission], user, scope: null})
       if (isSelf && scopes.includes(`${group}.${action}`)) {
-        continue
+        return
       }
 
-      let count = 0
-      if (group === 'user' && isSelf) {
-        count = 1
-      }
+      let count = group === 'user' && isSelf ? 1 : 0
 
-      humanReadablePermissions.push({
+      acc.push({
         permission: i18next.t(permissionLocaleKey, {
           group: i18next.t(group, { count: count }),
           count: count
         }),
         accessible: accessible
       })
-    }
-
-    return humanReadablePermissions
+      return acc
+    }, [])
   }
 
   static get allPermissions () {

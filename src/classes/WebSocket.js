@@ -40,24 +40,24 @@ export default class WebSocket {
     this.wss.on('connection', async (client, req) => {
       let url = new URL(`http://localhost:8082${req.url}`)
       client.req = req
-      client.clientId = uid.sync(GLOBAL.WEBSOCKET_IDENTIFIER_ROUNDS)
+      client.clientId = uid.sync(global.WEBSOCKET_IDENTIFIER_ROUNDS)
       client.subscriptions = []
 
       let bearer = url.searchParams.get('bearer')
       if (bearer) {
-        let {user, scope} = await Authentication.bearerAuthenticate(bearer)
+        let {user, scope} = await Authentication.bearerAuthenticate({bearer})
         if (user) {
           client.user = user
           client.scope = scope
         }
       }
 
-      this.onConnection(client)
+      this.onConnection({client})
 
       client.on('message', (message) => {
         try {
           let request = JSON.parse(String(message))
-          this.onMessage(client, request)
+          this.onMessage({client, request})
         } catch (ex) {
           logger.info('Failed to parse incoming websocket message')
         }
@@ -76,7 +76,7 @@ export default class WebSocket {
   }
 
   async onConnection ({client}) {
-    let ctx = new Context(client, {})
+    let ctx = new Context({client, request: {}})
     let route = await WebSocket.getRoute('version', 'read')
     let result = await route(ctx)
     let meta = {
@@ -90,28 +90,28 @@ export default class WebSocket {
       'Rate-Limit-Remaining': rateLimit.remaining,
       'Rate-Limit-Reset':  this.traffic.nextResetDate
     })
-    this.send(client, { result:  result.data, meta: meta })
+    this.send({client, message: { result:  result.data, meta: meta }})
   }
 
   async onMessage ({client, request}) {
     try {
-      let { result, meta } = await this.route(client, request)
+      let { result, meta } = await this.route({client, request})
       if (!result.meta) {
         result.meta = {}
       }
       Object.assign(result.meta, meta)
-      this.send(client, result)
+      this.send({client, message: result})
     } catch (ex) {
       let error = ex
       if ((error instanceof APIError) === false) {
         error = new InternalServerError({})
       }
-      this.send(client, Object.assign({'meta': request.meta}, error))
+      this.send({client, message: Object.assign({'meta': request.meta}, error)})
     }
   }
 
   async route ({client, request}) {
-    let ctx = new Context(client, request)
+    let ctx = new Context({client, request})
 
     let rateLimit = this.traffic.validateRateLimit(ctx)
 
@@ -123,7 +123,7 @@ export default class WebSocket {
     })
 
     let [endpointName, methodName] = request.action || []
-    let route = WebSocket.getRoute(endpointName, methodName)
+    let route = WebSocket.getRoute({endpointName, methodName})
     let result = await route(ctx)
 
     return { result:  result, meta: meta }
@@ -133,13 +133,13 @@ export default class WebSocket {
     let clients = [...this.socket.clients].filter((client) => {
       return client.subscriptions.includes(id)
     })
-    this.broadcast(clients, result)
+    this.broadcast({clients, message: result})
   }
 
   onEvent (event, ctx, result, permissions = null) {
     let clients = [...this.socket.clients].filter((client) => {
       if (client.clientId !== ctx.client.clientId) {
-        return (!permissions || Permission.granted(permissions, client.user, client.scope))
+        return (!permissions || Permission.granted({permissions, ...client}))
       }
       return false
     })
@@ -148,7 +148,7 @@ export default class WebSocket {
     }
 
     Object.assign(result.meta, { event })
-    this.broadcast(clients, result)
+    this.broadcast({clients, message: result})
   }
 
   send ({client, message}) {
@@ -165,7 +165,7 @@ export default class WebSocket {
 
   broadcast ({clients, message}) {
     for (let client of clients) {
-      this.send(client, message)
+      this.send({client, message})
     }
   }
 
@@ -214,7 +214,7 @@ export class Context {
  * @param methodName The method name to route websocket requests for
  * @returns {Function} An ESNext decorator function
  */
-export function websocket ({endpointName, methodName}) {
+export function websocket (endpointName, methodName) {
   return function (target, name, descriptor) {
     WebSocket.addRoute({endpointName, methodName, method: descriptor.value})
   }

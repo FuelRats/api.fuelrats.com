@@ -24,7 +24,7 @@ export default class Clients extends API {
   @authenticated
   @permissions('client.read')
   async search (ctx) {
-    let clientQuery = new ClientQuery(ctx.query, ctx)
+    let clientQuery = new ClientQuery({query: ctx.query, connection: ctx})
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
     return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
   }
@@ -34,10 +34,10 @@ export default class Clients extends API {
   @authenticated
   @parameters('id')
   async findById (ctx) {
-    let clientQuery = new ClientQuery({ id: ctx.params.id }, ctx)
+    let clientQuery = new ClientQuery({query: { id: ctx.params.id }, connection: ctx})
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
 
-    this.requireWritePermission(ctx, result)
+    this.requireWritePermission({connection: ctx, result})
 
     return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
   }
@@ -51,7 +51,7 @@ export default class Clients extends API {
     if (!ctx.data.userId) {
       ctx.data.userId = ctx.state.user.id
     }
-    this.requireWritePermission(ctx, ctx.data)
+    this.requireWritePermission({connection: ctx, entity: ctx.data})
     let secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
     ctx.data.secret = secret
     let result = await Client.create(ctx.data)
@@ -66,7 +66,7 @@ export default class Clients extends API {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    this.requireWritePermission(ctx, ctx.data)
+    this.requireWritePermission({connection: ctx, entity: ctx.data})
     let client = await Client.findOne({
       where: {
         id: ctx.params.id
@@ -77,7 +77,7 @@ export default class Clients extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, client)
+    this.requireWritePermission({connection: ctx, entity: client})
 
     await Client.update(ctx.data, {
       where: {
@@ -112,15 +112,15 @@ export default class Clients extends API {
     return true
   }
 
-  getReadPermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id || entity.userId === null) {
+  getReadPermissionFor ({connection, entity}) {
+    if (entity.userId === connection.state.user.id || entity.userId === null) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']
   }
 
-  getWritePermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id || entity.userId === null) {
+  getWritePermissionFor ({connection, entity}) {
+    if (entity.userId === connection.state.user.id || entity.userId === null) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']

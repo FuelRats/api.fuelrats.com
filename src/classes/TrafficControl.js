@@ -54,7 +54,7 @@ class TrafficControl {
   retrieveAuthenticatedEntity ({user}) {
     let entity = this.authenticatedRequests[user.id]
     if (!entity) {
-      entity = new AuthenticatedUserEntity(user)
+      entity = new AuthenticatedUserEntity({user})
       this.authenticatedRequests[user.id] = entity
     }
     return entity
@@ -68,7 +68,7 @@ class TrafficControl {
   retrieveUnauthenticatedEntity ({remoteAddress}) {
     let entity = this.unauthenticatedRequests[remoteAddress]
     if (!entity) {
-      entity = new RemoteAddressEntity(remoteAddress)
+      entity = new RemoteAddressEntity({remoteAddress})
       this.unauthenticatedRequests[remoteAddress] = entity
     }
     return entity

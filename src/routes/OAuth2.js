@@ -85,7 +85,7 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
 
 server.exchange(oauth2orize.exchange.password(
   async function (client, username, password) {
-    let user = await Authentication.passwordAuthenticate(username, password)
+    let user = await Authentication.passwordAuthenticate({email: username, password})
     if (!user) {
       return false
     }
@@ -147,7 +147,7 @@ export default class OAuth2 extends API {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
       client: client,
-      scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
+      scopes: Permission.humanReadable({scopes: ctx.state.oauth2.req.scope, user: ctx.state.user}),
       scope: ctx.state.oauth2.req.scope.join(' ')
     }
   }

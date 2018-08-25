@@ -1,5 +1,5 @@
 export default class Meta {
-  constructor ({result, query = null, additionalParameters = {}}) {
+  constructor ({result, query = null, additionalParameters}) {
     let meta = {
       meta: {}
     }
@@ -20,7 +20,7 @@ export default class Meta {
       }
     }
 
-    meta.meta = Object.assign(meta.meta, additionalParameters)
+    meta.meta = {...meta.meta, ...additionalParameters}
     return meta
   }
 }
