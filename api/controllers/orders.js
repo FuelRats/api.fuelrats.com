@@ -19,6 +19,16 @@ class Orders {
       more: orders.has_more
     })
   }
+
+  static async findById (ctx) {
+    if (ctx.params.id) {
+      let order = await stripe.orders.retrieve(ctx.params.id)
+
+      return OrdersPresenter.render(order)
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
 }
 
 module.exports = Orders
