@@ -11,11 +11,24 @@ class JiraGroups {
 
     return {
       id: profile.id,
-      groups: profile.groups.map((group) => {
-        return group.id
-      })
+      role: getRole(profile)
     }
   }
+}
+
+/**
+ * Get highest priority role from a profile
+ * @param profile
+ */
+function getRole (profile) {
+  let roles = profile.groups.sort((previousValue, currentValue) => {
+    return currentValue.priority > previousValue.priority
+  })
+
+  if (roles.length > 0) {
+    return roles[0].id
+  }
+  return 'recruit'
 }
 
 module.exports = JiraGroups

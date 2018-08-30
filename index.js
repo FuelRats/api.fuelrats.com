@@ -39,6 +39,7 @@ const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
 const profile = require('./api/controllers/profile')
 const nextcloud = require('./api/controllers/nextcloud')
+const product = require('./api/controllers/products')
 const rat = require('./api/controllers/rat')
 const register = require('./api/controllers/register')
 const reset = require('./api/controllers/reset')
@@ -260,7 +261,7 @@ router.post('/jira/drill', Authentication.isAuthenticated, Permission.required([
 router.get('/jira/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), jiraProfile.read)
 router.get('/jira/groups', Authentication.isAuthenticated, Permission.required(['user.read.me']), jiraGroups.read)
 
-
+router.get('/products', product.search)
 /*
 
 
