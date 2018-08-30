@@ -82,7 +82,7 @@ class Register {
         transaction: transaction
       })
 
-      //await NickServ.register(nickname, ctx.data.password, email)
+      await NickServ.register(nickname, ctx.data.password, email)
 
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
         where: { id: user.id }
@@ -94,8 +94,8 @@ class Register {
       let result = await User.scope('public').findOne(userQuery.toSequelize)
       let presentedUser = UserPresenter.render(result, {})
 
-      //await HostServ.update(presentedUser)
-      //process.emit('registration', ctx, ctx.data)
+      await HostServ.update(presentedUser)
+      process.emit('registration', ctx, ctx.data)
 
       ctx.body = presentedUser
     } catch (ex) {
