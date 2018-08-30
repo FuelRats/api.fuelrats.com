@@ -44,7 +44,7 @@ class ProductsPresenter extends ObjectPresenter {
         active: instance.active,
         attributes: instance.attributes,
         caption: instance.caption,
-        createdAt: new Date(instance.created),
+        createdAt: new Date(instance.created * 1000),
         description: instance.description,
         images: instance.images,
         livemode: instance.livemode,
@@ -52,13 +52,45 @@ class ProductsPresenter extends ObjectPresenter {
         dimensions: instance.package_dimensions,
         shippable: true,
         productType: instance.type,
-        updatedAt: new Date(instance.updated)
+        updatedAt: new Date(instance.updated * 1000)
       }
     }
     return null
   }
 }
 ProductsPresenter.prototype.type = 'products'
+
+class OrdersPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id
+  }
+
+  attributes (instance) {
+    if (instance) {
+      return {
+        amount: instance.amount,
+        returned: instance.amount_returned,
+        application: instance.application,
+        applicationFee: instance.application_fee,
+        charge: instance.charge,
+        currency: instance.currency,
+        email: instance.email,
+        livemode: instance.livemode,
+        shippingMethod: instance.selected_shipping_method,
+        shipping: instance.shipping,
+        shippingMethods: instance.shippingMethods,
+        status: instance.status,
+        statusTransitions: instance.status_transitions,
+        items: instance.items,
+        returns: instance.returns,
+        createdAt: new Date(instance.created * 1000),
+        updatedAt: new Date(instance.updated * 1000)
+      }
+    }
+    return null
+  }
+}
+OrdersPresenter.prototype.type = 'order'
 
 class DecalsPresenter extends Presenter {}
 DecalsPresenter.prototype.type = 'decals'
@@ -184,5 +216,6 @@ module.exports = {
   SystemStatisticsPresenter,
   RatStatisticsPresenter,
   ProductsPresenter,
+  OrdersPresenter,
   ObjectPresenter
 }

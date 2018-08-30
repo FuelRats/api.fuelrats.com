@@ -39,6 +39,7 @@ const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
 const profile = require('./api/controllers/profile')
 const nextcloud = require('./api/controllers/nextcloud')
+const order = require('./api/controllers/orders')
 const product = require('./api/controllers/products')
 const rat = require('./api/controllers/rat')
 const register = require('./api/controllers/register')
@@ -263,6 +264,9 @@ router.get('/jira/groups', Authentication.isAuthenticated, Permission.required([
 
 router.get('/products', product.search)
 router.get('/products/:id', product.findById)
+
+
+router.get('/orders', Authentication.isAuthenticated, Permission.required(['order.read']), order.search)
 /*
 
 
