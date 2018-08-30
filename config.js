@@ -61,5 +61,8 @@ module.exports = {
         'level': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_LEVEL || 'info'
       }
     }
+  },
+  'stripe': {
+    'token': process.env.FRAPI_STRIPE_TOKEN || null
   }
 }

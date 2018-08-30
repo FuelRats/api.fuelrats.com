@@ -33,6 +33,33 @@ class SubscriptionsPresenter extends ObjectPresenter {
 }
 SubscriptionsPresenter.prototype.type = 'subscriptions'
 
+class ProductsPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id
+  }
+
+  attributes (instance) {
+    if (instance) {
+      return {
+        active: instance.active,
+        attributes: instance.attributes,
+        caption: instance.caption,
+        createdAt: new Date(instance.created),
+        description: instance.description,
+        images: instance.images,
+        livemode: instance.livemode,
+        name: instance.name,
+        dimensions: instance.package_dimensions,
+        shippable: true,
+        productType: instance.type,
+        updatedAt: new Date(instance.updated)
+      }
+    }
+    return null
+  }
+}
+ProductsPresenter.prototype.type = 'products'
+
 class DecalsPresenter extends Presenter {}
 DecalsPresenter.prototype.type = 'decals'
 
@@ -156,5 +183,6 @@ module.exports = {
   RescueStatisticsPresenter,
   SystemStatisticsPresenter,
   RatStatisticsPresenter,
+  ProductsPresenter,
   ObjectPresenter
 }
