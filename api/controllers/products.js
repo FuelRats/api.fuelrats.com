@@ -14,14 +14,6 @@ class Products {
       more: products.has_more
     })
   }
-
-  static async findById (ctx) {
-    if (ctx.params.id) {
-
-    } else {
-      throw Error.template('missing_required_field', 'id')
-    }
-  }
 }
 
 module.exports = Products
