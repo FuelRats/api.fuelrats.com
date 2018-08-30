@@ -262,6 +262,7 @@ router.get('/jira/profile', Authentication.isAuthenticated, Permission.required(
 router.get('/jira/groups', Authentication.isAuthenticated, Permission.required(['user.read.me']), jiraGroups.read)
 
 router.get('/products', product.search)
+router.get('/products/:id', product.findById)
 /*
 
 
