@@ -29,6 +29,16 @@ class Orders {
       throw Error.template('missing_required_field', 'id')
     }
   }
+
+  static async update (ctx) {
+    if (ctx.params.id) {
+      let order = await stripe.orders.update(ctx.params.id, ctx.data)
+
+      return OrdersPresenter.render(order)
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
 }
 
 module.exports = Orders

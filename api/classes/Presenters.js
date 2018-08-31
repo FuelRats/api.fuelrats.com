@@ -48,10 +48,12 @@ class ProductsPresenter extends ObjectPresenter {
         description: instance.description,
         images: instance.images,
         livemode: instance.livemode,
+        metadata: instance.metadata,
         name: instance.name,
         dimensions: instance.package_dimensions,
         shippable: true,
         productType: instance.type,
+        url: instance.url,
         updatedAt: new Date(instance.updated * 1000)
       }
     }
@@ -76,6 +78,7 @@ class OrdersPresenter extends ObjectPresenter {
         currency: instance.currency,
         email: instance.email,
         livemode: instance.livemode,
+        metadata: instance.metadata,
         shippingMethod: instance.selected_shipping_method,
         shipping: instance.shipping,
         shippingMethods: instance.shippingMethods,

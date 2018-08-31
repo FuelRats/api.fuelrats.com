@@ -267,7 +267,8 @@ router.get('/products/:id', product.findById)
 
 
 router.get('/orders', Authentication.isAuthenticated, Permission.required(['order.read']), order.search)
-router.get('/orders/:id', Authentication.isAuthenticated, Permission.required(['order.read']), order.findById)
+router.get('/orders/:id', order.findById)
+router.put('/orders/:id', Authentication.isAuthenticated, Permission.required(['order.write']), order.update)
 /*
 
 
