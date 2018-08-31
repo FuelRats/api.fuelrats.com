@@ -52,6 +52,7 @@ class ProductsPresenter extends ObjectPresenter {
         name: instance.name,
         dimensions: instance.package_dimensions,
         shippable: true,
+        skus: instance.skus,
         productType: instance.type,
         url: instance.url,
         updatedAt: new Date(instance.updated * 1000)
