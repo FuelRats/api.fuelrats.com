@@ -30,6 +30,12 @@ class Orders {
     }
   }
 
+  static async create (ctx) {
+    let order = await stripe.orders.create(ctx.data)
+
+    return OrdersPresenter.render(order)
+  }
+
   static async update (ctx) {
     if (ctx.params.id) {
       let order = await stripe.orders.update(ctx.params.id, ctx.data)
