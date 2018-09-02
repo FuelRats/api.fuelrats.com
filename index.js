@@ -10,7 +10,7 @@ const session = require('koa-session')
 const router = require('koa-router')()
 const app = new Koa()
 require('koa-qs')(app)
-const koaBody = require('koa-body')
+const koaBody = require('koa-better-body')
 const TrafficControl = require('./api/TrafficControl')
 const render = require('koa-ejs')
 const path = require('path')
@@ -47,6 +47,7 @@ const reset = require('./api/controllers/reset')
 const rescue = require('./api/controllers/rescue')
 const ship = require('./api/controllers/ship')
 const statistics = require('./api/controllers/statistics')
+const stripeWebhook = require('./api/controllers/stripe/webhook')
 const user = require('./api/controllers/user')
 const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
@@ -65,6 +66,14 @@ try {
 }
 
 app.keys = [config.cookie.secret]
+app.use(koaBody({
+  detectJSON: function (ctx) {
+    if (ctx.req.url === '/stripe/webhook') {
+      return false
+    }
+    return ctx.request.is('json')
+  }
+}))
 
 let sessionConfiguration = {
   key: 'fuelrats:session',
@@ -77,12 +86,13 @@ app.use(require('koa-static')('static', {
   hidden: false,
   gzip: true
 }))
-app.use(koaBody({ strict: false }))
+
+
 
 let port = config.port || process.env.PORT
 
 app.use(async function (ctx, next) {
-  ctx.data = ctx.request.body
+  ctx.data = ctx.request.fields || {}
   ctx.meta = WebSocketManager.meta
   ctx.client = {}
 
@@ -270,6 +280,7 @@ router.get('/orders', Authentication.isAuthenticated, Permission.required(['orde
 router.get('/orders/:id', order.findById)
 router.post('/orders', order.create)
 router.put('/orders/:id', Authentication.isAuthenticated, Permission.required(['order.write']), order.update)
+router.post('/stripe/webhook', stripeWebhook.receive)
 /*
 
 
