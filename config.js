@@ -63,6 +63,7 @@ module.exports = {
     }
   },
   'stripe': {
-    'token': process.env.FRAPI_STRIPE_TOKEN || null
+    'token': process.env.FRAPI_STRIPE_TOKEN || null,
+    'signature': process.env.FRAPI_STRIPE_SIGNATURE || null
   }
 }
