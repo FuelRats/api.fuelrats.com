@@ -96,6 +96,22 @@ class OrdersPresenter extends ObjectPresenter {
 }
 OrdersPresenter.prototype.type = 'order'
 
+class CustomersPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id
+  }
+
+  attributes (instance) {
+    if (instance) {
+      instance.createdAt = new Date(instance.created * 1000)
+      delete instance.created
+      return instance
+    }
+    return null
+  }
+}
+CustomersPresenter.prototype.type = 'products'
+
 class DecalsPresenter extends Presenter {}
 DecalsPresenter.prototype.type = 'decals'
 
@@ -221,5 +237,6 @@ module.exports = {
   RatStatisticsPresenter,
   ProductsPresenter,
   OrdersPresenter,
+  CustomersPresenter,
   ObjectPresenter
 }
