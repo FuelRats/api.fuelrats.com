@@ -33,6 +33,7 @@ const Error = require('./api/errors')
 // Import controllers
 const Authentication = require('./api/controllers/auth')
 const client = require('./api/controllers/client')
+const customer = require('./api/controllers/customer')
 const decal = require('./api/controllers/decal')
 const login = require('./api/controllers/login')
 const nicknames = require('./api/controllers/nicknames')
@@ -270,6 +271,9 @@ router.get('/orders', Authentication.isAuthenticated, Permission.required(['orde
 router.get('/orders/:id', order.findById)
 router.post('/orders', order.create)
 router.put('/orders/:id', Authentication.isAuthenticated, Permission.required(['order.write']), order.update)
+
+
+router.post('/customers', customer.create)
 /*
 
 
