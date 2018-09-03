@@ -115,9 +115,18 @@ class OAuth2 {
   }
 
   static async revokeAll (ctx) {
+    let {clientId} = ctx.data
+    if (clientId) {
+      if (!Permission.granted(['user.write'], ctx.state.user, ctx.state.scope)) {
+        throw Permission.permissionError(['user.write'])
+      }
+    } else {
+      clientId = ctx.state.client.id
+    }
+
     let tokens = await Token.findAll({
       where: {
-        clientId: ctx.state.client.id
+        clientId: clientId
       }
     })
 
