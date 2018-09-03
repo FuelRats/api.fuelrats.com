@@ -2,6 +2,7 @@
 
 const Mailgen = require('mailgen')
 const nodemailer = require('nodemailer')
+const path = require('path')
 
 class Mail {
   constructor () {
@@ -11,11 +12,14 @@ class Mail {
     })
 
     this.mailgen = new Mailgen({
-      theme: 'default',
+      theme: {
+        path: path.resolve('static/mailgen/index.html'),
+        plaintextPath: path.resolve('static/mailgen/index.txt')
+      },
       product: {
         name: 'The Fuel Rats',
         link: 'https://fuelrats.com/',
-        logo: 'https://wordpress.fuelrats.com/wp-content/uploads/2018/09/roundel_black.jpg'
+        logo: 'http://wordpress.fuelrats.com/wp-content/uploads/2018/09/email.jpg'
       }
     })
   }

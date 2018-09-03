@@ -50,7 +50,7 @@ class Resets {
         to: user.email,
         subject: 'Fuel Rats Password Reset Requested',
         body: {
-          name: displayRat.name,
+          name: displayRat.attributes.name,
           intro: 'A password reset to your Fuel Rats Account has been requested.',
           action: {
             instructions: 'Click the button below to reset your password:',
@@ -60,7 +60,8 @@ class Resets {
               link:  Resets.getResetLink(reset.value)
             }
           },
-          outro: 'If you did not request a password reset, no further action is required on your part.'
+          outro: 'If you did not request a password reset, no further action is required on your part.',
+          signature: 'Sincerely'
         }
       })
       BotServ.say('#rattech', `[API] Password reset for ${user.email} requested by ${ctx.inet}`)
