@@ -1,19 +1,22 @@
 'use strict'
 
-const nodemailer = require('nodemailer')
 const { User, Reset } = require('../db')
 const crypto = require('crypto')
 const Error = require('../errors')
 const bcrypt = require('bcrypt')
 const BotServ = require('../Anope/BotServ')
+const Mail = require('../classes/Mail')
+const { UsersPresenter } = require('../classes/Presenters')
+
+let mail = new Mail()
 
 const BCRYPT_ROUNDS_COUNT = 12
 const RESET_TOKEN_LENGTH = 16
 const EXPIRE_LENGTH = 86400000
 
 class Resets {
-  static async requestReset (ctx, next) {
-    let user = await User.findOne({
+  static async requestReset (ctx) {
+    let user = await User.scope('defaultScope', 'profile').findOne({
       where: {
         email: { $iLike: ctx.data.email }
       }
@@ -39,32 +42,33 @@ class Resets {
       userId: user.id
     })
 
-    ctx.state.writeResp = false
-    let html = await ctx.render('reset-email', {
-      resetlink: Resets.getResetLink(reset.value)
-    })
+    let userResponse = UsersPresenter.render(user, {})
+    let displayRat = User.preferredRat(userResponse)
 
-    let transporter = nodemailer.createTransport({
-      host: 'smtp-relay.gmail.com',
-      port: 587
-    })
     try {
-      await transporter.sendMail({
-        from: 'Fuel Rats (Do Not Reply) <blackhole@fuelrats.com>',
+      await mail.send({
         to: user.email,
         subject: 'Fuel Rats Password Reset Requested',
-        text: Resets.getPlainTextEmail(reset.value),
-        html: html
+        body: {
+          name: displayRat.name,
+          intro: 'A password reset to your Fuel Rats Account has been requested.',
+          action: {
+            instructions: 'Click the button below to reset your password:',
+            button: {
+              color: '#d65050',
+              text: 'Reset your password',
+              link:  Resets.getResetLink(reset.value)
+            }
+          },
+          outro: 'If you did not request a password reset, no further action is required on your part.'
+        }
       })
       BotServ.say('#rattech', `[API] Password reset for ${user.email} requested by ${ctx.inet}`)
     } catch (ex) {
       BotServ.say('#rattech', '[API] Password reset failed due to error from SMTP server')
-      return
+      return Error.template('server_error')
     }
-
-    ctx.body = 'OK'
-
-    next()
+    return true
   }
 
   static async validateReset (ctx) {
@@ -115,18 +119,6 @@ class Resets {
 
     ctx.body = 'OK'
     next()
-  }
-
-  static getPlainTextEmail (resetToken) {
-    let resetLink = Resets.getResetLink(resetToken)
-    return `
-    A password reset to your Fuel Rats account has been requested
-    
-    To reset your password copy this link into your browser:
-    ${resetLink}
-    
-    Regards,
-    The Fuel Rats`
   }
 
   static getResetLink (resetToken) {

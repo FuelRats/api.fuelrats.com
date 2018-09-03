@@ -168,14 +168,6 @@ app.use(async (ctx, next) => {
   }
 })
 
-render(app, {
-  root: path.join(__dirname, 'views'),
-  layout: false,
-  viewExt: 'html',
-  cache: false,
-  debug: true
-})
-
 // ROUTES
 // =============================================================================
 router.get('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.search)
