@@ -60,6 +60,11 @@ class Resets {
               link:  Resets.getResetLink(reset.value)
             }
           },
+          goToAction: {
+            text: 'Reset Password',
+            link: Resets.getResetLink(reset.value),
+            description: 'Click to reset your password'
+          },
           outro: 'If you did not request a password reset, no further action is required on your part.',
           signature: 'Sincerely'
         }
