@@ -153,12 +153,15 @@ class OAuth2 {
     Object.assign(client, ctx.state.oauth2.client)
     delete client.secret
 
+    let existingToken = await Token.findOne({ where: { clientId: ctx.query.client_id } })
+
     ctx.body = {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
       client: client,
       scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
-      scope: ctx.state.oauth2.req.scope.join(' ')
+      scope: ctx.state.oauth2.req.scope.join(' '),
+      preAuthorised: (existingToken !== undefined)
     }
 
     await next()
