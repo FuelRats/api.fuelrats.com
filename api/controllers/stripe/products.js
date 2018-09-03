@@ -1,8 +1,8 @@
 'use strict'
 
-const config = require('../../config')
+const config = require('../../../config')
 const stripe = require('stripe')(config.stripe.token)
-const { ProductsPresenter } = require('../classes/Presenters')
+const { ProductsPresenter } = require('../../classes/Presenters')
 
 class Products {
   static async search (ctx) {
