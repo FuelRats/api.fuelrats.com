@@ -163,7 +163,9 @@ export default class Users extends API {
       }
     })
 
-    rats.forEach(rat => rat.destroy())
+    await Promise.all(rats.map((rat) => {
+      return rat.destroy()
+    }))
     await user.destroy()
 
     ctx.status = 204
