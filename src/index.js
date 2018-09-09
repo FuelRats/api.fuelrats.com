@@ -62,7 +62,9 @@ app.use(koaStatic('./static', {
   hidden: false,
   gzip: true
 }))
-app.use(koaBody())
+app.use(koaBody({
+  strict: false
+}))
 
 let port = config.port || process.env.PORT
 

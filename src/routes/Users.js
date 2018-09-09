@@ -1,7 +1,8 @@
 
 
-import { User } from '../db'
+import { User, Rat } from '../db'
 
+import Authentication from '../classes/Authentication'
 import UserQuery from '../query/UserQuery'
 import HostServ from '../Anope/HostServ'
 import bcrypt from 'bcrypt'
@@ -135,6 +136,40 @@ export default class Users extends API {
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
+  @DELETE('/users/:id')
+  @websocket('users', 'delete')
+  @required('password')
+  async delete (ctx) {
+    let user = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({parameter: 'id'})
+    }
+
+    this.requireWritePermission({connection: ctx, entity: user})
+
+    let isAuthenticated = await Authentication.passwordAuthenticate({email: user.email, password: ctx.data.password})
+    if (!isAuthenticated) {
+      throw new UnauthorizedAPIError({pointer: '/data/attributes/password'})
+    }
+
+    let rats = await Rat.findAll({
+      where: {
+        userId: ctx.params.id
+      }
+    })
+
+    rats.forEach(rat => rat.destroy())
+    await user.destroy()
+
+    ctx.status = 204
+    return true
+  }
+
   @POST('/users/image/:id')
   @websocket('users', 'image')
   @authenticated
@@ -149,7 +184,7 @@ export default class Users extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, user)
+    this.requireWritePermission({connection: ctx, entity: user})
 
     let imageData = ctx.req._readableState.buffer.head.data
 
@@ -163,27 +198,6 @@ export default class Users extends API {
     let userQuery = new UserQuery({id: ctx.params.id}, ctx)
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
-  }
-
-  @DELETE('/users/:id')
-  @websocket('users', 'delete')
-  @authenticated
-  @permissions('user.delete')
-  async delete (ctx) {
-    let rescue = await User.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    if (!rescue) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    rescue.destroy()
-
-    ctx.status = 204
-    return true
   }
 
   @PUT('/users/updatevirtualhost/:id')
