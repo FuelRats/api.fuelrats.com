@@ -33,7 +33,7 @@ class Webhook {
       let amount = (item.amount / 100).toLocaleString('en-GB', {
         style: 'currency',
         currency: item.currency,
-        currencyDisplay: 'code'
+        currencyDisplay: 'symbol'
       })
       return {
         item: item.description,
