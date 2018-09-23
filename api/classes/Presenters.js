@@ -82,7 +82,7 @@ class OrdersPresenter extends ObjectPresenter {
         metadata: instance.metadata,
         shippingMethod: instance.selected_shipping_method,
         shipping: instance.shipping,
-        shippingMethods: instance.shippingMethods,
+        shippingMethods: instance.shipping_methods,
         status: instance.status,
         statusTransitions: instance.status_transitions,
         items: instance.items,
