@@ -3,6 +3,7 @@
 const config = require('../../../config')
 const stripe = require('stripe')(config.stripe.token)
 const { OrdersPresenter } = require('../../classes/Presenters')
+const Permission = require('../../permission')
 
 class Orders {
   static async search (ctx) {
@@ -22,6 +23,10 @@ class Orders {
 
   static async findById (ctx) {
     if (ctx.params.id) {
+      if (ctx.session.currentTransaction !== ctx.params.id && !Permission.granted(['order.read'], ctx.state.user, ctx.state.scope)) {
+        throw Permission.permissionError(['order.read'])
+      }
+
       let order = await stripe.orders.retrieve(ctx.params.id)
 
       return OrdersPresenter.render(order)
@@ -33,11 +38,16 @@ class Orders {
   static async create (ctx) {
     let order = await stripe.orders.create(ctx.data)
 
+    ctx.session.currentTransaction = order.id
     return OrdersPresenter.render(order)
   }
 
   static async update (ctx) {
     if (ctx.params.id) {
+      if (ctx.session.currentTransaction !== ctx.params.id && !Permission.granted(['order.read'], ctx.state.user, ctx.state.scope)) {
+        throw Permission.permissionError(['order.read'])
+      }
+
       let order = await stripe.orders.update(ctx.params.id, ctx.data)
 
       return OrdersPresenter.render(order)
