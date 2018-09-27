@@ -4,6 +4,7 @@ import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import { Group, User } from '../db/index'
 import { ForbiddenAPIError } from './APIError'
+const permissions = require('../../permissions')
 
 i18next.init({
   lng: 'en',
@@ -13,9 +14,7 @@ i18next.init({
 const permissionLocaleKeys = {
   'read': 'permissionRead',
   'write': 'permissionWrite',
-  'delete': 'permissionDelete',
-
-  'groups': 'permissionGroup'
+  'delete': 'permissionDelete'
 }
 
 let groups = {}
@@ -163,42 +162,22 @@ export default class Permission {
   }
 
   static get allPermissions () {
-    return [
-      'rescue.read',
-      'rescue.write',
-      'rescue.delete',
-      'rescue.read.me',
-      'rescue.write.me',
-      'rescue.delete.me',
-      'rat.read',
-      'rat.write',
-      'rat.delete',
-      'rat.read.me',
-      'rat.write.me',
-      'rat.delete.me',
-      'user.read',
-      'user.write',
-      'user.delete',
-      'user.read.me',
-      'user.write.me',
-      'user.delete.me',
-      'client.read',
-      'client.write',
-      'client.delete',
-      'client.read.me',
-      'client.write.me',
-      'client.delete.me',
-      'ship.read',
-      'ship.write',
-      'ship.delete',
-      'ship.read.me',
-      'ship.write.me',
-      'ship.delete.me',
-      'decal.read',
-      'decal.read.me',
-      'group.read',
-      'group.write',
-      'group.delete'
-    ]
+    return Object.entries(permissions).reduce((acc, [domain, [self, ...accessTypes]]) => {
+      if (accessTypes.length === 0) {
+        accessTypes = ['read', 'write', 'delete']
+      }
+
+      acc.push(...accessTypes.map((accessType) => {
+        return `${domain}.${accessType}`
+      }))
+
+      if (self) {
+        acc.push(...accessTypes.map((accessType) => {
+          return `${domain}.${accessType}.me`
+        }))
+      }
+
+      return acc
+    }, [])
   }
 }

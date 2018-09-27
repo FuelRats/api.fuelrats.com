@@ -2,7 +2,7 @@ import { User, Rat, db, npoMembership } from '../db'
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
 import BotServ from '../Anope/BotServ'
-import UserQuery from '../query/UserQuery'
+import Query from '../query'
 import API, {
   POST,
   required
@@ -32,7 +32,7 @@ export default class Register extends API {
     // }
 
     let { email, name, nickname, password, ircPassword, platform } = ctx.data
-    Register.checkExisting(ctx)
+    await Register.checkExisting(ctx)
 
     let transaction = await db.transaction()
 
@@ -81,11 +81,10 @@ export default class Register extends API {
       throw ex
     }
 
-    let userQuery = new UserQuery({query: { id: userId }, connection: ctx})
+    let userQuery = new Query({params: { id: userId }, connection: ctx})
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     process.emit('registration', ctx, ctx.data)
-    let presentedUser = Profile.presenter.render(result.rows, API.meta(result, userQuery))
-    ctx.body = presentedUser
+    ctx.body = Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
   static async checkExisting (ctx) {
@@ -112,5 +111,3 @@ export default class Register extends API {
   }
 }
 
-process.on('registration', (ctx, values) => {
-})

@@ -38,7 +38,7 @@ export default class Decal {
     throw new BadRequestAPIError({})
   }
 
-  static async getDecalForUser ({user}) {
+  static async getDecalFor ({user}) {
     let decalEligible = await Decal.checkEligible({user})
     if (decalEligible) {
       let decal = await Decal.redeem({user, type: 'Rescues'})

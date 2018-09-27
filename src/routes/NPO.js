@@ -1,6 +1,6 @@
 
 
-import { Rat, User, npoMembership } from '../db'
+import { Rat, npoMembership } from '../db'
 import Users from '../routes/Users'
 import Query from '../query'
 import { NotFoundAPIError } from '../classes/APIError'
@@ -21,7 +21,7 @@ export default class NPO extends API {
   @authenticated
   @permissions('user.read')
   async search (ctx) {
-    let npoQuery = new Query(ctx.query, ctx)
+    let npoQuery = new Query({ params: ctx.query, connection: ctx })
     let result = await npoMembership.findAndCountAll(npoQuery.toSequelize)
     return NPO.presenter.render(result.rows, API.meta(result, npoQuery))
   }
@@ -30,7 +30,7 @@ export default class NPO extends API {
   @websocket('npo', 'read')
   @parameters('id')
   async findById (ctx) {
-    let npoQuery = new Query({ userId: ctx.params.id }, ctx)
+    let npoQuery = new Query({ params: { userId: ctx.params.id }, connection: ctx })
     let result = await Rat.findAndCountAll(npoQuery.toSequelize)
 
     return NPO.presenter.render(result.rows, API.meta(result, npoQuery))
@@ -68,15 +68,15 @@ export default class NPO extends API {
     return true
   }
 
-  getReadPermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id) {
+  getReadPermissionFor ({ connection, entity }) {
+    if (entity.userId === connection.state.user.id) {
       return ['user.write', 'user.write.me']
     }
     return ['user.write']
   }
 
-  getWritePermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id) {
+  getWritePermissionForEntity ({ connection, entity }) {
+    if (entity.userId === connection.state.user.id) {
       return ['user.write', 'user.write.me']
     }
     return ['user.write']

@@ -106,7 +106,7 @@ export default class Authentication {
   static async authenticate ({connection}) {
     let [ clientId, clientSecret ] = getBasicAuth(connection)
     if (clientId) {
-      connection.state.client = await Authentication.clientAuthenticate(clientId, clientSecret)
+      connection.state.client = await Authentication.clientAuthenticate({ clientId, clientSecret })
     }
 
     if (connection.session.userId) {

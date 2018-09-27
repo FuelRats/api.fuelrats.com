@@ -105,7 +105,7 @@ export default class Resets extends API {
 
     await user.save()
 
-    reset.destroy()
+    await reset.destroy()
 
     ctx.body = 'OK'
     next()

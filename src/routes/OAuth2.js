@@ -2,7 +2,7 @@
 
 import oauth2orize from 'oauth2orize-koa-fr'
 import crypto from 'crypto'
-import { Token, Client, Code } from '../db'
+import { Token, Client, Code, db } from '../db'
 import Permission from '../classes/Permission'
 import {NotFoundAPIError, UnauthorizedAPIError, UnprocessableEntityAPIError} from '../classes/APIError'
 import i18next from 'i18next'
@@ -72,7 +72,7 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
     return false
   }
 
-  auth.destroy()
+  await auth.destroy()
 
   let token = await Token.create({
     scope: auth.scope,
@@ -114,7 +114,7 @@ export default class OAuth2 extends API {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/clientId' })
     }
 
-    token.destroy()
+    await token.destroy()
     return true
   }
 
@@ -127,9 +127,18 @@ export default class OAuth2 extends API {
       }
     })
 
-    tokens.map((token) => {
-      token.destroy()
-    })
+    let transaction = await db.transaction()
+
+    try {
+      await Promise.all(tokens.map((token) => {
+        token.destroy({ transaction })
+      }))
+
+      await transaction.commit()
+    } catch (ex) {
+      transaction.rollback()
+      throw ex
+    }
 
     return true
   }

@@ -56,7 +56,7 @@ export default class JiraDrillWebhook extends API {
             as: 'rats',
             required: true,
             where: {
-              CMDRname: {
+              name: {
                 $iLike: cmdrName
               }
             }

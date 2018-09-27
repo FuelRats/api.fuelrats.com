@@ -1,5 +1,5 @@
 
-import QueryOptions from './QueryOptions'
+import QueryOptions from './options'
 
 const defaultRequestLimit = 25
 const maximumUnauthenticatedLimit = 100

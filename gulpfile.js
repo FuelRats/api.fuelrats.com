@@ -26,14 +26,21 @@ gulp.task('default', () =>
         }
       },
       'plugins': [
-        ['transform-es2015-modules-commonjs', { 'loose': false }],
-        'transform-decorators',
-        'transform-do-expressions',
-        'transform-export-extensions',
-        'transform-function-bind',
-        'transform-optional-catch-binding',
-        'transform-optional-chaining',
-        'transform-strict-mode'
+        ['@babel/plugin-transform-modules-commonjs', { 'loose': false }],
+        ['@babel/plugin-proposal-decorators', { 'legacy': true }],
+        ['@babel/plugin-proposal-class-properties', { 'loose': true }],
+        '@babel/plugin-proposal-do-expressions',
+        '@babel/plugin-proposal-function-bind',
+        '@babel/plugin-proposal-optional-catch-binding',
+        '@babel/plugin-proposal-optional-chaining',
+        '@babel/plugin-transform-strict-mode',
+        '@babel/plugin-proposal-throw-expressions',
+        '@babel/plugin-proposal-numeric-separator',
+        '@babel/plugin-proposal-nullish-coalescing-operator',
+        '@babel/plugin-proposal-logical-assignment-operators',
+        '@babel/plugin-proposal-function-sent',
+        '@babel/plugin-proposal-export-default-from',
+        '@babel/plugin-proposal-export-namespace-from'
       ]
     }))
     .pipe(sourcemaps.write('.', {

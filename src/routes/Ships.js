@@ -1,6 +1,6 @@
 
 import { Ship } from '../db'
-import ShipQuery from '../query/ShipQuery'
+import Query from '../query'
 import { NotFoundAPIError } from '../classes/APIError'
 import API, {
   authenticated,
@@ -9,7 +9,6 @@ import API, {
   PUT,
   DELETE,
   parameters,
-  disallow,
   required,
   protect
 } from '../classes/API'
@@ -19,7 +18,7 @@ export default class Ships extends API {
   @GET('/ships')
   @websocket('ships', 'search')
   async search (ctx) {
-    let shipsQuery = new ShipQuery(ctx.query, ctx)
+    let shipsQuery = new Query({ params: ctx.query, connection: ctx })
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
     return Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
   }
@@ -28,7 +27,7 @@ export default class Ships extends API {
   @websocket('ships', 'read')
   @parameters('id')
   async findById (ctx) {
-    let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
+    let shipsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
 
     return Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
@@ -40,7 +39,7 @@ export default class Ships extends API {
   @required('name', 'shipType', 'ratId')
   @protect('ship.write', 'shipId')
   async create (ctx) {
-    this.requireWritePermission(ctx, ctx.data)
+    this.requireWritePermission({ connection: ctx, entity: ctx.data })
 
     let result = await Ship.create(ctx.data)
 
@@ -55,7 +54,7 @@ export default class Ships extends API {
   @authenticated
   @protect('ship.write', 'shipId')
   async update (ctx) {
-    this.requireWritePermission(ctx, ctx.data)
+    this.requireWritePermission({ connection: ctx, entity: ctx.data })
 
     let ship = await Ship.findOne({
       where: {
@@ -67,7 +66,7 @@ export default class Ships extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, ship)
+    this.requireWritePermission({ connection: ctx, entity: ship })
 
     await Ship.update(ctx.data, {
       where: {
@@ -75,7 +74,7 @@ export default class Ships extends API {
       }
     })
 
-    let shipsQuery = new ShipQuery({id: ctx.params.id}, ctx)
+    let shipsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
 
     let renderedResult = Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
@@ -98,14 +97,14 @@ export default class Ships extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, ship)
+    this.requireWritePermission({ connection: ctx, entity: ship })
 
     await ship.destroy()
     return true
   }
 
-  getWritePermissionForEntity (ctx, entity) {
-    let rat = ctx.state.user.included.find((included) => {
+  getWritePermissionFor ({ connection, entity }) {
+    let rat = connection.state.user.included.find((included) => {
       return included.id === entity.ratId
     })
 

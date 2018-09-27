@@ -2,7 +2,7 @@
 
 import { Rescue, Rat } from '../db'
 import { CustomPresenter} from '../classes/Presenters'
-import RescueQuery from '../query/RescueQuery'
+import RescueQuery from '../query/rescue'
 import Rats from './Rats'
 import Epics from './Epics'
 import {ForbiddenAPIError, GoneAPIError, NotFoundAPIError} from '../classes/APIError'
@@ -31,7 +31,7 @@ export default class Rescues extends API {
   @authenticated
   @permissions('rescue.read')
   async search (ctx) {
-    let rescueQuery = new RescueQuery(ctx.query, ctx)
+    let rescueQuery = new RescueQuery({ params: ctx.query, connection: ctx })
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
   }
@@ -42,7 +42,7 @@ export default class Rescues extends API {
   @permissions('rescue.read')
   @parameters('id')
   async findById (ctx) {
-    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+    let rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
   }
@@ -77,13 +77,13 @@ export default class Rescues extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, rescue)
+    this.requireWritePermission({ connection: ctx, entity: rescue })
 
     await rescue.update(ctx.data, {
       userId: ctx.state.user.id
     })
 
-    let rescueQuery = new RescueQuery({id: ctx.params.id}, ctx)
+    let rescueQuery = new RescueQuery({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
@@ -106,7 +106,7 @@ export default class Rescues extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    rescue.destroy()
+    await rescue.destroy()
 
     process.emit('rescueDeleted', ctx, CustomPresenter.render({
       id: ctx.params.id
@@ -133,9 +133,9 @@ export default class Rescues extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, rescue)
+    this.requireWritePermission({ connection: ctx, entity: rescue })
 
-    let rats = await Promise.all(ctx.data.map(ratId => {
+    let rats = await Promise.all(ctx.data.map((ratId) => {
       return Rat.scope('internal').findOne({ where: { id: ratId } })
     }))
 
@@ -152,7 +152,7 @@ export default class Rescues extends API {
 
     await rescue.addRats(rats)
 
-    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+    let rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
@@ -185,16 +185,16 @@ export default class Rescues extends API {
 
     await Promise.all(rats)
 
-    let rescueQuery = new RescueQuery({ id: ctx.params.id }, ctx)
+    let rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
     return renderedResult
   }
 
-  getWritePermissionForEntity (ctx, entity) {
-    if (ctx.state.user && entity.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
-      for (let rat of ctx.state.user.rats) {
+  getWritePermissionFor ({ connection, entity }) {
+    if (connection.state.user && entity.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
+      for (let rat of connection.state.user.rats) {
         if (entity.rats.find((fRat) => { return fRat.id === rat.id }) || entity.firstLimpetId === rat.id) {
           return ['rescue.write.me', 'rescue.write']
         }

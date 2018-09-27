@@ -1,6 +1,6 @@
 import { Client } from '../db'
 import crypto from 'crypto'
-import ClientQuery from '../query/ClientQuery'
+import Query from '../query'
 import Users from './Users'
 import { NotFoundAPIError } from '../classes/APIError'
 import API, {
@@ -24,7 +24,7 @@ export default class Clients extends API {
   @authenticated
   @permissions('client.read')
   async search (ctx) {
-    let clientQuery = new ClientQuery({query: ctx.query, connection: ctx})
+    let clientQuery = new Query({params: ctx.query, connection: ctx})
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
     return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
   }
@@ -34,7 +34,7 @@ export default class Clients extends API {
   @authenticated
   @parameters('id')
   async findById (ctx) {
-    let clientQuery = new ClientQuery({query: { id: ctx.params.id }, connection: ctx})
+    let clientQuery = new Query({params: { id: ctx.params.id }, connection: ctx})
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
 
     this.requireWritePermission({connection: ctx, result})
@@ -85,7 +85,7 @@ export default class Clients extends API {
       }
     })
 
-    let clientQuery = new ClientQuery({id: ctx.params.id}, ctx)
+    let clientQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Client.findAndCountAll(clientQuery.toSequelize)
     return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
   }
@@ -96,17 +96,17 @@ export default class Clients extends API {
   @permissions('client.delete')
   @parameters('id')
   async delete (ctx) {
-    let rescue = await Client.findOne({
+    let client = await Client.findOne({
       where: {
         id: ctx.params.id
       }
     })
 
-    if (!rescue) {
+    if (!client) {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    rescue.destroy()
+    await client.destroy()
 
     ctx.status = 204
     return true

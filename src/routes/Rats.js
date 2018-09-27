@@ -1,7 +1,7 @@
 
 
 import { Rat } from '../db'
-import RatQuery from '../query/RatQuery'
+import Query from '../query'
 import { CustomPresenter } from '../classes/Presenters'
 import Ships from './Ships'
 import { NotFoundAPIError } from '../classes/APIError'
@@ -22,7 +22,7 @@ export default class Rats extends API {
   @GET('/rats')
   @websocket('rats', 'search')
   async search (ctx) {
-    let ratsQuery = new RatQuery({query: ctx.query, connection: ctx})
+    let ratsQuery = new Query({params: ctx.query, connection: ctx})
     let result = await Rat.findAndCountAll(ratsQuery.toSequelize)
     return Rats.presenter.render(result.rows, API.meta(result, ratsQuery))
   }
@@ -31,7 +31,7 @@ export default class Rats extends API {
   @websocket('rats', 'read')
   @parameters('id')
   async findById (ctx) {
-    let ratQuery = new RatQuery({query: {id: ctx.params.id}, connection: ctx})
+    let ratQuery = new Query({params: {id: ctx.params.id}, connection: ctx})
     let result = await Rat.findAndCountAll(ratQuery.toSequelize)
 
     return Rats.presenter.render(result.rows, API.meta(result, ratQuery))
@@ -41,7 +41,7 @@ export default class Rats extends API {
   @websocket('rats', 'create')
   @authenticated
   async create (ctx) {
-    this.requireWritePermission(ctx, ctx.data)
+    this.requireWritePermission({ connection: ctx, entity: ctx.data })
 
     if (!ctx.data.userId) {
       ctx.data.userId = ctx.state.user.id
@@ -61,7 +61,7 @@ export default class Rats extends API {
   @parameters('id')
   @protect('rat.write', 'platform')
   async update (ctx) {
-    this.requireWritePermission(ctx, ctx.data)
+    this.requireWritePermission({ connection: ctx, entity: ctx.data })
 
     let rat = await Rat.findOne({
       where: { id: ctx.params.id }
@@ -71,7 +71,7 @@ export default class Rats extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, rat)
+    this.requireWritePermission({ connection: ctx, entity: rat })
 
     await Rat.update(ctx.data, {
       where: {
@@ -79,7 +79,7 @@ export default class Rats extends API {
       }
     })
 
-    let ratQuery = new RatQuery({id: ctx.params.id}, ctx)
+    let ratQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Rat.findAndCountAll(ratQuery.toSequelize)
     let renderedResult = Rats.presenter.render(result.rows, API.meta(result, ratQuery))
     process.emit('ratUpdated', ctx, renderedResult)
@@ -102,7 +102,7 @@ export default class Rats extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    rat.destroy()
+    await rat.destroy()
 
     process.emit('ratDeleted', ctx, CustomPresenter.render({
       id: ctx.params.id
@@ -111,15 +111,15 @@ export default class Rats extends API {
     return true
   }
 
-  getReadPermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id) {
+  getReadPermissionFor ({ connection, entity }) {
+    if (entity.userId === connection.state.user.id) {
       return ['rat.write', 'rat.write.me']
     }
     return ['rat.write']
   }
 
-  getWritePermissionForEntity (ctx, entity) {
-    if (entity.userId === ctx.state.user.id) {
+  getWritePermissionFor ({ connection, entity }) {
+    if (entity.userId === connection.state.user.id) {
       return ['rat.write', 'rat.write.me']
     }
     return ['rat.write']

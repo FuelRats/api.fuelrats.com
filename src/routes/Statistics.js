@@ -1,9 +1,9 @@
 
 
 import { Rat, Rescue } from '../db'
-import RescueStatisticsQuery from '../query/RescueStatisticsQuery'
-import SystemStatisticsQuery from '../query/SystemStatisticsQuery'
-import RatsStatisticsQuery from '../query/RatsStatisticsQuery'
+import RescueStatisticsQuery from '../query/rescuestatistics'
+import SystemStatisticsQuery from '../query/systemstatistics'
+import RatsStatisticsQuery from '../query/ratstatistics'
 import { CustomPresenter } from '../classes/Presenters'
 import API, {
   GET

@@ -21,7 +21,7 @@ class Epics extends API {
   @authenticated
   @permissions('epic.read')
   async search (ctx) {
-    let epicsQuery = new Query(ctx.query, ctx)
+    let epicsQuery = new Query({ params: ctx.query, connection: ctx })
     let result = await Epic.findAndCountAll(epicsQuery.toSequelize)
     return Epics.presenter.render(result.rows, API.meta(result, epicsQuery))
   }
@@ -32,7 +32,7 @@ class Epics extends API {
   @permissions('epic.read')
   @parameters('id')
   async read (ctx) {
-    let epicsQuery = new Query({id: ctx.params.id}, ctx)
+    let epicsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Epic.findAndCountAll(epicsQuery.toSequelize)
 
     return Epics.presenter.render(result.rows, API.meta(result, epicsQuery))
@@ -99,7 +99,7 @@ class Epics extends API {
       }
     })
 
-    let epicsQuery = new Query({id: ctx.params.id}, ctx)
+    let epicsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Epic.findAndCountAll(epicsQuery.toSequelize)
     return Epics.presenter.render(result.rows, API.meta(result, epicsQuery))
   }

@@ -46,7 +46,7 @@ export default class Decals extends API {
   @authenticated
   @permissions('user.write.me')
   async redeem (ctx) {
-    let decal = await Decal.getDecalForUser(ctx.state.user)
+    let decal = await Decal.getDecalFor(ctx.state.user)
     return Decals.presenter.render(decal)
   }
 

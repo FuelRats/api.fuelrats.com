@@ -1,0 +1,9 @@
+{
+  "rescue": [true],
+  "rat": [true],
+  "user": [true],
+  "client": [true],
+  "ship": [true],
+  "decal": [true, "read"],
+  "group": [false]
+}

@@ -19,6 +19,7 @@ import render from 'koa-ejs'
 import path from 'path'
 import http from 'http'
 import logger from './loggly/logger'
+import Document from './classes/Document'
 import { promisify } from 'util'
 const {
   APIError,
@@ -128,6 +129,9 @@ app.use(async (ctx, next) => {
     let result = await next()
     if (result === true) {
       ctx.status = 204
+    } else if (result instanceof Document) {
+      ctx.type = 'application/vnd.api+json'
+      ctx.body = result.toString()
     } else if (result) {
       ctx.body = result
     }

@@ -11,17 +11,19 @@ export default class Version extends API {
   @GET('/version')
   @websocket('version', 'read')
   async read () {
-    const githash = await gitrev.long()
-    const gitbranch = await gitrev.branch()
-    const gittags = await gitrev.tags()
-    const gitdate = await gitrev.date()
+    const [hash, branch, tags, date] = await Promise.all([
+      gitrev.long(),
+      gitrev.branch(),
+      gitrev.tags(),
+      gitrev.date()
+    ])
 
     return Version.presenter.render({
       version: packageInfo.version,
-      commit: githash,
-      branch: gitbranch,
-      tags: gittags,
-      date: gitdate
+      commit: hash,
+      branch: branch,
+      tags: tags,
+      date: date
     })
   }
 

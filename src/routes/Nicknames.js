@@ -1,9 +1,10 @@
 
 import Permission from '../classes/Permission'
 import { User, db } from '../db'
-import NicknameQuery from '../query/NicknameQuery'
+import NicknameQuery from '../query/nickname'
 import { CustomPresenter} from '../classes/Presenters'
 import {NotFoundAPIError, ConflictAPIError, ForbiddenAPIError} from '../classes/APIError'
+import Query from '../query'
 
 import NickServ from '../Anope/NickServ'
 import HostServ from '../Anope/HostServ'
@@ -17,7 +18,6 @@ import API, {
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import Profile from './Profiles'
-import UserQuery from '../query/UserQuery'
 
 export default class Nicknames extends API {
   @GET('/nicknames/info/:nickname')
@@ -62,7 +62,7 @@ export default class Nicknames extends API {
     })
 
     await HostServ.update(ctx.state.user)
-    let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
+    let userQuery = new Query({ params: { id: ctx.state.user.id }, connection: ctx })
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -91,7 +91,7 @@ export default class Nicknames extends API {
 
     await HostServ.update(ctx.state.user)
 
-    let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
+    let userQuery = new Query({ params: { id: ctx.state.user.id }, connection: ctx })
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -107,7 +107,7 @@ export default class Nicknames extends API {
     })
     await HostServ.update(ctx.state.user)
 
-    let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
+    let userQuery = new Query({ params: { id: ctx.state.user.id }, connection: ctx })
     let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
     return Profile.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -141,7 +141,7 @@ export default class Nicknames extends API {
         }
       })
 
-      let userQuery = new UserQuery({ id: ctx.state.user.id }, ctx)
+      let userQuery = new Query({ params: { id: ctx.state.user.id }, connection: ctx })
       let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
       return Profile.presenter.render(result.rows, API.meta(result, userQuery))
     }

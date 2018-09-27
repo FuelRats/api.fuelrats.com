@@ -15,7 +15,6 @@ import Query from '../query'
 import { websocket } from '../classes/WebSocket'
 import {NotFoundAPIError} from '../classes/APIError'
 import Users from './Users'
-import UserQuery from '../query/UserQuery'
 
 export default class Groups extends API {
   @GET('/groups')
@@ -23,7 +22,7 @@ export default class Groups extends API {
   @authenticated
   @permissions('group.read')
   async search (ctx) {
-    let groupsQuery = new Query(ctx.query, ctx)
+    let groupsQuery = new Query({ params: ctx.query, connection: ctx })
     let result = await Group.findAndCountAll(groupsQuery.toSequelize)
     return Groups.presenter.render(result.rows, API.meta(result, groupsQuery))
   }
@@ -34,7 +33,7 @@ export default class Groups extends API {
   @permissions('group.read')
   @parameters('id')
   async read (ctx) {
-    let groupsQuery = new Query({id: ctx.params.id}, ctx)
+    let groupsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Group.findAndCountAll(groupsQuery.toSequelize)
 
     return Groups.presenter.render(result.rows, API.meta(result, groupsQuery))
@@ -72,7 +71,7 @@ export default class Groups extends API {
       }
     })
 
-    let groupsQuery = new Query({id: ctx.params.id}, ctx)
+    let groupsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await Group.findAndCountAll(groupsQuery.toSequelize)
     return Groups.presenter.render(result.rows, API.meta(result, groupsQuery))
   }
@@ -121,7 +120,7 @@ export default class Groups extends API {
     }
 
     await user.addGroup(group)
-    let userQuery = new UserQuery({ id: ctx.params.userId }, ctx)
+    let userQuery = new Query({ params: { id: ctx.params.userId }, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
 
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
@@ -150,7 +149,7 @@ export default class Groups extends API {
     }
 
     await user.removeGroup(group)
-    let userQuery = new UserQuery({ id: ctx.params.userId }, ctx)
+    let userQuery = new Query({ params: { id: ctx.params.userId }, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
 
     return Users.presenter.render(result.rows, API.meta(result, userQuery))

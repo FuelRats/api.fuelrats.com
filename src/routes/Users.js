@@ -1,9 +1,11 @@
 
 
-import { User, Rat } from '../db'
+import { User, Rat, db } from '../db'
 
 import Authentication from '../classes/Authentication'
-import UserQuery from '../query/UserQuery'
+import Document from '../classes/Document'
+import UserView from '../views/User'
+import Query from '../query'
 import HostServ from '../Anope/HostServ'
 import bcrypt from 'bcrypt'
 import gm from 'gm'
@@ -39,9 +41,10 @@ export default class Users extends API {
   @authenticated
   @permissions('user.read')
   async search (ctx) {
-    let userQuery = new UserQuery(ctx.query, ctx)
+    let userQuery = new Query({ params: ctx.query, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
+    // return Users.presenter.render(result.rows, API.meta(result, userQuery))
+    return new Document({ objects: result.rows, type: UserView, meta: API.meta(result, userQuery) })
   }
 
   @GET('/users/:id')
@@ -50,7 +53,7 @@ export default class Users extends API {
   @permissions('user.read')
   @parameters('id')
   async findById (ctx) {
-    let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+    let userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
 
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
@@ -83,7 +86,7 @@ export default class Users extends API {
 
     await user.save()
 
-    let userQuery = new UserQuery({id: ctx.state.user.id}, ctx)
+    let userQuery = new Query({ params: {id: ctx.state.user.id}, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -98,7 +101,7 @@ export default class Users extends API {
     let user = await User.create(ctx.data)
     await user.addGroup('default')
 
-    let userQuery = new UserQuery({ id: user.id }, ctx)
+    let userQuery = new Query({ params: { id: user.id }, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     ctx.response.status = 201
 
@@ -111,7 +114,7 @@ export default class Users extends API {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async update (ctx) {
-    this.requireWritePermission(ctx, ctx.data)
+    this.requireWritePermission({ connection: ctx, entity: ctx.data })
 
     let user = await User.findOne({
       where: {
@@ -123,7 +126,7 @@ export default class Users extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission(ctx, user)
+    this.requireWritePermission({ connection: ctx, entity: user })
 
     await User.update(ctx.data, {
       where: {
@@ -131,7 +134,7 @@ export default class Users extends API {
       }
     })
 
-    let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+    let userQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -163,10 +166,20 @@ export default class Users extends API {
       }
     })
 
-    await Promise.all(rats.map((rat) => {
-      return rat.destroy()
-    }))
-    await user.destroy()
+
+    let transaction = await db.transaction()
+
+    try {
+      await Promise.all(rats.map((rat) => {
+        return rat.destroy({ transaction })
+      }))
+      await user.destroy({ transaction })
+
+      await transaction.commit()
+    } catch (ex) {
+      transaction.rollback()
+      throw ex
+    }
 
     ctx.status = 204
     return true
@@ -197,7 +210,7 @@ export default class Users extends API {
       where: {id: ctx.params.id}
     })
 
-    let userQuery = new UserQuery({id: ctx.params.id}, ctx)
+    let userQuery = new UserQuery({ params: {id: ctx.params.id}, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -207,7 +220,7 @@ export default class Users extends API {
   @authenticated
   @permissions('user.write')
   async updatevirtualhost (ctx) {
-    let userQuery = new UserQuery({ id: ctx.params.id }, ctx)
+    let userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
     let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     if (result) {
       return HostServ.update(result)
@@ -215,23 +228,23 @@ export default class Users extends API {
     throw new NotFoundAPIError({ parameter: 'id' })
   }
 
-  getReadPermissionForEntity (ctx, entity) {
-    if (entity.id === ctx.state.user.id) {
+  getReadPermissionFor ({ connection, entity }) {
+    if (entity.id === connection.state.user.id) {
       return ['user.write.me', 'user.write']
     }
     return ['user.write']
   }
 
-  getWritePermissionForEntity (ctx, entity) {
+  getWritePermissionForEntity ({ connection, entity }) {
     if (entity.displayRatId) {
-      let rat = ctx.state.user.included.find((include) => {
+      let rat = connection.state.user.included.find((include) => {
         return include.id === entity.displayRatId
       })
       if (!rat) {
         return ['user.write']
       }
     }
-    if (entity.id === ctx.state.user.id) {
+    if (entity.id === connection.state.user.id) {
       return ['user.write.me', 'user.write']
     }
     return ['user.write']
