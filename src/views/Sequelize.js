@@ -24,9 +24,24 @@ export default class SequelizeView extends View {
     }, {})
   }
 
-  generateIncludes () {
-    return Object.values(Object.entries(this.relationships).reduce((acc, [key, view]) => {
+  generateIncludes ({ includeTypes }) {
+    return Object.entries(this.relationships).reduce((acc, [key, view]) => {
+      let objects = this.object[key]
+      if (!objects) {
+        return acc
+      }
 
-    }, {}))
+      if (!Array.isArray(objects)) {
+        objects = [objects]
+      }
+
+      acc.push(objects.reduce((includeCollection, object) => {
+        let objectView = (new view({ object }))
+        includeCollection.push(objectView.view)
+        includeCollection.push(objectView.generateIncludes({ }))
+        return includeCollection
+      }, []))
+      return acc
+    }, [])
   }
 }

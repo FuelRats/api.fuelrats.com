@@ -28,7 +28,13 @@ export default class Document  {
   }
 
   get included () {
-    return null
+    if (Array.isArray(this.#objects)) {
+      return this.#objects.map((object) => {
+        return (new this.#type({ object })).generateIncludes({})
+      })
+    } else {
+      return (new this.#type({ object: this.#objects })).generateIncludes({})
+    }
   }
 
   get links () {

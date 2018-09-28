@@ -47,7 +47,7 @@ export default class View {
       id: this.id,
       attributes: this.attributes,
       relationships: this.generateRelationships(),
-      links: this.links
+      //links: this.links
     }
   }
 
