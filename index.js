@@ -273,6 +273,7 @@ router.get('/orders', Authentication.isAuthenticated, Permission.required(['orde
 router.get('/orders/:id', order.findById)
 router.post('/orders', order.create)
 router.put('/orders/:id', order.update)
+router.put('/orders/:id/pay', order.pay)
 router.post('/stripe/webhook', stripeWebhook.receive)
 router.post('/customers', customer.create)
 /*

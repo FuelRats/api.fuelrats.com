@@ -44,11 +44,25 @@ class Orders {
 
   static async update (ctx) {
     if (ctx.params.id) {
-      if (ctx.session.currentTransaction !== ctx.params.id && !Permission.granted(['order.read'], ctx.state.user, ctx.state.scope)) {
-        throw Permission.permissionError(['order.read'])
+      if (ctx.session.currentTransaction !== ctx.params.id && !Permission.granted(['order.write'], ctx.state.user, ctx.state.scope)) {
+        throw Permission.permissionError(['order.write'])
       }
 
       let order = await stripe.orders.update(ctx.params.id, ctx.data)
+
+      return OrdersPresenter.render(order)
+    } else {
+      throw Error.template('missing_required_field', 'id')
+    }
+  }
+
+  static async pay (ctx) {
+    if (ctx.params.id) {
+      if (ctx.session.currentTransaction !== ctx.params.id && !Permission.granted(['order.write'], ctx.state.user, ctx.state.scope)) {
+        throw Permission.permissionError(['order.write'])
+      }
+
+      let order = await stripe.orders.pay(ctx.params.id, ctx.data)
 
       return OrdersPresenter.render(order)
     } else {
