@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <script type="application/ecmascript">
+            const bearer = 'verysecuretoken'
+            const socketUrl = `ws://localhost:8082?bearer=${bearer}`
+
+            console.info(`Connecting to ${socketUrl}..`)
+            let ws = new WebSocket(socketUrl, "fuelratsapi")
+
+            function send (object) {
+              let text = JSON.stringify(object)
+              ws.send(text)
+            }
+
+            ws.onopen = function (event) {
+              console.info('CONNECTION ESTABLISHED')
+            }
+
+            ws.onerror = function (event) {
+              console.error('CONNECTION FAILED')
+            }
+
+            ws.onmessage = function (event) {
+              let data = JSON.parse(event.data)
+              console.log('Incoming', data)
+            }
+
+        </script>
+    </head>
+    <body>
+
+    <code id="websocketOutput">
+
+    </code>
+    </body>
+</html>

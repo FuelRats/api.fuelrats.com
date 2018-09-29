@@ -33,9 +33,9 @@ const apiEvents = [
 const routes = {}
 
 export default class WebSocket {
-  constructor ({server, trafficManager}) {
+  constructor ({server, traffic}) {
     this.wss = new ws.Server({server})
-    this.traffic = trafficManager
+    this.traffic = traffic
 
     this.wss.on('connection', async (client, req) => {
       let url = new URL(`http://localhost:8082${req.url}`)
@@ -113,7 +113,7 @@ export default class WebSocket {
   async route ({client, request}) {
     let ctx = new Context({client, request})
 
-    let rateLimit = this.traffic.validateRateLimit(ctx)
+    let rateLimit = this.traffic.validateRateLimit({ connection: ctx })
 
     let meta = Object.assign(request.meta || {}, {
       'API-Version': 'v2.1',
@@ -196,7 +196,7 @@ export class Context {
 
     this.query = {}
     Object.assign(this.query, request)
-    this.meta = new Meta()
+    this.meta = new Meta({})
     Object.assign(this.meta, this.query)
     this.data = request.data
 
