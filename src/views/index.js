@@ -22,7 +22,7 @@ export default class View {
   }
 
   get includes () {
-    return {}
+    return []
   }
 
   get links () {

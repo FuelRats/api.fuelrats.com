@@ -28,13 +28,19 @@ export default class Document  {
   }
 
   get included () {
-    if (Array.isArray(this.#objects)) {
-      return this.#objects.reduce((acc, object) => {
-        return acc.concat((new this.#type({ object })).generateIncludes({}))
-      }, [])
-    } else {
-      return (new this.#type({ object: this.#objects })).generateIncludes({})
+    let objects = this.#objects
+    if (!Array.isArray(objects)) {
+      objects = [objects]
     }
+
+    let includes = objects.reduce((acc, object) => {
+      return acc.concat((new this.#type({ object })).generateIncludes({}))
+    }, [])
+
+    return Object.values(includes.reduce((acc, include) => {
+      acc[include.id] = include
+      return acc
+    }, {}))
   }
 
   get links () {

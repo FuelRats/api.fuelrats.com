@@ -18,6 +18,8 @@ import API, {
   parameters
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import Document from '../classes/Document'
+import RescueView from '../views/Rescue'
 
 const RESCUE_ACCESS_TIME = 3600000
 
@@ -33,7 +35,8 @@ export default class Rescues extends API {
   async search (ctx) {
     let rescueQuery = new RescueQuery({ params: ctx.query, connection: ctx })
     let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
+    // return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
+    return new Document({ objects: result.rows, type: RescueView, meta: API.meta(result, rescueQuery) })
   }
 
   @GET('/rescues/:id')

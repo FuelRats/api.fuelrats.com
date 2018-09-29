@@ -36,10 +36,6 @@ export default class UserView extends SequelizeView {
   }
 
   get includes () {
-    return {
-      rats: RatView,
-      displayRat: RatView,
-      groups: GroupView
-    }
+    return ['rats', 'displayRat', 'groups']
   }
 }

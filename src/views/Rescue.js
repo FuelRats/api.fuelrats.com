@@ -47,6 +47,10 @@ export default class RescueView extends SequelizeView {
     }
   }
 
+  get includes () {
+    return ['rats', 'firstLimpet']
+  }
+
   get related () {
     return [RatsView]
   }

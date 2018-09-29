@@ -16,18 +16,25 @@ export default class SequelizeView extends View {
         data = (new view({ object: this.object })).relationshipView
       }
 
-      acc[key] = {
-        links: view.links,
-        data
+      let linkObject =  {
+        links: view.links
       }
+
+      if (data && (!Array.isArray(data) || data.length > 0)) {
+        linkObject.data = data
+      }
+
+      acc[key] = linkObject
       return acc
     }, {})
   }
 
   generateIncludes ({ includeTypes }) {
+    let includes = includeTypes || this.includes
+
     return Object.entries(this.relationships).reduce((acc, [key, view]) => {
       let objects = this.object[key]
-      if (!objects) {
+      if (!objects || !includes.includes(key)) {
         return acc
       }
 
@@ -38,7 +45,7 @@ export default class SequelizeView extends View {
       return acc.concat(objects.reduce((includeCollection, object) => {
         let objectView = (new view({ object }))
         includeCollection.push(objectView.view)
-        return includeCollection.concat(objectView.generateIncludes({ }))
+        return includeCollection.concat(objectView.generateIncludes({ includeTypes }))
       }, []))
     }, [])
   }
