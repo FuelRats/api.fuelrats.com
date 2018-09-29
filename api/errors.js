@@ -50,7 +50,7 @@ let errors = {
 
   'payment_required': {
     'code': 402,
-    'detail': 'User does not have the required permission to perform that action',
+    'detail': 'This request failed due to an error reported by the payment provider',
     'status': 'Payment Required',
     'title': 'Request failed because a required payment could not be completed'
   },
