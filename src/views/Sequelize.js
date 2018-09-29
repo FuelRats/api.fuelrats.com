@@ -35,13 +35,11 @@ export default class SequelizeView extends View {
         objects = [objects]
       }
 
-      acc.push(objects.reduce((includeCollection, object) => {
+      return acc.concat(objects.reduce((includeCollection, object) => {
         let objectView = (new view({ object }))
         includeCollection.push(objectView.view)
-        includeCollection.push(objectView.generateIncludes({ }))
-        return includeCollection
+        return includeCollection.concat(objectView.generateIncludes({ }))
       }, []))
-      return acc
     }, [])
   }
 }

@@ -29,6 +29,7 @@ export default class UserView extends SequelizeView {
 
   get relationships () {
     return {
+      rats: RatView,
       displayRat: RatView,
       groups: GroupView,
     }
@@ -36,6 +37,7 @@ export default class UserView extends SequelizeView {
 
   get includes () {
     return {
+      rats: RatView,
       displayRat: RatView,
       groups: GroupView
     }

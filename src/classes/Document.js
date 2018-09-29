@@ -29,9 +29,9 @@ export default class Document  {
 
   get included () {
     if (Array.isArray(this.#objects)) {
-      return this.#objects.map((object) => {
-        return (new this.#type({ object })).generateIncludes({})
-      })
+      return this.#objects.reduce((acc, object) => {
+        return acc.concat((new this.#type({ object })).generateIncludes({}))
+      }, [])
     } else {
       return (new this.#type({ object: this.#objects })).generateIncludes({})
     }
