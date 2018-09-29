@@ -4,6 +4,7 @@ const config = require('../../../config')
 const stripe = require('stripe')(config.stripe.token)
 const { OrdersPresenter } = require('../../classes/Presenters')
 const Permission = require('../../permission')
+const Error = require('../../errors')
 
 class Orders {
   static async search (ctx) {
@@ -28,7 +29,6 @@ class Orders {
       }
 
       let order = await stripe.orders.retrieve(ctx.params.id)
-
       return OrdersPresenter.render(order)
     } else {
       throw Error.template('missing_required_field', 'id')
@@ -36,10 +36,14 @@ class Orders {
   }
 
   static async create (ctx) {
-    let order = await stripe.orders.create(ctx.data)
+    try {
+      let order = await stripe.orders.create(ctx.data)
 
-    ctx.session.currentTransaction = order.id
-    return OrdersPresenter.render(order)
+      ctx.session.currentTransaction = order.id
+      return OrdersPresenter.render(order)
+    } catch (error) {
+      throw Error.template('payment_required', error)
+    }
   }
 
   static async update (ctx) {
@@ -48,9 +52,13 @@ class Orders {
         throw Permission.permissionError(['order.write'])
       }
 
-      let order = await stripe.orders.update(ctx.params.id, ctx.data)
+      try {
+        let order = await stripe.orders.update(ctx.params.id, ctx.data)
 
-      return OrdersPresenter.render(order)
+        return OrdersPresenter.render(order)
+      } catch (error) {
+        throw Error.template('payment_required', error)
+      }
     } else {
       throw Error.template('missing_required_field', 'id')
     }
@@ -62,9 +70,13 @@ class Orders {
         throw Permission.permissionError(['order.write'])
       }
 
-      let order = await stripe.orders.pay(ctx.params.id, ctx.data)
+      try {
+        let order = await stripe.orders.pay(ctx.params.id, ctx.data)
 
-      return OrdersPresenter.render(order)
+        return OrdersPresenter.render(order)
+      } catch (error) {
+        throw Error.template('payment_required', error)
+      }
     } else {
       throw Error.template('missing_required_field', 'id')
     }
