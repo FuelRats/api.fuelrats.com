@@ -48,6 +48,13 @@ let errors = {
     'title': 'IP address not authorized'
   },
 
+  'payment_required': {
+    'code': 402,
+    'detail': 'User does not have the required permission to perform that action',
+    'status': 'Payment Required',
+    'title': 'Request failed because a required payment could not be completed'
+  },
+
   'no_permission': {
     'code': 403,
     'detail': 'User does not have the required permission to perform that action',
