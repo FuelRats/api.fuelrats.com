@@ -281,9 +281,6 @@
     "no-undefined": [
       "error"
     ],
-    "no-use-before-define": [
-      "warn"
-    ],
     "global-require": [
       "error"
     ],
@@ -364,7 +361,7 @@
     ],
     "max-len": [
       "warn",
-      100
+      120
     ],
     "max-lines": [
       "warn",
@@ -397,7 +394,15 @@
       "never"
     ],
     "new-cap": [
-      "error"
+      "error",
+      {
+        "capIsNewExceptions": [
+          "GET",
+          "POST",
+          "PUT",
+          "DELETE"
+        ]
+      }
     ],
     "new-parens": [
       "warn"
@@ -433,7 +438,12 @@
       "warn"
     ],
     "no-underscore-dangle": [
-      "warn"
+      "warn",
+      {
+        "allow": [
+          "_readableState"
+        ]
+      }
     ],
     "no-unneeded-ternary": [
       "warn"
