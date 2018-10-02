@@ -209,9 +209,6 @@
     "no-useless-escape": [
       "off"
     ],
-    "no-prototype-builtins": [
-      "error"
-    ],
     "no-template-curly-in-string": [
       "warn"
     ],
@@ -222,10 +219,10 @@
       "error"
     ],
     "array-callback-return": [
-      "error"
+      "warn"
     ],
     "consistent-return": [
-      "error"
+      "warn"
     ],
     "no-caller": [
       "error"
@@ -240,7 +237,7 @@
       "error"
     ],
     "no-multi-str": [
-      "error"
+      "warn"
     ],
     "no-new-wrappers": [
       "error"
@@ -255,13 +252,13 @@
       "error"
     ],
     "no-proto": [
-      "error"
+      "warn"
     ],
     "no-sequences": [
-      "error"
+      "warn"
     ],
     "no-useless-call": [
-      "error"
+      "warn"
     ],
     "no-void": [
       "warn"
@@ -287,9 +284,6 @@
     "no-use-before-define": [
       "warn"
     ],
-    "callback-return": [
-      "warn"
-    ],
     "global-require": [
       "error"
     ],
@@ -300,7 +294,7 @@
       "error"
     ],
     "no-mixed-requires": [
-      "error"
+      "warn"
     ],
     "no-new-require": [
       "error"
@@ -308,11 +302,221 @@
     "no-path-concat": [
       "error"
     ],
-    "no-process-exit": [
-      "error"
-    ],
     "no-sync": [
       "error"
+    ],
+    "block-spacing": [
+      "warn",
+      "always"
+    ],
+    "brace-style": [
+      "warn",
+      "1tbs"
+    ],
+    "camelcase": [
+      "warn",
+      {
+        "properties": "always",
+        "ignoreDestructuring": false
+      }
+    ],
+    "comma-dangle": [
+      "warn",
+      "never"
+    ],
+    "comma-spacing": [
+      "warn",
+      {
+        "before": false,
+        "after": true
+      }
+    ],
+    "computed-property-spacing": [
+      "warn",
+      "never"
+    ],
+    "consistent-this": [
+      "error",
+      "self"
+    ],
+    "eol-last": [
+      "warn",
+      "always"
+    ],
+    "func-call-spacing": [
+      "warn",
+      "never"
+    ],
+    "function-paren-newline": [
+      "warn",
+      {
+        "minItems": 5
+      }
+    ],
+    "lines-between-class-members": [
+      "warn",
+      "always",
+      { "exceptAfterSingleLine": true }
+    ],
+    "max-depth": [
+      "warn",
+      5
+    ],
+    "max-len": [
+      "warn",
+      100
+    ],
+    "max-lines": [
+      "warn",
+      500
+    ],
+    "max-lines-per-function": [
+      "warn",
+      100
+    ],
+    "max-nested-callbacks": [
+      "warn",
+      5
+    ],
+    "max-params": [
+      "warn",
+      10
+    ],
+    "max-statements": [
+      "warn",
+      30
+    ],
+    "max-statements-per-line": [
+      "warn",
+      {
+        "max": 1
+      }
+    ],
+    "multiline-ternary": [
+      "warn",
+      "never"
+    ],
+    "new-cap": [
+      "error"
+    ],
+    "new-parens": [
+      "warn"
+    ],
+    "newline-per-chained-call": [
+      "warn",
+      {
+        "ignoreChainWithDepth": 3
+      }
+    ],
+    "no-array-constructor": [
+      "warn"
+    ],
+    "no-bitwise": [
+      "warn"
+    ],
+    "no-lonely-if": [
+      "warn"
+    ],
+    "no-mixed-operators": [
+      "warn"
+    ],
+    "no-multi-assign": [
+      "warn"
+    ],
+    "no-negated-condition": [
+      "warn"
+    ],
+    "no-nested-ternary": [
+      "warn"
+    ],
+    "no-new-object": [
+      "warn"
+    ],
+    "no-underscore-dangle": [
+      "warn"
+    ],
+    "no-unneeded-ternary": [
+      "warn"
+    ],
+    "no-whitespace-before-property": [
+      "warn"
+    ],
+    "operator-linebreak": [
+      "warn",
+      "before"
+    ],
+    "prefer-object-spread": [
+      "warn"
+    ],
+    "arrow-body-style": [
+      "error",
+      "always"
+    ],
+    "arrow-parens": [
+      "error",
+      "always"
+    ],
+    "arrow-spacing": [
+      "warn",
+      {
+        "before": true,
+        "after": true
+      }
+    ],
+    "generator-star-spacing": [
+      "warn",
+      "both"
+    ],
+    "no-confusing-arrow": [
+      "error"
+    ],
+    "no-duplicate-imports": [
+      "warn"
+    ],
+    "no-useless-constructor": [
+      "warn"
+    ],
+    "no-useless-computed-key": [
+      "warn"
+    ],
+    "no-useless-rename": [
+      "warn"
+    ],
+    "object-shorthand": [
+      "warn"
+    ],
+    "prefer-arrow-callback": [
+      "error"
+    ],
+    "prefer-const": [
+      "warn"
+    ],
+    "prefer-numeric-literals": [
+      "warn"
+    ],
+    "prefer-rest-params": [
+      "warn"
+    ],
+    "prefer-spread": [
+      "warn"
+    ],
+    "prefer-template": [
+      "warn"
+    ],
+    "rest-spread-spacing": [
+      "warn",
+      "never"
+    ],
+    "symbol-description": [
+      "warn"
+    ],
+    "template-curly-spacing": [
+      "warn",
+      "never"
+    ],
+    "yield-star-spacing": [
+      "warn",
+      "both"
     ]
   }
 }
