@@ -208,6 +208,111 @@
     ],
     "no-useless-escape": [
       "off"
+    ],
+    "no-prototype-builtins": [
+      "error"
+    ],
+    "no-template-curly-in-string": [
+      "warn"
+    ],
+    "require-atomic-updates": [
+      "error"
+    ],
+    "accessor-pairs": [
+      "error"
+    ],
+    "array-callback-return": [
+      "error"
+    ],
+    "consistent-return": [
+      "error"
+    ],
+    "no-caller": [
+      "error"
+    ],
+    "no-extend-native": [
+      "error"
+    ],
+    "no-iterator": [
+      "error"
+    ],
+    "no-labels": [
+      "error"
+    ],
+    "no-multi-str": [
+      "error"
+    ],
+    "no-new-wrappers": [
+      "error"
+    ],
+    "no-new-func": [
+      "error"
+    ],
+    "no-new": [
+      "error"
+    ],
+    "no-param-reassign": [
+      "error"
+    ],
+    "no-proto": [
+      "error"
+    ],
+    "no-sequences": [
+      "error"
+    ],
+    "no-useless-call": [
+      "error"
+    ],
+    "no-void": [
+      "warn"
+    ],
+    "prefer-promise-reject-errors": [
+      "warn"
+    ],
+    "radix": [
+      "error"
+    ],
+    "require-unicode-regexp": [
+      "warn"
+    ],
+    "no-shadow": [
+      "error"
+    ],
+    "no-shadow-restricted-names": [
+      "error"
+    ],
+    "no-undefined": [
+      "error"
+    ],
+    "no-use-before-define": [
+      "warn"
+    ],
+    "callback-return": [
+      "warn"
+    ],
+    "global-require": [
+      "error"
+    ],
+    "handle-callback-err": [
+      "warn"
+    ],
+    "no-buffer-constructor": [
+      "error"
+    ],
+    "no-mixed-requires": [
+      "error"
+    ],
+    "no-new-require": [
+      "error"
+    ],
+    "no-path-concat": [
+      "error"
+    ],
+    "no-process-exit": [
+      "error"
+    ],
+    "no-sync": [
+      "error"
     ]
   }
 }
