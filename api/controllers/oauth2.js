@@ -151,7 +151,7 @@ class OAuth2 {
   static async authorizationRender (ctx, next) {
     let client = {}
     Object.assign(client, ctx.state.oauth2.client)
-    delete client.secret
+    delete client.data.attributes.secret
 
     let existingToken = await Token.findOne({ where: { clientId: ctx.query.client_id } })
 
