@@ -149,9 +149,11 @@ class OAuth2 {
   }
 
   static async authorizationRender (ctx, next) {
-    let client = {}
-    Object.assign(client, ctx.state.oauth2.client)
-    delete client.data.attributes.secret
+    let client = await Client.scope('public').findOne({
+      where: {
+        id: ctx.state.oauth2.client.data.id
+      }
+    })
 
     let existingToken = await Token.findOne({ where: { clientId: ctx.query.client_id } })
 
