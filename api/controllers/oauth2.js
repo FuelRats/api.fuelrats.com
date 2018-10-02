@@ -160,7 +160,7 @@ class OAuth2 {
     ctx.body = {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
-      client: client,
+      client: ClientsPresenter.render(client, {}),
       scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
       scope: ctx.state.oauth2.req.scope.join(' '),
       preAuthorised: (existingToken !== undefined)
