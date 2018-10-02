@@ -10,7 +10,7 @@ const session = require('koa-session')
 const router = require('koa-router')()
 const app = new Koa()
 require('koa-qs')(app)
-const koaBody = require('koa-body')
+const koaBody = require('koa-better-body')
 const TrafficControl = require('./api/TrafficControl')
 const render = require('koa-ejs')
 const path = require('path')
@@ -33,18 +33,22 @@ const Error = require('./api/errors')
 // Import controllers
 const Authentication = require('./api/controllers/auth')
 const client = require('./api/controllers/client')
+const customer = require('./api/controllers/customer')
 const decal = require('./api/controllers/decal')
 const login = require('./api/controllers/login')
 const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
 const profile = require('./api/controllers/profile')
 const nextcloud = require('./api/controllers/nextcloud')
+const order = require('./api/controllers/stripe/orders')
+const product = require('./api/controllers/stripe/products')
 const rat = require('./api/controllers/rat')
 const register = require('./api/controllers/register')
 const reset = require('./api/controllers/reset')
 const rescue = require('./api/controllers/rescue')
 const ship = require('./api/controllers/ship')
 const statistics = require('./api/controllers/statistics')
+const stripeWebhook = require('./api/controllers/stripe/webhook')
 const user = require('./api/controllers/user')
 const version = require('./api/controllers/version')
 const WebSocketManager = require('./api/websocket')
@@ -63,6 +67,14 @@ try {
 }
 
 app.keys = [config.cookie.secret]
+app.use(koaBody({
+  detectJSON: function (ctx) {
+    if (ctx.req.url === '/stripe/webhook') {
+      return false
+    }
+    return ctx.request.is('json')
+  }
+}))
 
 let sessionConfiguration = {
   key: 'fuelrats:session',
@@ -75,12 +87,14 @@ app.use(require('koa-static')('static', {
   hidden: false,
   gzip: true
 }))
-app.use(koaBody({ strict: false }))
+
+
 
 let port = config.port || process.env.PORT
 
 app.use(async function (ctx, next) {
-  ctx.data = ctx.request.body
+  ctx.data = ctx.request.fields || {}
+  ctx.request.body = ctx.data
   ctx.meta = WebSocketManager.meta
   ctx.client = {}
 
@@ -153,14 +167,6 @@ app.use(async (ctx, next) => {
       ctx.app.emit('error', ex, ctx)
     }
   }
-})
-
-render(app, {
-  root: path.join(__dirname, 'views'),
-  layout: false,
-  viewExt: 'html',
-  cache: false,
-  debug: true
 })
 
 // ROUTES
@@ -260,7 +266,17 @@ router.post('/jira/drill', Authentication.isAuthenticated, Permission.required([
 router.get('/jira/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), jiraProfile.read)
 router.get('/jira/groups', Authentication.isAuthenticated, Permission.required(['user.read.me']), jiraGroups.read)
 
+router.get('/products', product.search)
+router.get('/products/:id', product.findById)
 
+
+router.get('/orders', Authentication.isAuthenticated, Permission.required(['order.read']), order.search)
+router.get('/orders/:id', order.findById)
+router.post('/orders', order.create)
+router.put('/orders/:id', order.update)
+router.put('/orders/:id/pay', order.pay)
+router.post('/stripe/webhook', stripeWebhook.receive)
+router.post('/customers', customer.create)
 /*
 
 

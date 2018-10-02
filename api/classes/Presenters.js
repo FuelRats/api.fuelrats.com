@@ -33,6 +33,85 @@ class SubscriptionsPresenter extends ObjectPresenter {
 }
 SubscriptionsPresenter.prototype.type = 'subscriptions'
 
+class ProductsPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id
+  }
+
+  attributes (instance) {
+    if (instance) {
+      return {
+        active: instance.active,
+        attributes: instance.attributes,
+        caption: instance.caption,
+        createdAt: new Date(instance.created * 1000),
+        description: instance.description,
+        images: instance.images,
+        livemode: instance.livemode,
+        metadata: instance.metadata,
+        name: instance.name,
+        dimensions: instance.package_dimensions,
+        shippable: true,
+        skus: instance.skus,
+        productType: instance.type,
+        url: instance.url,
+        updatedAt: new Date(instance.updated * 1000)
+      }
+    }
+    return null
+  }
+}
+ProductsPresenter.prototype.type = 'products'
+
+class OrdersPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id
+  }
+
+  attributes (instance) {
+    if (instance) {
+      return {
+        amount: instance.amount,
+        returned: instance.amount_returned,
+        application: instance.application,
+        applicationFee: instance.application_fee,
+        charge: instance.charge,
+        currency: instance.currency,
+        email: instance.email,
+        livemode: instance.livemode,
+        metadata: instance.metadata,
+        shippingMethod: instance.selected_shipping_method,
+        shipping: instance.shipping,
+        shippingMethods: instance.shipping_methods,
+        status: instance.status,
+        statusTransitions: instance.status_transitions,
+        items: instance.items,
+        returns: instance.returns,
+        createdAt: new Date(instance.created * 1000),
+        updatedAt: new Date(instance.updated * 1000)
+      }
+    }
+    return null
+  }
+}
+OrdersPresenter.prototype.type = 'order'
+
+class CustomersPresenter extends ObjectPresenter {
+  id (instance) {
+    return instance.id
+  }
+
+  attributes (instance) {
+    if (instance) {
+      instance.createdAt = new Date(instance.created * 1000)
+      delete instance.created
+      return instance
+    }
+    return null
+  }
+}
+CustomersPresenter.prototype.type = 'products'
+
 class DecalsPresenter extends Presenter {}
 DecalsPresenter.prototype.type = 'decals'
 
@@ -156,5 +235,8 @@ module.exports = {
   RescueStatisticsPresenter,
   SystemStatisticsPresenter,
   RatStatisticsPresenter,
+  ProductsPresenter,
+  OrdersPresenter,
+  CustomersPresenter,
   ObjectPresenter
 }

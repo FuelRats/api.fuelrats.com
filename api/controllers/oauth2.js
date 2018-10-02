@@ -115,9 +115,18 @@ class OAuth2 {
   }
 
   static async revokeAll (ctx) {
+    let {clientId} = ctx.data
+    if (clientId) {
+      if (!Permission.granted(['user.write'], ctx.state.user, ctx.state.scope)) {
+        throw Permission.permissionError(['user.write'])
+      }
+    } else {
+      clientId = ctx.state.client.id
+    }
+
     let tokens = await Token.findAll({
       where: {
-        clientId: ctx.state.client.id
+        clientId: clientId
       }
     })
 
@@ -146,12 +155,15 @@ class OAuth2 {
       }
     })
 
+    let existingToken = await Token.findOne({ where: { clientId: ctx.query.client_id } })
+
     ctx.body = {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
       client: client,
       scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
-      scope: ctx.state.oauth2.req.scope.join(' ')
+      scope: ctx.state.oauth2.req.scope.join(' '),
+      preAuthorised: (existingToken !== undefined)
     }
 
     await next()
