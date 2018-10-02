@@ -37,6 +37,25 @@ module.exports = function (sequelize, DataTypes) {
     }, {
       override: true
     })
+
+    models.Client.addScope('public', {
+      attributes: {
+        include: [
+          'id',
+          'name',
+          'createdAt',
+          'updatedAt',
+          'redirectUri',
+          'userId'
+        ],
+        exclude: [
+          'secret'
+        ]
+      },
+      include: []
+    }, {
+      override: true
+    })
   }
 
   return Client
