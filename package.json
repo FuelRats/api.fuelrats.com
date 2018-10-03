@@ -51,7 +51,7 @@
     "yayson": "^2.0.8"
   },
   "engines": {
-    "node": "10.6"
+    "node": "10.11"
   },
   "devDependencies": {
     "@babel/core": "^7.1.0",
