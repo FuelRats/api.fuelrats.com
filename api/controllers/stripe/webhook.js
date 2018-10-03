@@ -1,7 +1,9 @@
 'use strict'
 
 const config = require('../../../config')
+const Errors = require('../../errors')
 const Mail = require('../../classes/Mail')
+const Shipping = require('../../classes/Shipping')
 const BotServ = require('../../Anope/BotServ')
 const stripe = require('stripe')(config.stripe.token)
 const bufferLimit = 1000000000
@@ -10,6 +12,7 @@ const royalMailTrackingCode = /^[A-Z]{2}[0-9]{9}GB$/iu
 const parcelForceTrackingCode = /^(EA|EB|EC|ED|EE|CP)[0-9]{9}[A-Z]{2}$/iu
 
 let mail = new Mail()
+let shipping = new Shipping()
 
 class Webhook {
   static async receive (ctx) {
@@ -44,6 +47,8 @@ class Webhook {
         price: amount
       }
     })
+
+    await shipping.uploadLabel(event.data.object)
 
     try {
       await mail.send({
@@ -84,7 +89,7 @@ class Webhook {
       })
     } catch (ex) {
       BotServ.say('#rattech', '[API] Sending of order confirmation failed due to error from SMTP server')
-      return Error.template('server_error')
+      return Errors.template('server_error')
     }
   }
 
