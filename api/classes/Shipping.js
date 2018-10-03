@@ -31,7 +31,7 @@ class Shipping {
     let csv = Shipping.generateCsv(shippingFields, [entry])
 
     await this.dropbox.filesUpload({
-      path: `/Apps/Click and Drop/${order.id}.csv`,
+      path: `${config.dropbox.path}/${order.id}.csv`,
       contents: csv
     })
   }
