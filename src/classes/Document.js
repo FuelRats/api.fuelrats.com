@@ -1,3 +1,8 @@
+import packageInfo from '../../package.json'
+import config from '../../config'
+
+const jsonApiVersion = '1.0'
+
 export default class Document  {
   #objects = null
   #meta = null
@@ -33,7 +38,7 @@ export default class Document  {
       objects = [objects]
     }
 
-    let includes = objects.reduce((acc, object) => {
+    const includes = objects.reduce((acc, object) => {
       return acc.concat((new this.#type({ object })).generateIncludes({}))
     }, [])
 
@@ -44,12 +49,17 @@ export default class Document  {
   }
 
   get links () {
-    return null
+    return {
+      self: `${config.externalUrl}/${this.#type.type}`
+    }
   }
 
   get jsonapi () {
     return {
-      version: '1.0'
+      version: jsonApiVersion,
+      meta: {
+        apiVersion: packageInfo.version
+      }
     }
   }
 

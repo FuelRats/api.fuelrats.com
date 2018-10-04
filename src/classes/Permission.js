@@ -2,13 +2,13 @@
 
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
-import { Group, User } from '../db/index'
+import { Group } from '../db/index'
 import { ForbiddenAPIError } from './APIError'
-const permissions = require('../../permissions')
+const permissionList = require('../../permissions')
 
 i18next.init({
   lng: 'en',
-  resources:  localisationResources,
+  resources:  localisationResources
 })
 
 const permissionLocaleKeys = {
@@ -80,15 +80,15 @@ export default class Permission {
       return false
     }
 
-    let user = {}
+    const user = {}
     Object.assign(user, origUser)
 
     let hasPermission = false
 
-    for (let permission of permissions) {
-      for (let groupRelation of user.groups) {
-        let group = groups.find((group) => {
-          return group.id === groupRelation.id
+    for (const permission of permissions) {
+      for (const groupRelation of user.groups) {
+        const group = groups.find((groupItem) => {
+          return groupItem.id === groupRelation.id
         })
 
         if (group && group.permissions.includes(permission)) {
@@ -113,7 +113,7 @@ export default class Permission {
    * @returns {boolean} Whether the user is an administrator
    */
   static isAdmin ({user}) {
-    return user.group.some((group => {
+    return user.group.some(((group) => {
       return group.isAdministrator
     }))
   }
@@ -133,46 +133,48 @@ export default class Permission {
    * @returns {Array} Array of objects with localised human readable permissions
    */
   static humanReadable ({scopes, user})  {
-    if (scopes.includes('*')) {
-      scopes = Permission.allPermissions
+    let scopeList = scopes
+    if (scopeList.includes('*')) {
+      scopeList = Permission.allPermissions
     }
 
-    return scopes.reduce((acc, permission) => {
-      let permissionComponents = permission.split('.')
-      let [group, action, isSelf] = permissionComponents
+    return scopeList.reduce((acc, permission) => {
+      const permissionComponents = permission.split('.')
+      const [group, action, isSelf] = permissionComponents
 
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'
-      let accessible = Permission.granted({permissions: [permission], user, scope: null})
-      if (isSelf && scopes.includes(`${group}.${action}`)) {
-        return
+      const accessible = Permission.granted({permissions: [permission], user, scope: null})
+      if (isSelf && scopeList.includes(`${group}.${action}`)) {
+        return acc
       }
 
-      let count = group === 'user' && isSelf ? 1 : 0
+      const count = group === 'user' && isSelf ? 1 : 0
 
       acc.push({
         permission: i18next.t(permissionLocaleKey, {
-          group: i18next.t(group, { count: count }),
-          count: count
+          group: i18next.t(group, { count }),
+          count
         }),
-        accessible: accessible
+        accessible
       })
       return acc
     }, [])
   }
 
   static get allPermissions () {
-    return Object.entries(permissions).reduce((acc, [domain, [self, ...accessTypes]]) => {
-      if (accessTypes.length === 0) {
-        accessTypes = ['read', 'write', 'delete']
+    return Object.entries(permissionList).reduce((acc, [domain, [self, ...accessTypes]]) => {
+      let accessTypeList = accessTypes
+      if (accessTypeList.length === 0) {
+        accessTypeList = ['read', 'write', 'delete']
       }
 
-      acc.push(...accessTypes.map((accessType) => {
+      acc.push(...accessTypeList.map((accessType) => {
         return `${domain}.${accessType}`
       }))
 
       if (self) {
-        acc.push(...accessTypes.map((accessType) => {
+        acc.push(...accessTypeList.map((accessType) => {
           return `${domain}.${accessType}.me`
         }))
       }

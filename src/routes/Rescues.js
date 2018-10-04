@@ -24,17 +24,13 @@ import RescueView from '../views/Rescue'
 const RESCUE_ACCESS_TIME = 3600000
 
 export default class Rescues extends API {
-  constructor () {
-    super()
-  }
-
   @GET('/rescues')
   @websocket('rescues', 'search')
   @authenticated
   @permissions('rescue.read')
   async search (ctx) {
-    let rescueQuery = new RescueQuery({ params: ctx.query, connection: ctx })
-    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    const rescueQuery = new RescueQuery({ params: ctx.query, connection: ctx })
+    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     // return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     return new Document({ objects: result.rows, type: RescueView, meta: API.meta(result, rescueQuery) })
   }
@@ -45,8 +41,8 @@ export default class Rescues extends API {
   @permissions('rescue.read')
   @parameters('id')
   async findById (ctx) {
-    let rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
-    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    const rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
+    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
     return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
   }
 
@@ -55,12 +51,12 @@ export default class Rescues extends API {
   @authenticated
   @permissions('rescue.write')
   async create (ctx) {
-    let result = await Rescue.scope('rescue').create(ctx.data, {
+    const result = await Rescue.scope('rescue').create(ctx.data, {
       userId: ctx.state.user.id
     })
 
     ctx.response.status = 201
-    let rescue = Rescues.presenter.render(result, API.meta(result))
+    const rescue = Rescues.presenter.render(result, API.meta(result))
     process.emit('rescueCreated', ctx, rescue)
     return rescue
   }
@@ -70,7 +66,7 @@ export default class Rescues extends API {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    let rescue = await Rescue.scope('rescue').findOne({
+    const rescue = await Rescue.scope('rescue').findOne({
       where: {
         id: ctx.params.id
       }
@@ -86,9 +82,9 @@ export default class Rescues extends API {
       userId: ctx.state.user.id
     })
 
-    let rescueQuery = new RescueQuery({ params: {id: ctx.params.id}, connection: ctx })
-    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
+    const rescueQuery = new RescueQuery({ params: {id: ctx.params.id}, connection: ctx })
+    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    const renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
     return renderedResult
   }
@@ -99,7 +95,7 @@ export default class Rescues extends API {
   @permissions('rescue.delete')
   @parameters('id')
   async delete (ctx) {
-    let rescue = await Rescue.scope('rescue').findOne({
+    const rescue = await Rescue.scope('rescue').findOne({
       where: {
         id: ctx.params.id
       }
@@ -126,7 +122,7 @@ export default class Rescues extends API {
       ctx.data = ctx.data.data
     }
 
-    let rescue = await Rescue.scope('rescue').findOne({
+    const rescue = await Rescue.scope('rescue').findOne({
       where: {
         id: ctx.params.id
       }
@@ -138,11 +134,11 @@ export default class Rescues extends API {
 
     this.requireWritePermission({ connection: ctx, entity: rescue })
 
-    let rats = await Promise.all(ctx.data.map((ratId) => {
+    const rats = await Promise.all(ctx.data.map((ratId) => {
       return Rat.scope('internal').findOne({ where: { id: ratId } })
     }))
 
-    for (let rat of rats) {
+    for (const rat of rats) {
       if (rat.user.isSuspended()) {
         process.emit('suspendedAssign', ctx, rat)
         throw new ForbiddenAPIError({ pointer: `/data/${rat.id}` })
@@ -155,9 +151,9 @@ export default class Rescues extends API {
 
     await rescue.addRats(rats)
 
-    let rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
-    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
+    const rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
+    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    const renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
     return renderedResult
   }
@@ -170,7 +166,7 @@ export default class Rescues extends API {
       ctx.data = ctx.data.data
     }
 
-    let rescue = await Rescue.scope('rescue').findOne({
+    const rescue = await Rescue.scope('rescue').findOne({
       where: {
         id: ctx.params.id
       }
@@ -182,23 +178,26 @@ export default class Rescues extends API {
 
     this.requireWritePermission(ctx, rescue)
 
-    let rats = ctx.data.map((rat) => {
+    const rats = ctx.data.map((rat) => {
       return rescue.removeRat(rat)
     })
 
     await Promise.all(rats)
 
-    let rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
-    let result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    let renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
+    const rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
+    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
+    const renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
     process.emit('rescueUpdated', ctx, renderedResult)
     return renderedResult
   }
 
   getWritePermissionFor ({ connection, entity }) {
     if (connection.state.user && entity.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
-      for (let rat of connection.state.user.rats) {
-        if (entity.rats.find((fRat) => { return fRat.id === rat.id }) || entity.firstLimpetId === rat.id) {
+      for (const rat of connection.state.user.rats) {
+        const isAssist = entity.rats.find((fRat) => {
+          return fRat.id === rat.id
+        })
+        if (isAssist || entity.firstLimpetId === rat.id) {
           return ['rescue.write.me', 'rescue.write']
         }
       }
@@ -243,16 +242,16 @@ process.on('rescueCreated', (ctx, rescue) => {
   }
 })
 
-process.on('rescueUpdated', async (ctx, result, permissions, changedValues) => {
+process.on('rescueUpdated', async (ctx, result, perms, changedValues) => {
   if (!changedValues) {
     return
   }
   if (changedValues.hasOwnProperty('outcome')) {
-    let { boardIndex } = result.data[0] || {}
-    let caseNumber = boardIndex || boardIndex === 0 ? `#${boardIndex}` : result.data[0].id
+    const { boardIndex } = result.data[0] || {}
+    const caseNumber = boardIndex || boardIndex === 0 ? `#${boardIndex}` : result.data[0].id
 
-    let client = result.data[0].client || ''
-    let author = await API.getAuthor(ctx).preferredRat().name
+    const client = result.data[0].client || ''
+    const author = await API.getAuthor(ctx).preferredRat().name
     BotServ.say(global.PAPERWORK_CHANNEL,
       `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author.preferredRat().name}`)
   }
@@ -260,7 +259,7 @@ process.on('rescueUpdated', async (ctx, result, permissions, changedValues) => {
 
 
 process.on('suspendedAssign', async (ctx, rat) => {
-  let author = await API.getAuthor(ctx)
+  const author = await API.getAuthor(ctx)
   BotServ.say(global.MODERATOR_CHANNEL,
     `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author.preferredRat().name}`)
 })

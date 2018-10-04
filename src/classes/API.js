@@ -4,9 +4,9 @@ import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './API
 import yayson from 'yayson'
 import router from './Router'
 import Meta from './Meta'
-import { Rat, User } from '../db'
+import { Rat } from '../db'
 import { UUID } from './Validators'
-let config = require('../../config')
+const config = require('../../config')
 
 /**
  * @class
@@ -56,12 +56,12 @@ export default class API {
 
   static async getAuthor (ctx) {
     if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
-      let ratId = ctx.req.headers['x-command-by']
+      const ratId = ctx.req.headers['x-command-by']
       if (UUID.test(ratId) === false) {
         return null
       }
 
-      let rat = await Rat.findOne({
+      const rat = await Rat.findOne({
         where: {
           id: ratId
         }
@@ -122,11 +122,12 @@ export function DELETE (route) {
  * ESNext Decorator for requiring authentication on an endpoint
  */
 export function authenticated (target, name, descriptor) {
-  let endpoint = descriptor.value
+  const endpoint = descriptor.value
 
-  descriptor.value = function (ctx) {
+  descriptor.value = function (...args) {
+    const [ctx] = args
     if (ctx.state.user) {
-      return endpoint.apply(target, arguments)
+      return endpoint.apply(target, args)
     } else {
       throw new UnauthorizedAPIError({})
     }
@@ -137,11 +138,12 @@ export function authenticated (target, name, descriptor) {
  * ESNext Decorator for requiring client authentication on an endpoint
  */
 export function clientAuthenticated (target, name, descriptor) {
-  let endpoint = descriptor.value
+  const endpoint = descriptor.value
 
-  descriptor.value = function (ctx) {
+  descriptor.value = function (...args) {
+    const [ctx] = args
     if (ctx.state.client) {
-      return endpoint.apply(this, arguments)
+      return endpoint.apply(this, args)
     } else {
       throw new UnauthorizedAPIError({})
     }
@@ -152,11 +154,12 @@ export function clientAuthenticated (target, name, descriptor) {
  * ESNext Decorator for requiring IP address authentication on an endpoint
  */
 export function IPAuthenticated (target, name, descriptor) {
-  let endpoint = descriptor.value
+  const endpoint = descriptor.value
 
-  descriptor.value = function (ctx) {
+  descriptor.value = function (...args) {
+    const [ctx] = args
     if (config.whitelist.includes(ctx.inet)) {
-      return endpoint.apply(this, arguments)
+      return endpoint.apply(this, args)
     } else {
       throw new UnauthorizedAPIError({})
     }
@@ -165,16 +168,17 @@ export function IPAuthenticated (target, name, descriptor) {
 
 /**
  * ESNext Decorator requiring a set of permissions for an API endpoint
- * @param permissions the permissions to require
+ * @param perms the permissions to require
  * @returns {Function} A decorator function
  */
-export function permissions (...permissions) {
+export function permissions (...perms) {
   return function (target, name, descriptor) {
-    let endpoint = descriptor.value
+    const endpoint = descriptor.value
 
-    descriptor.value = function (ctx) {
-      if (Permission.granted({permissions, ...ctx.state})) {
-        return endpoint.apply(this, arguments)
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      if (Permission.granted({permissions: perms, ...ctx.state})) {
+        return endpoint.apply(this, args)
       } else {
         throw new ForbiddenAPIError({})
       }
@@ -189,10 +193,11 @@ export function permissions (...permissions) {
  */
 export function parameters (...fields) {
   return function (target, name, descriptor) {
-    let endpoint = descriptor.value
+    const endpoint = descriptor.value
 
-    descriptor.value = function (ctx) {
-      let missingFields = fields.filter((requiredField) => {
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      const missingFields = fields.filter((requiredField) => {
         return (requiredField in ctx.params === false && requiredField in ctx.query === false)
       })
       if (missingFields.length > 0) {
@@ -200,7 +205,7 @@ export function parameters (...fields) {
           return new BadRequestAPIError({ parameter: field })
         })
       }
-      return endpoint.apply(this, arguments)
+      return endpoint.apply(this, args)
     }
   }
 }
@@ -213,10 +218,11 @@ export function parameters (...fields) {
  */
 export function required (...fields) {
   return function (target, name, descriptor) {
-    let endpoint = descriptor.value
+    const endpoint = descriptor.value
 
-    descriptor.value = function (ctx) {
-      let missingFields = fields.filter((requiredField) => {
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      const missingFields = fields.filter((requiredField) => {
         return ctx.data.hasOwnProperty(requiredField) === false
       })
       if (missingFields.length > 0) {
@@ -224,7 +230,7 @@ export function required (...fields) {
           return new BadRequestAPIError({ pointer: `/data/attributes/${field}` })
         })
       }
-      return endpoint.apply(this, arguments)
+      return endpoint.apply(this, args)
     }
   }
 }
@@ -236,15 +242,17 @@ export function required (...fields) {
  */
 export function disallow (...fields) {
   return function (target, name, descriptor) {
-    let endpoint = descriptor.value
+    const endpoint = descriptor.value
 
-    descriptor.value = function (ctx) {
+    descriptor.value = function (...args) {
+      const [ctx] = args
       if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
         fields.map((cleanField) => {
           delete ctx.data[cleanField]
+          return cleanField
         })
       }
-      return endpoint.apply(target, arguments)
+      return endpoint.apply(target, args)
     }
   }
 }
@@ -257,21 +265,23 @@ export function disallow (...fields) {
  */
 export function protect (permission, ...fields) {
   return function (target, name, descriptor) {
-    let endpoint = descriptor.value
+    const endpoint = descriptor.value
 
-    descriptor.value = function (ctx) {
+    descriptor.value = function (...args) {
+      const [ctx] = args
       if (ctx.data) {
-        fields.map(field => {
+        fields.map((field) => {
           if (!ctx.data[field]) {
-            return
+            return false
           }
 
           if (!Permission.granted({permissions: [permission], ...ctx.state})) {
             throw new ForbiddenAPIError({})
           }
+          return true
         })
       }
-      return endpoint.apply(target, arguments)
+      return endpoint.apply(target, args)
     }
   }
 }

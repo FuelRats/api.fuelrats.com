@@ -21,9 +21,9 @@ export default class Version extends API {
     return Version.presenter.render({
       version: packageInfo.version,
       commit: hash,
-      branch: branch,
-      tags: tags,
-      date: date
+      branch,
+      tags,
+      date
     })
   }
 

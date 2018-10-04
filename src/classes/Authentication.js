@@ -2,7 +2,6 @@
 import { User, Rat, Token, Client, Reset } from '../db/index'
 import bcrypt from 'bcrypt'
 import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
-import Profiles from '../routes/Profiles'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
@@ -13,12 +12,12 @@ export default class Authentication {
       return null
     }
 
-    let user = await User.scope('internal').findOne({where: {email: {$iLike: email}}})
+    const user = await User.scope('internal').findOne({where: {email: {$iLike: email}}})
     if (!user) {
       return null
     }
 
-    let requiredResets = await Reset.findAll({
+    const requiredResets = await Reset.findAll({
       where: {
         userId: user.id,
         required: true
@@ -31,7 +30,7 @@ export default class Authentication {
       })
     }
 
-    let result = await bcrypt.compare(password, user.password)
+    const result = await bcrypt.compare(password, user.password)
     if (result === false) {
       return null
     } else {
@@ -40,7 +39,7 @@ export default class Authentication {
       }
 
       if (bcrypt.getRounds(user.password) > global.BCRYPT_ROUNDS_COUNT) {
-        let newRoundPassword = await bcrypt.hash(password, global.BCRYPT_ROUNDS_COUNT)
+        const newRoundPassword = await bcrypt.hash(password, global.BCRYPT_ROUNDS_COUNT)
         User.update({
           password: newRoundPassword
         }, {
@@ -52,11 +51,11 @@ export default class Authentication {
   }
 
   static async bearerAuthenticate ({bearer}) {
-    let token = await Token.findOne({ where: { value: bearer } })
+    const token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
       return false
     }
-    let userInstance = await User.scope('internal').findOne({
+    const userInstance = await User.scope('internal').findOne({
       where: { id: token.userId },
       include: [
         {
@@ -71,27 +70,27 @@ export default class Authentication {
       throw new GoneAPIError({})
     }
 
-    let user = await User.scope('profile').findOne({where: { id: token.userId }})
+    const user = await User.scope('profile').findOne({where: { id: token.userId }})
     return {
-      user: user,
+      user,
       scope: token.scope
     }
   }
 
   static async clientAuthenticate ({clientId, secret}) {
-    let client = await Client.findById(clientId)
+    const client = await Client.findById(clientId)
     if (!client) {
       return null
     }
 
-    let authorised = await bcrypt.compare(secret, client.secret)
+    const authorised = await bcrypt.compare(secret, client.secret)
     if (authorised) {
       if (client.user.isSuspended()) {
         throw new GoneAPIError({})
       }
 
       if (bcrypt.getRounds(client.secret) > global.BCRYPT_ROUNDS_COUNT) {
-        let newRoundSecret = await bcrypt.hash(secret, global.BCRYPT_ROUNDS_COUNT)
+        const newRoundSecret = await bcrypt.hash(secret, global.BCRYPT_ROUNDS_COUNT)
         Client.update({
           secret: newRoundSecret
         }, {
@@ -104,22 +103,22 @@ export default class Authentication {
   }
 
   static async authenticate ({connection}) {
-    let [ clientId, clientSecret ] = getBasicAuth(connection)
+    const [clientId, clientSecret] = getBasicAuth(connection)
     if (clientId) {
       connection.state.client = await Authentication.clientAuthenticate({ clientId, clientSecret })
     }
 
     if (connection.session.userId) {
-      let user = await User.scope('profile').findOne({where: { id: connection.session.userId }})
+      const user = await User.scope('profile').findOne({where: { id: connection.session.userId }})
       if (user) {
         connection.state.user = user
         return true
       }
     }
 
-    let bearerToken = getBearerToken(connection)
+    const bearerToken = getBearerToken(connection)
     if (bearerToken) {
-      let bearerCheck = await Authentication.bearerAuthenticate(bearerToken)
+      const bearerCheck = await Authentication.bearerAuthenticate(bearerToken)
       if (bearerCheck) {
         connection.state.user = bearerCheck.user
         connection.state.scope = bearerCheck.scope
@@ -155,7 +154,7 @@ function getBearerToken (ctx) {
   if (ctx.query.bearer) {
     return ctx.query.bearer
   } else if (ctx.get('Authorization')) {
-    let authorizationHeader = ctx.get('Authorization')
+    const authorizationHeader = ctx.get('Authorization')
     if (authorizationHeader.startsWith('Bearer ') && authorizationHeader.length > bearerTokenHeaderOffset) {
       return authorizationHeader.substring(bearerTokenHeaderOffset)
     }
@@ -169,9 +168,9 @@ function getBearerToken (ctx) {
  * @returns {Array} An array containing the username and password, or an empty array if none was found.
  */
 function getBasicAuth (ctx) {
-  let authorizationHeader = ctx.get('Authorization')
+  const authorizationHeader = ctx.get('Authorization')
   if (authorizationHeader.startsWith('Basic ') && authorizationHeader.length > basicAuthHeaderOffset) {
-    let authString = Buffer.from(authorizationHeader.substring(basicAuthHeaderOffset), 'base64').toString('utf8')
+    const authString = Buffer.from(authorizationHeader.substring(basicAuthHeaderOffset), 'base64').toString('utf8')
     return authString.split(':')
   }
   return []

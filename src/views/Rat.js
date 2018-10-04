@@ -4,7 +4,7 @@ import ShipView from './Ship'
 import UserView from './User'
 
 export default class RatView extends SequelizeView {
-  get type () {
+  static get type () {
     return 'rats'
   }
 

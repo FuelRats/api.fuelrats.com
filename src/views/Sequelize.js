@@ -6,18 +6,18 @@ export default class SequelizeView extends View {
   }
 
   generateRelationships () {
-    return Object.entries(this.relationships).reduce((acc, [key, view]) => {
+    return Object.entries(this.relationships).reduce((acc, [key, RelationShipView]) => {
       let data = null
       if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
-          return (new view({ object: relation })).relationshipView
+          return (new RelationShipView({ object: relation, parentUrl: this.self })).relationshipView
         })
-      } else {
-        data = (new view({ object: this.object })).relationshipView
+      } else if (this.object[key]) {
+        data = (new RelationShipView({ object: this.object[key], parentUrl: this.self })).relationshipView
       }
 
-      let linkObject =  {
-        links: view.links
+      const linkObject =  {
+        links: this.getRelationLink(key)
       }
 
       if (data && (!Array.isArray(data) || data.length > 0)) {
@@ -30,9 +30,9 @@ export default class SequelizeView extends View {
   }
 
   generateIncludes ({ includeTypes }) {
-    let includes = includeTypes || this.includes
+    const includes = includeTypes || this.includes
 
-    return Object.entries(this.relationships).reduce((acc, [key, view]) => {
+    return Object.entries(this.relationships).reduce((acc, [key, RelationShipView]) => {
       let objects = this.object[key]
       if (!objects || !includes.includes(key)) {
         return acc
@@ -43,7 +43,7 @@ export default class SequelizeView extends View {
       }
 
       return acc.concat(objects.reduce((includeCollection, object) => {
-        let objectView = (new view({ object }))
+        const objectView = (new RelationShipView({ object }))
         includeCollection.push(objectView.view)
         return includeCollection.concat(objectView.generateIncludes({ includeTypes }))
       }, []))

@@ -38,14 +38,14 @@ export default class WebSocket {
     this.traffic = trafficManager
 
     this.wss.on('connection', async (client, req) => {
-      let url = new URL(`http://localhost:8082${req.url}`)
+      const url = new URL(`http://localhost:8082${req.url}`)
       client.req = req
       client.clientId = uid.sync(global.WEBSOCKET_IDENTIFIER_ROUNDS)
       client.subscriptions = []
 
-      let bearer = url.searchParams.get('bearer')
+      const bearer = url.searchParams.get('bearer')
       if (bearer) {
-        let {user, scope} = await Authentication.bearerAuthenticate({bearer})
+        const {user, scope} = await Authentication.bearerAuthenticate({bearer})
         if (user) {
           client.user = user
           client.scope = scope
@@ -56,46 +56,46 @@ export default class WebSocket {
 
       client.on('message', (message) => {
         try {
-          let request = JSON.parse(String(message))
+          const request = JSON.parse(String(message))
           this.onMessage({client, request})
         } catch (ex) {
           logger.info('Failed to parse incoming websocket message')
         }
       })
 
-      for (let event of apiEvents) {
+      for (const event of apiEvents) {
         process.on(event, (ctx, result, permissions) => {
-          this.onEvent.call(this, event, ctx, result, permissions)
+          this.onEvent(event, ctx, result, permissions)
         })
       }
 
       process.on('apiBroadcast', (id, ctx, result) => {
-        this.onBroadcast.call(this, id, ctx, result)
+        this.onBroadcast({ id, ctx, result })
       })
     })
   }
 
   async onConnection ({client}) {
-    let ctx = new Context({client, request: {}})
-    let route = await WebSocket.getRoute('version', 'read')
-    let result = await route(ctx)
-    let meta = {
+    const ctx = new Context({client, request: {}})
+    const route = await WebSocket.getRoute('version', 'read')
+    const result = await route(ctx)
+    const meta = {
       event: 'connection'
     }
 
-    let rateLimit = this.traffic.validateRateLimit(ctx, false)
+    const rateLimit = this.traffic.validateRateLimit(ctx, false)
     Object.assign(meta, {
       'API-Version': 'v2.1',
       'Rate-Limit-Limit': rateLimit.total,
       'Rate-Limit-Remaining': rateLimit.remaining,
       'Rate-Limit-Reset':  this.traffic.nextResetDate
     })
-    this.send({client, message: { result:  result.data, meta: meta }})
+    this.send({client, message: { result:  result.data, meta }})
   }
 
   async onMessage ({client, request}) {
     try {
-      let { result, meta } = await this.route({client, request})
+      const { result, meta } = await this.route({client, request})
       if (!result.meta) {
         result.meta = {}
       }
@@ -111,33 +111,33 @@ export default class WebSocket {
   }
 
   async route ({client, request}) {
-    let ctx = new Context({client, request})
+    const ctx = new Context({client, request})
 
-    let rateLimit = this.traffic.validateRateLimit(ctx)
+    const rateLimit = this.traffic.validateRateLimit(ctx)
 
-    let meta = Object.assign(request.meta || {}, {
+    const meta = Object.assign(request.meta || {}, {
       'API-Version': 'v2.1',
       'Rate-Limit-Limit': rateLimit.total,
       'Rate-Limit-Remaining': rateLimit.remaining,
       'Rate-Limit-Reset':  this.traffic.nextResetDate
     })
 
-    let [endpointName, methodName] = request.action || []
-    let route = WebSocket.getRoute({endpointName, methodName})
-    let result = await route(ctx)
+    const [endpointName, methodName] = request.action || []
+    const route = WebSocket.getRoute({endpointName, methodName})
+    const result = await route(ctx)
 
-    return { result:  result, meta: meta }
+    return { result, meta }
   }
 
-  onBroadcast ({id, ctx, result}) {
-    let clients = [...this.socket.clients].filter((client) => {
+  onBroadcast ({id, result}) {
+    const clients = [...this.socket.clients].filter((client) => {
       return client.subscriptions.includes(id)
     })
     this.broadcast({clients, message: result})
   }
 
   onEvent (event, ctx, result, permissions = null) {
-    let clients = [...this.socket.clients].filter((client) => {
+    const clients = [...this.socket.clients].filter((client) => {
       if (client.clientId !== ctx.client.clientId) {
         return (!permissions || Permission.granted({permissions, ...client}))
       }
@@ -164,7 +164,7 @@ export default class WebSocket {
   }
 
   broadcast ({clients, message}) {
-    for (let client of clients) {
+    for (const client of clients) {
       this.send({client, message})
     }
   }
@@ -179,7 +179,7 @@ export default class WebSocket {
 
   static getRoute ({endpointName, methodName}) {
     if (routes.hasOwnProperty(endpointName) === false || routes[endpointName].hasOwnProperty(methodName) === false) {
-      throw NotFoundAPIError({ parameter: 'action' })
+      throw new NotFoundAPIError({ parameter: 'action' })
     }
     return routes[endpointName][methodName]
   }

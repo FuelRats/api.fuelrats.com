@@ -1,8 +1,8 @@
 import SequelizeView from './Sequelize'
-import UserView from './Sequelize'
+import UserView from './User'
 
 export default class GroupView extends SequelizeView {
-  get type () {
+  static get type () {
     return 'groups'
   }
 

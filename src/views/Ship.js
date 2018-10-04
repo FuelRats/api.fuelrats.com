@@ -2,7 +2,7 @@ import SequelizeView from './Sequelize'
 import RatView from './Rat'
 
 export default class ShipView extends SequelizeView {
-  get type () {
+  static get type () {
     return 'ships'
   }
 

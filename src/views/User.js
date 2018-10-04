@@ -3,7 +3,7 @@ import RatView from './Rat'
 import GroupView from './Group'
 
 export default class UserView extends SequelizeView {
-  get type () {
+  static get type () {
     return 'users'
   }
 
@@ -31,7 +31,7 @@ export default class UserView extends SequelizeView {
     return {
       rats: RatView,
       displayRat: RatView,
-      groups: GroupView,
+      groups: GroupView
     }
   }
 

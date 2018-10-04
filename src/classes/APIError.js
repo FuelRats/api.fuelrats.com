@@ -5,10 +5,10 @@ import uuidV4 from 'uuid/v4'
 
 i18next.init({
   lng: 'en',
-  resources:  localisationResources,
+  resources:  localisationResources
 })
 
-export class APIError  extends Error {
+export class APIError extends Error {
   constructor (status, source) {
     super()
 
@@ -51,7 +51,7 @@ export class APIError  extends Error {
   static fromValidationError (validationError) {
     switch (validationError.name) {
       case 'SequelizeValidationError':
-        return validationError.errors.map(error => {
+        return validationError.errors.map((error) => {
           return new UnprocessableEntityAPIError({
             pointer: `/data/attributes/${error.path}`
           })

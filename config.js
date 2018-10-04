@@ -13,6 +13,7 @@ module.exports = {
   },
 
   'hostname': process.env.FRAPI_HOSTNAME || 'localhost',
+  'externalUrl': process.env.FRAPI_URL || 'https://api.fuelrats.com',
   'port': process.env.FRAPI_PORT || 8082,
   'proxyEnabled': process.env.FRAPI_PROXY_ENABLED || false,
   'postgres': {
