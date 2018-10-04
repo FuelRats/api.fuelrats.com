@@ -65,7 +65,7 @@ app.use(koaBody({
   strict: false
 }))
 
-let port = config.port || process.env.PORT
+const port = config.port || process.env.PORT
 
 /**
  * Parses an object of URL query parameters and builds a nested object by delimiting periods into sub objects.
@@ -75,7 +75,9 @@ let port = config.port || process.env.PORT
 function parseQuery (query) {
   return Object.entries(query).reduce((acc, [key, value]) => {
     const [last, ...paths] = key.split('.').reverse()
-    let object = paths.reduce((pathAcc, el) => ({ [el]: pathAcc }), { [last]: value })
+    const object = paths.reduce((pathAcc, el) => {
+      return { [el]: pathAcc }
+    }, { [last]: value })
     return {...acc, ...object}
   }, {})
 }
