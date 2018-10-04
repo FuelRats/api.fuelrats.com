@@ -8,13 +8,10 @@ import conditional from 'koa-conditional-get'
 import etag from 'koa-etag'
 const app = new Koa()
 import querystring from 'koa-qs'
-import koaStatic from 'koa-static'
 import router from './classes/Router'
 querystring(app)
 import koaBody from 'koa-body'
 import TrafficControl from './classes/TrafficControl'
-import render from 'koa-ejs'
-import path from 'path'
 import http from 'http'
 import logger from './loggly/logger'
 import Document from './classes/Document'
@@ -57,10 +54,6 @@ const sessionConfiguration = {
 app.use(conditional())
 app.use(etag())
 app.use(session(sessionConfiguration, app))
-app.use(koaStatic('./static', {
-  hidden: false,
-  gzip: true
-}))
 app.use(koaBody({
   strict: false
 }))
@@ -191,14 +184,6 @@ app.use(async (ctx, next) => {
       errors
     }
   }
-})
-
-render(app, {
-  root: path.join(__dirname, '../views'),
-  layout: false,
-  viewExt: 'html',
-  cache: false,
-  debug: true
 })
 
 // ROUTES
