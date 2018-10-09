@@ -65,5 +65,9 @@ module.exports = {
   'stripe': {
     'token': process.env.FRAPI_STRIPE_TOKEN || null,
     'signature': process.env.FRAPI_STRIPE_SIGNATURE || null
+  },
+  'dropbox': {
+    'token': process.env.FRAPI_DROPBOX_TOKEN || null,
+    'path': process.env.FRAPI_DROPBOX_PATH || '/Apps/Click and Drop'
   }
 }

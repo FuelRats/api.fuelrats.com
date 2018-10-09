@@ -155,7 +155,7 @@ class OAuth2 {
       }
     })
 
-    let existingToken = await Token.findOne({ where: { clientId: ctx.query.client_id } })
+    let existingToken = await Token.findOne({ where: { userId: ctx.state.user.data.id, clientId: ctx.query.client_id } })
 
     ctx.body = {
       transactionId: ctx.state.oauth2.transactionID,
@@ -163,7 +163,7 @@ class OAuth2 {
       client: ClientsPresenter.render(client, {}),
       scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
       scope: ctx.state.oauth2.req.scope.join(' '),
-      preAuthorised: (existingToken !== undefined)
+      preAuthorised: (Boolean(existingToken))
     }
 
     await next()

@@ -1,12 +1,18 @@
 'use strict'
 
 const config = require('../../../config')
+const Errors = require('../../errors')
 const Mail = require('../../classes/Mail')
+const Shipping = require('../../classes/Shipping')
 const BotServ = require('../../Anope/BotServ')
 const stripe = require('stripe')(config.stripe.token)
 const bufferLimit = 1000000000
 
+const royalMailTrackingCode = /^[A-Z]{2}[0-9]{9}GB$/iu
+const parcelForceTrackingCode = /^(EA|EB|EC|ED|EE|CP)[0-9]{9}[A-Z]{2}$/iu
+
 let mail = new Mail()
+let shipping = new Shipping()
 
 class Webhook {
   static async receive (ctx) {
@@ -41,6 +47,8 @@ class Webhook {
         price: amount
       }
     })
+
+    await shipping.uploadLabel(event.data.object)
 
     try {
       await mail.send({
@@ -81,7 +89,7 @@ class Webhook {
       })
     } catch (ex) {
       BotServ.say('#rattech', '[API] Sending of order confirmation failed due to error from SMTP server')
-      return Error.template('server_error')
+      return Errors.template('server_error')
     }
   }
 
@@ -92,33 +100,61 @@ class Webhook {
       return
     }
 
-    try {
-      await mail.send({
-        to: event.data.object.email,
-        subject: 'Fuel Rats Store Shipping Confirmation',
-        body: {
-          name: event.data.object.shipping.name,
-          intro: `Your order has been shipped with ${event.data.object.shipping.carrier}`,
-          action: {
-            instructions: 'You can click here to track the shipment of your order:',
-            button: {
-              color: '#d65050',
-              text: 'View Tracking',
-              link: `https://www.royalmail.com/portal/rm/track?trackNumber=${event.data.object.shipping.tracking_number}`
-            }
-          },
-          goToAction: {
-            text: 'View Tracking',
-            link: `https://www.royalmail.com/portal/rm/track?trackNumber=${event.data.object.shipping.tracking_number}`,
-            description: 'Check the tracking status of your shipment'
-          },
-          signature: 'Sincerely'
+    let email = {
+      to: event.data.object.email,
+      subject: 'Fuel Rats Store Shipping Confirmation',
+      body: {
+        name: event.data.object.shipping.name,
+        intro: `Your order has been shipped with ${event.data.object.shipping.carrier}`,
+        signature: 'Sincerely'
+      }
+    }
+
+    let link = getTrackingLink(event.data.object.shipping.tracking_number)
+    if (link) {
+      email.body.action = {
+        instructions: 'You can click here to track the shipment of your order:',
+        button: {
+          color: '#d65050',
+          text: 'View Tracking',
+          link: link
         }
-      })
+      }
+      email.body.goToAction = {
+        text: 'View Tracking',
+        link: link,
+        description: 'Check the tracking status of your shipment'
+      }
+    }
+
+    try {
+      await mail.send(email)
     } catch (ex) {
       BotServ.say('#rattech', '[API] Sending of shipping confirmation failed due to error from SMTP server')
       return Error.template('server_error')
     }
+  }
+}
+
+/**
+ * Geneerate a tracking link from a tracking number
+ * @param number the tracking number
+ * @returns {?string} a tracking link
+ */
+function getTrackingLink (number) {
+  if (!number) {
+    return null
+  }
+
+  switch (number) {
+    case royalMailTrackingCode.test(number):
+      return `https://www.royalmail.com/portal/rm/track?trackNumber=${number}`
+
+    case parcelForceTrackingCode.test(number):
+      return `http://www.parcelforce.com/portal/pw/track?trackNumber=${number}`
+
+    default:
+      return null
   }
 }
 
