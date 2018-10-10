@@ -56,7 +56,7 @@ class Webhook {
         subject: 'Fuel Rats Store Order Confirmation',
         body: {
           name: event.data.object.shipping.name,
-          intro: 'Your order has been processed',
+          intro: 'Your order has been processed. You should receive a shipping confirmation within a week.',
           table: {
             data: orderItems,
             columns: {
@@ -70,19 +70,6 @@ class Webhook {
                 price: 'right'
               }
             }
-          },
-          action: {
-            instructions: 'You can click here to check the status of your order:',
-            button: {
-              color: '#d65050',
-              text: 'View Order',
-              link: `https://fuelrats.com/store/order/${event.data.object.id}`
-            }
-          },
-          goToAction: {
-            text: 'View Order',
-            link: `https://fuelrats.com/store/order/${event.data.object.id}`,
-            description: 'Check the status of your order'
           },
           signature: 'Sincerely'
         }
