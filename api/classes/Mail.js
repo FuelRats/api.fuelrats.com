@@ -19,7 +19,7 @@ class Mail {
       product: {
         name: 'The Fuel Rats',
         link: 'https://fuelrats.com/',
-        logo: 'http://wordpress.fuelrats.com/wp-content/uploads/2018/09/email.jpg'
+        logo: 'https://wordpress.fuelrats.com/wp-content/uploads/2018/09/email.jpg'
       }
     })
   }
