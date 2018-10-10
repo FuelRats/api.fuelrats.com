@@ -163,7 +163,7 @@ class OAuth2 {
       client: ClientsPresenter.render(client, {}),
       scopes: Permission.humanReadable(ctx.state.oauth2.req.scope, ctx.state.user),
       scope: ctx.state.oauth2.req.scope.join(' '),
-      preAuthorised: (Boolean(existingToken))
+      preAuthorized: (Boolean(existingToken))
     }
 
     await next()
