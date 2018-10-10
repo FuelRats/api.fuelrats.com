@@ -87,6 +87,7 @@ class Webhook {
           signature: 'Sincerely'
         }
       })
+      BotServ.say('#ratmerch', '[API] New order ${event.data.object.id} of ${amount} has been received')
     } catch (ex) {
       BotServ.say('#rattech', '[API] Sending of order confirmation failed due to error from SMTP server')
       return Errors.template('server_error')
@@ -127,6 +128,7 @@ class Webhook {
       }
     }
 
+    BotServ.say('#ratmerch', '[API] Order ${event.data.object.id} of has been shipped')
     try {
       await mail.send(email)
     } catch (ex) {
