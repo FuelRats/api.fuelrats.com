@@ -133,7 +133,7 @@ class Webhook {
       }
     }
 
-    BotServ.say('#ratmerch', [API] Order ${event.data.object.id} of has been shipped)
+    BotServ.say('#ratmerch', `[API] Order ${event.data.object.id} of has been shipped`)
     try {
       await mail.send(email)
     } catch (ex) {
