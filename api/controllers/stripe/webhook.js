@@ -140,10 +140,10 @@ function getTrackingLink (number) {
     return null
   }
 
-  if (royalMailTrackingCode.test(number) === true) {
-    return `https://www.royalmail.com/portal/rm/track?trackNumber=${number}`
-  } else if (parcelForceTrackingCode.test(number) === true) {
+  if (parcelForceTrackingCode.test(number) === true) {
     return `http://www.parcelforce.com/portal/pw/track?trackNumber=${number}`
+  } else if (royalMailTrackingCode.test(number) === true) {
+    return `https://www.royalmail.com/portal/rm/track?trackNumber=${number}`
   }
   return null
 }
