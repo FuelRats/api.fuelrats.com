@@ -140,16 +140,12 @@ function getTrackingLink (number) {
     return null
   }
 
-  switch (number) {
-    case royalMailTrackingCode.test(number):
-      return `https://www.royalmail.com/portal/rm/track?trackNumber=${number}`
-
-    case parcelForceTrackingCode.test(number):
-      return `http://www.parcelforce.com/portal/pw/track?trackNumber=${number}`
-
-    default:
-      return null
+  if (royalMailTrackingCode.test(number) === true) {
+    return `https://www.royalmail.com/portal/rm/track?trackNumber=${number}`
+  } else if (parcelForceTrackingCode.test(number) === true) {
+    return `http://www.parcelforce.com/portal/pw/track?trackNumber=${number}`
   }
+  return null
 }
 
 module.exports = Webhook
