@@ -88,7 +88,7 @@ class Webhook {
 
   static async orderUpdated (event) {
     let isFulfiled = (event.data.object.status === 'fulfiled')
-    let isStatusChange = (event.data.previous_attributes.status !== undefined)
+    let isStatusChange = (typeof event.data.previous_attributes.status !== 'undefined')
     if (isFulfiled === false || isStatusChange === false) {
       return
     }
