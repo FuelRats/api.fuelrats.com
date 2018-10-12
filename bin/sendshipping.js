@@ -82,11 +82,11 @@ async function sendShipmentEmail (orderId) {
     }
   }
 
-  BotServ.say('#rattech', `[API Test] Order ${order.id} of has been shipped`)
+  BotServ.say('#ratmerch', `[API] Order ${order.id} of has been shipped`)
   try {
     await mail.send(email)
   } catch (ex) {
-    BotServ.say('#rattech', '[API Test] Sending of shipping confirmation failed due to error from SMTP server')
+    BotServ.say('#ratmerch', '[API] Sending of shipping confirmation failed due to error from SMTP server')
     console.error(ex)
   }
 }
