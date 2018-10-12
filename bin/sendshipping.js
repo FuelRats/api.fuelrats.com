@@ -7,9 +7,6 @@ const Mailgen = require('mailgen')
 const nodemailer = require('nodemailer')
 const path = require('path')
 
-const testPath = path.resolve('static/mailgen/index.html')
-console.log(testPath)
-
 class Mail {
   constructor () {
     this.transporter = nodemailer.createTransport({
