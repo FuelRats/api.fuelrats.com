@@ -32,7 +32,8 @@
     ],
     "semi": [
       "error",
-      "never"
+      "never",
+      { "beforeStatementContinuationChars": "always" }
     ],
     "strict": [
       "error",
