@@ -528,6 +528,10 @@
     "yield-star-spacing": [
       "warn",
       "both"
+    ],
+    "object-curly-spacing": [
+      "warn",
+      "always"
     ]
   }
 }
