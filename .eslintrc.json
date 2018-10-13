@@ -9,7 +9,11 @@
     "ecmaVersion": 2017,
     "sourceType": "module"
   },
-  "extends": "eslint:recommended",
+  "extends": [
+    "eslint:recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings"
+  ],
   "rules": {
     "no-restricted-syntax": [
       "error",
@@ -532,6 +536,21 @@
     "object-curly-spacing": [
       "warn",
       "always"
+    ],
+    "import/first": [
+      "error"
+    ],
+    "import/newline-after-import": [
+      "warn"
+    ],
+    "import/prefer-default-export": [
+      "error"
+    ],
+    "import/no-unassigned-import": [
+      "error"
+    ],
+    "import/no-anonymous-default-export": [
+      "warn"
     ]
   }
 }
