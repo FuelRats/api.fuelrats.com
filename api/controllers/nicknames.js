@@ -4,6 +4,7 @@ const Error = require('../errors')
 const { User, db } = require('../db')
 const NicknameQuery = require('../Query/NicknameQuery')
 const { NicknamesPresenter } = require('../classes/Presenters')
+const levenshtein = require('fast-levenshtein')
 
 const NickServ = require('../Anope/NickServ')
 const HostServ = require('../Anope/HostServ')
@@ -92,6 +93,16 @@ class Nicknames {
     }
 
     let result = await User.scope('public').findAndCountAll(new NicknameQuery(ctx.params, ctx).toSequelize)
+    if (ctx.params.nickname) {
+      let formattedNickname = ctx.params.nickname.replace(/\[(.*?)]$/g, '')
+      result.rows = result.rows.map((result) => {
+        result.rats.sort((rat1, rat2) => {
+          return levenshtein.get(formattedNickname, rat2.name) < levenshtein.get(formattedNickname, rat1.name)
+        })
+        return result
+      })
+    }
+
     return NicknamesPresenter.render(result)
   }
 
