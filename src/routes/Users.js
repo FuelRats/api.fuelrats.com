@@ -86,7 +86,7 @@ export default class Users extends API {
 
     await user.save()
 
-    const userQuery = new Query({ params: {id: ctx.state.user.id}, connection: ctx })
+    const userQuery = new Query({ params: { id: ctx.state.user.id }, connection: ctx })
     const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -134,7 +134,7 @@ export default class Users extends API {
       }
     })
 
-    const userQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
+    const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
     const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -150,14 +150,14 @@ export default class Users extends API {
     })
 
     if (!user) {
-      throw new NotFoundAPIError({parameter: 'id'})
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission({connection: ctx, entity: user})
+    this.requireWritePermission({ connection: ctx, entity: user })
 
-    const isAuthenticated = await Authentication.passwordAuthenticate({email: user.email, password: ctx.data.password})
+    const isAuthenticated = await Authentication.passwordAuthenticate({ email: user.email, password: ctx.data.password })
     if (!isAuthenticated) {
-      throw new UnauthorizedAPIError({pointer: '/data/attributes/password'})
+      throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
     }
 
     const rats = await Rat.findAll({
@@ -177,7 +177,7 @@ export default class Users extends API {
 
       await transaction.commit()
     } catch (ex) {
-      transaction.rollback()
+      await transaction.rollback()
       throw ex
     }
 
@@ -199,7 +199,7 @@ export default class Users extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission({connection: ctx, entity: user})
+    this.requireWritePermission({ connection: ctx, entity: user })
 
     const imageData = ctx.req._readableState.buffer.head.data
 
@@ -207,10 +207,10 @@ export default class Users extends API {
     await User.update({
       image: formattedImageData
     }, {
-      where: {id: ctx.params.id}
+      where: { id: ctx.params.id }
     })
 
-    const userQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
+    const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
     const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }

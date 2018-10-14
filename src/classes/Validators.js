@@ -1,15 +1,52 @@
 import Permission from './Permission'
-import {UnprocessableEntityAPIError} from './APIError'
+import RegexLiteral from './RegexLiteral'
+import { UnprocessableEntityAPIError } from './APIError'
 import { URL } from 'url'
 
-export const FrontierRedeemCode = /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-FUE[0-9]{2}$/u
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/u
-export const CMDRname = /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]{3,64}$/u
-export const ShipName = /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control} ]{3,22}$/u
-export const OAuthClientName = /^[\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Connector_Punctuation}\p{Join_Control}\p{Punctuation}\p{Space_Separator}]{3,64}$/u
-export const ISO8601 = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?))?)?$/u
-export const IRCNickname = /^[A-Za-z_\\`\[\]{}][A-Za-z0-9_\\`\[\]{}]*/u
-export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
+export const IRCNickname = /^[A-Za-z_\\`\[\]{}][ A-Za-z0-9_\\`\[\]{} ]*/u
+
+// language=JSUnicodeRegexp
+export const FrontierRedeemCode = new RegexLiteral(`^
+  [A-Z0-9]{5}-
+  [A-Z0-9]{5}-
+  [A-Z0-9]{5}-
+  [A-Z0-9]{5}-
+  FUE[0-9]{2}
+$`, 'gu')
+export const CMDRname = new RegexLiteral(`^[
+  \\p{Alphabetic}
+  \\p{Mark}
+  \\p{Decimal_Number}
+  \\p{Connector_Punctuation}
+  \\p{Join_Control}
+  \\p{Space_Separator}
+]{3,64}$`, 'gu')
+export const ShipName = new RegexLiteral(`^[
+  \\p{Alphabetic}
+  \\p{Mark}
+  \\p{Decimal_Number}
+  \\p{Connector_Punctuation}
+  \\p{Join_Control}
+  \\p{Space_Separator}
+]{3,22}$`, 'gu')
+export const OAuthClientName = new RegexLiteral(`^[
+  \\p{Alphabetic}
+  \\p{Mark}
+  \\p{Decimal_Number}
+  \\p{Connector_Punctuation}
+  \\p{Join_Control}
+  \\p{Punctuation}
+  \\p{Space_Separator}
+]{3,64}$`, 'gu')
+// language=JSUnicodeRegexp
+export const UUID = new RegexLiteral(`^
+  [0-9a-f]{8}-
+  [0-9a-f]{4}-
+  [1-5][0-9a-f]{3}-
+  [89ab][0-9a-f]{3}-
+  [0-9a-f]{12}
+`, 'igu')
 
 /**
  * Validate wether a list of OAuth Scopes is valid
@@ -17,7 +54,7 @@ export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
  * @constructor
  */
 export function OAuthScope (value) {
-  for (let scope of value) {
+  for (const scope of value) {
     if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
     }
@@ -45,19 +82,19 @@ const requiredQuoteFields = [
 
 /**
  * Validate wether a value is a valid list of rescue quotes
- * @param value the list of rescue quotes to validate
+ * @param quotes the list of rescue quotes to validate
  * @constructor
  */
-export function RescueQuote (value) {
+export function RescueQuote (quotes) {
   try {
-    value.forEach(quote => {
-      requiredQuoteFields.forEach(requiredField => {
+    quotes.forEach((quote) => {
+      requiredQuoteFields.forEach((requiredField) => {
         if (quote.hasOwnProperty(requiredField) === false) {
           throw Error()
         }
       })
 
-      for (let [key, value] of Object.entries(quote)) {
+      for (const [key, value] of Object.entries(quote)) {
         switch (key) {
           case 'message':
             if (typeof value !== 'string') {
@@ -98,7 +135,7 @@ export function IRCNicknames (value) {
   if (!Array.isArray(value)) {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/nicknames' })
   }
-  value.forEach(nickname => {
+  value.forEach((nickname) => {
     if (!IRCNickname.test(nickname)) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/nicknames' })
     }
@@ -112,7 +149,7 @@ export function IRCNicknames (value) {
  */
 export function isURL (value) {
   try {
-    new URL(value)
+    return new URL(value)
   } catch (ex) {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
   }

@@ -109,7 +109,7 @@ class Epics extends API {
   @authenticated
   @permissions('epic.delete')
   async delete (ctx) {
-    let epic = await Epic.findOne({
+    const epic = await Epic.findOne({
       where: {
         id: ctx.params.id
       }
@@ -119,7 +119,7 @@ class Epics extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    epic.destroy()
+    await epic.destroy()
     ctx.status = 204
     return true
   }

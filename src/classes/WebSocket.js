@@ -33,8 +33,8 @@ const apiEvents = [
 const routes = {}
 
 export default class WebSocket {
-  constructor ({server, trafficManager}) {
-    this.wss = new ws.Server({server})
+  constructor ({ server, trafficManager }) {
+    this.wss = new ws.Server({ server })
     this.traffic = trafficManager
 
     this.wss.on('connection', async (client, req) => {
@@ -45,21 +45,22 @@ export default class WebSocket {
 
       const bearer = url.searchParams.get('bearer')
       if (bearer) {
-        const {user, scope} = await Authentication.bearerAuthenticate({bearer})
+        const { user, scope } = await Authentication.bearerAuthenticate({ bearer })
         if (user) {
           client.user = user
           client.scope = scope
         }
       }
 
-      this.onConnection({client})
+      await this.onConnection({ client })
 
       client.on('message', (message) => {
         try {
           const request = JSON.parse(String(message))
-          this.onMessage({client, request})
+          return this.onMessage({ client, request })
         } catch (ex) {
           logger.info('Failed to parse incoming websocket message')
+          return null
         }
       })
 
@@ -90,28 +91,28 @@ export default class WebSocket {
       'Rate-Limit-Remaining': rateLimit.remaining,
       'Rate-Limit-Reset':  this.traffic.nextResetDate
     })
-    this.send({client, message: { result:  result.data, meta }})
+    this.send({ client, message: { result:  result.data, meta } })
   }
 
-  async onMessage ({client, request}) {
+  async onMessage ({ client, request }) {
     try {
-      const { result, meta } = await this.route({client, request})
+      const { result, meta } = await this.route({ client, request })
       if (!result.meta) {
         result.meta = {}
       }
       Object.assign(result.meta, meta)
-      this.send({client, message: result})
+      this.send({ client, message: result })
     } catch (ex) {
       let error = ex
       if ((error instanceof APIError) === false) {
         error = new InternalServerError({})
       }
-      this.send({client, message: Object.assign({'meta': request.meta}, error)})
+      this.send({ client, message: Object.assign({ 'meta': request.meta }, error) })
     }
   }
 
-  async route ({client, request}) {
-    const ctx = new Context({client, request})
+  async route ({ client, request }) {
+    const ctx = new Context({ client, request })
 
     const rateLimit = this.traffic.validateRateLimit(ctx)
 
@@ -123,23 +124,23 @@ export default class WebSocket {
     })
 
     const [endpointName, methodName] = request.action || []
-    const route = WebSocket.getRoute({endpointName, methodName})
+    const route = WebSocket.getRoute({ endpointName, methodName })
     const result = await route(ctx)
 
     return { result, meta }
   }
 
-  onBroadcast ({id, result}) {
+  onBroadcast ({ id, result }) {
     const clients = [...this.socket.clients].filter((client) => {
       return client.subscriptions.includes(id)
     })
-    this.broadcast({clients, message: result})
+    this.broadcast({ clients, message: result })
   }
 
   onEvent (event, ctx, result, permissions = null) {
     const clients = [...this.socket.clients].filter((client) => {
       if (client.clientId !== ctx.client.clientId) {
-        return (!permissions || Permission.granted({permissions, ...client}))
+        return (!permissions || Permission.granted({ permissions, ...client }))
       }
       return false
     })
@@ -148,10 +149,10 @@ export default class WebSocket {
     }
 
     Object.assign(result.meta, { event })
-    this.broadcast({clients, message: result})
+    this.broadcast({ clients, message: result })
   }
 
-  send ({client, message}) {
+  send ({ client, message }) {
     try {
       if (process.env.NODE_ENV === 'production') {
         client.send(JSON.stringify(message))
@@ -163,13 +164,13 @@ export default class WebSocket {
     }
   }
 
-  broadcast ({clients, message}) {
+  broadcast ({ clients, message }) {
     for (const client of clients) {
-      this.send({client, message})
+      this.send({ client, message })
     }
   }
 
-  static addRoute ({endpointName, methodName, method}) {
+  static addRoute ({ endpointName, methodName, method }) {
     if (routes.hasOwnProperty(endpointName) === false) {
       routes[endpointName] = {}
     }
@@ -177,7 +178,7 @@ export default class WebSocket {
     routes[endpointName][methodName] = method
   }
 
-  static getRoute ({endpointName, methodName}) {
+  static getRoute ({ endpointName, methodName }) {
     if (routes.hasOwnProperty(endpointName) === false || routes[endpointName].hasOwnProperty(methodName) === false) {
       throw new NotFoundAPIError({ parameter: 'action' })
     }
@@ -186,7 +187,7 @@ export default class WebSocket {
 }
 
 export class Context {
-  constructor ({client, request}) {
+  constructor ({ client, request }) {
     this.inet = client.req.headers['X-Forwarded-for'] || client.req.connection.remoteAddress
 
     this.client = client
@@ -216,6 +217,6 @@ export class Context {
  */
 export function websocket (endpointName, methodName) {
   return function (target, name, descriptor) {
-    WebSocket.addRoute({endpointName, methodName, method: descriptor.value})
+    WebSocket.addRoute({ endpointName, methodName, method: descriptor.value })
   }
 }

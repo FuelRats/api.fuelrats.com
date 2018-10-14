@@ -4,7 +4,7 @@ import oauth2orize from 'oauth2orize-koa-fr'
 import crypto from 'crypto'
 import { Token, Client, Code, db } from '../db'
 import Permission from '../classes/Permission'
-import {NotFoundAPIError, UnauthorizedAPIError, UnprocessableEntityAPIError} from '../classes/APIError'
+import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Clients from './Clients'
@@ -20,17 +20,17 @@ import API, {
 
 i18next.init({
   lng: 'en',
-  resources:  localisationResources,
+  resources:  localisationResources
 })
 
-let server = oauth2orize.createServer()
+const server = oauth2orize.createServer()
 
-server.serializeClient(function (client) {
+server.serializeClient((client) => {
   return client.data.id
 })
 
-server.deserializeClient(async function (id) {
-  let client = await Client.findById(id)
+server.deserializeClient(async (id) => {
+  const client = await Client.findById(id)
   if (!client) {
     return false
   }
@@ -38,25 +38,25 @@ server.deserializeClient(async function (id) {
   return client
 })
 
-server.grant(oauth2orize.grant.code(async function (client, redirectUri, user, ares, areq) {
+server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq) => {
   validateScopes(areq.scope)
 
-  redirectUri = redirectUri || client.redirectUri
+  const clientRedirectUri = redirectUri || client.redirectUri
 
-  let code = await Code.create({
+  const code = await Code.create({
     value: crypto.randomBytes(global.OAUTH_CODE_LENGTH).toString('hex'),
     scope: areq.scope,
-    redirectUri: redirectUri,
+    redirectUri: clientRedirectUri,
     clientId: client.id,
     userId: user.id
   })
   return code.value
 }))
 
-server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
+server.grant(oauth2orize.grant.token(async (client, user, ares, areq) => {
   validateScopes(areq.scope)
 
-  let token = await Token.create({
+  const token = await Token.create({
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
     scope: areq.scope,
     clientId: client.id,
@@ -65,8 +65,8 @@ server.grant(oauth2orize.grant.token(async function (client, user, ares, areq) {
   return token.value
 }))
 
-server.exchange(oauth2orize.exchange.code(async function (client, code, redirectUri) {
-  let auth = await Code.findOne({ where: { value: code }})
+server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
+  const auth = await Code.findOne({ where: { value: code }})
 
   if (!auth || client.id !== auth.clientId || redirectUri !== auth.redirectUri) {
     return false
@@ -74,7 +74,7 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
 
   await auth.destroy()
 
-  let token = await Token.create({
+  const token = await Token.create({
     scope: auth.scope,
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
     clientId: client.id,
@@ -83,32 +83,30 @@ server.exchange(oauth2orize.exchange.code(async function (client, code, redirect
   return token.value
 }))
 
-server.exchange(oauth2orize.exchange.password(
-  async function (client, username, password) {
-    let user = await Authentication.passwordAuthenticate({email: username, password})
-    if (!user) {
-      return false
-    }
-
-    let token = await Token.create({
-      value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
-      clientId: client.id,
-      userId: user.id,
-      scope: ['*']
-    })
-
-    return token.value
+server.exchange(oauth2orize.exchange.password(async (client, username, password) => {
+  const user = await Authentication.passwordAuthenticate({email: username, password})
+  if (!user) {
+    return false
   }
-))
+
+  const token = await Token.create({
+    value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
+    clientId: client.id,
+    userId: user.id,
+    scope: ['*']
+  })
+
+  return token.value
+}))
 
 export default class OAuth2 extends API {
   @POST('/oauth2/revoke')
   @clientAuthenticated
   @required('token')
   async revoke (ctx) {
-    let token = await Token.findOne({ where: { value: ctx.data.token } })
+    const token = await Token.findOne({ where: { value: ctx.data.token } })
     if (!token) {
-      throw NotFoundAPIError({ pointer: '/data/attributes/token' })
+      throw new NotFoundAPIError({ pointer: '/data/attributes/token' })
     }
     if (token.clientId !== ctx.state.client.id) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/clientId' })
@@ -121,22 +119,22 @@ export default class OAuth2 extends API {
   @POST('/oauth2/revokeall')
   @clientAuthenticated
   async revokeAll (ctx) {
-    let tokens = await Token.findAll({
+    const tokens = await Token.findAll({
       where: {
         clientId: ctx.state.client.id
       }
     })
 
-    let transaction = await db.transaction()
+    const transaction = await db.transaction()
 
     try {
       await Promise.all(tokens.map((token) => {
-        token.destroy({ transaction })
+        return token.destroy({ transaction })
       }))
 
       await transaction.commit()
     } catch (ex) {
-      transaction.rollback()
+      await transaction.rollback()
       throw ex
     }
 
@@ -148,14 +146,14 @@ export default class OAuth2 extends API {
   @parameters('scope', 'client_id', 'response_type')
   @validateRedirectUri
   authorizationRender (ctx) {
-    let client = {}
+    const client = {}
     Object.assign(client, ctx.state.oauth2.client)
     delete client.secret
 
     return {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
-      client: client,
+      client,
       scopes: Permission.humanReadable({scopes: ctx.state.oauth2.req.scope, user: ctx.state.user}),
       scope: ctx.state.oauth2.req.scope.join(' ')
     }
@@ -169,22 +167,23 @@ export default class OAuth2 extends API {
  * @param descriptor
  */
 export function validateRedirectUri (target, name, descriptor) {
-  let endpoint = descriptor.value
+  const endpoint = descriptor.value
 
-  descriptor.value = async function (ctx, next) {
-    await server.authorize(async function (clientId, redirectUri) {
-      let client = await Client.findById(clientId)
+  descriptor.value = async function (...args) {
+    const [connection, next] = args
+    await server.authorize(async (clientId, redirectUri) => {
+      const client = await Client.findById(clientId)
       if (!client) {
         return false
       }
       if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
-        redirectUri = redirectUri || client.redirectUri
-        return [Clients.presenter.render(client, {}), redirectUri]
+        const clientRedirectUri = redirectUri || client.redirectUri
+        return [Clients.presenter.render(client, {}), clientRedirectUri]
       } else {
         throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
       }
-    })(ctx, next)
-    return endpoint.apply(this, arguments)
+    })(connection, next)
+    return endpoint.apply(this, args)
   }
 }
 
@@ -193,7 +192,7 @@ export function validateRedirectUri (target, name, descriptor) {
  * @param scopes
  */
 function validateScopes (scopes) {
-  for (let scope of scopes) {
+  for (const scope of scopes) {
     if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
     }

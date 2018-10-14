@@ -1,7 +1,7 @@
 
 
 module.exports = function (sequelize, DataTypes) {
-  let action = sequelize.define('Action', {
+  const action = sequelize.define('Action', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,

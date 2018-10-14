@@ -77,7 +77,7 @@ export default class Register extends API {
 
       await transaction.commit()
     } catch (ex) {
-      transaction.rollback()
+      await transaction.rollback()
       throw ex
     }
 

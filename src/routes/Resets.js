@@ -156,9 +156,9 @@ async function getReset (user, required = false) {
     }
   })
 
-  resets.map((reset) => {
-    reset.destroy()
-  })
+  await Promise.all(resets.map((reset) => {
+    return reset.destroy()
+  }))
 
   return Reset.create({
     value: crypto.randomBytes(global.RESET_TOKEN_LENGTH / 2).toString('hex'),

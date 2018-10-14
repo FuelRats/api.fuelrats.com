@@ -1,11 +1,11 @@
-import {OAuthScope} from '../classes/Validators'
+import { OAuthScope } from '../classes/Validators'
 
 const OAUTH_SCOPE_MAX_LENGTH = 128
 const MIN_TOKEN_LENGTH = 16
 const MAX_TOKEN_LENGTH = 128
 
 module.exports = function (sequelize, DataTypes) {
-  let token = sequelize.define('Token', {
+  const token = sequelize.define('Token', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,

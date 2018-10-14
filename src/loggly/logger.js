@@ -34,4 +34,4 @@ if (config.loggly) {
 
 
 const logger = log4js.getLogger()
-module.exports = logger
+export default logger

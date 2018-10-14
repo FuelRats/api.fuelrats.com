@@ -82,7 +82,7 @@ export default class Groups extends API {
   @permissions('group.delete')
   @parameters('id')
   async delete (ctx) {
-    let group = await Group.findOne({
+    const group = await Group.findOne({
       where: {
         id: ctx.params.id
       }
@@ -92,7 +92,7 @@ export default class Groups extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    group.destroy()
+    await group.destroy()
     ctx.status = 204
     return true
   }

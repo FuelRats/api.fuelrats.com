@@ -1,10 +1,10 @@
 import yayson from 'yayson'
 
-let { Presenter } = yayson({
+const { Presenter } = yayson({
   adapter: 'sequelize'
 })
 
-let ObjectPresenter = yayson({
+const ObjectPresenter = yayson({
   adapter: 'default'
 }).Presenter
 

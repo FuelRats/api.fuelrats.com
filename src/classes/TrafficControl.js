@@ -11,13 +11,15 @@ const allowedAdminRequestCount = 10000
 /**
  * Class for managing the rate of traffic from IP addresses and users
  */
-class TrafficControl {
+export default class TrafficControl {
+  #resetTimer = 0
+
   /**
    * Create a new instance of a Traffic Controller with fresh hash tables and reset clock
    * @constructor
    */
   constructor () {
-    this._reset()
+    this.reset()
   }
 
   /**
@@ -27,15 +29,15 @@ class TrafficControl {
    * @returns {Object} - An object containing whether the rate limit is exceeded, how many requests are left,
    * and the total requests
    */
-  validateRateLimit ({connection, increase = true}) {
+  validateRateLimit ({ connection, increase = true }) {
     let entity
     if (connection.state.user) {
-      entity = this.retrieveAuthenticatedEntity({user: connection.state.user})
+      entity = this.retrieveAuthenticatedEntity({ user: connection.state.user })
     } else {
-      entity = this.retrieveUnauthenticatedEntity({remoteAddress: connection.inet})
+      entity = this.retrieveUnauthenticatedEntity({ remoteAddress: connection.inet })
     }
 
-    let valid = entity.remainingRequests > 0
+    const valid = entity.remainingRequests > 0
     if (valid && increase) {
       entity.count += 1
     }
@@ -51,10 +53,10 @@ class TrafficControl {
    * @param {Object} user - The user associated with this request
    * @returns {Object} An instance of AuthenticatedUserEntity
    */
-  retrieveAuthenticatedEntity ({user}) {
+  retrieveAuthenticatedEntity ({ user }) {
     let entity = this.authenticatedRequests[user.id]
     if (!entity) {
-      entity = new AuthenticatedUserEntity({user})
+      entity = new AuthenticatedUserEntity({ user })
       this.authenticatedRequests[user.id] = entity
     }
     return entity
@@ -65,10 +67,10 @@ class TrafficControl {
    * @param {string} remoteAddress - The remote address associated with this request
    * @returns {Object} an instance of RemoteAddressEntity
    */
-  retrieveUnauthenticatedEntity ({remoteAddress}) {
+  retrieveUnauthenticatedEntity ({ remoteAddress }) {
     let entity = this.unauthenticatedRequests[remoteAddress]
     if (!entity) {
-      entity = new RemoteAddressEntity({remoteAddress})
+      entity = new RemoteAddressEntity({ remoteAddress })
       this.unauthenticatedRequests[remoteAddress] = entity
     }
     return entity
@@ -87,7 +89,7 @@ class TrafficControl {
    * @returns {number} A number with the number of milliseconds until the next rate limit reset
    * @private
    */
-  get _remainingTimeToNextResetDate () {
+  get remainingTimeToNextResetDate () {
     return this.nextResetDate.getTime() - new Date().getTime()
   }
 
@@ -95,10 +97,10 @@ class TrafficControl {
    * Reset all rate limits
    * @private
    */
-  _reset () {
+  reset () {
     this.authenticatedRequests = {}
     this.unauthenticatedRequests = {}
-    this._resetTimer = setTimeout(this._reset.bind(this), this._remainingTimeToNextResetDate)
+    this.#resetTimer = setTimeout(this.reset.bind(this), this.remainingTimeToNextResetDate)
   }
 }
 
@@ -106,12 +108,14 @@ class TrafficControl {
  * Base class representing a request traffic entity
  */
 class TrafficEntity {
+  #requestCount = 0
+
   /**
    * Get the number of requests made by this entity during the rate limit period
    * @returns {number} number of requests made by this entity during the rate limit period
    */
   get count () {
-    return this._requestCount
+    return this.#requestCount
   }
 
   /**
@@ -119,7 +123,7 @@ class TrafficEntity {
    * @param {number} count The number of requests made by this entity during the rate limit period
    */
   set count (count) {
-    this._requestCount =  count
+    this.#requestCount =  count
   }
 }
 
@@ -127,16 +131,19 @@ class TrafficEntity {
  * Class representing an authenticated user containing their requests the last clock hour
  */
 class AuthenticatedUserEntity extends TrafficEntity {
+  #user = null
+  #requestCount = 0
+
   /**
    * Create an entity representing the traffic made by a specific authenticated user
    * @constructor
    * @param {Object} user - The user object of the authenticated user this traffic belongs to
    * @param {number} initialCount - Optional parameter containing the number of requests this entity should start with
    */
-  constructor ({user, initialCount = 0}) {
+  constructor ({ user, initialCount = 0 }) {
     super()
-    this._user = user
-    this._requestCount = initialCount
+    this.#user = user
+    this.#requestCount = initialCount
   }
 
   /**
@@ -144,7 +151,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {boolean} true if the authenticated user this entity belongs to is an admin
    */
   get isAdmin () {
-    let user = this._user
+    const user = this.#user
     return Permissions.groups.find((group) => {
       return group.isAdministrator && user.groups.find((uGroup) => {
         return uGroup.id === group.id
@@ -158,9 +165,9 @@ class AuthenticatedUserEntity extends TrafficEntity {
    */
   get remainingRequests () {
     if (this.isAdmin) {
-      return allowedAdminRequestCount - this._requestCount
+      return allowedAdminRequestCount - this.#requestCount
     }
-    return allowedAuthenticatedRequestCount - this._requestCount
+    return allowedAuthenticatedRequestCount - this.#requestCount
   }
 
   get totalRequests () {
@@ -175,15 +182,18 @@ class AuthenticatedUserEntity extends TrafficEntity {
  *  Class representing an unauthenticated remote address containing their requests the last clock hour
  */
 class RemoteAddressEntity extends TrafficEntity {
+  #remoteAddress = null
+  #requestCount = 0
+
   /**
    * Create an entity representing the traffic made by a specific unauthenticated remote address
    * @param {string} remoteAddress - The remote address this traffic belongs to
    * @param initialCount - Optional parameter containing the number ofrequests this entity should start with
    */
-  constructor ({remoteAddress, initialCount = 0}) {
+  constructor ({ remoteAddress, initialCount = 0 }) {
     super()
-    this._remoteAddress = remoteAddress
-    this._requestCount = initialCount
+    this.#remoteAddress = remoteAddress
+    this.#requestCount = initialCount
   }
 
   /**
@@ -198,5 +208,3 @@ class RemoteAddressEntity extends TrafficEntity {
     return allowedUnauthenticatedRequestCount
   }
 }
-
-module.exports = TrafficControl

@@ -6,7 +6,7 @@ const MIN_SECRET_LENGTH = 32
 const MAX_SECRET_LENGTH = 512
 
 module.exports = function (sequelize, DataTypes) {
-  let client = sequelize.define('Client', {
+  const client = sequelize.define('Client', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -45,18 +45,18 @@ module.exports = function (sequelize, DataTypes) {
     }
   })
 
-  let hashPasswordHook = async function (instance) {
+  const hashPasswordHook = async function (instance) {
     if (!instance.changed('secret')) {
       return
     }
-    let hash = await bcrypt.hash(instance.get('secret'), global.BCRYPT_ROUNDS_COUNT)
+    const hash = await bcrypt.hash(instance.get('secret'), global.BCRYPT_ROUNDS_COUNT)
     instance.set('secret', hash)
   }
   client.beforeCreate(hashPasswordHook)
   client.beforeUpdate(hashPasswordHook)
 
   client.prototype.toJSON = function () {
-    let values = this.get()
+    const values = this.get()
     delete values.secret
     return values
   }

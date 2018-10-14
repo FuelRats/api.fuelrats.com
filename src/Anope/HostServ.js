@@ -33,7 +33,7 @@ class HostServ {
 
     await HostServ.set(user.nicknames[0], virtualHost)
 
-    NickServ.update(user.nicknames[0])
+    await NickServ.update(user.nicknames[0])
     return virtualHost
   }
 }

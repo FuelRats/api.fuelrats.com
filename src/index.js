@@ -1,39 +1,64 @@
-// IMPORT
-// =============================================================================
-
-require('./Globals')
 import Koa from 'koa'
 import session from 'koa-session'
 import conditional from 'koa-conditional-get'
 import etag from 'koa-etag'
-const app = new Koa()
-import querystring from 'koa-qs'
 import router from './classes/Router'
-querystring(app)
 import koaBody from 'koa-body'
 import TrafficControl from './classes/TrafficControl'
 import http from 'http'
 import logger from './loggly/logger'
 import Document from './classes/Document'
 import { promisify } from 'util'
+import Authentication from './classes/Authentication'
+import oauth2 from './routes/OAuth2'
+import querystring from 'koa-qs'
+import WebSocket from './classes/WebSocket'
+import { db } from './db'
+import npid from 'npid'
+import config from '../config'
+
+import Rescue from './routes/Rescues'
+import User from './routes/Users'
+import Rats from './routes/Rats'
+import Clients from './routes/Clients'
+import Nicknames from './routes/Nicknames'
+import Ships from './routes/Ships'
+import Login from './routes/Login'
+import Register from './routes/Register'
+import Profile from './routes/Profiles'
+import Reset from './routes/Resets'
+import AnopeWebhook from './routes/AnopeWebhook'
+import Statistics from './routes/Statistics'
+import Version from './routes/Version'
+import Decals from './routes/Decals'
+import Stream from './routes/Stream'
+import JiraDrillWebhook from './routes/JiraDrillWebhook'
+import NPO from './routes/NPO'
+
+
+const app = new Koa()
+querystring(app)
+
 const {
   APIError,
   InternalServerError,
   TooManyRequestsAPIError
 } = require('./classes/APIError')
 
-import npid from 'npid'
-
-// Import config
-import config from '../config'
 
 
 // Import controllers
-import Authentication from './classes/Authentication'
-import oauth2 from './routes/OAuth2'
 
-import WebSocket from './classes/WebSocket'
-import { db } from './db/index'
+global.WEBSOCKET_IDENTIFIER_ROUNDS = 16
+global.BCRYPT_ROUNDS_COUNT = 16
+global.OAUTH_CODE_LENGTH = 24
+global.OAUTH_TOKEN_LENTH = 32
+global.OVERSEER_CHANNEL = '#doersofstuff'
+global.RESCUE_CHANNEL = '#fuelrats'
+global.PAPERWORK_CHANNEL = '#ratchat'
+global.MODERATOR_CHANNEL = '#rat-ops'
+global.TECHNICAL_CHANNEL = '#rattech'
+global.RESET_TOKEN_LENGTH = 32
 
 try {
   npid.remove('api.pid')
@@ -189,25 +214,7 @@ app.use(async (ctx, next) => {
 // ROUTES
 // =============================================================================
 
-import Rescue from './routes/Rescues'
-import User from './routes/Users'
-import Rats from './routes/Rats'
-import Clients from './routes/Clients'
-import Nicknames from './routes/Nicknames'
-import Ships from './routes/Ships'
-import Login from './routes/Login'
-import Register from './routes/Register'
-import Profile from './routes/Profiles'
-import Reset from './routes/Resets'
-import AnopeWebhook from './routes/AnopeWebhook'
-import Statistics from './routes/Statistics'
-import Version from './routes/Version'
-import Decals from './routes/Decals'
-import Stream from './routes/Stream'
-import JiraDrillWebhook from './routes/JiraDrillWebhook'
-import NPO from './routes/NPO'
-
-export const routes = [
+const routes = [
   new Rescue(),
   new User(),
   new Rats(),
@@ -226,6 +233,7 @@ export const routes = [
   new JiraDrillWebhook(),
   new NPO()
 ]
+export default routes
 
 // OAUTH2
 
@@ -244,11 +252,11 @@ app.use(router.allowedMethods())
 
 
 const server = http.createServer(app.callback())
-server.wss = new WebSocket({server, traffic});
+server.wss = new WebSocket({ server, traffic })
 
 
 
-(async function startServer () {
+;(async function startServer () {
   try {
     await db.sync()
     const listen = promisify(server.listen.bind(server))

@@ -6,7 +6,7 @@ const MAX_TOKEN_LENGTH = 128
 const MAX_URL_LENGTH = 255
 
 module.exports = function (sequelize, DataTypes) {
-  let code = sequelize.define('Code', {
+  const code = sequelize.define('Code', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,

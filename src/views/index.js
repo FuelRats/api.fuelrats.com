@@ -43,7 +43,7 @@ export default class View {
     if (this.parentUrl) {
       return `${this.parentUrl}/${this.id}`
     }
-    return `${Object.getPrototypeOf(this).constructor.type}/${this.id}`
+    return `${this.type}/${this.id}`
   }
 
   getRelationLink (relation) {

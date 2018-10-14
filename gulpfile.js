@@ -5,7 +5,7 @@ const path = require('path')
 
 const sourceRoot = path.join(__dirname, 'src')
 
-gulp.task('default', () =>
+gulp.task('default', () => {
   gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
     .pipe(babel({
@@ -45,7 +45,7 @@ gulp.task('default', () =>
     }))
     .pipe(sourcemaps.write('.', {
       includeContent: false,
-      sourceRoot: sourceRoot
+      sourceRoot
     }))
     .pipe(gulp.dest('dist'))
-)
+})
