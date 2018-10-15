@@ -48,7 +48,7 @@ class JiraDrill {
             as: 'rats',
             required: true,
             where: {
-              CMDRname: {
+              name: {
                 $iLike: CMDRname
               }
             }
