@@ -38,6 +38,7 @@ models.Ship = db.import(__dirname + '/ship')
 models.Decal = db.import(__dirname + '/decal')
 models.Group = db.import(__dirname + '/group')
 models.UserGroups = db.import(__dirname + '/usergroups')
+models.Orders = db.import(__dirname + '/order')
 
 Object.keys(models).forEach(function (modelName) {
   if (models[modelName].hasOwnProperty('associate')) {
