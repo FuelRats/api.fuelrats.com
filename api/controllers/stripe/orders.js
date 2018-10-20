@@ -5,20 +5,28 @@ const stripe = require('stripe')(config.stripe.token)
 const { OrdersPresenter } = require('../../classes/Presenters')
 const Permission = require('../../permission')
 const Error = require('../../errors')
+const { Orders: Order } = require('../../db')
+const stripeWebhook = require('./webhook')
 
 class Orders {
   static async search (ctx) {
-    let orders = await stripe.orders.list(
+    let stripeOrders = await stripe.orders.list(
       ctx.query
     )
 
-    orders.data.map((order) => {
+    let customOrders = await Order.findAll({
+      where: ctx.query
+    })
+
+    stripeOrders.data.map((order) => {
       order.returns = order.returns.data
       return order
     })
 
-    return OrdersPresenter.render(orders.data, {
-      more: orders.has_more
+    stripeOrders.data = stripeOrders.data.concat(customOrders)
+
+    return OrdersPresenter.render(stripeOrders.data, {
+      more: stripeOrders.has_more
     })
   }
 
@@ -28,8 +36,14 @@ class Orders {
         throw Permission.permissionError(['order.read'])
       }
 
-      let order = await stripe.orders.retrieve(ctx.params.id)
-      return OrdersPresenter.render(order)
+
+      let stripeOrder = null
+      if (ctx.params.id.startsWith('or_')) {
+        stripeOrder = await stripe.orders.retrieve(ctx.params.id)
+      } else {
+        stripeOrder = await Order.findById(ctx.params.id)
+      }
+      return OrdersPresenter.render(stripeOrder)
     } else {
       throw Error.template('missing_required_field', 'id')
     }
@@ -46,6 +60,10 @@ class Orders {
     }
   }
 
+  static manualCreate (ctx) {
+    return Order.create(ctx.data)
+  }
+
   static async update (ctx) {
     if (ctx.params.id) {
       if (ctx.session.currentTransaction !== ctx.params.id && !Permission.granted(['order.write'], ctx.state.user, ctx.state.scope)) {
@@ -53,7 +71,35 @@ class Orders {
       }
 
       try {
-        let order = await stripe.orders.update(ctx.params.id, ctx.data)
+        let order = null
+        if (ctx.params.id.startsWith('or_')) {
+          order = await stripe.orders.update(ctx.params.id, ctx.data)
+        } else {
+          await Order.update(ctx.data, {
+            where: {
+              id: ctx.params.id
+            }
+          })
+          order = await Order.findById(ctx.params.id)
+
+
+          if (ctx.data.status === 'paid') {
+            await stripeWebhook.paymentSuccessful({
+              data: {
+                object: order
+              }
+            })
+          } else if (ctx.data.status === 'fulfilled') {
+            await stripeWebhook.orderUpdated({
+              data: {
+                object: order,
+                previous_attributes: {
+                  status: 'paid'
+                }
+              }
+            })
+          }
+        }
 
         return OrdersPresenter.render(order)
       } catch (error) {
