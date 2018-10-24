@@ -53,10 +53,10 @@ class Webhook {
     try {
       await mail.send({
         to: event.data.object.email,
-        subject: 'Fuel Rats Store Order Confirmation',
+        subject: `Fuel Rats Store Order Confirmation (${event.data.object.id})`,
         body: {
           name: event.data.object.shipping.name,
-          intro: 'Your order has been processed. You should receive a shipping confirmation within a week.',
+          intro: `Your order ${event.data.object.id} has been processed. You should receive a shipping confirmation within a week.`,
           table: {
             data: orderItems,
             columns: {
@@ -95,10 +95,10 @@ class Webhook {
 
     let email = {
       to: event.data.object.email,
-      subject: 'Fuel Rats Store Shipping Confirmation',
+      subject: `Fuel Rats Store Shipping Confirmation (${event.data.object.id})`,
       body: {
         name: event.data.object.shipping.name,
-        intro: `Your order has been shipped with ${event.data.object.shipping.carrier}`,
+        intro: `Your order ${event.data.object.id} has been shipped with ${event.data.object.shipping.carrier}`,
         signature: 'Sincerely'
       }
     }
@@ -120,7 +120,7 @@ class Webhook {
       }
     }
 
-    BotServ.say('#ratmerch', `[API] Order ${event.data.object.id} of has been shipped`)
+    BotServ.say('#ratmerch', `[API] Order ${event.data.object.id} has been shipped with ${event.data.object.shipping.carrier}. ${link}`)
     try {
       await mail.send(email)
     } catch (ex) {
