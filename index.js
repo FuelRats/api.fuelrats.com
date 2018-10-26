@@ -171,6 +171,8 @@ app.use(async (ctx, next) => {
 
 // ROUTES
 // =============================================================================
+
+router.get('/', version.read)
 router.get('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.search)
 router.get('/rescues/:id', Authentication.isAuthenticated, Permission.required(['rescue.read']), rescue.findById)
 router.post('/rescues', Authentication.isAuthenticated, Permission.required(['rescue.write']), rescue.create)
