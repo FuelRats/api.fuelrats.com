@@ -54,7 +54,7 @@ Start postgres and create the databases required:
     psql -c 'CREATE DATABASE fuelratsTest;' -U postgres
     psql -c 'CREATE EXTENSION citext;' -U postgres fuelratstest
     psql -c 'CREATE USER fuelrats;' -U postgres
-    psql -c "ALTER USER fuelrats PASSWORD 'SqueakBaby';" -U postgres
+    psql -c "ALTER USER fuelrats PASSWORD 'SuperAwesomePassword';" -U postgres
     exit
 
 If you want to use a different username or password, you can use them instead and set the new ones in your `config.json`
