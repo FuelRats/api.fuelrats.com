@@ -138,6 +138,10 @@ class OAuth2 {
   }
 
   static async authorizationValidateFields (ctx, next) {
+    if (ctx.query.access_type) {
+      delete ctx.query.access_type
+    }
+
     if (!ctx.query.scope) {
       return next(Errors.template('missing_required_field', 'scope'))
     } else if (!ctx.query.client_id) {
