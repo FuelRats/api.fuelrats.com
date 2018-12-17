@@ -40,6 +40,7 @@ const nicknames = require('./api/controllers/nicknames')
 const oauth2 = require('./api/controllers/oauth2')
 const profile = require('./api/controllers/profile')
 const nextcloud = require('./api/controllers/nextcloud')
+const grafana = require('./api/controllers/grafana')
 const order = require('./api/controllers/stripe/orders')
 const product = require('./api/controllers/stripe/products')
 const rat = require('./api/controllers/rat')
@@ -231,6 +232,7 @@ router.post('/register', fields('email', 'password', 'name', 'platform', 'nickna
   register.create)
 router.get('/profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), profile.read)
 router.get('/nextcloud_profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), nextcloud.read)
+router.get('/grafana_profile', Authentication.isAuthenticated, Permission.required(['user.read.me']), grafana.read)
 
 router.post('/anope', Authentication.isWhitelisted, AnopeWebhook.update)
 
