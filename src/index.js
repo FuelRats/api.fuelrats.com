@@ -7,7 +7,7 @@ import koaBody from 'koa-body'
 import TrafficControl from './classes/TrafficControl'
 import http from 'http'
 import logger from './loggly/logger'
-import Document from './classes/Document'
+import Document from './Documents'
 import { promisify } from 'util'
 import Authentication from './classes/Authentication'
 import oauth2 from './routes/OAuth2'
@@ -96,7 +96,7 @@ function parseQuery (query) {
     const object = paths.reduce((pathAcc, el) => {
       return { [el]: pathAcc }
     }, { [last]: value })
-    return {...acc, ...object}
+    return { ...acc, ...object }
   }, {})
 }
 
@@ -129,7 +129,7 @@ app.use((ctx, next) => {
   if (ctx.request.headers['x-forwarded-for']) {
     [ctx.inet] = ctx.request.headers['x-forwarded-for'].split(', ')
   } else {
-    ctx.inet =  ctx.request.ip
+    ctx.inet = ctx.request.ip
   }
 
   return next()
@@ -149,9 +149,9 @@ const traffic = new TrafficControl()
 
 app.use(async (ctx, next) => {
   try {
-    await Authentication.authenticate({connection: ctx})
+    await Authentication.authenticate({ connection: ctx })
 
-    const rateLimit = traffic.validateRateLimit({connection: ctx})
+    const rateLimit = traffic.validateRateLimit({ connection: ctx })
 
     ctx.set('X-API-Version', '2.0')
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
@@ -159,13 +159,13 @@ app.use(async (ctx, next) => {
     ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)
 
     logger.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
-      'ip': ctx.inet,
-      'path': ctx.request.path,
+      ip: ctx.inet,
+      path: ctx.request.path,
       'rate-limit-limit': rateLimit.total,
       'rate-limit-remaining': rateLimit.remaining,
-      'query': ctx.query,
-      'body': censor(ctx.data),
-      'method': ctx.request.req.method
+      query: ctx.query,
+      body: censor(ctx.data),
+      method: ctx.request.req.method
     })
 
     if (rateLimit.exceeded) {
@@ -233,7 +233,6 @@ const routes = [
   new JiraDrillWebhook(),
   new NPO()
 ]
-export default routes
 
 // OAUTH2
 
@@ -267,5 +266,4 @@ server.wss = new WebSocket({ server, traffic })
   }
 })()
 
-// allow launch of app from unit tests
-module.exports = server
+export default routes

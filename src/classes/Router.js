@@ -1,6 +1,6 @@
 import Router from 'koa-router'
 
-let router = new Router()
+const router = new Router()
 
 router.get('/welcome', (ctx) => {
   ctx.redirect('https://fuelrats.com/profile')

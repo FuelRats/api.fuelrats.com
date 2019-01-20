@@ -1,4 +1,5 @@
-import {ShipName} from '../classes/Validators'
+import { ShipName } from '../classes/Validators'
+import ShipView from '../views/Ship'
 
 
 const MAX_INGAME_SHIP_NAME_LENGTH = 22
@@ -40,7 +41,7 @@ const shipTypes = [
 ]
 
 module.exports = function (sequelize, DataTypes) {
-  let ship = sequelize.define('Ship', {
+  const ship = sequelize.define('Ship', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -84,6 +85,10 @@ module.exports = function (sequelize, DataTypes) {
   }, {
     paranoid: true
   })
+
+  ship.prototype.renderView = function () {
+    return ShipView
+  }
 
   ship.associate = function (models) {
     models.Ship.belongsTo(models.Rat, { as: 'rat' })

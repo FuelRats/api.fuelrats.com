@@ -1,8 +1,8 @@
-import SequelizeView from './Sequelize'
+import DatabaseView from './Database'
 import RatView from './Rat'
 import GroupView from './Group'
 
-export default class UserView extends SequelizeView {
+export default class UserView extends DatabaseView {
   static get type () {
     return 'users'
   }

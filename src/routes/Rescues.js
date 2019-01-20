@@ -1,13 +1,10 @@
 
 
 import { Rescue, Rat } from '../db'
-import { CustomPresenter} from '../classes/Presenters'
-import RescueQuery from '../query/rescue'
+import DatabaseQuery from '../query2/Database'
 import Rats from './Rats'
-import Epics from './Epics'
-import {ForbiddenAPIError, GoneAPIError, NotFoundAPIError} from '../classes/APIError'
+import { ForbiddenAPIError, GoneAPIError, NotFoundAPIError } from '../classes/APIError'
 
-import BotServ from '../Anope/BotServ'
 import API, {
   permissions,
   authenticated,
@@ -18,8 +15,8 @@ import API, {
   parameters
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
-import Document from '../classes/Document'
 import RescueView from '../views/Rescue'
+import DatabaseDocument from '../Documents/Database'
 
 const RESCUE_ACCESS_TIME = 3600000
 
@@ -29,10 +26,9 @@ export default class Rescues extends API {
   @authenticated
   @permissions('rescue.read')
   async search (ctx) {
-    const rescueQuery = new RescueQuery({ params: ctx.query, connection: ctx })
-    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    // return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
-    return new Document({ objects: result.rows, type: RescueView, meta: API.meta(result, rescueQuery) })
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Rescue.findAndCountAll(query.searchObject)
+    return new DatabaseDocument({ query, result, type: RescueView })
   }
 
   @GET('/rescues/:id')

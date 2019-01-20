@@ -1,18 +1,17 @@
-
-import { User, Rat, Token, Client, Reset } from '../db/index'
 import bcrypt from 'bcrypt'
+import { User, Rat, Token, Client, Reset } from '../db/index'
 import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
 
 export default class Authentication {
-  static async passwordAuthenticate ({email, password}) {
+  static async passwordAuthenticate ({ email, password }) {
     if (!email || !password) {
       return null
     }
 
-    const user = await User.scope('internal').findOne({where: {email: {$iLike: email}}})
+    const user = await User.findOne({ where: { email: { $iLike: email } } })
     if (!user) {
       return null
     }
@@ -46,16 +45,16 @@ export default class Authentication {
           where: { id: user.id }
         })
       }
-      return User.scope('profile').findOne({where: {email: {$iLike: email}}})
+      return User.findOne({ where: { email: { $iLike: email } } })
     }
   }
 
-  static async bearerAuthenticate ({bearer}) {
+  static async bearerAuthenticate ({ bearer }) {
     const token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
       return false
     }
-    const userInstance = await User.scope('internal').findOne({
+    const userInstance = await User.findOne({
       where: { id: token.userId },
       include: [
         {
@@ -70,14 +69,14 @@ export default class Authentication {
       throw new GoneAPIError({})
     }
 
-    const user = await User.scope('profile').findOne({where: { id: token.userId }})
+    const user = await User.findOne({ where: { id: token.userId } })
     return {
       user,
       scope: token.scope
     }
   }
 
-  static async clientAuthenticate ({clientId, secret}) {
+  static async clientAuthenticate ({ clientId, secret }) {
     const client = await Client.findById(clientId)
     if (!client) {
       return null
@@ -102,14 +101,14 @@ export default class Authentication {
     throw new UnauthorizedAPIError({})
   }
 
-  static async authenticate ({connection}) {
+  static async authenticate ({ connection }) {
     const [clientId, clientSecret] = getBasicAuth(connection)
     if (clientId) {
       connection.state.client = await Authentication.clientAuthenticate({ clientId, clientSecret })
     }
 
     if (connection.session.userId) {
-      const user = await User.scope('profile').findOne({where: { id: connection.session.userId }})
+      const user = await User.findOne({ where: { id: connection.session.userId } })
       if (user) {
         connection.state.user = user
         return true

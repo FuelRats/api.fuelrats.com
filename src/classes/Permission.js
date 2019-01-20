@@ -4,6 +4,7 @@ import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import { Group } from '../db/index'
 import { ForbiddenAPIError } from './APIError'
+
 const permissionList = require('../../permissions')
 
 i18next.init({
@@ -43,8 +44,8 @@ export default class Permission {
    * @param {Object} scope - Optional scope array of an oauth2 client to validate
    * @returns {boolean}
    */
-  static require ({permissions, user, scope = null}) {
-    if (Permission.granted({permissions, user, scope})) {
+  static require ({ permissions, user, scope = null }) {
+    if (Permission.granted({ permissions, user, scope })) {
       return true
     }
     throw new ForbiddenAPIError({})
@@ -57,7 +58,7 @@ export default class Permission {
    */
   static required (permissions) {
     return function (ctx, next) {
-      if (Permission.granted({permissions, origUser: ctx.state.user, scope: ctx.state.scope})) {
+      if (Permission.granted({ permissions, origUser: ctx.state.user, scope: ctx.state.scope })) {
         return next()
       } else {
         throw new ForbiddenAPIError({})
@@ -72,7 +73,7 @@ export default class Permission {
    * @param {Object} scope - Optional oauth2 client object to validate
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
-  static granted ({permissions, user: origUser, scope = null}) {
+  static granted ({ permissions, user: origUser, scope = null }) {
     if (!origUser || origUser.isDeactivated()) {
       return false
     } else if (origUser.isDeactivated() || origUser.isSuspended()) {
@@ -111,7 +112,7 @@ export default class Permission {
    * @param user The user to check
    * @returns {boolean} Whether the user is an administrator
    */
-  static isAdmin ({user}) {
+  static isAdmin ({ user }) {
     return user.group.some(((group) => {
       return group.isAdministrator
     }))
@@ -131,7 +132,7 @@ export default class Permission {
    * @param {Object} user A user object to check permissions against
    * @returns {Array} Array of objects with localised human readable permissions
    */
-  static humanReadable ({scopes, user})  {
+  static humanReadable ({ scopes, user })  {
     let scopeList = scopes
     if (scopeList.includes('*')) {
       scopeList = Permission.allPermissions
@@ -143,7 +144,7 @@ export default class Permission {
 
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'
-      const accessible = Permission.granted({permissions: [permission], user, scope: null})
+      const accessible = Permission.granted({ permissions: [permission], user, scope: null })
       if (isSelf && scopeList.includes(`${group}.${action}`)) {
         return acc
       }

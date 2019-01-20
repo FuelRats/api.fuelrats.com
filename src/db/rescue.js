@@ -1,11 +1,13 @@
-import {JSONObject, RescueQuote} from '../classes/Validators'
+import { JSONObject, RescueQuote } from '../classes/Validators'
+import RescueView from '../views/Rescue'
+
 const MAX_CLIENT_NAME_LENGTH = 64
 const MAX_NOTES_LENGTH = 2048
 const MAX_SYSTEMLENGTH = 64
 const MAX_TITLE_LENGTH = 64
 
 module.exports = function (sequelize, DataTypes) {
-  let rescue = sequelize.define('Rescue', {
+  const rescue = sequelize.define('Rescue', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -116,6 +118,10 @@ module.exports = function (sequelize, DataTypes) {
     }]
   })
 
+  rescue.prototype.renderView = function () {
+    return RescueView
+  }
+
   rescue.associate = function (models) {
     models.Rescue.belongsTo(models.Rat, {
       as: 'firstLimpet',
@@ -131,7 +137,7 @@ module.exports = function (sequelize, DataTypes) {
 
     models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })
 
-    models.Rescue.addScope('rescue', {
+    models.Rescue.addScope('defaultScope', {
       include: [
         {
           model: models.Rat,

@@ -76,8 +76,8 @@ export default class WebSocket {
     })
   }
 
-  async onConnection ({client}) {
-    const ctx = new Context({client, request: {}})
+  async onConnection ({ client }) {
+    const ctx = new Context({ client, request: {} })
     const route = await WebSocket.getRoute('version', 'read')
     const result = await route(ctx)
     const meta = {

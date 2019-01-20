@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+
 import { OAuthClientName, isURL } from '../classes/Validators'
 
 const CLIENT_SECRET_MAX_LENGTH = 1024
@@ -59,6 +60,10 @@ module.exports = function (sequelize, DataTypes) {
     const values = this.get()
     delete values.secret
     return values
+  }
+
+  client.prototype.documentType = function () {
+    return 'clients'
   }
 
   client.associate = function (models) {

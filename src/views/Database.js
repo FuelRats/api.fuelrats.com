@@ -1,6 +1,6 @@
-import View from './'
+import View from '.'
 
-export default class SequelizeView extends View {
+export default class DatabaseView extends View {
   get id () {
     return this.object.id
   }
@@ -16,7 +16,7 @@ export default class SequelizeView extends View {
         data = (new RelationShipView({ object: this.object[key], parentUrl: this.self })).relationshipView
       }
 
-      const linkObject =  {
+      const linkObject = {
         links: this.getRelationLink(key)
       }
 

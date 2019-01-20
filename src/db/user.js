@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
-import {JSONObject, IRCNicknames} from '../classes/Validators'
+import UserView from '../views/User'
+import { JSONObject, IRCNicknames } from '../classes/Validators'
 
 const PASSWORD_MIN_LENGTH = 12
 const PASSWORD_MAX_LENGTH = 1024
@@ -7,7 +8,7 @@ const NICKNAME_MAX_LENGTH = 35
 
 
 module.exports = function (db, DataTypes) {
-  let user = db.define('User', {
+  const user = db.define('User', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -43,8 +44,10 @@ module.exports = function (db, DataTypes) {
       allowNull: true,
       defaultValue: [],
       set (value) {
-        value = value.map(nickname => nickname.toLowerCase())
-        this.setDataValue('nicknames', value)
+        const lowerValue = value.map((nickname) => {
+          return nickname.toLowerCase()
+        })
+        this.setDataValue('nicknames', lowerValue)
       },
       validate: {
         IRCNicknames
@@ -71,7 +74,7 @@ module.exports = function (db, DataTypes) {
     },
     permissions: {
       type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
-      get: function () {
+      get:  ()  => {
         if (!this.groups) {
           return []
         }
@@ -85,11 +88,11 @@ module.exports = function (db, DataTypes) {
     paranoid: true
   })
 
-  let hashPasswordHook = async function (instance) {
+  const hashPasswordHook = async function (instance) {
     if (!instance.changed('password')) {
       return
     }
-    let hash = await bcrypt.hash(instance.get('password'), global.BCRYPT_ROUNDS_COUNT)
+    const hash = await bcrypt.hash(instance.get('password'), global.BCRYPT_ROUNDS_COUNT)
     instance.set('password', hash)
   }
 
@@ -97,9 +100,13 @@ module.exports = function (db, DataTypes) {
   user.beforeUpdate(hashPasswordHook)
 
   user.prototype.toJSON = function () {
-    let values = this.get()
+    const values = this.get()
     delete values.password
     return values
+  }
+
+  user.prototype.renderView = function () {
+    return UserView
   }
 
   user.prototype.isSuspended = function () {
@@ -160,133 +167,6 @@ module.exports = function (db, DataTypes) {
         ]
       }
     }, { override: true })
-
-
-    models.User.addScope('public', {
-      attributes: {
-        exclude: [
-          'image',
-          'suspended',
-          'permissions'
-        ]
-      },
-      include: [
-        {
-          model: models.Rat,
-          as: 'rats'
-        }, {
-          model: models.Rat,
-          as: 'displayRat'
-        }, {
-          model: models.Group,
-          as: 'groups',
-          required: false,
-          through: {
-            attributes: []
-          },
-          order: [
-            ['priority', 'DESC']
-          ]
-        }
-      ]
-    }, {
-      override: true
-    })
-    models.User.addScope('internal', {
-      attributes: {
-        exclude: [
-          'image',
-          'permissions'
-        ]
-      },
-      include: [
-        {
-          model: models.Rat,
-          as: 'rats',
-          attributes: {
-            exclude: [
-              'deletedAt'
-            ]
-          }
-        }, {
-          model: models.Rat,
-          as: 'displayRat'
-        }, {
-          model: models.Group,
-          as: 'groups',
-          required: false,
-          through: {
-            attributes: []
-          }
-        }
-      ]
-    }, {
-      override: true
-    })
-
-    models.User.addScope('profile', {
-      attributes: {
-        include: [
-          'permissions',
-        ],
-        exclude: [
-          'password',
-          'deletedAt',
-          'image'
-        ]
-      },
-      include: [
-        {
-          model: models.Rat,
-          as: 'rats',
-          include: [{
-            model: models.Ship,
-            as: 'ships',
-            required: false
-          }]
-        },
-        {
-          model: models.Rat,
-          as: 'displayRat',
-
-          include: [{
-            model: models.Ship,
-            as: 'ships',
-            required: false
-          }]
-        }, {
-          model: models.Group,
-          as: 'groups',
-          required: false,
-          through: {
-            attributes: []
-          },
-          order: [
-            ['priority', 'DESC']
-          ]
-        }, {
-          model: models.npoMembership,
-          as: 'npoMembership'
-        }, {
-          model: models.Client,
-          as: 'client',
-          required: false
-        }
-      ]
-    })
-
-    models.User.addScope('stats', {
-      include: [
-        {
-          model: models.Rat,
-          as: 'displayRat',
-          attributes: [
-            'id',
-            'name'
-          ]
-        }
-      ]
-    })
 
     models.User.addScope('image', {
       attributes: [

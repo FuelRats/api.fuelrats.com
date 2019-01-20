@@ -7,21 +7,36 @@ export default class Document  {
   #objects = null
   #meta = null
   #type = null
+  #query = null
 
-  constructor ({ objects, type, meta = {} }) {
+  constructor ({ objects, type, meta = {}, query }) {
     this.#meta = meta
     this.#objects = objects
     this.#type = type
+    this.#query = query
   }
 
   get data () {
-    if (Array.isArray(this.#objects)) {
-      return this.#objects.map((object) => {
-        return (new this.#type({ object })).view
+    const { objects, type: Type } = this
+    if (Array.isArray(objects)) {
+      return this.objects.map((object) => {
+        return (new Type({ object, query: this.query })).view
       })
     } else {
-      return (new this.#type({ object: this.#objects })).view
+      return (new Type({ object: this.objects, query: this.query })).view
     }
+  }
+
+  get objects () {
+    return this.#objects
+  }
+
+  get type () {
+    return this.#type
+  }
+
+  get query () {
+    return this.#query
   }
 
   get errors () {
@@ -29,17 +44,17 @@ export default class Document  {
   }
 
   get meta () {
-    return {}
+    return this.#meta
   }
 
   get included () {
-    let objects = this.#objects
+    let { objects, type: Type } = this
     if (!Array.isArray(objects)) {
       objects = [objects]
     }
 
     const includes = objects.reduce((acc, object) => {
-      return acc.concat((new this.#type({ object })).generateIncludes({}))
+      return acc.concat((new Type({ object })).generateIncludes({}))
     }, [])
 
     return Object.values(includes.reduce((acc, include) => {
@@ -50,7 +65,7 @@ export default class Document  {
 
   get links () {
     return {
-      self: `${config.externalUrl}/${this.#type.type}`
+      self: `${config.externalUrl}/${this.type.type}`
     }
   }
 

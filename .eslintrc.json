@@ -1,5 +1,4 @@
 {
-
   "parser": "babel-eslint",
   "env": {
     "node": true,
@@ -21,7 +20,8 @@
     ],
     "indent": [
       "error",
-      2, {
+      2,
+      {
         "SwitchCase": 1
       }
     ],
@@ -37,7 +37,9 @@
     "semi": [
       "error",
       "never",
-      { "beforeStatementContinuationChars": "always" }
+      {
+        "beforeStatementContinuationChars": "always"
+      }
     ],
     "strict": [
       "error",
@@ -157,7 +159,13 @@
     "no-magic-numbers": [
       "warn",
       {
-        "ignore": [0, 1, 2, 60, 1000],
+        "ignore": [
+          0,
+          1,
+          2,
+          60,
+          1000
+        ],
         "enforceConst": true
       }
     ],
@@ -195,7 +203,10 @@
     "no-warning-comments": [
       "error",
       {
-        "terms": ["todo", "fixme"]
+        "terms": [
+          "todo",
+          "fixme"
+        ]
       }
     ],
     "require-jsdoc": [
@@ -358,7 +369,9 @@
     "lines-between-class-members": [
       "warn",
       "always",
-      { "exceptAfterSingleLine": true }
+      {
+        "exceptAfterSingleLine": true
+      }
     ],
     "max-depth": [
       "warn",
@@ -504,7 +517,10 @@
       "error"
     ],
     "prefer-const": [
-      "warn"
+      "warn",
+      {
+        "destructuring": "all"
+      }
     ],
     "prefer-numeric-literals": [
       "warn"

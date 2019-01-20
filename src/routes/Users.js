@@ -3,7 +3,7 @@
 import { User, Rat, db } from '../db'
 
 import Authentication from '../classes/Authentication'
-import Document from '../classes/Document'
+import Document from '../Documents/index'
 import UserView from '../views/User'
 import Query from '../query'
 import HostServ from '../Anope/HostServ'

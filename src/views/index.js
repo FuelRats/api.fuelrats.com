@@ -2,10 +2,12 @@ import config from '../../config'
 
 export default class View {
   object = null
+  query = null
   parent = null
 
-  constructor ({ object, parentUrl = null }) {
+  constructor ({ object, query, parentUrl = null }) {
     this.object = object
+    this.query = query
     this.parentUrl = parentUrl
   }
 

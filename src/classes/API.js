@@ -1,11 +1,12 @@
 
 import Permission from './Permission'
-import {ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError} from './APIError'
+import { ForbiddenAPIError, UnauthorizedAPIError, BadRequestAPIError } from './APIError'
 import yayson from 'yayson'
 import router from './Router'
 import Meta from './Meta'
 import { Rat } from '../db'
 import { UUID } from './Validators'
+
 const config = require('../../config')
 
 /**
@@ -15,31 +16,31 @@ const config = require('../../config')
 export default class API {
 
   // eslint-disable-next-line no-unused-vars
-  getReadPermissionFor ({connection, entity}) {
+  getReadPermissionFor ({ connection, entity }) {
     return []
   }
 
   // eslint-disable-next-line no-unused-vars
-  getWritePermissionFor ({connection, entity}) {
+  getWritePermissionFor ({ connection, entity }) {
     return []
   }
 
-  hasReadPermission ({connection, entity}) {
-    return Permission.granted({permissions: this.getReadPermissionFor({connection, entity}), ...connection.state})
+  hasReadPermission ({ connection, entity }) {
+    return Permission.granted({ permissions: this.getReadPermissionFor({ connection, entity }), ...connection.state })
   }
 
-  hasWritePermission ({connection, entity}) {
-    return Permission.granted({permissions: this.getWritePermissionFor({connection, entity}), ...connection.state})
+  hasWritePermission ({ connection, entity }) {
+    return Permission.granted({ permissions: this.getWritePermissionFor({ connection, entity }), ...connection.state })
   }
 
-  requireReadPermission ({connection, entity}) {
-    if (!this.hasReadPermission({connection, entity})) {
+  requireReadPermission ({ connection, entity }) {
+    if (!this.hasReadPermission({ connection, entity })) {
       throw new ForbiddenAPIError({})
     }
   }
 
-  requireWritePermission ({connection, entity}) {
-    if (!this.hasWritePermission({connection, entity})) {
+  requireWritePermission ({ connection, entity }) {
+    if (!this.hasWritePermission({ connection, entity })) {
       throw new ForbiddenAPIError({})
     }
   }
@@ -51,7 +52,7 @@ export default class API {
   }
 
   static meta (result, query = null, additionalParameters = {}) {
-    return new Meta({result, query, additionalParameters})
+    return new Meta({ result, query, additionalParameters })
   }
 
   static async getAuthor (ctx) {
@@ -275,7 +276,7 @@ export function protect (permission, ...fields) {
             return false
           }
 
-          if (!Permission.granted({permissions: [permission], ...ctx.state})) {
+          if (!Permission.granted({ permissions: [permission], ...ctx.state })) {
             throw new ForbiddenAPIError({})
           }
           return true

@@ -1,7 +1,7 @@
-import SequelizeView from './Sequelize'
+import DatabaseView from './Database'
 import RatsView from './Rat'
 
-export default class RescueView extends SequelizeView {
+export default class RescueView extends DatabaseView {
   static get type () {
     return 'rescues'
   }

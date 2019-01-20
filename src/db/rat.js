@@ -1,8 +1,8 @@
-import {CMDRname, JSONObject} from '../classes/Validators'
-
+import { CMDRname, JSONObject } from '../classes/Validators'
+import RatView from '../views/Rat'
 
 module.exports = function (sequelize, DataTypes) {
-  let rat = sequelize.define('Rat', {
+  const rat = sequelize.define('Rat', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -51,6 +51,10 @@ module.exports = function (sequelize, DataTypes) {
     paranoid: true
   })
 
+  rat.prototype.renderView = function () {
+    return RatView
+  }
+
   rat.associate = function (models) {
     models.Rat.addScope('stats', {})
     models.Rat.addScope('defaultScope', {
@@ -60,15 +64,6 @@ module.exports = function (sequelize, DataTypes) {
       }]
     }, { override: true })
 
-    models.Rat.addScope('internal', {
-      include: [{
-        model: models.User,
-        as: 'user'
-      }, {
-        model: models.Ship,
-        as: 'ships'
-      }]
-    })
 
     models.Rat.belongsTo(models.User, {
       as: 'user',

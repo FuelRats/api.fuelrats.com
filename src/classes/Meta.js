@@ -1,6 +1,6 @@
 export default class Meta {
-  constructor ({result, query = null, additionalParameters}) {
-    let meta = {
+  constructor ({ result, query = null, additionalParameters }) {
+    const meta = {
       meta: {}
     }
     if (query) {
