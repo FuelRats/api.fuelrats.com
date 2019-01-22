@@ -55,14 +55,7 @@ export default class Authentication {
       return false
     }
     const userInstance = await User.findOne({
-      where: { id: token.userId },
-      include: [
-        {
-          model: Rat,
-          as: 'rats',
-          required: false
-        }
-      ]
+      where: { id: token.userId }
     })
 
     if (userInstance && userInstance.isSuspended()) {

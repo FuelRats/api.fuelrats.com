@@ -201,7 +201,7 @@ class RemoteAddressEntity extends TrafficEntity {
    * @returns {number} the number of remaining requests this entity has in this period
    */
   get remainingRequests () {
-    return allowedUnauthenticatedRequestCount - this.count
+    return allowedUnauthenticatedRequestCount - this.#requestCount
   }
 
   get totalRequests () {

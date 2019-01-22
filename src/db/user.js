@@ -74,7 +74,7 @@ module.exports = function (db, DataTypes) {
     },
     permissions: {
       type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
-      get:  ()  => {
+      get: function () {
         if (!this.groups) {
           return []
         }
@@ -165,7 +165,50 @@ module.exports = function (db, DataTypes) {
           'image',
           'permissions'
         ]
-      }
+      },
+      include: [
+        {
+          model: models.Rat,
+          as: 'rats',
+          include: [{
+            model: models.Ship,
+            as: 'ships',
+            required: false,
+            include: []
+          }]
+        },
+        {
+          model: models.Rat,
+          as: 'displayRat',
+
+          include: [{
+            model: models.Ship,
+            as: 'ships',
+            required: false,
+            include: []
+          }]
+        }, {
+          model: models.Group,
+          as: 'groups',
+          required: false,
+          through: {
+            attributes: []
+          },
+          include: [],
+          order: [
+            ['priority', 'DESC']
+          ]
+        }, {
+          model: models.npoMembership,
+          as: 'npoMembership',
+          include: []
+        }, {
+          model: models.Client,
+          as: 'clients',
+          required: false,
+          include: []
+        }
+      ]
     }, { override: true })
 
     models.User.addScope('image', {
@@ -174,7 +217,7 @@ module.exports = function (db, DataTypes) {
       ]
     })
 
-    models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'client' })
+    models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
     models.User.hasMany(models.UserGroups)
     models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })

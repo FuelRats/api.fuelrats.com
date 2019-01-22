@@ -26,13 +26,6 @@ module.exports = function (sequelize, DataTypes) {
       as: 'user',
       foreignKey: 'userId'
     })
-
-    models.npoMembership.addScope('defaultScope', {
-      include: [{
-        model: models.User,
-        as: 'user'
-      }]
-    }, { override: true })
   }
 
 

@@ -68,18 +68,6 @@ module.exports = function (sequelize, DataTypes) {
 
   client.associate = function (models) {
     models.Client.belongsTo(models.User, { foreignKey: 'userId', as: 'user' })
-
-    models.Client.addScope('defaultScope', {
-      include:  [
-        {
-          model: models.User,
-          as: 'user',
-          required: false
-        }
-      ]
-    }, {
-      override: true
-    })
   }
 
   return client
