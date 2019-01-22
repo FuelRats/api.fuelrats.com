@@ -74,7 +74,7 @@ module.exports = function (db, DataTypes) {
     },
     permissions: {
       type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
-      get: function () {
+      get () {
         if (!this.groups) {
           return []
         }
