@@ -21,20 +21,20 @@ export class SortOrder {
         return 'DESC'
 
       default:
-        return null
+        return undefined
     }
   }
 }
 
 export default class Query {
-  connection = null
+  connection = undefined
 
   constructor ({ connection }) {
     this.connection = connection
   }
 
   get searchObject () {
-    return null
+    return undefined
   }
 
   get page () {
@@ -48,10 +48,10 @@ export default class Query {
       }
       return acc
     }, {
-      number: null,
-      size: null,
-      offset: null,
-      limit: null
+      number: undefined,
+      size: undefined,
+      offset: undefined,
+      limit: undefined
     })
   }
 
@@ -107,13 +107,13 @@ export default class Query {
   get include () {
     const { include } = this.connection
     if (!include) {
-      return null
+      return undefined
     }
     return include.split(',')
   }
 
   get defaultSort () {
-    return null
+    return undefined
   }
 
   get filter () {

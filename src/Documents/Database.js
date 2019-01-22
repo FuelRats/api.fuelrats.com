@@ -1,11 +1,12 @@
-export default class DatabaseDocument {
-  #query = null
-  #objects = null
-  #type = null
+import Document from '.'
 
-  constructor ({ query, result, type = null }) {
-    this.#query = query
-    this.#objects = result.rows || result
-    this.#type = type
+export default class DatabaseDocument extends Document {
+  constructor ({ query, result, type = undefined }) {
+    super({
+      objects: result.rows || result,
+      type: type,
+      meta: {},
+      query: query
+    })
   }
 }

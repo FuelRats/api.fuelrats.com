@@ -4,10 +4,10 @@ import config from '../../config'
 const jsonApiVersion = '1.0'
 
 export default class Document  {
-  #objects = null
-  #meta = null
-  #type = null
-  #query = null
+  #objects = undefined
+  #meta = undefined
+  #type = undefined
+  #query = undefined
 
   constructor ({ objects, type, meta = {}, query }) {
     this.#meta = meta
@@ -40,7 +40,7 @@ export default class Document  {
   }
 
   get errors () {
-    return null
+    return undefined
   }
 
   get meta () {

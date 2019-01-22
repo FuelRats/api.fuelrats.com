@@ -7,8 +7,8 @@ export default class DatabaseQuery extends Query {
       where: this.filter,
       offset: this.offset,
       limit: this.limit,
-      order: this.sort.map(([field, order]) => {
-        const sequelizeOrder = SortOrder.toSQL(order)
+      order: this.sort.map(({ field, sort }) => {
+        const sequelizeOrder = SortOrder.toSQL(sort)
         return [field, sequelizeOrder]
       })
     }
