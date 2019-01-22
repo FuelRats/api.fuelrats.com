@@ -42,7 +42,7 @@ export default class Users extends API {
   @permissions('user.read')
   async search (ctx) {
     const userQuery = new Query({ params: ctx.query, connection: ctx })
-    const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    const result = await User.findAndCountAll(userQuery.toSequelize)
     // return Users.presenter.render(result.rows, API.meta(result, userQuery))
     return new Document({ objects: result.rows, type: UserView, meta: API.meta(result, userQuery) })
   }
@@ -54,7 +54,7 @@ export default class Users extends API {
   @parameters('id')
   async findById (ctx) {
     const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    const result = await User.findAndCountAll(userQuery.toSequelize)
 
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
@@ -87,7 +87,7 @@ export default class Users extends API {
     await user.save()
 
     const userQuery = new Query({ params: { id: ctx.state.user.id }, connection: ctx })
-    const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    const result = await User.findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
@@ -102,7 +102,7 @@ export default class Users extends API {
     await user.addGroup('default')
 
     const userQuery = new Query({ params: { id: user.id }, connection: ctx })
-    const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    const result = await User.findAndCountAll(userQuery.toSequelize)
     ctx.response.status = 201
 
     return Users.presenter.render(result, API.meta(result))
@@ -135,7 +135,7 @@ export default class Users extends API {
     })
 
     const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    const result = await User.findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
@@ -211,7 +211,7 @@ export default class Users extends API {
     })
 
     const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    const result = await User.findAndCountAll(userQuery.toSequelize)
     return Users.presenter.render(result.rows, API.meta(result, userQuery))
   }
 
@@ -221,7 +221,7 @@ export default class Users extends API {
   @permissions('user.write')
   async updatevirtualhost (ctx) {
     const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
+    const result = await User.findAndCountAll(userQuery.toSequelize)
     if (result) {
       return HostServ.update(result)
     }

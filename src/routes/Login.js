@@ -5,14 +5,17 @@ import API, {
   POST,
   required
 } from '../classes/API'
-import Profiles from './Profiles'
+import Query from '../query2'
+import { User } from '../db'
+import Document from '../Documents'
+import UserView from '../views/User'
 
 export default class Login extends API {
   @POST('/login')
   @required('email', 'password')
   async login (ctx) {
-    let {email, password} = ctx.data
-    let user = await Authentication.passwordAuthenticate({email, password})
+    const { email, password } = ctx.data
+    const user = await Authentication.passwordAuthenticate({ email, password })
     if (!user) {
       throw new UnauthorizedAPIError({})
     }
@@ -20,11 +23,15 @@ export default class Login extends API {
     ctx.session.userId = user.id
     ctx.status = 200
     if (ctx.session.redirect) {
-      let redirectUrl = ctx.session.redirect
+      const redirectUrl = ctx.session.redirect
       ctx.session.redirect = null
       ctx.redirect(redirectUrl)
     }
-    return Profiles.presenter.render(user, {})
+    const userQuery = new Query({ params: {
+      id: user.id
+    }, connection: ctx })
+    const result = await User.findAndCountAll(userQuery.toSequelize)
+    return new Document({ objects: result.rows, type: UserView, meta: API.meta(result, userQuery) })
   }
 
   @GET('/logout')
