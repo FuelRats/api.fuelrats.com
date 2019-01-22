@@ -20,7 +20,7 @@
     "no-restricted-syntax": [
       "error",
       "ForStatement",
-      "[value=null]"
+      "Literal[value=null]"
     ],
     "indent": [
       "error",
