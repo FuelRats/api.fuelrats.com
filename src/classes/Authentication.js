@@ -31,7 +31,7 @@ export default class Authentication {
 
     const result = await bcrypt.compare(password, user.password)
     if (result === false) {
-      return null
+      return undefined
     } else {
       if (user.isSuspended() === true) {
         throw new GoneAPIError({ pointer: '/data/attributes/email' })

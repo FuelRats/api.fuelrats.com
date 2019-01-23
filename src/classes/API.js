@@ -14,6 +14,7 @@ const config = require('../../config')
  * Base class for FuelRats API endpoints
  */
 export default class API {
+  view = undefined
 
   // eslint-disable-next-line no-unused-vars
   getReadPermissionFor ({ connection, entity }) {

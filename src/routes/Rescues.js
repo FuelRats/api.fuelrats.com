@@ -1,5 +1,3 @@
-
-
 import { Rescue, Rat } from '../db'
 import DatabaseQuery from '../query2/Database'
 import Rats from './Rats'
@@ -37,9 +35,16 @@ export default class Rescues extends API {
   @permissions('rescue.read')
   @parameters('id')
   async findById (ctx) {
-    const rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    return Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Rescue.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+    if (!result) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    return new DatabaseDocument({ query, result, type: RescueView })
   }
 
   @POST('/rescues')

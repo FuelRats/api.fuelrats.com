@@ -8,22 +8,23 @@ export default class Document  {
   #meta = undefined
   #type = undefined
   #query = undefined
+  #single = false
 
-  constructor ({ objects, type, meta = {}, query }) {
+  constructor ({ objects, type, meta = {}, query, single = false }) {
     this.#meta = meta
     this.#objects = objects
     this.#type = type
     this.#query = query
+    this.#single = single
   }
 
   get data () {
-    const { objects, type: Type } = this
-    if (Array.isArray(objects)) {
-      return this.objects.map((object) => {
-        return (new Type({ object, query: this.query })).view
-      })
+    if (this.#single) {
+      return (new this.#type({ object: this.objects, query: this.query })).view
     } else {
-      return (new Type({ object: this.objects, query: this.query })).view
+      return this.objects.map((object) => {
+        return (new this.#type({ object, query: this.query })).view
+      })
     }
   }
 
@@ -49,7 +50,7 @@ export default class Document  {
 
   get included () {
     let { objects, type: Type } = this
-    if (!Array.isArray(objects)) {
+    if (this.#single) {
       objects = [objects]
     }
 
@@ -64,8 +65,15 @@ export default class Document  {
   }
 
   get links () {
-    return {
-      self: `${config.externalUrl}/${this.type.type}`
+    if (this.#single) {
+      const singleObjectId = (new this.#type({ object: this.#objects })).id
+      return {
+        self: `${config.externalUrl}/${this.type.type}/${singleObjectId}`
+      }
+    } else {
+      return {
+        self: `${config.externalUrl}/${this.type.type}`
+      }
     }
   }
 

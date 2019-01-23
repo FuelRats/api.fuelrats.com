@@ -131,7 +131,7 @@ class TrafficEntity {
  * Class representing an authenticated user containing their requests the last clock hour
  */
 class AuthenticatedUserEntity extends TrafficEntity {
-  #user = null
+  #user = undefined
   #requestCount = 0
 
   /**
@@ -182,7 +182,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
  *  Class representing an unauthenticated remote address containing their requests the last clock hour
  */
 class RemoteAddressEntity extends TrafficEntity {
-  #remoteAddress = null
+  #remoteAddress = undefined
   #requestCount = 0
 
   /**
