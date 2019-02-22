@@ -28,11 +28,18 @@ class Nicknames {
       throw Error.template('operation_failed', 'Admin nicknames cannot be registered')
     }
 
+
     let fields = ['nickname', 'password']
     for (let field of fields) {
       if (!ctx.data[field]) {
         throw Error.template('missing_required_field', field)
       }
+    }
+
+    if (ctx.data.nickname.toLowerCase().endsWith('serv')) {
+      BotServ.say('#rat-ops',
+        `[API] User ${ctx.state.user.data.id} Attempted to register illegal nickname ${ctx.data.nickname}`)
+      throw Error.template('no_permission')
     }
 
     let { nicknames } = ctx.state.user.data.attributes
