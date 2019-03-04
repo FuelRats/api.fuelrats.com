@@ -1,7 +1,15 @@
-import { Rescue, Rat } from '../db'
+import { Rescue, Rat, db } from '../db'
 import DatabaseQuery from '../query2/Database'
+
+
 import Rats from './Rats'
-import { ForbiddenAPIError, GoneAPIError, NotFoundAPIError } from '../classes/APIError'
+import {
+  ForbiddenAPIError,
+  GoneAPIError,
+  NotFoundAPIError,
+  UnprocessableEntityAPIError,
+  UnsupportedMediaAPIError
+} from '../classes/APIError'
 
 import API, {
   permissions,
@@ -9,6 +17,7 @@ import API, {
   GET,
   POST,
   PUT,
+  PATCH,
   DELETE,
   parameters
 } from '../classes/API'
@@ -16,9 +25,19 @@ import { websocket } from '../classes/WebSocket'
 import RescueView from '../views/Rescue'
 import DatabaseDocument from '../Documents/Database'
 
-const RESCUE_ACCESS_TIME = 3600000
+const rescueAccesstime = 3600000
 
+/**
+ *
+ */
 export default class Rescues extends API {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'rescues'
+  }
+
   @GET('/rescues')
   @websocket('rescues', 'search')
   @authenticated
@@ -52,13 +71,15 @@ export default class Rescues extends API {
   @authenticated
   @permissions('rescue.write')
   async create (ctx) {
-    const result = await Rescue.scope('rescue').create(ctx.data, {
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Rescue.create(ctx.data, {
       userId: ctx.state.user.id
     })
 
+    const rescue = new DatabaseDocument({ query, result, type: RescueView })
+
     ctx.response.status = 201
-    const rescue = Rescues.presenter.render(result, API.meta(result))
-    process.emit('rescueCreated', ctx, rescue)
+    process.emit('rescueCreated', ctx, rescue.data)
     return rescue
   }
 
@@ -67,27 +88,10 @@ export default class Rescues extends API {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    const rescue = await Rescue.scope('rescue').findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
+    const rescue = await super.update({ ctx, databaseType: Rescue, updateSearch: { userId: ctx.state.user.id } })
 
-    if (!rescue) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({ connection: ctx, entity: rescue })
-
-    await rescue.update(ctx.data, {
-      userId: ctx.state.user.id
-    })
-
-    const rescueQuery = new RescueQuery({ params: {id: ctx.params.id}, connection: ctx })
-    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    const renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
-    process.emit('rescueUpdated', ctx, renderedResult, null, ctx.data)
-    return renderedResult
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, rescue, type: RescueView })
   }
 
   @DELETE('/rescues/:id')
@@ -96,17 +100,7 @@ export default class Rescues extends API {
   @permissions('rescue.delete')
   @parameters('id')
   async delete (ctx) {
-    const rescue = await Rescue.scope('rescue').findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    if (!rescue) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    await rescue.destroy()
+    await super.delete({ ctx, Rescue })
 
     process.emit('rescueDeleted', ctx, CustomPresenter.render({
       id: ctx.params.id
@@ -115,85 +109,75 @@ export default class Rescues extends API {
     return true
   }
 
-  @PUT('/rescues/assign/:id')
+  // relationships
+
+  @POST('/rescues/:id/relationships/rats')
+  @websocket('rescues', 'rats', 'create')
   @authenticated
   @parameters('id')
-  async assign (ctx) {
-    if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
-      ctx.data = ctx.data.data
-    }
-
-    const rescue = await Rescue.scope('rescue').findOne({
-      where: {
-        id: ctx.params.id
-      }
+  async relationshipRatsCreate (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Rescue,
+      relationType: 'rats',
+      change: 'add',
+      relationship: 'rats'
     })
 
-    if (!rescue) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({ connection: ctx, entity: rescue })
-
-    const rats = await Promise.all(ctx.data.map((ratId) => {
-      return Rat.scope('internal').findOne({ where: { id: ratId } })
-    }))
-
-    for (const rat of rats) {
-      if (rat.user.isSuspended()) {
-        process.emit('suspendedAssign', ctx, rat)
-        throw new ForbiddenAPIError({ pointer: `/data/${rat.id}` })
-      }
-
-      if (rat.user.isDeactivated()) {
-        throw new GoneAPIError({ pointer: `/data/${rat.id}` })
-      }
-    }
-
-    await rescue.addRats(rats)
-
-    const rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    const renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
-    process.emit('rescueUpdated', ctx, renderedResult)
-    return renderedResult
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView  })
   }
 
-  @PUT('/rescues/unassign/:id')
+  @PATCH('/rescues/:id/relationships/rats')
+  @websocket('rescues', 'rats', 'patch')
   @authenticated
   @parameters('id')
-  async unassign (ctx) {
-    if (Array.isArray(ctx.data) === false && ctx.data.hasOwnProperty('data')) {
-      ctx.data = ctx.data.data
-    }
-
-    const rescue = await Rescue.scope('rescue').findOne({
-      where: {
-        id: ctx.params.id
-      }
+  async relationshipRatsPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Rescue,
+      relationType: 'rats',
+      change: 'patch',
+      relationship: 'rats'
     })
 
-    if (!rescue) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView  })
+  }
 
-    this.requireWritePermission(ctx, rescue)
-
-    const rats = ctx.data.map((rat) => {
-      return rescue.removeRat(rat)
+  @DELETE('/rescues/:id/relationships/rats')
+  @websocket('rescues', 'rats', 'delete')
+  @authenticated
+  @parameters('id')
+  async relationshipRatsDelete (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Rescue,
+      change: 'remove',
+      relationship: 'rats'
     })
 
-    await Promise.all(rats)
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView  })
+  }
 
-    const rescueQuery = new RescueQuery({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await Rescue.scope('rescue').findAndCountAll(rescueQuery.toSequelize)
-    const renderedResult = Rescues.presenter.render(result.rows, API.meta(result, rescueQuery))
-    process.emit('rescueUpdated', ctx, renderedResult)
-    return renderedResult
+  @PATCH('/rescues/:id/relationships/firstLimpet')
+  @websocket('rescues', 'firstLimpet', 'patch')
+  @authenticated
+  async relationshipFirstLimpetPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Rescue,
+      change: 'patch',
+      relationship: 'firstLimpet'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView  })
   }
 
   getWritePermissionFor ({ connection, entity }) {
-    if (connection.state.user && entity.createdAt - Date.now() < RESCUE_ACCESS_TIME) {
+    if (connection.state.user && entity.createdAt - Date.now() < rescueAccesstime) {
       for (const rat of connection.state.user.rats) {
         const isAssist = entity.rats.find((fRat) => {
           return fRat.id === rat.id
@@ -204,6 +188,54 @@ export default class Rescues extends API {
       }
     }
     return ['rescue.write']
+  }
+
+  changeRelationship ({ relationship }) {
+    switch (relationship) {
+      case 'rats':
+        return {
+          many: true,
+
+          add ({ entity, ids }) {
+            return entity.addRats(ids)
+          },
+
+          patch ({ entity, ids }) {
+            return entity.setRats(ids)
+          },
+
+          remove ({ entity, ids }) {
+            return entity.removeRats(ids)
+          }
+        }
+
+      case 'firstLimpet':
+        return {
+          many: false,
+
+          add ({ entity, id }) {
+            return entity.addRat(id)
+          },
+
+          patch ({ entity, id }) {
+            return entity.setRat(id)
+          },
+
+          remove ({ entity, id }) {
+            return entity.removeRat(id)
+          }
+        }
+
+      default:
+        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+    }
+  }
+
+  get relationTypes () {
+    return {
+      'rats': 'rats',
+      'firstLimpet': 'rats'
+    }
   }
 
   static get presenter () {

@@ -36,6 +36,7 @@ import JiraDrillWebhook from './routes/JiraDrillWebhook'
 import NPO from './routes/NPO'
 
 
+
 const app = new Koa()
 querystring(app)
 
@@ -80,7 +81,8 @@ app.use(conditional())
 app.use(etag())
 app.use(session(sessionConfiguration, app))
 app.use(koaBody({
-  strict: false
+  strict: false,
+  multipart: true
 }))
 
 const port = config.port || process.env.PORT
@@ -246,7 +248,15 @@ router.post('/oauth2/token',
 
 
 app.use(router.routes())
-app.use(router.allowedMethods())
+app.use(router.allowedMethods({
+  throw: true,
+  notImplemented: () => {
+    console.log('notImplemented')
+  },
+  methodNotAllowed: () => {
+    console.log('methodNotAllowed')
+  }
+}))
 
 
 

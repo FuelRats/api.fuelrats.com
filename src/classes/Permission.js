@@ -73,7 +73,7 @@ export default class Permission {
    * @param {Object} scope - Optional oauth2 client object to validate
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
-  static granted ({ permissions, user: origUser, scope = null }) {
+  static granted ({ permissions, user: origUser, scope = undefined }) {
     if (!origUser || origUser.isDeactivated()) {
       return false
     } else if (origUser.isDeactivated() || origUser.isSuspended()) {

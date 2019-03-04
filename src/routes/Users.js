@@ -8,9 +8,11 @@ import UserView from '../views/User'
 import Query from '../query'
 import HostServ from '../Anope/HostServ'
 import bcrypt from 'bcrypt'
-import gm from 'gm'
 import Rats from './Rats'
 import Groups from './Groups'
+
+import workerpool from 'workerpool'
+
 const {
   NotFoundAPIError,
   UnauthorizedAPIError,
@@ -32,10 +34,9 @@ import API, {
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 
-const PROFILE_IMAGE_MIN = 64
-const PROFILE_IMAGE_MAX = 100
-
 export default class Users extends API {
+  static imageResizePool = workerpool.pool('./dist/workers/image.js')
+
   @GET('/users')
   @websocket('users', 'search')
   @authenticated
@@ -155,7 +156,11 @@ export default class Users extends API {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    const isAuthenticated = await Authentication.passwordAuthenticate({ email: user.email, password: ctx.data.password })
+    const isAuthenticated = await Authentication.passwordAuthenticate({
+      email: user.email,
+      password: ctx.data.password
+    })
+
     if (!isAuthenticated) {
       throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
     }
@@ -203,7 +208,8 @@ export default class Users extends API {
 
     const imageData = ctx.req._readableState.buffer.head.data
 
-    const formattedImageData = await formatImage(imageData)
+    const formattedImageData = await Users.imageResizePool.exec('avatarImageResize', [imageData])
+
     await User.update({
       image: formattedImageData
     }, {
@@ -235,7 +241,7 @@ export default class Users extends API {
     return ['user.write']
   }
 
-  getWritePermissionForEntity ({ connection, entity }) {
+  getWritePermissionFor ({ connection, entity }) {
     if (entity.displayRatId) {
       const rat = connection.state.user.included.find((include) => {
         return include.id === entity.displayRatId
@@ -263,30 +269,4 @@ export default class Users extends API {
     UsersPresenter.prototype.type = 'users'
     return UsersPresenter
   }
-}
-
-/**
- * Resize the image to the required format for fuelrats.com profile images
- * @param imageData Original image data
- * @returns {Promise} A resized image
- */
-function formatImage (imageData) {
-  return new Promise((resolve, reject) => {
-    gm(imageData).identify((err, data) => {
-      if (err || data.format !== 'JPEG') {
-        reject(new UnsupportedMediaAPIError({ pointer: '/data' }))
-      }
-
-      if (data.size.width < PROFILE_IMAGE_MIN || data.size.height < PROFILE_IMAGE_MIN) {
-        reject(new BadRequestAPIError({ pointer: '/data' }))
-      }
-
-      gm(imageData).resize(PROFILE_IMAGE_MAX, PROFILE_IMAGE_MAX, '!').toBuffer('JPG', (resizeErr, buffer) => {
-        if (resizeErr) {
-          reject(new BadRequestAPIError(({ pointer: '/data' })))
-        }
-        resolve(buffer)
-      })
-    })
-  })
 }

@@ -29,6 +29,10 @@
         "SwitchCase": 1
       }
     ],
+    "id-match": [
+      "error",
+      "^([A-Za-z]+)$"
+    ],
     "linebreak-style": [
       "error",
       "unix"
@@ -214,7 +218,16 @@
       }
     ],
     "require-jsdoc": [
-      "error"
+      "warn",
+      {
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": true,
+          "ClassDeclaration": true,
+          "ArrowFunctionExpression": false,
+          "FunctionExpression": false
+        }
+      }
     ],
     "id-length": [
       "error",
@@ -419,7 +432,8 @@
           "GET",
           "POST",
           "PUT",
-          "DELETE"
+          "DELETE",
+          "PATCH"
         ]
       }
     ],
