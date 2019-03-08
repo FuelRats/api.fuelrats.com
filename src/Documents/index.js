@@ -9,13 +9,17 @@ export default class Document  {
   #type = undefined
   #query = undefined
   #single = false
+  #metaOnly = false
+  #relationshipOnly = false
 
-  constructor ({ objects, type, meta = {}, query, single = false }) {
+  constructor ({ objects, type, meta = {}, query, single = false, metaOnly = false, relationshipOnly = false }) {
     this.#meta = meta
     this.#objects = objects
     this.#type = type
     this.#query = query
     this.#single = single
+    this.#metaOnly = metaOnly
+    this.#relationshipOnly = relationshipOnly
   }
 
   get data () {
@@ -104,7 +108,45 @@ export default class Document  {
     }
   }
 
+  get metaDocument () {
+    if (this.errors) {
+      return {
+        errors: this.errors,
+        meta: this.meta,
+        links: this.links,
+        jsonapi: this.jsonapi
+      }
+    }
+    return {
+      meta: this.meta,
+      links: this.links,
+      jsonapi: this.jsonapi
+    }
+  }
+
+  get relationshipDocument () {
+    if (this.errors) {
+      return {
+        errors: this.errors,
+        meta: this.meta,
+        links: this.links,
+        jsonapi: this.jsonapi
+      }
+    }
+    return {
+      data: this.data,
+      meta: this.meta,
+      links: this.links,
+      jsonapi: this.jsonapi
+    }
+  }
+
   toString () {
+    if (this.#metaOnly) {
+      return JSON.stringify(this.metaDocument)
+    } else if (this.#relationshipOnly) {
+      return JSON.stringify(this.relationshipDocument)
+    }
     return JSON.stringify(this.document)
   }
 }

@@ -1,4 +1,3 @@
-
 import Permission from './Permission'
 import {
   ForbiddenAPIError,
@@ -35,12 +34,36 @@ export default class API {
     return undefined
   }
 
+  /**
+   * Base function to create a database entry from a request
+   * @param ctx a request context
+   * @param databaseType a database type object
+   * @returns {Promise<Model>} A transaction to retrieve the created object
+   */
   async create ({ ctx, databaseType }) {
     if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
       throw new UnprocessableEntityAPIError({ pointer: '/data' })
     }
 
+    if (!(ctx.data.data.attributes instanceof Object)) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
+    }
 
+    const entity = await databaseType.create(ctx.data.data.attributes)
+
+    if (ctx.data.relationships instanceof Object) {
+      const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
+        return this.generateRelationshipChange({ data, entity, change: 'add', relationship })
+      })
+
+      await Promise.all(relationshipChanges)
+    }
+
+    return databaseType.findOne({
+      where: {
+        id: entity.id
+      }
+    })
   }
 
   /**
@@ -48,9 +71,13 @@ export default class API {
    * @param ctx A request context
    * @param databaseType a database type object
    * @param updateSearch search parameter on which to issue an update
-   * @returns {Promise<Model>} An update transaction
+   * @returns {Promise<Model>}  A transaction to retrieve the updated object
    */
   async update ({ ctx, databaseType, updateSearch }) {
+    if (!ctx.params.id) {
+      throw new BadRequestAPIError({ parameter: 'id' })
+    }
+
     if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
       throw new UnprocessableEntityAPIError({ pointer: '/data' })
     }
@@ -87,6 +114,56 @@ export default class API {
   }
 
   /**
+   * Base function to delete a datbase entry from a request
+   * @param ctx a request context
+   * @param databaseType a database type object
+   * @returns {Promise<undefined>} A delete transaction
+   */
+  async delete ({ ctx, databaseType }) {
+    if (!ctx.params.id) {
+      throw new BadRequestAPIError({ parameter: 'id' })
+    }
+
+    const entity = await databaseType.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!entity) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity })
+
+    return entity.destroy()
+  }
+
+  async relationshipView ({ ctx, databaseType, relationship }) {
+    if (!ctx.params.id) {
+      throw new BadRequestAPIError({ parameter: 'id' })
+    }
+
+    const entity = await databaseType.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!entity) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireReadPermission({ connection: ctx, entity })
+
+    return databaseType.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+  }
+
+  /**
    * Perform a relationship change based on a PATCH /relationships request
    * @param ctx the context of a PATCH /relationships request
    * @param databaseType the sequelize object for this data type
@@ -95,6 +172,10 @@ export default class API {
    * @returns {Promise<Model>} A resource with its relationships updated
    */
   async relationshipChange ({ ctx, databaseType, change, relationship }) {
+    if (!ctx.params.id) {
+      throw new BadRequestAPIError({ parameter: 'id' })
+    }
+
     const entity = await databaseType.findOne({
       where: {
         id: ctx.params.id
@@ -143,27 +224,6 @@ export default class API {
     } else {
       throw new UnprocessableEntityAPIError({ pointer: '/data' })
     }
-  }
-
-  /**
-   * Base function to delete a database entry from a request
-   * @param ctx A request context
-   * @param databaseType a database type object
-   * @returns {Promise<boolean>} True if the request suceeded.
-   */
-  async delete ({ ctx, databaseType }) {
-    const entity = await databaseType.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    if (!entity) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    await entity.destroy()
-    return true
   }
 
   getReadPermissionFor ({ connection, entity }) {

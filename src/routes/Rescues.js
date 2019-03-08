@@ -4,10 +4,7 @@ import DatabaseQuery from '../query2/Database'
 
 import Rats from './Rats'
 import {
-  ForbiddenAPIError,
-  GoneAPIError,
   NotFoundAPIError,
-  UnprocessableEntityAPIError,
   UnsupportedMediaAPIError
 } from '../classes/APIError'
 
@@ -27,9 +24,6 @@ import DatabaseDocument from '../Documents/Database'
 
 const rescueAccesstime = 3600000
 
-/**
- *
- */
 export default class Rescues extends API {
   /**
    * @inheritdoc
@@ -52,7 +46,6 @@ export default class Rescues extends API {
   @websocket('rescues', 'read')
   @authenticated
   @permissions('rescue.read')
-  @parameters('id')
   async findById (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const result = await Rescue.findOne({
@@ -71,16 +64,11 @@ export default class Rescues extends API {
   @authenticated
   @permissions('rescue.write')
   async create (ctx) {
+    const result = await super.create({ ctx, databaseType: Rescue })
+
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Rescue.create(ctx.data, {
-      userId: ctx.state.user.id
-    })
-
-    const rescue = new DatabaseDocument({ query, result, type: RescueView })
-
     ctx.response.status = 201
-    process.emit('rescueCreated', ctx, rescue.data)
-    return rescue
+    return new DatabaseDocument({ query, result, type: RescueView })
   }
 
   @PUT('/rescues/:id')
@@ -98,57 +86,63 @@ export default class Rescues extends API {
   @websocket('rescues', 'delete')
   @authenticated
   @permissions('rescue.delete')
-  @parameters('id')
   async delete (ctx) {
     await super.delete({ ctx, Rescue })
 
-    process.emit('rescueDeleted', ctx, CustomPresenter.render({
-      id: ctx.params.id
-    }, {}))
-    ctx.status = 204
+    ctx.response.status = 204
     return true
   }
 
   // relationships
 
+  @GET('/rescues/:id/relationships/rats')
+  @websocket('rescues', 'rats', 'read')
+  @authenticated
+  async relationshipRatsView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Rescue,
+      relationship: 'rats'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView, relationshipOnly: true })
+  }
+
   @POST('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'create')
   @authenticated
-  @parameters('id')
   async relationshipRatsCreate (ctx) {
     const result = await this.relationshipChange({
       ctx,
       databaseType: Rescue,
-      relationType: 'rats',
       change: 'add',
       relationship: 'rats'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView  })
+    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true })
   }
 
   @PATCH('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'patch')
   @authenticated
-  @parameters('id')
   async relationshipRatsPatch (ctx) {
     const result = await this.relationshipChange({
       ctx,
       databaseType: Rescue,
-      relationType: 'rats',
       change: 'patch',
       relationship: 'rats'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView  })
+
+    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true  })
   }
 
   @DELETE('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'delete')
   @authenticated
-  @parameters('id')
   async relationshipRatsDelete (ctx) {
     const result = await this.relationshipChange({
       ctx,
@@ -158,7 +152,22 @@ export default class Rescues extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView  })
+
+    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true })
+  }
+
+  @GET('/rescues/:id/relationships/firstLimpet')
+  @websocket('rescues', 'firstLimpet', 'read')
+  @authenticated
+  async relationshipfirstLimpetView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Rescue,
+      relationship: 'firstLimpet'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView, relationshipOnly: true })
   }
 
   @PATCH('/rescues/:id/relationships/firstLimpet')
@@ -173,7 +182,8 @@ export default class Rescues extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView  })
+
+    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true })
   }
 
   getWritePermissionFor ({ connection, entity }) {

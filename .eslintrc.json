@@ -397,7 +397,7 @@
     ],
     "max-lines": [
       "warn",
-      500
+      1000
     ],
     "max-lines-per-function": [
       "warn",
