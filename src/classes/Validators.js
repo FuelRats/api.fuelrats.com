@@ -4,7 +4,7 @@ import { UnprocessableEntityAPIError } from './APIError'
 import { URL } from 'url'
 
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/u
-export const IRCNickname = /^[A-Za-z_\\`\[\]{}][A-Za-z0-9_\\`\[\]{}]{1,30}/u
+export const IRCNickname = /^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}]{1,29})?$/u
 
 // language=JSUnicodeRegexp
 export const FrontierRedeemCode = new RegexLiteral(`^
