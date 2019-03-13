@@ -22,6 +22,9 @@ module.exports = function (sequelize, DataTypes) {
     shipType: {
       type: DataTypes.ENUM(
         'Adder',
+        'Alliance Challenger',
+        'Alliance Chieftain',
+        'Alliance Crusader',
         'Anaconda',
         'Asp Explorer',
         'Asp Scout',
@@ -45,6 +48,9 @@ module.exports = function (sequelize, DataTypes) {
         'Imperial Eagle',
         'Imperial Fighter',
         'Keelback',
+        'Krait MK II',
+        'Krait Phantom',
+        'Mamba',
         'Orca',
         'Python',
         'Sidewinder MkI',
@@ -52,6 +58,7 @@ module.exports = function (sequelize, DataTypes) {
         'Type-6 Transporter',
         'Type-7 Transporter',
         'Type-9 Heavy',
+        'Type-10 Defender',
         'Viper MkIII',
         'Viper MkIV',
         'Vulture'
