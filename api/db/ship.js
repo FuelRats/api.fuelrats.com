@@ -58,7 +58,7 @@ module.exports = function (sequelize, DataTypes) {
         'Type-6 Transporter',
         'Type-7 Transporter',
         'Type-9 Heavy',
-        'Type 10',
+        'Type 10 Defender',
         'Viper MkIII',
         'Viper MkIV',
         'Vulture'
