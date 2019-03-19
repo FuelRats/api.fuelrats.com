@@ -98,7 +98,8 @@ export default class Document  {
       previousPage: this.previousPage,
       nextPage: this.nextPage,
       offset: this.offset,
-      limit: this.limit
+      limit: this.limit,
+      total: this.total
     }
   }
 
