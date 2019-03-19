@@ -8,12 +8,12 @@ const basicAuthHeaderOffset = 6
 export default class Authentication {
   static async passwordAuthenticate ({ email, password }) {
     if (!email || !password) {
-      return null
+      return undefined
     }
 
     const user = await User.findOne({ where: { email: { $iLike: email } } })
     if (!user) {
-      return null
+      return undefined
     }
 
     const requiredResets = await Reset.findAll({
@@ -72,7 +72,7 @@ export default class Authentication {
   static async clientAuthenticate ({ clientId, secret }) {
     const client = await Client.findById(clientId)
     if (!client) {
-      return null
+      return undefined
     }
 
     const authorised = await bcrypt.compare(secret, client.secret)
@@ -110,7 +110,7 @@ export default class Authentication {
 
     const bearerToken = getBearerToken(connection)
     if (bearerToken) {
-      const bearerCheck = await Authentication.bearerAuthenticate(bearerToken)
+      const bearerCheck = await Authentication.bearerAuthenticate({ bearer: bearerToken })
       if (bearerCheck) {
         connection.state.user = bearerCheck.user
         connection.state.scope = bearerCheck.scope
@@ -151,7 +151,7 @@ function getBearerToken (ctx) {
       return authorizationHeader.substring(bearerTokenHeaderOffset)
     }
   }
-  return null
+  return undefined
 }
 
 /**

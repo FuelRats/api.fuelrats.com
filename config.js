@@ -56,5 +56,8 @@ module.exports = {
         'level': process.env.FRAPI_LOGGLY_TEST_CATEGORIES_DEFAULT_LEVEL || 'info'
       }
     }
+  },
+  'testing': {
+    'token': process.env.FRAPI_TESTING_TOKEN || 'testingadmintoken'
   }
 }

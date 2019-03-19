@@ -104,14 +104,14 @@ export function RescueQuote (quotes) {
 
           case 'author':
           case 'lastAuthor':
-            if (value !== null && typeof value !== 'string') {
+            if ((typeof value !== 'undefined') && typeof value !== 'string') {
               throw Error()
             }
             break
 
           case 'createdAt':
           case 'updatedAt':
-            if (value !== null && ISO8601.test(value) === false) {
+            if ((typeof value !== 'undefined') && ISO8601.test(value) === false) {
               throw Error()
             }
             break
