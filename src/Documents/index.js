@@ -49,7 +49,11 @@ export default class Document  {
   }
 
   get meta () {
-    return this.#meta
+    if (this.#single) {
+      return this.#meta
+    }
+
+    return { ...this.#meta, ...this.pageMeta }
   }
 
   get included () {
@@ -68,18 +72,100 @@ export default class Document  {
     }, {}))
   }
 
-  get links () {
+  get self () {
     if (this.#single) {
       const singleObjectId = (new this.#type({ object: this.#objects })).id
-      return {
-        self: `${config.externalUrl}/${this.type.type}/${singleObjectId}`
-      }
+      return `${config.externalUrl}/${this.type.type}/${singleObjectId}`
     } else {
-      return {
-        self: `${config.externalUrl}/${this.type.type}`
-      }
+      return `${config.externalUrl}/${this.type.type}`
     }
   }
+
+  get links () {
+    return {
+      self: this.currentCursor,
+      first: this.firstCursor,
+      last: this.lastCursor,
+      previous: this.previousCursor,
+      next: this.nextCursor
+    }
+  }
+
+  get pageMeta () {
+    return {
+      page: this.currentPage,
+      lastPage: this.lastPage,
+      previousPage: this.previousPage,
+      nextPage: this.nextPage,
+      offset: this.offset,
+      limit: this.limit
+    }
+  }
+
+  get firstPage () {
+    return undefined
+  }
+
+  get lastPage () {
+    return undefined
+  }
+
+  get currentPage () {
+    return undefined
+  }
+
+  get previousPage () {
+    return undefined
+  }
+
+  get nextPage () {
+    return undefined
+  }
+
+  get offset () {
+    return undefined
+  }
+
+  get limit () {
+    return undefined
+  }
+
+  get count () {
+    return undefined
+  }
+
+  get total () {
+    return undefined
+  }
+
+  createPageCursor (page) {
+    if (typeof page === 'undefined') {
+      return undefined
+    }
+
+    return `${this.self}?page[size]=${this.#query.limit}&page[number]=${page}`
+  }
+
+  get firstCursor () {
+    return this.createPageCursor(this.firstPage)
+  }
+
+  get lastCursor () {
+    return this.createPageCursor(this.lastPage)
+  }
+
+  get currentCursor () {
+    return this.createPageCursor(this.currentPage)
+  }
+
+  get previousCursor () {
+    return this.createPageCursor(this.previousPage)
+  }
+
+  get nextCursor () {
+    return this.createPageCursor(this.nextPage)
+  }
+
 
   get jsonapi () {
     return {

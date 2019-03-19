@@ -58,7 +58,7 @@ export default class Query {
   get offset () {
     const { number, size = defaultSize, offset = defaultOffset } = this.page
     if (number) {
-      return number * size
+      return (number - 1) * size
     }
     return offset
   }
