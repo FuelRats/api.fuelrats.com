@@ -38,9 +38,10 @@ export default class API {
    * Base function to create a database entry from a request
    * @param ctx a request context
    * @param databaseType a database type object
+   * @param callback optional callback to perform actions before resource is returned
    * @returns {Promise<Model>} A transaction to retrieve the created object
    */
-  async create ({ ctx, databaseType }) {
+  async create ({ ctx, databaseType, callback = undefined }) {
     if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
       throw new UnprocessableEntityAPIError({ pointer: '/data' })
     }
@@ -50,6 +51,10 @@ export default class API {
     }
 
     const entity = await databaseType.create(ctx.data.data.attributes)
+
+    if (callback) {
+      await callback({ entity })
+    }
 
     if (ctx.data.relationships instanceof Object) {
       const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
@@ -207,11 +212,14 @@ export default class API {
    */
   generateRelationshipChange ({ data, entity, change, relationship }) {
     const changeRelationship = this.changeRelationship({ relationship })
-    const validOneRelationship = this.isValidOneRelationship({ relationship: data })
+    const validOneRelationship = this.isValidOneRelationship({ relationship: data, relation: relationship })
 
     if (Array.isArray(data) && changeRelationship.many === true) {
       const relationshipIds = data.map((relationshipObject) => {
-        const validManyRelationship = this.isValidManyRelationship({ relationship: relationshipObject })
+        const validManyRelationship = this.isValidManyRelationship({
+          relationship: relationshipObject,
+          relation: relationship
+        })
         if (validManyRelationship === false) {
           throw new UnprocessableEntityAPIError({ pointer: '/data' })
         }
@@ -291,9 +299,9 @@ export default class API {
     }
   }
 
-  isValidOneRelationship ({ relationship }) {
+  isValidOneRelationship ({ relationship, relation }) {
     if (relationship instanceof Object) {
-      if (typeof relationship.id !== 'undefined' && relationship.type === this.relationTypes[relationship]) {
+      if (typeof relationship.id !== 'undefined' && relationship.type === this.relationTypes[relation]) {
         return true
       }
     } else if (!relationship) {
@@ -302,9 +310,9 @@ export default class API {
     return false
   }
 
-  isValidManyRelationship ({ relationship }) {
+  isValidManyRelationship ({ relationship, relation }) {
     if (relationship instanceof Object) {
-      if (typeof relationship.id !== 'undefined' && relationship.type === this.relationTypes[relationship]) {
+      if (typeof relationship.id !== 'undefined' && relationship.type === this.relationTypes[relation]) {
         return true
       }
     }
@@ -550,3 +558,10 @@ export function isValidJSONAPIObject ({ object }) {
   }
   return false
 }
+
+
+[1, 2, 3].map((item) => {
+  return item + 1
+});
+
+[1, 2, 3].map(item++)

@@ -4,6 +4,12 @@ export default class DatabaseDocument extends Document {
   #result = undefined
   #query = undefined
 
+  /**
+   * Create a JSONAPI document from a database result
+   * @param query the request query for this document
+   * @param result database result
+   * @param type the resource type
+   */
   constructor ({ query, result, type }) {
     if (result.rows) {
       super({

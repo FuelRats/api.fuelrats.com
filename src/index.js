@@ -155,7 +155,7 @@ app.use(async (ctx, next) => {
 
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
 
-    ctx.set('X-API-Version', '2.0')
+    ctx.set('X-API-Version', '3.0')
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
     ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)

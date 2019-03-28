@@ -5,10 +5,9 @@ import API, {
   POST,
   required
 } from '../classes/API'
-import Query from '../query2'
-import { User } from '../db'
-import Document from '../Documents'
 import UserView from '../views/User'
+import DatabaseQuery from '../query2/Database'
+import DatabaseDocument from '../Documents/Database'
 
 export default class Login extends API {
   @POST('/login')
@@ -24,14 +23,12 @@ export default class Login extends API {
     ctx.status = 200
     if (ctx.session.redirect) {
       const redirectUrl = ctx.session.redirect
-      ctx.session.redirect = null
+      ctx.session.redirect = undefined
       ctx.redirect(redirectUrl)
     }
-    const userQuery = new Query({ params: {
-      id: user.id
-    }, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
-    return new Document({ objects: result.rows, type: UserView, meta: API.meta(result, userQuery) })
+
+    const userQuery = new DatabaseQuery({ params: { id: user.id }, connection: ctx })
+    return new DatabaseDocument({ query: userQuery, result: user, type: UserView })
   }
 
   @GET('/logout')

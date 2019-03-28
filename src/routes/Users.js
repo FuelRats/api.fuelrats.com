@@ -1,24 +1,22 @@
 
 
-import { User, Rat, db } from '../db'
+import { User, Rat, db, Rescue } from '../db'
 
 import Authentication from '../classes/Authentication'
 import Document from '../Documents/index'
 import UserView from '../views/User'
-import Query from '../query'
-import HostServ from '../Anope/HostServ'
+import Query from '../query2'
 import bcrypt from 'bcrypt'
 import Rats from './Rats'
 import Groups from './Groups'
 
 import workerpool from 'workerpool'
 
-const {
+import {
   NotFoundAPIError,
   UnauthorizedAPIError,
-  UnsupportedMediaAPIError,
-  BadRequestAPIError
-} = require('../classes/APIError')
+  UnsupportedMediaAPIError
+} from '../classes/APIError'
 
 import API, {
   permissions,
@@ -30,9 +28,12 @@ import API, {
   parameters,
   disallow,
   required,
-  protect
+  protect, PATCH
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import DatabaseQuery from '../query2/Database'
+import DatabaseDocument from '../Documents/Database'
+import RescueView from '../views/Rescue'
 
 export default class Users extends API {
   static imageResizePool = workerpool.pool('./dist/workers/image.js')
@@ -42,10 +43,9 @@ export default class Users extends API {
   @authenticated
   @permissions('user.read')
   async search (ctx) {
-    const userQuery = new Query({ params: ctx.query, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
-    // return Users.presenter.render(result.rows, API.meta(result, userQuery))
-    return new Document({ objects: result.rows, type: UserView, meta: API.meta(result, userQuery) })
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await User.findAndCountAll(query.searchObject)
+    return new DatabaseDocument({ query, result, type: UserView })
   }
 
   @GET('/users/:id')
@@ -54,12 +54,20 @@ export default class Users extends API {
   @permissions('user.read')
   @parameters('id')
   async findById (ctx) {
-    const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
-
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+    if (!result) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    return new DatabaseDocument({ query, result, type: UserView })
   }
 
+  @GET('/users/:id/image')
+  @websocket('users', 'image', 'read')
   async image (ctx, next) {
     const user = await User.scope('image').findById(ctx.params.id)
     ctx.type = 'image/jpeg'
@@ -67,7 +75,7 @@ export default class Users extends API {
     next()
   }
 
-  @PUT('/users/setpassword')
+  @PUT('/users/:id/password')
   @websocket('users', 'setpassword')
   @authenticated
   @required('password', 'new')
@@ -99,14 +107,13 @@ export default class Users extends API {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async create (ctx) {
-    const user = await User.create(ctx.data)
-    await user.addGroup('default')
+    const result = await super.create({ ctx, databaseType: User, callback: ({ entity }) => {
+      return entity.addGroup('default')
+    } })
 
-    const userQuery = new Query({ params: { id: user.id }, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
+    const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = 201
-
-    return Users.presenter.render(result, API.meta(result))
+    return new DatabaseDocument({ query, result, type: UserView })
   }
 
   @PUT('/users/:id')
@@ -115,82 +122,23 @@ export default class Users extends API {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async update (ctx) {
-    this.requireWritePermission({ connection: ctx, entity: ctx.data })
+    const result = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
 
-    const user = await User.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    if (!user) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({ connection: ctx, entity: user })
-
-    await User.update(ctx.data, {
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView })
   }
 
   @DELETE('/users/:id')
   @websocket('users', 'delete')
   @required('password')
   async delete (ctx) {
-    const user = await User.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
+    await super.delete({ ctx, databaseType: User })
 
-    if (!user) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({ connection: ctx, entity: user })
-
-    const isAuthenticated = await Authentication.passwordAuthenticate({
-      email: user.email,
-      password: ctx.data.password
-    })
-
-    if (!isAuthenticated) {
-      throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
-    }
-
-    const rats = await Rat.findAll({
-      where: {
-        userId: ctx.params.id
-      }
-    })
-
-
-    const transaction = await db.transaction()
-
-    try {
-      await Promise.all(rats.map((rat) => {
-        return rat.destroy({ transaction })
-      }))
-      await user.destroy({ transaction })
-
-      await transaction.commit()
-    } catch (ex) {
-      await transaction.rollback()
-      throw ex
-    }
-
-    ctx.status = 204
+    ctx.response.status = 204
     return true
   }
 
-  @POST('/users/image/:id')
+  @POST('/users/:id/image')
   @websocket('users', 'image')
   @authenticated
   async setimage (ctx) {
@@ -216,22 +164,106 @@ export default class Users extends API {
       where: { id: ctx.params.id }
     })
 
-    const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+    return new DatabaseDocument({ query, result, type: UserView })
   }
 
-  @PUT('/users/updatevirtualhost/:id')
-  @websocket('users', 'updatevirtualhost')
+  // relationships
+
+  @GET('/users/:id/relationships/rats')
+  @websocket('users', 'rats', 'read')
   @authenticated
-  @permissions('user.write')
-  async updatevirtualhost (ctx) {
-    const userQuery = new Query({ params: { id: ctx.params.id }, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
-    if (result) {
-      return HostServ.update(result)
-    }
-    throw new NotFoundAPIError({ parameter: 'id' })
+  async relationshipRatsView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: User,
+      relationship: 'rats'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, relationshipOnly: true })
+  }
+
+  @POST('/users/:id/relationships/rats')
+  @websocket('users', 'rats', 'create')
+  @authenticated
+  async relationshipRatsCreate (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'add',
+      relationship: 'rats'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true })
+  }
+
+  @PATCH('/users/:id/relationships/rats')
+  @websocket('users', 'rats', 'patch')
+  @authenticated
+  async relationshipRatsPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'patch',
+      relationship: 'rats'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true  })
+  }
+
+  @DELETE('/users/:id/relationships/rats')
+  @websocket('users', 'rats', 'delete')
+  @authenticated
+  async relationshipRatsDelete (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'remove',
+      relationship: 'rats'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true })
+  }
+
+  @GET('/users/:id/relationships/displayRat')
+  @websocket('users', 'displayRat', 'read')
+  @authenticated
+  async relationshipDisplayRatView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: User,
+      relationship: 'displayRat'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, relationshipOnly: true })
+  }
+
+  @PATCH('/users/:id/relationships/displayRat')
+  @websocket('users', 'displayRat', 'patch')
+  @authenticated
+  async relationshipFirstLimpetPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'patch',
+      relationship: 'displayRat'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true })
   }
 
   getReadPermissionFor ({ connection, entity }) {
@@ -254,6 +286,90 @@ export default class Users extends API {
       return ['user.write.me', 'user.write']
     }
     return ['user.write']
+  }
+
+  changeRelationship ({ relationship }) {
+    switch (relationship) {
+      case 'rats':
+        return {
+          many: true,
+
+          add ({ entity, ids }) {
+            return entity.addRats(ids)
+          },
+
+          patch ({ entity, ids }) {
+            return entity.setRats(ids)
+          },
+
+          remove ({ entity, ids }) {
+            return entity.removeRats(ids)
+          }
+        }
+
+      case 'displayRat':
+        return {
+          many: false,
+
+          add ({ entity, id }) {
+            return entity.addRat(id)
+          },
+
+          patch ({ entity, id }) {
+            return entity.setRat(id)
+          },
+
+          remove ({ entity, id }) {
+            return entity.removeRat(id)
+          }
+        }
+
+      case 'groups':
+        return {
+          many: true,
+
+          add ({ entity, ids }) {
+            return entity.addGroups(ids)
+          },
+
+          patch ({ entity, ids }) {
+            return entity.setGroups(ids)
+          },
+
+          remove ({ entity, ids }) {
+            return entity.removeGroups(ids)
+          }
+        }
+
+      case 'clients':
+        return {
+          many: true,
+
+          add ({ entity, ids }) {
+            return entity.addClients(ids)
+          },
+
+          patch ({ entity, ids }) {
+            return entity.setClients(ids)
+          },
+
+          remove ({ entity, ids }) {
+            return entity.removeClients(ids)
+          }
+        }
+
+      default:
+        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+    }
+  }
+
+  get relationTypes () {
+    return {
+      'rats': 'rats',
+      'displayRat': 'rats',
+      'groups': 'groups',
+      'clients': 'clients'
+    }
   }
 
   static get presenter () {

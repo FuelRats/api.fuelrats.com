@@ -1,18 +1,18 @@
 import config from '../../config'
 
 export default class View {
-  object = null
-  query = null
-  parent = null
+  object = undefined
+  query = undefined
+  parent = undefined
 
-  constructor ({ object, query, parentUrl = null }) {
+  constructor ({ object, query, parentUrl = undefined }) {
     this.object = object
     this.query = query
     this.parentUrl = parentUrl
   }
 
   static get type () {
-    return null
+    return undefined
   }
 
   get type () {
@@ -20,11 +20,11 @@ export default class View {
   }
 
   get id () {
-    return null
+    return undefined
   }
 
   get attributes () {
-    return null
+    return undefined
   }
 
   get relationships () {

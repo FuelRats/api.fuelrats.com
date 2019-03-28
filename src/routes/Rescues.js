@@ -1,4 +1,4 @@
-import { Rescue, Rat, db } from '../db'
+import { Rescue } from '../db'
 import DatabaseQuery from '../query2/Database'
 
 
@@ -76,10 +76,10 @@ export default class Rescues extends API {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    const rescue = await super.update({ ctx, databaseType: Rescue, updateSearch: { userId: ctx.state.user.id } })
+    const result = await super.update({ ctx, databaseType: Rescue, updateSearch: { id:ctx.params.id } })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, rescue, type: RescueView })
+    return new DatabaseDocument({ query, result, type: RescueView })
   }
 
   @DELETE('/rescues/:id')
@@ -87,7 +87,7 @@ export default class Rescues extends API {
   @authenticated
   @permissions('rescue.delete')
   async delete (ctx) {
-    await super.delete({ ctx, Rescue })
+    await super.delete({ ctx, databaseType: Rescue })
 
     ctx.response.status = 204
     return true

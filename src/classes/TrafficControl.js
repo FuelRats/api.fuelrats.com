@@ -1,7 +1,7 @@
 
 import Permissions from './Permission'
 
-const HOUR_TIMER = 60 * 60 * 1000
+const hourTimer = 60 * 60 * 1000
 
 const allowedUnauthenticatedRequestCount = 360
 const allowedAuthenticatedRequestCount = 3600
@@ -81,7 +81,7 @@ export default class TrafficControl {
    * @returns {Date} A date object containing the next time all rate limits will be reset
    */
   get nextResetDate () {
-    return new Date(Math.ceil(new Date().getTime() / HOUR_TIMER) * HOUR_TIMER)
+    return new Date(Math.ceil(new Date().getTime() / hourTimer) * hourTimer)
   }
 
   /**

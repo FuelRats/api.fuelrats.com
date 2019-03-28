@@ -12,6 +12,16 @@ export default class Document  {
   #metaOnly = false
   #relationshipOnly = false
 
+  /**
+   * Create a JSONAPI Document
+   * @param objects result object(s) to create a jsonapi document from
+   * @param type the resource type of objects in this document
+   * @param meta meta data
+   * @param query the request query to use in this document
+   * @param single whether the document contains a single resource or multiple resources
+   * @param metaOnly whether the document should only display meta data
+   * @param relationshipOnly whether the document should only display relationships
+   */
   constructor ({ objects, type, meta = {}, query, single = false, metaOnly = false, relationshipOnly = false }) {
     this.#meta = meta
     this.#objects = objects
@@ -104,39 +114,39 @@ export default class Document  {
   }
 
   get firstPage () {
-    return undefined
+    throw new NotImplementedError('Document.firstPage')
   }
 
   get lastPage () {
-    return undefined
+    throw new NotImplementedError('Document.lastPage')
   }
 
   get currentPage () {
-    return undefined
+    throw new NotImplementedError('Document.currentPage')
   }
 
   get previousPage () {
-    return undefined
+    throw new NotImplementedError('Document.previousPage')
   }
 
   get nextPage () {
-    return undefined
+    throw new NotImplementedError('Document.nextPage')
   }
 
   get offset () {
-    return undefined
+    throw new NotImplementedError('Document.offset')
   }
 
   get limit () {
-    return undefined
+    throw new NotImplementedError('Document.limit')
   }
 
   get count () {
-    return undefined
+    throw new NotImplementedError('Document.count')
   }
 
   get total () {
-    return undefined
+    throw new NotImplementedError('Document.total')
   }
 
   createPageCursor (page) {
@@ -235,5 +245,11 @@ export default class Document  {
       return JSON.stringify(this.relationshipDocument)
     }
     return JSON.stringify(this.document)
+  }
+}
+
+class NotImplementedError extends Error {
+  constructor (description) {
+    super(`${description} requires implementation by subclass`)
   }
 }

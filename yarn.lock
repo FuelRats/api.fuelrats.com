@@ -1024,7 +1024,7 @@ ajv@^5.2.2:
     fast-json-stable-stringify "^2.0.0"
     json-schema-traverse "^0.3.0"
 
-ajv@^6.10.0, ajv@^6.5.2:
+ajv@^6.10.0:
   version "6.10.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.10.0.tgz#90d0d54439da587cd7e843bfb7045f50bd22bdf1"
   dependencies:
@@ -1705,7 +1705,7 @@ chalk@^1.1.1:
     strip-ansi "^3.0.0"
     supports-color "^2.0.0"
 
-chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.1, chalk@^2.4.2:
+chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.4.2.tgz#cd42541677a54333cf541a49108c1432b44c9424"
   dependencies:
@@ -3859,21 +3859,13 @@ jest-jasmine2@^24.5.0:
     pretty-format "^24.5.0"
     throat "^4.0.0"
 
-jest-json-schema@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/jest-json-schema/-/jest-json-schema-2.0.2.tgz#f829089e0fb42deecaeb1770f4e83a8fb3404a2f"
-  dependencies:
-    ajv "^6.5.2"
-    chalk "^2.4.1"
-    jest-matcher-utils "^24.0.0"
-
 jest-leak-detector@^24.5.0:
   version "24.5.0"
   resolved "https://registry.yarnpkg.com/jest-leak-detector/-/jest-leak-detector-24.5.0.tgz#21ae2b3b0da252c1171cd494f75696d65fb6fa89"
   dependencies:
     pretty-format "^24.5.0"
 
-jest-matcher-utils@^24.0.0, jest-matcher-utils@^24.5.0:
+jest-matcher-utils@^24.5.0:
   version "24.5.0"
   resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-24.5.0.tgz#5995549dcf09fa94406e89526e877b094dad8770"
   dependencies:
