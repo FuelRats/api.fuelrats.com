@@ -20,7 +20,7 @@ it is a base class for API endpoints to override */
 
 /**
  * @class
- * Base class for FuelRats API endpoints
+ * @classdesc Base class for FuelRats API endpoints
  */
 export default class API {
   view = undefined
@@ -144,6 +144,13 @@ export default class API {
     return entity.destroy()
   }
 
+  /**
+   * Base function for relationship view requests
+   * @param ctx a request context
+   * @param databaseType a database type object
+   * @param relationship the JSONAPI resource relattionship
+   * @returns {Promise<Model>} a find transaction
+   */
   async relationshipView ({ ctx, databaseType, relationship }) {
     if (!ctx.params.id) {
       throw new BadRequestAPIError({ parameter: 'id' })
@@ -234,36 +241,84 @@ export default class API {
     }
   }
 
+  /**
+   * Get read permissions for this ressource
+   * @param connection a request context
+   * @param entity a resource entity
+   * @returns {Array} list of acceptable permissions
+   * @abstract
+   */
   getReadPermissionFor ({ connection, entity }) {
     return []
   }
 
+  /**
+   * Get write permissions for this ressource
+   * @param connection a request context
+   * @param entity a resource entity
+   * @returns {Array} a list of acceptable permissions
+   * @abstract
+   */
   getWritePermissionFor ({ connection, entity }) {
     return []
   }
 
+  /**
+   * Check whether the user has read permission for this ressource
+   * @param connection a request context
+   * @param entity a resource entity
+   * @returns {boolean} whether the user has read permission for this resource
+   */
   hasReadPermission ({ connection, entity }) {
     return Permission.granted({ permissions: this.getReadPermissionFor({ connection, entity }), ...connection.state })
   }
 
+  /**
+   * Check whether the user has write permission for this ressource
+   * @param connection a request context
+   * @param entity a resource entity
+   * @returns {boolean} whether the usre has write permission for this resource
+   */
   hasWritePermission ({ connection, entity }) {
     return Permission.granted({ permissions: this.getWritePermissionFor({ connection, entity }), ...connection.state })
   }
 
+  /**
+   * Get a change relationship object for this resource defining the actions to perform for add, delete, and patch
+   * relationship requests
+   * @param relationship the relationship relative to the ressource
+   * @returns {*} a change relationship object
+   * @abstract
+   */
   changeRelationship ({ relationship }) {
     return undefined
   }
 
+  /**
+   * Get a map of JSONAPI ressource types for the relationships of this resource
+   * @returns {*} a map of JSONAPI ressource types
+   * @abstract
+   */
   get relationTypes () {
     return {}
   }
 
+  /**
+   * Require read permission to modify this entity
+   * @param connection a request context
+   * @param entity a resource entity
+   */
   requireReadPermission ({ connection, entity }) {
     if (!this.hasReadPermission({ connection, entity })) {
       throw new ForbiddenAPIError({})
     }
   }
 
+  /**
+   * Require write permission to modify this entity
+   * @param connection a request context
+   * @param entity a resource entity
+   */
   requireWritePermission ({ connection, entity }) {
     if (!this.hasWritePermission({ connection, entity })) {
       throw new ForbiddenAPIError({})
@@ -299,6 +354,12 @@ export default class API {
     }
   }
 
+  /**
+   * Check whether a relationship is a valid one-to-one relationship for this resource
+   * @param relationship a relationship object
+   * @param relation name of the relation relative to the resource
+   * @returns {boolean} Whether the relationship is a valid one-to-one relationship for this resource
+   */
   isValidOneRelationship ({ relationship, relation }) {
     if (relationship instanceof Object) {
       if (typeof relationship.id !== 'undefined' && relationship.type === this.relationTypes[relation]) {
@@ -310,6 +371,12 @@ export default class API {
     return false
   }
 
+  /**
+   * Check whether a relationship is a valid many relationship for this resource
+   * @param relationship a relationship object
+   * @param relation name of the relation relative to the resource
+   * @returns {boolean} Whether the relationship is a valid many relationship for this resource
+   */
   isValidManyRelationship ({ relationship, relation }) {
     if (relationship instanceof Object) {
       if (typeof relationship.id !== 'undefined' && relationship.type === this.relationTypes[relation]) {
@@ -558,10 +625,3 @@ export function isValidJSONAPIObject ({ object }) {
   }
   return false
 }
-
-
-[1, 2, 3].map((item) => {
-  return item + 1
-});
-
-[1, 2, 3].map(item++)

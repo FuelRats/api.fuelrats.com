@@ -21,9 +21,14 @@ import API, {
 import { websocket } from '../classes/WebSocket'
 import RescueView from '../views/Rescue'
 import DatabaseDocument from '../Documents/Database'
+import { DocumentViewType } from '../Documents'
 
 const rescueAccesstime = 3600000
 
+/**
+ * @classdesc Rescues API endpoint
+ * @class
+ */
 export default class Rescues extends API {
   /**
    * @inheritdoc
@@ -106,7 +111,7 @@ export default class Rescues extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView, relationshipOnly: true })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.relationship })
   }
 
   @POST('/rescues/:id/relationships/rats')
@@ -121,7 +126,7 @@ export default class Rescues extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
   }
 
   @PATCH('/rescues/:id/relationships/rats')
@@ -137,7 +142,7 @@ export default class Rescues extends API {
 
     const query = new DatabaseQuery({ connection: ctx })
 
-    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true  })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
   }
 
   @DELETE('/rescues/:id/relationships/rats')
@@ -153,7 +158,7 @@ export default class Rescues extends API {
 
     const query = new DatabaseQuery({ connection: ctx })
 
-    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
   }
 
   @GET('/rescues/:id/relationships/firstLimpet')
@@ -167,7 +172,7 @@ export default class Rescues extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView, relationshipOnly: true })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.relationship })
   }
 
   @PATCH('/rescues/:id/relationships/firstLimpet')
@@ -183,7 +188,7 @@ export default class Rescues extends API {
 
     const query = new DatabaseQuery({ connection: ctx })
 
-    return new DatabaseDocument({ query, result, type: RescueView, metaOnly: true })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
   }
 
   getWritePermissionFor ({ connection, entity }) {

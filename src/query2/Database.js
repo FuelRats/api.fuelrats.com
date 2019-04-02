@@ -1,7 +1,15 @@
 import Query, { SortOrder } from '.'
 
-
+/**
+ * @classdesc An API Query Handler for requests that need data from a Sequelize database table
+ * @class
+ * @augments {Query}
+ */
 export default class DatabaseQuery extends Query {
+
+  /**
+   * @inheritDoc
+   */
   get searchObject () {
     return {
       where: this.filter,
@@ -14,6 +22,9 @@ export default class DatabaseQuery extends Query {
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   get defaultSort () {
     return [{
       field: 'createdAt',

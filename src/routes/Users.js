@@ -33,10 +33,15 @@ import API, {
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query2/Database'
 import DatabaseDocument from '../Documents/Database'
-import RescueView from '../views/Rescue'
+import { DocumentViewType } from '../Documents'
 
 export default class Users extends API {
   static imageResizePool = workerpool.pool('./dist/workers/image.js')
+
+  get type () {
+    return 'users'
+  }
+
 
   @GET('/users')
   @websocket('users', 'search')
@@ -186,7 +191,7 @@ export default class Users extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: UserView, relationshipOnly: true })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
   @POST('/users/:id/relationships/rats')
@@ -201,7 +206,7 @@ export default class Users extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
   @PATCH('/users/:id/relationships/rats')
@@ -217,7 +222,7 @@ export default class Users extends API {
 
     const query = new DatabaseQuery({ connection: ctx })
 
-    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true  })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
   @DELETE('/users/:id/relationships/rats')
@@ -233,7 +238,7 @@ export default class Users extends API {
 
     const query = new DatabaseQuery({ connection: ctx })
 
-    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
   @GET('/users/:id/relationships/displayRat')
@@ -247,7 +252,7 @@ export default class Users extends API {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: UserView, relationshipOnly: true })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
   @PATCH('/users/:id/relationships/displayRat')
@@ -263,7 +268,7 @@ export default class Users extends API {
 
     const query = new DatabaseQuery({ connection: ctx })
 
-    return new DatabaseDocument({ query, result, type: UserView, metaOnly: true })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
   getReadPermissionFor ({ connection, entity }) {

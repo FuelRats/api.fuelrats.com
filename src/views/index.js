@@ -84,7 +84,11 @@ export default class View {
     return {}
   }
 
-  toString () {
+  render () {
     return this.view
+  }
+
+  toString () {
+    return this.render()
   }
 }

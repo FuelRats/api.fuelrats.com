@@ -6,14 +6,14 @@ export default class DatabaseView extends View {
   }
 
   generateRelationships () {
-    return Object.entries(this.relationships).reduce((acc, [key, RelationShipView]) => {
-      let data = null
+    return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
+      let data = undefined
       if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
-          return (new RelationShipView({ object: relation, parentUrl: this.self })).relationshipView
+          return (new RelationshipView({ object: relation, parentUrl: this.self })).relationshipView
         })
       } else if (this.object[key]) {
-        data = (new RelationShipView({ object: this.object[key], parentUrl: this.self })).relationshipView
+        data = (new RelationshipView({ object: this.object[key], parentUrl: this.self })).relationshipView
       }
 
       const linkObject = {
@@ -32,7 +32,7 @@ export default class DatabaseView extends View {
   generateIncludes ({ includeTypes }) {
     const includes = includeTypes || this.includes
 
-    return Object.entries(this.relationships).reduce((acc, [key, RelationShipView]) => {
+    return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
       let objects = this.object[key]
       if (!objects || !includes.includes(key)) {
         return acc
@@ -43,7 +43,7 @@ export default class DatabaseView extends View {
       }
 
       return acc.concat(objects.reduce((includeCollection, object) => {
-        const objectView = (new RelationShipView({ object }))
+        const objectView = (new RelationshipView({ object }))
         includeCollection.push(objectView.view)
         return includeCollection.concat(objectView.generateIncludes({ includeTypes }))
       }, []))
