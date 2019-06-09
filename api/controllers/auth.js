@@ -69,7 +69,7 @@ class Authentication {
   }
 
   static async clientAuthenticate (clientId, secret) {
-    let client = await Client.findById(clientId)
+    let client = await Client.findByPk(clientId)
     if (!client) {
       return null
     }

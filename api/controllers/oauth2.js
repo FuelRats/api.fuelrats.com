@@ -25,7 +25,7 @@ server.serializeClient(function (client) {
 })
 
 server.deserializeClient(async function (id) {
-  let client = await Client.findById(id)
+  let client = await Client.findByPk(id)
   if (!client) {
     return false
   }
@@ -175,7 +175,7 @@ class OAuth2 {
 }
 
 OAuth2.authorizationValidateRedirect = server.authorize(async function (clientId, redirectUri) {
-  let client = await Client.findById(clientId)
+  let client = await Client.findByPk(clientId)
   if (!client) {
     return false
   }
