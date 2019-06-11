@@ -6,7 +6,7 @@ if (process.env.NODE_ENV === 'testing') {
   config = config.test
 }
 
-const Op = Sequelize.Op
+const { Op } = Sequelize
 const operatorsAliases = {
   $eq: Op.eq,
   $ne: Op.ne,
