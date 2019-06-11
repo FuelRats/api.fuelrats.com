@@ -89,13 +89,15 @@ class Rats {
         throw Error.template('not_found', ctx.params.id)
       }
 
-      rat.destroy()
+      if (hasValidPermissionsForRat(ctx, rat, 'write')) {
+        rat.destroy()
 
-      process.emit('ratDeleted', ctx, CustomPresenter.render({
-        id: ctx.params.id
-      }))
-      ctx.status = 204
-      return true
+        process.emit('ratDeleted', ctx, CustomPresenter.render({
+          id: ctx.params.id
+        }))
+        ctx.status = 204
+        return true
+      }
     }
   }
 }
