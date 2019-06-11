@@ -123,9 +123,9 @@ db.sync({ force: true }).then(async function () {
 
   await Promise.all(groups)
 
-  let adminGroup = await Group.findById('admin')
-  let ratGroup = await Group.findById('rat')
-  let dispatchGroup = await Group.findById('dispatch')
+  let adminGroup = await Group.findByPk('admin')
+  let ratGroup = await Group.findByPk('rat')
+  let dispatchGroup = await Group.findByPk('dispatch')
 
   let hash = await bcrypt.hash('testuser', BCRYPT_ROUNDS)
   let adminTestUser = {

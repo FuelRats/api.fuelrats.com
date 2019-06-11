@@ -214,7 +214,7 @@ router.get('/rats', rat.search)
 router.get('/rats/:id', rat.findById)
 router.post('/rats', rat.create)
 router.put('/rats/:id', rat.update)
-router.delete('/rats/:id', Permission.required(['rat.delete']), rat.delete)
+router.delete('/rats/:id', rat.delete)
 
 router.get('/ships', ship.search)
 router.get('/ships/:id', ship.findById)

@@ -39,7 +39,7 @@ class Users {
   }
 
   static async image (ctx, next) {
-    let user = await User.scope('image').findById(ctx.params.id)
+    let user = await User.scope('image').findByPk(ctx.params.id)
     ctx.type = 'image/jpeg'
     ctx.body = user.image
     next()
