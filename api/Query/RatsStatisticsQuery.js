@@ -52,6 +52,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
     this._query.attributes = [
       [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'id'],
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
+      [db.literal('min(DISTINCT "Rat"."joined")'), 'createdAt'],
       [db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)'), 'rescueCount'],
       [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed']
     ]
@@ -59,7 +60,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
     this._query.attributes = this._query.attributes.concat(this.compare('firstLimpet', this.comparators))
 
     this._query.group = [
-      db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 
+      db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'),
       'user.id', 'user->displayRat.id', 'user->displayRat->ships.id'
     ]
   }
