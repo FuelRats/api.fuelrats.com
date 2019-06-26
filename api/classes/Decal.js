@@ -52,6 +52,16 @@ class Decal {
   }
 
   static async redeem (user, type, notes = '') {
+    let existingDecal = await Decals.findOne({
+      where: {
+        userId: user.id
+      }
+    })
+
+    if (existingDecal) {
+      throw 'User has already redeemed a decal'
+    }
+
     let availableDecal = await Decals.findOne({
       where: {
         userId: null,
