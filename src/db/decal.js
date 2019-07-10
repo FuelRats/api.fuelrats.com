@@ -1,9 +1,9 @@
 import { FrontierRedeemCode } from '../classes/Validators'
 
-const MAX_NOTES_LENGTH = 4096
+const decalNotesMaxLength = 4096
 
 module.exports = function (sequelize, DataTypes) {
-  let decal = sequelize.define('Decal', {
+  const decal = sequelize.define('Decal', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -36,7 +36,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         defaultValue: '',
-        len: [0, MAX_NOTES_LENGTH]
+        len: [0, decalNotesMaxLength]
       }
     },
     userId: {

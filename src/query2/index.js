@@ -1,5 +1,6 @@
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 import enumerable from '../classes/Enum'
+import Permission from '../classes/Permission'
 
 const fieldsRegex = /^fields\[([a-z-]*)\]$/gu
 const pageRegex = /^page\[([a-z]*)\]$/gu
@@ -44,6 +45,7 @@ export class SortOrder {
  */
 export default class Query {
   connection = undefined
+  permissions = undefined
 
   /**
    * Create a new instance of an API Query
@@ -52,6 +54,7 @@ export default class Query {
    */
   constructor ({ connection }) {
     this.connection = connection
+    this.permissions = Permission.getConnectionPermissions({ connection })
   }
 
   /**

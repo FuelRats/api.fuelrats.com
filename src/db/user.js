@@ -1,13 +1,14 @@
+/* eslint max-lines-per-function:0 */
+
 import bcrypt from 'bcrypt'
 import UserView from '../views/User'
 import { JSONObject, IRCNicknames } from '../classes/Validators'
 
-const PASSWORD_MIN_LENGTH = 12
-const PASSWORD_MAX_LENGTH = 1024
-const NICKNAME_MAX_LENGTH = 35
+const passwordMinLength = 12
+const passwordMaxLength = 1024
+const nicknameMaxLength = 35
 
-
-module.exports = function (db, DataTypes) {
+export default function User (db, DataTypes) {
   const user = db.define('User', {
     id: {
       type: DataTypes.UUID,
@@ -33,14 +34,14 @@ module.exports = function (db, DataTypes) {
       }
     },
     password: {
-      type: DataTypes.STRING(PASSWORD_MAX_LENGTH),
+      type: DataTypes.STRING(passwordMaxLength),
       allowNull: false,
       validate: {
-        len: [PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH]
+        len: [passwordMinLength, passwordMaxLength]
       }
     },
     nicknames: {
-      type: DataTypes.ARRAY(DataTypes.STRING(NICKNAME_MAX_LENGTH)),
+      type: DataTypes.ARRAY(DataTypes.STRING(nicknameMaxLength)),
       allowNull: true,
       defaultValue: [],
       set (value) {
@@ -56,7 +57,7 @@ module.exports = function (db, DataTypes) {
     image: {
       type: DataTypes.BLOB(),
       allowNull: true,
-      defaultValue: null
+      defaultValue: undefined
     },
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'legacy', 'deactivated'),
@@ -70,7 +71,7 @@ module.exports = function (db, DataTypes) {
     suspended: {
       type: DataTypes.DATE,
       allowNull: true,
-      defaultValue: null
+      defaultValue: undefined
     },
     permissions: {
       type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
@@ -218,7 +219,7 @@ module.exports = function (db, DataTypes) {
     })
 
     models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
-    models.User.hasMany(models.UserGroups)
+    models.User.hasMany(models.UserGroups, { foreignKey: 'userId' })
     models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
   }

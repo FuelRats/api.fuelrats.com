@@ -1,7 +1,7 @@
 import { CMDRname, JSONObject } from '../classes/Validators'
 import RatView from '../views/Rat'
 
-module.exports = function (sequelize, DataTypes) {
+export default function Rat (sequelize, DataTypes) {
   const rat = sequelize.define('Rat', {
     id: {
       type: DataTypes.UUID,

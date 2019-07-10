@@ -1,12 +1,22 @@
+
 import { JSONObject, RescueQuote } from '../classes/Validators'
 import RescueView from '../views/Rescue'
 
-const MAX_CLIENT_NAME_LENGTH = 64
-const MAX_NOTES_LENGTH = 2048
-const MAX_SYSTEMLENGTH = 64
-const MAX_TITLE_LENGTH = 64
+/* eslint max-lines-per-function:0 */
 
-module.exports = function (sequelize, DataTypes) {
+const rescueClientNameMaxLength = 64
+const rescueNotesMaxLength = 2048
+const rescueSystemMaxLength = 64
+const rescueTitleMaxLength = 64
+
+/**
+ *
+ * @param sequelize
+ * @param DataTypes
+ * @returns {void|Model|*}
+ * @constructor
+ */
+export default function Rescue (sequelize, DataTypes) {
   const rescue = sequelize.define('Rescue', {
     id: {
       type: DataTypes.UUID,
@@ -20,7 +30,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       validate: {
-        len: [1, MAX_CLIENT_NAME_LENGTH]
+        len: [1, rescueClientNameMaxLength]
       }
     },
     codeRed: {
@@ -41,7 +51,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       defaultValue: '',
       validate: {
-        len: [0, MAX_NOTES_LENGTH]
+        len: [0, rescueNotesMaxLength]
       }
     },
     platform: {
@@ -73,25 +83,25 @@ module.exports = function (sequelize, DataTypes) {
     system: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: undefined,
       validate: {
-        len: [1, MAX_SYSTEMLENGTH],
+        len: [1, rescueSystemMaxLength],
         isUppercase: true
       }
     },
     title: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: undefined,
       validate: {
-        len: [1, MAX_TITLE_LENGTH],
+        len: [1, rescueTitleMaxLength],
         isAlphanumeric: true
       }
     },
     outcome: {
       type: DataTypes.ENUM('success', 'failure', 'invalid', 'other'),
       allowNull: true,
-      defaultValue:  null,
+      defaultValue: undefined,
       validate: {
         notEmpty: true,
         isIn: [['success', 'failure', 'invalid', 'other']]

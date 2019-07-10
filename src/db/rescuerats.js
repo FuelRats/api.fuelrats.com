@@ -1,6 +1,6 @@
 
 
-module.exports = function (sequelize, DataTypes) {
+export default function RescueRats (sequelize, DataTypes) {
   return sequelize.define('RescueRats', {
     id: {
       type: DataTypes.UUID,
@@ -10,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
         isUUID: 4
       }
     },
-    RescueId: {
+    rescueId: {
       type: DataTypes.UUID,
       allowNull: false,
       defaultValue: DataTypes.UUIDV4,
@@ -18,7 +18,7 @@ module.exports = function (sequelize, DataTypes) {
         isUUID: 4
       }
     },
-    RatId: {
+    ratId: {
       type: DataTypes.UUID,
       allowNull: false,
       defaultValue: DataTypes.UUIDV4,

@@ -9,6 +9,7 @@ import {
 } from '../classes/APIError'
 
 import API, {
+  FieldAccess,
   permissions,
   authenticated,
   GET,
@@ -189,6 +190,29 @@ export default class Rescues extends API {
     const query = new DatabaseQuery({ connection: ctx })
 
     return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * @inheritDoc
+   */
+  get fieldProperties () {
+    return {
+      id: ['rescues.internal'],
+      client: ['rescues.write', 'rescues.write.me'],
+      codeRed: ['rescues.write', 'rescues.write.me'],
+      data: ['rescues.write', 'rescues.write.me'],
+      notes: ['rescues.write', 'rescues.write.me'],
+      platform: ['rescues.write', 'rescues.write.me'],
+      system: ['rescues.write', 'rescues.write.me'],
+      title: ['rescues.write', 'rescues.write.me'],
+      unidentifiedRats: ['rescues.write', 'rescues.write.me'],
+      createdAt: ['rescues.internal'],
+      updatedAt: ['rescues.internal'],
+      deletedAt: ['rescues.internal'],
+      status: ['rescues.write', 'rescues.write.me'],
+      outcome: ['rescues.write', 'rescues.write.me'],
+      quotes: ['rescues.write', 'rescues.write.me']
+    }
   }
 
   getWritePermissionFor ({ connection, entity }) {

@@ -1,6 +1,4 @@
-
-
-module.exports = function (sequelize, DataTypes) {
+export default function Action (sequelize, DataTypes) {
   const action = sequelize.define('Action', {
     id: {
       type: DataTypes.UUID,

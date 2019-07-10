@@ -11,6 +11,7 @@ import router from './Router'
 import Meta from './Meta'
 import { Rat } from '../db'
 import { UUID } from './Validators'
+import enumerable from './Enum'
 
 const config = require('../../config')
 
@@ -99,7 +100,11 @@ export default class API {
 
     this.requireWritePermission({ connection: ctx, entity })
 
-    if (ctx.data.data.attributes instanceof Object) {
+    let { attributes } = ctx.data.data
+
+    if (attributes instanceof Object) {
+      this.validateUpdateAccess({ ctx, attributes })
+
       await entity.update(ctx.data.data.attributes, updateSearch)
     }
 
@@ -241,6 +246,56 @@ export default class API {
     }
   }
 
+  getAccessibleAttributes ({ scopes, attributes }) {
+    return Object.entries(attributes).reduce((object, [attribute, value]) => {
+
+      return object
+    }, {})
+
+  }
+
+  /**
+   * Validate whether the user has access to modify all the attributes in the update request
+   * @param ctx a request context
+   * @param attributes attributes list
+   */
+  validateUpdateAccess ({ ctx, attributes }) {
+    Object.entries(attributes).forEach(([key]) => {
+      const attributePermission = this.fieldProperties[key]
+      if (!attributePermission) {
+        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
+      }
+
+      const attributeAvailablePermissions = this.writePermissionsForFieldAccess[attributePermission]
+      if (!attributeAvailablePermissions) {
+        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
+      }
+
+      const granted = Permission.granted({ permissions: attributeAvailablePermissions, ...ctx.state })
+      if (!granted) {
+        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
+      }
+    })
+  }
+
+  /**
+   * Get a map of acceptable read permissions for field access types
+   * @returns {Object}
+   * @abstract
+   */
+  get readPermissionsForFieldAccess () {
+    return {}
+  }
+
+  /**
+   * Get a map of acceptable write permissions for field access types
+   * @returns {Object}
+   * @abstract
+   */
+  get writePermissionsForFieldAccess () {
+    return {}
+  }
+
   /**
    * Get read permissions for this ressource
    * @param connection a request context
@@ -261,6 +316,15 @@ export default class API {
    */
   getWritePermissionFor ({ connection, entity }) {
     return []
+  }
+
+  /**
+   * Get inividual field properties for this resource
+   * @returns {Object} Field properties
+   * @abstract
+   */
+  get fieldProperties () {
+    return {}
   }
 
   /**
@@ -388,6 +452,7 @@ export default class API {
 }
 
 
+// region Decorators
 /**
  * ESNext Decorator for routing this method through a koa router GET endpoint
  * @param route the http path to route
@@ -395,6 +460,13 @@ export default class API {
  */
 export function GET (route) {
   return function (target, name, descriptor) {
+    const endpoint = descriptor.value
+
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      ctx.endpoint = this
+      return endpoint.apply(this, args)
+    }
     router.get(route, descriptor.value)
   }
 }
@@ -406,6 +478,13 @@ export function GET (route) {
  */
 export function POST (route) {
   return function (target, name, descriptor) {
+    const endpoint = descriptor.value
+
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      ctx.endpoint = this
+      return endpoint.apply(this, args)
+    }
     router.post(route, descriptor.value)
   }
 }
@@ -417,6 +496,13 @@ export function POST (route) {
  */
 export function PUT (route) {
   return function (target, name, descriptor) {
+    const endpoint = descriptor.value
+
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      ctx.endpoint = this
+      return endpoint.apply(this, args)
+    }
     router.put(route, descriptor.value)
   }
 }
@@ -429,6 +515,13 @@ export function PUT (route) {
  */
 export function PATCH (route) {
   return function (target, name, descriptor) {
+    const endpoint = descriptor.value
+
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      ctx.endpoint = this
+      return endpoint.apply(this, args)
+    }
     router.patch(route, descriptor.value)
   }
 }
@@ -440,6 +533,13 @@ export function PATCH (route) {
  */
 export function DELETE (route) {
   return function (target, name, descriptor) {
+    const endpoint = descriptor.value
+
+    descriptor.value = function (...args) {
+      const [ctx] = args
+      ctx.endpoint = this
+      return endpoint.apply(this, args)
+    }
     router.del(route, descriptor.value)
   }
 }
@@ -611,6 +711,7 @@ export function protect (permission, ...fields) {
     }
   }
 }
+// endregion
 
 /**
  * Validate whether an object is a valid JSONAPI Object
@@ -624,4 +725,23 @@ export function isValidJSONAPIObject ({ object }) {
     }
   }
   return false
+}
+
+@enumerable
+/**
+ * Enumerable representing the different access restrictions a field of a resource can have
+ * @readonly
+ * @enum {Symbol}
+ * @property {Symbol} internal Nobody can either read or write to this field
+ * @property {Symbol} readOwn Field is read-only with access given to the owner of the entity and universal read
+ * @property {Symbol} readAll Field is read-only with access only given to those with universal read permission
+ * @property {Symbol} readWriteOwn Field is read-write with write only given to the entity owner and universal write
+ * @property {Symbol} readWriteAll Field is read-write with write only given to those with universal write
+ */
+export class FieldAccess {
+  static internal
+  static readOwn
+  static readAll
+  static readWriteOwn
+  static readWriteAll
 }

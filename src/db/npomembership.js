@@ -1,7 +1,7 @@
 
 
-module.exports = function (sequelize, DataTypes) {
-  let npoMembership = sequelize.define('NPOmembership', {
+export default function NPOmembership (sequelize, DataTypes) {
+  const npoMembership = sequelize.define('NPOmembership', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,

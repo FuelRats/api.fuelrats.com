@@ -1,10 +1,10 @@
 import { OAuthScope } from '../classes/Validators'
 
-const OAUTH_SCOPE_MAX_LENGTH = 128
-const MIN_TOKEN_LENGTH = 16
-const MAX_TOKEN_LENGTH = 128
+const oAuthScopeMaxLength = 128
+const oAuthTokenMinLength = 16
+const oAuthTokenMaxLength = 128
 
-module.exports = function (sequelize, DataTypes) {
+export default function Token (sequelize, DataTypes) {
   const token = sequelize.define('Token', {
     id: {
       type: DataTypes.UUID,
@@ -15,7 +15,7 @@ module.exports = function (sequelize, DataTypes) {
       }
     },
     scope: {
-      type: DataTypes.ARRAY(DataTypes.STRING(OAUTH_SCOPE_MAX_LENGTH)),
+      type: DataTypes.ARRAY(DataTypes.STRING(oAuthScopeMaxLength)),
       allowNull: false,
       defaultValue: [],
       validate: {
@@ -27,7 +27,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         notEmpty: true,
-        len: [MIN_TOKEN_LENGTH, MAX_TOKEN_LENGTH],
+        len: [oAuthTokenMinLength, oAuthTokenMaxLength],
         isAlphanumeric: true
       }
     },

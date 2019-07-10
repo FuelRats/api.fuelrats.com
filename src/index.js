@@ -249,13 +249,7 @@ router.post('/oauth2/token',
 
 app.use(router.routes())
 app.use(router.allowedMethods({
-  throw: true,
-  notImplemented: () => {
-    console.log('notImplemented')
-  },
-  methodNotAllowed: () => {
-    console.log('methodNotAllowed')
-  }
+  throw: true
 }))
 
 

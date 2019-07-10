@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt'
 
 import { OAuthClientName, isURL } from '../classes/Validators'
 
-const CLIENT_SECRET_MAX_LENGTH = 1024
-const MIN_SECRET_LENGTH = 32
-const MAX_SECRET_LENGTH = 512
+const clientSecretEncodedMaxLength = 1024
+const clientSecretMinLength = 32
+const clientSecretMaxLength = 512
 
-module.exports = function (sequelize, DataTypes) {
+export default function Client (sequelize, DataTypes) {
   const client = sequelize.define('Client', {
     id: {
       type: DataTypes.UUID,
@@ -24,10 +24,10 @@ module.exports = function (sequelize, DataTypes) {
       }
     },
     secret: {
-      type: DataTypes.STRING(CLIENT_SECRET_MAX_LENGTH),
+      type: DataTypes.STRING(clientSecretEncodedMaxLength),
       allowNull: false,
       validate: {
-        len: [MIN_SECRET_LENGTH, MAX_SECRET_LENGTH]
+        len: [clientSecretMinLength, clientSecretMaxLength]
       }
     },
     redirectUri: {

@@ -1,0 +1,39 @@
+{
+  "id": "c60aeb0d-0704-44ab-8683-77b64d4721dd",
+  "type": "rescues",
+  "attributes": {
+    "client": "Marenthyu",
+    "codeRed": false,
+    "data": {"langID": "en", "IRCNick": "Marenthyu", "markedForDeletion": {"marked": ", "reason": "null.", "reporter": "Noone."}, "status": {}, "boardIndex": 0},
+    "notes": null,
+    "platform": "pc",
+    "quotes": [{"message": "ratsignal pc fuelum", "updatedAt": "2019-07-09T21:05:22.383260Z", "createdAt": "2019-07-09T21:05:22.383260Z", "author": "Marenthyu", "lastAuthor": "Marenthyu"}, {"message": "[Autodetected system: Fuelum]", "updatedAt": "2019-07-09T21:05:22.383260Z", "createdAt": "2019-07-09T21:05:22.383260Z", "author": "Marenthyu", "lastAuthor": "Marenthyu"}],
+    "status": "open",
+    "system": "Fuelum",
+    "title": null,
+    "outcome": null,
+    "unidentifiedRats": [],
+    "createdAt": "2019-07-09T23:04:54.261698+02:00",
+    "updatedAt": "2019-07-09T23:04:54.261738+02:00"
+  },
+  "links": {"self": "http://apiv3.fuelrats.dev/api/rescues/c60aeb0d-0704-44ab-8683-77b64d4721dd"},
+  "related": {},
+  "relationships": {
+    "firstLimpet": {
+      "data": {
+        "type": "rats",
+        "id": "001c38d1-9769-4682-8b85-af8dd5c4932c"
+      }
+    },
+      "links": {
+        "self":"http://apiv3.fuelrats.dev/api/rescues/c60aeb0d-0704-44ab-8683-77b64d4721dd/relationships/firstLimpet",
+        "related": "http://apiv3.fuelrats.dev/api/rescues/c60aeb0d-0704-44ab-8683-77b64d4721dd/firstLimpet"
+      },
+      "meta": {"direction": "MANYTOONE", "results": {}}
+    },
+      "includes": [
+
+      ]
+  },
+  "meta": {"forbidden_fields": []}
+}

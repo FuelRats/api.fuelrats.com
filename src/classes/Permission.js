@@ -44,7 +44,7 @@ export default class Permission {
    * @param {Object} scope - Optional scope array of an oauth2 client to validate
    * @returns {boolean}
    */
-  static require ({ permissions, user, scope = null }) {
+  static require ({ permissions, user, scope = undefined }) {
     if (Permission.granted({ permissions, user, scope })) {
       return true
     }
@@ -107,6 +107,24 @@ export default class Permission {
     return hasPermission
   }
 
+  static getConnectionPermissions ({ connection }) {
+    const { user, scope: scopes } = connection.state
+    if (!user || !user.groups) {
+      return undefined
+    }
+
+    let permissions = user.groups.reduce((accumulator, value) => {
+      return accumulator.concat(value.permissions)
+    }, [])
+
+    if (scopes) {
+      permissions = permissions.filter((permission) => {
+        return scopes.includes(permission)
+      })
+    }
+    return permissions
+  }
+
   /**
    * Returns whether a given user is an administrator
    * @param user The user to check
@@ -144,7 +162,7 @@ export default class Permission {
 
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'
-      const accessible = Permission.granted({ permissions: [permission], user, scope: null })
+      const accessible = Permission.granted({ permissions: [permission], user, scope: undefined })
       if (isSelf && scopeList.includes(`${group}.${action}`)) {
         return acc
       }
@@ -162,6 +180,10 @@ export default class Permission {
     }, [])
   }
 
+  /**
+   * Get all existing permissions available in the API
+   * @returns {[string, any]} All existing permissions
+   */
   static get allPermissions () {
     return Object.entries(permissionList).reduce((acc, [domain, [self, ...accessTypes]]) => {
       let accessTypeList = accessTypes

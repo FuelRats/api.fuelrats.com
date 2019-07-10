@@ -1,7 +1,7 @@
-import {IRCVirtualHost, OAuthScope } from '../classes/Validators'
+import { IRCVirtualHost, OAuthScope } from '../classes/Validators'
 
-module.exports = function (sequelize, DataTypes) {
-  let group = sequelize.define('Group', {
+export default function Group (sequelize, DataTypes) {
+  const group = sequelize.define('Group', {
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
@@ -42,7 +42,7 @@ module.exports = function (sequelize, DataTypes) {
   })
 
   group.associate = function (models) {
-    models.Group.hasMany(models.UserGroups)
+    models.Group.hasMany(models.UserGroups, { foreignKey: 'groupId' })
 
     models.Group.addScope('stats', {
       attributes: []

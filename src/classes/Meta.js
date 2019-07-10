@@ -1,5 +1,5 @@
 export default class Meta {
-  constructor ({ result, query = null, additionalParameters }) {
+  constructor ({ result, query = undefined, additionalParameters }) {
     const meta = {
       meta: {}
     }

@@ -1,7 +1,7 @@
-const MAX_EPIC_NOTES_LENGTH = 2048
+const epicsNotesFieldMaxLength = 2048
 
-module.exports = function (sequelize, DataTypes) {
-  let epic = sequelize.define('Epic', {
+export default function Epic (sequelize, DataTypes) {
+  const epic = sequelize.define('Epic', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -14,7 +14,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: false,
       validate: {
-        len: [0, MAX_EPIC_NOTES_LENGTH]
+        len: [0, epicsNotesFieldMaxLength]
       }
     },
     rescueId: {
@@ -34,7 +34,7 @@ module.exports = function (sequelize, DataTypes) {
     approvedById: {
       type: DataTypes.UUID,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: undefined,
       validate: {
         isUUID: 4
       }
@@ -42,7 +42,7 @@ module.exports = function (sequelize, DataTypes) {
     nominatedById: {
       type: DataTypes.UUID,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: undefined,
       validate: {
         isUUID: 4
       }

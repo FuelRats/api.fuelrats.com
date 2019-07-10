@@ -1,5 +1,6 @@
 import DatabaseView from './Database'
 import RatsView from './Rat'
+import enumerable from '../classes/Enum'
 
 export default class RescueView extends DatabaseView {
   static get type () {
@@ -7,38 +8,9 @@ export default class RescueView extends DatabaseView {
   }
 
   get attributes () {
-    const {
-      client,
-      codeRed,
-      data,
-      notes,
-      platform,
-      quotes,
-      status,
-      system,
-      title,
-      outcome,
-      unidentifiedRats,
-      createdAt,
-      updatedAt
-    } = this.object
-
-    return {
-      client,
-      codeRed,
-      data,
-      notes,
-      platform,
-      quotes,
-      status,
-      system,
-      title,
-      outcome,
-      unidentifiedRats,
-      createdAt,
-      updatedAt
-    }
+    return attributes
   }
+
 
   get relationships () {
     return {
@@ -54,4 +26,27 @@ export default class RescueView extends DatabaseView {
   get related () {
     return [RatsView]
   }
+}
+
+@enumerable
+/**
+ * Enumerable representing the different attributes of this view
+ * @readonly
+ * @enum {Symbol}
+ */
+export class attributes {
+  static client
+  static codeRed
+  static data
+  static notes
+  static platform
+  static system
+  static title
+  static unidentifiedRats
+  static createdAt
+  static updatedAt
+  static deletedAt = { permissions: ['rescue.internal'] }
+  static status
+  static outcome
+  static quotes
 }

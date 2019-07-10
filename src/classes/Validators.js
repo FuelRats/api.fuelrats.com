@@ -14,6 +14,9 @@ export const FrontierRedeemCode = new RegexLiteral(`^
   [A-Z0-9]{5}-
   FUE[0-9]{2}
 $`, 'gu')
+
+// noinspection RegExpRepeatedSpace
+// language=JSUnicodeRegexp
 export const CMDRname = new RegexLiteral(`^[
   \\p{Alphabetic}
   \\p{Mark}
@@ -22,6 +25,7 @@ export const CMDRname = new RegexLiteral(`^[
   \\p{Join_Control}
   \\p{Space_Separator}
 ]{3,64}$`, 'gu')
+// language=JSUnicodeRegexp
 export const ShipName = new RegexLiteral(`^[
   \\p{Alphabetic}
   \\p{Mark}
@@ -30,6 +34,7 @@ export const ShipName = new RegexLiteral(`^[
   \\p{Join_Control}
   \\p{Space_Separator}
 ]{3,22}$`, 'gu')
+// language=JSUnicodeRegexp
 export const OAuthClientName = new RegexLiteral(`^[
   \\p{Alphabetic}
   \\p{Mark}

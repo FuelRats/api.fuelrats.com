@@ -1,7 +1,5 @@
 import bcrypt from 'bcrypt'
 import { User, Rat, Token, Client, Reset } from '../db/index'
-// import User from '../model/user'
-
 import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
 
 const bearerTokenHeaderOffset = 7
@@ -11,7 +9,7 @@ const basicAuthHeaderOffset = 6
  * @classdesc Class for handling authentication mechanisms
  * @class
  */
-export default class Authentication {
+export default class AuthenticaLtion {
   /**
    * Perform password authentication with email andoh rig password
    * @param email the email of the user to authenticate
@@ -22,8 +20,6 @@ export default class Authentication {
     if (!email || !password) {
       return undefined
     }
-
-    // const user = await User.findByEmail(email)
 
     const user = await User.findOne({ where: { email: { $iLike: email } } })
     if (!user) {

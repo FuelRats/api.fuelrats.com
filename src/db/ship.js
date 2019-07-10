@@ -2,7 +2,7 @@ import { ShipName } from '../classes/Validators'
 import ShipView from '../views/Ship'
 
 
-const MAX_INGAME_SHIP_NAME_LENGTH = 22
+const maxIngameShipNameLength = 22
 const shipTypes = [
   'Adder',
   'Anaconda',
@@ -40,7 +40,7 @@ const shipTypes = [
   'Vulture'
 ]
 
-module.exports = function (sequelize, DataTypes) {
+export default function Ship (sequelize, DataTypes) {
   const ship = sequelize.define('Ship', {
     id: {
       type: DataTypes.UUID,
@@ -51,7 +51,7 @@ module.exports = function (sequelize, DataTypes) {
       }
     },
     name: {
-      type: DataTypes.CHAR(MAX_INGAME_SHIP_NAME_LENGTH),
+      type: DataTypes.CHAR(maxIngameShipNameLength),
       allowNull: false,
       validate: {
         is: ShipName

@@ -19,6 +19,7 @@ import {
 } from '../classes/APIError'
 
 import API, {
+  FieldAccess,
   permissions,
   authenticated,
   GET,
@@ -270,6 +271,24 @@ export default class Users extends API {
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
+
+  /**
+   * @inheritDoc
+   */
+  get fieldProperties () {
+    return {
+      createdAt: FieldAccess.readOwn,
+      updatedAt: FieldAccess.readOwn,
+      deletedAt: FieldAccess.internal,
+      email: FieldAccess.readOwn,
+      password: FieldAccess.internal,
+      nicknames: FieldAccess.readWriteOwn,
+      data: FieldAccess.readWriteOwn,
+      image: FieldAccess.readWriteOwn
+    }
+  }
+
+
 
   getReadPermissionFor ({ connection, entity }) {
     if (entity.id === connection.state.user.id) {

@@ -1,7 +1,7 @@
 
 
-module.exports = function (sequelize, DataTypes) {
-  let usergroups = sequelize.define('UserGroups', {
+export default function UserGroups (sequelize, DataTypes) {
+  const usergroups = sequelize.define('UserGroups', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -10,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
         isUUID: 4
       }
     },
-    GroupId: {
+    groupId: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: DataTypes.STRING,
@@ -19,7 +19,7 @@ module.exports = function (sequelize, DataTypes) {
         notEmpty: true
       }
     },
-    UserId: {
+    userId: {
       type: DataTypes.UUID,
       allowNull: false,
       defaultValue: DataTypes.UUIDV4,
@@ -30,8 +30,8 @@ module.exports = function (sequelize, DataTypes) {
   })
 
   usergroups.associate = function (models) {
-    models.UserGroups.belongsTo(models.User)
-    models.UserGroups.belongsTo(models.Group)
+    models.UserGroups.belongsTo(models.User, { foreignKey: 'userId' })
+    models.UserGroups.belongsTo(models.Group, { foreignKey: 'groupId' })
   }
 
   return usergroups

@@ -48,7 +48,9 @@ gulp.task('default', () => {
         includeContent: false,
         sourceRoot
       }))
-      .pipe(gulp.dest('dist'))
+      .pipe(gulp.dest('dist')).on('error', (error) => {
+        throw error
+      })
     resolve()
   })
 })

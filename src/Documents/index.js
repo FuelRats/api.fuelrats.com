@@ -382,8 +382,8 @@ export default class Document  {
   }
 
   /**
-   * Get a string version of the final rendered JSONAPI document
-   * @returns {string} the final rendered JSONAPI document
+   * Get a string version of the final rendered JSONAPI document.
+   * @returns {string} The final rendered JSONAPI document.
    */
   toString () {
     return JSON.stringify(this.render())
@@ -412,8 +412,8 @@ export class DocumentViewType {
  */
 class NotImplementedError extends Error {
   /**
-   * Create a new not implemented error
-   * @param description description of the method that hasn ot been implemented
+   * Create a new not implemented error.
+   * @param {string} description Description of the method that has not been implemented.
    */
   constructor (description) {
     super(`${description} requires implementation by subclass`)

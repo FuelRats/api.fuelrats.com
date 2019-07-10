@@ -1,7 +1,7 @@
-const RESET_TOKEN_LENGTH = 32
+const resetPasswordTokenLength = 32
 
-module.exports = function (sequelize, DataTypes) {
-  let reset = sequelize.define('Reset', {
+export default function Reset (sequelize, DataTypes) {
+  const reset = sequelize.define('Reset', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -15,7 +15,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         isAlphanumeric: true,
-        len: [RESET_TOKEN_LENGTH, RESET_TOKEN_LENGTH]
+        len: [resetPasswordTokenLength, resetPasswordTokenLength]
       }
     },
     expires: {

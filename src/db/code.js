@@ -1,11 +1,11 @@
 import { OAuthScope, isURL } from '../classes/Validators'
 
-const OAUTH_SCOPE_MAX_LENGTH = 128
-const MIN_TOKEN_LENGTH = 24
-const MAX_TOKEN_LENGTH = 128
-const MAX_URL_LENGTH = 255
+const oAuthScopeMaxLength = 128
+const oAuthTokenMinLength = 24
+const oAuthTokenMaxLength = 128
+const oAuthRedirectUriMaxLength = 255
 
-module.exports = function (sequelize, DataTypes) {
+export default function Code (sequelize, DataTypes) {
   const code = sequelize.define('Code', {
     id: {
       type: DataTypes.UUID,
@@ -16,7 +16,7 @@ module.exports = function (sequelize, DataTypes) {
       }
     },
     scope: {
-      type: DataTypes.ARRAY(DataTypes.STRING(OAUTH_SCOPE_MAX_LENGTH)),
+      type: DataTypes.ARRAY(DataTypes.STRING(oAuthScopeMaxLength)),
       allowNull: false,
       defaultValue: [],
       validate: {
@@ -28,7 +28,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
       validate: {
         isAlphanumeric: true,
-        len: [MIN_TOKEN_LENGTH, MAX_TOKEN_LENGTH],
+        len: [oAuthTokenMinLength, oAuthTokenMaxLength],
         notEmpty: true
       }
     },
@@ -38,7 +38,7 @@ module.exports = function (sequelize, DataTypes) {
       validate: {
         isURL,
         notEmpty: true,
-        len: [1, MAX_URL_LENGTH]
+        len: [1, oAuthRedirectUriMaxLength]
       }
     },
     userId: {

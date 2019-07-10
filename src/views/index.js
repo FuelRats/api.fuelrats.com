@@ -63,7 +63,7 @@ export default class View {
     return {
       type: this.type,
       id: this.id,
-      attributes: this.attributes,
+      attributes: this.generateAttributes(),
       relationships: this.generateRelationships(),
       links: this.links
     }
@@ -74,6 +74,22 @@ export default class View {
       type: this.type,
       id: this.id
     }
+  }
+
+  generateAttributes () {
+    Object.entries(this.attributes).reduce((acc, [attribute, options]) => {
+      let { value, permissions } = options
+      if (typeof options === 'symbol') {
+        value = attribute
+      }
+
+      acc[attribute] = this.attributeForKey(value)
+      return acc
+    }, {})
+  }
+
+  attributeForKey () {
+    return undefined
   }
 
   generateRelationships () {
