@@ -14,10 +14,10 @@ export default class DatabaseView extends View {
       let data = undefined
       if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
-          return (new RelationshipView({ object: relation, parentUrl: this.self })).relationshipView
+          return (new RelationshipView({ object: relation, parentUrl: this.self, query: this.query })).relationshipView
         })
       } else if (this.object[key]) {
-        data = (new RelationshipView({ object: this.object[key], parentUrl: this.self })).relationshipView
+        data = (new RelationshipView({ object: this.object[key], parentUrl: this.self, query: this.query })).relationshipView
       }
 
       const linkObject = {
@@ -47,7 +47,7 @@ export default class DatabaseView extends View {
       }
 
       return acc.concat(objects.reduce((includeCollection, object) => {
-        const objectView = (new RelationshipView({ object }))
+        const objectView = (new RelationshipView({ object, query: this.query }))
         includeCollection.push(objectView.view)
         return includeCollection.concat(objectView.generateIncludes({ includeTypes }))
       }, []))

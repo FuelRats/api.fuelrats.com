@@ -108,7 +108,7 @@ export default class View {
 
   hasPermissionForField (permission, field) {
     switch (permission) {
-      case ReadPermission.none:
+      case ReadPermission.all:
         return true
 
       case ReadPermission.internal:
@@ -164,5 +164,5 @@ export class ReadPermission {
   static internal
   static self
   static group
-  static none
+  static all
 }

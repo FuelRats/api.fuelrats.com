@@ -12,9 +12,9 @@ export default class UserView extends DatabaseView {
   get attributes () {
     return class {
       static data
-      static email
+      static email = ReadPermission.group
       static status
-      static suspended
+      static suspended = ReadPermission.group
       static createdAt
       static updatedAt
       static deletedAt = ReadPermission.internal
@@ -22,7 +22,7 @@ export default class UserView extends DatabaseView {
   }
 
   get defaultReadPermission () {
-    return ReadPermission.group
+    return ReadPermission.all
   }
 
   get isSelf () {

@@ -1,5 +1,6 @@
 import DatabaseView from './Database'
 import UserView from './User'
+import { ReadPermission } from './index'
 
 export default class GroupView extends DatabaseView {
   static get type () {
@@ -7,22 +8,34 @@ export default class GroupView extends DatabaseView {
   }
 
   get attributes () {
-    const {
-      vhost,
-      isAdministrator,
-      priority,
-      permissions,
-      createdAt,
-      updatedAt
-    } = this.object
-    return {
-      vhost,
-      isAdministrator,
-      priority,
-      permissions,
-      createdAt,
-      updatedAt
+    return class {
+      static vhost
+      static isAdministrator
+      static priority
+      static permissions
+      static createdAt
+      static updatedAt
+      static deletedAt = ReadPermission.internal
     }
+  }
+
+  get defaultReadPermission () {
+    return ReadPermission.group
+  }
+
+  get isSelf () {
+    if (this.query.connection.state.user && this.object.UserGroups.userId === this.query.connection.state.user.id) {
+      return this.query.permissions.includes('group.read.me')
+    }
+    return false
+  }
+
+  get isGroup () {
+    return this.query.permissions.includes('group.read')
+  }
+
+  get isInternal () {
+    return this.query.permissions.includes('group.internal')
   }
 
   get related () {

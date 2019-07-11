@@ -38,10 +38,10 @@ export default class Document  {
    */
   get data () {
     if (this.#view === DocumentViewType.individual) {
-      return (new this.#type({ object: this.objects, query: this.query })).render()
+      return (new this.#type({ object: this.objects, query: this.#query })).render()
     } else {
       return this.objects.map((object) => {
-        return (new this.#type({ object, query: this.query })).render()
+        return (new this.#type({ object, query: this.#query })).render()
       })
     }
   }
@@ -101,7 +101,7 @@ export default class Document  {
     }
 
     const includes = objects.reduce((acc, object) => {
-      return acc.concat((new Type({ object })).generateIncludes({}))
+      return acc.concat((new Type({ object, query: this.#query })).generateIncludes({}))
     }, [])
 
     return Object.values(includes.reduce((acc, include) => {

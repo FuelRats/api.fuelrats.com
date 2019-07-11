@@ -199,7 +199,7 @@ export default function User (db, DataTypes) {
           as: 'groups',
           required: false,
           through: {
-            attributes: []
+            attributes: ['userId']
           },
           include: [],
           order: [

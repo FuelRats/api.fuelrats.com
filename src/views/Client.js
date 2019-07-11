@@ -1,5 +1,6 @@
 import DatabaseView from './Database'
 import UserView from './User'
+import { ReadPermission } from './index'
 
 export default class ClientView extends DatabaseView {
   static get type () {
@@ -7,19 +8,32 @@ export default class ClientView extends DatabaseView {
   }
 
   get attributes () {
-    const {
-      name,
-      redirectUri,
-      createdAt,
-      updatedAt
-    } = this.object
-
     return {
-      name,
-      redirectUri,
-      createdAt,
-      updatedAt
+      name: ReadPermission.all,
+      redirectUri: ReadPermission.all,
+      createdAt: ReadPermission.all,
+      updatedAt: ReadPermission.all,
+      deletedAt: ReadPermission.internal
     }
+  }
+
+  get defaultReadPermission () {
+    return ReadPermission.all
+  }
+
+  get isSelf () {
+    if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
+      return this.query.permissions.includes('client.read.me')
+    }
+    return false
+  }
+
+  get isGroup () {
+    return this.query.permissions.includes('client.read')
+  }
+
+  get isInternal () {
+    return this.query.permissions.includes('client.internal')
   }
 
   get relationships () {
