@@ -1,7 +1,5 @@
 
 
-import HostServ from '../Anope/HostServ'
-import BotServ from '../Anope/BotServ'
 import { User, Rat } from '../db/index'
 import Users from './Users'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
@@ -29,21 +27,21 @@ export default class JiraDrillWebhook extends API {
 
     let email = fields[emailAddressField]
     if (!email) {
-      BotServ.say(global.OVERSEER_CHANNEL,
-        '[API] Unable to update drilled status or IRC permissions. Email was not provided')
+      // BotServ.say(global.OVERSEER_CHANNEL,
+      //   '[API] Unable to update drilled status or IRC permissions. Email was not provided')
       throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${emailAddressField}` })
     }
 
     let cmdrName = fields[CMDRnameField]
     if (!cmdrName) {
-      BotServ.say(global.OVERSEER_CHANNEL,
-        '[API] Unable to update IRC permissions. CMDR name was not provided')
+      // BotServ.say(global.OVERSEER_CHANNEL,
+      //   '[API] Unable to update IRC permissions. CMDR name was not provided')
       throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/issue/fields/${CMDRnameField}` })
     }
 
     let user = await User.findOne({
       where: {
-        email: {$iLike: email}
+        email: {ilike: email}
       }
     })
 
@@ -57,7 +55,7 @@ export default class JiraDrillWebhook extends API {
             required: true,
             where: {
               name: {
-                $iLike: cmdrName
+                ilike: cmdrName
               }
             }
           }

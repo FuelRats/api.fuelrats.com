@@ -46,6 +46,7 @@ export class SortOrder {
 export default class Query {
   connection = undefined
   permissions = undefined
+  cachedViewPermissions = {}
 
   /**
    * Create a new instance of an API Query

@@ -1,7 +1,4 @@
 import { User, Rat, db, npoMembership } from '../db'
-import NickServ from '../Anope/NickServ'
-import HostServ from '../Anope/HostServ'
-import BotServ from '../Anope/BotServ'
 import Query from '../query'
 import API, {
   POST,
@@ -92,7 +89,7 @@ export default class Register extends API {
 
     let existingUser = await User.findOne({ where: {
       email: {
-        $iLike: email
+        ilike: email
       }
     }})
     if (existingUser) {
@@ -101,7 +98,7 @@ export default class Register extends API {
 
     let existingRat = await Rat.findOne({ where: {
       name: {
-        $iLike: name
+        ilike: name
       },
       platform: platform
     }})

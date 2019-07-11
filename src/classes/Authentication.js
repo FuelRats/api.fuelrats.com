@@ -25,7 +25,7 @@ export default class Authentication {
 
     // const user = await User.findByEmail(email)
 
-    const user = await User.findOne({ where: { email: { $iLike: email } } })
+    const user = await User.findOne({ where: { email: { ilike: email } } })
     if (!user) {
       return undefined
     }
@@ -59,7 +59,7 @@ export default class Authentication {
           where: { id: user.id }
         })
       }
-      return User.findOne({ where: { email: { $iLike: email } } })
+      return User.findOne({ where: { email: { ilike: email } } })
     }
   }
 

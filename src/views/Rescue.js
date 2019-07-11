@@ -1,4 +1,5 @@
 import DatabaseView from './Database'
+import { ReadPermission } from './'
 import RatsView from './Rat'
 import enumerable from '../classes/Enum'
 
@@ -8,9 +9,27 @@ export default class RescueView extends DatabaseView {
   }
 
   get attributes () {
-    return attributes
+    return class {
+      static client
+      static codeRed
+      static data
+      static notes
+      static platform
+      static system
+      static title
+      static unidentifiedRats
+      static createdAt
+      static updatedAt
+      static deletedAt = ReadPermission.internal
+      static status
+      static outcome
+      static quotes
+    }
   }
 
+  get defaultReadPermission () {
+    return ReadPermission.group
+  }
 
   get relationships () {
     return {
@@ -26,27 +45,4 @@ export default class RescueView extends DatabaseView {
   get related () {
     return [RatsView]
   }
-}
-
-@enumerable
-/**
- * Enumerable representing the different attributes of this view
- * @readonly
- * @enum {Symbol}
- */
-export class attributes {
-  static client
-  static codeRed
-  static data
-  static notes
-  static platform
-  static system
-  static title
-  static unidentifiedRats
-  static createdAt
-  static updatedAt
-  static deletedAt = { permissions: ['rescue.internal'] }
-  static status
-  static outcome
-  static quotes
 }

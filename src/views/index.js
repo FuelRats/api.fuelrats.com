@@ -1,9 +1,13 @@
 import config from '../../config'
+import enumerable from '../classes/Enum'
 
 export default class View {
   object = undefined
   query = undefined
   parent = undefined
+  #cachedInternal = undefined
+  #cachedSelf = undefined
+  #cachedGroup = undefined
 
   constructor ({ object, query, parentUrl = undefined }) {
     this.object = object
@@ -33,6 +37,18 @@ export default class View {
 
   get includes () {
     return []
+  }
+
+  get isInternal () {
+    return undefined
+  }
+
+  get isSelf () {
+    return undefined
+  }
+
+  get isGroup () {
+    return undefined
   }
 
   get links () {
@@ -77,15 +93,49 @@ export default class View {
   }
 
   generateAttributes () {
-    Object.entries(this.attributes).reduce((acc, [attribute, options]) => {
-      let { value, permissions } = options
-      if (typeof options === 'symbol') {
-        value = attribute
+    return Object.entries(this.attributes).reduce((acc, value) => {
+      var [attribute, permission] = value
+      if (typeof permission === 'undefined') {
+        permission = this.defaultReadPermission
       }
 
-      acc[attribute] = this.attributeForKey(value)
+      if (this.hasPermissionForField(permission, attribute)) {
+        acc[attribute] = this.attributeForKey(attribute)
+      }
       return acc
     }, {})
+  }
+
+  hasPermissionForField (permission, field) {
+    switch (permission) {
+      case ReadPermission.none:
+        return true
+
+      case ReadPermission.internal:
+        if (!this.#cachedInternal) {
+          this.#cachedInternal = this.isInternal
+        }
+        return this.#cachedInternal
+
+      case ReadPermission.group:
+        if (!this.#cachedGroup) {
+          this.#cachedGroup = this.isSelf || this.isGroup
+        }
+        return this.#cachedGroup
+
+      case ReadPermission.self:
+        if (!this.#cachedSelf) {
+          this.#cachedSelf = this.isSelf
+        }
+        return this.#cachedSelf
+
+      default:
+        return false
+    }
+  }
+
+  get defaultReadPermission () {
+    return undefined
   }
 
   attributeForKey () {
@@ -107,4 +157,12 @@ export default class View {
   toString () {
     return this.render()
   }
+}
+
+@enumerable
+export class ReadPermission {
+  static internal
+  static self
+  static group
+  static none
 }

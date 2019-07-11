@@ -38,7 +38,7 @@
     "pg": "^7.11.0",
     "pure-uuid": "^1.5.7",
     "sequelize": "^5.10.0",
-    "sequelize-paper-trail-fr": "^2.0.1",
+    "sequelize-paper-trail": "^3.0.0-rc.8",
     "sharp": "^0.22.1",
     "sinon": "^7.3.2",
     "slack-node": "^0.1.8",
@@ -51,6 +51,7 @@
     "node": "12.6.0"
   },
   "devDependencies": {
+    "@babel/cli": "7.5.0",
     "@babel/core": "^7.5.4",
     "@babel/plugin-proposal-class-properties": "^7.5.0",
     "@babel/plugin-proposal-decorators": "^7.4.4",
@@ -69,7 +70,6 @@
     "@babel/plugin-transform-strict-mode": "^7.2.0",
     "@babel/preset-env": "^7.5.4",
     "ajv": "^6.10.1",
-    "@babel/cli": "7.5.0",
     "babel-eslint": "10.0.2",
     "eslint-plugin-import": "^2.18.0",
     "gulp": "^4.0.2",

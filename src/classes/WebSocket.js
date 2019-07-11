@@ -7,7 +7,7 @@ import {
 import ws from 'ws'
 
 import { URL } from 'url'
-import uid from 'uid-safe'
+import UUID from 'pure-uuid'
 import Authentication from './Authentication'
 import Permission from './Permission'
 import Meta from './Meta'
@@ -40,7 +40,7 @@ export default class WebSocket {
     this.wss.on('connection', async (client, req) => {
       const url = new URL(`http://localhost:8082${req.url}`)
       client.req = req
-      client.clientId = uid.sync(global.WEBSOCKET_IDENTIFIER_ROUNDS)
+      client.clientId = new UUID(4)
       client.subscriptions = []
 
       const bearer = url.searchParams.get('bearer')

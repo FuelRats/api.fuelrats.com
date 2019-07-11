@@ -3,7 +3,6 @@ const config = require('../../config')
 import nodemailer from 'nodemailer'
 import { User, Reset } from '../db'
 import crypto from 'crypto'
-import BotServ from '../Anope/BotServ'
 import { NotFoundAPIError } from '../classes/APIError'
 import API, {
   GET,
@@ -23,7 +22,7 @@ export default class Resets extends API {
   async requestReset (ctx, next) {
     let user = await User.findOne({
       where: {
-        email: { $iLike: ctx.data.email }
+        email: { ilike: ctx.data.email }
       }
     })
 
@@ -49,7 +48,7 @@ export default class Resets extends API {
   async generateReset (ctx) {
     let user = await User.findOne({
       where: {
-        email: { $iLike: ctx.data.email }
+        email: { ilike: ctx.data.email }
       }
     })
 
@@ -189,9 +188,9 @@ async function sendReset (ctx, user, reset, html) {
       text: Resets.getPlainTextEmail(reset.value),
       html: html
     })
-    BotServ.say(global.TECHNICAL_CHANNEL, `[API] Password reset for ${user.email} requested by ${ctx.inet}`)
+    // BotServ.say(global.TECHNICAL_CHANNEL, `[API] Password reset for ${user.email} requested by ${ctx.inet}`)
   } catch (ex) {
-    BotServ.say(global.TECHNICAL_CHANNEL, '[API] Password reset failed due to error from SMTP server')
+    // BotServ.say(global.TECHNICAL_CHANNEL, '[API] Password reset failed due to error from SMTP server')
     throw ex
   }
 }

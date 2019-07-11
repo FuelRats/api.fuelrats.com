@@ -1,10 +1,49 @@
 
 import Sequelize from 'sequelize'
-import PaperTrail from 'sequelize-paper-trail-fr'
+import PaperTrail from 'sequelize-paper-trail'
 import path from 'path'
 import config from '../../config'
 
 const { database, username, password, hostname, port } = config.postgres
+
+const { Op } = Sequelize
+const operatorsAliases = {
+  eq: Op.eq,
+  ne: Op.ne,
+  gte: Op.gte,
+  gt: Op.gt,
+  lte: Op.lte,
+  lt: Op.lt,
+  not: Op.not,
+  in: Op.in,
+  notin: Op.notIn,
+  is: Op.is,
+  like: Op.like,
+  notlike: Op.notLike,
+  ilike: Op.iLike,
+  notilike: Op.notILike,
+  $regexp: Op.regexp,
+  regexp: Op.regexp,
+  notregexp: Op.notRegexp,
+  iregexp: Op.iRegexp,
+  notiregexp: Op.notIRegexp,
+  between: Op.between,
+  notbetween: Op.notBetween,
+  overlap: Op.overlap,
+  contains: Op.contains,
+  contained: Op.contained,
+  adjacent: Op.adjacent,
+  strictleft: Op.strictLeft,
+  strictright: Op.strictRight,
+  noextendright: Op.noExtendRight,
+  noextendleft: Op.noExtendLeft,
+  and: Op.and,
+  or: Op.or,
+  any: Op.any,
+  all: Op.all,
+  values: Op.values,
+  col: Op.col
+}
 
 const db = new Sequelize(database, username, password, {
   host: hostname,
@@ -13,8 +52,11 @@ const db = new Sequelize(database, username, password, {
   logging: true,
 
   pool: {
-    idle: 10000
-  }
+    idle: 1000,
+    min: 0,
+    acquire: 30000
+  },
+  operatorsAliases
 })
 
 /**

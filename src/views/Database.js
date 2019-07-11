@@ -5,6 +5,10 @@ export default class DatabaseView extends View {
     return this.object.id
   }
 
+  attributeForKey (key) {
+    return this.object[key]
+  }
+
   generateRelationships () {
     return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
       let data = undefined

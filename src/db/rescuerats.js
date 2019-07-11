@@ -1,7 +1,7 @@
 
 
 export default function RescueRats (sequelize, DataTypes) {
-  return sequelize.define('RescueRats', {
+  let rescuerats = sequelize.define('RescueRats', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -27,4 +27,11 @@ export default function RescueRats (sequelize, DataTypes) {
       }
     }
   })
+
+  rescuerats.associate = function (models) {
+    models.RescueRats.belongsTo(models.Rescue, { foreignKey: 'rescueId' })
+    models.RescueRats.belongsTo(models.Rat, { foreignKey: 'ratId' })
+  }
+
+  return rescuerats
 }

@@ -2,6 +2,7 @@ import DatabaseView from './Database'
 import RatView from './Rat'
 import GroupView from './Group'
 import ClientView from './Client'
+import { ReadPermission } from './index'
 
 export default class UserView extends DatabaseView {
   static get type () {
@@ -9,23 +10,34 @@ export default class UserView extends DatabaseView {
   }
 
   get attributes () {
-    const {
-      data,
-      email,
-      nicknames,
-      status,
-      createdAt,
-      updatedAt
-    } = this.object
-
-    return {
-      data,
-      email,
-      nicknames,
-      status,
-      createdAt,
-      updatedAt
+    return class {
+      static data
+      static email
+      static status
+      static suspended
+      static createdAt
+      static updatedAt
+      static deletedAt = ReadPermission.internal
     }
+  }
+
+  get defaultReadPermission () {
+    return ReadPermission.group
+  }
+
+  get isSelf () {
+    if (this.query.connection.state.user && this.object.id === this.query.connection.state.user.id) {
+      return this.query.permissions.includes('user.read.me')
+    }
+    return false
+  }
+
+  get isGroup () {
+    return this.query.permissions.includes('user.read')
+  }
+
+  get isInternal () {
+    return this.query.permissions.includes('user.internal')
   }
 
   get relationships () {

@@ -155,10 +155,16 @@ export default function User (db, DataTypes) {
 
     models.User.belongsToMany(models.Group, {
       as: 'groups',
+      foreignKey: 'userId',
       through: {
-        model: models.UserGroups
+        model: models.UserGroups,
+        foreignKey: 'userId'
       }
     })
+
+    models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
+    models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
+    models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
 
     models.User.addScope('defaultScope', {
       attributes: {
@@ -217,11 +223,6 @@ export default function User (db, DataTypes) {
         'image'
       ]
     })
-
-    models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
-    models.User.hasMany(models.UserGroups, { foreignKey: 'userId' })
-    models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
-    models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
   }
   return user
 }

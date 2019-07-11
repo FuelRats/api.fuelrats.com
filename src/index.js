@@ -21,13 +21,11 @@ import Rescue from './routes/Rescues'
 import User from './routes/Users'
 import Rats from './routes/Rats'
 import Clients from './routes/Clients'
-import Nicknames from './routes/Nicknames'
 import Ships from './routes/Ships'
 import Login from './routes/Login'
 import Register from './routes/Register'
 import Profile from './routes/Profiles'
 import Reset from './routes/Resets'
-import AnopeWebhook from './routes/AnopeWebhook'
 import Statistics from './routes/Statistics'
 import Version from './routes/Version'
 import Decals from './routes/Decals'
@@ -221,13 +219,11 @@ const routes = [
   new User(),
   new Rats(),
   new Clients(),
-  new Nicknames(),
   new Ships(),
   new Login(),
   new Register(),
   new Profile(),
   new Reset(),
-  new AnopeWebhook(),
   new Statistics(),
   new Version(),
   new Decals(),

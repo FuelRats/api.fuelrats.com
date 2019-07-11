@@ -37,7 +37,7 @@ export default class Document  {
    * @returns {*} the data section of a JSONAPI document
    */
   get data () {
-    if (this.#view === DocumentViewType.inividual) {
+    if (this.#view === DocumentViewType.individual) {
       return (new this.#type({ object: this.objects, query: this.query })).render()
     } else {
       return this.objects.map((object) => {
@@ -83,7 +83,7 @@ export default class Document  {
    * @returns {*} the meta section of the JSONAPI document
    */
   get meta () {
-    if (this.#view === DocumentViewType.inividual) {
+    if (this.#view === DocumentViewType.individual) {
       return this.#meta
     }
 
@@ -96,7 +96,7 @@ export default class Document  {
    */
   get included () {
     let { objects, type: Type } = this
-    if (this.#view === DocumentViewType.inividual) {
+    if (this.#view === DocumentViewType.individual) {
       objects = [objects]
     }
 
@@ -115,7 +115,7 @@ export default class Document  {
    * @returns {string} the self link for the JSONAPI document
    */
   get self () {
-    if (this.#view === DocumentViewType.inividual) {
+    if (this.#view === DocumentViewType.individual) {
       const singleObjectId = (new this.#type({ object: this.#objects })).id
       return `${config.externalUrl}/${this.type.type}/${singleObjectId}`
     } else {

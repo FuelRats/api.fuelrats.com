@@ -42,7 +42,14 @@ export default function Group (sequelize, DataTypes) {
   })
 
   group.associate = function (models) {
-    models.Group.hasMany(models.UserGroups, { foreignKey: 'groupId' })
+    models.Group.belongsToMany(models.User, {
+      as: 'users',
+      foreignKey: 'groupId',
+      through: {
+        model: models.UserGroups,
+        foreignKey: 'groupId'
+      }
+    })
 
     models.Group.addScope('stats', {
       attributes: []
