@@ -23,17 +23,17 @@ export default class ClientView extends DatabaseView {
 
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
-      return this.query.permissions.includes('client.read.me')
+      return this.query.connection.state.permissions.includes('client.read.me')
     }
     return false
   }
 
   get isGroup () {
-    return this.query.permissions.includes('client.read')
+    return this.query.connection.state.permissions.includes('client.read')
   }
 
   get isInternal () {
-    return this.query.permissions.includes('client.internal')
+    return this.query.connection.state.permissions.includes('client.internal')
   }
 
   get relationships () {

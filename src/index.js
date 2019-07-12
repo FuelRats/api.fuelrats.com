@@ -32,6 +32,7 @@ import Decals from './routes/Decals'
 import Stream from './routes/Stream'
 import JiraDrillWebhook from './routes/JiraDrillWebhook'
 import NPO from './routes/NPO'
+import Permission from './classes/Permission'
 
 
 
@@ -176,6 +177,8 @@ app.use(async (ctx, next) => {
     if (ctx.state.client) {
       ctx.state.user = ctx.state.client
     }
+
+    ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
 
     const result = await next()
     if (result === true) {

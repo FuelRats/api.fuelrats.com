@@ -25,17 +25,17 @@ export default class GroupView extends DatabaseView {
 
   get isSelf () {
     if (this.query.connection.state.user && this.object.UserGroups.userId === this.query.connection.state.user.id) {
-      return this.query.permissions.includes('group.read.me')
+      return this.query.connection.state.permissions.includes('group.read.me')
     }
     return false
   }
 
   get isGroup () {
-    return this.query.permissions.includes('group.read')
+    return this.query.connection.state.permissions.includes('group.read')
   }
 
   get isInternal () {
-    return this.query.permissions.includes('group.internal')
+    return this.query.connection.state.permissions.includes('group.internal')
   }
 
   get related () {

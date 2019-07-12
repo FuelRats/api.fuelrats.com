@@ -45,7 +45,6 @@ export class SortOrder {
  */
 export default class Query {
   connection = undefined
-  permissions = undefined
   cachedViewPermissions = {}
 
   /**
@@ -55,7 +54,6 @@ export default class Query {
    */
   constructor ({ connection }) {
     this.connection = connection
-    this.permissions = Permission.getConnectionPermissions({ connection })
   }
 
   /**

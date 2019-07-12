@@ -259,41 +259,81 @@ export default class API {
    * @param ctx a request context
    * @param attributes attributes list
    */
-  validateUpdateAccess ({ ctx, attributes }) {
+  validateUpdateAccess ({ ctx, attributes, entity }) {
+    const isGroup = this.isGroup({ ctx, entity })
+    const isSelf = this.isSelf({ ctx, entity })
+    const isInternal = this.isInternal({ ctx, entity })
+
     Object.entries(attributes).forEach(([key]) => {
-      const attributePermission = this.fieldProperties[key]
-      if (!attributePermission) {
+      const attributePermissions = this.writePermissionsForFieldAccess[key]
+      if (!attributePermissions) {
         throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
       }
 
-      const attributeAvailablePermissions = this.writePermissionsForFieldAccess[attributePermission]
-      if (!attributeAvailablePermissions) {
-        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
+      const hasPermission = () => {
+        switch (attributePermissions) {
+          case WritePermission.all:
+            return true
+
+          case WritePermission.internal:
+            return isInternal
+
+          case WritePermission.sudo:
+            return isGroup
+
+          case WritePermission.group:
+            return isGroup || isSelf
+
+          case WritePermission.self:
+            return isSelf
+
+          default:
+            return false
+        }
       }
 
-      const granted = Permission.granted({ permissions: attributeAvailablePermissions, ...ctx.state })
-      if (!granted) {
+      if (hasPermission() === false) {
         throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
       }
     })
   }
 
   /**
-   * Get a map of acceptable read permissions for field access types
-   * @returns {Object}
-   * @abstract
-   */
-  get readPermissionsForFieldAccess () {
-    return {}
-  }
-
-  /**
-   * Get a map of acceptable write permissions for field access types
+   * Get a map of write permissions for fields
    * @returns {Object}
    * @abstract
    */
   get writePermissionsForFieldAccess () {
     return {}
+  }
+
+  /**
+   * @abstract
+   */
+  isInternal ({ ctx, entity }) {
+    return undefined
+  }
+
+  /**
+   *
+   * @param ctx
+   * @param entity
+   * @returns {undefined}
+   * @abstract
+   */
+  isGroup ({ ctx, entity }) {
+    return undefined
+  }
+
+  /**
+   *
+   * @param ctx
+   * @param entity
+   * @returns {undefined}
+   * @abstract
+   */
+  isSelf ({ ctx, entity }) {
+    return undefined
   }
 
   /**
@@ -728,20 +768,10 @@ export function isValidJSONAPIObject ({ object }) {
 }
 
 @enumerable
-/**
- * Enumerable representing the different access restrictions a field of a resource can have
- * @readonly
- * @enum {Symbol}
- * @property {Symbol} internal Nobody can either read or write to this field
- * @property {Symbol} readOwn Field is read-only with access given to the owner of the entity and universal read
- * @property {Symbol} readAll Field is read-only with access only given to those with universal read permission
- * @property {Symbol} readWriteOwn Field is read-write with write only given to the entity owner and universal write
- * @property {Symbol} readWriteAll Field is read-write with write only given to those with universal write
- */
-export class FieldAccess {
+export class WritePermission {
   static internal
-  static readOwn
-  static readAll
-  static readWriteOwn
-  static readWriteAll
+  static self
+  static group
+  static sudo
+  static all
 }

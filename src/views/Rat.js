@@ -26,17 +26,17 @@ export default class RatView extends DatabaseView {
 
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
-      return this.query.permissions.includes('rat.read.me')
+      return this.query.connection.state.permissions.includes('rat.read.me')
     }
     return false
   }
 
   get isGroup () {
-    return this.query.permissions.includes('rat.read')
+    return this.query.connection.state.permissions.includes('rat.read')
   }
 
   get isInternal () {
-    return this.query.permissions.includes('rat.internal')
+    return this.query.connection.state.permissions.includes('rat.internal')
   }
 
   get relationships () {

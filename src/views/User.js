@@ -27,17 +27,17 @@ export default class UserView extends DatabaseView {
 
   get isSelf () {
     if (this.query.connection.state.user && this.object.id === this.query.connection.state.user.id) {
-      return this.query.permissions.includes('user.read.me')
+      return this.query.connection.state.permissions.includes('user.read.me')
     }
     return false
   }
 
   get isGroup () {
-    return this.query.permissions.includes('user.read')
+    return this.query.connection.state.permissions.includes('user.read')
   }
 
   get isInternal () {
-    return this.query.permissions.includes('user.internal')
+    return this.query.connection.state.permissions.includes('user.internal')
   }
 
   get relationships () {

@@ -336,7 +336,7 @@ process.on('rescueCreated', (ctx, rescue) => {
     return
   }
   if (rescue.system.includes('NLTT 48288') || rescue.system.includes('MCC 811')) {
-    BotServ.say(global.PAPERWORK_CHANNEL, 'DRINK!')
+    // BotServ.say(global.PAPERWORK_CHANNEL, 'DRINK!')
   }
 })
 
@@ -350,14 +350,14 @@ process.on('rescueUpdated', async (ctx, result, perms, changedValues) => {
 
     const client = result.data[0].client || ''
     const author = await API.getAuthor(ctx).preferredRat().name
-    BotServ.say(global.PAPERWORK_CHANNEL,
-      `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author.preferredRat().name}`)
+    // BotServ.say(global.PAPERWORK_CHANNEL,
+    //   `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author.preferredRat().name}`)
   }
 })
 
 
 process.on('suspendedAssign', async (ctx, rat) => {
   const author = await API.getAuthor(ctx)
-  BotServ.say(global.MODERATOR_CHANNEL,
-    `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author.preferredRat().name}`)
+  // BotServ.say(global.MODERATOR_CHANNEL,
+  //   `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author.preferredRat().name}`)
 })
