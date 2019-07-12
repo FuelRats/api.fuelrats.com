@@ -100,12 +100,12 @@ export default class API {
 
     this.requireWritePermission({ connection: ctx, entity })
 
-    let { attributes } = ctx.data.data
+    const { attributes } = ctx.data.data
 
     if (attributes instanceof Object) {
-      this.validateUpdateAccess({ ctx, attributes })
+      this.validateUpdateAccess({ ctx, attributes, entity })
 
-      await entity.update(ctx.data.data.attributes, updateSearch)
+      await entity.update(attributes, updateSearch)
     }
 
     if (ctx.data.relationships instanceof Object) {

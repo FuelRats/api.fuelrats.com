@@ -231,7 +231,7 @@ export default class Rescues extends API {
     })
 
     let isFirstLimpet = false
-    if (this.object.firstLimpet) {
+    if (entity.firstLimpet) {
       isFirstLimpet = entity.firstLimpet.userId === user.id
     }
 
