@@ -72,8 +72,10 @@ export default function Rat (sequelize, DataTypes) {
 
     models.Rat.belongsToMany(models.Rescue, {
       as: 'rescues',
+      foreignKey: 'ratId',
       through: {
-        model: models.RescueRats
+        model: models.RescueRats,
+        foreignKey: 'ratId'
       }
     })
 

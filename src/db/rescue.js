@@ -140,8 +140,10 @@ export default function Rescue (sequelize, DataTypes) {
 
     models.Rescue.belongsToMany(models.Rat, {
       as: 'rats',
+      foreignKey: 'rescueId',
       through: {
-        model: models.RescueRats
+        model: models.RescueRats,
+        foreignKey: 'rescueId'
       }
     })
 
