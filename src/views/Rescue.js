@@ -31,6 +31,35 @@ export default class RescueView extends DatabaseView {
     return ReadPermission.group
   }
 
+  get isSelf () {
+    const { user } = this.query.connection.state
+    if (!user) {
+      return false
+    }
+
+    const isAssigned = this.object.rats.some((rat) => {
+      return rat.userId === user.id
+    })
+
+    let isFirstLimpet = false
+    if (this.object.firstLimpet) {
+      isFirstLimpet = this.object.firstLimpet.userId === user.id
+    }
+
+    if (isAssigned || isFirstLimpet) {
+      return this.query.permissions.includes('rescue.read.me')
+    }
+    return false
+  }
+
+  get isGroup () {
+    return this.query.permissions.includes('rescue.read')
+  }
+
+  get isInternal () {
+    return this.query.permissions.includes('rescue.internal')
+  }
+
   get relationships () {
     return {
       rats: RatsView,

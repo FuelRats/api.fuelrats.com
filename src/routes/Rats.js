@@ -14,7 +14,7 @@ import API, {
   PUT,
   DELETE,
   parameters,
-  protect
+  protect, WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 
@@ -109,6 +109,17 @@ export default class Rats extends API {
     }))
     ctx.status = 204
     return true
+  }
+
+  get writePermissionsForFieldAccess () {
+    return {
+      name: WritePermission.group,
+      data: WritePermission.group,
+      platform: WritePermission.group,
+      createdAt: WritePermission.internal,
+      updatedAt: WritePermission.internal,
+      deletedAt: WritePermission.internal
+    }
   }
 
   getReadPermissionFor ({ connection, entity }) {

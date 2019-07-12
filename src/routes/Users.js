@@ -1,5 +1,3 @@
-
-
 import { User, Rat, db, Rescue } from '../db'
 
 import Authentication from '../classes/Authentication'
@@ -9,6 +7,7 @@ import Query from '../query2'
 import bcrypt from 'bcrypt'
 import Rats from './Rats'
 import Groups from './Groups'
+import Permission from '../classes/Permission'
 
 import workerpool from 'workerpool'
 
@@ -19,7 +18,7 @@ import {
 } from '../classes/APIError'
 
 import API, {
-  FieldAccess,
+  WritePermission,
   permissions,
   authenticated,
   GET,
@@ -272,23 +271,35 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
-  /**
-   * @inheritDoc
-   */
-  get fieldProperties () {
+
+  get writePermissionsForFieldAccess () {
     return {
-      createdAt: FieldAccess.readOwn,
-      updatedAt: FieldAccess.readOwn,
-      deletedAt: FieldAccess.internal,
-      email: FieldAccess.readOwn,
-      password: FieldAccess.internal,
-      nicknames: FieldAccess.readWriteOwn,
-      data: FieldAccess.readWriteOwn,
-      image: FieldAccess.readWriteOwn
+      data: WritePermission.group,
+      email: WritePermission.sudo,
+      password: WritePermission.sudo,
+      status: WritePermission.sudo,
+      suspended: WritePermission.internal,
+      createdAt: WritePermission.internal,
+      updatedAt: WritePermission.internal,
+      deletedAt: WritePermission.internal
     }
   }
 
+  isInternal ({ ctx }) {
+    return Permission.granted({ permissions: ['user.internal'], user: ctx.state.user, scope: ctx.state.scope })
+  }
 
+
+  isGroup ({ ctx, entity }) {
+    return Permission.granted({ permissions: ['user.write'], user: ctx.state.user, scope: ctx.state.scope })
+  }
+
+  isSelf ({ ctx, entity }) {
+    if (entity.id === ctx.state.user.id) {
+      return Permission.granted({ permissions: ['user.write.me'], user: ctx.state.user, scope: ctx.state.scope })
+    }
+    return false
+  }
 
   getReadPermissionFor ({ connection, entity }) {
     if (entity.id === connection.state.user.id) {

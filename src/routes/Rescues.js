@@ -9,7 +9,6 @@ import {
 } from '../classes/APIError'
 
 import API, {
-  FieldAccess,
   permissions,
   authenticated,
   GET,
@@ -17,14 +16,17 @@ import API, {
   PUT,
   PATCH,
   DELETE,
-  parameters
+  parameters,
+  WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import RescueView from '../views/Rescue'
 import DatabaseDocument from '../Documents/Database'
 import { DocumentViewType } from '../Documents'
+import Permission from '../classes/Permission'
 
-const rescueAccesstime = 3600000
+const rescueAccessHours = 3
+const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
 
 /**
  * @classdesc Rescues API endpoint
@@ -192,31 +194,55 @@ export default class Rescues extends API {
     return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
   }
 
-  /**
-   * @inheritDoc
-   */
-  get fieldProperties () {
+  get writePermissionsForFieldAccess () {
     return {
-      id: ['rescues.internal'],
-      client: ['rescues.write', 'rescues.write.me'],
-      codeRed: ['rescues.write', 'rescues.write.me'],
-      data: ['rescues.write', 'rescues.write.me'],
-      notes: ['rescues.write', 'rescues.write.me'],
-      platform: ['rescues.write', 'rescues.write.me'],
-      system: ['rescues.write', 'rescues.write.me'],
-      title: ['rescues.write', 'rescues.write.me'],
-      unidentifiedRats: ['rescues.write', 'rescues.write.me'],
-      createdAt: ['rescues.internal'],
-      updatedAt: ['rescues.internal'],
-      deletedAt: ['rescues.internal'],
-      status: ['rescues.write', 'rescues.write.me'],
-      outcome: ['rescues.write', 'rescues.write.me'],
-      quotes: ['rescues.write', 'rescues.write.me']
+      client: WritePermission.group,
+      codeRed: WritePermission.group,
+      data: WritePermission.group,
+      notes: WritePermission.group,
+      platform: WritePermission.group,
+      system: WritePermission.group,
+      title: WritePermission.sudo,
+      unidentifiedRats: WritePermission.group,
+      outcome: WritePermission.group,
+      quotes: WritePermission.group,
+      createdAt: WritePermission.internal,
+      updatedAt: WritePermission.internal,
+      deletedAt: WritePermission.internal
     }
   }
 
+  isInternal ({ ctx }) {
+    return Permission.granted({ permissions: ['rescue.internal'], user: ctx.state.user, scope: ctx.state.scope })
+  }
+
+  isGroup ({ ctx }) {
+    return Permission.granted({ permissions: ['rescue.write'], user: ctx.state.user, scope: ctx.state.scope })
+  }
+
+  isSelf ({ ctx, entity }) {
+    const { user } = ctx.state
+    if (!user) {
+      return false
+    }
+
+    const isAssigned = entity.rats.some((rat) => {
+      return rat.userId === user.id
+    })
+
+    let isFirstLimpet = false
+    if (this.object.firstLimpet) {
+      isFirstLimpet = entity.firstLimpet.userId === user.id
+    }
+
+    if (isAssigned || isFirstLimpet) {
+      return Permission.granted({ permissions: ['rescue.write'], user: ctx.state.user, scope: ctx.state.scope })
+    }
+    return false
+  }
+
   getWritePermissionFor ({ connection, entity }) {
-    if (connection.state.user && entity.createdAt - Date.now() < rescueAccesstime) {
+    if (connection.state.user && entity.createdAt - Date.now() < rescueAccessTime) {
       for (const rat of connection.state.user.rats) {
         const isAssist = entity.rats.find((fRat) => {
           return fRat.id === rat.id
