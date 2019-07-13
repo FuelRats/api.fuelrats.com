@@ -5,7 +5,7 @@ import { URL } from 'url'
 
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/u
 export const IRCNickname = /^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}]{1,29})?$/u
-const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]']
+const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]', 'CMDR']
 
 // language=JSUnicodeRegexp
 export const FrontierRedeemCode = new RegexLiteral(`^
