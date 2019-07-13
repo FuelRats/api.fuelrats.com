@@ -23,6 +23,13 @@ module.exports = {
     'password': process.env.FRAPI_POSTGRES_PASSWORD || 'SqueakBaby',
     'port': process.env.FRAPI_POSTGRES_PORT || 5432
   },
+  'anope': {
+    'database': process.env.FRAPI_ANOPE_DATABASE || 'anope',
+    'hostname': process.env.FRAPI_ANOPE_HOSTNAME || 'localhost',
+    'username': process.env.FRAPI_ANOPE_USERNAME || 'anope2',
+    'password': process.env.FRAPI_ANOPE_PASSWORD || '',
+    'port': process.env.FRAPI_ANOPE_PORT || 3306
+  },
   'smtp': {
     'host': process.env.SMTP_HOSTNAME || 'smtp-relay.gmail.com',
     'email': process.env.SMTP_EMAIL || 'blackhole@fuelrats.com'

@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
 import { User, Rat, Token, Client, Reset } from '../db/index'
+import Anope from '../classes/Anope'
 // import User from '../model/user'
 
 import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
@@ -125,6 +126,7 @@ export default class Authentication {
    * @returns {Promise<boolean>} true if the request was successfully authenticated, false if not
    */
   static async authenticate ({ connection }) {
+    Anope.nicknamesForEmail('alex@sorlie.io')
     const [clientId, clientSecret] = getBasicAuth(connection)
     if (clientId) {
       connection.state.client = await Authentication.clientAuthenticate({ clientId, clientSecret })

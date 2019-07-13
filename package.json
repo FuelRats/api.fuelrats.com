@@ -32,6 +32,7 @@
     "koa-router": "^7.4.0",
     "koa-session": "^5.12.2",
     "log4js": "^4.5.0",
+    "mysql": "https://github.com/nwoltman/node-mysql.git",
     "nodemailer": "^6.2.1",
     "npid": "^0.4.0",
     "oauth2orize-koa-fr": "^1.3.3",

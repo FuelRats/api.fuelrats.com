@@ -344,7 +344,7 @@
     "camelcase": [
       "warn",
       {
-        "properties": "always",
+        "properties": "never",
         "ignoreDestructuring": false
       }
     ],
