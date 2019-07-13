@@ -1,14 +1,13 @@
 import { User, Rat, db, npoMembership } from '../db'
 import axios from 'axios'
 import config from '../../config'
-import { UnauthorizedAPIError } from '../classes/APIError'
+import Anope from '../classes/Anope'
 
 import API, {
   POST,
   required
 } from '../classes/API'
-import Profile from './Profiles'
-import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import { ConflictAPIError, UnprocessableEntityAPIError, UnauthorizedAPIError } from '../classes/APIError'
 
 const googleRecaptchaEndpoint = 'https://www.google.com/recaptcha/api/siteverify'
 
@@ -16,10 +15,9 @@ const platforms = ['pc', 'xb', 'ps']
 
 export default class Register extends API {
   @POST('/register')
-  @required('email', 'password', 'name', 'platform', 'nickname')
+  @required('email', 'password', 'name', 'platform', 'nickname', 'g-recaptcha-response')
   async create (ctx) {
-    let userId = undefined
-    let { email, name, nickname, password, ircPassword, platform, 'g-recaptcha-response': captcha } = ctx.data
+    const { email, name, nickname, password, ircPassword, platform, 'g-recaptcha-response': captcha } = ctx.data
 
     const validationResponse = await axios.post(googleRecaptchaEndpoint, {
       secret:  config.recaptcha.secret,
@@ -33,19 +31,14 @@ export default class Register extends API {
 
     await Register.checkExisting(ctx)
 
-    let transaction = await db.transaction()
+    const transaction = await db.transaction()
 
     try {
-      let user = await User.create({
-        email: email,
-        password: password
+      const user = await User.create({
+        email,
+        password
       }, { transaction })
 
-      userId = user.id
-
-      await user.addGroup('default', { transaction })
-
-      name = name.replace(/CMDR/i, '')
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
         throw new UnprocessableEntityAPIError({
@@ -60,19 +53,12 @@ export default class Register extends API {
       }
 
       await Rat.create({
-        name: name,
-        platform: platform,
+        name,
+        platform,
         userId: user.id
       }, { transaction })
 
-      nickname = nickname.replace(/\[.*]/i, '')
-
-      if (!ircPassword) {
-        ircPassword = password
-      }
-
-      await User.update({ nicknames: [nickname] }, {
-        where: { id: user.id }, transaction })
+      await Anope.addNewUser(email, nickname, `bcrypt:${user.password}`)
 
       await transaction.commit()
     } catch (ex) {
@@ -80,30 +66,27 @@ export default class Register extends API {
       throw ex
     }
 
-    let userQuery = new Query({params: { id: userId }, connection: ctx})
-    let result = await User.scope('profile').findAndCountAll(userQuery.toSequelize)
-    process.emit('registration', ctx, ctx.data)
-    ctx.body = Profile.presenter.render(result.rows, API.meta(result, userQuery))
+
   }
 
   static async checkExisting (ctx) {
-    let { email, name, platform } = ctx.data
+    const { email, name, platform } = ctx.data
 
-    let existingUser = await User.findOne({ where: {
+    const existingUser = await User.findOne({ where: {
       email: {
         ilike: email
       }
-    }})
+    } })
     if (existingUser) {
       throw new ConflictAPIError({ pointer: '/data/attributes/email' })
     }
 
-    let existingRat = await Rat.findOne({ where: {
+    const existingRat = await Rat.findOne({ where: {
       name: {
         ilike: name
       },
-      platform: platform
-    }})
+      platform
+    } })
     if (existingRat) {
       throw new ConflictAPIError({ pointer: '/data/attributes/name' })
     }

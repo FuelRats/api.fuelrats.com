@@ -1,6 +1,7 @@
 import knex from 'knex'
 import config from '../../config'
 import bcrypt from 'bcrypt'
+import { ConflictAPIError } from './APIError'
 
 const { database, username, password, hostname, port } = config.anope
 const anopeBcryptRounds = 10
@@ -16,11 +17,29 @@ const mysql = knex({
 })
 
 export default class Anope {
-  static nicknamesForEmail (email) {
-    return mysql.select('*')
+  static async getAccount (email) {
+    const results = await mysql.select('*')
       .from('anope_db_NickCore')
       .leftJoin('anope_db_NickAlias', 'anope_db_NickCore.display', 'anope_db_NickAlias.nc')
       .whereRaw('lower(email) = lower(?)', [email])
+
+    if (results.length > 0) {
+      return results
+    }
+    return undefined
+  }
+
+  static async findNickname (nickname) {
+    let nicknames = await mysql.raw(`
+        SELECT * FROM anope_db_NickAlias
+        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        WHERE
+            lower(anope_db_NickAlias.nick) = lower('?')
+    `, [nickname])
+    if (nicknames.length > 0) {
+      return nicknames[0]
+    }
+    return undefined
   }
 
   static setEmail (oldEmail, newEmail) {
@@ -56,23 +75,36 @@ export default class Anope {
 
   static addNewUser (email, nick, encryptedPassword, vhost) {
     return mysql.transaction(async (transaction) => {
+      const existingNickname = await Anope.findNickname(nick)
+      if (existingNickname) {
+        if (existingNickname.email.toLowerCase() === email.toLowerCase()) {
+          return existingNickname
+        } else {
+          throw new ConflictAPIError({
+            pointer: '/data/attributes/nickname'
+          })
+        }
+      }
+
       const createdUnixTime = Math.floor(Date.getTime() / 1000)
+      const user = await Anope.getAccount(email)
+      if (!user) {
+        await transaction.insert({
+          AUTOOP: 1,
+          HIDE_EMAIL: 1,
+          HIDE_MASK: 1,
+          MEMO_RECEIVE: 1,
+          MEMO_SIGNON: 1,
+          NS_PRIVATE: 1,
+          NS_SECURE: 1,
+          display: nick,
+          email,
+          memomax: 20,
+          password: encryptedPassword
+        }).into('anope_db_NickCore')
+      }
 
-      const insertedUser = await transaction.insert({
-        AUTOOP: 1,
-        HIDE_EMAIL: 1,
-        HIDE_MASK: 1,
-        MEMO_RECEIVE: 1,
-        MEMO_SIGNON: 1,
-        NS_PRIVATE: 1,
-        NS_SECURE: 1,
-        display: nick,
-        email,
-        memomax: 20,
-        password: encryptedPassword
-      }).into('anope_db_NickCore')
-
-      const insertedAlias = await transaction.insert({
+      const insertedNickname = await transaction.insert({
         nc: nick,
         nick,
         time_registered: createdUnixTime,
@@ -82,9 +114,7 @@ export default class Anope {
       }).into('anope_db_NickAlias')
 
       await transaction.commit()
-
-      insertedUser.nicknames = [insertedAlias]
-      return insertedUser
+      return insertedNickname
     })
   }
 }
