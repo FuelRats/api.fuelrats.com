@@ -35,7 +35,7 @@ module.exports = {
     'email': process.env.SMTP_EMAIL || 'blackhole@fuelrats.com'
   },
   'recaptcha': {
-    'secret': process.env.FRAPI_RECAPTCHA_SECRET || '6LdUsBoUAAAAAMkdpS2l6EE29GOZD9MgT1fhB_u6'
+    'secret': process.env.FRAPI_RECAPTCHA_SECRET || ''
   },
   'jira': {
     'username': process.env.FRAPI_JIRA_USERNAME || '',

@@ -1,11 +1,16 @@
 import { User, Rat, db, npoMembership } from '../db'
-import Query from '../query'
+import axios from 'axios'
+import config from '../../config'
+import { UnauthorizedAPIError } from '../classes/APIError'
+
 import API, {
   POST,
   required
 } from '../classes/API'
 import Profile from './Profiles'
-import { ConflictAPIError,UnprocessableEntityAPIError } from '../classes/APIError'
+import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+
+const googleRecaptchaEndpoint = 'https://www.google.com/recaptcha/api/siteverify'
 
 const platforms = ['pc', 'xb', 'ps']
 
@@ -13,22 +18,19 @@ export default class Register extends API {
   @POST('/register')
   @required('email', 'password', 'name', 'platform', 'nickname')
   async create (ctx) {
-    let userId = null
-    // let captcha = ctx.data['g-recaptcha-response']
-    // let captchaResult = await new Request(POST, {
-    //   host: 'www.google.com',
-    //   path: '/recaptcha/api/siteverify'
-    // }, {
-    //   secret: config.recaptcha.secret,
-    //   response: captcha,
-    //   remoteip: ctx.inet
-    // })
-    //
-    // if (captchaResult.body.success === false) {
-    //   throw Errors.template('invalid_parameter', 'g-recaptcha-response')
-    // }
+    let userId = undefined
+    let { email, name, nickname, password, ircPassword, platform, 'g-recaptcha-response': captcha } = ctx.data
 
-    let { email, name, nickname, password, ircPassword, platform } = ctx.data
+    const validationResponse = await axios.post(googleRecaptchaEndpoint, {
+      secret:  config.recaptcha.secret,
+      response: captcha,
+      remoteip: ctx.inet
+    })
+
+    if (validationResponse.data.success !== true) {
+      throw new UnauthorizedAPIError('/data/attributes/g-recaptcha-response')
+    }
+
     await Register.checkExisting(ctx)
 
     let transaction = await db.transaction()

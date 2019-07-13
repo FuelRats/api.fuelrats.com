@@ -22,7 +22,6 @@ import User from './routes/Users'
 import Rats from './routes/Rats'
 import Clients from './routes/Clients'
 import Ships from './routes/Ships'
-import Login from './routes/Login'
 import Register from './routes/Register'
 import Profile from './routes/Profiles'
 import Reset from './routes/Resets'
@@ -223,7 +222,6 @@ const routes = [
   new Rats(),
   new Clients(),
   new Ships(),
-  new Login(),
   new Register(),
   new Profile(),
   new Reset(),
