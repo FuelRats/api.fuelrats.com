@@ -25,6 +25,7 @@ import Ships from './routes/Ships'
 import Register from './routes/Register'
 import Profile from './routes/Profiles'
 import Reset from './routes/Resets'
+import Verifications from './routes/Verifications'
 import Statistics from './routes/Statistics'
 import Version from './routes/Version'
 import Decals from './routes/Decals'
@@ -225,6 +226,7 @@ const routes = [
   new Register(),
   new Profile(),
   new Reset(),
+  new Verifications(),
   new Statistics(),
   new Version(),
   new Decals(),
