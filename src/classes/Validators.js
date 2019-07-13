@@ -5,6 +5,7 @@ import { URL } from 'url'
 
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/u
 export const IRCNickname = /^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}]{1,29})?$/u
+const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]']
 
 // language=JSUnicodeRegexp
 export const FrontierRedeemCode = new RegexLiteral(`^
@@ -24,7 +25,7 @@ export const CMDRname = new RegexLiteral(`^[
   \\p{Connector_Punctuation}
   \\p{Join_Control}
   \\p{Space_Separator}
-]{3,64}$`, 'gu')
+]{3,64}$`, 'gui')
 // language=JSUnicodeRegexp
 export const ShipName = new RegexLiteral(`^[
   \\p{Alphabetic}
@@ -64,6 +65,21 @@ export function OAuthScope (value) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
     }
   }
+}
+
+export function validCMDRname (value) {
+  if (CMDRname.test(value) === true) {
+    const lowerNick = value.toLowerCase()
+    let invalid = forbiddenCMDRNameComponents.some((comp) => {
+      return lowerNick.includes(comp)
+    })
+
+    if (invalid === false) {
+      return true
+    }
+  }
+
+  throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name' })
 }
 
 /**

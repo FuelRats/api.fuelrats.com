@@ -1,4 +1,4 @@
-import { CMDRname, JSONObject } from '../classes/Validators'
+import { JSONObject, validCMDRname } from '../classes/Validators'
 import RatView from '../views/Rat'
 
 export default function Rat (sequelize, DataTypes) {
@@ -15,7 +15,7 @@ export default function Rat (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        is: CMDRname
+        validCMDRname
       }
     },
     data: {
