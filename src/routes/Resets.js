@@ -14,6 +14,7 @@ import Users from './Users'
 
 const mail = new Mail()
 const expirationLength = 86400000
+const resetTokenLength = 64
 
 export default class Resets extends API {
   get type () {
@@ -55,7 +56,7 @@ export default class Resets extends API {
       }
 
       const reset = await Reset.create({
-        value: crypto.randomBytes(expirationLength / 2).toString('hex'),
+        value: crypto.randomBytes(resetTokenLength / 2).toString('hex'),
         expires: new Date(Date.now() + expirationLength).getTime(),
         userId: user.id,
         required
@@ -141,6 +142,6 @@ export default class Resets extends API {
   }
 
   static getResetLink (resetToken) {
-    return `https://fuelrats.com/password-reset?t=${resetToken}`
+    return `https://fuelrats.com/verify?type=reset&t=${resetToken}`
   }
 }

@@ -50,6 +50,13 @@
         "detail": "Authentication credentials were provided in the request, but the server considers them insufficient to grant access"
       },
 
+
+      "verification_required": {
+        "code": 403,
+        "title": "Forbidden",
+        "detail": "Authentication credentials were provided in the request, but the server considers them insufficient to grant access"
+      },
+
       "resetrequired": {
         "code": 403,
         "title": "Forbidden",

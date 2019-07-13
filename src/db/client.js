@@ -68,6 +68,18 @@ export default function Client (sequelize, DataTypes) {
 
   client.associate = function (models) {
     models.Client.belongsTo(models.User, { foreignKey: 'userId', as: 'user' })
+
+    models.Client.addScope('authentication', {
+      include: [
+        {
+          model: models.User,
+          as: 'user',
+          required: true
+        }
+      ]
+    }, {
+      override: true
+    })
   }
 
   return client

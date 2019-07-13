@@ -127,11 +127,16 @@ app.use((ctx, next) => {
   const { query } = ctx
   ctx.query = parseQuery(query)
 
+  ctx.userAgent = ctx.request.headers['user-agent']
+
   if (ctx.request.headers['x-forwarded-for']) {
     [ctx.inet] = ctx.request.headers['x-forwarded-for'].split(', ')
   } else {
     ctx.inet = ctx.request.ip
   }
+
+  // FIXME
+  ctx.inet = '90.8.145.198'
 
   return next()
 })

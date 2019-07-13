@@ -98,7 +98,8 @@ const models = importModels([
   'Decal',
   'Group',
   'UserGroups',
-  'VerificationToken'
+  'VerificationToken',
+  'Session'
 ])
 
 
@@ -140,5 +141,6 @@ export const {
   Decal,
   Group,
   UserGroups,
-  VerificationToken
+  VerificationToken,
+  Session
 } = models

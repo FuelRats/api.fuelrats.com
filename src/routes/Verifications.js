@@ -14,6 +14,7 @@ import Users from './Users'
 
 const mail = new Mail()
 const expirationLength = 86400000
+const verificationTokenLength = 64
 
 export default class Verifications extends API {
   get type () {
@@ -83,7 +84,7 @@ export default class Verifications extends API {
     }
 
     const verification = await VerificationToken.create({
-      value: crypto.randomBytes(expirationLength / 2).toString('hex'),
+      value: crypto.randomBytes(verificationTokenLength / 2).toString('hex'),
       expires: new Date(Date.now() + expirationLength).getTime(),
       userId: user.id
     })
@@ -114,6 +115,6 @@ export default class Verifications extends API {
   }
 
   static getVerifyLink (resetToken) {
-    return `https://fuelrats.com/verify-me?t=${resetToken}`
+    return `https://fuelrats.com/verify?type=email&t=${resetToken}`
   }
 }

@@ -1,14 +1,14 @@
-
-
 import oauth2orize from 'oauth2orize-koa-fr'
 import crypto from 'crypto'
-import { Token, Client, Code, db } from '../db'
+import { Token, Client, Code, db, Session } from '../db'
 import Permission from '../classes/Permission'
-import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import { NotFoundAPIError, UnprocessableEntityAPIError, VerificationRequiredAPIError } from '../classes/APIError'
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Clients from './Clients'
 import Authentication from '../classes/Authentication'
+import Sessions from '../routes/Session'
+
 import API, {
   clientAuthenticated,
   authenticated,
@@ -30,7 +30,7 @@ server.serializeClient((client) => {
 })
 
 server.deserializeClient(async (id) => {
-  const client = await Client.findById(id)
+  const client = await Client.findByPk(id)
   if (!client) {
     return false
   }
@@ -83,10 +83,25 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
   return token.value
 }))
 
-server.exchange(oauth2orize.exchange.password(async (client, username, password) => {
-  const user = await Authentication.passwordAuthenticate({email: username, password})
+server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, ctx) => {
+  const user = await Authentication.passwordAuthenticate({ email: username, password })
   if (!user) {
     return false
+  }
+
+  const existingSession = await Session.findOne({
+    where: {
+      ip: ctx.inet,
+      userAgent: ctx.userAgent
+    }
+  })
+
+  if (!existingSession) {
+    await Sessions.createSession(ctx, user)
+    throw new VerificationRequiredAPIError()
+  } else if (existingSession.verified === false) {
+    await Sessions.sendSessionMail(user.email, user.displayRat.name, existingSession.code, ctx)
+    throw new VerificationRequiredAPIError()
   }
 
   const token = await Token.create({
@@ -172,7 +187,7 @@ export function validateRedirectUri (target, name, descriptor) {
   descriptor.value = async function (...args) {
     const [connection, next] = args
     await server.authorize(async (clientId, redirectUri) => {
-      const client = await Client.findById(clientId)
+      const client = await Client.findByPk(clientId)
       if (!client) {
         return false
       }

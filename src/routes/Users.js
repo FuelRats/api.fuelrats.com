@@ -74,7 +74,7 @@ export default class Users extends API {
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
   async image (ctx, next) {
-    const user = await User.scope('image').findById(ctx.params.id)
+    const user = await User.scope('image').findByPk(ctx.params.id)
     ctx.type = 'image/jpeg'
     ctx.body = user.image
     next()

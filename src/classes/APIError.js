@@ -86,6 +86,12 @@ export class ForbiddenAPIError extends APIError {
   }
 }
 
+export class VerificationRequiredAPIError extends APIError {
+  constructor (source) {
+    super('verification_required', source)
+  }
+}
+
 export class ResetRequiredAPIError extends APIError {
   constructor (source) {
     super('resetrequired', source)

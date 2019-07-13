@@ -9,6 +9,7 @@ static/js/
 static/docs/
 database.json
 dist/
+static/geoip/*
 
 .idea/*
 

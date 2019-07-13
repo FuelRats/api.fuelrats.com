@@ -96,7 +96,7 @@ export default class Authentication {
    * @returns {Promise<*|DatabaseDocument|undefined>} A promise returning the authenticated OAuth client object
    */
   static async clientAuthenticate ({ clientId, secret }) {
-    const client = await Client.findById(clientId)
+    const client = await Client.scope('authentication').findByPk(clientId)
     if (!client) {
       return undefined
     }
@@ -126,10 +126,9 @@ export default class Authentication {
    * @returns {Promise<boolean>} true if the request was successfully authenticated, false if not
    */
   static async authenticate ({ connection }) {
-    Anope.nicknamesForEmail('alex@sorlie.io')
     const [clientId, clientSecret] = getBasicAuth(connection)
     if (clientId) {
-      connection.state.client = await Authentication.clientAuthenticate({ clientId, clientSecret })
+      connection.state.client = await Authentication.clientAuthenticate({ clientId, secret: clientSecret })
     }
 
     if (connection.session.userId) {
