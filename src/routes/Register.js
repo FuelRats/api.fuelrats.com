@@ -2,12 +2,15 @@ import { User, Rat, db, npoMembership } from '../db'
 import axios from 'axios'
 import config from '../../config'
 import Anope from '../classes/Anope'
+import Mail from '../classes/Mail'
 
 import API, {
   POST,
   required
 } from '../classes/API'
 import { ConflictAPIError, UnprocessableEntityAPIError, UnauthorizedAPIError } from '../classes/APIError'
+
+const mail = new Mail()
 
 const googleRecaptchaEndpoint = 'https://www.google.com/recaptcha/api/siteverify'
 
@@ -59,6 +62,31 @@ export default class Register extends API {
       }, { transaction })
 
       await Anope.addNewUser(email, nickname, `bcrypt:${user.password}`)
+
+
+      await mail.send({
+        to: user.email,
+        subject: 'Fuel Rats Email Verification Required',
+        body: {
+          name,
+          intro: 'To complete the creation of your Fuel Rats Account your email address needs to be verified.',
+          action: {
+            instructions: 'Click the button below to verify your email:',
+            button: {
+              color: '#d65050',
+              text: 'Verify me',
+              link:  Resets.getResetLink(reset.value)
+            }
+          },
+          goToAction: {
+            text: 'Verify Email Address',
+            link: Resets.getResetLink(reset.value),
+            description: 'Click to verify your email'
+          },
+          outro: 'If you are having problems with verification you may contact support@fuelrats.com',
+          signature: 'Sincerely'
+        }
+      })
 
       await transaction.commit()
     } catch (ex) {

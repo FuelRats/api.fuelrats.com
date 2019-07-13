@@ -22,7 +22,7 @@ export default class Mail {
     })
   }
 
-  async send ({to: recipient, subject, body}) {
+  async send ({ to: recipient, subject, body }) {
     const email = {
       body
     }
