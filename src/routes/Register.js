@@ -3,6 +3,7 @@ import axios from 'axios'
 import config from '../../config'
 import Anope from '../classes/Anope'
 import Verifications from './Verifications'
+import Sessions from './Sessions'
 
 import API, {
   POST,
@@ -66,8 +67,9 @@ export default class Register extends API {
       await Anope.addNewUser(email, nickname, `bcrypt:${user.password}`)
       await Verifications.createVerification(user)
 
-
       await transaction.commit()
+
+      await Sessions.createVerifiedSession(ctx, user)
     } catch (ex) {
       await transaction.rollback()
       throw ex

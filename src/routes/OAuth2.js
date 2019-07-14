@@ -7,7 +7,7 @@ import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Clients from './Clients'
 import Authentication from '../classes/Authentication'
-import Sessions from '../routes/Session'
+import Sessions from './Sessions'
 
 import API, {
   clientAuthenticated,
