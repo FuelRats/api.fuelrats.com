@@ -2,7 +2,7 @@ import { User, Rat, db, npoMembership } from '../db'
 import axios from 'axios'
 import config from '../../config'
 import Anope from '../classes/Anope'
-import Mail from '../classes/Mail'
+import Verifications from './Verifications'
 
 import API, {
   POST,
@@ -55,38 +55,17 @@ export default class Register extends API {
         }, { transaction })
       }
 
-      await Rat.create({
+      const rat = await Rat.create({
         name,
         platform,
         userId: user.id
       }, { transaction })
 
+      user.rats.push(rat)
+
       await Anope.addNewUser(email, nickname, `bcrypt:${user.password}`)
+      await Verifications.createVerification(user)
 
-
-      await mail.send({
-        to: user.email,
-        subject: 'Fuel Rats Email Verification Required',
-        body: {
-          name,
-          intro: 'To complete the creation of your Fuel Rats Account your email address needs to be verified.',
-          action: {
-            instructions: 'Click the button below to verify your email:',
-            button: {
-              color: '#d65050',
-              text: 'Verify me',
-              link:  Resets.getResetLink(reset.value)
-            }
-          },
-          goToAction: {
-            text: 'Verify Email Address',
-            link: Resets.getResetLink(reset.value),
-            description: 'Click to verify your email'
-          },
-          outro: 'If you are having problems with verification you may contact support@fuelrats.com',
-          signature: 'Sincerely'
-        }
-      })
 
       await transaction.commit()
     } catch (ex) {

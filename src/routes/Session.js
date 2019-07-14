@@ -50,7 +50,7 @@ export default class Sessions extends API {
       userId: user.id
     })
 
-    return Sessions.sendSessionMail(user.email, user.displayRat.name, session.code, ctx)
+    return Sessions.sendSessionMail(user.email, user.preferredRat.name, session.code, ctx)
   }
 
   static sendSessionMail (email, name, code, ctx) {

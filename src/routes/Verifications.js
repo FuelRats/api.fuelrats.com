@@ -93,7 +93,7 @@ export default class Verifications extends API {
       to: user.email,
       subject: 'Fuel Rats Email Verification Required',
       body: {
-        name: user.displayRat.name,
+        name: user.preferredRat.name,
         intro: 'To complete the creation of your Fuel Rats Account your email address needs to be verified.',
         action: {
           instructions: 'Click the button below to verify your email:',

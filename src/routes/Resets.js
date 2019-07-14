@@ -65,7 +65,7 @@ export default class Resets extends API {
         to: user.email,
         subject: 'Fuel Rats Password Reset Requested',
         body: {
-          name: user.displayRat.name,
+          name: user.preferredRat.name,
           intro: 'A password reset to your Fuel Rats Account has been requested.',
           action: {
             instructions: 'Click the button below to reset your password:',
