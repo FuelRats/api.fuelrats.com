@@ -72,7 +72,7 @@ export default class Verifications extends API {
     return true
   }
 
-  static async createVerification (user) {
+  static async createVerification (user, transaction = undefined) {
     const existingVerification = VerificationToken.findOne({
       where: {
         userId: user.id
@@ -87,7 +87,7 @@ export default class Verifications extends API {
       value: crypto.randomBytes(verificationTokenLength / 2).toString('hex'),
       expires: new Date(Date.now() + expirationLength).getTime(),
       userId: user.id
-    })
+    }, { transaction })
 
     await mail.send({
       to: user.email,

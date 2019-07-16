@@ -43,15 +43,9 @@ export default class API {
    * @returns {Promise<Model>} A transaction to retrieve the created object
    */
   async create ({ ctx, databaseType, callback = undefined }) {
-    if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data' })
-    }
+    const dataObj = getJSONAPIData({ ctx, type: this.type })
 
-    if (!(ctx.data.data.attributes instanceof Object)) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
-    }
-
-    const entity = await databaseType.create(ctx.data.data.attributes)
+    const entity = await databaseType.create(dataObj.attributes)
 
     if (callback) {
       await callback({ entity })
@@ -84,9 +78,7 @@ export default class API {
       throw new BadRequestAPIError({ parameter: 'id' })
     }
 
-    if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data' })
-    }
+    const dataObj = getJSONAPIData({ ctx, type: this.type })
 
     const entity = await databaseType.findOne({
       where: {
@@ -100,7 +92,7 @@ export default class API {
 
     this.requireWritePermission({ connection: ctx, entity })
 
-    const { attributes } = ctx.data.data
+    const { attributes } = dataObj
 
     if (attributes instanceof Object) {
       this.validateUpdateAccess({ ctx, attributes, entity })
@@ -765,6 +757,18 @@ export function isValidJSONAPIObject ({ object }) {
     }
   }
   return false
+}
+
+export function getJSONAPIData ({ ctx, type }) {
+  if (!ctx.data.data || !isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== type) {
+    throw new UnprocessableEntityAPIError({ pointer: '/data' })
+  }
+
+  if (!(ctx.data.data.attributes instanceof Object)) {
+    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
+  }
+
+  return ctx.data.data
 }
 
 @enumerable

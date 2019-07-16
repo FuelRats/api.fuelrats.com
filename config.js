@@ -11,6 +11,7 @@ module.exports = {
     'url': process.env.FRAPI_XMLRPC_URL || 'https://irc.eu.fuelrats.com:6080/xmlrpc',
     'insecure': process.env.FRAPI_XMLRPC_INSECURE || false
   },
+  'ropcClientId': process.env.FRAPI_ROPC_CLIENTID || '60cf7fad-ab39-4ca6-81c3-4ff873477a17',
 
   'hostname': process.env.FRAPI_HOSTNAME || 'localhost',
   'externalUrl': process.env.FRAPI_URL || 'https://api.fuelrats.com',
@@ -29,6 +30,11 @@ module.exports = {
     'username': process.env.FRAPI_ANOPE_USERNAME || 'anope2',
     'password': process.env.FRAPI_ANOPE_PASSWORD || '',
     'port': process.env.FRAPI_ANOPE_PORT || 3306
+  },
+  'frontier': {
+    'clientId': process.env.FRAPI_FRONTIER_CLIENTID || '',
+    'sharedKey': process.env.FRAPI_FRONTIER_SHAREDKEY ||  '',
+    'redirectUri': process.env.FRAPI_FRONTIER_REDIRECTURI || ''
   },
   'smtp': {
     'host': process.env.SMTP_HOSTNAME || 'smtp-relay.gmail.com',

@@ -1,7 +1,6 @@
 
 
-import { Rat } from '../db'
-import Query from '../query'
+import { Rat, Rescue } from '../db'
 import { CustomPresenter } from '../classes/Presenters'
 import Ships from './Ships'
 import { NotFoundAPIError } from '../classes/APIError'
@@ -17,42 +16,45 @@ import API, {
   protect, WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import DatabaseQuery from '../query2/Database'
+import DatabaseDocument from '../Documents/Database'
+import RatView from '../views/Rat'
+import RescueView from '../views/Rescue'
 
 export default class Rats extends API {
   @GET('/rats')
   @websocket('rats', 'search')
   async search (ctx) {
-    let ratsQuery = new Query({params: ctx.query, connection: ctx})
-    let result = await Rat.findAndCountAll(ratsQuery.toSequelize)
-    return Rats.presenter.render(result.rows, API.meta(result, ratsQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Rat.findAndCountAll(query.searchObject)
+    return new DatabaseDocument({ query, result, type: RatView })
   }
 
   @GET('/rats/:id')
   @websocket('rats', 'read')
   @parameters('id')
   async findById (ctx) {
-    let ratQuery = new Query({params: {id: ctx.params.id}, connection: ctx})
-    let result = await Rat.findAndCountAll(ratQuery.toSequelize)
-
-    return Rats.presenter.render(result.rows, API.meta(result, ratQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Rat.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+    if (!result) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    return new DatabaseDocument({ query, result, type: RatView })
   }
 
   @POST('/rats')
   @websocket('rats', 'create')
   @authenticated
   async create (ctx) {
-    this.requireWritePermission({ connection: ctx, entity: ctx.data })
+    const result = await super.create({ ctx, databaseType: Rat })
 
-    if (!ctx.data.userId) {
-      ctx.data.userId = ctx.state.user.id
-    }
-
-    let result = await Rat.create(ctx.data)
-
+    const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = 201
-    let renderedResult = Rats.presenter.render(result, API.meta(result))
-    process.emit('ratCreated', ctx, renderedResult)
-    return renderedResult
+    return new DatabaseDocument({ query, result, type: RatView })
   }
 
   @PUT('/rats')
@@ -61,29 +63,10 @@ export default class Rats extends API {
   @parameters('id')
   @protect('rat.write', 'platform')
   async update (ctx) {
-    this.requireWritePermission({ connection: ctx, entity: ctx.data })
+    const result = await super.update({ ctx, databaseType: Rat, updateSearch: { id:ctx.params.id } })
 
-    let rat = await Rat.findOne({
-      where: { id: ctx.params.id }
-    })
-
-    if (!rat) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({ connection: ctx, entity: rat })
-
-    await Rat.update(ctx.data, {
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    let ratQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
-    let result = await Rat.findAndCountAll(ratQuery.toSequelize)
-    let renderedResult = Rats.presenter.render(result.rows, API.meta(result, ratQuery))
-    process.emit('ratUpdated', ctx, renderedResult)
-    return renderedResult
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RatView })
   }
 
   @DELETE('/rats/:id')
@@ -92,22 +75,9 @@ export default class Rats extends API {
   @permissions('rat.delete')
   @parameters('id')
   async delete (ctx) {
-    let rat = await Rat.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
+    await super.delete({ ctx, databaseType: Rat })
 
-    if (!rat) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    await rat.destroy()
-
-    process.emit('ratDeleted', ctx, CustomPresenter.render({
-      id: ctx.params.id
-    }))
-    ctx.status = 204
+    ctx.response.status = 204
     return true
   }
 
@@ -116,6 +86,7 @@ export default class Rats extends API {
       name: WritePermission.group,
       data: WritePermission.group,
       platform: WritePermission.group,
+      frontierId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
       deletedAt: WritePermission.internal
@@ -134,17 +105,5 @@ export default class Rats extends API {
       return ['rat.write', 'rat.write.me']
     }
     return ['rat.write']
-  }
-
-  static get presenter () {
-    class RatsPresenter extends API.presenter {
-      relationships () {
-        return {
-          ships: Ships.presenter
-        }
-      }
-    }
-    RatsPresenter.prototype.type = 'rats'
-    return RatsPresenter
   }
 }

@@ -40,6 +40,10 @@ export default function Rat (sequelize, DataTypes) {
         isIn: [['pc', 'xb', 'ps']]
       }
     },
+    frontierId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
     userId: {
       type: DataTypes.UUID,
       allowNull: true,

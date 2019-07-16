@@ -54,6 +54,10 @@ export default function User (db, DataTypes) {
         IRCNicknames
       }
     },
+    frontierId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
     image: {
       type: DataTypes.BLOB(),
       allowNull: true,

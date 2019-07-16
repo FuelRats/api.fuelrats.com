@@ -279,6 +279,7 @@ export default class Users extends API {
       password: WritePermission.sudo,
       status: WritePermission.sudo,
       suspended: WritePermission.internal,
+      frontierId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
       deletedAt: WritePermission.internal

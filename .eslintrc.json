@@ -36,6 +36,13 @@
       "error",
       "^([A-Za-z0-9]+)$"
     ],
+    "id-length": [
+      "error",
+      {
+        "min": 2,
+        "max": 35
+      }
+    ],
     "linebreak-style": [
       "error",
       "unix"
@@ -225,13 +232,6 @@
           "todo",
           "fixme"
         ]
-      }
-    ],
-    "id-length": [
-      "error",
-      {
-        "min": 2,
-        "max": 35
       }
     ],
     "getter-return": [

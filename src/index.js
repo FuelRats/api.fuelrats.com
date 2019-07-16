@@ -21,11 +21,13 @@ import Rescue from './routes/Rescues'
 import User from './routes/Users'
 import Rats from './routes/Rats'
 import Clients from './routes/Clients'
+import Frontier from './routes/Frontier'
 import Ships from './routes/Ships'
 import Register from './routes/Register'
 import Profile from './routes/Profiles'
 import Reset from './routes/Resets'
 import Verifications from './routes/Verifications'
+import Sessions from './routes/Sessions'
 import Statistics from './routes/Statistics'
 import Version from './routes/Version'
 import Decals from './routes/Decals'
@@ -232,12 +234,14 @@ const routes = [
   new Profile(),
   new Reset(),
   new Verifications(),
+  new Sessions(),
   new Statistics(),
   new Version(),
   new Decals(),
   new Stream(),
   new JiraDrillWebhook(),
-  new NPO()
+  new NPO(),
+  new Frontier()
 ]
 
 // OAUTH2

@@ -11,8 +11,6 @@ import API, {
 } from '../classes/API'
 import { ConflictAPIError, UnprocessableEntityAPIError, UnauthorizedAPIError } from '../classes/APIError'
 
-const mail = new Mail()
-
 const googleRecaptchaEndpoint = 'https://www.google.com/recaptcha/api/siteverify'
 
 const platforms = ['pc', 'xb', 'ps']
@@ -21,7 +19,7 @@ export default class Register extends API {
   @POST('/register')
   @required('email', 'password', 'name', 'platform', 'nickname', 'g-recaptcha-response')
   async create (ctx) {
-    const { email, name, nickname, password, ircPassword, platform, 'g-recaptcha-response': captcha } = ctx.data
+    const { email, name, nickname, password, platform, 'g-recaptcha-response': captcha } = ctx.data
 
     const validationResponse = await axios.post(googleRecaptchaEndpoint, {
       secret:  config.recaptcha.secret,
@@ -35,16 +33,13 @@ export default class Register extends API {
 
     await Register.checkExisting(ctx)
 
-    const transaction = await db.transaction()
-
-    try {
+    const result = db.transaction(async (transaction) => {
       const user = await User.create({
         email,
         password
       }, { transaction })
 
       if (platforms.includes(platform) === false) {
-        // noinspection ExceptionCaughtLocallyJS
         throw new UnprocessableEntityAPIError({
           pointer: '/data/attributes/platform'
         })
@@ -66,6 +61,10 @@ export default class Register extends API {
 
       await Anope.addNewUser(email, nickname, `bcrypt:${user.password}`)
       await Verifications.createVerification(user)
+    })
+
+    try {
+
 
       await transaction.commit()
 

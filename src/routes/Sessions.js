@@ -53,14 +53,14 @@ export default class Sessions extends API {
     return Sessions.sendSessionMail(user.email, user.preferredRat.name, session.code, ctx)
   }
 
-  static createVerifiedSession (ctx, user) {
+  static createVerifiedSession (ctx, user, transaction = undefined) {
     return Session.create({
       ip: ctx.inet,
       userAgent: ctx.userAgent,
       code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
       userId: user.id,
       verified: true
-    })
+    }, { transaction })
   }
 
   static sendSessionMail (email, name, code, ctx) {
