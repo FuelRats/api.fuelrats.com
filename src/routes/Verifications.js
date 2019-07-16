@@ -73,7 +73,7 @@ export default class Verifications extends API {
   }
 
   static async createVerification (user, transaction = undefined) {
-    const existingVerification = VerificationToken.findOne({
+    const existingVerification = await VerificationToken.findOne({
       where: {
         userId: user.id
       }
