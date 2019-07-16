@@ -29,8 +29,18 @@ export default class Anope {
     return undefined
   }
 
+  static async setFingerprint (email, fingerprint) {
+    return mysql.raw(`
+        UPDATE anope_db_NickCore
+        SET
+            cert = ?
+        WHERE
+            lower(anope_db_NickCore.email) = lower(?)
+        `, [fingerprint, email])
+  }
+
   static async findNickname (nickname) {
-    let nicknames = await mysql.raw(`
+    const nicknames = await mysql.raw(`
         SELECT * FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE

@@ -1,6 +1,4 @@
 import { User, Rat, db, Rescue } from '../db'
-
-import Authentication from '../classes/Authentication'
 import Document from '../Documents/index'
 import UserView from '../views/User'
 import Query from '../query2'
@@ -8,6 +6,8 @@ import bcrypt from 'bcrypt'
 import Rats from './Rats'
 import Groups from './Groups'
 import Permission from '../classes/Permission'
+import Anope from '../classes/Anope'
+import { BadRequestAPIError } from '../classes/APIError'
 
 import workerpool from 'workerpool'
 
@@ -37,6 +37,7 @@ import { DocumentViewType } from '../Documents'
 
 export default class Users extends API {
   static imageResizePool = workerpool.pool('./dist/workers/image.js')
+  static sslGenerationPool = workerpool.pool('./dist/workers/certificate.js')
 
   get type () {
     return 'users'
@@ -74,10 +75,31 @@ export default class Users extends API {
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
   async image (ctx, next) {
-    const user = await User.scope('image').findByPk(ctx.params.id)
+    const user = await User.scope('image')
+      .findByPk(ctx.params.id)
     ctx.type = 'image/jpeg'
     ctx.body = user.image
     next()
+  }
+
+  @GET('/users/:id/certificate')
+  @authenticated
+  async certificate (ctx) {
+    const ratName = ctx.state.user.preferredRat.name
+    const { certificate, fingerprint }  = await Users.sslGenerationPool.exec(
+      'generateSslCertificate',
+      [ratName]
+    )
+
+    const anopeAccount = Anope.getAccount(ctx.state.user.email)
+    if (!anopeAccount) {
+      throw new BadRequestAPIError()
+    }
+
+    Anope.setFingerprint(ctx.state.user.email, fingerprint)
+    ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
+    ctx.set('Content-type', 'application/x-pem-file')
+    ctx.body = certificate
   }
 
   @PUT('/users/:id/password')
@@ -112,9 +134,11 @@ export default class Users extends API {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async create (ctx) {
-    const result = await super.create({ ctx, databaseType: User, callback: ({ entity }) => {
-      return entity.addGroup('default')
-    } })
+    const result = await super.create({
+      ctx, databaseType: User, callback: ({ entity }) => {
+        return entity.addGroup('default')
+      }
+    })
 
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = 201
@@ -406,19 +430,5 @@ export default class Users extends API {
       'groups': 'groups',
       'clients': 'clients'
     }
-  }
-
-  static get presenter () {
-    class UsersPresenter extends API.presenter {
-      relationships () {
-        return {
-          rats: Rats.presenter,
-          groups: Groups.presenter,
-          displayRat: Rats.presenter
-        }
-      }
-    }
-    UsersPresenter.prototype.type = 'users'
-    return UsersPresenter
   }
 }
