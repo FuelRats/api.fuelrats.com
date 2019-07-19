@@ -20,12 +20,13 @@ const mysql = knex({
 
 function convert (obj) {
   return {
+    id: obj.id,
     lastQuit: obj.last_quit,
     lastRealHost: obj.last_realhost,
     lastRealName: obj.last_realname,
     lastSeen: new Date(obj.last_seen * 1000),
     lastUserMask: obj.last_usermask,
-    account: obj.nc,
+    display: obj.nc,
     nick: obj.nick,
     createdAt: new Date(obj.time_registered * 1000),
     updatedAt: parse(obj.timestamp),
@@ -66,7 +67,11 @@ export default class Anope {
     const distance = Math.min(Math.ceil(nickname.length / 2), defaultMaximumEditDistance)
 
     const [results] = await mysql.raw(`
-        SELECT *, levenshtein(anope_db_NickAlias.nick, :nickname) AS score
+        SELECT 
+               *, 
+               anope_db_NickAlias.id AS id,
+               anope_db_NickCore.id AS accountId,
+               levenshtein(anope_db_NickAlias.nick, :nickname) AS score
         FROM anope_db_NickAlias
                  LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE levenshtein(anope_db_NickAlias.nick, :nickname) <= :distance
@@ -96,16 +101,22 @@ export default class Anope {
   }
 
   static async findNickname (nickname) {
-    const nicknames = await mysql.raw(`
+    const [account] = await mysql.raw(`
         SELECT * FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE
             lower(anope_db_NickAlias.nick) = lower('?')
     `, [nickname])
-    if (nicknames.length > 0) {
-      return nicknames[0]
+    if (!account) {
+      return undefined
     }
-    return undefined
+
+    account.user = await User.findOne({
+      where: {
+        email: { ilike: account.email }
+      }
+    })
+    return account
   }
 
   static setEmail (oldEmail, newEmail) {

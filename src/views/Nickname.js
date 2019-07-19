@@ -9,6 +9,10 @@ export default class NicknameView extends DatabaseView {
     return 'nicknames'
   }
 
+  get id () {
+    return this.object.id
+  }
+
   get attributes () {
     return class {
       static lastQuit
@@ -16,7 +20,7 @@ export default class NicknameView extends DatabaseView {
       static lastRealName
       static lastSeen
       static lastUserMask
-      static account
+      static display
       static nick
       static createdAt
       static updatedAt
