@@ -101,15 +101,17 @@ export default class Anope {
   }
 
   static async findNickname (nickname) {
-    const [account] = await mysql.raw(`
+    let [[account]] = await mysql.raw(`
         SELECT * FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE
-            lower(anope_db_NickAlias.nick) = lower('?')
+            lower(anope_db_NickAlias.nick) = lower(?)
     `, [nickname])
     if (!account) {
       return undefined
     }
+
+    account = convert(account)
 
     account.user = await User.findOne({
       where: {

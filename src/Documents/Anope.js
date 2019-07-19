@@ -17,13 +17,13 @@ export default class AnopeDocument extends Document {
    * @param view A DocumentViewType enum describing the type of view this document should have
    * @constructor
    */
-  constructor ({ query, result, type}) {
+  constructor ({ query, result, type, view = DocumentViewType.collection }) {
     super({
       objects: result,
       type,
       meta: query.meta,
       query,
-      view: DocumentViewType.collection
+      view
     })
 
     this.#result = result
