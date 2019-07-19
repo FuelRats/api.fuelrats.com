@@ -2,9 +2,11 @@ import knex from 'knex'
 import config from '../../config'
 import bcrypt from 'bcrypt'
 import { ConflictAPIError } from './APIError'
-
-const { database, username, password, hostname, port } = config.anope
+import { parse } from 'date-fns'
+import { User } from '../db'
+const { database, username, hostname, port } = config.anope
 const anopeBcryptRounds = 10
+const defaultMaximumEditDistance = 5
 
 const mysql = knex({
   client: 'mysql',
@@ -15,6 +17,27 @@ const mysql = knex({
     database
   }
 })
+
+function convert (obj) {
+  return {
+    lastQuit: obj.last_quit,
+    lastRealHost: obj.last_realhost,
+    lastRealName: obj.last_realname,
+    lastSeen: new Date(obj.last_seen * 1000),
+    lastUserMask: obj.last_usermask,
+    account: obj.nc,
+    nick: obj.nick,
+    createdAt: new Date(obj.time_registered * 1000),
+    updatedAt: parse(obj.timestamp),
+    vhostSetBy: obj.vhost_creator,
+    vhost: obj.vhost_host,
+    vhostSetAt: new Date(obj.vhost_time * 1000),
+    email: obj.email,
+    password: obj.pass,
+    fingerprint: obj.cert,
+    score: obj.score
+  }
+}
 
 export default class Anope {
   static async getAccount (email) {
@@ -37,6 +60,39 @@ export default class Anope {
         WHERE
             lower(anope_db_NickCore.email) = lower(?)
         `, [fingerprint, email])
+  }
+
+  static async findAccountFuzzyMatch (nickname) {
+    const distance = Math.min(Math.ceil(nickname.length / 2), defaultMaximumEditDistance)
+
+    const [results] = await mysql.raw(`
+        SELECT *, levenshtein(anope_db_NickAlias.nick, :nickname) AS score
+        FROM anope_db_NickAlias
+                 LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        WHERE levenshtein(anope_db_NickAlias.nick, :nickname) <= :distance
+        ORDER BY score ASC
+        LIMIT 10
+    `, { nickname, distance })
+
+    const emails = results.map((result) => {
+      return result.email
+    })
+
+    const users = await User.findAll({
+      where: {
+        email: {
+          like: { any: emails }
+        }
+      }
+    })
+
+    return results.map((result) => {
+      const entry = convert(result)
+      entry.user = users.find((user) => {
+        return user.email.toLowerCase() === entry.email.toLowerCase()
+      })
+      return entry
+    })
   }
 
   static async findNickname (nickname) {

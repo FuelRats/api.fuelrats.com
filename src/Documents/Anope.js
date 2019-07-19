@@ -17,24 +17,14 @@ export default class AnopeDocument extends Document {
    * @param view A DocumentViewType enum describing the type of view this document should have
    * @constructor
    */
-  constructor ({ query, result, type, view = DocumentViewType.individual }) {
-    if (result.rows) {
-      super({
-        objects: result.rows,
-        type,
-        meta: query.meta,
-        query,
-        view: DocumentViewType.collection
-      })
-    } else {
-      super({
-        objects: result,
-        type,
-        meta: query.meta,
-        query,
-        view
-      })
-    }
+  constructor ({ query, result, type}) {
+    super({
+      objects: result,
+      type,
+      meta: query.meta,
+      query,
+      view: DocumentViewType.collection
+    })
 
     this.#result = result
     this.#query = query
@@ -44,105 +34,62 @@ export default class AnopeDocument extends Document {
    * @inheritDoc
    */
   get firstPage () {
-    if (!this.#result.rows || this.#result.count === 0) {
-      return undefined
-    }
-
-    return 1
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get lastPage () {
-    if (!this.#result.rows || this.#result.count === 0) {
-      return undefined
-    }
-    return Math.floor(this.#result.count / this.#query.limit)
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get currentPage () {
-    if (!this.#result.rows) {
-      return undefined
-    }
-
-    return (this.#query.offset + this.#query.limit) / this.#query.limit
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get previousPage () {
-    if (!this.#result.rows) {
-      return undefined
-    }
-
-    const { currentPage } = this
-    if (currentPage === 1) {
-      return undefined
-    }
-    return currentPage - 1
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get nextPage () {
-    if (!this.#result.rows) {
-      return undefined
-    }
-
-    const { currentPage, lastPage } = this
-    if (currentPage === lastPage) {
-      return undefined
-    }
-    return currentPage + 1
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get offset () {
-    if (!this.#result.rows) {
-      return undefined
-    }
-
-    return this.#query.offset
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get limit () {
-    if (!this.#result.rows) {
-      return undefined
-    }
-
-    return this.#query.limit
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get count () {
-    if (!this.#result.rows) {
-      return undefined
-    }
-
-    return this.#result.rows.length
+    return undefined
   }
 
   /**
    * @inheritDoc
    */
   get total () {
-    if (!this.#result.rows) {
-      return undefined
-    }
-
-    return this.#result.count
+    return undefined
   }
 }

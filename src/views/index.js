@@ -10,9 +10,13 @@ export default class View {
   #cachedGroup = undefined
 
   constructor ({ object, query, parentUrl = undefined }) {
-    this.object = object
+    this.setObject(object)
     this.query = query
     this.parentUrl = parentUrl
+  }
+
+  setObject (object) {
+    this.object = object
   }
 
   static get type () {

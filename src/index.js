@@ -26,6 +26,7 @@ import Ships from './routes/Ships'
 import Register from './routes/Register'
 import Profile from './routes/Profiles'
 import Reset from './routes/Resets'
+import Nicknames from './routes/Nicknames'
 import Verifications from './routes/Verifications'
 import Sessions from './routes/Sessions'
 import Statistics from './routes/Statistics'
@@ -227,6 +228,7 @@ app.use(async (ctx, next) => {
 const routes = [
   new Rescue(),
   new User(),
+  new Nicknames(),
   new Rats(),
   new Clients(),
   new Ships(),

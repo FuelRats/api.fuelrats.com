@@ -1,11 +1,10 @@
 import workerpool from 'workerpool'
 import { exec } from 'child_process'
 
-const certificateLifeTime = 365 * 10
 
 function generateSslCertificate (ratName) {
   return new Promise((resolve, reject) => {
-    exec(`openssl req -new -newkey rsa:4096 -days ${certificateLifeTime} -nodes -x509 -subj \\
+    exec(`openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj \\
     "/C=US/ST=something/L=Generic/O=FuelRats/CN="${ratName}"@fuelrats.com"`, (err, certStdout) => {
       if (err) {
         return reject(err)

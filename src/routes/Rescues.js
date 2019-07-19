@@ -302,33 +302,6 @@ export default class Rescues extends API {
       'firstLimpet': 'rats'
     }
   }
-
-  static get presenter () {
-    class RescuesPresenter extends API.presenter {
-      relationships () {
-        return {
-          rats: Rats.presenter,
-          firstLimpet: Rats.presenter,
-          epics: Epics.presenter
-        }
-      }
-
-      selfLinks (instance) {
-        return `/rescues/${this.id(instance)}`
-      }
-
-      links (instance) {
-        return {
-          rescues: {
-            self: this.selfLinks(instance),
-            related: this.selfLinks(instance)
-          }
-        }
-      }
-    }
-    RescuesPresenter.prototype.type = 'rescues'
-    return RescuesPresenter
-  }
 }
 
 process.on('rescueCreated', (ctx, rescue) => {
