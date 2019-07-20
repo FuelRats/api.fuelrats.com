@@ -139,6 +139,24 @@ export default function User (db, DataTypes) {
     return this.rats[0]
   }
 
+  user.prototype.vhost = function () {
+    if (!this.groups || this.groups.length === 0) {
+      return undefined
+    }
+
+    const [group] = this.groups.sort((group1, group2) => {
+      return group1.priority - group2.priority
+    })
+
+    if (group.isAdministrator) {
+      return group.vhost
+    }
+    const rat = this.preferredRat()
+    const identifier = rat ? rat.name : user.id
+
+    return `${getIRCSafeName(identifier)}.${group.vhost}`
+  }
+
   user.associate = function (models) {
     models.User.hasMany(models.Rat, {
       as: 'rats',
@@ -229,4 +247,12 @@ export default function User (db, DataTypes) {
     })
   }
   return user
+}
+
+
+function getIRCSafeName (rat) {
+  let ratName = rat.name
+  ratName = ratName.replace(/ /gu, '')
+  ratName = ratName.replace(/[^a-zA-Z0-9\s]/gu, '')
+  return ratName.toLowerCase()
 }

@@ -152,6 +152,13 @@ export default class Anope {
       })
   }
 
+  static removeNickname (nickname) {
+    return mysql.raw(`
+      DELETE FROM anope_db_NickAlias
+      WHERE  nick = ?
+    `, [nickname])
+  }
+
   static addNewUser (email, nick, encryptedPassword, vhost) {
     return mysql.transaction(async (transaction) => {
       const existingNickname = await Anope.findNickname(nick)
