@@ -1,20 +1,17 @@
-import { User, Rat, db, Rescue } from '../db'
-import Document from '../Documents/index'
+import { User } from '../db'
 import UserView from '../views/User'
 import Query from '../query2'
 import bcrypt from 'bcrypt'
-import Rats from './Rats'
-import Groups from './Groups'
 import Permission from '../classes/Permission'
 import Anope from '../classes/Anope'
-import { BadRequestAPIError } from '../classes/APIError'
 
 import workerpool from 'workerpool'
 
 import {
   NotFoundAPIError,
   UnauthorizedAPIError,
-  UnsupportedMediaAPIError
+  UnsupportedMediaAPIError,
+  BadRequestAPIError
 } from '../classes/APIError'
 
 import API, {
@@ -35,6 +32,9 @@ import DatabaseQuery from '../query2/Database'
 import DatabaseDocument from '../Documents/Database'
 import { DocumentViewType } from '../Documents'
 
+/**
+ * Class for the /users endpoint
+ */
 export default class Users extends API {
   static imageResizePool = workerpool.pool('./dist/workers/image.js')
   static sslGenerationPool = workerpool.pool('./dist/workers/certificate.js')
@@ -96,7 +96,7 @@ export default class Users extends API {
       throw new BadRequestAPIError()
     }
 
-    Anope.setFingerprint(ctx.state.user.email, fingerprint)
+    await Anope.setFingerprint(ctx.state.user.email, fingerprint)
     ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
     ctx.set('Content-type', 'application/x-pem-file')
     ctx.body = certificate
