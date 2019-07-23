@@ -44,8 +44,8 @@ export default class Sessions extends API {
 
   static async createSession (ctx, user) {
     const session = await Session.create({
-      ip: ctx.inet,
-      userAgent: ctx.userAgent,
+      ip: ctx.request.ip,
+      userAgent: ctx.state.userAgent,
       code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
       userId: user.id
     })
@@ -55,8 +55,8 @@ export default class Sessions extends API {
 
   static createVerifiedSession (ctx, user, transaction = undefined) {
     return Session.create({
-      ip: ctx.inet,
-      userAgent: ctx.userAgent,
+      ip: ctx.request.ip,
+      userAgent: ctx.state.userAgent,
       code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
       userId: user.id,
       verified: true
@@ -64,7 +64,7 @@ export default class Sessions extends API {
   }
 
   static sendSessionMail (email, name, code, ctx) {
-    const ipAddress = ctx.inet
+    const ipAddress = ctx.request.ip
 
     const geoip = GeoIP.lookup(ipAddress)
     const locationString = `${geoip.city.names.en}, ${geoip.postal.code} ${geoip.country.names.en}`
@@ -89,7 +89,7 @@ export default class Sessions extends API {
           description: 'Click to authorise the login from a new location'
         },
         dictionary: {
-          'Device': Sessions.generateDeviceDescription(ctx.userAgent),
+          'Device': Sessions.generateDeviceDescription(ctx.state.userAgent),
           'Location': locationString,
           'IP Address': ipAddress
         },

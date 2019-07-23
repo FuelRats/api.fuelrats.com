@@ -87,7 +87,7 @@ export default class Document  {
       return this.#meta
     }
 
-    return { ...this.#meta, ...this.pageMeta }
+    return { ...this.#meta, ...this.pageMeta, ...this.defaultMeta }
   }
 
   /**
@@ -134,6 +134,15 @@ export default class Document  {
       last: this.lastCursor,
       previous: this.previousCursor,
       next: this.nextCursor
+    }
+  }
+
+  get defaultMeta () {
+    return {
+      apiVersion: packageInfo.version,
+      rateLimitTotal: this.query.connection.state.traffic.total,
+      rateLimitRemaining: this.query.connection.state.traffic.remaining,
+      rateLimitReset: this.query.connection.state.traffic.nextResetDate
     }
   }
 

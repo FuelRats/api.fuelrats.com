@@ -24,7 +24,7 @@ export default class Register extends API {
     const validationResponse = await axios.post(googleRecaptchaEndpoint, {
       secret:  config.recaptcha.secret,
       response: captcha,
-      remoteip: ctx.inet
+      remoteip: ctx.request.ip
     })
 
     if (validationResponse.data.success !== true) {
@@ -60,21 +60,13 @@ export default class Register extends API {
       user.rats.push(rat)
 
       await Anope.addNewUser(email, nickname, `bcrypt:${user.password}`)
-      await Verifications.createVerification(user)
+      await Verifications.createVerification(user, transaction)
+
+      return Sessions.createVerifiedSession(ctx, user, transaction)
     })
 
-    try {
-
-
-      await transaction.commit()
-
-      await Sessions.createVerifiedSession(ctx, user)
-    } catch (ex) {
-      await transaction.rollback()
-      throw ex
-    }
-
-
+    ctx.response.status = 201
+    return true
   }
 
   static async checkExisting (ctx) {

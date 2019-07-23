@@ -23,20 +23,4 @@ export default class Profiles extends API {
     })
     return Profiles.presenter.render(profile)
   }
-
-  static get presenter () {
-    class ProfilesPresenter extends API.presenter {
-      relationships () {
-        return {
-          rats: Rats.presenter,
-          groups: Groups.presenter,
-          displayRat: Rats.presenter,
-          npoMembership: NPO.presenter,
-          clients: Client.presenter
-        }
-      }
-    }
-    ProfilesPresenter.prototype.type = 'profiles'
-    return ProfilesPresenter
-  }
 }

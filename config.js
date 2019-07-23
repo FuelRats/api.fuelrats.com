@@ -6,11 +6,6 @@ module.exports = {
     'domain': process.env.FRAPI_COOKIE_DOMAIN || 'localhost',
     'secret': process.env.FRAPI_COOKIE_SECRET || 'oUAAAAAMkdpS2l6E'
   },
-  'xmlrpc': {
-
-    'url': process.env.FRAPI_XMLRPC_URL || 'https://irc.eu.fuelrats.com:6080/xmlrpc',
-    'insecure': process.env.FRAPI_XMLRPC_INSECURE || false
-  },
   'ropcClientId': process.env.FRAPI_ROPC_CLIENTID || '60cf7fad-ab39-4ca6-81c3-4ff873477a17',
 
   'hostname': process.env.FRAPI_HOSTNAME || 'localhost',

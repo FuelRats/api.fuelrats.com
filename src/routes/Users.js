@@ -86,12 +86,10 @@ export default class Users extends API {
   @authenticated
   async certificate (ctx) {
     const ratName = ctx.state.user.preferredRat.name
-    const { certificate, fingerprint }  = await Users.sslGenerationPool.exec(
-      'generateSslCertificate',
-      [ratName]
-    )
+    const { certificate, fingerprint }  = await Users.sslGenerationPool.exec('generateSslCertificate',
+      [ratName])
 
-    const anopeAccount = Anope.getAccount(ctx.state.user.email)
+    const anopeAccount = await Anope.getAccount(ctx.state.user.email)
     if (!anopeAccount) {
       throw new BadRequestAPIError()
     }

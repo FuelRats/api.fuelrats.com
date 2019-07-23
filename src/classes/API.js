@@ -6,10 +6,8 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError
 } from './APIError'
-import yayson from 'yayson'
 import router from './Router'
-import Meta from './Meta'
-import { Rat } from '../db'
+import { Rat, db } from '../db'
 import { UUID } from './Validators'
 import enumerable from './Enum'
 
@@ -37,10 +35,10 @@ export default class API {
 
   /**
    * Base function to create a database entry from a request
-   * @param ctx a request context
-   * @param databaseType a database type object
-   * @param callback optional callback to perform actions before resource is returned
-   * @returns {Promise<Model>} A transaction to retrieve the created object
+   * @param {object} ctx a request context
+   * @param {db.Model} databaseType a database type object
+   * @param {Function} callback optional callback to perform actions before resource is returned
+   * @returns {Promise<db.Model>} A transaction to retrieve the created object
    */
   async create ({ ctx, databaseType, callback = undefined }) {
     const dataObj = getJSONAPIData({ ctx, type: this.type })
@@ -421,16 +419,6 @@ export default class API {
     }
   }
 
-  static get presenter () {
-    return yayson({
-      adapter: 'sequelize'
-    }).Presenter
-  }
-
-  static meta (result, query = undefined, additionalParameters = {}) {
-    return new Meta({ result, query, additionalParameters })
-  }
-
   static async getAuthor (ctx) {
     if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
       const ratId = ctx.req.headers['x-command-by']
@@ -616,7 +604,7 @@ export function IPAuthenticated (target, name, descriptor) {
 
   descriptor.value = function (...args) {
     const [ctx] = args
-    if (config.whitelist.includes(ctx.inet)) {
+    if (config.whitelist.includes(ctx.request.ip)) {
       return endpoint.apply(this, args)
     } else {
       throw new UnauthorizedAPIError({})

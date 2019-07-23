@@ -91,8 +91,8 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
 
   const existingSession = await Session.findOne({
     where: {
-      ip: ctx.inet,
-      userAgent: ctx.userAgent
+      ip: ctx.request.ip,
+      userAgent: ctx.state.userAgent
     }
   })
 

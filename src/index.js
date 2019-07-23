@@ -36,6 +36,7 @@ import Stream from './routes/Stream'
 import JiraDrillWebhook from './routes/JiraDrillWebhook'
 import NPO from './routes/NPO'
 import Permission from './classes/Permission'
+import packageInfo from '../package'
 
 
 
@@ -130,16 +131,8 @@ app.use((ctx, next) => {
   const { query } = ctx
   ctx.query = parseQuery(query)
 
-  ctx.userAgent = ctx.request.headers['user-agent']
+  ctx.state.userAgent = ctx.request.headers['user-agent']
 
-  if (ctx.request.headers['x-forwarded-for']) {
-    [ctx.inet] = ctx.request.headers['x-forwarded-for'].split(', ')
-  } else {
-    ctx.inet = ctx.request.ip
-  }
-
-  // FIXME
-  ctx.inet = '90.8.145.198'
 
   return next()
 })
@@ -161,14 +154,15 @@ app.use(async (ctx, next) => {
     await Authentication.authenticate({ connection: ctx })
 
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
+    ctx.state.traffic = rateLimit
 
-    ctx.set('X-API-Version', '3.0')
+    ctx.set('X-API-Version', packageInfo.version)
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
     ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)
 
-    logger.info({ tags: ['request'] }, `Request by ${ctx.inet} to ${ctx.request.path}`, {
-      ip: ctx.inet,
+    logger.info({ tags: ['request'] }, `Request by ${ctx.request.ip} to ${ctx.request.path}`, {
+      ip: ctx.request.ip,
       path: ctx.request.path,
       'rate-limit-limit': rateLimit.total,
       'rate-limit-remaining': rateLimit.remaining,
