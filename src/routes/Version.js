@@ -1,6 +1,5 @@
 
 import gitrev from 'git-rev-promises'
-import { ObjectPresenter } from '../classes/Presenters'
 import packageInfo from '../../package.json'
 import API, {
   GET
@@ -25,22 +24,5 @@ export default class Version extends API {
       tags,
       date
     })
-  }
-
-  static get presenter () {
-    class VersionPresenter extends ObjectPresenter {
-      id (instance) {
-        return instance.commit
-      }
-
-      attributes (instance) {
-        if (instance) {
-          return instance
-        }
-        return null
-      }
-    }
-
-    return VersionPresenter
   }
 }

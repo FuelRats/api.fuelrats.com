@@ -14,19 +14,20 @@ function generateSslCertificate (ratName) {
       const certificate = certStdout.substring(certBeginIndex)
 
 
-      exec(`echo "${certificate}" | openssl x509 -sha256 -noout -fingerprint | sed -e 's/^.*=//;s/://g;y/ABCDEF/abcdef/'`,
-        (fpErr, fpStdout) => {
-          if (fpErr) {
-            return reject(fpErr)
-          }
+      exec(`echo "${certificate}" | openssl x509 -sha256 -noout -fingerprint \\
+      | sed -e 's/^.*=//;s/://g;y/ABCDEF/abcdef/'`,
+      (fpErr, fpStdout) => {
+        if (fpErr) {
+          return reject(fpErr)
+        }
 
-          const fingerprint = fpStdout.trim()
+        const fingerprint = fpStdout.trim()
 
-          return resolve({
-            certificate,
-            fingerprint
-          })
+        return resolve({
+          certificate,
+          fingerprint
         })
+      })
     })
   })
 }

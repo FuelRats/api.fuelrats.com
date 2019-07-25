@@ -1,8 +1,4 @@
-import DatabaseView from './DatabaseView'
-import RescueView from './RescueView'
-import ShipView from './ShipView'
-import UserView from './UserView'
-import { ReadPermission } from './View'
+import { ReadPermission, DatabaseView, UserView } from './'
 
 export default class NicknameView extends DatabaseView {
   static get type () {

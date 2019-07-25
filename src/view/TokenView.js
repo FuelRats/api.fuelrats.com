@@ -1,6 +1,4 @@
-import DatabaseView from './DatabaseView'
-import UserView from './UserView'
-import { ReadPermission } from './View'
+import { ReadPermission, DatabaseView, UserView } from './'
 
 export default class TokenView extends DatabaseView {
   static get type () {

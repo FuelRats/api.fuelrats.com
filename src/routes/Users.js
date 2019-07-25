@@ -1,5 +1,5 @@
 import { User } from '../db'
-import UserView from '../views/UserView'
+import { UserView } from '../view'
 import Query from '../query/Query'
 import bcrypt from 'bcrypt'
 import Permission from '../classes/Permission'

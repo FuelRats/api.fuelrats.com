@@ -1,7 +1,4 @@
-import DatabaseView from './DatabaseView'
-import { ReadPermission } from './'
-import RatsView from './RatView'
-import enumerable from '../classes/Enum'
+import { ReadPermission, RatView, DatabaseView } from './'
 
 export default class RescueView extends DatabaseView {
   static get type () {
@@ -62,8 +59,8 @@ export default class RescueView extends DatabaseView {
 
   get relationships () {
     return {
-      rats: RatsView,
-      firstLimpet: RatsView
+      rats: RatView,
+      firstLimpet: RatView
     }
   }
 
@@ -72,6 +69,6 @@ export default class RescueView extends DatabaseView {
   }
 
   get related () {
-    return [RatsView]
+    return [RatView]
   }
 }
