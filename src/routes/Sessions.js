@@ -74,9 +74,9 @@ export default class Sessions extends API {
       subject: 'Fuel Rats: Login from a new location',
       body: {
         name,
-        intro: 'An attempt was made to login to your Fuel Rats account from an unknown location.',
+        intro: 'An attempt was made to login to your Fuel Rats account from a new location.',
         action: {
-          instructions: 'Click the button below to authorise the login from a new location:',
+          instructions: 'Click the button below to authorise the login:',
           button: {
             color: '#d65050',
             text: 'Authorise login',
@@ -84,7 +84,7 @@ export default class Sessions extends API {
           }
         },
         goToAction: {
-          text: 'Authorise login from new location',
+          text: 'Authorise login',
           link: Sessions.getVerifyLink(code),
           description: 'Click to authorise the login from a new location'
         },
@@ -93,7 +93,7 @@ export default class Sessions extends API {
           'Location': locationString,
           'IP Address': ipAddress
         },
-        outro: 'If you did not make this request please change your password immediately!',
+        outro: 'If this login was not by you then please change your password immediately and contact administrators!',
         signature: 'Sincerely'
       }
     })
