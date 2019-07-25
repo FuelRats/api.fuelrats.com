@@ -1,6 +1,6 @@
-import DatabaseView from './Database'
-import RatView from './Rat'
-import { ReadPermission } from './index'
+import DatabaseView from './DatabaseView'
+import RatView from './RatView'
+import { ReadPermission } from './View'
 
 export default class ShipView extends DatabaseView {
   static get type () {

@@ -1,5 +1,5 @@
 import { Rescue } from '../db'
-import DatabaseQuery from '../query2/Database'
+import DatabaseQuery from '../query/DatabaseQuery'
 
 
 import Rats from './Rats'
@@ -20,9 +20,9 @@ import API, {
   WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
-import RescueView from '../views/Rescue'
-import DatabaseDocument from '../Documents/Database'
-import { DocumentViewType } from '../Documents'
+import RescueView from '../views/RescueView'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
 import Permission from '../classes/Permission'
 
 const rescueAccessHours = 3

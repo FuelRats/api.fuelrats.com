@@ -1,6 +1,6 @@
 
 import { JSONObject, RescueQuote } from '../classes/Validators'
-import RescueView from '../views/Rescue'
+import RescueView from '../views/RescueView'
 
 /* eslint max-lines-per-function:0 */
 

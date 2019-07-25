@@ -1,6 +1,6 @@
 
 import { Ship } from '../db'
-import Query from '../query'
+import Query from '../query/Query'
 import { NotFoundAPIError } from '../classes/APIError'
 import API, {
   authenticated,

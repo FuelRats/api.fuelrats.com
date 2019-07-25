@@ -1,7 +1,7 @@
 /* eslint max-lines-per-function:0 */
 
 import bcrypt from 'bcrypt'
-import UserView from '../views/User'
+import UserView from '../views/UserView'
 import { JSONObject, IRCNicknames } from '../classes/Validators'
 
 const passwordMinLength = 12

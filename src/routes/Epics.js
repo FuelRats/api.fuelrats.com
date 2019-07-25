@@ -12,7 +12,6 @@ import API, {
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
-import Query from '../query'
 import {ConflictAPIError, NotFoundAPIError} from '../classes/APIError'
 
 class Epics extends API {

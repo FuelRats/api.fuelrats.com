@@ -11,7 +11,7 @@ import API, {
 } from '../classes/API'
 
 import {Group, User } from '../db'
-import Query from '../query'
+import Query from '../query/Query'
 import { websocket } from '../classes/WebSocket'
 import {NotFoundAPIError} from '../classes/APIError'
 import Users from './Users'

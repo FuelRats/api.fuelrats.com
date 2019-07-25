@@ -12,7 +12,7 @@ import UUID from 'pure-uuid'
 import Authentication from './Authentication'
 import Permission from './Permission'
 import config from '../../config'
-import Document from '../Documents'
+import Document from '../Documents/Document'
 
 const acceptedProtocols = ['FR-JSONAPI-WS']
 
@@ -78,7 +78,7 @@ export default class WebSocket {
     const result = await route(ctx)
 
     ctx.state.traffic = this.traffic.validateRateLimit(ctx, false)
-    this.send({ client, message: result })
+    WebSocket.send({ client, message: result })
   }
 
   async onMessage ({ client, data, message }) {
@@ -98,7 +98,7 @@ export default class WebSocket {
         result = result.toString()
       }
 
-      this.send({ client, message: result })
+      WebSocket.send({ client, message: result })
     } catch (ex) {
       let errors = ex
 
@@ -117,7 +117,7 @@ export default class WebSocket {
         return error
       })
 
-      this.send({ client, message: errors })
+      WebSocket.send({ client, message: errors })
     }
   }
 
@@ -133,14 +133,14 @@ export default class WebSocket {
   }
 
   onBroadcast ({ id, result }) {
-    const clients = [...this.socket.clients].filter((client) => {
+    const clients = [...this.wss.clients].filter((client) => {
       return client.subscriptions.includes(id)
     })
-    this.broadcast({ clients, message: result })
+    WebSocket.broadcast({ clients, message: result })
   }
 
   onEvent (event, ctx, result, permissions = undefined) {
-    const clients = [...this.socket.clients].filter((client) => {
+    const clients = [...this.wss.clients].filter((client) => {
       if (client.clientId !== ctx.client.clientId) {
         return (!permissions || Permission.granted({ permissions, ...client }))
       }
@@ -151,10 +151,10 @@ export default class WebSocket {
     }
 
     Object.assign(result.meta, { event })
-    this.broadcast({ clients, message: result })
+    WebSocket.broadcast({ clients, message: result })
   }
 
-  send ({ client, message }) {
+  static send ({ client, message }) {
     try {
       client.send(JSON.stringify(message))
     } catch (ex) {
@@ -162,9 +162,9 @@ export default class WebSocket {
     }
   }
 
-  broadcast ({ clients, message }) {
+  static broadcast ({ clients, message }) {
     for (const client of clients) {
-      this.send({ client, message })
+      WebSocket.send({ client, message })
     }
   }
 

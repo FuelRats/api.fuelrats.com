@@ -1,11 +1,11 @@
 import API, { GET, PUT, POST, DELETE, authenticated, required, getJSONAPIData } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import Anope from '../classes/Anope'
-import AnopeQuery from '../query2/Anope'
-import AnopeDocument from '../Documents/Anope'
-import NicknameView from '../views/Nickname'
+import AnopeQuery from '../query/AnopeQuery'
+import AnopeDocument from '../Documents/AnopeDocument'
+import NicknameView from '../views/NicknameView'
 import { ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
-import { DocumentViewType } from '../Documents'
+import { DocumentViewType } from '../Documents/Document'
 
 export default class Nickname extends API {
   get type () {

@@ -349,21 +349,13 @@ export default class API {
   }
 
   /**
-   * Get inividual field properties for this resource
-   * @returns {Object} Field properties
-   * @abstract
-   */
-  get fieldProperties () {
-    return {}
-  }
-
-  /**
    * Check whether the user has read permission for this ressource
    * @param connection a request context
    * @param entity a resource entity
    * @returns {boolean} whether the user has read permission for this resource
    */
   hasReadPermission ({ connection, entity }) {
+    // noinspection JSCheckFunctionSignatures
     return Permission.granted({ permissions: this.getReadPermissionFor({ connection, entity }), ...connection.state })
   }
 
@@ -374,6 +366,7 @@ export default class API {
    * @returns {boolean} whether the usre has write permission for this resource
    */
   hasWritePermission ({ connection, entity }) {
+    // noinspection JSCheckFunctionSignatures
     return Permission.granted({ permissions: this.getWritePermissionFor({ connection, entity }), ...connection.state })
   }
 
@@ -623,6 +616,7 @@ export function permissions (...perms) {
 
     descriptor.value = function (...args) {
       const [ctx] = args
+      // noinspection JSCheckFunctionSignatures
       if (Permission.granted({permissions: perms, ...ctx.state})) {
         return endpoint.apply(this, args)
       } else {

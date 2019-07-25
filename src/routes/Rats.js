@@ -16,10 +16,10 @@ import API, {
   protect, WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
-import DatabaseQuery from '../query2/Database'
-import DatabaseDocument from '../Documents/Database'
-import RatView from '../views/Rat'
-import RescueView from '../views/Rescue'
+import DatabaseQuery from '../query/DatabaseQuery'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import RatView from '../views/RatView'
+import RescueView from '../views/RescueView'
 
 export default class Rats extends API {
   @GET('/rats')

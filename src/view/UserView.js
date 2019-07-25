@@ -1,8 +1,8 @@
-import DatabaseView from './Database'
-import RatView from './Rat'
-import GroupView from './Group'
-import ClientView from './Client'
-import { ReadPermission } from './index'
+import DatabaseView from './DatabaseView'
+import RatView from './RatView'
+import GroupView from './GroupView'
+import ClientView from './ClientView'
+import { ReadPermission } from './View'
 
 export default class UserView extends DatabaseView {
   static get type () {

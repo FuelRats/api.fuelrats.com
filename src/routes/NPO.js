@@ -2,7 +2,7 @@
 
 import { Rat, npoMembership } from '../db'
 import Users from '../routes/Users'
-import Query from '../query'
+import Query from '../query/Query'
 import { NotFoundAPIError } from '../classes/APIError'
 
 import API, {

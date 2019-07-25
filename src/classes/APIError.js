@@ -1,7 +1,7 @@
 
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
-import uuidV4 from 'uuid/v4'
+import UUID from 'pure-uuid'
 
 i18next.init({
   lng: 'en',
@@ -12,7 +12,7 @@ export class APIError extends Error {
   constructor (status, source) {
     super()
 
-    this.id = uuidV4()
+    this.id = new UUID(4)
     this.code = status
     this.source = source
   }

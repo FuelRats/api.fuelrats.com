@@ -1,6 +1,6 @@
 import { User } from '../db'
-import UserView from '../views/User'
-import Query from '../query2'
+import UserView from '../views/UserView'
+import Query from '../query/Query'
 import bcrypt from 'bcrypt'
 import Permission from '../classes/Permission'
 import Anope from '../classes/Anope'
@@ -28,9 +28,9 @@ import API, {
   protect, PATCH
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
-import DatabaseQuery from '../query2/Database'
-import DatabaseDocument from '../Documents/Database'
-import { DocumentViewType } from '../Documents'
+import DatabaseQuery from '../query/DatabaseQuery'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
 
 /**
  * Class for the /users endpoint
@@ -132,11 +132,7 @@ export default class Users extends API {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async create (ctx) {
-    const result = await super.create({
-      ctx, databaseType: User, callback: ({ entity }) => {
-        return entity.addGroup('default')
-      }
-    })
+    const result = await super.create({ ctx, databaseType: User })
 
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = 201

@@ -1,6 +1,6 @@
-import DatabaseView from './Database'
+import DatabaseView from './DatabaseView'
 import { ReadPermission } from './'
-import RatsView from './Rat'
+import RatsView from './RatView'
 import enumerable from '../classes/Enum'
 
 export default class RescueView extends DatabaseView {

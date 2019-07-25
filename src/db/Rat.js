@@ -1,5 +1,5 @@
 import { JSONObject, validCMDRname } from '../classes/Validators'
-import RatView from '../views/Rat'
+import RatView from '../views/RatView'
 
 export default function Rat (sequelize, DataTypes) {
   const rat = sequelize.define('Rat', {

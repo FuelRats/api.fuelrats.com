@@ -1,5 +1,5 @@
 import { ShipName } from '../classes/Validators'
-import ShipView from '../views/Ship'
+import ShipView from '../views/ShipView'
 
 
 const maxIngameShipNameLength = 22

@@ -1,6 +1,9 @@
 import { Client } from '../db'
 import crypto from 'crypto'
-import Query from '../query'
+import DatabaseQuery from '../query/DatabaseQuery'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import ClientView from '../views/ClientView'
+
 import Users from './Users'
 import { NotFoundAPIError } from '../classes/APIError'
 import API, {
@@ -16,7 +19,7 @@ import API, {
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 
-const CLIENT_SECRET_LENGTH = 32
+const clientSecretLength= 32
 
 export default class Clients extends API {
   @GET('/clients')
