@@ -10,8 +10,26 @@ import router from './Router'
 import { Rat, db } from '../db'
 import { UUID } from './Validators'
 import enumerable from './Enum'
+import { URL } from 'url'
 
 const config = require('../../config')
+
+/**
+ * @class
+ * @classdesc Base class for FuelRats API endpoints
+ */
+export default class API {
+  view = undefined
+
+  /**
+   * The JSONAPI type for the resource this API endpoint is for, override.
+   * @returns {string} JSONAPI type
+   * @abstract
+   */
+  get type () {
+    return undefined
+  }
+}
 
 /* no-unused-vars in function arguments is being ignored for this class since
 it is a base class for API endpoints to override */
@@ -21,9 +39,7 @@ it is a base class for API endpoints to override */
  * @class
  * @classdesc Base class for FuelRats API endpoints
  */
-export default class API {
-  view = undefined
-
+export class APIResource extends API {
   /**
    * The JSONAPI type for the resource this API endpoint is for, override.
    * @returns {string} JSONAPI type
@@ -66,10 +82,10 @@ export default class API {
 
   /**
    * Base function to update a database entry from a request
-   * @param ctx A request context
-   * @param databaseType a database type object
-   * @param updateSearch search parameter on which to issue an update
-   * @returns {Promise<Model>}  A transaction to retrieve the updated object
+   * @param {object} ctx A request context
+   * @param {db.Model} databaseType a database type object
+   * @param {object} updateSearch search parameter on which to issue an update
+   * @returns {Promise<db.Model>}  A transaction to retrieve the updated object
    */
   async update ({ ctx, databaseType, updateSearch }) {
     if (!ctx.params.id) {
@@ -115,8 +131,8 @@ export default class API {
 
   /**
    * Base function to delete a datbase entry from a request
-   * @param ctx a request context
-   * @param databaseType a database type object
+   * @param {object} ctx a request context
+   * @param {db.Model} databaseType a database type object
    * @returns {Promise<undefined>} A delete transaction
    */
   async delete ({ ctx, databaseType }) {
@@ -141,10 +157,10 @@ export default class API {
 
   /**
    * Base function for relationship view requests
-   * @param ctx a request context
-   * @param databaseType a database type object
-   * @param relationship the JSONAPI resource relattionship
-   * @returns {Promise<Model>} a find transaction
+   * @param {object} ctx a request context
+   * @param {db.Model} databaseType a database type object
+   * @param {object} relationship the JSONAPI resource relattionship
+   * @returns {Promise<db.Model>} a find transaction
    */
   async relationshipView ({ ctx, databaseType, relationship }) {
     if (!ctx.params.id) {
@@ -172,11 +188,11 @@ export default class API {
 
   /**
    * Perform a relationship change based on a PATCH /relationships request
-   * @param ctx the context of a PATCH /relationships request
-   * @param databaseType the sequelize object for this data type
-   * @param change The type of relationship change to perform (add, patch, remove)
-   * @param relationship the relationship to change
-   * @returns {Promise<Model>} A resource with its relationships updated
+   * @param {object} ctx the context of a PATCH /relationships request
+   * @param {db.Model} databaseType the sequelize object for this data type
+   * @param {string} change The type of relationship change to perform (add, patch, remove)
+   * @param {string} relationship the relationship to change
+   * @returns {Promise<db.Model>} A resource with its relationships updated
    */
   async relationshipChange ({ ctx, databaseType, change, relationship }) {
     if (!ctx.params.id) {
@@ -206,11 +222,11 @@ export default class API {
 
   /**
    * Generate a relationship change database call from a JSONAPI compliant relationship object
-   * @param data a JSONAPI compliant relationship object
-   * @param entity the entity to change the relationship of
-   * @param change the type of change to perform (add, patch, remove)
-   * @param relationship The relationship to change
-   * @returns {*} a database change promise for updating the relationships
+   * @param {object} data a JSONAPI compliant relationship object
+   * @param {object} entity the entity to change the relationship of
+   * @param {string} change the type of change to perform (add, patch, remove)
+   * @param {string} relationship The relationship to change
+   * @returns {Promise<undefined>} a database change promise for updating the relationships
    */
   generateRelationshipChange ({ data, entity, change, relationship }) {
     const changeRelationship = this.changeRelationship({ relationship })
@@ -236,18 +252,11 @@ export default class API {
     }
   }
 
-  getAccessibleAttributes ({ scopes, attributes }) {
-    return Object.entries(attributes).reduce((object, [attribute, value]) => {
-
-      return object
-    }, {})
-
-  }
-
   /**
    * Validate whether the user has access to modify all the attributes in the update request
-   * @param ctx a request context
-   * @param attributes attributes list
+   * @param {object} ctx a request context
+   * @param {[object]} attributes attributes list
+   * @param {object} entity the entity to validate
    */
   validateUpdateAccess ({ ctx, attributes, entity }) {
     const isGroup = this.isGroup({ ctx, entity })
@@ -290,7 +299,7 @@ export default class API {
 
   /**
    * Get a map of write permissions for fields
-   * @returns {Object}
+   * @returns {object}
    * @abstract
    */
   get writePermissionsForFieldAccess () {
@@ -298,6 +307,10 @@ export default class API {
   }
 
   /**
+   * Check whether this entity requires an internal access level for the current user
+   * @param {object} ctx request context
+   * @param {object} entity the entity to check access level on
+   * @returns {boolean} whether this entity requires an internal access level
    * @abstract
    */
   isInternal ({ ctx, entity }) {
@@ -305,10 +318,10 @@ export default class API {
   }
 
   /**
-   *
-   * @param ctx
-   * @param entity
-   * @returns {undefined}
+   * Check whether this entity requires group level access for the current user
+   * @param {object} ctx request context
+   * @param {object} entity the entity to check access level on
+   * @returns {boolean} whether this entity requires group level access
    * @abstract
    */
   isGroup ({ ctx, entity }) {
@@ -316,10 +329,10 @@ export default class API {
   }
 
   /**
-   *
-   * @param ctx
-   * @param entity
-   * @returns {undefined}
+   * Check whether this entity requires self-level access (Can only be accessed by themselves, or admin)
+   * @param {object} ctx request context
+   * @param {object} entity the entity to check access level on
+   * @returns {boolean} whether this entity requires self-level access
    * @abstract
    */
   isSelf ({ ctx, entity }) {
@@ -328,8 +341,8 @@ export default class API {
 
   /**
    * Get read permissions for this ressource
-   * @param connection a request context
-   * @param entity a resource entity
+   * @param {object} connection a request context
+   * @param {object} entity a resource entity
    * @returns {Array} list of acceptable permissions
    * @abstract
    */
@@ -339,8 +352,8 @@ export default class API {
 
   /**
    * Get write permissions for this ressource
-   * @param connection a request context
-   * @param entity a resource entity
+   * @param {object} connection a request context
+   * @param {object} entity a resource entity
    * @returns {Array} a list of acceptable permissions
    * @abstract
    */
@@ -350,8 +363,8 @@ export default class API {
 
   /**
    * Check whether the user has read permission for this ressource
-   * @param connection a request context
-   * @param entity a resource entity
+   * @param {object} connection a request context
+   * @param {object} entity a resource entity
    * @returns {boolean} whether the user has read permission for this resource
    */
   hasReadPermission ({ connection, entity }) {
@@ -361,8 +374,8 @@ export default class API {
 
   /**
    * Check whether the user has write permission for this ressource
-   * @param connection a request context
-   * @param entity a resource entity
+   * @param {object} connection a request context
+   * @param {object} entity a resource entity
    * @returns {boolean} whether the usre has write permission for this resource
    */
   hasWritePermission ({ connection, entity }) {
@@ -373,7 +386,7 @@ export default class API {
   /**
    * Get a change relationship object for this resource defining the actions to perform for add, delete, and patch
    * relationship requests
-   * @param relationship the relationship relative to the ressource
+   * @param {string} relationship the relationship relative to the ressource
    * @returns {*} a change relationship object
    * @abstract
    */
@@ -392,8 +405,8 @@ export default class API {
 
   /**
    * Require read permission to modify this entity
-   * @param connection a request context
-   * @param entity a resource entity
+   * @param {object} connection a request context
+   * @param {object} entity a resource entity
    */
   requireReadPermission ({ connection, entity }) {
     if (!this.hasReadPermission({ connection, entity })) {
@@ -403,8 +416,8 @@ export default class API {
 
   /**
    * Require write permission to modify this entity
-   * @param connection a request context
-   * @param entity a resource entity
+   * @param {object} connection a request context
+   * @param {object} entity a resource entity
    */
   requireWritePermission ({ connection, entity }) {
     if (!this.hasWritePermission({ connection, entity })) {
@@ -412,6 +425,11 @@ export default class API {
     }
   }
 
+  /**
+   * Get the author of a request
+   * @param {object} ctx request context
+   * @returns {Promise<db.User>}
+   */
   static async getAuthor (ctx) {
     if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
       const ratId = ctx.req.headers['x-command-by']
@@ -433,8 +451,8 @@ export default class API {
 
   /**
    * Check whether a relationship is a valid one-to-one relationship for this resource
-   * @param relationship a relationship object
-   * @param relation name of the relation relative to the resource
+   * @param {object} relationship a relationship object
+   * @param {string} relation name of the relation relative to the resource
    * @returns {boolean} Whether the relationship is a valid one-to-one relationship for this resource
    */
   isValidOneRelationship ({ relationship, relation }) {
@@ -450,8 +468,8 @@ export default class API {
 
   /**
    * Check whether a relationship is a valid many relationship for this resource
-   * @param relationship a relationship object
-   * @param relation name of the relation relative to the resource
+   * @param {object} relationship a relationship object
+   * @param {string} relation name of the relation relative to the resource
    * @returns {boolean} Whether the relationship is a valid many relationship for this resource
    */
   isValidManyRelationship ({ relationship, relation }) {
@@ -468,7 +486,7 @@ export default class API {
 // region Decorators
 /**
  * ESNext Decorator for routing this method through a koa router GET endpoint
- * @param route the http path to route
+ * @param {string} route the http path to route
  * @returns {Function} An ESNExt decorator function
  */
 export function GET (route) {
@@ -486,7 +504,7 @@ export function GET (route) {
 
 /**
  * ESNext Decorator for routing this method through a koa router post endpoint
- * @param route
+ * @param {string} route the http path to route
  * @returns {Function}
  */
 export function POST (route) {
@@ -504,7 +522,7 @@ export function POST (route) {
 
 /**
  * ESNext Decorator for routing this method through a koa router PUT endpoint
- * @param route
+ * @param {string} route the http path to route
  * @returns {Function}
  */
 export function PUT (route) {
@@ -522,9 +540,8 @@ export function PUT (route) {
 
 /**
  * ESNext Decorator for routing this method through a koa router PATCH endpoint
- * @param route
+ * @param {string} route the http path to route
  * @returns {Function}
- * @constructor
  */
 export function PATCH (route) {
   return function (target, name, descriptor) {
@@ -541,7 +558,7 @@ export function PATCH (route) {
 
 /**
  * ESNext Decorator for routing this method through a koa router DELETE endpoint
- * @param route
+ * @param route the http path to route
  * @returns {Function}
  */
 export function DELETE (route) {
@@ -557,6 +574,7 @@ export function DELETE (route) {
   }
 }
 
+// eslint-disable-next-line jsdoc/require-param
 /**
  * ESNext Decorator for requiring authentication on an endpoint
  */
@@ -573,6 +591,7 @@ export function authenticated (target, name, descriptor) {
   }
 }
 
+// eslint-disable-next-line jsdoc/require-param
 /**
  * ESNext Decorator for requiring client authentication on an endpoint
  */
@@ -589,6 +608,7 @@ export function clientAuthenticated (target, name, descriptor) {
   }
 }
 
+// eslint-disable-next-line jsdoc/require-param
 /**
  * ESNext Decorator for requiring IP address authentication on an endpoint
  */
@@ -607,7 +627,7 @@ export function IPAuthenticated (target, name, descriptor) {
 
 /**
  * ESNext Decorator requiring a set of permissions for an API endpoint
- * @param perms the permissions to require
+ * @param {...string} perms the permissions to require
  * @returns {Function} A decorator function
  */
 export function permissions (...perms) {
@@ -617,7 +637,7 @@ export function permissions (...perms) {
     descriptor.value = function (...args) {
       const [ctx] = args
       // noinspection JSCheckFunctionSignatures
-      if (Permission.granted({permissions: perms, ...ctx.state})) {
+      if (Permission.granted({ permissions: perms, ...ctx.state })) {
         return endpoint.apply(this, args)
       } else {
         throw new ForbiddenAPIError({})
@@ -628,7 +648,7 @@ export function permissions (...perms) {
 
 /**
  * ESNext Decorator for requiring query parameters in an endpoint
- * @param fields The query parameters to require
+ * @param {...string} fields The query parameters to require
  * @returns {Function} A decorator function
  */
 export function parameters (...fields) {
@@ -652,7 +672,7 @@ export function parameters (...fields) {
 
 /**
  * ESNext Decorator for requiring data fields in an endpoint
- * @param fields The data fields to require
+ * @param {...string} fields The data fields to require
  * @returns {Function} A decorator function
  *
  */
@@ -677,7 +697,7 @@ export function required (...fields) {
 
 /**
  * ESNext Decorator for disallowing a set of data fields in an endpoint
- * @param fields The data fields to disallow
+ * @param {...string} fields The data fields to disallow
  * @returns {Function} A decorator function
  */
 export function disallow (...fields) {
@@ -700,7 +720,7 @@ export function disallow (...fields) {
 /**
  * Protect a set of fields in an endpoint with a specific permission
  * @param permission the permission to require
- * @param fields the fields to require this permission for
+ * @param {...string} fields the fields to require this permission for
  * @returns {Function} A decorator function
  */
 export function protect (permission, ...fields) {
@@ -715,7 +735,8 @@ export function protect (permission, ...fields) {
             return false
           }
 
-          if (!Permission.granted({ permissions: [permission], ...ctx.state })) {
+          const { user, scope } = ctx.state
+          if (!Permission.granted({ permissions: [permission], user, scope })) {
             throw new ForbiddenAPIError({})
           }
           return true
@@ -725,11 +746,12 @@ export function protect (permission, ...fields) {
     }
   }
 }
+
 // endregion
 
 /**
  * Validate whether an object is a valid JSONAPI Object
- * @param object an object
+ * @param {object} object an object
  * @returns {boolean} True if valid, false is not valid
  */
 export function isValidJSONAPIObject ({ object }) {
@@ -741,6 +763,12 @@ export function isValidJSONAPIObject ({ object }) {
   return false
 }
 
+/**
+ * Retrieve the data field of a JSONAPI request
+ * @param {object} ctx request context
+ * @param {string} type the JSONAPI resource type
+ * @returns {object} JSONAPI data field
+ */
 export function getJSONAPIData ({ ctx, type }) {
   if (!ctx.data.data || !isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== type) {
     throw new UnprocessableEntityAPIError({ pointer: '/data' })
@@ -760,4 +788,143 @@ export class WritePermission {
   static group
   static sudo
   static all
+}
+
+export class Request {
+  constructor ({ client, query, body, message }) {
+    const url = new URL(`${config.externalUrl}${client.req.url}`)
+
+    this.header = client.req.headers
+    this.headers = client.req.headers
+    this.method = client.req.method
+    this.length = message.length
+    this.url = client.req.url
+    this.originalUrl = client.req.url
+    this.origin = url.origin
+    this.href = url.href
+    this.path = url.pathname
+    this.querystring = url.search
+    this.search = url.search
+    this.host = url.host
+    this.hostname = url.hostname
+    this.URL = url
+    this.type = undefined
+    this.charset = undefined
+    this.query = query
+    this.body = body
+    this.fresh = true
+    this.state = false
+    this.protocol = 'https'
+    this.secure = true
+    this.ip = client.req.headers['x-forwarded-for'] || client.req.connection.remoteAddress
+    this.ips = [client.req.headers['x-forwarded-for'], client.req.connection.remoteAddress]
+    this.subdomains = url.hostname.split('.')
+    this.is = () => {
+      return false
+    }
+    this.socket = client.req.socket
+    this.get = (header) => {
+      return client.req.headers[header.toLowerCase()]
+    }
+  }
+}
+
+export class Response {
+  constructor ({ client }) {
+    this.header = {}
+    this.headers = this.header
+    this.socket = client.req.socket
+    this.status = 404
+    this.message = undefined
+    this.length = 0
+    this.body = undefined
+    this.get = () => {
+      return undefined
+    }
+    this.set = (field, value) => {
+      this.header[field] = value
+    }
+
+    this.append = (field, value) => {
+      this.header[field] = value
+    }
+
+    this.remove = (field) => {
+      delete this.header[field]
+    }
+
+    this.type = undefined
+    this.is = () => {
+      return false
+    }
+  }
+}
+
+/**
+ * @typedef {object} Context
+ * @type {object} Request context
+ */
+export class Context {
+  // eslint-disable-next-line max-statements
+  /**
+   * Create a request context
+   * @param client
+   * @param query
+   * @param body
+   * @param message
+   */
+  constructor ({ client, query, body, message }) {
+    const request = new Request({ client, query, body, message })
+    const response = new Response({ client })
+    this.client = client
+
+    this.req = client.req
+    this.res = client.req
+    this.request = request
+    this.response = response
+
+    this.state = {}
+    this.state.scope = client.scope
+    this.state.user = client.user
+    this.state.userAgent = client.req.headers['user-agent']
+
+    this.app = {}
+    this.cookies = {
+      get: () => {
+        return undefined
+      },
+      set: () => {
+        return undefined
+      }
+    }
+
+    this.header = request.header
+    this.headers = request.headers
+    this.method = request.method
+    this.url = request.url
+    this.originalUrl = request.originalUrl
+    this.origin = request.origin
+    this.href = request.href
+    this.path = request.path
+    this.query = request.query
+    this.querystring = request.querystring
+    this.host = request.host
+    this.hostname = request.hostname
+    this.fresh = request.fresh
+    this.stale = request.stale
+    this.socket = request.socket
+    this.protocol = request.protocol
+    this.secure = request.secure
+    this.ip = request.ip
+    this.subdomains = request.subdomains
+    this.is = request.is
+    this.get = request.get
+    this.data = request.body
+
+    this.body = response.body
+    this.status = response.status
+    this.message = response.message
+    this.length = response.length
+    this.type = response.type
+  }
 }

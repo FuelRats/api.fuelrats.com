@@ -1,6 +1,11 @@
 import config from '../../config'
 import enumerable from '../classes/Enum'
 
+/**
+ * @classdesc JSONAPI View base class
+ * @class
+ *
+ */
 export default class View {
   object = undefined
   query = undefined
@@ -9,28 +14,48 @@ export default class View {
   #cachedSelf = undefined
   #cachedGroup = undefined
 
+  /**
+   * Create a JSONAPI View
+   * @param object
+   * @param query
+   * @param parentUrl
+   * @constructor
+   */
   constructor ({ object, query, parentUrl = undefined }) {
-    this.setObject(object)
+    this.object = object
     this.query = query
     this.parentUrl = parentUrl
   }
 
-  setObject (object) {
-    this.object = object
-  }
-
+  /**
+   * Defines the JSONAPI resource type this view represents. e.g "users"
+   * @returns {string} JSONAPI resource type
+   * @abstract
+   */
   static get type () {
     return undefined
   }
 
+  /**
+   * Access the JSONAPI resource type of the current view instance
+   * @returns {string} JSONAPI resource type
+   */
   get type () {
     return Object.getPrototypeOf(this).constructor.type
   }
 
+  /**
+   * Returns the ID of the JSONAPI resource this view represents
+   * @returns {string} JSONAPI resource ID
+   */
   get id () {
     return undefined
   }
 
+  /**
+   * Returns the attributes of this JSONAPI resource
+   * @returns {*} attributes of the JSONAPI resource
+   */
   get attributes () {
     return undefined
   }

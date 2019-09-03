@@ -405,7 +405,7 @@ export default class Document  {
  * @readonly
  * @enum {Symbol}
  * @property {Symbol} collection Document represents a collection of resources
- * @property {Symbol} individuall Document represents an individual requested resource
+ * @property {Symbol} individual Document represents an individual requested resource
  * @property {Symbol} meta Document represents only meta data for a resource
  * @property {Symbol} relationship Document represents only relationships for a resource
  */

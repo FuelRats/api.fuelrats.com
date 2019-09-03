@@ -1,39 +1,46 @@
 import { User, Rat, db, npoMembership } from '../db'
-import axios from 'axios'
-import config from '../../config'
 import Anope from '../classes/Anope'
 import Verifications from './Verifications'
 import Sessions from './Sessions'
 
 import API, {
+  Context, getJSONAPIData,
   POST,
   required
 } from '../classes/API'
-import { ConflictAPIError, UnprocessableEntityAPIError, UnauthorizedAPIError } from '../classes/APIError'
+import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 
-const googleRecaptchaEndpoint = 'https://www.google.com/recaptcha/api/siteverify'
 
 const platforms = ['pc', 'xb', 'ps']
 
+/**
+ * @classdesc Endpoint handling user registration
+ * @class
+ */
 export default class Register extends API {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'registrations'
+  }
+
+  /**
+   * Register a new account
+   * @param {Context} ctx request context
+   * @returns {Promise<boolean>} returns a 204 if successful
+   */
   @POST('/register')
-  @required('email', 'password', 'name', 'platform', 'nickname', 'g-recaptcha-response')
+  @required(
+    'email', 'password', 'name', 'platform', 'nickname'
+  )
   async create (ctx) {
-    const { email, name, nickname, password, platform, 'g-recaptcha-response': captcha } = ctx.data
+    const formData = getJSONAPIData({ ctx, type: 'registrations' })
 
-    const validationResponse = await axios.post(googleRecaptchaEndpoint, {
-      secret:  config.recaptcha.secret,
-      response: captcha,
-      remoteip: ctx.request.ip
-    })
+    await Register.checkExisting(formData)
+    const { email, name, nickname, password, platform } = formData
 
-    if (validationResponse.data.success !== true) {
-      throw new UnauthorizedAPIError('/data/attributes/g-recaptcha-response')
-    }
-
-    await Register.checkExisting(ctx)
-
-    const result = db.transaction(async (transaction) => {
+    await db.transaction(async (transaction) => {
       const user = await User.create({
         email,
         password
@@ -69,9 +76,15 @@ export default class Register extends API {
     return true
   }
 
-  static async checkExisting (ctx) {
-    const { email, name, platform } = ctx.data
-
+  /**
+   * Check if an existing account with this information already exists
+   * @param {object} args function arguments object
+   * @param {string} args.email account email
+   * @param {string} args.name rat name
+   * @param {string} args.platform gaming platform
+   * @returns {Promise<undefined>} resolves a promise if successful
+   */
+  static async checkExisting ({ email, name, platform }) {
     const existingUser = await User.findOne({ where: {
       email: {
         ilike: email

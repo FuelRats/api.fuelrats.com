@@ -1,12 +1,13 @@
 import nodemailer from 'nodemailer'
 import Mailgen from 'mailgen'
 import path from 'path'
+import config from '../../config'
 
 export default class Mail {
   constructor () {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp-relay.gmail.com',
-      port: 587
+      host: config.smtp.host,
+      port: config.smtp.port
     })
 
     this.mailgen = new Mailgen({

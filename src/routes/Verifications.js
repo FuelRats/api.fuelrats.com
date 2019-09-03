@@ -1,37 +1,39 @@
 import Mail from '../classes/Mail'
-import { User, VerificationToken } from '../db'
+import { User, VerificationToken, db } from '../db'
 import crypto from 'crypto'
-import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import { NotFoundAPIError } from '../classes/APIError'
 import API, {
+  Context,
   GET,
   POST,
   parameters,
-  permissions,
-  isValidJSONAPIObject
+  getJSONAPIData
 } from '../classes/API'
-import { websocket } from '../classes/WebSocket'
-import Users from './Users'
 
 const mail = new Mail()
 const expirationLength = 86400000
 const verificationTokenLength = 64
 
+/**
+ * @classdesc API endpoint for handling account email verifications
+ * @class
+ */
 export default class Verifications extends API {
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'verifications'
   }
 
+  /**
+   * Request a new account verification
+   * @param {Context} ctx request context
+   * @returns {Promise<boolean>} a 204 is returned when successful
+   */
   @POST('/verifications')
   async create (ctx) {
-    if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data' })
-    }
-
-    if (!(ctx.data.data.attributes instanceof Object)) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
-    }
-
-    const { email } = ctx.data.data.attributes
+    const { email } = getJSONAPIData({ ctx, type: 'verifications' })
 
     const user = await User.findOne({
       where: {
@@ -46,6 +48,11 @@ export default class Verifications extends API {
     return true
   }
 
+  /**
+   * Verify an account using a token
+   * @param {Context} ctx request token
+   * @returns {Promise<boolean>} a 204 is returned when successful
+   */
   @GET('/verifications/:token')
   @parameters('token')
   async verify (ctx) {
@@ -72,6 +79,12 @@ export default class Verifications extends API {
     return true
   }
 
+  /**
+   * Create a verification token and send it to a user
+   * @param {db.User} user the user to send it to
+   * @param {db.transaction?} transaction optional database transaction to use for the operation
+   * @returns {Promise<undefined>} Resolves a promise when the operation is complete.
+   */
   static async createVerification (user, transaction = undefined) {
     const existingVerification = await VerificationToken.findOne({
       where: {
@@ -114,6 +127,11 @@ export default class Verifications extends API {
     })
   }
 
+  /**
+   * Generate a verification link from a reset token
+   * @param {string} resetToken the reset token
+   * @returns {string} a verification link
+   */
   static getVerifyLink (resetToken) {
     return `https://fuelrats.com/verify?type=email&t=${resetToken}`
   }

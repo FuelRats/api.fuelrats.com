@@ -2,7 +2,7 @@ import API, { GET, PUT, POST, DELETE, authenticated, required, getJSONAPIData } 
 import { websocket } from '../classes/WebSocket'
 import Anope from '../classes/Anope'
 import AnopeQuery from '../query/AnopeQuery'
-import AnopeDocument from '../Documents/AnopeDocument'
+import ObjectDocument from '../Documents/ObjectDocument'
 import NicknameView from '../views/NicknameView'
 import { ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
 import { DocumentViewType } from '../Documents/Document'
@@ -19,7 +19,7 @@ export default class Nickname extends API {
     const { nick } = ctx.query
     const result = await Anope.findAccountFuzzyMatch(nick)
     const query = new AnopeQuery({ connection: ctx })
-    return new AnopeDocument({ query, result, type: NicknameView })
+    return new ObjectDocument({ query, result, type: NicknameView })
   }
 
   @GET('/nicknames/:nick')
@@ -32,7 +32,7 @@ export default class Nickname extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
     const query = new AnopeQuery({ connection: ctx })
-    return new AnopeDocument({ query, result, type: NicknameView, view: DocumentViewType.individual })
+    return new ObjectDocument({ query, result, type: NicknameView, view: DocumentViewType.individual })
   }
 
   @POST('/nicknames')
@@ -52,7 +52,7 @@ export default class Nickname extends API {
     const createdNick = Anope.findNickname(nick)
     const query = new AnopeQuery({ connection: ctx })
     ctx.response.status = 201
-    return new AnopeDocument({ query, result: createdNick, type: NicknameView, view: DocumentViewType.individual })
+    return new ObjectDocument({ query, result: createdNick, type: NicknameView, view: DocumentViewType.individual })
   }
 
   @DELETE('/nicknames/:nick')

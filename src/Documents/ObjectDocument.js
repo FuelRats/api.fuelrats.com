@@ -1,11 +1,11 @@
 import Document, { DocumentViewType } from '.'
 
 /**
- * @classdesc A JSONAPI document render for Sequelize database results
+ * @classdesc A JSONAPI document render for simple object results
  * @class
  * @augments {Document}
  */
-export default class AnopeDocument extends Document {
+export default class ObjectDocument extends Document {
   #result = undefined
   #query = undefined
 

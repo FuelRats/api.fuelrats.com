@@ -12,7 +12,4 @@ export default class GeoIP {
 (async function () {
   cityLookup = await maxmind.open('static/geoip/GeoLite2-City.mmdb')
   asnLookup = await maxmind.open('static/geoip/GeoLite2-ASN.mmdb')
-
-  let result = GeoIP.lookup('90.8.145.198')
-  console.log(result)
 }())

@@ -1,10 +1,8 @@
 import { User } from '../db'
 import { UserView } from '../view'
-import Query from '../query/Query'
 import bcrypt from 'bcrypt'
 import Permission from '../classes/Permission'
 import Anope from '../classes/Anope'
-
 import workerpool from 'workerpool'
 
 import {
@@ -14,7 +12,9 @@ import {
   BadRequestAPIError
 } from '../classes/APIError'
 
-import API, {
+import {
+  APIResource,
+  Context,
   WritePermission,
   permissions,
   authenticated,
@@ -25,7 +25,9 @@ import API, {
   parameters,
   disallow,
   required,
-  protect, PATCH
+  protect,
+  PATCH,
+  getJSONAPIData
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -35,15 +37,22 @@ import { DocumentViewType } from '../Documents/Document'
 /**
  * Class for the /users endpoint
  */
-export default class Users extends API {
+export default class Users extends APIResource {
   static imageResizePool = workerpool.pool('./dist/workers/image.js')
   static sslGenerationPool = workerpool.pool('./dist/workers/certificate.js')
 
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'users'
   }
 
-
+  /**
+   * Get a list of users according to a search query
+   * @param {Context} ctx a request context
+   * @returns {Promise<DatabaseDocument>} JSONAPI result document
+   */
   @GET('/users')
   @websocket('users', 'search')
   @authenticated
@@ -54,6 +63,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
+  /**
+   * Get a specific user by ID
+   * @param {Context} ctx a request context
+   * @returns {Promise<DatabaseDocument>} JSONAPI result document
+   */
   @GET('/users/:id')
   @websocket('users', 'read')
   @authenticated
@@ -72,6 +86,12 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
+  /**
+   * Get a user's avatar
+   * @param {Context} ctx a request context
+   * @param {Function} next Koa routing function
+   * @returns {Promise<undefined>} resolves a promise upon completion
+   */
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
   async image (ctx, next) {
@@ -82,6 +102,11 @@ export default class Users extends API {
     next()
   }
 
+  /**
+   * Generate and set a certificate for use with IRC identification
+   * @param {Context} ctx request context
+   * @returns {Promise<undefined>} resolves a promise upon completion
+   */
   @GET('/users/:id/certificate')
   @authenticated
   async certificate (ctx) {
@@ -100,31 +125,43 @@ export default class Users extends API {
     ctx.body = certificate
   }
 
+  /**
+   * Change a user's password
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user if the password change is successful
+   */
   @PUT('/users/:id/password')
-  @websocket('users', 'setpassword')
+  @websocket('users', 'password', 'update')
   @authenticated
   @required('password', 'new')
-  async setpassword (ctx) {
+  async setPassword (ctx) {
+    const { password, newPassword } = getJSONAPIData({ ctx, type: 'password-changes' })
+
     const user = await User.findOne({
       where: {
-        id: ctx.state.user.id
+        id: ctx.params.id
       }
     })
 
-    const validatePassword = await bcrypt.compare(ctx.data.password, user.password)
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    const validatePassword = await bcrypt.compare(password, user.password)
     if (!validatePassword) {
       throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
     }
 
-    user.password = ctx.data.new
-
+    user.password = newPassword
     await user.save()
 
-    const userQuery = new Query({ params: { id: ctx.state.user.id }, connection: ctx })
-    const result = await User.findAndCountAll(userQuery.toSequelize)
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result: user, type: UserView })
   }
 
+  /**
+   * Endpoint for admins to create new users. For self-creating a user, see /register
+   * @param {Context} ctx a request context
+   * @returns {Promise<DatabaseDocument>} a created user if the request is successful
+   */
   @POST('/users')
   @websocket('users', 'create')
   @authenticated
@@ -139,6 +176,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
+  /**
+   * Update a user
+   * @param {Context} ctx a requset context
+   * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
+   */
   @PUT('/users/:id')
   @websocket('users', 'update')
   @authenticated
@@ -151,6 +193,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
+  /**
+   * Delete a user
+   * @param {Context} ctx a request context
+   * @returns {Promise<boolean>} returns a 204 if the request is successful
+   */
   @DELETE('/users/:id')
   @websocket('users', 'delete')
   @required('password')
@@ -161,6 +208,11 @@ export default class Users extends API {
     return true
   }
 
+  /**
+   * Update a user's avatar image
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
+   */
   @POST('/users/:id/image')
   @websocket('users', 'image')
   @authenticated
@@ -196,8 +248,13 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
-  // relationships
+  // Relationships
 
+  /**
+   * Get a user's rat relationships
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} a list of a user's rat relationships
+   */
   @GET('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'read')
   @authenticated
@@ -212,6 +269,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
+  /**
+   * Create new rat relationship(s) on a user
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
   @POST('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'create')
   @authenticated
@@ -227,6 +289,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
+  /**
+   * Override a user's rat relationships with a new set
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
   @PATCH('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'patch')
   @authenticated
@@ -243,6 +310,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
+  /**
+   * Delete one or more rat relationships of a user
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
   @DELETE('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'delete')
   @authenticated
@@ -259,6 +331,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
+  /**
+   * Get a user's display rat relationship
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} a user's display rat relationship
+   */
   @GET('/users/:id/relationships/displayRat')
   @websocket('users', 'displayRat', 'read')
   @authenticated
@@ -273,6 +350,11 @@ export default class Users extends API {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
+  /**
+   * Set a user's display rat relationship
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
   @PATCH('/users/:id/relationships/displayRat')
   @websocket('users', 'displayRat', 'patch')
   @authenticated
@@ -290,6 +372,9 @@ export default class Users extends API {
   }
 
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return {
       data: WritePermission.group,
@@ -304,15 +389,23 @@ export default class Users extends API {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   isInternal ({ ctx }) {
     return Permission.granted({ permissions: ['user.internal'], user: ctx.state.user, scope: ctx.state.scope })
   }
 
-
-  isGroup ({ ctx, entity }) {
+  /**
+   * @inheritdoc
+   */
+  isGroup ({ ctx }) {
     return Permission.granted({ permissions: ['user.write'], user: ctx.state.user, scope: ctx.state.scope })
   }
 
+  /**
+   * @inheritdoc
+   */
   isSelf ({ ctx, entity }) {
     if (entity.id === ctx.state.user.id) {
       return Permission.granted({ permissions: ['user.write.me'], user: ctx.state.user, scope: ctx.state.scope })
@@ -320,6 +413,9 @@ export default class Users extends API {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   getReadPermissionFor ({ connection, entity }) {
     if (entity.id === connection.state.user.id) {
       return ['user.write.me', 'user.write']
@@ -327,6 +423,9 @@ export default class Users extends API {
     return ['user.write']
   }
 
+  /**
+   * @inheritdoc
+   */
   getWritePermissionFor ({ connection, entity }) {
     if (entity.displayRatId) {
       const rat = connection.state.user.included.find((include) => {
@@ -342,6 +441,10 @@ export default class Users extends API {
     return ['user.write']
   }
 
+  /**
+   *
+   * @inheritdoc
+   */
   changeRelationship ({ relationship }) {
     switch (relationship) {
       case 'rats':
@@ -417,6 +520,9 @@ export default class Users extends API {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationTypes () {
     return {
       'rats': 'rats',

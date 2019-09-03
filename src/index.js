@@ -37,6 +37,9 @@ import JiraDrillWebhook from './routes/JiraDrillWebhook'
 import NPO from './routes/NPO'
 import Permission from './classes/Permission'
 import packageInfo from '../package'
+import ErrorDocument from './Documents/ErrorDocument'
+import Query from './query'
+import StatusCode from './classes/StatusCode'
 
 
 
@@ -44,8 +47,6 @@ const app = new Koa()
 querystring(app)
 
 const {
-  APIError,
-  InternalServerError,
   TooManyRequestsAPIError
 } = require('./classes/APIError')
 
@@ -163,17 +164,17 @@ app.use(async (ctx, next) => {
 
     logger.info({ tags: ['request'] }, `Request by ${ctx.request.ip} to ${ctx.request.path}`, {
       ip: ctx.request.ip,
+      headers: ctx.request.headers,
       path: ctx.request.path,
-      'rate-limit-limit': rateLimit.total,
-      'rate-limit-remaining': rateLimit.remaining,
+      rateLimitTotal: rateLimit.total,
+      rateLimitRemaining: rateLimit.remaining,
       query: ctx.query,
-      body: censor(ctx.data),
       method: ctx.request.req.method
     })
 
     if (rateLimit.exceeded) {
-      next(new TooManyRequestsAPIError({}))
-      return
+      // noinspection ExceptionCaughtLocallyJS
+      throw new TooManyRequestsAPIError({})
     }
 
     if (ctx.state.client) {
@@ -184,35 +185,22 @@ app.use(async (ctx, next) => {
 
     const result = await next()
     if (result === true) {
-      ctx.status = 204
+      ctx.status = StatusCode.noContent
     } else if (result instanceof Document) {
       ctx.type = 'application/vnd.api+json'
       ctx.body = result.toString()
     } else if (result) {
       ctx.body = result
     }
-  } catch (ex) {
-    let errors = ex
 
-    if (errors.hasOwnProperty('name')) {
-      errors = APIError.fromValidationError(errors)
-    }
+    logger.error('Router received a response from the endpoint that could not be processed')
+  } catch (errors) {
+    const query = new Query({ connection: ctx })
+    const errorDocument = new ErrorDocument({ query, errors })
 
-    if (Array.isArray(errors) === false) {
-      errors = [errors]
-    }
-
-    errors = errors.map((error) => {
-      if ((error instanceof APIError) === false) {
-        return new InternalServerError({})
-      }
-      return error
-    })
-
-    ctx.status = errors[0].status
-    ctx.body = {
-      errors
-    }
+    ctx.status = errorDocument.httpStatus
+    ctx.type = 'application/vnd.api+json'
+    ctx.body = errorDocument.toString()
   }
 })
 
