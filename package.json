@@ -28,7 +28,7 @@
     "i18next": "^17.0.6",
     "install": "^0.13.0",
     "join-js": "xlexi/joinjs",
-    "knex": "^0.17.6",
+    "knex": "^0.19.5",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
     "koa-conditional-get": "^2.0.0",
