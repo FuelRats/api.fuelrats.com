@@ -45,11 +45,11 @@ export class APIError extends Error {
   }
 
   get title () {
-    return i18next.t(`${this.code}.title`)
+    return i18next.t(`${this.status}.title`)
   }
 
   get detail () {
-    return i18next.t(`${this.code}.detail`)
+    return i18next.t(`${this.status}.detail`)
   }
 
   get links () {
