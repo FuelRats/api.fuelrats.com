@@ -3,14 +3,101 @@
 import Decal from '../classes/Decal'
 import { User } from '../db'
 import API, {
+  APIResource,
   authenticated,
   GET,
   permissions
 } from '../classes/API'
-import { NotFoundAPIError } from '../classes/APIError'
+import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
 
-export default class Decals extends API {
+/**
+ *
+ */
+export default class Decals extends APIResource {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'decals'
+  }
+
+  async search (ctx) {
+
+  }
+
+  async findById () {
+
+  }
+
+  async create () {
+
+  }
+
+  async update () {
+
+  }
+
+  async delete () {
+
+  }
+
+  async redeem () {
+
+  }
+
+  /**
+   *
+   * @inheritdoc
+   */
+  changeRelationship ({ relationship }) {
+    switch (relationship) {
+      case 'displayRat':
+        return {
+          many: false,
+
+          add ({ entity, id }) {
+            return entity.addUser(id)
+          },
+
+          patch ({ entity, id }) {
+            return entity.setUser(id)
+          },
+
+          remove ({ entity, id }) {
+            return entity.removeUser(id)
+          }
+        }
+
+      default:
+        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+    }
+  }
+
+  get relationTypes () {
+    return {
+      'user': 'users'
+    }
+  }
+
+
+  isGroup ({ ctx, entity }) {
+    return false
+  }
+
+  isInternal ({ ctx, entity }) {
+    return false
+  }
+
+  isSelf ({ ctx, entity }) {
+    return false
+  }
+
+  get writePermissionsForFieldAccess () {
+    return undefined
+  }
+}
+export class Decals2 extends API {
   @GET('/decals/check')
   @websocket('decals', 'check')
   @authenticated
@@ -48,20 +135,6 @@ export default class Decals extends API {
   async redeem (ctx) {
     let decal = await Decal.getDecalFor(ctx.state.user)
     return Decals.presenter.render(decal)
-  }
-
-  getReadPermissionForEntity (ctx, entity) {
-    if (entity.id === ctx.state.user.id) {
-      return ['user.write.me', 'user.write']
-    }
-    return ['user.write']
-  }
-
-  getWritePermissionForEntity (ctx, entity) {
-    if (entity.id === ctx.state.user.id) {
-      return ['user.write.me', 'user.write']
-    }
-    return ['user.write']
   }
 
   static get presenter () {

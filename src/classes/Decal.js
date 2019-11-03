@@ -136,7 +136,7 @@ function checkEligibleForRescueDecal ({user}) {
  * @returns {Date} A date object for midnight UTC on the 1st of the current month.
  */
 function getLastMonthTurnover () {
-  let foo = new Date()
+  const foo = new Date()
   foo.setUTCDate(1)
   foo.setUTCHours(0)
   foo.setUTCMinutes(0)

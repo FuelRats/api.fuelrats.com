@@ -34,7 +34,6 @@ import Version from './routes/Version'
 import Decals from './routes/Decals'
 import Stream from './routes/Stream'
 import JiraDrillWebhook from './routes/JiraDrillWebhook'
-import NPO from './routes/NPO'
 import Permission from './classes/Permission'
 import packageInfo from '../package'
 import ErrorDocument from './Documents/ErrorDocument'
@@ -73,8 +72,6 @@ try {
   process.exit(1)
 }
 
-app.keys = [config.cookie.secret]
-
 const sessionConfiguration = {
   key: 'fuelrats:session',
   overwrite: true,
@@ -88,8 +85,6 @@ app.use(koaBody({
   strict: false,
   multipart: true
 }))
-
-const port = config.port || process.env.PORT
 
 /**
  * Parses an object of URL query parameters and builds a nested object by delimiting periods into sub objects.
@@ -224,7 +219,6 @@ const routes = [
   new Decals(),
   new Stream(),
   new JiraDrillWebhook(),
-  new NPO(),
   new Frontier()
 ]
 
@@ -255,8 +249,8 @@ server.wss = new WebSocket({ server, traffic })
   try {
     await db.sync()
     const listen = promisify(server.listen.bind(server))
-    await listen(port, config.hostname)
-    logger.info(`HTTP Server listening on ${config.hostname} port ${port}`)
+    await listen(config.server.port, config.server.hostname)
+    logger.info(`HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
   } catch (error) {
     logger.error(error)
   }

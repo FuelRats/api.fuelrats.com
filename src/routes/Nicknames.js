@@ -3,9 +3,10 @@ import { websocket } from '../classes/WebSocket'
 import Anope from '../classes/Anope'
 import AnopeQuery from '../query/AnopeQuery'
 import ObjectDocument from '../Documents/ObjectDocument'
-import NicknameView from '../views/NicknameView'
+import { NicknameView } from '../view'
 import { ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
 import { DocumentViewType } from '../Documents/Document'
+import StatusCode from '../classes/StatusCode'
 
 export default class Nickname extends API {
   get type () {
@@ -51,7 +52,7 @@ export default class Nickname extends API {
 
     const createdNick = Anope.findNickname(nick)
     const query = new AnopeQuery({ connection: ctx })
-    ctx.response.status = 201
+    ctx.response.status = StatusCode.created
     return new ObjectDocument({ query, result: createdNick, type: NicknameView, view: DocumentViewType.individual })
   }
 
@@ -69,9 +70,9 @@ export default class Nickname extends API {
       throw new ConflictAPIError({ parameter: 'nick' })
     }
 
-    this.requireWritePermission({ connection: ctx, nickname })
+    this.requireWritePermission({ connection: ctx, entity: nickname })
     await Anope.removeNickname(nick)
-    ctx.response.status = 204
+    ctx.response.status = StatusCode.noContent
     return true
   }
 

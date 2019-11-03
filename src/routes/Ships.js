@@ -1,7 +1,7 @@
 
-import { Ship } from '../db'
+import { Rat, Ship } from '../db'
 import Query from '../query/Query'
-import { NotFoundAPIError } from '../classes/APIError'
+import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import API, {
   authenticated,
   GET,
@@ -10,27 +10,38 @@ import API, {
   DELETE,
   parameters,
   required,
-  protect
+  protect, WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import DatabaseQuery from '../query/DatabaseQuery'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import ShipView from '../view/ShipView'
+import StatusCode from '../classes/StatusCode'
+import Permission from '../classes/Permission'
 
 export default class Ships extends API {
   @GET('/ships')
   @websocket('ships', 'search')
   async search (ctx) {
-    let shipsQuery = new Query({ params: ctx.query, connection: ctx })
-    let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
-    return Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Ship.findAndCountAll(query.searchObject)
+    return new DatabaseDocument({ result, query, type: ShipView })
   }
 
   @GET('/ships/:id')
   @websocket('ships', 'read')
   @parameters('id')
   async findById (ctx) {
-    let shipsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
-    let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
-
-    return Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Ship.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+    if (!result) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    return new DatabaseDocument({ query, result, type: ShipView })
   }
 
   @POST('/ships')
@@ -39,14 +50,11 @@ export default class Ships extends API {
   @required('name', 'shipType', 'ratId')
   @protect('ship.write', 'shipId')
   async create (ctx) {
-    this.requireWritePermission({ connection: ctx, entity: ctx.data })
+    const result = await super.create({ ctx, databaseType: Ship })
 
-    let result = await Ship.create(ctx.data)
-
-    ctx.response.status = 201
-    let renderedResult = Ships.presenter.render(result, API.meta(result))
-    process.emit('shipCreated', ctx, renderedResult)
-    return renderedResult
+    const query = new DatabaseQuery({ connection: ctx })
+    ctx.response.status = StatusCode.created
+    return new DatabaseDocument({ query, result, type: ShipView })
   }
 
   @PUT('/ships')
@@ -54,32 +62,10 @@ export default class Ships extends API {
   @authenticated
   @protect('ship.write', 'shipId')
   async update (ctx) {
-    this.requireWritePermission({ connection: ctx, entity: ctx.data })
+    const result = await super.update({ ctx, databaseType: Ship, updateSearch: { id:ctx.params.id } })
 
-    let ship = await Ship.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    if (!ship) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({ connection: ctx, entity: ship })
-
-    await Ship.update(ctx.data, {
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    let shipsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
-    let result = await Ship.findAndCountAll(shipsQuery.toSequelize)
-
-    let renderedResult = Ships.presenter.render(result.rows, API.meta(result, shipsQuery))
-    process.emit('shipUpdated', ctx, renderedResult)
-    return renderedResult
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: ShipView })
   }
 
   @DELETE('/ships/:id')
@@ -87,37 +73,104 @@ export default class Ships extends API {
   @authenticated
   @parameters('id')
   async delete (ctx) {
-    let ship = await Ship.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
+    await super.delete({ ctx, databaseType: Ship })
 
-    if (!ship) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({ connection: ctx, entity: ship })
-
-    await ship.destroy()
+    ctx.response.status = StatusCode.noContent
     return true
   }
 
-  getWritePermissionFor ({ connection, entity }) {
-    let rat = connection.state.user.included.find((included) => {
-      return included.id === entity.ratId
-    })
-
-    if (rat) {
-      return ['ship.write.me', 'ship.write']
-    } else {
-      return ['ship.write.me']
+  get writePermissionsForFieldAccess () {
+    return {
+      name: WritePermission.group,
+      shipType: WritePermission.group,
+      shipId: WritePermission.internal,
+      createdAt: WritePermission.internal,
+      updatedAt: WritePermission.internal,
+      deletedAt: WritePermission.internal
     }
   }
 
-  static get presenter () {
-    class ShipsPresenter extends API.presenter {}
-    ShipsPresenter.prototype.type = 'ships'
-    return ShipsPresenter
+  /**
+   * @inheritdoc
+   */
+  isInternal ({ ctx }) {
+    return Permission.granted({ permissions: ['ship.internal'], user: ctx.state.user, scope: ctx.state.scope })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  isGroup ({ ctx }) {
+    return Permission.granted({ permissions: ['ship.write'], user: ctx.state.user, scope: ctx.state.scope })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  isSelf ({ ctx, entity }) {
+    const hasRat = ctx.state.user.rats.find((rat) => {
+      return rat.id === entity.ratId
+    })
+    if (hasRat) {
+      return Permission.granted({ permissions: ['ship.write.me'], user: ctx.state.user, scope: ctx.state.scope })
+    }
+    return false
+  }
+
+  getReadPermissionFor ({ connection, entity }) {
+    const hasRat = connection.state.user.rats.find((rat) => {
+      return rat.id === entity.ratId
+    })
+    if (hasRat) {
+      return ['ship.write', 'ship.write.me']
+    }
+    return ['ship.write']
+  }
+
+  getWritePermissionFor ({ connection, entity }) {
+    const hasRat = connection.state.user.rats.find((rat) => {
+      return rat.id === entity.ratId
+    })
+    if (hasRat) {
+      return ['ship.write', 'ship.write.me']
+    }
+    return ['ship.write']
+  }
+
+  /**
+   *
+   * @inheritdoc
+   */
+  changeRelationship ({ relationship }) {
+    switch (relationship) {
+      case 'rat':
+        return {
+          many: false,
+
+          add ({ entity, id }) {
+            return entity.addRat(id)
+          },
+
+          patch ({ entity, id }) {
+            return entity.setRat(id)
+          },
+
+          remove ({ entity, id }) {
+            return entity.removeRat(id)
+          }
+        }
+
+      default:
+        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+    }
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get relationTypes () {
+    return {
+      'rat': 'rats'
+    }
   }
 }

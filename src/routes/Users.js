@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import Permission from '../classes/Permission'
 import Anope from '../classes/Anope'
 import workerpool from 'workerpool'
+import StatusCode from '../classes/StatusCode'
 
 import {
   NotFoundAPIError,
@@ -172,7 +173,7 @@ export default class Users extends APIResource {
     const result = await super.create({ ctx, databaseType: User })
 
     const query = new DatabaseQuery({ connection: ctx })
-    ctx.response.status = 201
+    ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
@@ -204,7 +205,7 @@ export default class Users extends APIResource {
   async delete (ctx) {
     await super.delete({ ctx, databaseType: User })
 
-    ctx.response.status = 204
+    ctx.response.status = StatusCode.noContent
     return true
   }
 
@@ -371,6 +372,168 @@ export default class Users extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
+  /**
+   * Get a user's group relationships
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} a list of a user's group relationships
+   */
+  @GET('/users/:id/relationships/groups')
+  @websocket('users', 'groups', 'read')
+  @authenticated
+  async relationshipGroupsView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: User,
+      relationship: 'groups'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
+  }
+
+  /**
+   * Create new group relationship(s) on a user
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
+  @POST('/users/:id/relationships/groups')
+  @websocket('users', 'groups', 'create')
+  @authenticated
+  async relationshipGroupsCreate (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'add',
+      relationship: 'groups'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * Override a user's group relationships with a new set
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
+  @PATCH('/users/:id/relationships/groups')
+  @websocket('users', 'groups', 'patch')
+  @authenticated
+  async relationshipGroupsPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'patch',
+      relationship: 'groups'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * Delete one or more group relationships of a user
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
+  @DELETE('/users/:id/relationships/groups')
+  @websocket('users', 'groups', 'delete')
+  @authenticated
+  async relationshipGroupsDelete (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'remove',
+      relationship: 'groups'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * Get a user's client relationships
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} a list of a user's client relationships
+   */
+  @GET('/users/:id/relationships/clients')
+  @websocket('users', 'clients', 'read')
+  @authenticated
+  async relationshipClientsView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: User,
+      relationship: 'clients'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
+  }
+
+  /**
+   * Create new client relationship(s) on a user
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
+  @POST('/users/:id/relationships/clients')
+  @websocket('users', 'clients', 'create')
+  @authenticated
+  async relationshipClientsCreate (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'add',
+      relationship: 'clients'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * Override a user's client relationships with a new set
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
+  @PATCH('/users/:id/relationships/clients')
+  @websocket('users', 'clients', 'patch')
+  @authenticated
+  async relationshipClientsPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'patch',
+      relationship: 'clients'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * Delete one or more client relationships of a user
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
+  @DELETE('/users/:id/relationships/clients')
+  @websocket('users', 'clients', 'delete')
+  @authenticated
+  async relationshipClientsDelete (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: User,
+      change: 'remove',
+      relationship: 'clients'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+  }
+
 
   /**
    * @inheritdoc
@@ -414,34 +577,6 @@ export default class Users extends APIResource {
   }
 
   /**
-   * @inheritdoc
-   */
-  getReadPermissionFor ({ connection, entity }) {
-    if (entity.id === connection.state.user.id) {
-      return ['user.write.me', 'user.write']
-    }
-    return ['user.write']
-  }
-
-  /**
-   * @inheritdoc
-   */
-  getWritePermissionFor ({ connection, entity }) {
-    if (entity.displayRatId) {
-      const rat = connection.state.user.included.find((include) => {
-        return include.id === entity.displayRatId
-      })
-      if (!rat) {
-        return ['user.write']
-      }
-    }
-    if (entity.id === connection.state.user.id) {
-      return ['user.write.me', 'user.write']
-    }
-    return ['user.write']
-  }
-
-  /**
    *
    * @inheritdoc
    */
@@ -468,16 +603,8 @@ export default class Users extends APIResource {
         return {
           many: false,
 
-          add ({ entity, id }) {
-            return entity.addRat(id)
-          },
-
           patch ({ entity, id }) {
             return entity.setRat(id)
-          },
-
-          remove ({ entity, id }) {
-            return entity.removeRat(id)
           }
         }
 

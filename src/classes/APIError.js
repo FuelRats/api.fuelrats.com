@@ -1,24 +1,47 @@
+/* eslint-disable jsdoc/require-jsdoc */
 
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import UUID from 'pure-uuid'
+import StatusCode from './StatusCode'
 
 i18next.init({
   lng: 'en',
   resources:  localisationResources
 })
 
+/**
+ * @classdesc API error base class
+ * @class
+ */
 export class APIError extends Error {
-  constructor (status, source) {
+  /**
+   * Create an API error instance with a jsonapi source
+   * @param {object} source
+   */
+  constructor (source) {
     super()
 
     this.id = new UUID(4)
-    this.code = status
     this.source = source
   }
 
+  /**
+   * Set the HTTP status code
+   * @returns {number}
+   * @abstract
+   */
+  get code () {
+    return undefined
+  }
+
+  /**
+   * Set the status identifier for this error
+   * @returns {string}
+   * @abstract
+   */
   get status () {
-    return i18next.t(`${this.code}.code`)
+    return undefined
   }
 
   get title () {
@@ -37,7 +60,7 @@ export class APIError extends Error {
 
   toJSON () {
     return {
-      id:     this.id,
+      id:     this.id.format(),
       links:  this.links,
       status: this.status,
       code:   this.code,
@@ -69,91 +92,151 @@ export class APIError extends Error {
 }
 
 export class BadRequestAPIError extends APIError {
-  constructor (source) {
-    super('bad_request', source)
+  get code () {
+    return StatusCode.badRequest
+  }
+
+  get status () {
+    return 'bad_request'
   }
 }
 
 export class UnauthorizedAPIError extends APIError {
-  constructor (source) {
-    super('unauthorized', source)
+  get code () {
+    return StatusCode.unauthorised
+  }
+
+  get status () {
+    return 'unauthorized'
   }
 }
 
 export class ForbiddenAPIError extends APIError {
-  constructor (source) {
-    super('forbidden', source)
+  get code () {
+    return StatusCode.forbidden
+  }
+
+  get status () {
+    return 'forbidden'
   }
 }
 
 export class VerificationRequiredAPIError extends APIError {
-  constructor (source) {
-    super('verification_required', source)
+  get code () {
+    return StatusCode.forbidden
+  }
+
+  get status () {
+    return 'verification_required'
   }
 }
 
 export class ResetRequiredAPIError extends APIError {
-  constructor (source) {
-    super('resetrequired', source)
+  get code () {
+    return StatusCode.forbidden
+  }
+
+  get status () {
+    return 'reset_required'
   }
 }
 
 export class NotFoundAPIError extends APIError {
-  constructor (source) {
-    super('not_found', source)
+  get code () {
+    return StatusCode.notFound
+  }
+
+  get status () {
+    return 'not_found'
   }
 }
 
 export class ConflictAPIError extends APIError {
-  constructor (source) {
-    super('conflict', source)
+  get code () {
+    return StatusCode.conflict
+  }
+
+  get status () {
+    return 'conflict'
   }
 }
 
 export class GoneAPIError extends APIError {
-  constructor (source) {
-    super('gone', source)
+  get code () {
+    return StatusCode.gone
+  }
+
+  get status () {
+    return 'gone'
   }
 }
 
 export class PayloadTooLargeAPIError extends APIError {
-  constructor (source) {
-    super('payload_too_large', source)
+  get code () {
+    return StatusCode.payloadTooLarge
+  }
+
+  get status () {
+    return 'payload_too_large'
   }
 }
 
 export class UnsupportedMediaAPIError extends APIError {
-  constructor (source) {
-    super('unsupported_media_type', source)
+  get code () {
+    return StatusCode
+  }
+
+  get status () {
+    return 'unsupported_media_type'
   }
 }
 
 export class ImATeapotAPIError extends APIError {
-  constructor (source) {
-    super('im_a_teapot', source)
+  get code () {
+    return StatusCode.imATeapot
+  }
+
+  get status () {
+    return 'im_a_teapot'
   }
 }
 
 export class UnprocessableEntityAPIError extends APIError {
-  constructor (source) {
-    super('unprocessable_entity', source)
+  get code () {
+    return StatusCode.unprocessableEntity
+  }
+
+  get status () {
+    return 'unprocessable_entity'
   }
 }
 
 export class TooManyRequestsAPIError extends APIError {
-  constructor (source) {
-    super('too_many_requests', source)
+  get code () {
+    return StatusCode.tooManyRequests
+  }
+
+  get status () {
+    return 'too_many_requests'
   }
 }
 
 export class InternalServerError extends APIError {
-  constructor (source) {
-    super('internal_server', source)
+  get code () {
+    return StatusCode.internalServerError
+  }
+
+  get status () {
+    return 'internal_server'
   }
 }
 
 export class NotImplementedAPIError extends APIError {
-  constructor (source) {
-    super('not_implemented', source)
+  get code () {
+    return StatusCode.notImplemented
+  }
+
+  get status () {
+    return 'not_implemented'
   }
 }

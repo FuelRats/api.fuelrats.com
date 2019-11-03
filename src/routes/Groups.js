@@ -10,11 +10,14 @@ import API, {
   required
 } from '../classes/API'
 
-import {Group, User } from '../db'
-import Query from '../query/Query'
+import { Group, Rat, User } from '../db'
 import { websocket } from '../classes/WebSocket'
 import {NotFoundAPIError} from '../classes/APIError'
 import Users from './Users'
+import DatabaseQuery from '../query/DatabaseQuery'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { RatView, GroupView } from '../view'
+import StatusCode from '../classes/StatusCode'
 
 export default class Groups extends API {
   @GET('/groups')
@@ -22,9 +25,9 @@ export default class Groups extends API {
   @authenticated
   @permissions('group.read')
   async search (ctx) {
-    let groupsQuery = new Query({ params: ctx.query, connection: ctx })
-    let result = await Group.findAndCountAll(groupsQuery.toSequelize)
-    return Groups.presenter.render(result.rows, API.meta(result, groupsQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Group.findAndCountAll(query.searchObject)
+    return new DatabaseDocument({ query, result, type: GroupView })
   }
 
   @GET('/groups/:id')
@@ -33,10 +36,16 @@ export default class Groups extends API {
   @permissions('group.read')
   @parameters('id')
   async read (ctx) {
-    let groupsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
-    let result = await Group.findAndCountAll(groupsQuery.toSequelize)
-
-    return Groups.presenter.render(result.rows, API.meta(result, groupsQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Group.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+    if (!result) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    return new DatabaseDocument({ query, result, type: GroupView })
   }
 
   @POST('/groups')
@@ -45,10 +54,11 @@ export default class Groups extends API {
   @permissions('group.write')
   @required('id', 'priority', 'permissions')
   async create (ctx) {
-    let result = await Group.create(ctx.data)
+    const result = await super.create({ ctx, databaseType: Group })
 
-    ctx.response.status = 201
-    return Groups.presenter.render(result, API.meta(result))
+    const query = new DatabaseQuery({ connection: ctx })
+    ctx.response.status = StatusCode.created
+    return new DatabaseDocument({ query, result, type: GroupView })
   }
 
   @PUT('/groups/:id')
@@ -57,23 +67,10 @@ export default class Groups extends API {
   @permissions('group.write')
   @parameters('id')
   async update (ctx) {
-    let group = await Group.findOne({
-      where: { id: ctx.params.id }
-    })
+    const result = await super.update({ ctx, databaseType: Group, updateSearch: { id:ctx.params.id } })
 
-    if (!group) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    await Group.update(ctx.data, {
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    let groupsQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
-    let result = await Group.findAndCountAll(groupsQuery.toSequelize)
-    return Groups.presenter.render(result.rows, API.meta(result, groupsQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: GroupView })
   }
 
   @DELETE('/groups/:id')
@@ -82,83 +79,10 @@ export default class Groups extends API {
   @permissions('group.delete')
   @parameters('id')
   async delete (ctx) {
-    const group = await Group.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
+    await super.delete({ ctx, databaseType: Group })
 
-    if (!group) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    await group.destroy()
-    ctx.status = 204
+    ctx.response.status = StatusCode.noContent
     return true
-  }
-
-  @POST('/groups/:id/:userId')
-  @websocket('groups', 'grant')
-  @authenticated
-  @permissions('group.write')
-  @parameters('id', 'userId')
-  async grant (ctx) {
-    let group = await Group.findOne({
-      where: { id: ctx.params.id }
-    })
-
-    if (!group) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    let user = await User.findOne({
-      where: { id: ctx.params.userId }
-    })
-
-    if (!user) {
-      throw new NotFoundAPIError({ parameter: 'userId' })
-    }
-
-    await user.addGroup(group)
-    let userQuery = new Query({ params: { id: ctx.params.userId }, connection: ctx })
-    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
-  }
-
-  @DELETE('/groups/:id/:userId')
-  @websocket('groups', 'revoke')
-  @authenticated
-  @permissions('group.write')
-  @parameters('id', 'userId')
-  async revoke (ctx) {
-    let group = await Group.findOne({
-      where: { id: ctx.params.id }
-    })
-
-    if (!group) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    let user = await User.findOne({
-      where: { id: ctx.params.userId }
-    })
-
-    if (!user) {
-      throw new NotFoundAPIError({ parameter: 'userId' })
-    }
-
-    await user.removeGroup(group)
-    let userQuery = new Query({ params: { id: ctx.params.userId }, connection: ctx })
-    let result = await User.scope('public').findAndCountAll(userQuery.toSequelize)
-
-    return Users.presenter.render(result.rows, API.meta(result, userQuery))
-  }
-
-  static get presenter () {
-    class GroupsPresenter extends API.presenter {}
-    GroupsPresenter.prototype.type = 'groups'
-    return GroupsPresenter
   }
 }
 

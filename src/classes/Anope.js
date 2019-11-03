@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import { ConflictAPIError } from './APIError'
 import { parse } from 'date-fns'
 import { User } from '../db'
+
 const { database, username, hostname, port } = config.anope
 const anopeBcryptRounds = 10
 const defaultMaximumEditDistance = 5
@@ -18,29 +19,16 @@ const mysql = knex({
   }
 })
 
-function convert (obj) {
-  return {
-    id: obj.id,
-    lastQuit: obj.last_quit,
-    lastRealHost: obj.last_realhost,
-    lastRealName: obj.last_realname,
-    lastSeen: new Date(obj.last_seen * 1000),
-    lastUserMask: obj.last_usermask,
-    display: obj.nc,
-    nick: obj.nick,
-    createdAt: new Date(obj.time_registered * 1000),
-    updatedAt: parse(obj.timestamp),
-    vhostSetBy: obj.vhost_creator,
-    vhost: obj.vhost_host,
-    vhostSetAt: new Date(obj.vhost_time * 1000),
-    email: obj.email,
-    password: obj.pass,
-    fingerprint: obj.cert,
-    score: obj.score
-  }
-}
-
+/**
+ * @classdesc Class managing the interface to Anope
+ * @class
+ */
 export default class Anope {
+  /**
+   * Get an account entry from Anope
+   * @param {string} email The user's email
+   * @returns {Promise<[Nickname]|undefined>} a list of nickname entries
+   */
   static async getAccount (email) {
     const results = await mysql.select('*')
       .from('anope_db_NickCore')
@@ -53,7 +41,13 @@ export default class Anope {
     return undefined
   }
 
-  static async setFingerprint (email, fingerprint) {
+  /**
+   *
+   * @param {string} email the email of the account to set the fingerprint of
+   * @param {string} fingerprint the fingerprint to set
+   * @returns {Promise<undefined>} resolves a promise when completed
+   */
+  static setFingerprint (email, fingerprint) {
     return mysql.raw(`
         UPDATE anope_db_NickCore
         SET
@@ -63,19 +57,24 @@ export default class Anope {
         `, [fingerprint, email])
   }
 
+  /**
+   * Get a list of accounts by completing a fuzzy match search on a nickname
+   * @param {string} nickname the nickname to search by
+   * @returns {Promise<[Nickname]>} a list of nick search results
+   */
   static async findAccountFuzzyMatch (nickname) {
     const distance = Math.min(Math.ceil(nickname.length / 2), defaultMaximumEditDistance)
 
     const [results] = await mysql.raw(`
-        SELECT 
-               *, 
+        SELECT
+               *,
                anope_db_NickAlias.id AS id,
                anope_db_NickCore.id AS accountId,
                levenshtein(anope_db_NickAlias.nick, :nickname) AS score
         FROM anope_db_NickAlias
                  LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE levenshtein(anope_db_NickAlias.nick, :nickname) <= :distance
-        ORDER BY score ASC
+        ORDER BY score
         LIMIT 10
     `, { nickname, distance })
 
@@ -92,7 +91,7 @@ export default class Anope {
     })
 
     return results.map((result) => {
-      const entry = convert(result)
+      const entry = new Nickname(result)
       entry.user = users.find((user) => {
         return user.email.toLowerCase() === entry.email.toLowerCase()
       })
@@ -100,6 +99,11 @@ export default class Anope {
     })
   }
 
+  /**
+   *
+   * @param {string} nickname Get a database nickname entry from a nickname string
+   * @returns {Promise<Nickname>} a database nickname result
+   */
   static async findNickname (nickname) {
     let [[account]] = await mysql.raw(`
         SELECT * FROM anope_db_NickAlias
@@ -111,7 +115,7 @@ export default class Anope {
       return undefined
     }
 
-    account = convert(account)
+    account = new Nickname(account)
 
     account.user = await User.findOne({
       where: {
@@ -121,16 +125,28 @@ export default class Anope {
     return account
   }
 
-  static setEmail (oldEmail, newEmail) {
-    return mysql('anope_db_NickCore')
-      .whereRaw('lower(email) = lower(?)', [oldEmail])
+  /**
+   * Change the email of an Anope account
+   * @param {string} currentEmail the current email
+   * @param {string} newEmail the new email to set
+   * @returns {Promise<undefined>} resolves a promise when completed successfully
+   */
+  static async setEmail (currentEmail, newEmail) {
+    await mysql('anope_db_NickCore')
+      .whereRaw('lower(email) = lower(?)', [currentEmail])
       .update({
         email: newEmail
       })
   }
 
-  static setVirtualHost (email, vhost) {
-    return mysql.raw(`
+  /**
+   * Set the virtual host for all nicknames of an account
+   * @param {string} email the email of the account to set a virtual host for
+   * @param {string} vhost the virtual host to set
+   * @returns {Promise<undefined>} resolves a promise when completed successfully
+   */
+  static async setVirtualHost (email, vhost) {
+    await mysql.raw(`
         UPDATE anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         SET
@@ -142,23 +158,42 @@ export default class Anope {
         `, [vhost, email])
   }
 
+  /**
+   * Set the password for an Anope account
+   * @param {string} email the email of the account to set password for
+   * @param {string} newPassword the password to set
+   * @returns {Promise<undefined>} resolves a promise when completed successfully
+   */
   static async setPassword (email, newPassword) {
     const encryptedPassword = await bcrypt.hash(newPassword, anopeBcryptRounds)
 
-    return mysql('anope_db_NickCore')
+    await mysql('anope_db_NickCore')
       .whereRaw('lower(email) = lower(?)', [email])
       .update({
         password: `bcrypt:${encryptedPassword}`
       })
   }
 
-  static removeNickname (nickname) {
-    return mysql.raw(`
+  /**
+   * Remove a nickname from the Anope database
+   * @param {string} nickname the nickname to remove
+   * @returns {Promise<undefined>} resolves a promise when completed successfully
+   */
+  static async removeNickname (nickname) {
+    await mysql.raw(`
       DELETE FROM anope_db_NickAlias
-      WHERE  nick = ?
+      WHERE  lower(nick) = lower(?)
     `, [nickname])
   }
 
+  /**
+   * Add a new user to the Anope database
+   * @param {string} email the email to use for the new user
+   * @param {string} nick the main IRC nickname for the new user
+   * @param {string} encryptedPassword a bcrypt encrypted password to use for the new user
+   * @param {string} vhost vhoset to use for all nicknames of the new user
+   * @returns {Promise<Nickname>} returns a newly created Nickname entry
+   */
   static addNewUser (email, nick, encryptedPassword, vhost) {
     return mysql.transaction(async (transaction) => {
       const existingNickname = await Anope.findNickname(nick)
@@ -200,7 +235,36 @@ export default class Anope {
       }).into('anope_db_NickAlias')
 
       await transaction.commit()
-      return insertedNickname
+      return new Nickname(insertedNickname)
     })
+  }
+}
+
+/**
+ * An IRC Nickname database entry representation
+ */
+class Nickname {
+  /**
+   * Create a new Nickname object from a database result
+   * @param {object} obj database object to use for creating the new result
+   */
+  constructor (obj) {
+    this.id = obj.id
+    this.lastQuit = obj.last_quit
+    this.lastRealHost = obj.last_realhost
+    this.lastRealName = obj.last_realname
+    this.lastSeen = new Date(obj.last_seen * 1000)
+    this.lastUserMask = obj.last_usermask
+    this.display = obj.nc
+    this.nick = obj.nick
+    this.createdAt = new Date(obj.time_registered * 1000)
+    this.updatedAt = parse(obj.timestamp)
+    this.vhostSetBy = obj.vhost_creator
+    this.vhost = obj.vhost_host
+    this.vhostSetAt = new Date(obj.vhost_time * 1000)
+    this.email = obj.email
+    this.password = obj.pass
+    this.fingerprint = obj.cert
+    this.score = obj.score
   }
 }

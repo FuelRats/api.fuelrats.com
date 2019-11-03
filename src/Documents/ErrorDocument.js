@@ -39,7 +39,7 @@ export default class ErrorDocument extends Document {
 
   get httpStatus () {
     if (this.#errors.length > 0) {
-      return this.#errors[0].status
+      return this.#errors[0].code
     }
     return StatusCode.internalServerError
   }

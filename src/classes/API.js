@@ -54,9 +54,10 @@ export class APIResource extends API {
    * @param {object} ctx a request context
    * @param {db.Model} databaseType a database type object
    * @param {Function} callback optional callback to perform actions before resource is returned
+   * @param {object} overrideFields fields to override in the create statement
    * @returns {Promise<db.Model>} A transaction to retrieve the created object
    */
-  async create ({ ctx, databaseType, callback = undefined }) {
+  async create ({ ctx, databaseType, callback = undefined, overrideFields = {} }) {
     const dataObj = getJSONAPIData({ ctx, type: this.type })
 
     const entity = await databaseType.create(dataObj.attributes)
@@ -340,28 +341,6 @@ export class APIResource extends API {
   }
 
   /**
-   * Get read permissions for this ressource
-   * @param {object} connection a request context
-   * @param {object} entity a resource entity
-   * @returns {Array} list of acceptable permissions
-   * @abstract
-   */
-  getReadPermissionFor ({ connection, entity }) {
-    return []
-  }
-
-  /**
-   * Get write permissions for this ressource
-   * @param {object} connection a request context
-   * @param {object} entity a resource entity
-   * @returns {Array} a list of acceptable permissions
-   * @abstract
-   */
-  getWritePermissionFor ({ connection, entity }) {
-    return []
-  }
-
-  /**
    * Check whether the user has read permission for this ressource
    * @param {object} connection a request context
    * @param {object} entity a resource entity
@@ -379,8 +358,11 @@ export class APIResource extends API {
    * @returns {boolean} whether the usre has write permission for this resource
    */
   hasWritePermission ({ connection, entity }) {
-    // noinspection JSCheckFunctionSignatures
-    return Permission.granted({ permissions: this.getWritePermissionFor({ connection, entity }), ...connection.state })
+    const isGroup = this.isGroup({ ctx: connection, entity })
+    const isSelf = this.isSelf({ ctx: connection, entity })
+    const isInternal = this.isInternal({ ctx: connection, entity })
+
+
   }
 
   /**

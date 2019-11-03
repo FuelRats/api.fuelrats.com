@@ -8,7 +8,6 @@ import enumerable from './Enum'
  * @typedef StatusCode
  * @readonly
  * @enum {number}
- * @property {number} continue 100 Continue -
  */
 export default class StatusCode {
   /**
@@ -17,7 +16,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  continue = 100
+  static continue = 100
 
   /**
    * The server understands and is willing to comply with the client's request, via the Upgrade header field1,
@@ -25,7 +24,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  switchingProtocols = 101
+  static switchingProtocols = 101
 
   /**
    * An interim response used to inform the client that the server has accepted the complete request,
@@ -33,21 +32,21 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  processing = 102
+  static processing = 102
 
   /**
    * The request has succeeded.
    * @type {number}
    * @memberof StatusCode
    */
-  ok = 200
+  static ok = 200
 
   /**
    * The request has been fulfilled and has resulted in one or more new resources being created.
    * @type {number}
    * @memberof StatusCode
    */
-  created = 201
+  static created = 201
 
   /**
    * The request has been accepted for processing, but the processing has not been completed.
@@ -56,7 +55,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  accepted = 202
+  static accepted = 202
 
   /**
    * The request was successful but the enclosed payload has been modified from that of the origin server's 200 OK
@@ -64,7 +63,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  nonAuthoritativeInformation = 203
+  static nonAuthoritativeInformation = 203
 
   /**
    * The server has successfully fulfilled the request and that there is no additional content
@@ -72,7 +71,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  noContent = 204
+  static noContent = 204
 
   /**
    * The server has fulfilled the request and desires that the user agent reset the "document view",
@@ -80,7 +79,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  resetContent = 205
+  static resetContent = 205
 
   /**
    * The server has fulfilled the request and desires that the user agent reset the "document view",
@@ -88,7 +87,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  partialContent = 206
+  static partialContent = 206
 
   /**
    * A Multi-Status response conveys information about multiple resources in situations where multiple status
@@ -96,7 +95,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  multiStatus = 207
+  static multiStatus = 207
 
   /**
    * Used inside a DAV: propstat response element to avoid enumerating the internal members of multiple bindings
@@ -104,7 +103,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  alreadyReported = 208
+  static alreadyReported = 208
 
   /**
    * The server has fulfilled a GET request for the resource, and the response is a representation of the result
@@ -112,7 +111,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  imUsed = 226
+  static imUsed = 226
 
 
 
@@ -123,7 +122,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  multipleChoices = 300
+  static multipleChoices = 300
 
   /**
    * The target resource has been assigned a new permanent URI and any future references
@@ -131,7 +130,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  movedPermanently = 301
+  static movedPermanently = 301
 
   /**
    * The target resource resides temporarily under a different URI. Since the redirection might be altered on occasion,
@@ -139,7 +138,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  found = 302
+  static found = 302
 
   /**
    * The server is redirecting the user agent to a different resource,
@@ -148,7 +147,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  seeOther = 303
+  static seeOther = 303
 
   /**
    * A conditional GET or HEAD request has been received and would have resulted in a 200 OK response if it were not
@@ -156,7 +155,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  notModified = 304
+  static notModified = 304
 
   /**
    * The target resource resides temporarily under a different URI and the user agent MUST NOT change the request method
@@ -164,7 +163,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  temporaryRedirect = 307
+  static temporaryRedirect = 307
 
   /**
    * The target resource has been assigned a new permanent URI and any future references to this resource ought to
@@ -172,7 +171,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  permanentRedirect = 308
+  static permanentRedirect = 308
 
 
   /**
@@ -181,28 +180,28 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  badRequest = 400
+  static badRequest = 400
 
   /**
    * The request has not been applied because it lacks valid authentication credentials for the target resource.
    * @type {number}
    * @memberof StatusCode
    */
-  unauthorised = 401
+  static unauthorised = 401
 
   /**
    * Reserved for future use.
    * @type {number}
    * @memberof StatusCode
    */
-  paymentRequired = 402
+  static paymentRequired = 402
 
   /**
    * The server understood the request but refuses to authorize it.
    * @type {number}
    * @memberof StatusCode
    */
-  forbidden = 403
+  static forbidden = 403
 
   /**
    * The origin server did not find a current representation for the target resource or
@@ -210,14 +209,14 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  notFound = 404
+  static notFound = 404
 
   /**
    * The method received in the request-line is known by the origin server but not supported by the target resource.
    * @type {number}
    * @memberof StatusCode
    */
-  methodNotAllowed = 405
+  static methodNotAllowed = 405
 
   /**
    * The target resource does not have a current representation that would be acceptable to the user agent,
@@ -226,21 +225,21 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  notAcceptable = 406
+  static notAcceptable = 406
 
   /**
    * Similar to 401 Unauthorized, but it indicates that the client needs to authenticate itself in order to use a proxy.
    * @type {number}
    * @memberof StatusCode
    */
-  proxyAuthenticationRequired = 407
+  static proxyAuthenticationRequired = 407
 
   /**
    * The server did not receive a complete request message within the time that it was prepared to wait.
    * @type {number}
    * @memberof StatusCode
    */
-  requestTimeout = 408
+  static requestTimeout = 408
 
   /**
    * The request could not be completed due to a conflict with the current state of the target resource.
@@ -248,28 +247,28 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  conflict = 409
+  static conflict = 409
 
   /**
    * The target resource is no longer available at the origin server and that this condition is likely to be permanent.
    * @type {number}
    * @memberof StatusCode
    */
-  gone = 410
+  static gone = 410
 
   /**
    * The server refuses to accept the request without a defined Content-Length.
    * @type {number}
    * @memberof StatusCode
    */
-  lengthRequired = 411
+  static lengthRequired = 411
 
   /**
    * One or more conditions given in the request header fields evaluated to false when tested on the server.
    * @type {number}
    * @memberof StatusCode
    */
-  preconditionFailed = 412
+  static preconditionFailed = 412
 
   /**
    * The server is refusing to process a request because the request payload is
@@ -277,7 +276,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  payloadTooLarge = 413
+  static payloadTooLarge = 413
 
   /**
    * The server is refusing to service the request because the request-target is
@@ -285,7 +284,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  requestUriTooLong = 414
+  static requestUriTooLong = 414
 
   /**
    * The origin server is refusing to service the request because the payload is in a format not supported by
@@ -293,7 +292,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  unsupportedMediaType = 415
+  static unsupportedMediaType = 415
 
   /**
    * None of the ranges in the request's Range header field1 overlap the current extent of the selected resource
@@ -302,14 +301,14 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  requestedRangeNotSatisfiable = 416
+  static requestedRangeNotSatisfiable = 416
 
   /**
    * The expectation given in the request's Expect header field could not be met by at least one of the inbound servers.
    * @type {number}
    * @memberof StatusCode
    */
-  expectationFailed = 417
+  static expectationFailed = 417
 
   /**
    * Any attempt to brew coffee with a teapot should result in the error code "418 I'm a teapot".
@@ -317,7 +316,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  imATeapot = 418
+  static imATeapot = 418
 
   /**
    * The request was directed at a server that is not able to produce a response.
@@ -326,7 +325,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  misdirectedRequest = 421
+  static misdirectedRequest = 421
 
   /**
    * The server understands the content type of the request entity
@@ -335,14 +334,14 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  unprocessableEntity = 422
+  static unprocessableEntity = 422
 
   /**
    * The source or destination resource of a method is locked.
    * @type {number}
    * @memberof StatusCode
    */
-  locked = 423
+  static locked = 423
 
   /**
    * The method could not be performed on the resource because the
@@ -350,7 +349,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  failedDependency = 424
+  static failedDependency = 424
 
   /**
    * The server refuses to perform the request using the current protocol but might be willing to do so after
@@ -358,21 +357,21 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  upgradeRequired = 426
+  static upgradeRequired = 426
 
   /**
    * The origin server requires the request to be conditional.
    * @type {number}
    * @memberof StatusCode
    */
-  preconditionRequired = 428
+  static preconditionRequired = 428
 
   /**
    * The user has sent too many requests in a given amount of time ("rate limiting").
    * @type {number}
    * @memberof StatusCode
    */
-  tooManyRequests = 429
+  static tooManyRequests = 429
 
   /**
    * The server is unwilling to process the request because its header fields are too large.
@@ -380,14 +379,14 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  requestedHeaderFieldsTooLarge = 431
+  static requestedHeaderFieldsTooLarge = 431
 
   /**
    * The server is denying access to the resource as a consequence of a legal demand.
    * @type {number}
    * @memberof StatusCode
    */
-  unavailableForLegalReasons = 451
+  static unavailableForLegalReasons = 451
 
 
   /**
@@ -395,14 +394,14 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  internalServerError = 500
+  static internalServerError = 500
 
   /**
    * The server does not support the functionality required to fulfill the request.
    * @type {number}
    * @memberof StatusCode
    */
-  notImplemented = 501
+  static notImplemented = 501
 
   /**
    * The server, while acting as a gateway or proxy, received an invalid response from an inbound server it
@@ -410,7 +409,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  badGateway = 502
+  static badGateway = 502
 
   /**
    * The server is currently unable to handle the request due to a temporary overload or scheduled maintenance,
@@ -418,7 +417,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  serviceUnavailable = 503
+  static serviceUnavailable = 503
 
   /**
    * The server, while acting as a gateway or proxy, did not receive a timely response from an upstream server it
@@ -426,14 +425,14 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  gatewayTimeout = 504
+  static gatewayTimeout = 504
 
   /**
    * The server does not support, or refuses to support, the major version of HTTP that was used in the request message.
    * @type {number}
    * @memberof StatusCode
    */
-  httpVersionNotSupported = 505
+  static httpVersionNotSupported = 505
 
   /**
    * The server has an internal configuration error: the chosen variant resource is configured to engage in transparent
@@ -441,7 +440,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  variantAlsoNegotiates = 506
+  static variantAlsoNegotiates = 506
 
   /**
    * The method could not be performed on the resource because the server is unable to store the representation
@@ -449,7 +448,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  insufficientStorage = 507
+  static insufficientStorage = 507
 
   /**
    * The server terminated an operation because it encountered an infinite loop while processing a request with
@@ -457,7 +456,7 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  loopDetected = 508
+  static loopDetected = 508
 
   /**
    * The policy for accessing the resource has not been met in the request.
@@ -465,5 +464,5 @@ export default class StatusCode {
    * @type {number}
    * @memberof StatusCode
    */
-  notExtended = 510
+  static notExtended = 510
 }

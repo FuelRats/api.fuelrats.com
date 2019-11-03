@@ -137,13 +137,31 @@ export default class Document  {
     }
   }
 
+  /**
+   * Get the default set of metadata for this Document
+   * @returns {object} meta data
+   */
   get defaultMeta () {
-    return {
-      apiVersion: packageInfo.version,
-      rateLimitTotal: this.query.connection.state.traffic.total,
-      rateLimitRemaining: this.query.connection.state.traffic.remaining,
-      rateLimitReset: this.query.connection.state.traffic.nextResetDate
+    let traffic = {}
+    if (this.#query.connection.state.traffic) {
+      const {
+        total: rateLimitTotal,
+        remaining: rateLimitRemaining,
+        nextResetDate: rateLimitReset
+      } = this.#query.connection.state.traffic
+
+      traffic = {
+        rateLimitTotal,
+        rateLimitRemaining,
+        rateLimitReset
+      }
     }
+
+    const meta = {
+      apiVersion: packageInfo.version
+    }
+
+    return { ...meta, ...traffic }
   }
 
   /**

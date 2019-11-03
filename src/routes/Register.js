@@ -9,6 +9,7 @@ import API, {
   required
 } from '../classes/API'
 import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import StatusCode from '../classes/StatusCode'
 
 
 const platforms = ['pc', 'xb', 'ps']
@@ -72,7 +73,7 @@ export default class Register extends API {
       return Sessions.createVerifiedSession(ctx, user, transaction)
     })
 
-    ctx.response.status = 201
+    ctx.response.status = StatusCode.created
     return true
   }
 

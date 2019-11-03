@@ -2,7 +2,6 @@
 import { User } from '../db'
 import Rats from './Rats'
 import Groups from './Groups'
-import NPO from './NPO'
 import Client from './Clients'
 
 import API, {

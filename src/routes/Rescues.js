@@ -9,6 +9,7 @@ import {
 } from '../classes/APIError'
 
 import API, {
+  APIResource,
   permissions,
   authenticated,
   GET,
@@ -20,10 +21,11 @@ import API, {
   WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
-import RescueView from '../views/RescueView'
+import { RescueView } from '../view'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -32,7 +34,7 @@ const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
  * @classdesc Rescues API endpoint
  * @class
  */
-export default class Rescues extends API {
+export default class Rescues extends APIResource {
   /**
    * @inheritdoc
    */
@@ -75,7 +77,7 @@ export default class Rescues extends API {
     const result = await super.create({ ctx, databaseType: Rescue })
 
     const query = new DatabaseQuery({ connection: ctx })
-    ctx.response.status = 201
+    ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
@@ -97,7 +99,7 @@ export default class Rescues extends API {
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Rescue })
 
-    ctx.response.status = 204
+    ctx.response.status = StatusCode.noContent
     return true
   }
 

@@ -1,4 +1,4 @@
-import API, { POST, required, getJSONAPIData } from '../classes/API'
+import API, { POST, getJSONAPIData } from '../classes/API'
 import FrontierAPI from '../classes/FrontierAPI'
 import { db, Rat, Token, User } from '../db'
 import crypto from 'crypto'
@@ -7,9 +7,9 @@ import { ConflictAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import Sessions from './Sessions'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
-import TokenView from '../views/TokenView'
-import ACRView from '../views/ACRView'
 import Anope from '../classes/Anope'
+import { TokenView } from '../view'
+import StatusCode from '../classes/StatusCode'
 
 export default class Frontier extends API {
   @POST('/frontier/login')
@@ -33,7 +33,7 @@ export default class Frontier extends API {
         scope: ['*']
       })
 
-      ctx.status.code = 201
+      ctx.status.code = StatusCode.created
 
       const query = new DatabaseQuery({ connection: ctx })
       return new DatabaseDocument({ query, newToken, type: TokenView })
@@ -105,7 +105,7 @@ export default class Frontier extends API {
       scope: ['*']
     })
 
-    ctx.status.code = 201
+    ctx.status.code = StatusCode.created
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }
@@ -174,7 +174,7 @@ export default class Frontier extends API {
       scope: ['*']
     })
 
-    ctx.status.code = 201
+    ctx.status.code = StatusCode.created
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }

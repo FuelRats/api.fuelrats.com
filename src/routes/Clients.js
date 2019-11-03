@@ -1,12 +1,11 @@
-import { Client } from '../db'
+import { Client, Rat, Code, Token } from '../db'
 import crypto from 'crypto'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
-import ClientView from '../views/ClientView'
-
-import Users from './Users'
-import { NotFoundAPIError } from '../classes/APIError'
+import { ClientView } from '../view'
+import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import API, {
+  Context,
   permissions,
   authenticated,
   GET,
@@ -15,11 +14,14 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required
+  required, WritePermission, PATCH
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import StatusCode from '../classes/StatusCode'
+import Permission from '../classes/Permission'
+import { DocumentViewType } from '../Documents'
 
-const clientSecretLength= 32
+const clientSecretLength = 32
 
 export default class Clients extends API {
   @GET('/clients')
@@ -27,9 +29,9 @@ export default class Clients extends API {
   @authenticated
   @permissions('client.read')
   async search (ctx) {
-    const clientQuery = new Query({params: ctx.query, connection: ctx})
-    const result = await Client.findAndCountAll(clientQuery.toSequelize)
-    return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Client.findAndCountAll(query.searchObject)
+    return new DatabaseDocument({ query, result, type: ClientView })
   }
 
   @GET('/clients/:id')
@@ -37,12 +39,16 @@ export default class Clients extends API {
   @authenticated
   @parameters('id')
   async findById (ctx) {
-    const clientQuery = new Query({params: { id: ctx.params.id }, connection: ctx})
-    const result = await Client.findAndCountAll(clientQuery.toSequelize)
-
-    this.requireWritePermission({connection: ctx, result})
-
-    return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await Client.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+    if (!result) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    return new DatabaseDocument({ query, result, type: ClientView })
   }
 
   @POST('/clients')
@@ -51,17 +57,12 @@ export default class Clients extends API {
   @required('name')
   @disallow('secret')
   async create (ctx) {
-    if (!ctx.data.userId) {
-      ctx.data.userId = ctx.state.user.id
-    }
-    this.requireWritePermission({connection: ctx, entity: ctx.data})
-    const secret = crypto.randomBytes(CLIENT_SECRET_LENGTH).toString('hex')
-    ctx.data.secret = secret
-    const result = await Client.create(ctx.data)
-    result.secret = secret
+    const secret = crypto.randomBytes(clientSecretLength).toString('hex')
+    const result = await super.create({ ctx, databaseType: Client, overrideFields: { secret } })
 
-    ctx.response.status = 201
-    return Clients.presenter.render(result, API.meta(result))
+    const query = new DatabaseQuery({ connection: ctx })
+    ctx.response.status = StatusCode.created
+    return new DatabaseDocument({ query, result, type: ClientView })
   }
 
   @PUT('/clients/:id')
@@ -69,28 +70,10 @@ export default class Clients extends API {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    this.requireWritePermission({connection: ctx, entity: ctx.data})
-    const client = await Client.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
+    const result = await super.update({ ctx, databaseType: Client, updateSearch: { id:ctx.params.id } })
 
-    if (!client) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
-
-    this.requireWritePermission({connection: ctx, entity: client})
-
-    await Client.update(ctx.data, {
-      where: {
-        id: ctx.params.id
-      }
-    })
-
-    const clientQuery = new Query({ params: {id: ctx.params.id}, connection: ctx })
-    const result = await Client.findAndCountAll(clientQuery.toSequelize)
-    return Clients.presenter.render(result.rows, API.meta(result, clientQuery))
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: ClientView })
   }
 
   @DELETE('/clients/:id')
@@ -99,45 +82,151 @@ export default class Clients extends API {
   @permissions('client.delete')
   @parameters('id')
   async delete (ctx) {
-    const client = await Client.findOne({
+    await super.delete({ ctx, databaseType: Rat })
+    await Code.destroy({
       where: {
-        id: ctx.params.id
+        clientId: ctx.params.id
       }
     })
 
-    if (!client) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
+    await Token.destroy({
+      where: {
+        clientId: ctx.params.id
+      }
+    })
 
-    await client.destroy()
-
-    ctx.status = 204
+    ctx.response.status = StatusCode.noContent
     return true
   }
 
-  getReadPermissionFor ({connection, entity}) {
-    if (entity.userId === connection.state.user.id || entity.userId === null) {
+  /**
+   * Get a client's user relationship
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} a user's display rat relationship
+   */
+  @GET('/clients/:id/relationships/user')
+  @websocket('clients', 'user', 'read')
+  @authenticated
+  async relationshipDisplayRatView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Client,
+      relationship: 'user'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: ClientView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * Set a client's user relationship
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   */
+  @PATCH('/clients/:id/relationships/user')
+  @websocket('clients', 'user', 'patch')
+  @authenticated
+  async relationshipFirstLimpetPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Client,
+      change: 'patch',
+      relationship: 'user'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({ query, result, type: ClientView, view: DocumentViewType.meta })
+  }
+
+  get writePermissionsForFieldAccess () {
+    return {
+      name: WritePermission.group,
+      redirectUri: WritePermission.group,
+      secret: WritePermission.internal,
+      createdAt: WritePermission.internal,
+      updatedAt: WritePermission.internal
+    }
+  }
+
+  /**
+   * @inheritdoc
+   */
+  isInternal ({ ctx }) {
+    return Permission.granted({ permissions: ['client.internal'], user: ctx.state.user, scope: ctx.state.scope })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  isGroup ({ ctx }) {
+    return Permission.granted({ permissions: ['client.write'], user: ctx.state.user, scope: ctx.state.scope })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  isSelf ({ ctx, entity }) {
+    if (entity.userId === ctx.state.user.id) {
+      return Permission.granted({ permissions: ['client.write.me'], user: ctx.state.user, scope: ctx.state.scope })
+    }
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   */
+  getReadPermissionFor ({ connection, entity }) {
+    if (entity.userId === connection.state.user.id) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']
   }
 
-  getWritePermissionFor ({connection, entity}) {
-    if (entity.userId === connection.state.user.id || entity.userId === null) {
+  /**
+   * @inheritdoc
+   */
+  getWritePermissionFor ({ connection, entity }) {
+    if (entity.userId === connection.state.user.id) {
       return ['client.write.me', 'client.write']
     }
     return ['client.write']
   }
 
-  static get presenter () {
-    class ClientsPresenter extends API.presenter {
-      relationships () {
+  /**
+   *
+   * @inheritdoc
+   */
+  changeRelationship ({ relationship }) {
+    switch (relationship) {
+      case 'user':
         return {
-          user: Users.presenter
+          many: false,
+
+          add ({ entity, id }) {
+            return entity.addUser(id)
+          },
+
+          patch ({ entity, id }) {
+            return entity.setUser(id)
+          },
+
+          remove ({ entity, id }) {
+            return entity.removeUser(id)
+          }
         }
-      }
+
+      default:
+        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
     }
-    ClientsPresenter.prototype.type = 'clients'
-    return ClientsPresenter
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get relationTypes () {
+    return {
+      'user': 'users'
+    }
   }
 }
