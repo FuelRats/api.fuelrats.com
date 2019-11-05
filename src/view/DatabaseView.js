@@ -11,15 +11,23 @@ export default class DatabaseView extends View {
 
   generateRelationships () {
     return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
+      if (this.root && RelationshipView.type === this.root.type) {
+        return acc
+      }
+
       let data = undefined
       if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
-          return (new RelationshipView({ object: relation, parentUrl: this.self, query: this.query })).relationshipView
+          return (new RelationshipView({
+            object: relation,
+            root: this.root || this,
+            query: this.query
+          })).relationshipView
         })
       } else if (this.object[key]) {
         data = (new RelationshipView({
           object: this.object[key],
-          parentUrl: this.self,
+          root: this.root || this,
           query: this.query
         })).relationshipView
       }
@@ -37,12 +45,12 @@ export default class DatabaseView extends View {
     }, {})
   }
 
-  generateIncludes ({ includeTypes }) {
+  generateIncludes ({ rootType, includeTypes }) {
     const includes = includeTypes || this.includes
 
     return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
       let objects = this.object[key]
-      if (!objects || !includes.includes(key)) {
+      if (!objects || !includes.includes(key) || rootType === RelationshipView.type) {
         return acc
       }
 
@@ -51,9 +59,9 @@ export default class DatabaseView extends View {
       }
 
       return acc.concat(objects.reduce((includeCollection, object) => {
-        const objectView = (new RelationshipView({ object, query: this.query }))
+        const objectView = (new RelationshipView({ object, root: this.root || this, query: this.query }))
         includeCollection.push(objectView.view)
-        return includeCollection.concat(objectView.generateIncludes({ includeTypes }))
+        return includeCollection.concat(objectView.generateIncludes({ rootType, includeTypes }))
       }, []))
     }, [])
   }

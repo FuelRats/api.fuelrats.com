@@ -101,7 +101,10 @@ export default class Document  {
     }
 
     const includes = objects.reduce((acc, object) => {
-      return acc.concat((new Type({ object, query: this.#query })).generateIncludes({}))
+      return acc.concat((new Type({
+        object,
+        query: this.#query
+      })).generateIncludes({ rootType: this.#type.type }))
     }, [])
 
     return Object.values(includes.reduce((acc, include) => {
@@ -117,9 +120,9 @@ export default class Document  {
   get self () {
     if (this.#view === DocumentViewType.individual) {
       const singleObjectId = (new this.#type({ object: this.#objects })).id
-      return `${config.externalUrl}/${this.type.type}/${singleObjectId}`
+      return `${config.externalUrl}/${this.#type.type}/${singleObjectId}`
     } else {
-      return `${config.externalUrl}/${this.type.type}`
+      return `${config.externalUrl}/${this.#type.type}`
     }
   }
 

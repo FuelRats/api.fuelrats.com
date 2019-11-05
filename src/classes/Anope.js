@@ -41,6 +41,7 @@ export default class Anope {
     return undefined
   }
 
+
   /**
    *
    * @param {string} email the email of the account to set the fingerprint of
@@ -97,6 +98,52 @@ export default class Anope {
       })
       return entry
     })
+  }
+
+  static async mapNickname (user) {
+    const [results] = await mysql.raw(`
+        SELECT *
+        FROM anope_db_NickAlias
+        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        WHERE lower(email) = lower(:email)
+    `, {
+      email: user.email
+    })
+
+    user.nicknames = results.map((result) => {
+      return new Nickname(result, user)
+    })
+
+    return user
+  }
+
+  static async mapNicknames (users) {
+    const userEmails = users.rows.map((user) => {
+      return user.email.toLowerCase()
+    })
+
+    const [results] = await mysql.raw(`
+        SELECT *
+        FROM anope_db_NickAlias
+        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        WHERE lower(email) IN (:emails)
+    `, {
+      emails: userEmails
+    })
+
+    users.rows = users.rows.map((user) => {
+      user.nicknames = results.reduce((nicknames, result) => {
+        if (result.email.toLowerCase() === user.email.toLowerCase()) {
+          const nickname = new Nickname(result, user)
+          nicknames.push(nickname)
+        }
+        return nicknames
+      }, [])
+
+      return user
+    })
+
+    return users
   }
 
   /**
@@ -247,8 +294,9 @@ class Nickname {
   /**
    * Create a new Nickname object from a database result
    * @param {object} obj database object to use for creating the new result
+   * @param {object} user the user that this Nickname belongs to
    */
-  constructor (obj) {
+  constructor (obj, user = undefined) {
     this.id = obj.id
     this.lastQuit = obj.last_quit
     this.lastRealHost = obj.last_realhost
@@ -258,7 +306,7 @@ class Nickname {
     this.display = obj.nc
     this.nick = obj.nick
     this.createdAt = new Date(obj.time_registered * 1000)
-    this.updatedAt = parse(obj.timestamp)
+    this.updatedAt = parse(obj.timestamp, 'yyyy-MM-DD HH:mm:ss', (new Date()))
     this.vhostSetBy = obj.vhost_creator
     this.vhost = obj.vhost_host
     this.vhostSetAt = new Date(obj.vhost_time * 1000)
@@ -266,5 +314,7 @@ class Nickname {
     this.password = obj.pass
     this.fingerprint = obj.cert
     this.score = obj.score
+
+    this.user = user
   }
 }

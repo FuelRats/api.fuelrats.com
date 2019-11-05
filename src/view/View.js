@@ -18,13 +18,13 @@ export default class View {
    * Create a JSONAPI View
    * @param object
    * @param query
-   * @param parentUrl
+   * @param root
    * @constructor
    */
-  constructor ({ object, query, parentUrl = undefined }) {
+  constructor ({ object, query, root = undefined }) {
     this.object = object
     this.query = query
-    this.parentUrl = parentUrl
+    this.root = root
   }
 
   /**
@@ -87,8 +87,8 @@ export default class View {
   }
 
   get self () {
-    if (this.parentUrl) {
-      return `${this.parentUrl}/${this.id}`
+    if (this.root) {
+      return `${this.root.self}/${this.id}`
     }
     return `${this.type}/${this.id}`
   }

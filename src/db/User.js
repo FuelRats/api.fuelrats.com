@@ -40,20 +40,6 @@ export default function User (db, DataTypes) {
         len: [passwordMinLength, passwordMaxLength]
       }
     },
-    nicknames: {
-      type: DataTypes.ARRAY(DataTypes.STRING(nicknameMaxLength)),
-      allowNull: true,
-      defaultValue: [],
-      set (value) {
-        const lowerValue = value.map((nickname) => {
-          return nickname.toLowerCase()
-        })
-        this.setDataValue('nicknames', lowerValue)
-      },
-      validate: {
-        IRCNicknames
-      }
-    },
     frontierId: {
       type: DataTypes.INTEGER,
       allowNull: true

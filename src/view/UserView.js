@@ -1,4 +1,4 @@
-import { ReadPermission, DatabaseView, RatView, GroupView, ClientView } from './'
+import { ReadPermission, DatabaseView, RatView, GroupView, ClientView, NicknameView } from './'
 
 export default class UserView extends DatabaseView {
   static get type () {
@@ -41,6 +41,7 @@ export default class UserView extends DatabaseView {
   get relationships () {
     return {
       rats: RatView,
+      nicknames: NicknameView,
       displayRat: RatView,
       groups: GroupView,
       clients: ClientView
@@ -48,6 +49,6 @@ export default class UserView extends DatabaseView {
   }
 
   get includes () {
-    return ['rats', 'displayRat', 'groups', 'clients']
+    return ['rats', 'displayRat', 'groups', 'clients', 'nicknames']
   }
 }

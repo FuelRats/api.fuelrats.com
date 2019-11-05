@@ -60,7 +60,9 @@ export default class Users extends APIResource {
   @permissions('user.read')
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await User.findAndCountAll(query.searchObject)
+    const results = await User.findAndCountAll(query.searchObject)
+    const result = await Anope.mapNicknames(results)
+
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
@@ -84,7 +86,9 @@ export default class Users extends APIResource {
     if (!result) {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
-    return new DatabaseDocument({ query, result, type: UserView })
+
+    const user = await Anope.mapNickname(result)
+    return new DatabaseDocument({ query, result: user, type: UserView })
   }
 
   /**
@@ -154,8 +158,10 @@ export default class Users extends APIResource {
     user.password = newPassword
     await user.save()
 
+    const result = await Anope.mapNickname(user)
+
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result: user, type: UserView })
+    return new DatabaseDocument({ query, result, type: UserView })
   }
 
   /**
@@ -170,9 +176,11 @@ export default class Users extends APIResource {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async create (ctx) {
-    const result = await super.create({ ctx, databaseType: User })
+    const user = await super.create({ ctx, databaseType: User })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
+
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: UserView })
   }
@@ -188,9 +196,10 @@ export default class Users extends APIResource {
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async update (ctx) {
-    const result = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
+    const user = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
@@ -260,11 +269,13 @@ export default class Users extends APIResource {
   @websocket('users', 'rats', 'read')
   @authenticated
   async relationshipRatsView (ctx) {
-    const result = await this.relationshipView({
+    const user = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'rats'
     })
+
+    const result = await Anope.mapNickname(user)
 
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
@@ -279,7 +290,7 @@ export default class Users extends APIResource {
   @websocket('users', 'rats', 'create')
   @authenticated
   async relationshipRatsCreate (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
@@ -287,6 +298,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
@@ -299,7 +311,7 @@ export default class Users extends APIResource {
   @websocket('users', 'rats', 'patch')
   @authenticated
   async relationshipRatsPatch (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
@@ -307,6 +319,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
@@ -320,7 +333,7 @@ export default class Users extends APIResource {
   @websocket('users', 'rats', 'delete')
   @authenticated
   async relationshipRatsDelete (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
@@ -328,6 +341,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
@@ -341,13 +355,14 @@ export default class Users extends APIResource {
   @websocket('users', 'displayRat', 'read')
   @authenticated
   async relationshipDisplayRatView (ctx) {
-    const result = await this.relationshipView({
+    const user = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'displayRat'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
@@ -360,7 +375,7 @@ export default class Users extends APIResource {
   @websocket('users', 'displayRat', 'patch')
   @authenticated
   async relationshipFirstLimpetPatch (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
@@ -368,6 +383,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
@@ -381,13 +397,14 @@ export default class Users extends APIResource {
   @websocket('users', 'groups', 'read')
   @authenticated
   async relationshipGroupsView (ctx) {
-    const result = await this.relationshipView({
+    const user = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'groups'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
@@ -400,7 +417,7 @@ export default class Users extends APIResource {
   @websocket('users', 'groups', 'create')
   @authenticated
   async relationshipGroupsCreate (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
@@ -408,6 +425,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
@@ -420,7 +438,7 @@ export default class Users extends APIResource {
   @websocket('users', 'groups', 'patch')
   @authenticated
   async relationshipGroupsPatch (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
@@ -428,6 +446,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
@@ -441,7 +460,7 @@ export default class Users extends APIResource {
   @websocket('users', 'groups', 'delete')
   @authenticated
   async relationshipGroupsDelete (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
@@ -449,6 +468,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
@@ -462,13 +482,14 @@ export default class Users extends APIResource {
   @websocket('users', 'clients', 'read')
   @authenticated
   async relationshipClientsView (ctx) {
-    const result = await this.relationshipView({
+    const user = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'clients'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
@@ -481,7 +502,7 @@ export default class Users extends APIResource {
   @websocket('users', 'clients', 'create')
   @authenticated
   async relationshipClientsCreate (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
@@ -489,6 +510,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
 
@@ -501,7 +523,7 @@ export default class Users extends APIResource {
   @websocket('users', 'clients', 'patch')
   @authenticated
   async relationshipClientsPatch (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
@@ -509,6 +531,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
@@ -522,7 +545,7 @@ export default class Users extends APIResource {
   @websocket('users', 'clients', 'delete')
   @authenticated
   async relationshipClientsDelete (ctx) {
-    const result = await this.relationshipChange({
+    const user = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
@@ -530,6 +553,7 @@ export default class Users extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
+    const result = await Anope.mapNickname(user)
 
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
   }
