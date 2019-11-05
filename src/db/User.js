@@ -1,7 +1,7 @@
 /* eslint max-lines-per-function:0 */
 
 import bcrypt from 'bcrypt'
-import UserView from '../views/UserView'
+import UserView from '../view/UserView'
 import { JSONObject, IRCNicknames } from '../classes/Validators'
 
 const passwordMinLength = 12
@@ -76,6 +76,16 @@ export default function User (db, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: undefined
+    },
+    avatar: {
+      type: DataTypes.VIRTUAL,
+      get () {
+        if (Reflect.has(this.dataValues, 'avatar') === true) {
+          return this.dataValues.avatar
+        }
+        return false
+      },
+      include: []
     },
     permissions: {
       type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
@@ -163,11 +173,6 @@ export default function User (db, DataTypes) {
       foreignKey: 'userId'
     })
 
-    models.User.hasOne(models.npoMembership, {
-      as: 'npoMembership',
-      foreignKey: 'userId'
-    })
-
     models.User.belongsTo(models.Rat, { as: 'displayRat', constraints: false })
 
     models.User.hasOne(models.Decal, {
@@ -190,9 +195,13 @@ export default function User (db, DataTypes) {
 
     models.User.addScope('defaultScope', {
       attributes: {
+        include: [
+          [db.literal('"image" IS NOT NULL'), 'avatar']
+        ],
         exclude: [
           'image',
-          'permissions'
+          'permissions',
+          'avatar'
         ]
       },
       include: [
@@ -227,10 +236,6 @@ export default function User (db, DataTypes) {
           order: [
             ['priority', 'DESC']
           ]
-        }, {
-          model: models.npoMembership,
-          as: 'npoMembership',
-          include: []
         }, {
           model: models.Client,
           as: 'clients',

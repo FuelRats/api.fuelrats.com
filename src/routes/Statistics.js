@@ -1,10 +1,6 @@
 
 
 import { Rat, Rescue } from '../db'
-import RescueStatisticsQuery from '../query/rescuestatistics'
-import SystemStatisticsQuery from '../query/systemstatistics'
-import RatsStatisticsQuery from '../query/ratstatistics'
-import { CustomPresenter } from '../classes/Presenters'
 import API, {
   GET
 } from '../classes/API'
@@ -39,24 +35,3 @@ export default class Statistics extends API {
   }
 }
 
-
-class RescueStatisticsPresenter extends CustomPresenter {
-  id (instance) {
-    return instance.date || null
-  }
-}
-RescueStatisticsPresenter.prototype.type = 'rescuestatistics'
-
-class SystemStatisticsPresenter extends CustomPresenter {
-  id (instance) {
-    return instance.system || null
-  }
-}
-SystemStatisticsPresenter.prototype.type = 'systemstatistics'
-
-class RatStatisticsPresenter extends CustomPresenter {
-  id (instance) {
-    return instance.id || null
-  }
-}
-RatStatisticsPresenter.prototype.type = 'ratstatistics'

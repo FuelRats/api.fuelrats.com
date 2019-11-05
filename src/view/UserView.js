@@ -12,6 +12,7 @@ export default class UserView extends DatabaseView {
       static status
       static suspended = ReadPermission.group
       static frontierId = ReadPermission.group
+      static avatar
       static createdAt
       static updatedAt
       static deletedAt = ReadPermission.internal

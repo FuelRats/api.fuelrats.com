@@ -1,6 +1,6 @@
 
 
-export default function UserGroup (sequelize, DataTypes) {
+export default function UserGroups (sequelize, DataTypes) {
   const usergroups = sequelize.define('UserGroups', {
     id: {
       type: DataTypes.UUID,

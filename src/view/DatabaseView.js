@@ -17,7 +17,11 @@ export default class DatabaseView extends View {
           return (new RelationshipView({ object: relation, parentUrl: this.self, query: this.query })).relationshipView
         })
       } else if (this.object[key]) {
-        data = (new RelationshipView({ object: this.object[key], parentUrl: this.self, query: this.query })).relationshipView
+        data = (new RelationshipView({
+          object: this.object[key],
+          parentUrl: this.self,
+          query: this.query
+        })).relationshipView
       }
 
       const linkObject = {
