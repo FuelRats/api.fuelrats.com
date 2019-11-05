@@ -556,14 +556,14 @@ export default class Users extends APIResource {
    * @inheritdoc
    */
   isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['user.internal'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['user.internal'], connection: ctx })
   }
 
   /**
    * @inheritdoc
    */
   isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['user.write'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['user.write'], connection: ctx })
   }
 
   /**
@@ -571,7 +571,7 @@ export default class Users extends APIResource {
    */
   isSelf ({ ctx, entity }) {
     if (entity.id === ctx.state.user.id) {
-      return Permission.granted({ permissions: ['user.write.me'], user: ctx.state.user, scope: ctx.state.scope })
+      return Permission.granted({ permissions: ['user.write.me'], connection: ctx })
     }
     return false
   }

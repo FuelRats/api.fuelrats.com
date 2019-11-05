@@ -347,8 +347,7 @@ export class APIResource extends API {
    * @returns {boolean} whether the user has read permission for this resource
    */
   hasReadPermission ({ connection, entity }) {
-    // noinspection JSCheckFunctionSignatures
-    return Permission.granted({ permissions: this.getReadPermissionFor({ connection, entity }), ...connection.state })
+    return Permission.granted({ permissions: this.getReadPermissionFor({ connection, entity }), connection })
   }
 
   /**
@@ -618,8 +617,7 @@ export function permissions (...perms) {
 
     descriptor.value = function (...args) {
       const [ctx] = args
-      // noinspection JSCheckFunctionSignatures
-      if (Permission.granted({ permissions: perms, ...ctx.state })) {
+      if (Permission.granted({ permissions: perms, connection: ctx })) {
         return endpoint.apply(this, args)
       } else {
         throw new ForbiddenAPIError({})
@@ -717,8 +715,7 @@ export function protect (permission, ...fields) {
             return false
           }
 
-          const { user, scope } = ctx.state
-          if (!Permission.granted({ permissions: [permission], user, scope })) {
+          if (!Permission.granted({ permissions: [permission], connection: ctx })) {
             throw new ForbiddenAPIError({})
           }
           return true

@@ -98,14 +98,14 @@ export default class Rats extends API {
    * @inheritdoc
    */
   isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['rat.internal'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['rat.internal'], connection: ctx })
   }
 
   /**
    * @inheritdoc
    */
   isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['rat.write'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['rat.write'], connection: ctx })
   }
 
   /**
@@ -113,7 +113,7 @@ export default class Rats extends API {
    */
   isSelf ({ ctx, entity }) {
     if (entity.userId === ctx.state.user.id) {
-      return Permission.granted({ permissions: ['rat.write.me'], user: ctx.state.user, scope: ctx.state.scope })
+      return Permission.granted({ permissions: ['rat.write.me'], connection: ctx })
     }
     return false
   }

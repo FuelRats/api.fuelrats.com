@@ -94,14 +94,14 @@ export default class Ships extends API {
    * @inheritdoc
    */
   isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['ship.internal'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['ship.internal'], connection: ctx })
   }
 
   /**
    * @inheritdoc
    */
   isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['ship.write'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['ship.write'], connection: ctx })
   }
 
   /**
@@ -112,7 +112,7 @@ export default class Ships extends API {
       return rat.id === entity.ratId
     })
     if (hasRat) {
-      return Permission.granted({ permissions: ['ship.write.me'], user: ctx.state.user, scope: ctx.state.scope })
+      return Permission.granted({ permissions: ['ship.write.me'], connection: ctx })
     }
     return false
   }

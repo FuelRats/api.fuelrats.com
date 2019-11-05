@@ -1,4 +1,4 @@
-import logger from '../loggly/logger'
+import logger from '../logging'
 import {
   APIError,
   InternalServerError,
@@ -142,7 +142,7 @@ export default class WebSocket {
   onEvent (event, ctx, result, permissions = undefined) {
     const clients = [...this.wss.clients].filter((client) => {
       if (client.clientId !== ctx.client.clientId) {
-        return (!permissions || Permission.granted({ permissions, ...client }))
+        return (!permissions || Permission.granted({ permissions, connection: ctx }))
       }
       return false
     })

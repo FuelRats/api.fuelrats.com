@@ -215,11 +215,11 @@ export default class Rescues extends APIResource {
   }
 
   isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['rescue.internal'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['rescue.internal'], connection: ctx })
   }
 
   isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['rescue.write'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['rescue.write'], connection: ctx })
   }
 
   isSelf ({ ctx, entity }) {
@@ -238,7 +238,7 @@ export default class Rescues extends APIResource {
     }
 
     if (isAssigned || isFirstLimpet) {
-      return Permission.granted({ permissions: ['rescue.write'], user: ctx.state.user, scope: ctx.state.scope })
+      return Permission.granted({ permissions: ['rescue.write'], connection: ctx })
     }
     return false
   }

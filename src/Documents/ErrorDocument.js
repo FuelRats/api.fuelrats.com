@@ -13,9 +13,13 @@ export default class ErrorDocument extends Document {
 
   constructor ({ query, errors }) {
     let errorList = errors
-    if (Reflect.has(errors, 'name')) {
-      errorList = APIError.fromValidationError(errors)
+    if (Array.isArray(errorList) === false) {
+      errorList = [errorList]
     }
+
+    // if (Reflect.has(errors, 'name')) {
+    //   errorList = APIError.fromValidationError(errors)
+    // }
 
     errorList = errorList.map((error) => {
       if ((error instanceof APIError) === false) {

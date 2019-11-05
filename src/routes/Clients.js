@@ -153,14 +153,14 @@ export default class Clients extends API {
    * @inheritdoc
    */
   isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['client.internal'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['client.internal'], connection: ctx })
   }
 
   /**
    * @inheritdoc
    */
   isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['client.write'], user: ctx.state.user, scope: ctx.state.scope })
+    return Permission.granted({ permissions: ['client.write'], connection: ctx })
   }
 
   /**
@@ -168,7 +168,7 @@ export default class Clients extends API {
    */
   isSelf ({ ctx, entity }) {
     if (entity.userId === ctx.state.user.id) {
-      return Permission.granted({ permissions: ['client.write.me'], user: ctx.state.user, scope: ctx.state.scope })
+      return Permission.granted({ permissions: ['client.write.me'], connection: ctx })
     }
     return false
   }

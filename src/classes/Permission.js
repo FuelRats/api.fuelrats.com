@@ -37,34 +37,6 @@ let groups = {}
  * Class for managing user permissions
  */
 export default class Permission {
-  /**
-   * Promise to validate whether a user has the appropriate permissions
-   * @param {string[]} permissions - The permissions to validate
-   * @param {Object} user - The user object of the user to validate
-   * @param {Object} scope - Optional scope array of an oauth2 client to validate
-   * @returns {boolean}
-   */
-  static require ({ permissions, user, scope = undefined }) {
-    if (Permission.granted({ permissions, user, scope })) {
-      return true
-    }
-    throw new ForbiddenAPIError({})
-  }
-
-  /**
-   * Express.js middleware to require a permission or throw back an error
-   * @param {string[]} permissions - The permissions to require
-   * @returns {Function} Express.js middleware function
-   */
-  static required (permissions) {
-    return function (ctx, next) {
-      if (Permission.granted({ permissions, origUser: ctx.state.user, scope: ctx.state.scope })) {
-        return next()
-      } else {
-        throw new ForbiddenAPIError({})
-      }
-    }
-  }
 
   /**
    * Check whether a user has the required permissions
@@ -73,38 +45,14 @@ export default class Permission {
    * @param {Object} scope - Optional oauth2 client object to validate
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
-  static granted ({ permissions, user: origUser, scope = undefined }) {
-    if (!origUser || origUser.isDeactivated()) {
-      return false
-    } else if (origUser.isDeactivated() || origUser.isSuspended()) {
+  static granted ({ permissions, connection }) {
+    if (!connection.state.user || connection.state.user.isDeactivated() || connection.state.user.isSuspended()) {
       return false
     }
 
-    const user = {}
-    Object.assign(user, origUser)
-
-    let hasPermission = false
-
-    for (const permission of permissions) {
-      for (const groupRelation of user.groups) {
-        const group = groups.find((groupItem) => {
-          return groupItem.id === groupRelation.id
-        })
-
-        if (group && group.permissions.includes(permission)) {
-          if (scope) {
-            if (scope.includes(permission) || scope.includes('*')) {
-              hasPermission = true
-              break
-            }
-          } else {
-            hasPermission = true
-            break
-          }
-        }
-      }
-    }
-    return hasPermission
+    return permissions.some((permission) => {
+      return connection.state.permissions.includes(permission)
+    })
   }
 
   static getConnectionPermissions ({ connection }) {
@@ -119,7 +67,7 @@ export default class Permission {
 
     if (scopes) {
       permissions = permissions.filter((permission) => {
-        return scopes.includes(permission)
+        return scopes.includes(permission) || scopes.includes('*')
       })
     }
     return permissions
@@ -150,7 +98,7 @@ export default class Permission {
    * @param {Object} user A user object to check permissions against
    * @returns {Array} Array of objects with localised human readable permissions
    */
-  static humanReadable ({ scopes, user })  {
+  static humanReadable ({ scopes, connection })  {
     let scopeList = scopes
     if (scopeList.includes('*')) {
       scopeList = Permission.allPermissions
@@ -162,7 +110,7 @@ export default class Permission {
 
       let permissionLocaleKey = permissionLocaleKeys[action]
       permissionLocaleKey += isSelf ? 'Own' : 'All'
-      const accessible = Permission.granted({ permissions: [permission], user, scope: undefined })
+      const accessible = Permission.granted({ permissions: [permission], connection })
       if (isSelf && scopeList.includes(`${group}.${action}`)) {
         return acc
       }

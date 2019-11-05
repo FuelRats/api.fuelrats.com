@@ -7,6 +7,7 @@ const config = {
     hostname: required('FRAPI_HOSTNAME', [], 'localhost'),
     port: required('FRAPI_PORT', [], 8080),
     externalUrl: required('FRAPI_URL', [], 'http://localhost:8080'),
+    cookieSecret: required('FRAPI_COOKIE', []),
     proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false),
     ropcClientId: recommended('FRAPI_ROPC_CLIENTID', [])
   },

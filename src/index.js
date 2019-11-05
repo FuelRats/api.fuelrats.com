@@ -6,7 +6,6 @@ import router from './classes/Router'
 import koaBody from 'koa-body'
 import TrafficControl from './classes/TrafficControl'
 import http from 'http'
-import logger from './loggly/logger'
 import Document from './Documents/Document'
 import { promisify } from 'util'
 import Authentication from './classes/Authentication'
@@ -16,7 +15,7 @@ import WebSocket from './classes/WebSocket'
 import { db } from './db'
 import npid from 'npid'
 import config from '../config'
-
+import logger from './logging'
 import Rescue from './routes/Rescues'
 import User from './routes/Users'
 import Rats from './routes/Rats'
@@ -71,6 +70,8 @@ try {
 } catch (err) {
   process.exit(1)
 }
+
+app.keys = [config.server.cookieSecret]
 
 const sessionConfiguration = {
   key: 'fuelrats:session',
@@ -186,9 +187,10 @@ app.use(async (ctx, next) => {
       ctx.body = result.toString()
     } else if (result) {
       ctx.body = result
+    } else {
+      logger.error('Router received a response from the endpoint that could not be processed')
     }
 
-    logger.error('Router received a response from the endpoint that could not be processed')
   } catch (errors) {
     const query = new Query({ connection: ctx })
     const errorDocument = new ErrorDocument({ query, errors })

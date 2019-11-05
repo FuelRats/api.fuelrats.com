@@ -23,22 +23,19 @@ log4js.configure({
       type: '@log4js-node/smtp',
       subject: 'Fuel Rats API Problem',
       sender: 'blackhole@fuelrats.com',
-      recipients: 'support@fuelrats.com',
-      SMTP: {
-        host: config.smtp.host,
-        port: config.smtp.port
-      },
+      recipients: 'techrats@fuelrats.com',
+      SMTP: config.smtp,
       sendInterval: 3600
-    },
-    syslogFilter: {
-      type: 'logLevelFilter',
-      appender: 'syslogErr',
-      level: 'ERROR'
     }
+    // syslogFilter: {
+    //   type: 'logLevelFilter',
+    //   appender: 'syslogerr',
+    //   level: 'error'
+    // }
   },
   categories: {
     default: {
-      appenders: ['graylog', 'syslogFilter'],
+      appenders: ['graylog'],
       level: 'debug'
     },
     fatal: {
