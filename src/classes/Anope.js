@@ -226,11 +226,32 @@ export default class Anope {
    * @param {string} nickname the nickname to remove
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
-  static async removeNickname (nickname) {
-    await mysql.raw(`
+  static removeNickname (nickname) {
+    return mysql.raw(`
       DELETE FROM anope_db_NickAlias
       WHERE  lower(nick) = lower(?)
     `, [nickname])
+  }
+
+  /**
+   * Delete an Anope account
+   * @param {string} email the email belonging to the account you wish to delete
+   * @returns {Promise<undefined>} Promise is void on completion
+   */
+  static async deleteAccount (email) {
+    await mysql.raw(`
+        DELETE anope_db_NickAlias.* FROM anope_db_NickAlias
+        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        WHERE
+            lower(anope_db_NickCore.email) = lower(:email)
+            
+    `, { email })
+
+    return mysql.raw(`
+        DELETE FROM anope_db_NickCore
+        WHERE
+            lower(anope_db_NickCore.email) = lower(:email)
+    `, { email })
   }
 
   /**

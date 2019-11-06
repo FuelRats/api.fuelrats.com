@@ -212,7 +212,10 @@ export default class Users extends APIResource {
   @websocket('users', 'delete')
   @required('password')
   async delete (ctx) {
-    await super.delete({ ctx, databaseType: User })
+
+    await super.delete({ ctx, databaseType: User, callback: (user) => {
+      return Anope.deleteAccount(user.email)
+    } })
 
     ctx.response.status = StatusCode.noContent
     return true

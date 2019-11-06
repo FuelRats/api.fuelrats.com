@@ -136,7 +136,7 @@ export class APIResource extends API {
    * @param {db.Model} databaseType a database type object
    * @returns {Promise<undefined>} A delete transaction
    */
-  async delete ({ ctx, databaseType }) {
+  async delete ({ ctx, databaseType, callback }) {
     if (!ctx.params.id) {
       throw new BadRequestAPIError({ parameter: 'id' })
     }
@@ -152,6 +152,10 @@ export class APIResource extends API {
     }
 
     this.requireWritePermission({ connection: ctx, entity })
+
+    if (callback) {
+      await callback(entity)
+    }
 
     return entity.destroy()
   }
