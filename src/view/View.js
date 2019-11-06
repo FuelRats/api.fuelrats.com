@@ -82,7 +82,7 @@ export default class View {
 
   get links () {
     return {
-      self: `${config.externalUrl}/${this.self}`
+      self: `${config.server.externalUrl}/${this.self}`
     }
   }
 
@@ -95,8 +95,8 @@ export default class View {
 
   getRelationLink (relation) {
     return {
-      self: `${config.externalUrl}/${this.self}/relationships/${relation}`,
-      related: `${config.externalUrl}/${this.self}/${relation}`
+      self: `${config.server.externalUrl}/${this.self}/relationships/${relation}`,
+      related: `${config.server.externalUrl}/${this.self}/${relation}`
     }
   }
 
