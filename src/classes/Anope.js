@@ -1,13 +1,14 @@
 import knex from 'knex'
 import config from '../../config'
 import bcrypt from 'bcrypt'
-import { ConflictAPIError } from './APIError'
+import { ConflictAPIError, NotFoundAPIError } from './APIError'
 import { parse } from 'date-fns'
-import { User } from '../db'
+import { User, Rat } from '../db'
 
 const { database, username, hostname, port } = config.anope
 const anopeBcryptRounds = 10
 const defaultMaximumEditDistance = 5
+
 
 const mysql = knex({
   client: 'mysql',
@@ -16,8 +17,16 @@ const mysql = knex({
     port,
     user: username,
     database
+  },
+  pool: {
+    afterCreate (conn, done) {
+      conn.query('ALTER TABLE anope_db_NickAlias ADD COLUMN IF NOT EXISTS rat_id BINARY(16);', (err) => {
+        done(err, conn)
+      })
+    }
   }
 })
+
 
 /**
  * @classdesc Class managing the interface to Anope
@@ -260,10 +269,25 @@ export default class Anope {
    * @param {string} nick the main IRC nickname for the new user
    * @param {string} encryptedPassword a bcrypt encrypted password to use for the new user
    * @param {string} vhost vhoset to use for all nicknames of the new user
+   * @param {string} [ratId] the id of an optional Rat to bind to this nickname
    * @returns {Promise<Nickname>} returns a newly created Nickname entry
    */
-  static addNewUser (email, nick, encryptedPassword, vhost) {
+  static addNewUser ({ email, nick, encryptedPassword, vhost, ratId }) {
     return mysql.transaction(async (transaction) => {
+      if (ratId) {
+        const rat = await Rat.findOne({
+          where: {
+            id: ratId
+          }
+        })
+
+        if (!rat) {
+          throw new NotFoundAPIError({
+            pointer: '/data/attributes/ratId'
+          })
+        }
+      }
+
       const existingNickname = await Anope.findNickname(nick)
       if (existingNickname) {
         if (existingNickname.email.toLowerCase() === email.toLowerCase()) {
@@ -289,7 +313,8 @@ export default class Anope {
           display: nick,
           email,
           memomax: 20,
-          password: encryptedPassword
+          password: encryptedPassword,
+          rat_id: ratId
         }).into('anope_db_NickCore')
       }
 
@@ -335,6 +360,7 @@ class Nickname {
     this.password = obj.pass
     this.fingerprint = obj.cert
     this.score = obj.score
+    this.ratId = obj.rat_id
 
     this.user = user
   }

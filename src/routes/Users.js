@@ -571,7 +571,7 @@ export default class Users extends APIResource {
       email: WritePermission.sudo,
       password: WritePermission.sudo,
       status: WritePermission.sudo,
-      suspended: WritePermission.internal,
+      suspended: WritePermission.sudo,
       frontierId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,

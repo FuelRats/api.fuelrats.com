@@ -1,4 +1,4 @@
-import { ReadPermission, DatabaseView, UserView } from './'
+import { ReadPermission, DatabaseView, UserView, RatView } from './'
 
 export default class NicknameView extends DatabaseView {
   static get type () {
@@ -51,7 +51,8 @@ export default class NicknameView extends DatabaseView {
 
   get relationships () {
     return {
-      user: UserView
+      user: UserView,
+      rat: RatView
     }
   }
 
