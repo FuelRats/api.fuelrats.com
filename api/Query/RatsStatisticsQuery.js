@@ -104,7 +104,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
   }
 
   get _countField () {
-    return db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)')
+    return db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL AND "outcome" = \'success\' THEN 1 ELSE 0 END)')
   }
 }
 
