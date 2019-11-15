@@ -53,7 +53,7 @@ class RatsStatisticsQuery extends StatisticsQuery {
       [db.literal('CASE WHEN "Rat"."userId" IS NULL THEN "Rat"."id" ELSE "Rat"."userId" END'), 'id'],
       [db.literal('array_agg(DISTINCT "Rat"."name")'), 'rats'],
       [db.literal('min(DISTINCT "Rat"."joined")'), 'createdAt'],
-      [db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL THEN 1 ELSE 0 END)'), 'rescueCount'],
+      [db.literal('SUM(CASE WHEN "firstLimpetId" IS NOT NULL AND "outcome" = \'success\' THEN 1 ELSE 0 END)'), 'rescueCount'],
       [db.fn('COUNT', db.fn('nullif', db.col('codeRed'), false)), 'codeRed']
     ]
 
