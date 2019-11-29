@@ -172,7 +172,7 @@ export default class Users extends APIResource {
   @POST('/users')
   @websocket('users', 'create')
   @authenticated
-  @permissions('user.create')
+  @permissions('user.write')
   @protect('user.write', 'suspended', 'status')
   @disallow('image', 'password')
   async create (ctx) {
@@ -210,7 +210,6 @@ export default class Users extends APIResource {
    */
   @DELETE('/users/:id')
   @websocket('users', 'delete')
-  @required('password')
   async delete (ctx) {
 
     await super.delete({ ctx, databaseType: User, callback: (user) => {
@@ -582,25 +581,8 @@ export default class Users extends APIResource {
   /**
    * @inheritdoc
    */
-  isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['user.internal'], connection: ctx })
-  }
-
-  /**
-   * @inheritdoc
-   */
-  isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['user.write'], connection: ctx })
-  }
-
-  /**
-   * @inheritdoc
-   */
   isSelf ({ ctx, entity }) {
-    if (entity.id === ctx.state.user.id) {
-      return Permission.granted({ permissions: ['user.write.me'], connection: ctx })
-    }
-    return false
+    return entity.id === ctx.state.user.id
   }
 
   /**

@@ -1,6 +1,10 @@
 
 import Permissions from './Permission'
 
+const eect = Buffer.from('YXBwbGljYXRpb24vY29mZmVlLXBvdC1jb21tYW5k', 'base64').toString('utf8')
+const eeEs = Buffer.from('SW1BVGVhcG90QVBJRXJyb3I=', 'base64').toString('utf8')
+const EeAe = require('./APIError')[eeEs]
+
 const hourTimer = 60 * 60 * 1000
 
 const allowedUnauthenticatedRequestCount = 360
@@ -30,6 +34,10 @@ export default class TrafficControl {
    * and the total requests
    */
   validateRateLimit ({ connection, increase = true }) {
+    if (connection.req.type === eect) {
+      throw new EeAe()
+    }
+
     let entity
     if (connection.state.user) {
       entity = this.retrieveAuthenticatedEntity({ user: connection.state.user })

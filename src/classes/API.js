@@ -19,6 +19,7 @@ const config = require('../../config')
  * @classdesc Base class for FuelRats API endpoints
  */
 export default class API {
+  resource = undefined
   view = undefined
 
   /**
@@ -351,7 +352,10 @@ export class APIResource extends API {
    * @returns {boolean} whether the user has read permission for this resource
    */
   hasReadPermission ({ connection, entity }) {
-    return Permission.granted({ permissions: this.getReadPermissionFor({ connection, entity }), connection })
+    if (this.isSelf({ ctx: connection, entity })) {
+      return Permission.granted({ permissions: [`${this.type}.read.me`, `${this.type}.read`], connection })
+    }
+    return Permission.granted({ permissions: [`${this.type}.read`], connection })
   }
 
   /**
@@ -361,11 +365,10 @@ export class APIResource extends API {
    * @returns {boolean} whether the usre has write permission for this resource
    */
   hasWritePermission ({ connection, entity }) {
-    const isGroup = this.isGroup({ ctx: connection, entity })
-    const isSelf = this.isSelf({ ctx: connection, entity })
-    const isInternal = this.isInternal({ ctx: connection, entity })
-
-
+    if (this.isSelf({ ctx: connection, entity })) {
+      return Permission.granted({ permissions: [`${this.type}.write.me`, `${this.type}.write`], connection })
+    }
+    return Permission.granted({ permissions: [`${this.type}.write`], connection })
   }
 
   /**
@@ -520,6 +523,7 @@ export function PUT (route) {
       return endpoint.apply(this, args)
     }
     router.put(route, descriptor.value)
+    router.patch(route, descriptor.value)
   }
 }
 
@@ -738,7 +742,7 @@ export function protect (permission, ...fields) {
  * @returns {boolean} True if valid, false is not valid
  */
 export function isValidJSONAPIObject ({ object }) {
-  if (object instanceof Object && object.id && (object.type && object.type.constructor === String)) {
+  if (object instanceof Object && (object.type && object.type.constructor === String)) {
     if (object.attributes instanceof Object || object.relationships instanceof Object) {
       return true
     }
