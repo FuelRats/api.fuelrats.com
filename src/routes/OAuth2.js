@@ -1,6 +1,7 @@
 import oauth2orize from 'oauth2orize-koa-fr'
 import crypto from 'crypto'
 import { Token, Client, Code, db, Session } from '../db'
+import { ClientView } from '../view'
 import Permission from '../classes/Permission'
 import { NotFoundAPIError, UnprocessableEntityAPIError, VerificationRequiredAPIError } from '../classes/APIError'
 import i18next from 'i18next'
@@ -17,6 +18,7 @@ import API, {
   required,
   parameters
 } from '../classes/API'
+import DatabaseQuery from '../query/DatabaseQuery'
 
 i18next.init({
   lng: 'en',
@@ -26,7 +28,7 @@ i18next.init({
 const server = oauth2orize.createServer()
 
 server.serializeClient((client) => {
-  return client.data.id
+  return client.id
 })
 
 server.deserializeClient(async (id) => {
@@ -98,10 +100,10 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
 
   if (!existingSession) {
     await Sessions.createSession(ctx, user)
-    throw new VerificationRequiredAPIError()
+    throw new VerificationRequiredAPIError({})
   } else if (existingSession.verified === false) {
     await Sessions.sendSessionMail(user.email, user.displayRat.name, existingSession.code, ctx)
-    throw new VerificationRequiredAPIError()
+    throw new VerificationRequiredAPIError({})
   }
 
   const token = await Token.create({
@@ -169,11 +171,17 @@ export default class OAuth2 extends API {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
       client,
-      scopes: Permission.humanReadable({scopes: ctx.state.oauth2.req.scope, user: ctx.state.user}),
+      scopes: Permission.humanReadable({ scopes: ctx.state.oauth2.req.scope, connection: ctx }),
       scope: ctx.state.oauth2.req.scope.join(' ')
     }
   }
+
+  static authorizationDecisionHandler (ctx) {
+    ctx.type = 'application/json'
+    ctx.body = { redirectUri: ctx.data.redirectUri }
+  }
 }
+
 
 /**
  *
@@ -192,8 +200,11 @@ export function validateRedirectUri (target, name, descriptor) {
         return false
       }
       if (!client.redirectUri || client.redirectUri === redirectUri || !redirectUri) {
+        const query = new DatabaseQuery({ connection })
+        const clientView = (new ClientView({ object: client, query })).render()
+
         const clientRedirectUri = redirectUri || client.redirectUri
-        return [Clients.presenter.render(client, {}), clientRedirectUri]
+        return [clientView, clientRedirectUri]
       } else {
         throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
       }

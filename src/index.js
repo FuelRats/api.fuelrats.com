@@ -224,8 +224,13 @@ const routes = [
 
 // OAUTH2
 
+const [transactionLoader, decision] = oauth2.server.decision()
+
 router.post('/oauth2/authorize',
-  ...oauth2.server.decision())
+  Authentication.isAuthenticated,
+  transactionLoader,
+  decision,
+  oauth2.authorizationDecisionHandler)
 
 router.post('/oauth2/token',
   Authentication.isClientAuthenticated,
