@@ -23,7 +23,6 @@ import Clients from './routes/Clients'
 import Frontier from './routes/Frontier'
 import Ships from './routes/Ships'
 import Register from './routes/Register'
-import Profile from './routes/Profiles'
 import Reset from './routes/Resets'
 import Nicknames from './routes/Nicknames'
 import Verifications from './routes/Verifications'
@@ -212,7 +211,6 @@ const routes = [
   new Clients(),
   new Ships(),
   new Register(),
-  new Profile(),
   new Reset(),
   new Verifications(),
   new Sessions(),

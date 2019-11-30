@@ -15,14 +15,15 @@ export default class DatabaseDocument extends Document {
    * @param result database result
    * @param type the resource type
    * @param view A DocumentViewType enum describing the type of view this document should have
+   * @param [meta] extra metdata
    * @constructor
    */
-  constructor ({ query, result, type, view = DocumentViewType.individual }) {
+  constructor ({ query, result, type, view = DocumentViewType.individual, meta = {} }) {
     if (result.rows) {
       super({
         objects: result.rows,
         type,
-        meta: query.meta,
+        meta: { ...meta, ...query.meta },
         query,
         view: DocumentViewType.collection
       })
@@ -30,7 +31,7 @@ export default class DatabaseDocument extends Document {
       super({
         objects: result,
         type,
-        meta: query.meta,
+        meta: { ...meta, ...query.meta },
         query,
         view
       })

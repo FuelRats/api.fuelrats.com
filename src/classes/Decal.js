@@ -4,10 +4,43 @@ import { Rescue, User, Rat, Decal as Decals } from '../db'
 import { BadRequestAPIError } from './APIError'
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
-const rescueParticipationRequirement = 10
+const minimumRescueCount = 10
+
+// language=PostgreSQL
+const queryOfDoom = `
+WITH "EligibleRats" AS (
+	SELECT
+		COUNT(DISTINCT "Rescues"."id") AS "count",
+		COUNT(DISTINCT "Decals"."id") AS "existingDecals"
+	FROM "Users"
+	INNER JOIN "Rats" ON "Rats"."userId" = "Users"."id"
+	INNER JOIN "Rescues" ON "Rescues"."firstLimpetId" = "Rats"."id"
+	LEFT JOIN "Decals" ON "Decals"."userId" = "Users"."id"
+	WHERE
+		NOT EXISTS (
+			SELECT NULL FROM "Rescues" WHERE
+				"Rescues"."firstLimpetId" = "Rats"."id" AND
+				"Rescues"."deletedAt" IS NULL AND
+				"Rescues"."outcome" = 'success' AND
+				"Rescues"."createdAt" < :originalDecalDeadline
+		) AND
+		"Users"."id" = 'e9520722-02d2-4d69-9dba-c4e3ea727b14' AND
+		"Decals"."type" = 'Rescues' AND
+		"Rats"."deletedAt" IS NULL AND
+		"Rescues"."deletedAt" IS NULL AND
+		"Rescues"."outcome" = 'success' AND
+		"Rescues"."createdAt" < :monthTurnOver
+	GROUP BY "Rats"."id"
+    HAVING COUNT(DISTINCT "Rescues"."id") >= :minimumRescueCount
+)
+
+SELECT COUNT("EligibleRats"."count") - min("existingDecals") AS "canRedeem"
+FROM "EligibleRats"
+`
 
 export default class Decal {
-  static async checkEligible ({user}) {
+
+  static async checkEligible2 ({user}) {
     let decal = await Decals.findOne({
       where: {
         userId: user.id
@@ -72,64 +105,6 @@ export default class Decal {
   }
 }
 
-/**
- * Check wether a user was eligible for the origina 3301 decals issued by Frontier on April 1st as a present for
- * the Fuel Rats completing 10,000 rescues.
- * @param user The user to check eligibility for
- * @returns {*} A user if the user is eligible, null if not.
- */
-function checkEligibleForOriginalDecal ({user}) {
-  return User.findOne({
-    where: {
-      id: user.id
-    },
-    include: [{
-      required: true,
-      model: Rat,
-      as: 'rats',
-      include: [{
-        required: true,
-        where: {
-          createdAt: {
-            $lt: originalDecalDeadline
-          },
-          outcome: 'success'
-        },
-        model: Rescue,
-        as: 'firstLimpet'
-      }]
-    }]
-  })
-}
-
-/**
- * Check wether the user is eligible for a new rescue decal
- * @param user the user to check eligibility for
- * @returns {*} A user if the user is eligible, null if not.
- */
-function checkEligibleForRescueDecal ({user}) {
-  return User.findOne({
-    where: {
-      id: user.id
-    },
-    include: [{
-      required: true,
-      model: Rat,
-      as: 'rats',
-      include: [{
-        required: true,
-        where: {
-          createdAt: {
-            $lt: getLastMonthTurnover()
-          },
-          outcome: 'success'
-        },
-        model: Rescue,
-        as: 'firstLimpet'
-      }]
-    }]
-  })
-}
 
 /**
  * Get a date object for the last time decals were issued (1st of every month)

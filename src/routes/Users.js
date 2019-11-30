@@ -5,6 +5,7 @@ import Permission from '../classes/Permission'
 import Anope from '../classes/Anope'
 import workerpool from 'workerpool'
 import StatusCode from '../classes/StatusCode'
+import Decals from './Decals'
 
 import {
   NotFoundAPIError,
@@ -89,6 +90,23 @@ export default class Users extends APIResource {
 
     const user = await Anope.mapNickname(result)
     return new DatabaseDocument({ query, result: user, type: UserView })
+  }
+
+  @GET('/profile')
+  @websocket('profiles', 'read')
+  @authenticated
+  async profile (ctx) {
+    const query = new DatabaseQuery({ connection: ctx })
+    const result = await User.findOne({
+      where: {
+        id: ctx.state.user.id
+      }
+    })
+
+    const redeemable = await Decals.getEligibleDecalCount({ user: ctx.state.user })
+
+    const user = await Anope.mapNickname(result)
+    return new DatabaseDocument({ query, result: user, type: UserView, meta: { redeemable } })
   }
 
   /**

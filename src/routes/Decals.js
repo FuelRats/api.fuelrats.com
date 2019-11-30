@@ -1,7 +1,6 @@
 
 
-import Decal from '../classes/Decal'
-import { User } from '../db'
+import { User, db } from '../db'
 import API, {
   APIResource,
   authenticated,
@@ -10,6 +9,59 @@ import API, {
 } from '../classes/API'
 import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
+
+const originalDecalDeadline = '2016-04-01 00:00:00+00'
+const minimumRescueCount = 10
+
+/*
+* This query retrieves the number of decals the user is eligible to redeem.
+* A user is granted 1 decal per rat (CMDR) that had 10 rescues or more before the start of the current month.
+* This excludes rats that had a rescue before April 2016 as those were already granted a decal using a previous giveway
+* The number of rescue decals already redeemed by the user is subtracted from the count.
+* */
+
+// language=PostgreSQL
+const decalEligibilityQuery = `
+WITH "EligibleRats" AS (
+	SELECT
+		COUNT(DISTINCT "Rescues"."id") AS "count",
+		COUNT(DISTINCT "Decals"."id") AS "existingDecals"
+	FROM "Users"
+	LEFT JOIN "Rats" ON "Rats"."userId" = "Users"."id" AND "Rats"."deletedAt" IS NULL
+	LEFT JOIN "Rescues" ON "Rescues"."firstLimpetId" = "Rats"."id" AND "Rescues"."deletedAt" IS NULL
+	LEFT JOIN "Decals" ON "Decals"."userId" = "Users"."id" AND "Decals"."type" = 'Rescues'
+	WHERE
+		NOT EXISTS (
+			SELECT NULL FROM "Rescues" WHERE
+				"Rescues"."firstLimpetId" = "Rats"."id" AND
+				"Rescues"."deletedAt" IS NULL AND
+				"Rescues"."outcome" = 'success' AND
+				"Rescues"."createdAt" < $originalDecalDeadline
+		) AND
+		"Users"."id" = $userId AND
+		"Rescues"."outcome" = 'success' AND
+		"Rescues"."createdAt" < $monthTurnOver
+	GROUP BY "Rats"."id"
+    HAVING COUNT(DISTINCT "Rescues"."id") >= $minimumRescueCount
+)
+
+SELECT COUNT("EligibleRats"."count") - min("existingDecals") AS "canRedeem"
+FROM "EligibleRats"
+`
+
+
+/**
+ * Get a date object for the last time decals were issued (1st of every month)
+ * @returns {Date} A date object for midnight UTC on the 1st of the current month.
+ */
+function getLastMonthTurnover () {
+  const foo = new Date()
+  foo.setUTCDate(1)
+  foo.setUTCHours(0)
+  foo.setUTCMinutes(0)
+  foo.setUTCSeconds(0)
+  return foo
+}
 
 /**
  *
@@ -44,6 +96,28 @@ export default class Decals extends APIResource {
 
   async redeem () {
 
+  }
+
+  static getLastMonthTurnOver () {
+    const date = new Date()
+    date.setUTCDate(1)
+    date.setUTCHours(0)
+    date.setUTCMinutes(0)
+    date.setUTCSeconds(0)
+    return date
+  }
+
+  static async getEligibleDecalCount ({ user }) {
+    const { id: userId } = user
+    const monthTurnOver = Decals.getLastMonthTurnOver()
+
+    const [result] = await db.query(decalEligibilityQuery, {
+      bind: { userId, originalDecalDeadline, monthTurnOver, minimumRescueCount  },
+      type: db.QueryTypes.SELECT
+    })
+
+    const { canRedeem } = result || {}
+    return canRedeem || 0
   }
 
   /**
