@@ -1,7 +1,6 @@
 import { User } from '../db'
-import { UserView } from '../view'
+import { UserView, DecalView } from '../view'
 import bcrypt from 'bcrypt'
-import Permission from '../classes/Permission'
 import Anope from '../classes/Anope'
 import workerpool from 'workerpool'
 import StatusCode from '../classes/StatusCode'
@@ -11,7 +10,8 @@ import {
   NotFoundAPIError,
   UnauthorizedAPIError,
   UnsupportedMediaAPIError,
-  BadRequestAPIError
+  BadRequestAPIError,
+  InternalServerError
 } from '../classes/APIError'
 
 import {
@@ -25,9 +25,7 @@ import {
   PUT,
   DELETE,
   parameters,
-  disallow,
   required,
-  protect,
   PATCH,
   getJSONAPIData
 } from '../classes/API'
@@ -58,7 +56,6 @@ export default class Users extends APIResource {
   @GET('/users')
   @websocket('users', 'search')
   @authenticated
-  @permissions('user.read')
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const results = await User.findAndCountAll(query.searchObject)
@@ -75,18 +72,9 @@ export default class Users extends APIResource {
   @GET('/users/:id')
   @websocket('users', 'read')
   @authenticated
-  @permissions('user.read')
   @parameters('id')
   async findById (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await User.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-    if (!result) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
+    const { query, result } = super.findById({ ctx, databaseType: User })
 
     const user = await Anope.mapNickname(result)
     return new DatabaseDocument({ query, result: user, type: UserView })
@@ -190,9 +178,7 @@ export default class Users extends APIResource {
   @POST('/users')
   @websocket('users', 'create')
   @authenticated
-  @permissions('user.write')
-  @protect('user.write', 'suspended', 'status')
-  @disallow('image', 'password')
+  @permissions('users.write')
   async create (ctx) {
     const user = await super.create({ ctx, databaseType: User })
 
@@ -211,8 +197,6 @@ export default class Users extends APIResource {
   @PUT('/users/:id')
   @websocket('users', 'update')
   @authenticated
-  @protect('user.write', 'suspended', 'status')
-  @disallow('image', 'password')
   async update (ctx) {
     const user = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
 
@@ -228,8 +212,8 @@ export default class Users extends APIResource {
    */
   @DELETE('/users/:id')
   @websocket('users', 'delete')
+  @authenticated
   async delete (ctx) {
-
     await super.delete({ ctx, databaseType: User, callback: (user) => {
       return Anope.deleteAccount(user.email)
     } })
@@ -276,6 +260,43 @@ export default class Users extends APIResource {
       }
     })
     return new DatabaseDocument({ query, result, type: UserView })
+  }
+
+  @POST('/users/:id/relationships/decals')
+  @authenticated
+  async redeemDecal (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    const redeemable = await Decals.getEligibleDecalCount({ user })
+    if (redeemable < 1) {
+      throw new BadRequestAPIError({})
+    }
+
+    const availableDecal = await Decals.findOne({
+      where: {
+        userId: undefined,
+        claimedAt: undefined,
+        type: 'Rescues'
+      }
+    })
+
+    if (!availableDecal) {
+      throw new InternalServerError({})
+    }
+
+    const result = await availableDecal.update({
+      userId: user.id,
+      claimedAt: Date.now()
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: DecalView })
   }
 
   // Relationships

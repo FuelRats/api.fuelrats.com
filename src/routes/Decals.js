@@ -1,14 +1,24 @@
 
 
-import { User, db } from '../db'
+import { Decal, db } from '../db'
 import API, {
   APIResource,
   authenticated,
   GET,
-  permissions
+  POST,
+  PUT,
+  DELETE,
+  PATCH,
+  permissions,
+  parameters, WritePermission
 } from '../classes/API'
 import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
+import DatabaseQuery from '../query/DatabaseQuery'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DecalView } from '../view'
+import StatusCode from '../classes/StatusCode'
+import { DocumentViewType } from '../Documents'
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const minimumRescueCount = 10
@@ -49,20 +59,6 @@ SELECT COUNT("EligibleRats"."count") - min("existingDecals") AS "canRedeem"
 FROM "EligibleRats"
 `
 
-
-/**
- * Get a date object for the last time decals were issued (1st of every month)
- * @returns {Date} A date object for midnight UTC on the 1st of the current month.
- */
-function getLastMonthTurnover () {
-  const foo = new Date()
-  foo.setUTCDate(1)
-  foo.setUTCHours(0)
-  foo.setUTCMinutes(0)
-  foo.setUTCSeconds(0)
-  return foo
-}
-
 /**
  *
  */
@@ -74,28 +70,85 @@ export default class Decals extends APIResource {
     return 'decals'
   }
 
+  @GET('/decals')
+  @websocket('decals', 'search')
+  @authenticated
+  @permissions('decals.read')
   async search (ctx) {
+    const query = new DatabaseQuery({ connection: ctx })
+    const results = await Decal.findAndCountAll(query.searchObject)
 
+    return new DatabaseDocument({ query, results, type: DecalView })
   }
 
-  async findById () {
-
+  @GET('/decals/:id')
+  @websocket('decals', 'read')
+  @authenticated
+  @parameters('id')
+  async findById (ctx) {
+    const { query, result } = await super.findById({ ctx, databaseType: Decal, requirePermission: true })
+    return new DatabaseDocument({ query, result, type: DecalView })
   }
 
-  async create () {
+  @POST('/decals')
+  @websocket('decals', 'create')
+  @authenticated
+  @permissions('decals.write')
+  async create (ctx) {
+    const result = await super.create({ ctx, databaseType: Decal })
 
+    const query = new DatabaseQuery({ connection: ctx })
+    ctx.response.status = StatusCode.created
+    return new DatabaseDocument({ query, result, type: DecalView })
   }
 
-  async update () {
+  @PUT('/decals/:id')
+  @websocket('decals', 'update')
+  @authenticated
+  async update (ctx) {
+    const result = await super.update({ ctx, databaseType: Decal, updateSearch: { id: ctx.params.id } })
 
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: DecalView })
   }
 
-  async delete () {
+  @DELETE('/decals/:id')
+  @websocket('decals', 'delete')
+  @authenticated
+  async delete (ctx) {
+    await super.delete({ ctx, databaseType: Decal })
 
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
-  async redeem () {
+  @GET('/decals/:id/relationships/rat')
+  @websocket('decals', 'rat', 'view')
+  @authenticated
+  async relationshipRatView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Decal,
+      relationship: 'rat'
+    })
 
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: DecalView, view: DocumentViewType.meta })
+  }
+
+  @PATCH('/decals/:id/relationships/rat')
+  @websocket('decals', 'rat', 'patch')
+  @authenticated
+  async relationshipRatPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Decal,
+      change: 'patch',
+      relationship: 'rat'
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: DecalView, view: DocumentViewType.meta })
   }
 
   static getLastMonthTurnOver () {
@@ -125,27 +178,16 @@ export default class Decals extends APIResource {
    * @inheritdoc
    */
   changeRelationship ({ relationship }) {
-    switch (relationship) {
-      case 'displayRat':
-        return {
-          many: false,
+    if (relationship === 'user') {
+      return {
+        many: false,
 
-          add ({ entity, id }) {
-            return entity.addUser(id)
-          },
-
-          patch ({ entity, id }) {
-            return entity.setUser(id)
-          },
-
-          remove ({ entity, id }) {
-            return entity.removeUser(id)
-          }
+        patch ({ entity, id }) {
+          return entity.setUser(id)
         }
-
-      default:
-        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+      }
     }
+    throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
   }
 
   get relationTypes () {
@@ -154,66 +196,21 @@ export default class Decals extends APIResource {
     }
   }
 
-
-  isGroup ({ ctx, entity }) {
-    return false
-  }
-
-  isInternal ({ ctx, entity }) {
-    return false
-  }
-
+  /**
+   * @inheritdoc
+   */
   isSelf ({ ctx, entity }) {
-    return false
+    return entity.userId === ctx.state.user.id
   }
 
   get writePermissionsForFieldAccess () {
-    return undefined
-  }
-}
-export class Decals2 extends API {
-  @GET('/decals/check')
-  @websocket('decals', 'check')
-  @authenticated
-  @permissions('user.read.me')
-  async check (ctx) {
-    if (Object.keys(ctx.query).length > 0) {
-      let user = await User.findOne({
-        where: ctx.query
-      })
-
-      if (!user) {
-        throw new NotFoundAPIError({ parameter: 'id' })
-      }
-
-      this.requireReadPermission(ctx, user)
-
-      let eligible = await Decal.checkEligible(user)
-      if (eligible.id) {
-        return Decals.presenter.render(eligible)
-      }
-      return eligible
-    } else {
-      let eligible = await Decal.checkEligible(ctx.state.user)
-      if (eligible.id) {
-        return Decals.presenter.render(eligible)
-      }
-      return eligible
+    return {
+      code: WritePermission.sudo,
+      type: WritePermission.sudo,
+      notes: WritePermission.sudo,
+      createdAt: WritePermission.internal,
+      updatedAt: WritePermission.internal,
+      deletedAt: WritePermission.internal
     }
-  }
-
-  @GET('/decals/redeem')
-  @websocket('decals', 'redeem')
-  @authenticated
-  @permissions('user.write.me')
-  async redeem (ctx) {
-    let decal = await Decal.getDecalFor(ctx.state.user)
-    return Decals.presenter.render(decal)
-  }
-
-  static get presenter () {
-    class DecalsPresenter extends API.presenter {}
-    DecalsPresenter.prototype.type = 'decals'
-    return DecalsPresenter
   }
 }

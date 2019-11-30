@@ -7,10 +7,11 @@ import {
   UnprocessableEntityAPIError
 } from './APIError'
 import router from './Router'
-import { Rat, db } from '../db'
+import { Rat, db, Decal } from '../db'
 import { UUID } from './Validators'
 import enumerable from './Enum'
 import { URL } from 'url'
+import DatabaseQuery from '../query/DatabaseQuery'
 
 const config = require('../../config')
 
@@ -48,6 +49,26 @@ export class APIResource extends API {
    */
   get type () {
     return undefined
+  }
+
+  async findById ({ ctx, databaseType, requirePermission = false }) {
+    const query = new DatabaseQuery({ connection: ctx })
+
+    const result = await databaseType.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!result) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    if (requirePermission) {
+      this.requireWritePermission({ connection: ctx, entity: result })
+    }
+
+    return { query, result }
   }
 
   /**
@@ -265,9 +286,18 @@ export class APIResource extends API {
    * @param {object} entity the entity to validate
    */
   validateUpdateAccess ({ ctx, attributes, entity }) {
-    const isGroup = this.isGroup({ ctx, entity })
-    const isSelf = this.isSelf({ ctx, entity })
-    const isInternal = this.isInternal({ ctx, entity })
+    const isGroup = Permission.granted({
+      permissions: [`${this.type}.write`],
+      connection: ctx
+    })
+    const isSelf = this.isSelf({ ctx, entity }) && Permission.granted({
+      permissions: [`${this.type}.write.me`],
+      connection: ctx
+    })
+    const isInternal = Permission.granted({
+      permissions: [`${this.type}.internal`],
+      connection: ctx
+    })
 
     Object.entries(attributes).forEach(([key]) => {
       const attributePermissions = this.writePermissionsForFieldAccess[key]
@@ -310,28 +340,6 @@ export class APIResource extends API {
    */
   get writePermissionsForFieldAccess () {
     return {}
-  }
-
-  /**
-   * Check whether this entity requires an internal access level for the current user
-   * @param {object} ctx request context
-   * @param {object} entity the entity to check access level on
-   * @returns {boolean} whether this entity requires an internal access level
-   * @abstract
-   */
-  isInternal ({ ctx, entity }) {
-    return undefined
-  }
-
-  /**
-   * Check whether this entity requires group level access for the current user
-   * @param {object} ctx request context
-   * @param {object} entity the entity to check access level on
-   * @returns {boolean} whether this entity requires group level access
-   * @abstract
-   */
-  isGroup ({ ctx, entity }) {
-    return undefined
   }
 
   /**
