@@ -74,7 +74,7 @@ export default class Users extends APIResource {
   @authenticated
   @parameters('id')
   async findById (ctx) {
-    const { query, result } = super.findById({ ctx, databaseType: User })
+    const { query, result } = await super.findById({ ctx, databaseType: User })
 
     const user = await Anope.mapNickname(result)
     return new DatabaseDocument({ query, result: user, type: UserView })
