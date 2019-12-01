@@ -8,7 +8,7 @@ export default class GroupView extends DatabaseView {
   get attributes () {
     return class {
       static vhost
-      static isAdministrator
+      static withoutPrefix
       static priority
       static permissions
       static createdAt

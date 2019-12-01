@@ -1,7 +1,7 @@
 
 
 import { Decal, db } from '../db'
-import API, {
+import {
   APIResource,
   authenticated,
   GET,
@@ -12,7 +12,7 @@ import API, {
   permissions,
   parameters, WritePermission
 } from '../classes/API'
-import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
+import { UnsupportedMediaAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
@@ -190,6 +190,9 @@ export default class Decals extends APIResource {
     throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationTypes () {
     return {
       'user': 'users'
@@ -203,6 +206,9 @@ export default class Decals extends APIResource {
     return entity.userId === ctx.state.user.id
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return {
       code: WritePermission.sudo,

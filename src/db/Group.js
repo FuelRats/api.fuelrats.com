@@ -18,7 +18,7 @@ export default function Group (sequelize, DataTypes) {
         is: IRCVirtualHost
       }
     },
-    isAdministrator: {
+    withoutPrefix: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false

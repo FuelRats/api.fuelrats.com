@@ -144,7 +144,7 @@ export default function User (db, DataTypes) {
       return group1.priority - group2.priority
     })
 
-    if (group.isAdministrator) {
+    if (group.withoutPrefix) {
       return group.vhost
     }
     const rat = this.preferredRat()

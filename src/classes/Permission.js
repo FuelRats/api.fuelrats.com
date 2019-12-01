@@ -74,17 +74,6 @@ export default class Permission {
   }
 
   /**
-   * Returns whether a given user is an administrator
-   * @param user The user to check
-   * @returns {boolean} Whether the user is an administrator
-   */
-  static isAdmin ({ user }) {
-    return user.group.some(((group) => {
-      return group.isAdministrator
-    }))
-  }
-
-  /**
    * Get the available permissions/oauth scopes
    * @returns {Object}
    */

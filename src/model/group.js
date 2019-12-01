@@ -11,7 +11,7 @@ export default class Group extends Model {
   static vhost
 
   @column({ type: Boolean, defaultValue: false })
-  static isAdministrator
+  static withoutPrefix
 
   @column({ type: Number, defaultValue: 0 })
   static priority
