@@ -26,18 +26,18 @@ export default class ShipView extends DatabaseView {
         return rat.id === this.ratId
       })
       if (ratExists) {
-        return this.query.connection.state.permissions.includes('ship.read.me')
+        return this.query.connection.state.permissions.includes('ships.read.me')
       }
     }
     return false
   }
 
   get isGroup () {
-    return this.query.connection.state.permissions.includes('ship.read')
+    return this.query.connection.state.permissions.includes('ships.read')
   }
 
   get isInternal () {
-    return this.query.connection.state.permissions.includes('ship.internal')
+    return this.query.connection.state.permissions.includes('ships.internal')
   }
 
   get relationships () {

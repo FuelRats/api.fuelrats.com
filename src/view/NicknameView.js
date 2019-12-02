@@ -36,17 +36,17 @@ export default class NicknameView extends DatabaseView {
 
   get isSelf () {
     if (this.query.connection.state.user && this.object.user.id === this.query.connection.state.user.id) {
-      return this.query.connection.state.permissions.includes('nickname.read.me')
+      return this.query.connection.state.permissions.includes('nicknames.read.me')
     }
     return false
   }
 
   get isGroup () {
-    return this.query.connection.state.permissions.includes('nickname.read')
+    return this.query.connection.state.permissions.includes('nicknames.read')
   }
 
   get isInternal () {
-    return this.query.connection.state.permissions.includes('nickname.internal')
+    return this.query.connection.state.permissions.includes('nicknames.internal')
   }
 
   get relationships () {

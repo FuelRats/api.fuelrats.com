@@ -44,17 +44,17 @@ export default class RescueView extends DatabaseView {
     }
 
     if (isAssigned || isFirstLimpet) {
-      return this.query.connection.state.permissions.includes('rescue.read.me')
+      return this.query.connection.state.permissions.includes('rescues.read.me')
     }
     return false
   }
 
   get isGroup () {
-    return this.query.connection.state.permissions.includes('rescue.read')
+    return this.query.connection.state.permissions.includes('rescues.read')
   }
 
   get isInternal () {
-    return this.query.connection.state.permissions.includes('rescue.internal')
+    return this.query.connection.state.permissions.includes('rescues.internal')
   }
 
   get relationships () {

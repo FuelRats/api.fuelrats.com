@@ -22,17 +22,17 @@ export default class DecalView extends DatabaseView {
 
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
-      return this.query.connection.state.permissions.includes('decal.read.me')
+      return this.query.connection.state.permissions.includes('decals.read.me')
     }
     return false
   }
 
   get isGroup () {
-    return this.query.connection.state.permissions.includes('decal.read')
+    return this.query.connection.state.permissions.includes('decals.read')
   }
 
   get isInternal () {
-    return this.query.connection.state.permissions.includes('decal.internal')
+    return this.query.connection.state.permissions.includes('decals.internal')
   }
 
   get relationships () {
