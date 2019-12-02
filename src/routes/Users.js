@@ -324,66 +324,62 @@ export default class Users extends APIResource {
   /**
    * Create new rat relationship(s) on a user
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @POST('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'create')
   @authenticated
   async relationshipRatsCreate (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'rats'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
    * Override a user's rat relationships with a new set
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @PATCH('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'patch')
   @authenticated
   async relationshipRatsPatch (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'rats'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    // I'm sorry Clapton, JSONAPI made me do it
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
    * Delete one or more rat relationships of a user
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @DELETE('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'delete')
   @authenticated
   async relationshipRatsDelete (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'rats'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
@@ -409,23 +405,21 @@ export default class Users extends APIResource {
   /**
    * Set a user's display rat relationship
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @PATCH('/users/:id/relationships/displayRat')
   @websocket('users', 'displayRat', 'patch')
   @authenticated
   async relationshipFirstLimpetPatch (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'displayRat'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
@@ -451,66 +445,61 @@ export default class Users extends APIResource {
   /**
    * Create new group relationship(s) on a user
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<DatabaseDocument|boolean>} 204 no content
    */
   @POST('/users/:id/relationships/groups')
   @websocket('users', 'groups', 'create')
   @authenticated
   async relationshipGroupsCreate (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'groups'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
    * Override a user's group relationships with a new set
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @PATCH('/users/:id/relationships/groups')
   @websocket('users', 'groups', 'patch')
   @authenticated
   async relationshipGroupsPatch (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'groups'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
    * Delete one or more group relationships of a user
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @DELETE('/users/:id/relationships/groups')
   @websocket('users', 'groups', 'delete')
   @authenticated
   async relationshipGroupsDelete (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'groups'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
@@ -536,22 +525,21 @@ export default class Users extends APIResource {
   /**
    * Create new client relationship(s) on a user
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @POST('/users/:id/relationships/clients')
   @websocket('users', 'clients', 'create')
   @authenticated
   async relationshipClientsCreate (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'clients'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
@@ -579,23 +567,21 @@ export default class Users extends APIResource {
   /**
    * Delete one or more client relationships of a user
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @DELETE('/users/:id/relationships/clients')
   @websocket('users', 'clients', 'delete')
   @authenticated
   async relationshipClientsDelete (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'clients'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
 
@@ -653,7 +639,6 @@ export default class Users extends APIResource {
       case 'displayRat':
         return {
           many: false,
-
 
           hasPermission (connection) {
             return Permission.granted({ permissions: ['rats.write'], connection })
