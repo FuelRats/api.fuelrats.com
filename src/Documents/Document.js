@@ -46,8 +46,10 @@ export default class Document  {
           return this.objects.map((object) => {
             return (new this.#type({ object, query: this.#query })).relationshipView
           })
+        } else if (this.#objects) {
+          return (new this.#type({ object: this.objects, query: this.#query })).relationshipView
         }
-        return (new this.#type({ object: this.objects, query: this.#query })).relationshipView
+        return undefined
 
       default:
         return this.objects.map((object) => {
@@ -426,7 +428,13 @@ export default class Document  {
    * @returns {string} The final rendered JSONAPI document.
    */
   toString () {
-    return JSON.stringify(this.render())
+    return JSON.stringify(this.render(), (key, value) => {
+      if (typeof value === 'undefined') {
+        // eslint-disable-next-line no-restricted-syntax
+        return null
+      }
+      return value
+    })
   }
 }
 

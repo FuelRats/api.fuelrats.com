@@ -19,13 +19,13 @@ export default class DatabaseDocument extends Document {
    * @constructor
    */
   constructor ({ query, result, type, view = DocumentViewType.individual, meta = {} }) {
-    if (result.rows) {
+    if (result && result.rows) {
       super({
         objects: result.rows,
         type,
         meta: { ...meta, ...query.meta },
         query,
-        view: DocumentViewType.collection
+        view: view || DocumentViewType.collection
       })
     } else {
       super({
@@ -45,7 +45,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get firstPage () {
-    if (!this.#result.rows || this.#result.count === 0) {
+    if (!this.#result || !this.#result.rows || this.#result.count === 0) {
       return undefined
     }
 
@@ -56,7 +56,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get lastPage () {
-    if (!this.#result.rows || this.#result.count === 0) {
+    if (!this.#result || !this.#result.rows || this.#result.count === 0) {
       return undefined
     }
     return Math.floor(this.#result.count / this.#query.limit)
@@ -66,7 +66,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get currentPage () {
-    if (!this.#result.rows) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 
@@ -77,7 +77,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get previousPage () {
-    if (!this.#result.rows) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 
@@ -92,7 +92,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get nextPage () {
-    if (!this.#result.rows) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 
@@ -107,7 +107,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get offset () {
-    if (!this.#result.rows) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 
@@ -118,7 +118,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get limit () {
-    if (!this.#result.rows) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 
@@ -129,7 +129,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get count () {
-    if (!this.#result.rows) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 
@@ -140,7 +140,7 @@ export default class DatabaseDocument extends Document {
    * @inheritDoc
    */
   get total () {
-    if (!this.#result.rows) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 

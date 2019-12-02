@@ -273,7 +273,7 @@ export class APIResource extends API {
 
       return changeRelationship[change]({ entity, ids: relationshipIds })
     } else if (validOneRelationship && changeRelationship.many === false) {
-      if (!changeRelationship.hasPermission(entity, relationship.id)) {
+      if (!changeRelationship.hasPermission(ctx, entity, relationship.id)) {
         throw new ForbiddenAPIError({ pointer: '/data' })
       }
       return changeRelationship[change]({ entity, id: data.id })

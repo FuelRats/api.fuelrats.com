@@ -391,15 +391,14 @@ export default class Users extends APIResource {
   @websocket('users', 'displayRat', 'read')
   @authenticated
   async relationshipDisplayRatView (ctx) {
-    const user = await this.relationshipView({
+    const result = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'displayRat'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
 
   /**
@@ -410,7 +409,7 @@ export default class Users extends APIResource {
   @PATCH('/users/:id/relationships/displayRat')
   @websocket('users', 'displayRat', 'patch')
   @authenticated
-  async relationshipFirstLimpetPatch (ctx) {
+  async relationshipDisplayRatPatch (ctx) {
     await this.relationshipChange({
       ctx,
       databaseType: User,
@@ -640,8 +639,11 @@ export default class Users extends APIResource {
         return {
           many: false,
 
-          hasPermission (connection) {
-            return Permission.granted({ permissions: ['rats.write'], connection })
+          hasPermission (connection, entity, id) {
+            const hasRat = connection.state.user.rats.some((rat) => {
+              return rat.id === id
+            })
+            return hasRat || Permission.granted({ permissions: ['rats.write'], connection })
           },
 
           patch ({ entity, id }) {
