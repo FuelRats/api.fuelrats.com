@@ -120,7 +120,8 @@ models.Rescue.Revisions = models.Rescue.hasPaperTrail()
 export {
   db,
   db as sequelize,
-  Sequelize
+  Sequelize,
+  Op
 }
 
 export const {

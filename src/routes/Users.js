@@ -1,10 +1,11 @@
-import { User } from '../db'
-import { UserView, DecalView } from '../view'
+import { User, Decal, db } from '../db'
+import { UserView, DecalView, RatView } from '../view'
 import bcrypt from 'bcrypt'
 import Anope from '../classes/Anope'
 import workerpool from 'workerpool'
 import StatusCode from '../classes/StatusCode'
 import Decals from './Decals'
+import Permission from '../classes/Permission'
 
 import {
   NotFoundAPIError,
@@ -262,7 +263,7 @@ export default class Users extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
-  @POST('/users/:id/relationships/decals')
+  @POST('/users/:id/decals')
   @authenticated
   async redeemDecal (ctx) {
     const user = await User.findOne({
@@ -278,10 +279,10 @@ export default class Users extends APIResource {
       throw new BadRequestAPIError({})
     }
 
-    const availableDecal = await Decals.findOne({
+    const availableDecal = await Decal.findOne({
       where: {
-        userId: undefined,
-        claimedAt: undefined,
+        userId: { is: undefined },
+        claimedAt: { is: undefined },
         type: 'Rescues'
       }
     })
@@ -310,16 +311,14 @@ export default class Users extends APIResource {
   @websocket('users', 'rats', 'read')
   @authenticated
   async relationshipRatsView (ctx) {
-    const user = await this.relationshipView({
+    const result = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'rats'
     })
 
-    const result = await Anope.mapNickname(user)
-
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
+    return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
 
   /**
@@ -634,6 +633,10 @@ export default class Users extends APIResource {
         return {
           many: true,
 
+          hasPermission (connection) {
+            return Permission.granted({ permissions: ['rats.write'], connection })
+          },
+
           add ({ entity, ids }) {
             return entity.addRats(ids)
           },
@@ -651,6 +654,11 @@ export default class Users extends APIResource {
         return {
           many: false,
 
+
+          hasPermission (connection) {
+            return Permission.granted({ permissions: ['rats.write'], connection })
+          },
+
           patch ({ entity, id }) {
             return entity.setRat(id)
           }
@@ -659,6 +667,10 @@ export default class Users extends APIResource {
       case 'groups':
         return {
           many: true,
+
+          hasPermission (connection) {
+            return Permission.granted({ permissions: ['groups.write'], connection })
+          },
 
           add ({ entity, ids }) {
             return entity.addGroups(ids)
@@ -676,6 +688,10 @@ export default class Users extends APIResource {
       case 'clients':
         return {
           many: true,
+
+          hasPermission (connection) {
+            return Permission.granted({ permissions: ['clients.write'], connection })
+          },
 
           add ({ entity, ids }) {
             return entity.addClients(ids)

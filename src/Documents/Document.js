@@ -37,12 +37,22 @@ export default class Document  {
    * @returns {*} the data section of a JSONAPI document
    */
   get data () {
-    if (this.#view === DocumentViewType.individual) {
-      return (new this.#type({ object: this.objects, query: this.#query })).render()
-    } else {
-      return this.objects.map((object) => {
-        return (new this.#type({ object, query: this.#query })).render()
-      })
+    switch (this.#view) {
+      case DocumentViewType.individual:
+        return (new this.#type({ object: this.objects, query: this.#query })).render()
+
+      case DocumentViewType.relationship:
+        if (Array.isArray(this.#objects)) {
+          return this.objects.map((object) => {
+            return (new this.#type({ object, query: this.#query })).relationshipView
+          })
+        }
+        return (new this.#type({ object: this.objects, query: this.#query })).relationshipView
+
+      default:
+        return this.objects.map((object) => {
+          return (new this.#type({ object, query: this.#query })).render()
+        })
     }
   }
 

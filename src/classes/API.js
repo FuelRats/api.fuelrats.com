@@ -90,7 +90,7 @@ export class APIResource extends API {
 
     if (ctx.data.relationships instanceof Object) {
       const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
-        return this.generateRelationshipChange({ data, entity, change: 'add', relationship })
+        return this.generateRelationshipChange({ ctx, data, entity, change: 'add', relationship })
       })
 
       await Promise.all(relationshipChanges)
@@ -139,7 +139,7 @@ export class APIResource extends API {
 
     if (ctx.data.relationships instanceof Object) {
       const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
-        return this.generateRelationshipChange({ data, entity, change: 'patch', relationship })
+        return this.generateRelationshipChange({ ctx, data, entity, change: 'patch', relationship })
       })
 
       await Promise.all(relationshipChanges)
@@ -206,11 +206,7 @@ export class APIResource extends API {
 
     this.requireReadPermission({ connection: ctx, entity })
 
-    return databaseType.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
+    return entity[relationship]
   }
 
   /**
@@ -238,7 +234,7 @@ export class APIResource extends API {
 
     this.requireWritePermission({ connection: ctx, entity })
 
-    await this.generateRelationshipChange({ data: ctx.data.data, entity, change, relationship })
+    await this.generateRelationshipChange({ ctx, data: ctx.data.data, entity, change, relationship })
 
     return databaseType.findOne({
       where: {
@@ -255,7 +251,7 @@ export class APIResource extends API {
    * @param {string} relationship The relationship to change
    * @returns {Promise<undefined>} a database change promise for updating the relationships
    */
-  generateRelationshipChange ({ data, entity, change, relationship }) {
+  generateRelationshipChange ({ ctx, data, entity, change, relationship }) {
     const changeRelationship = this.changeRelationship({ relationship })
     const validOneRelationship = this.isValidOneRelationship({ relationship: data, relation: relationship })
 
@@ -268,11 +264,18 @@ export class APIResource extends API {
         if (validManyRelationship === false) {
           throw new UnprocessableEntityAPIError({ pointer: '/data' })
         }
+
+        if (!changeRelationship.hasPermission(ctx, entity, relationship.id)) {
+          throw new ForbiddenAPIError({ pointer: '/data' })
+        }
         return relationship.id
       })
 
       return changeRelationship[change]({ entity, ids: relationshipIds })
     } else if (validOneRelationship && changeRelationship.many === false) {
+      if (!changeRelationship.hasPermission(entity, relationship.id)) {
+        throw new ForbiddenAPIError({ pointer: '/data' })
+      }
       return changeRelationship[change]({ entity, id: data.id })
     } else {
       throw new UnprocessableEntityAPIError({ pointer: '/data' })
