@@ -1,5 +1,5 @@
-import { User, Decal, db } from '../db'
-import { UserView, DecalView, RatView } from '../view'
+import { User, Decal } from '../db'
+import { UserView, DecalView, RatView, ClientView, GroupView } from '../view'
 import bcrypt from 'bcrypt'
 import Anope from '../classes/Anope'
 import workerpool from 'workerpool'
@@ -263,6 +263,11 @@ export default class Users extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
+  /**
+   * Redeem a decal
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} a decal
+   */
   @POST('/users/:id/decals')
   @authenticated
   async redeemDecal (ctx) {
@@ -430,15 +435,14 @@ export default class Users extends APIResource {
   @websocket('users', 'groups', 'read')
   @authenticated
   async relationshipGroupsView (ctx) {
-    const user = await this.relationshipView({
+    const result = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'groups'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
+    return new DatabaseDocument({ query, result, type: GroupView, view: DocumentViewType.relationship })
   }
 
   /**
@@ -510,15 +514,14 @@ export default class Users extends APIResource {
   @websocket('users', 'clients', 'read')
   @authenticated
   async relationshipClientsView (ctx) {
-    const user = await this.relationshipView({
+    const result = await this.relationshipView({
       ctx,
       databaseType: User,
       relationship: 'clients'
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
+    return new DatabaseDocument({ query, result, type: ClientView, view: DocumentViewType.relationship })
   }
 
   /**
@@ -544,23 +547,21 @@ export default class Users extends APIResource {
   /**
    * Override a user's client relationships with a new set
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @PATCH('/users/:id/relationships/clients')
   @websocket('users', 'clients', 'patch')
   @authenticated
   async relationshipClientsPatch (ctx) {
-    const user = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'clients'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
-
-    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
@@ -647,7 +648,7 @@ export default class Users extends APIResource {
           },
 
           patch ({ entity, id }) {
-            return entity.setRat(id)
+            return entity.setDisplayRat(id)
           }
         }
 

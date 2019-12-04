@@ -7,11 +7,12 @@ import {
   UnprocessableEntityAPIError
 } from './APIError'
 import router from './Router'
-import { Rat, db, Decal } from '../db'
+import { Rat, db } from '../db'
 import { UUID } from './Validators'
 import enumerable from './Enum'
 import { URL } from 'url'
 import DatabaseQuery from '../query/DatabaseQuery'
+import ws from 'ws'
 
 const config = require('../../config')
 
@@ -51,6 +52,14 @@ export class APIResource extends API {
     return undefined
   }
 
+  /**
+   * Base function to find a database entry by id
+   * @param {object} arg function parameters
+   * @param {Context} arg.ctx request context
+   * @param {db.Model} arg.databaseType a database type object
+   * @param {boolean} arg.requirePermission whether a read permission challenge should be made
+   * @returns {Promise<{result: db.Model<any, any>, query: DatabaseQuery}>} query object and result object
+   */
   async findById ({ ctx, databaseType, requirePermission = false }) {
     const query = new DatabaseQuery({ connection: ctx })
 
@@ -73,10 +82,11 @@ export class APIResource extends API {
 
   /**
    * Base function to create a database entry from a request
-   * @param {object} ctx a request context
-   * @param {db.Model} databaseType a database type object
-   * @param {Function} callback optional callback to perform actions before resource is returned
-   * @param {object} overrideFields fields to override in the create statement
+   * @param {object} arg function arguments object
+   * @param {object} arg.ctx a request context
+   * @param {db.Model} arg.databaseType a database type object
+   * @param {Function} arg.callback optional callback to perform actions before resource is returned
+   * @param {object} arg.overrideFields fields to override in the create statement
    * @returns {Promise<db.Model>} A transaction to retrieve the created object
    */
   async create ({ ctx, databaseType, callback = undefined, overrideFields = {} }) {
@@ -105,9 +115,10 @@ export class APIResource extends API {
 
   /**
    * Base function to update a database entry from a request
-   * @param {object} ctx A request context
-   * @param {db.Model} databaseType a database type object
-   * @param {object} updateSearch search parameter on which to issue an update
+   * @param {object} arg function arguments object
+   * @param {object} arg.ctx A request context
+   * @param {db.Model} arg.databaseType a database type object
+   * @param {object} arg.updateSearch search parameter on which to issue an update
    * @returns {Promise<db.Model>}  A transaction to retrieve the updated object
    */
   async update ({ ctx, databaseType, updateSearch }) {
@@ -153,9 +164,10 @@ export class APIResource extends API {
   }
 
   /**
-   * Base function to delete a datbase entry from a request
-   * @param {object} ctx a request context
-   * @param {db.Model} databaseType a database type object
+   * Base function to delete a database entry from a request
+   * @param {object} arg function arguments object
+   * @param {object} arg.ctx a request context
+   * @param {db.Model} arg.databaseType a database type object
    * @returns {Promise<undefined>} A delete transaction
    */
   async delete ({ ctx, databaseType, callback }) {
@@ -184,9 +196,10 @@ export class APIResource extends API {
 
   /**
    * Base function for relationship view requests
-   * @param {object} ctx a request context
-   * @param {db.Model} databaseType a database type object
-   * @param {object} relationship the JSONAPI resource relattionship
+   * @param {object} arg function arguments object
+   * @param {object} arg.ctx a request context
+   * @param {db.Model} arg.databaseType a database type object
+   * @param {object} arg.relationship the JSONAPI resource relattionship
    * @returns {Promise<db.Model>} a find transaction
    */
   async relationshipView ({ ctx, databaseType, relationship }) {
@@ -211,10 +224,11 @@ export class APIResource extends API {
 
   /**
    * Perform a relationship change based on a PATCH /relationships request
-   * @param {object} ctx the context of a PATCH /relationships request
-   * @param {db.Model} databaseType the sequelize object for this data type
-   * @param {string} change The type of relationship change to perform (add, patch, remove)
-   * @param {string} relationship the relationship to change
+   * @param {object} arg function arguments object
+   * @param {object} arg.ctx the context of a PATCH /relationships request
+   * @param {db.Model} arg.databaseType the sequelize object for this data type
+   * @param {string} arg.change The type of relationship change to perform (add, patch, remove)
+   * @param {string} arg.relationship the relationship to change
    * @returns {Promise<db.Model>} A resource with its relationships updated
    */
   async relationshipChange ({ ctx, databaseType, change, relationship }) {
@@ -245,10 +259,11 @@ export class APIResource extends API {
 
   /**
    * Generate a relationship change database call from a JSONAPI compliant relationship object
-   * @param {object} data a JSONAPI compliant relationship object
-   * @param {object} entity the entity to change the relationship of
-   * @param {string} change the type of change to perform (add, patch, remove)
-   * @param {string} relationship The relationship to change
+   * @param {object} arg function arguments object
+   * @param {object} arg.data a JSONAPI compliant relationship object
+   * @param {object} arg.entity the entity to change the relationship of
+   * @param {string} arg.change the type of change to perform (add, patch, remove)
+   * @param {string} arg.relationship The relationship to change
    * @returns {Promise<undefined>} a database change promise for updating the relationships
    */
   generateRelationshipChange ({ ctx, data, entity, change, relationship }) {
@@ -284,9 +299,10 @@ export class APIResource extends API {
 
   /**
    * Validate whether the user has access to modify all the attributes in the update request
-   * @param {object} ctx a request context
-   * @param {[object]} attributes attributes list
-   * @param {object} entity the entity to validate
+   * @param {object} arg function arguments object
+   * @param {object} arg.ctx a request context
+   * @param {[object]} arg.attributes attributes list
+   * @param {object} arg.entity the entity to validate
    */
   validateUpdateAccess ({ ctx, attributes, entity }) {
     const isGroup = Permission.granted({
@@ -347,8 +363,9 @@ export class APIResource extends API {
 
   /**
    * Check whether this entity requires self-level access (Can only be accessed by themselves, or admin)
-   * @param {object} ctx request context
-   * @param {object} entity the entity to check access level on
+   * @param {object} arg function arguments object
+   * @param {object} arg.ctx request context
+   * @param {object} arg.entity the entity to check access level on
    * @returns {boolean} whether this entity requires self-level access
    * @abstract
    */
@@ -357,9 +374,10 @@ export class APIResource extends API {
   }
 
   /**
-   * Check whether the user has read permission for this ressource
-   * @param {object} connection a request context
-   * @param {object} entity a resource entity
+   * Check whether the user has read permission for this resource
+   * @param {object} arg function arguments object
+   * @param {object} arg.connection a request context
+   * @param {object} arg.entity a resource entity
    * @returns {boolean} whether the user has read permission for this resource
    */
   hasReadPermission ({ connection, entity }) {
@@ -370,9 +388,10 @@ export class APIResource extends API {
   }
 
   /**
-   * Check whether the user has write permission for this ressource
-   * @param {object} connection a request context
-   * @param {object} entity a resource entity
+   * Check whether the user has write permission for this resource
+   * @param {object} arg function arguments object
+   * @param {object}  arg.connection a request context
+   * @param {object} arg.entity a resource entity
    * @returns {boolean} whether the usre has write permission for this resource
    */
   hasWritePermission ({ connection, entity }) {
@@ -404,8 +423,9 @@ export class APIResource extends API {
 
   /**
    * Require read permission to modify this entity
-   * @param {object} connection a request context
-   * @param {object} entity a resource entity
+   * @param {object} arg function arguments object
+   * @param {object} arg.connection a request context
+   * @param {object} arg.entity a resource entity
    */
   requireReadPermission ({ connection, entity }) {
     if (!this.hasReadPermission({ connection, entity })) {
@@ -415,8 +435,9 @@ export class APIResource extends API {
 
   /**
    * Require write permission to modify this entity
-   * @param {object} connection a request context
-   * @param {object} entity a resource entity
+   * @param {object} arg function arguments object
+   * @param {object} arg.connection a request context
+   * @param {object} arg.entity a resource entity
    */
   requireWritePermission ({ connection, entity }) {
     if (!this.hasWritePermission({ connection, entity })) {
@@ -430,7 +451,7 @@ export class APIResource extends API {
    * @returns {Promise<db.User>}
    */
   static async getAuthor (ctx) {
-    if (ctx.req && ctx.req.headers.hasOwnProperty('x-command-by')) {
+    if (ctx.req && Reflect.has(ctx.req.headers, 'x-command-by')) {
       const ratId = ctx.req.headers['x-command-by']
       if (UUID.test(ratId) === false) {
         return undefined
@@ -450,8 +471,9 @@ export class APIResource extends API {
 
   /**
    * Check whether a relationship is a valid one-to-one relationship for this resource
-   * @param {object} relationship a relationship object
-   * @param {string} relation name of the relation relative to the resource
+   * @param {object} arg function arguments object
+   * @param {object} arg.relationship a relationship object
+   * @param {string} arg.relation name of the relation relative to the resource
    * @returns {boolean} Whether the relationship is a valid one-to-one relationship for this resource
    */
   isValidOneRelationship ({ relationship, relation }) {
@@ -467,8 +489,9 @@ export class APIResource extends API {
 
   /**
    * Check whether a relationship is a valid many relationship for this resource
-   * @param {object} relationship a relationship object
-   * @param {string} relation name of the relation relative to the resource
+   * @param {object} arg function arguments object
+   * @param {object} arg.relationship a relationship object
+   * @param {string} arg.relation name of the relation relative to the resource
    * @returns {boolean} Whether the relationship is a valid many relationship for this resource
    */
   isValidManyRelationship ({ relationship, relation }) {
@@ -788,7 +811,18 @@ export class WritePermission {
   static all
 }
 
+/**
+ * Request object
+ */
 export class Request {
+  /**
+   * Create a request object
+   * @param {object} arg function arguments object
+   * @param {ws.Client} arg.client websocket client
+   * @param {object} arg.query request query
+   * @param {object} arg.body request body
+   * @param {object} arg.message the message
+   */
   constructor ({ client, query, body, message }) {
     const url = new URL(`${config.externalUrl}${client.req.url}`)
 
@@ -827,7 +861,14 @@ export class Request {
   }
 }
 
+/**
+ * Response object
+ */
 export class Response {
+  /**
+   * Create a response object
+   * @param {ws.Client} client websocket client
+   */
   constructor ({ client }) {
     this.header = {}
     this.headers = this.header
@@ -863,13 +904,13 @@ export class Response {
  * @type {object} Request context
  */
 export class Context {
-  // eslint-disable-next-line max-statements
   /**
    * Create a request context
-   * @param client
-   * @param query
-   * @param body
-   * @param message
+   * @param {object} arg function arguments object
+   * @param {ws.Client} arg.client websocket client
+   * @param {object} arg.query request query
+   * @param {object} arg.body the request body
+   * @param {object} arg.message the request message
    */
   constructor ({ client, query, body, message }) {
     const request = new Request({ client, query, body, message })
