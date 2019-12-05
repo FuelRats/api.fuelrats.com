@@ -98,10 +98,10 @@ export default class Clients extends APIResource {
   @DELETE('/clients/:id')
   @websocket('clients', 'delete')
   @authenticated
-  @permissions('client.delete')
+  @permissions('clients.write')
   @parameters('id')
   async delete (ctx) {
-    await super.delete({ ctx, databaseType: Rat })
+    await super.delete({ ctx, databaseType: Client })
     await Code.destroy({
       where: {
         clientId: ctx.params.id
