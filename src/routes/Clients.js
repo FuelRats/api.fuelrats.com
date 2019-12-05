@@ -4,7 +4,7 @@ import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { ClientView } from '../view'
 import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
-import API, {
+import {
   Context,
   permissions,
   authenticated,
@@ -14,7 +14,7 @@ import API, {
   DELETE,
   parameters,
   disallow,
-  required, WritePermission, PATCH
+  required, WritePermission, PATCH, APIResource
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import StatusCode from '../classes/StatusCode'
@@ -23,42 +23,61 @@ import { DocumentViewType } from '../Documents'
 
 const clientSecretLength = 32
 
-export default class Clients extends API {
+/**
+ * OAuth clients endpoints
+ */
+export default class Clients extends APIResource {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'clients'
+  }
+
+  /**
+   * Search oauth clients
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} list of oauth client results
+   */
   @GET('/clients')
   @websocket('clients', 'search')
   @authenticated
-  @permissions('client.read')
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const result = await Client.findAndCountAll(query.searchObject)
     return new DatabaseDocument({ query, result, type: ClientView })
   }
 
+  /**
+   * Find an Oauth client by id
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} an oauth client result
+   */
   @GET('/clients/:id')
   @websocket('clients', 'read')
   @authenticated
   @parameters('id')
   async findById (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Client.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-    if (!result) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
+    const { query, result } = await super.findById({ ctx, databaseType: Client })
+
     return new DatabaseDocument({ query, result, type: ClientView })
   }
 
+  /**
+   * Create an oauth client
+   * @param {Context} ctx
+   * @returns {Promise<DatabaseDocument>}
+   */
   @POST('/clients')
   @websocket('clients', 'create')
   @authenticated
-  @required('name')
-  @disallow('secret')
   async create (ctx) {
     const secret = crypto.randomBytes(clientSecretLength).toString('hex')
-    const result = await super.create({ ctx, databaseType: Client, overrideFields: { secret } })
+    const result = await super.create({
+      ctx,
+      databaseType: Client,
+      overrideFields: { secret, userId: ctx.state.user.id }
+    })
 
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
@@ -139,6 +158,9 @@ export default class Clients extends API {
     return new DatabaseDocument({ query, result, type: ClientView, view: DocumentViewType.meta })
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return {
       name: WritePermission.group,
@@ -152,45 +174,11 @@ export default class Clients extends API {
   /**
    * @inheritdoc
    */
-  isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['client.internal'], connection: ctx })
-  }
-
-  /**
-   * @inheritdoc
-   */
-  isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['client.write'], connection: ctx })
-  }
-
-  /**
-   * @inheritdoc
-   */
   isSelf ({ ctx, entity }) {
     if (entity.userId === ctx.state.user.id) {
-      return Permission.granted({ permissions: ['client.write.me'], connection: ctx })
+      return Permission.granted({ permissions: ['clients.write.me'], connection: ctx })
     }
     return false
-  }
-
-  /**
-   * @inheritdoc
-   */
-  getReadPermissionFor ({ connection, entity }) {
-    if (entity.userId === connection.state.user.id) {
-      return ['client.write.me', 'client.write']
-    }
-    return ['client.write']
-  }
-
-  /**
-   * @inheritdoc
-   */
-  getWritePermissionFor ({ connection, entity }) {
-    if (entity.userId === connection.state.user.id) {
-      return ['client.write.me', 'client.write']
-    }
-    return ['client.write']
   }
 
   /**
@@ -198,27 +186,31 @@ export default class Clients extends API {
    * @inheritdoc
    */
   changeRelationship ({ relationship }) {
-    switch (relationship) {
-      case 'user':
-        return {
-          many: false,
+    if (relationship === 'user') {
+      return {
+        many: false,
+        hasPermission (connection, entity, id) {
+          return (!entity.userId && id === connection.state.user.id) || Permission.granted({
+            permissions: ['clients.write'],
+            connection
+          })
+        },
 
-          add ({ entity, id }) {
-            return entity.addUser(id)
-          },
+        add ({ entity, id }) {
+          return entity.addUser(id)
+        },
 
-          patch ({ entity, id }) {
-            return entity.setUser(id)
-          },
+        patch ({ entity, id }) {
+          return entity.setUser(id)
+        },
 
-          remove ({ entity, id }) {
-            return entity.removeUser(id)
-          }
+        remove ({ entity, id }) {
+          return entity.removeUser(id)
         }
-
-      default:
-        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+      }
     }
+
+    throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
   }
 
   /**
