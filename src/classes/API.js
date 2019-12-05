@@ -83,7 +83,7 @@ export class APIResource extends API {
   /**
    * Base function to create a database entry from a request
    * @param {object} arg function arguments object
-   * @param {object} arg.ctx a request context
+   * @param {Context} arg.ctx a request context
    * @param {db.Model} arg.databaseType a database type object
    * @param {Function} arg.callback optional callback to perform actions before resource is returned
    * @param {object} arg.overrideFields fields to override in the create statement
@@ -92,7 +92,8 @@ export class APIResource extends API {
   async create ({ ctx, databaseType, callback = undefined, overrideFields = {} }) {
     const dataObj = getJSONAPIData({ ctx, type: this.type })
 
-    const entity = await databaseType.create(dataObj.attributes)
+    await this.validateCreateAccess({ ctx, attributes:  dataObj.attributes })
+    const entity = await databaseType.create({ ...dataObj.attributes, ...overrideFields })
 
     if (callback) {
       await callback({ entity })
@@ -116,7 +117,7 @@ export class APIResource extends API {
   /**
    * Base function to update a database entry from a request
    * @param {object} arg function arguments object
-   * @param {object} arg.ctx A request context
+   * @param {Context} arg.ctx A request context
    * @param {db.Model} arg.databaseType a database type object
    * @param {object} arg.updateSearch search parameter on which to issue an update
    * @returns {Promise<db.Model>}  A transaction to retrieve the updated object
@@ -298,9 +299,63 @@ export class APIResource extends API {
   }
 
   /**
+   * Valiadate whether the user has access to create all the attributes in the create request
+   * @param {object} arg function arguments object
+   * @param {Context} arg.ctx request context
+   * @param {object} arg.attributes attributes list
+   */
+  validateCreateAccess ({ ctx, attributes }) {
+    const isGroup = Permission.granted({
+      permissions: [`${this.type}.write`],
+      connection: ctx
+    })
+    const isSelf = Permission.granted({
+      permissions: [`${this.type}.write.me`],
+      connection: ctx
+    })
+    const isInternal = Permission.granted({
+      permissions: [`${this.type}.internal`],
+      connection: ctx
+    })
+
+    Object.entries(attributes).forEach(([key]) => {
+      const attributePermissions = this.writePermissionsForFieldAccess[key]
+      if (!attributePermissions) {
+        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
+      }
+
+      const hasPermission = () => {
+        switch (attributePermissions) {
+          case WritePermission.all:
+            return true
+
+          case WritePermission.internal:
+            return isInternal
+
+          case WritePermission.sudo:
+            return isGroup
+
+          case WritePermission.group:
+            return isGroup || isSelf
+
+          case WritePermission.self:
+            return isSelf
+
+          default:
+            return false
+        }
+      }
+
+      if (hasPermission() === false) {
+        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
+      }
+    })
+  }
+
+  /**
    * Validate whether the user has access to modify all the attributes in the update request
    * @param {object} arg function arguments object
-   * @param {object} arg.ctx a request context
+   * @param {Context} arg.ctx a request context
    * @param {[object]} arg.attributes attributes list
    * @param {object} arg.entity the entity to validate
    */
