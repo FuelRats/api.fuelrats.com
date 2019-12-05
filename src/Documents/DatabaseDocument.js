@@ -18,7 +18,7 @@ export default class DatabaseDocument extends Document {
    * @param [meta] extra metdata
    * @constructor
    */
-  constructor ({ query, result, type, view = DocumentViewType.individual, meta = {} }) {
+  constructor ({ query, result, type, view, meta = {} }) {
     if (result && result.rows) {
       super({
         objects: result.rows,
@@ -33,7 +33,7 @@ export default class DatabaseDocument extends Document {
         type,
         meta: { ...meta, ...query.meta },
         query,
-        view
+        view: view || DocumentViewType.individual
       })
     }
 
