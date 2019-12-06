@@ -62,12 +62,9 @@ export default function Client (sequelize, DataTypes) {
     return values
   }
 
-  client.prototype.documentType = function () {
-    return 'clients'
-  }
-
   client.associate = function (models) {
     models.Client.belongsTo(models.User, { foreignKey: 'userId', as: 'user' })
+
 
     models.Client.addScope('authentication', {
       include: [

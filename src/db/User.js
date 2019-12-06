@@ -44,11 +44,6 @@ export default function User (db, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: true
     },
-    image: {
-      type: DataTypes.BLOB(),
-      allowNull: true,
-      defaultValue: undefined
-    },
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'legacy', 'deactivated'),
       allowNull: false,
@@ -63,13 +58,10 @@ export default function User (db, DataTypes) {
       allowNull: true,
       defaultValue: undefined
     },
-    avatar: {
+    image: {
       type: DataTypes.VIRTUAL,
       get () {
-        if (Reflect.has(this.dataValues, 'avatar') === true) {
-          return this.dataValues.avatar
-        }
-        return false
+        return Boolean(this.avatar)
       },
       include: []
     },
@@ -179,15 +171,13 @@ export default function User (db, DataTypes) {
     models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
 
+    models.User.hasOne(models.Avatar, { foreignKey: 'userId', as: 'avatar' })
+
     models.User.addScope('defaultScope', {
       attributes: {
-        include: [
-          [db.literal('"image" IS NOT NULL'), 'avatar']
-        ],
         exclude: [
-          'image',
           'permissions',
-          'avatar'
+          'image'
         ]
       },
       include: [
@@ -231,11 +221,14 @@ export default function User (db, DataTypes) {
       ]
     }, { override: true })
 
-    models.User.addScope('image', {
-      attributes: [
-        'image'
-      ]
-    })
+    models.User.addScope('norelations', {
+      attributes: {
+        exclude: [
+          'permissions',
+          'image'
+        ]
+      }
+    }, { override: true })
   }
   return user
 }

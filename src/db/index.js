@@ -83,9 +83,10 @@ function importModels (modelNames) {
 
 
 const models = importModels([
+  'Avatar',
+  'User',
   'Rat',
   'Rescue',
-  'User',
   'RescueRats',
   'Client',
   'Code',
@@ -128,6 +129,7 @@ export const {
   Rat,
   Rescue,
   User,
+  Avatar,
   RescueRats,
   Client,
   Code,
