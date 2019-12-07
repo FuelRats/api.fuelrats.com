@@ -55,18 +55,42 @@ export default function Rat (sequelize, DataTypes) {
     paranoid: true
   })
 
-  rat.prototype.renderView = function () {
-    return RatView
-  }
-
   rat.associate = function (models) {
     models.Rat.addScope('stats', {})
     models.Rat.addScope('defaultScope', {
       include: [{
+        model: models.User.scope('norelations'),
+        as: 'user',
+        required: false
+      }, {
         model: models.Ship,
-        as: 'ships'
+        as: 'ships',
+        required: false
       }]
     }, { override: true })
+
+    models.Rat.addScope('rescues', {
+      include: [{
+        model: models.User.scope('norelations'),
+        as: 'user',
+        required: false
+      }, {
+        model: models.Ship,
+        as: 'ships',
+        required: false
+      }, {
+        model: models.Rescue.scope(null),
+        as: 'firstLimpet',
+        required: false
+      }, {
+        model: models.Rescue.scope(null),
+        as: 'rescues',
+        required: false,
+        through: {
+          attributes: []
+        }
+      }]
+    })
 
 
     models.Rat.belongsTo(models.User, {

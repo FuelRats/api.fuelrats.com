@@ -171,7 +171,7 @@ export class APIResource extends API {
    * @param {db.Model} arg.databaseType a database type object
    * @returns {Promise<undefined>} A delete transaction
    */
-  async delete ({ ctx, databaseType, callback }) {
+  async delete ({ ctx, databaseType, hasPermission = undefined, callback }) {
     if (!ctx.params.id) {
       throw new BadRequestAPIError({ parameter: 'id' })
     }
@@ -186,7 +186,15 @@ export class APIResource extends API {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    this.requireWritePermission({ connection: ctx, entity })
+    if (hasPermission) {
+      const permissionResult = await hasPermission(entity)
+      if (permissionResult === false) {
+        throw new ForbiddenAPIError({})
+      }
+    } else {
+      this.requireWritePermission({ connection: ctx, entity })
+    }
+
 
     if (callback) {
       await callback(entity)

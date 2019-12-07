@@ -128,10 +128,6 @@ export default function Rescue (sequelize, DataTypes) {
     }]
   })
 
-  rescue.prototype.renderView = function () {
-    return RescueView
-  }
-
   rescue.associate = function (models) {
     models.Rescue.belongsTo(models.Rat, {
       as: 'firstLimpet',

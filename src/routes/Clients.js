@@ -126,7 +126,7 @@ export default class Clients extends APIResource {
   @GET('/clients/:id/relationships/user')
   @websocket('clients', 'user', 'read')
   @authenticated
-  async relationshipDisplayRatView (ctx) {
+  async relationshipUserView (ctx) {
     const result = await this.relationshipView({
       ctx,
       databaseType: Client,
@@ -145,7 +145,7 @@ export default class Clients extends APIResource {
   @PATCH('/clients/:id/relationships/user')
   @websocket('clients', 'user', 'patch')
   @authenticated
-  async relationshipFirstLimpetPatch (ctx) {
+  async relationshipUserPatch (ctx) {
     await this.relationshipChange({
       ctx,
       databaseType: Client,

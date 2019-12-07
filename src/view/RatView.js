@@ -46,4 +46,8 @@ export default class RatView extends DatabaseView {
   get related () {
     return [RescueView, ShipView]
   }
+
+  get includes () {
+    return ['user', 'ships']
+  }
 }

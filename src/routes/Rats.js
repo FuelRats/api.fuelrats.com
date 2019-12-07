@@ -1,6 +1,6 @@
 
 
-import { Rat} from '../db'
+import { Rat } from '../db'
 import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 
 import API, {
@@ -10,17 +10,23 @@ import API, {
   POST,
   PUT,
   DELETE,
+  PATCH,
   parameters,
-  protect, WritePermission
+  protect, WritePermission, APIResource
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import StatusCode from '../classes/StatusCode'
 import Permission from '../classes/Permission'
-import { RatView } from '../view'
+import { RatView, UserView } from '../view'
+import { DocumentViewType } from '../Documents'
 
-export default class Rats extends API {
+export default class Rats extends APIResource {
+  get type () {
+    return 'rats'
+  }
+
   @GET('/rats')
   @websocket('rats', 'search')
   async search (ctx) {
@@ -33,15 +39,8 @@ export default class Rats extends API {
   @websocket('rats', 'read')
   @parameters('id')
   async findById (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Rat.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-    if (!result) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
+    const { query, result } = await super.findById({ ctx, databaseType: Rat })
+
     return new DatabaseDocument({ query, result, type: RatView })
   }
 
@@ -49,7 +48,9 @@ export default class Rats extends API {
   @websocket('rats', 'create')
   @authenticated
   async create (ctx) {
-    const result = await super.create({ ctx, databaseType: Rat })
+    const result = await super.create({ ctx, databaseType: Rat, overrideFields: {
+      userId: ctx.state.user.id
+    } })
 
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
@@ -60,7 +61,6 @@ export default class Rats extends API {
   @websocket('rats', 'update')
   @authenticated
   @parameters('id')
-  @protect('rat.write', 'platform')
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Rat, updateSearch: { id:ctx.params.id } })
 
@@ -71,16 +71,52 @@ export default class Rats extends API {
   @DELETE('/rats/:id')
   @websocket('rats', 'delete')
   @authenticated
-  @permissions('rat.delete')
   @parameters('id')
   async delete (ctx) {
-    await super.delete({ ctx, databaseType: Rat })
+    await super.delete({ ctx, databaseType: Rat.scope('rescues'), hasPermission: async (entity) => {
+      if (Permission.granted({ permissions: ['rats.write'], connection: ctx })) {
+        return true
+      }
+
+      if (entity.userId !== ctx.state.user.id) {
+        return false
+      }
+
+      return entity.ships.length === 0 && entity.rescues.length === 0 && entity.firstLimpet.length === 0
+    } })
 
     ctx.response.status = StatusCode.noContent
     return true
   }
 
+  @GET('/rats/:id/relationships/user')
+  @websocket('rats', 'user', 'read')
+  @authenticated
+  async relationshipUserView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Rat,
+      relationship: 'user'
+    })
 
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
+  }
+
+  @PATCH('/rats/:id/relationships/user')
+  @websocket('rats', 'user', 'patch')
+  @authenticated
+  async relationshipUserPatch (ctx) {
+    await this.relationshipChange({
+      ctx,
+      databaseType: Rat,
+      change: 'patch',
+      relationship: 'user'
+    })
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
 
   get writePermissionsForFieldAccess () {
     return {
@@ -97,20 +133,6 @@ export default class Rats extends API {
   /**
    * @inheritdoc
    */
-  isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['rat.internal'], connection: ctx })
-  }
-
-  /**
-   * @inheritdoc
-   */
-  isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['rat.write'], connection: ctx })
-  }
-
-  /**
-   * @inheritdoc
-   */
   isSelf ({ ctx, entity }) {
     if (entity.userId === ctx.state.user.id) {
       return Permission.granted({ permissions: ['rat.write.me'], connection: ctx })
@@ -118,46 +140,26 @@ export default class Rats extends API {
     return false
   }
 
-  getReadPermissionFor ({ connection, entity }) {
-    if (entity.userId === connection.state.user.id) {
-      return ['rat.write', 'rat.write.me']
-    }
-    return ['rat.write']
-  }
-
-  getWritePermissionFor ({ connection, entity }) {
-    if (entity.userId === connection.state.user.id) {
-      return ['rat.write', 'rat.write.me']
-    }
-    return ['rat.write']
-  }
-
   /**
    *
    * @inheritdoc
    */
   changeRelationship ({ relationship }) {
-    switch (relationship) {
-      case 'user':
-        return {
-          many: false,
+    if (relationship === 'user') {
+      return {
+        many: false,
 
-          add ({ entity, id }) {
-            return entity.addUser(id)
-          },
+        hasPermission (connection) {
+          return Permission.granted({ permissions: ['rats.write'], connection })
+        },
 
-          patch ({ entity, id }) {
-            return entity.setUser(id)
-          },
-
-          remove ({ entity, id }) {
-            return entity.removeUser(id)
-          }
+        patch ({ entity, id }) {
+          return entity.setUser(id)
         }
-
-      default:
-        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+      }
     }
+
+    throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
   }
 
   /**
