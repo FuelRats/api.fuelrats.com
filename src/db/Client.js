@@ -66,10 +66,10 @@ export default function Client (sequelize, DataTypes) {
     models.Client.belongsTo(models.User, { foreignKey: 'userId', as: 'user' })
 
 
-    models.Client.addScope('authentication', {
+    models.Client.addScope('defaultScope', {
       include: [
         {
-          model: models.User,
+          model: models.User.scope('norelations'),
           as: 'user',
           required: true
         }

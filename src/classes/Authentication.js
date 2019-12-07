@@ -96,7 +96,7 @@ export default class Authentication {
    * @returns {Promise<*|DatabaseDocument|undefined>} A promise returning the authenticated OAuth client object
    */
   static async clientAuthenticate ({ clientId, secret }) {
-    const client = await Client.scope('authentication').findByPk(clientId)
+    const client = await Client.findByPk(clientId)
     if (!client) {
       return undefined
     }

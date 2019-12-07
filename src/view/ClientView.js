@@ -41,6 +41,6 @@ export default class ClientView extends DatabaseView {
   }
 
   get includes () {
-    return []
+    return ['user']
   }
 }

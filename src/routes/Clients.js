@@ -2,7 +2,7 @@ import { Client, Rat, Code, Token } from '../db'
 import crypto from 'crypto'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
-import { ClientView } from '../view'
+import { ClientView, UserView } from '../view'
 import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import {
   Context,
@@ -134,28 +134,27 @@ export default class Clients extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: ClientView, view: DocumentViewType.meta })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
   /**
    * Set a client's user relationship
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * @returns {Promise<boolean>} 204 no content
    */
   @PATCH('/clients/:id/relationships/user')
   @websocket('clients', 'user', 'patch')
   @authenticated
   async relationshipFirstLimpetPatch (ctx) {
-    const result = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: Client,
       change: 'patch',
       relationship: 'user'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-
-    return new DatabaseDocument({ query, result, type: ClientView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   /**
