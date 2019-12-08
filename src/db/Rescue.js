@@ -26,6 +26,14 @@ export default function Rescue (sequelize, DataTypes) {
         isUUID: 4
       }
     },
+    commandIdentifier: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      validate: {
+        isInt: true,
+        min: 0
+      }
+    },
     client: {
       type: DataTypes.STRING,
       allowNull: true,
