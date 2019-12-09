@@ -100,12 +100,12 @@ export default function Rescue (sequelize, DataTypes) {
       }
     },
     outcome: {
-      type: DataTypes.ENUM('success', 'failure', 'invalid', 'other'),
+      type: DataTypes.ENUM('success', 'failure', 'invalid', 'other', 'purge'),
       allowNull: true,
       defaultValue: undefined,
       validate: {
         notEmpty: true,
-        isIn: [['success', 'failure', 'invalid', 'other']]
+        isIn: [['success', 'failure', 'invalid', 'other', 'purge']]
       }
     },
     unidentifiedRats: {
