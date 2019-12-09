@@ -34,13 +34,6 @@ export default function Rescue (sequelize, DataTypes) {
         min: 0
       }
     },
-    client: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      validate: {
-        len: [1, rescueClientNameMaxLength]
-      }
-    },
     codeRed: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -140,6 +133,11 @@ export default function Rescue (sequelize, DataTypes) {
     models.Rescue.belongsTo(models.Rat, {
       as: 'firstLimpet',
       foreignKey: 'firstLimpetId'
+    })
+
+    models.Rescue.belongsTo(models.RescueClient, {
+      as: 'rescueClient',
+      foreignKey: 'rescueClientId'
     })
 
     models.Rescue.belongsToMany(models.Rat, {
