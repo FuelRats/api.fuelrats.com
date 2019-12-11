@@ -21,7 +21,7 @@ import API, {
   WritePermission
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
-import { RescueView } from '../view'
+import { RescueView, RatView } from '../view'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import Permission from '../classes/Permission'
@@ -57,22 +57,15 @@ export default class Rescues extends APIResource {
   @authenticated
   @permissions('rescue.read')
   async findById (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Rescue.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-    if (!result) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
+    const { query, result } = await super.findById({ ctx, databaseType: Rescue })
+
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
   @POST('/rescues')
   @websocket('rescues', 'create')
   @authenticated
-  @permissions('rescue.write')
+  @permissions('rescues.write')
   async create (ctx) {
     const result = await super.create({ ctx, databaseType: Rescue })
 
@@ -95,7 +88,7 @@ export default class Rescues extends APIResource {
   @DELETE('/rescues/:id')
   @websocket('rescues', 'delete')
   @authenticated
-  @permissions('rescue.delete')
+  @permissions('rescues.delete')
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Rescue })
 
@@ -116,54 +109,53 @@ export default class Rescues extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.relationship })
+    return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
 
   @POST('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'create')
   @authenticated
   async relationshipRatsCreate (ctx) {
-    const result = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'add',
       relationship: 'rats'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   @PATCH('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'patch')
   @authenticated
   async relationshipRatsPatch (ctx) {
-    const result = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'patch',
       relationship: 'rats'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-
-    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   @DELETE('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'delete')
   @authenticated
   async relationshipRatsDelete (ctx) {
-    const result = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'remove',
       relationship: 'rats'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
 
-    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   @GET('/rescues/:id/relationships/firstLimpet')
@@ -177,28 +169,30 @@ export default class Rescues extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.relationship })
+    return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
 
   @PATCH('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'patch')
   @authenticated
   async relationshipFirstLimpetPatch (ctx) {
-    const result = await this.relationshipChange({
+    await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'patch',
       relationship: 'firstLimpet'
     })
 
-    const query = new DatabaseQuery({ connection: ctx })
-
-    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.meta })
+    ctx.response.status = StatusCode.noContent
+    return true
   }
 
   get writePermissionsForFieldAccess () {
     return {
       client: WritePermission.group,
+      clientNick: WritePermission.group,
+      clientLanguage: WritePermission.group,
+      commandIdentifier: WritePermission.sudo,
       codeRed: WritePermission.group,
       data: WritePermission.group,
       notes: WritePermission.group,
@@ -212,14 +206,6 @@ export default class Rescues extends APIResource {
       updatedAt: WritePermission.internal,
       deletedAt: WritePermission.internal
     }
-  }
-
-  isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['rescue.internal'], connection: ctx })
-  }
-
-  isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['rescue.write'], connection: ctx })
   }
 
   isSelf ({ ctx, entity }) {
@@ -238,23 +224,9 @@ export default class Rescues extends APIResource {
     }
 
     if (isAssigned || isFirstLimpet) {
-      return Permission.granted({ permissions: ['rescue.write'], connection: ctx })
+      return Permission.granted({ permissions: ['rescues.write'], connection: ctx })
     }
     return false
-  }
-
-  getWritePermissionFor ({ connection, entity }) {
-    if (connection.state.user && entity.createdAt - Date.now() < rescueAccessTime) {
-      for (const rat of connection.state.user.rats) {
-        const isAssist = entity.rats.find((fRat) => {
-          return fRat.id === rat.id
-        })
-        if (isAssist || entity.firstLimpetId === rat.id) {
-          return ['rescue.write.me', 'rescue.write']
-        }
-      }
-    }
-    return ['rescue.write']
   }
 
   changeRelationship ({ relationship }) {
@@ -262,6 +234,13 @@ export default class Rescues extends APIResource {
       case 'rats':
         return {
           many: true,
+
+          hasPermission (connection, entity) {
+            return this.isSelf({ ctx: connection, entity }) || Permission.granted({
+              permissions: ['rescues.write'],
+              connection
+            })
+          },
 
           add ({ entity, ids }) {
             return entity.addRats(ids)
@@ -280,16 +259,15 @@ export default class Rescues extends APIResource {
         return {
           many: false,
 
-          add ({ entity, id }) {
-            return entity.addRat(id)
+          hasPermission (connection, entity) {
+            return this.isSelf({ ctx: connection, entity }) || Permission.granted({
+              permissions: ['rescues.write'],
+              connection
+            })
           },
 
           patch ({ entity, id }) {
-            return entity.setRat(id)
-          },
-
-          remove ({ entity, id }) {
-            return entity.removeRat(id)
+            return entity.setFirstLimpet(id)
           }
         }
 
@@ -301,38 +279,8 @@ export default class Rescues extends APIResource {
   get relationTypes () {
     return {
       'rats': 'rats',
-      'firstLimpet': 'rats'
+      'firstLimpet': 'rats',
+      'rescueClient': 'rescue-clients'
     }
   }
 }
-
-process.on('rescueCreated', (ctx, rescue) => {
-  if (!rescue.system) {
-    return
-  }
-  if (rescue.system.includes('NLTT 48288') || rescue.system.includes('MCC 811')) {
-    // BotServ.say(global.PAPERWORK_CHANNEL, 'DRINK!')
-  }
-})
-
-process.on('rescueUpdated', async (ctx, result, perms, changedValues) => {
-  if (!changedValues) {
-    return
-  }
-  if (changedValues.hasOwnProperty('outcome')) {
-    const { boardIndex } = result.data[0] || {}
-    const caseNumber = boardIndex || boardIndex === 0 ? `#${boardIndex}` : result.data[0].id
-
-    const client = result.data[0].client || ''
-    const author = await API.getAuthor(ctx).preferredRat().name
-    // BotServ.say(global.PAPERWORK_CHANNEL,
-    //   `[Paperwork] Paperwork for rescue ${caseNumber} (${client}) has been completed by ${author.preferredRat().name}`)
-  }
-})
-
-
-process.on('suspendedAssign', async (ctx, rat) => {
-  const author = await API.getAuthor(ctx)
-  // BotServ.say(global.MODERATOR_CHANNEL,
-  //   `[API] Attempt to assign suspended rat ${rat.name} (${rat.id}) by ${author.preferredRat().name}`)
-})

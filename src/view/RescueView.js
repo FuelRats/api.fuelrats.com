@@ -1,4 +1,4 @@
-import { ReadPermission, RatView, DatabaseView, RescueClientView } from './'
+import { ReadPermission, RatView, DatabaseView } from './'
 
 export default class RescueView extends DatabaseView {
   static get type () {
@@ -7,6 +7,9 @@ export default class RescueView extends DatabaseView {
 
   get attributes () {
     return class {
+      static client
+      static clientNick
+      static clientLanguage
       static commandIdentifier
       static codeRed
       static data
@@ -60,16 +63,15 @@ export default class RescueView extends DatabaseView {
   get relationships () {
     return {
       rats: RatView,
-      firstLimpet: RatView,
-      rescueClient: RescueClientView
+      firstLimpet: RatView
     }
   }
 
   get includes () {
-    return ['rats', 'firstLimpet', 'rescueClient']
+    return ['rats', 'firstLimpet']
   }
 
   get related () {
-    return [RatView, RescueClientView]
+    return [RatView]
   }
 }

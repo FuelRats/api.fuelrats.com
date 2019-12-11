@@ -1,5 +1,5 @@
 
-import { JSONObject, RescueQuote } from '../classes/Validators'
+import { IRCNickname, JSONObject, languageCode, RescueQuote, validCMDRname } from '../classes/Validators'
 import RescueView from '../view/RescueView'
 
 /* eslint max-lines-per-function:0 */
@@ -24,6 +24,27 @@ export default function Rescue (sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV4,
       validate: {
         isUUID: 4
+      }
+    },
+    client: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        validCMDRname
+      }
+    },
+    clientNick: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate:  {
+        IRCNickname
+      }
+    },
+    clientLanguage: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        languageCode
       }
     },
     commandIdentifier: {
@@ -133,11 +154,6 @@ export default function Rescue (sequelize, DataTypes) {
     models.Rescue.belongsTo(models.Rat, {
       as: 'firstLimpet',
       foreignKey: 'firstLimpetId'
-    })
-
-    models.Rescue.belongsTo(models.RescueClient, {
-      as: 'rescueClient',
-      foreignKey: 'rescueClientId'
     })
 
     models.Rescue.belongsToMany(models.Rat, {
