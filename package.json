@@ -47,7 +47,7 @@
     "pg": "^7.11.0",
     "pure-uuid": "^1.5.7",
     "sequelize": "^5.10.0",
-    "sequelize-paper-trail": "^3.0.0-rc.8",
+    "sequelize-paper-trail": "^3.0.1",
     "sharp": "^0.22.1",
     "sinon": "^7.3.2",
     "slack-node": "^0.1.8",
