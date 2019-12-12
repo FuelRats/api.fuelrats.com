@@ -37,14 +37,14 @@ export default function Rescue (sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       validate:  {
-        IRCNickname
+        is: [IRCNickname, 'i']
       }
     },
     clientLanguage: {
       type: DataTypes.STRING,
       allowNull: true,
       validate: {
-        languageCode
+        is: [languageCode, '']
       }
     },
     commandIdentifier: {

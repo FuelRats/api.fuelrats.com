@@ -6,13 +6,13 @@ export default class ShipView extends DatabaseView {
   }
 
   get attributes () {
-    return class {
-      static name
-      static shipId
-      static shipType
-      static createdAt
-      static updatedAt
-      static deletedAt = ReadPermission.internal
+    return {
+      name: ReadPermission.all,
+      shipId: ReadPermission.all,
+      shipType: ReadPermission.all,
+      createdAt: ReadPermission.all,
+      updatedAt: ReadPermission.all,
+      deletedAt: ReadPermission.internal
     }
   }
 
