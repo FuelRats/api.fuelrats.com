@@ -12,7 +12,7 @@
     "test": "NODE_ENV=testing node --harmony test",
     "jsdoc": "jsdoc -d static/docs/js -rgoo api",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
-    "eslint": "eslint api test"
+    "eslint": "./node_modules/eslint/bin/eslint.js src"
   },
   "license": "BSD-3",
   "dependencies": {
@@ -78,7 +78,7 @@
     "@babel/plugin-transform-strict-mode": "^7.7.4",
     "@babel/preset-env": "^7.7.6",
     "ajv": "^6.10.2",
-    "babel-eslint": "10.0.3",
+    "babel-eslint": "^10.0.3",
     "eslint-plugin-import": "^2.19.1",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
