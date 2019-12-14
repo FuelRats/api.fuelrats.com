@@ -1,10 +1,19 @@
 import { ReadPermission, DatabaseView, UserView } from './'
 
+/**
+ * JSONAPI View for an OAuth client
+ */
 export default class ClientView extends DatabaseView {
+  /**
+   * @inheritdoc
+   */
   static get type () {
     return 'clients'
   }
 
+  /**
+   * @inheritdoc
+   */
   get attributes () {
     return {
       name: ReadPermission.all,
@@ -15,10 +24,16 @@ export default class ClientView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get defaultReadPermission () {
     return ReadPermission.all
   }
 
+  /**
+   * @inheritdoc
+   */
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
       return this.query.connection.state.permissions.includes('clients.read.me')
@@ -26,20 +41,32 @@ export default class ClientView extends DatabaseView {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   get isGroup () {
     return this.query.connection.state.permissions.includes('clients.read')
   }
 
+  /**
+   * @inheritdoc
+   */
   get isInternal () {
     return this.query.connection.state.permissions.includes('clients.internal')
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationships () {
     return {
       user: UserView
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get includes () {
     return ['user']
   }

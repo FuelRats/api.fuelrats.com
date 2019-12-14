@@ -1,6 +1,5 @@
 
-import { Rat, Ship } from '../db'
-import Query from '../query/Query'
+import { Ship } from '../db'
 import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import API, {
   authenticated,
@@ -19,7 +18,21 @@ import ShipView from '../view/ShipView'
 import StatusCode from '../classes/StatusCode'
 import Permission from '../classes/Permission'
 
+/**
+ * Class managing Ship related endpoints
+ */
 export default class Ships extends API {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'ships'
+  }
+
+  /**
+   * Search ships
+   * @endpoint
+   */
   @GET('/ships')
   @websocket('ships', 'search')
   async search (ctx) {
@@ -28,6 +41,10 @@ export default class Ships extends API {
     return new DatabaseDocument({ result, query, type: ShipView })
   }
 
+  /**
+   * Get a ship by id
+   * @endpoint
+   */
   @GET('/ships/:id')
   @websocket('ships', 'read')
   @parameters('id')
@@ -44,6 +61,10 @@ export default class Ships extends API {
     return new DatabaseDocument({ query, result, type: ShipView })
   }
 
+  /**
+   * Create a ship
+   * @endpoint
+   */
   @POST('/ships')
   @websocket('ships', 'create')
   @authenticated
@@ -57,6 +78,10 @@ export default class Ships extends API {
     return new DatabaseDocument({ query, result, type: ShipView })
   }
 
+  /**
+   * Update a ship
+   * @endpoint
+   */
   @PUT('/ships')
   @websocket('ships', 'update')
   @authenticated
@@ -68,6 +93,10 @@ export default class Ships extends API {
     return new DatabaseDocument({ query, result, type: ShipView })
   }
 
+  /**
+   * Delete a ship
+   * @endpoint
+   */
   @DELETE('/ships/:id')
   @websocket('ships', 'delete')
   @authenticated
@@ -79,6 +108,9 @@ export default class Ships extends API {
     return true
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return {
       name: WritePermission.group,
@@ -94,14 +126,14 @@ export default class Ships extends API {
    * @inheritdoc
    */
   isInternal ({ ctx }) {
-    return Permission.granted({ permissions: ['ship.internal'], connection: ctx })
+    return Permission.granted({ permissions: ['ships.internal'], connection: ctx })
   }
 
   /**
    * @inheritdoc
    */
   isGroup ({ ctx }) {
-    return Permission.granted({ permissions: ['ship.write'], connection: ctx })
+    return Permission.granted({ permissions: ['ships.write'], connection: ctx })
   }
 
   /**
@@ -117,28 +149,7 @@ export default class Ships extends API {
     return false
   }
 
-  getReadPermissionFor ({ connection, entity }) {
-    const hasRat = connection.state.user.rats.find((rat) => {
-      return rat.id === entity.ratId
-    })
-    if (hasRat) {
-      return ['ship.write', 'ship.write.me']
-    }
-    return ['ship.write']
-  }
-
-  getWritePermissionFor ({ connection, entity }) {
-    const hasRat = connection.state.user.rats.find((rat) => {
-      return rat.id === entity.ratId
-    })
-    if (hasRat) {
-      return ['ship.write', 'ship.write.me']
-    }
-    return ['ship.write']
-  }
-
   /**
-   *
    * @inheritdoc
    */
   changeRelationship ({ relationship }) {

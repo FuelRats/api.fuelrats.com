@@ -1,10 +1,19 @@
 import { ReadPermission, DatabaseView } from './'
 
+/**
+ * JSONAPI view for account creation requests
+ */
 export default class ACRView extends DatabaseView {
+  /**
+   * @inheritdoc
+   */
   static get type () {
     return 'account-creation-request'
   }
 
+  /**
+   * @inheritdoc
+   */
   get attributes () {
     return class {
       static name
@@ -15,17 +24,25 @@ export default class ACRView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get defaultReadPermission () {
     return ReadPermission.all
   }
 
 
+  /**
+   * @inheritdoc
+   * @returns {{}}
+   */
   get relationships () {
-    return {
-
-    }
+    return {}
   }
 
+  /**
+   * @inheritdoc
+   */
   get related () {
     return []
   }

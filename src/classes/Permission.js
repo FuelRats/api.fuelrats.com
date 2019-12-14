@@ -3,7 +3,7 @@
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import { Group } from '../db/index'
-import { ForbiddenAPIError } from './APIError'
+import { Context } from '../classes/Context'
 
 const permissionList = require('../../permissions')
 
@@ -40,9 +40,9 @@ export default class Permission {
 
   /**
    * Check whether a user has the required permissions
-   * @param {string[]} permissions - The permissions to validate
-   * @param {Object} origUser - The user object of the user to validate
-   * @param {Object} scope - Optional oauth2 client object to validate
+   * @param {object} arg function arguments object
+   * @param {string[]} arg.permissions - The permissions to validate
+   * @param {Context} arg.connection request context
    * @returns {boolean} - Boolean value indicating whether permission is granted
    */
   static granted ({ permissions, connection }) {
@@ -55,6 +55,11 @@ export default class Permission {
     })
   }
 
+  /**
+   * Get all permissions available to the user on this connection
+   * @param {Context} connection request context
+   * @returns {[string]} permissions
+   */
   static getConnectionPermissions ({ connection }) {
     const { user, scope: scopes } = connection.state
     if (!user || !user.groups) {
@@ -75,7 +80,7 @@ export default class Permission {
 
   /**
    * Get the available permissions/oauth scopes
-   * @returns {Object}
+   * @returns {object}
    */
   static get groups () {
     return groups
@@ -83,8 +88,9 @@ export default class Permission {
 
   /**
    * Get a list of localised human readable permissions from a list of OAuth scopes
-   * @param {Array} scopes Array of OAuth scopes
-   * @param {Object} user A user object to check permissions against
+   * @param {object} arg function arguments object
+   * @param {Array} arg.scopes Array of OAuth scopes
+   * @param {Context} arg.connection request context
    * @returns {Array} Array of objects with localised human readable permissions
    */
   static humanReadable ({ scopes, connection })  {

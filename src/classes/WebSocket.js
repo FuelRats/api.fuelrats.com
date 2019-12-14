@@ -1,3 +1,4 @@
+/* eslint-disable */
 import logger from '../logging'
 import {
   APIError,
@@ -18,6 +19,7 @@ const acceptedProtocols = ['FR-JSONAPI-WS']
 
 const routes = {}
 
+// eslint-disable-next-line
 export default class WebSocket {
   constructor ({ server, trafficManager }) {
     this.wss = new ws.Server({

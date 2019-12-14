@@ -2,8 +2,8 @@ import Mail from '../classes/Mail'
 import { User, VerificationToken, db } from '../db'
 import crypto from 'crypto'
 import { NotFoundAPIError } from '../classes/APIError'
+import { Context } from '../classes/Context'
 import API, {
-  Context,
   GET,
   POST,
   parameters,

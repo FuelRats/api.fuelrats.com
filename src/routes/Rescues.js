@@ -1,14 +1,10 @@
 import { Rescue } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
-
-
-import Rats from './Rats'
 import {
-  NotFoundAPIError,
   UnsupportedMediaAPIError
 } from '../classes/APIError'
 
-import API, {
+import {
   APIResource,
   permissions,
   authenticated,
@@ -42,6 +38,10 @@ export default class Rescues extends APIResource {
     return 'rescues'
   }
 
+  /**
+   * Search rescues
+   * @endpoint
+   */
   @GET('/rescues')
   @websocket('rescues', 'search')
   @authenticated
@@ -51,6 +51,10 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
+  /**
+   * Get a rescue by id
+   * @endpoint
+   */
   @GET('/rescues/:id')
   @websocket('rescues', 'read')
   @authenticated
@@ -60,6 +64,10 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
+  /**
+   * Create a rescue
+   * @endpoint
+   */
   @POST('/rescues')
   @websocket('rescues', 'create')
   @authenticated
@@ -72,6 +80,10 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
+  /**
+   * Update a rescue
+   * @endpoint
+   */
   @PUT('/rescues/:id')
   @websocket('rescues', 'update')
   @authenticated
@@ -83,6 +95,10 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
+  /**
+   * Delete a rescue by id
+   * @endpoint
+   */
   @DELETE('/rescues/:id')
   @websocket('rescues', 'delete')
   @authenticated
@@ -96,6 +112,10 @@ export default class Rescues extends APIResource {
 
   // relationships
 
+  /**
+   * Get a rescue's assigned rats
+   * @endpoint
+   */
   @GET('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'read')
   @authenticated
@@ -110,6 +130,10 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
 
+  /**
+   * Assign rats to a rescue
+   * @endpoint
+   */
   @POST('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'create')
   @authenticated
@@ -125,6 +149,10 @@ export default class Rescues extends APIResource {
     return true
   }
 
+  /**
+   * Set the assigned rats of a rescue
+   * @endpoint
+   */
   @PATCH('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'patch')
   @authenticated
@@ -140,6 +168,10 @@ export default class Rescues extends APIResource {
     return true
   }
 
+  /**
+   * Unassign rats from a rescue
+   * @endpoint
+   */
   @DELETE('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'delete')
   @authenticated
@@ -156,6 +188,10 @@ export default class Rescues extends APIResource {
     return true
   }
 
+  /**
+   * Get a rescue's first limpet
+   * @endpoint
+   */
   @GET('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'read')
   @authenticated
@@ -170,6 +206,10 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
 
+  /**
+   * Set a rescue's first limpet
+   * @endpoint
+   */
   @PATCH('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'patch')
   @authenticated
@@ -185,6 +225,9 @@ export default class Rescues extends APIResource {
     return true
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return {
       client: WritePermission.group,
@@ -206,10 +249,17 @@ export default class Rescues extends APIResource {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   isSelf ({ ctx, entity }) {
     const { user } = ctx.state
     if (!user) {
       return false
+    }
+
+    if ((Date.now() - entity.createdAt) < rescueAccessTime) {
+      return true
     }
 
     const isAssigned = entity.rats.some((rat) => {
@@ -227,6 +277,9 @@ export default class Rescues extends APIResource {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   changeRelationship ({ relationship }) {
     switch (relationship) {
       case 'rats':
@@ -274,6 +327,9 @@ export default class Rescues extends APIResource {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationTypes () {
     return {
       'rats': 'rats',

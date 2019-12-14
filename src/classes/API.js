@@ -11,6 +11,7 @@ import { Rat, db } from '../db'
 import { UUID } from './Validators'
 import enumerable from './Enum'
 import DatabaseQuery from '../query/DatabaseQuery'
+import { Context } from './Context'
 
 const config = require('../../config')
 
@@ -643,7 +644,7 @@ export function PATCH (route) {
 
 /**
  * ESNext Decorator for routing this method through a koa router DELETE endpoint
- * @param route the http path to route
+ * @param {Function} route the http path to route
  * @returns {Function}
  */
 export function DELETE (route) {
@@ -767,7 +768,7 @@ export function required (...fields) {
     descriptor.value = function (...args) {
       const [ctx] = args
       const missingFields = fields.filter((requiredField) => {
-        return ctx.data.hasOwnProperty(requiredField) === false
+        return Reflect.has(ctx.data, requiredField) === false
       })
       if (missingFields.length > 0) {
         throw missingFields.map((field) => {
@@ -803,7 +804,7 @@ export function disallow (...fields) {
 
 /**
  * Protect a set of fields in an endpoint with a specific permission
- * @param permission the permission to require
+ * @param {string} permission the permission to require
  * @param {...string} fields the fields to require this permission for
  * @returns {Function} A decorator function
  */
@@ -848,8 +849,9 @@ export function isValidJSONAPIObject ({ object }) {
 
 /**
  * Retrieve the data field of a JSONAPI request
- * @param {object} ctx request context
- * @param {string} type the JSONAPI resource type
+ * @param {object} arg function arguments object
+ * @param {Context} arg.ctx request context
+ * @param {string} arg.type the JSONAPI resource type
  * @returns {object} JSONAPI data field
  */
 export function getJSONAPIData ({ ctx, type }) {
@@ -865,6 +867,9 @@ export function getJSONAPIData ({ ctx, type }) {
 }
 
 @enumerable
+/**
+ * Enum for types of write permissions that can be required for a field
+ */
 export class WritePermission {
   static internal
   static self

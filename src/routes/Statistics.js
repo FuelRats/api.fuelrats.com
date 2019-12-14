@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 
 import { Rat, Rescue } from '../db'

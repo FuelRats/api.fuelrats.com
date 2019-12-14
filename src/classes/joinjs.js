@@ -1,3 +1,4 @@
+/* eslint-disable */
 /** Thrown when mapOne does not find an object in the resultSet and "isRequired" is passed in as true */
 function NotFoundError (message = 'Not Found') {
   this.name = 'NotFoundError'

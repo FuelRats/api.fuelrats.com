@@ -6,6 +6,7 @@ const clientSecretEncodedMaxLength = 1024
 const clientSecretMinLength = 32
 const clientSecretMaxLength = 512
 
+/* eslint-disable jsdoc/require-jsdoc */
 export default function Client (sequelize, DataTypes) {
   const client = sequelize.define('Client', {
     id: {

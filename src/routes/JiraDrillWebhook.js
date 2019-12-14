@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 
 import { User, Rat } from '../db/index'

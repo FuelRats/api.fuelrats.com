@@ -1,10 +1,19 @@
 import { ReadPermission, DatabaseView, RescueView, ShipView, UserView } from './'
 
+/**
+ * Get JSONAPI view for a rat
+ */
 export default class RatView extends DatabaseView {
+  /**
+   * @inheritdoc
+   */
   static get type () {
     return 'rats'
   }
 
+  /**
+   * @inheritdoc
+   */
   get attributes () {
     return {
       name: ReadPermission.all,
@@ -17,10 +26,16 @@ export default class RatView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get defaultReadPermission () {
     return ReadPermission.all
   }
 
+  /**
+   * @inheritdoc
+   */
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
       return this.query.connection.state.permissions.includes('rats.read.me')
@@ -28,14 +43,23 @@ export default class RatView extends DatabaseView {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   get isGroup () {
     return this.query.connection.state.permissions.includes('rats.read')
   }
 
+  /**
+   * @inheritdoc
+   */
   get isInternal () {
     return this.query.connection.state.permissions.includes('rats.internal')
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationships () {
     return {
       user: UserView,
@@ -43,10 +67,16 @@ export default class RatView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get related () {
     return [RescueView, ShipView]
   }
 
+  /**
+   * @inheritdoc
+   */
   get includes () {
     return ['user', 'ships']
   }

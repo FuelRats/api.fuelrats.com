@@ -601,7 +601,10 @@
       "warn"
     ],
     "jsdoc/check-tag-names": [
-      "warn"
+      "warn",
+      {
+        "definedTags": ["endpoint"]
+      }
     ],
     "jsdoc/check-types": [
       "warn"
@@ -628,7 +631,10 @@
       "warn"
     ],
     "jsdoc/require-param": [
-      "warn"
+      "warn",
+      {
+        "exemptedBy": ["endpoint"]
+      }
     ],
     "jsdoc/require-returns-check": [
       "warn"
@@ -637,7 +643,10 @@
       "warn"
     ],
     "jsdoc/require-returns": [
-      "warn"
+      "warn",
+      {
+        "exemptedBy": ["endpoint"]
+      }
     ],
     "dot-notation": [
       "error"

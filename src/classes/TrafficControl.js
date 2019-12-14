@@ -1,5 +1,7 @@
 
 import Permissions from './Permission'
+import { User } from '../db'
+import { Context } from '../classes/Context'
 
 const eect = Buffer.from('YXBwbGljYXRpb24vY29mZmVlLXBvdC1jb21tYW5k', 'base64').toString('utf8')
 const eeEs = Buffer.from('SW1BVGVhcG90QVBJRXJyb3I=', 'base64').toString('utf8')
@@ -14,13 +16,13 @@ const allowedAdminRequestCount = 10000
 
 /**
  * Class for managing the rate of traffic from IP addresses and users
+ * @class
  */
 export default class TrafficControl {
   #resetTimer = 0
 
   /**
    * Create a new instance of a Traffic Controller with fresh hash tables and reset clock
-   * @constructor
    */
   constructor () {
     this.reset()
@@ -28,9 +30,10 @@ export default class TrafficControl {
 
   /**
    *
-   * @param {Object} connection - A websocket client or Express.js request object
-   * @param {boolean} increase - Whether this validation should also increase the request count by 1
-   * @returns {Object} - An object containing whether the rate limit is exceeded, how many requests are left,
+   * @param {object} arg function arguments object
+   * @param {Context} arg.connection A websocket client or Express.js request object
+   * @param {boolean} arg.increase Whether this validation should also increase the request count by 1
+   * @returns {object} An object containing whether the rate limit is exceeded, how many requests are left,
    * and the total requests
    */
   validateRateLimit ({ connection, increase = true }) {
@@ -58,8 +61,8 @@ export default class TrafficControl {
 
   /**
    * Retrieve an authenticated entity with the number of requests made by this user, or create one
-   * @param {Object} user - The user associated with this request
-   * @returns {Object} An instance of AuthenticatedUserEntity
+   * @param {User} user - The user associated with this request
+   * @returns {object} An instance of AuthenticatedUserEntity
    */
   retrieveAuthenticatedEntity ({ user }) {
     let entity = this.authenticatedRequests[user.id]
@@ -73,7 +76,7 @@ export default class TrafficControl {
   /**
    * Retrieve an unauthenticated entity with the number of requests made by this IP address, or create one
    * @param {string} remoteAddress - The remote address associated with this request
-   * @returns {Object} an instance of RemoteAddressEntity
+   * @returns {object} an instance of RemoteAddressEntity
    */
   retrieveUnauthenticatedEntity ({ remoteAddress }) {
     let entity = this.unauthenticatedRequests[remoteAddress]
@@ -114,6 +117,7 @@ export default class TrafficControl {
 
 /**
  * Base class representing a request traffic entity
+ * @class
  */
 class TrafficEntity {
   #requestCount = 0
@@ -137,6 +141,7 @@ class TrafficEntity {
 
 /**
  * Class representing an authenticated user containing their requests the last clock hour
+ * @class
  */
 class AuthenticatedUserEntity extends TrafficEntity {
   #user = undefined
@@ -144,9 +149,9 @@ class AuthenticatedUserEntity extends TrafficEntity {
 
   /**
    * Create an entity representing the traffic made by a specific authenticated user
-   * @constructor
-   * @param {Object} user - The user object of the authenticated user this traffic belongs to
-   * @param {number} initialCount - Optional parameter containing the number of requests this entity should start with
+   * @param {object} arg function arguments object
+   * @param {User} arg.user - The user object of the authenticated user this traffic belongs to
+   * @param {number} arg.initialCount Optional parameter containing the number of requests this entity should start with
    */
   constructor ({ user, initialCount = 0 }) {
     super()
@@ -178,6 +183,10 @@ class AuthenticatedUserEntity extends TrafficEntity {
     return allowedAuthenticatedRequestCount - this.#requestCount
   }
 
+  /**
+   * Get the total number of requests allowed by this entity
+   * @returns {number} total number of requests
+   */
   get totalRequests () {
     if (this.isAdmin) {
       return allowedAdminRequestCount
@@ -187,7 +196,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
 }
 
 /**
- *  Class representing an unauthenticated remote address containing their requests the last clock hour
+ * Class representing an unauthenticated remote address containing their requests the last clock hour
  */
 class RemoteAddressEntity extends TrafficEntity {
   #remoteAddress = undefined
@@ -195,8 +204,9 @@ class RemoteAddressEntity extends TrafficEntity {
 
   /**
    * Create an entity representing the traffic made by a specific unauthenticated remote address
-   * @param {string} remoteAddress - The remote address this traffic belongs to
-   * @param initialCount - Optional parameter containing the number ofrequests this entity should start with
+   * @param {object} arg function arguments object
+   * @param {string} arg.remoteAddress The remote address this traffic belongs to
+   * @param {number} [arg.initialCount] Optional parameter containing the number of requests this entity should start
    */
   constructor ({ remoteAddress, initialCount = 0 }) {
     super()
@@ -212,6 +222,10 @@ class RemoteAddressEntity extends TrafficEntity {
     return allowedUnauthenticatedRequestCount - this.#requestCount
   }
 
+  /**
+   * Get the total number of requests
+   * @returns {number} total number of requests
+   */
   get totalRequests () {
     return allowedUnauthenticatedRequestCount
   }

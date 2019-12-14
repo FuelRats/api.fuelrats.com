@@ -1,20 +1,21 @@
-import { Client, Rat, Code, Token } from '../db'
+import { Client, Code, Token } from '../db'
 import crypto from 'crypto'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { ClientView, UserView } from '../view'
-import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
+import { UnsupportedMediaAPIError } from '../classes/APIError'
+import { Context } from '../classes/Context'
 import {
-  Context,
   permissions,
   authenticated,
   GET,
   POST,
   PUT,
   DELETE,
+  PATCH,
   parameters,
-  disallow,
-  required, WritePermission, PATCH, APIResource
+  WritePermission,
+  APIResource
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import StatusCode from '../classes/StatusCode'
@@ -65,8 +66,8 @@ export default class Clients extends APIResource {
 
   /**
    * Create an oauth client
-   * @param {Context} ctx
-   * @returns {Promise<DatabaseDocument>}
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} created oauth client
    */
   @POST('/clients')
   @websocket('clients', 'create')
@@ -84,6 +85,11 @@ export default class Clients extends APIResource {
     return new DatabaseDocument({ query, result, type: ClientView })
   }
 
+  /**
+   * Update a client by ID
+   * @param {Context} ctx request context
+   * @returns {Promise<DatabaseDocument>} updated oauth client
+   */
   @PUT('/clients/:id')
   @websocket('clients', 'update')
   @authenticated
@@ -95,6 +101,11 @@ export default class Clients extends APIResource {
     return new DatabaseDocument({ query, result, type: ClientView })
   }
 
+  /**
+   * Delete an oauth client by ID
+   * @param {Context} ctx request context
+   * @returns {Promise<boolean>} 204 no content
+   */
   @DELETE('/clients/:id')
   @websocket('clients', 'delete')
   @authenticated

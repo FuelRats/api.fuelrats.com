@@ -1,6 +1,6 @@
 
 
-import { Decal, db } from '../db'
+import { Decal, db, User } from '../db'
 import {
   APIResource,
   authenticated,
@@ -70,6 +70,10 @@ export default class Decals extends APIResource {
     return 'decals'
   }
 
+  /**
+   * Search decals
+   * @endpoint
+   */
   @GET('/decals')
   @websocket('decals', 'search')
   @authenticated
@@ -81,6 +85,10 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, results, type: DecalView })
   }
 
+  /**
+   * Get a decal by ID
+   * @endpoint
+   */
   @GET('/decals/:id')
   @websocket('decals', 'read')
   @authenticated
@@ -90,6 +98,10 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
+  /**
+   * Create a decal
+   * @endpoint
+   */
   @POST('/decals')
   @websocket('decals', 'create')
   @authenticated
@@ -102,6 +114,10 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
+  /**
+   * Update a decal by ID
+   * @endpoint
+   */
   @PUT('/decals/:id')
   @websocket('decals', 'update')
   @authenticated
@@ -112,6 +128,10 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
+  /**
+   * Delete a decal by ID
+   * @endpoint
+   */
   @DELETE('/decals/:id')
   @websocket('decals', 'delete')
   @authenticated
@@ -122,6 +142,10 @@ export default class Decals extends APIResource {
     return true
   }
 
+  /**
+   * Get a decal's rat relationship
+   * @endpoint
+   */
   @GET('/decals/:id/relationships/rat')
   @websocket('decals', 'rat', 'view')
   @authenticated
@@ -136,6 +160,10 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView, view: DocumentViewType.meta })
   }
 
+  /**
+   * Set a decal's rat relationship
+   * @endpoint
+   */
   @PATCH('/decals/:id/relationships/rat')
   @websocket('decals', 'rat', 'patch')
   @authenticated
@@ -151,6 +179,10 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView, view: DocumentViewType.meta })
   }
 
+  /**
+   * Get a date object for the exact start of the current month
+   * @returns {Date} date object for the start of the current month
+   */
   static getLastMonthTurnOver () {
     const date = new Date()
     date.setUTCDate(1)
@@ -160,6 +192,12 @@ export default class Decals extends APIResource {
     return date
   }
 
+  /**
+   * Get a user's eligible decal count
+   * @param {object} arg function arguments object
+   * @param {User} arg.user the user to check
+   * @returns {Promise<number>} the number of decals the user is eligible to redeem
+   */
   static async getEligibleDecalCount ({ user }) {
     const { id: userId } = user
     const monthTurnOver = Decals.getLastMonthTurnOver()

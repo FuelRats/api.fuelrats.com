@@ -60,7 +60,7 @@ const db = new Sequelize(database, username, password, {
 
 /**
  * Import all database models
- * @param modelNames the names of the models to import
+ * @param {[string]} modelNames the names of the models to import
  * @returns {*}
  */
 function importModels (modelNames) {
@@ -73,7 +73,7 @@ function importModels (modelNames) {
   models.sequelize = db
 
   Object.keys(models).forEach((modelName) => {
-    if (models[modelName].hasOwnProperty('associate')) {
+    if (Reflect.has(models[modelName], 'associate')) {
       models[modelName].associate(models)
     }
   })

@@ -1,6 +1,6 @@
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 import enumerable from '../classes/Enum'
-import Permission from '../classes/Permission'
+import { Context } from '../classes/Context'
 
 const fieldsRegex = /^fields\[([a-z-]*)\]$/gu
 const pageRegex = /^page\[([a-z]*)\]$/gu
@@ -12,9 +12,9 @@ const defaultSize = 25
 /**
  * Enumerable representing the different sort orders a query can have
  * @readonly
- * @enum {Symbol}
- * @property {Symbol} ascending the query is sorted in ascending order
- * @property {Symbol} descending the query is sorted in descending order
+ * @enum {symbol}
+ * @property {symbol} ascending the query is sorted in ascending order
+ * @property {symbol} descending the query is sorted in descending order
  */
 export class SortOrder {
   static ascending
@@ -49,8 +49,8 @@ export default class Query {
 
   /**
    * Create a new instance of an API Query
-   * @param connection
-   * @constructor
+   * @param {object} arg function arguments object
+   * @param {Context} arg.connection request context
    */
   constructor ({ connection }) {
     this.connection = connection
@@ -58,7 +58,7 @@ export default class Query {
 
   /**
    * Get the implementation specific generated object that is sent to the data layer for query
-   * @returns {Object} Implementation specific generated search object
+   * @returns {object} Implementation specific generated search object
    * @abstract
    */
   get searchObject () {
@@ -67,7 +67,7 @@ export default class Query {
 
   /**
    * Get page query information like page number, offset, or limit parsed from the API Query
-   * @returns {{number: Number, size: Number, offset: Number, limit: Number}}  Page query information
+   * @returns {{number: number, size: number, offset: number, limit: number}}  Page query information
    */
   get page () {
     const { query } = this.connection
@@ -113,7 +113,7 @@ export default class Query {
 
   /**
    * Get the result fields to display, parsed from the API Query
-   * @returns {Object} Get the subset of resulting fields to display, parsed from the API Query
+   * @returns {object} Get the subset of resulting fields to display, parsed from the API Query
    */
   get fields () {
     const { query } = this.connection
@@ -130,7 +130,7 @@ export default class Query {
 
   /**
    * Get the requested sorting field and order, parsed from the API query
-   * @returns {{field: String, sort: SortOrder}[]} requested sorting order
+   * @returns {{field: string, sort: SortOrder}[]} requested sorting order
    */
   get sort () {
     const { order } = this.connection.query
@@ -175,7 +175,7 @@ export default class Query {
 
   /**
    * Get the filtering query to be applied to results of the request
-   * @returns {Object} Requested filtering to be performed on the results of the request
+   * @returns {object} Requested filtering to be performed on the results of the request
    */
   get filter () {
     const { filter } = this.connection.query

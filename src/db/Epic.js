@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-jsdoc */
 const epicsNotesFieldMaxLength = 2048
 
 export default function Epic (sequelize, DataTypes) {

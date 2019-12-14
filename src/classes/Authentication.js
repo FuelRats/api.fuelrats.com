@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt'
-import { User, Rat, Token, Client, Reset } from '../db/index'
-import Anope from '../classes/Anope'
-// import User from '../model/user'
+import { User, Token, Client, Reset, db } from '../db'
+import { Context } from './Context'
 
 import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
 
@@ -15,9 +14,10 @@ const basicAuthHeaderOffset = 6
 export default class Authentication {
   /**
    * Perform password authentication with email andoh rig password
-   * @param email the email of the user to authenticate
-   * @param password the password of the user to authenticate
-   * @returns {Promise<undefined|Promise<Model>>} A promise returning the authenticated user object
+   * @param {object} arg function arguments object
+   * @param {string} arg.email the email of the user to authenticate
+   * @param {string} arg.password the password of the user to authenticate
+   * @returns {Promise<undefined|Promise<db.Model>>} A promise returning the authenticated user object
    */
   static async passwordAuthenticate ({ email, password }) {
     if (!email || !password) {
@@ -66,8 +66,9 @@ export default class Authentication {
 
   /**
    * Perform Bearer authentication with an access token
-   * @param bearer the bearer access token to authenticate
-   * @returns {Promise<boolean|{scope: *, user: Model}>} A promise returning the authenticated user object
+   * @param {object} arg function arguments object
+   * @param {string} arg.bearer the bearer access token to authenticate
+   * @returns {Promise<boolean|{scope: *, user: db.Model}>} A promise returning the authenticated user object
    */
   static async bearerAuthenticate ({ bearer }) {
     const token = await Token.findOne({ where: { value: bearer } })
@@ -91,9 +92,10 @@ export default class Authentication {
 
   /**
    * Authenticate an OAuth client using client id and client secret
-   * @param clientId the ID of the OAuth client to authenticate
-   * @param secret the secret key of the OAuth client to authenticate
-   * @returns {Promise<*|DatabaseDocument|undefined>} A promise returning the authenticated OAuth client object
+   * @param {object} arg function arguments object
+   * @param {string} arg.clientId the ID of the OAuth client to authenticate
+   * @param {string} arg.secret the secret key of the OAuth client to authenticate
+   * @returns {Promise<Client>} A promise returning the authenticated OAuth client object
    */
   static async clientAuthenticate ({ clientId, secret }) {
     const client = await Client.findByPk(clientId)
@@ -122,7 +124,8 @@ export default class Authentication {
 
   /**
    * Perform all available authentication flows on a request context
-   * @param connection a requeset connection context
+   * @param {object} arg function arguments object
+   * @param {string} arg.connection a request connection context
    * @returns {Promise<boolean>} true if the request was successfully authenticated, false if not
    */
   static async authenticate ({ connection }) {
@@ -153,8 +156,8 @@ export default class Authentication {
 
   /**
    * Koa Middleware to require that a user be authenticated to continue the request
-   * @param ctx a request context
-   * @param next the next middleware or route
+   * @param {Context} ctx a request context
+   * @param {Function} next the next middleware or route
    * @returns {Promise<void>}
    */
   static isAuthenticated (ctx, next) {
@@ -167,8 +170,8 @@ export default class Authentication {
 
   /**
    * Koa Middleware to require that an OAuth client be authenticated to continue the request
-   * @param ctx a request context
-   * @param next the next middleware or route
+   * @param {Context} ctx a request context
+   * @param {Function} next the next middleware or route
    * @returns {Promise<void>}
    */
   static async isClientAuthenticated (ctx, next) {
@@ -182,7 +185,7 @@ export default class Authentication {
 
 /**
  * Retrieve bearer token from a request object
- * @param ctx the request object to retrieve a bearer token from
+ * @param {Context} ctx the request object to retrieve a bearer token from
  * @returns {*} A string with the bearer token or null if none was found.
  */
 function getBearerToken (ctx) {
@@ -199,7 +202,7 @@ function getBearerToken (ctx) {
 
 /**
  * Get basic auth credentials from a request object
- * @param ctx the requset object to retrieve basic auth credentials from
+ * @param {Context} ctx the requset object to retrieve basic auth credentials from
  * @returns {Array} An array containing the username and password, or an empty array if none was found.
  */
 function getBasicAuth (ctx) {

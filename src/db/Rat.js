@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { JSONObject, validCMDRname } from '../classes/Validators'
 import RatView from '../view/RatView'
 

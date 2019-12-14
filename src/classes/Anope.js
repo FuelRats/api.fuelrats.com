@@ -109,6 +109,11 @@ export default class Anope {
     })
   }
 
+  /**
+   * Map nicknames onto a user object
+   * @param {User} user object to map onto
+   * @returns {Promise<User>} user object with mapped nicknames
+   */
   static async mapNickname (user) {
     const [results] = await mysql.raw(`
         SELECT *
@@ -119,6 +124,7 @@ export default class Anope {
       email: user.email
     })
 
+    // noinspection JSUndefinedPropertyAssignment
     user.nicknames = results.map((result) => {
       return new Nickname(result, user)
     })
@@ -126,6 +132,11 @@ export default class Anope {
     return user
   }
 
+  /**
+   * Map nicknames onto a list of user objects
+   * @param {[User] }users list of users to map onto
+   * @returns {Promise<[User]>} list of user objects with mapped nicknames
+   */
   static async mapNicknames (users) {
     const userEmails = users.rows.map((user) => {
       return user.email.toLowerCase()
@@ -265,11 +276,12 @@ export default class Anope {
 
   /**
    * Add a new user to the Anope database
-   * @param {string} email the email to use for the new user
-   * @param {string} nick the main IRC nickname for the new user
-   * @param {string} encryptedPassword a bcrypt encrypted password to use for the new user
-   * @param {string} vhost vhoset to use for all nicknames of the new user
-   * @param {string} [ratId] the id of an optional Rat to bind to this nickname
+   * @param {object} arg function arguments object
+   * @param {string} arg.email the email to use for the new user
+   * @param {string} arg.nick the main IRC nickname for the new user
+   * @param {string} arg.encryptedPassword a bcrypt encrypted password to use for the new user
+   * @param {string} arg.vhost vhoset to use for all nicknames of the new user
+   * @param {string} [arg.ratId] the id of an optional Rat to bind to this nickname
    * @returns {Promise<Nickname>} returns a newly created Nickname entry
    */
   static addNewUser ({ email, nick, encryptedPassword, vhost, ratId }) {

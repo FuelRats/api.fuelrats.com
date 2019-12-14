@@ -57,27 +57,28 @@ export const UUID = new RegexLiteral(`^
 
 /**
  * Validate wether a list of OAuth Scopes is valid
- * @param value the list of OAuth scopes to validate
- * @constructor
+ * @param {[string] }value the list of OAuth scopes to validate
  */
 export function OAuthScope (value) {
-  for (const scope of value) {
-    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
-      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
-    }
+  const invalid = value.some((scope) => {
+    return Permission.allPermissions.includes(scope) === false && scope !== '*'
+  })
+  if (invalid) {
+    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
   }
 }
 
+/**
+ * Validate whether input is a valid CMDR name
+ * @param {string} value input to validate
+ * @returns {boolean} whether input is a valid CMDR name
+ */
 export function validCMDRname (value) {
   if (CMDRname.test(value) === true) {
     const lowerNick = value.toLowerCase()
-    let invalid = forbiddenCMDRNameComponents.some((comp) => {
+    return !forbiddenCMDRNameComponents.some((comp) => {
       return lowerNick.includes(comp)
     })
-
-    if (invalid === false) {
-      return true
-    }
   }
 
   throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name' })
@@ -85,8 +86,7 @@ export function validCMDRname (value) {
 
 /**
  * Validate wether a value is a valid JSON object for a jsonb field
- * @param value the value to validate
- * @constructor
+ * @param {object} value the value to validate
  */
 export function JSONObject (value) {
   if (typeof value !== 'object') {
@@ -104,44 +104,16 @@ const requiredQuoteFields = [
 
 /**
  * Validate wether a value is a valid list of rescue quotes
- * @param quotes the list of rescue quotes to validate
- * @constructor
+ * @param {object} quotes the list of rescue quotes to validate
  */
 export function RescueQuote (quotes) {
   try {
     quotes.forEach((quote) => {
       requiredQuoteFields.forEach((requiredField) => {
-        if (quote.hasOwnProperty(requiredField) === false) {
+        if (Reflect.has(quote, requiredField) === false) {
           throw Error()
         }
       })
-
-      for (const [key, value] of Object.entries(quote)) {
-        switch (key) {
-          case 'message':
-            if (typeof value !== 'string') {
-              throw Error()
-            }
-            break
-
-          case 'author':
-          case 'lastAuthor':
-            if ((typeof value !== 'undefined') && typeof value !== 'string') {
-              throw Error()
-            }
-            break
-
-          case 'createdAt':
-          case 'updatedAt':
-            if ((typeof value !== 'undefined') && ISO8601.test(value) === false) {
-              throw Error()
-            }
-            break
-
-          default:
-            throw Error()
-        }
-      }
     })
   } catch (ex) {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/quotes' })
@@ -150,8 +122,7 @@ export function RescueQuote (quotes) {
 
 /**
  * Validate wether a value is a valid list of IRC nicknames
- * @param value the list of IRC nicknames to validate
- * @constructor
+ * @param {[string] }value the list of IRC nicknames to validate
  */
 export function IRCNicknames (value) {
   if (!Array.isArray(value)) {
@@ -166,8 +137,8 @@ export function IRCNicknames (value) {
 
 /**
  * Validate wether a value is a valid URL
- * @param value the URL to validate
- * @constructor
+ * @param {string} value the URL to validate
+ * @returns {URL} a url
  */
 export function isURL (value) {
   try {

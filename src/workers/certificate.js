@@ -1,7 +1,12 @@
+/* eslint-disable */
 import workerpool from 'workerpool'
 import { exec } from 'child_process'
 
-
+/**
+ * Generate SSL certificate for a rat
+ * @param {string} ratName name of the rat
+ * @returns {Promise<{certificate,fingerprint}>}
+ */
 function generateSslCertificate (ratName) {
   return new Promise((resolve, reject) => {
     exec(`openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj \\

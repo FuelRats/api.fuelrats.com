@@ -1,10 +1,10 @@
-import { User, Rat, db, npoMembership } from '../db'
+import { User, Rat, db } from '../db'
 import Anope from '../classes/Anope'
 import Verifications from './Verifications'
 import Sessions from './Sessions'
 
 import API, {
-  Context, getJSONAPIData,
+  getJSONAPIData,
   POST,
   required
 } from '../classes/API'
@@ -28,8 +28,7 @@ export default class Register extends API {
 
   /**
    * Register a new account
-   * @param {Context} ctx request context
-   * @returns {Promise<boolean>} returns a 204 if successful
+   * @endpoint
    */
   @POST('/register')
   @required(
@@ -51,12 +50,6 @@ export default class Register extends API {
         throw new UnprocessableEntityAPIError({
           pointer: '/data/attributes/platform'
         })
-      }
-
-      if (ctx.data.npo === true) {
-        await npoMembership.create({
-          userId: user.id
-        }, { transaction })
       }
 
       const rat = await Rat.create({

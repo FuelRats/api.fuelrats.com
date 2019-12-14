@@ -1,10 +1,10 @@
 import config from '../../config'
 import enumerable from '../classes/Enum'
+import Query from '../query'
 
 /**
  * @classdesc JSONAPI View base class
  * @class
- *
  */
 export default class View {
   object = undefined
@@ -16,10 +16,10 @@ export default class View {
 
   /**
    * Create a JSONAPI View
-   * @param object
-   * @param query
-   * @param root
-   * @constructor
+   * @param {object} arg function arguments object
+   * @param {object} arg.object object to render the view from
+   * @param {Query} arg.query request query
+   * @param {object} arg.root the root view of the document the view belongs to
    */
   constructor ({ object, query, root = undefined }) {
     this.object = object
@@ -60,32 +60,63 @@ export default class View {
     return undefined
   }
 
+  /**
+   * The view's relationships
+   * @returns {object}
+   */
   get relationships () {
     return {}
   }
 
+  /**
+   * THe view's includes
+   * @returns {[string]}
+   */
   get includes () {
     return []
   }
 
+  /**
+   * Whether this view requires internal permissions
+   * @returns {boolean}
+   * @abstract
+   */
   get isInternal () {
     return undefined
   }
 
+  /**
+   * Whether this view is associated with the user
+   * @returns {boolean}
+   * @abstract
+   */
   get isSelf () {
     return undefined
   }
 
+  /**
+   * Whether this view is associated with the user's group
+   * @returns {boolean}
+   * @abstract
+   */
   get isGroup () {
     return undefined
   }
 
+  /**
+   * The view's JSONAPI links
+   * @returns {object}
+   */
   get links () {
     return {
       self: `${config.server.externalUrl}/${this.self}`
     }
   }
 
+  /**
+   * The view's self link
+   * @returns {string}
+   */
   get self () {
     if (this.root) {
       return `${this.root.self}/${this.id}`
@@ -93,6 +124,11 @@ export default class View {
     return `${this.type}/${this.id}`
   }
 
+  /**
+   * JSONAPI Links for a relation relative to this view
+   * @param {string} relation the relation
+   * @returns {object}
+   */
   getRelationLink (relation) {
     return {
       self: `${config.server.externalUrl}/${this.self}/relationships/${relation}`,
@@ -100,10 +136,18 @@ export default class View {
     }
   }
 
+  /**
+   * Related views to this one
+   * @returns {[View]}
+   */
   get related () {
     return []
   }
 
+  /**
+   * The rendered view
+   * @returns {object}
+   */
   get view () {
     return {
       type: this.type,
@@ -114,6 +158,10 @@ export default class View {
     }
   }
 
+  /**
+   * Rendered relationship view
+   * @returns {object}
+   */
   get relationshipView () {
     return {
       type: this.type,
@@ -121,9 +169,13 @@ export default class View {
     }
   }
 
+  /**
+   * Generate the attributes to display in this view
+   * @returns {object}
+   */
   generateAttributes () {
     return Object.entries(this.attributes).reduce((acc, value) => {
-      var [attribute, permission] = value
+      let [attribute, permission] = value
       if (typeof permission === 'undefined') {
         permission = this.defaultReadPermission
       }
@@ -135,7 +187,12 @@ export default class View {
     }, {})
   }
 
-  hasPermissionForField (permission, field) {
+  /**
+   * Check whether the user has permission to see a specific field of this view
+   * @param {ReadPermission} permission field read permission
+   * @returns {boolean}
+   */
+  hasPermissionForField (permission) {
     switch (permission) {
       case ReadPermission.all:
         return true
@@ -163,32 +220,63 @@ export default class View {
     }
   }
 
+  /**
+   * The default read permission for attributes in this view
+   * @returns {ReadPermission}
+   * @abstract
+   */
   get defaultReadPermission () {
     return undefined
   }
 
+  /**
+   * Get an attribute from a key
+   * @returns {any}
+   * @abstract
+   */
   attributeForKey () {
     return undefined
   }
 
+  /**
+   * Generate relationships
+   * @returns {object}
+   * @abstract
+   */
   generateRelationships () {
     return {}
   }
 
+  /**
+   * Generate includes
+   * @returns {object}
+   * @abstract
+   */
   generateIncludes () {
     return {}
   }
 
+  /**
+   * Render the view
+   * @returns {object}
+   */
   render () {
     return this.view
   }
 
+  /**
+   * Get a string representation of the view
+   * @returns {object}
+   */
   toString () {
     return this.render()
   }
 }
 
 @enumerable
+/**
+ * Field Read permission
+ */
 export class ReadPermission {
   static internal
   static self
