@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "node --harmony dist/index.js",
+    "build": "gulp",
     "test": "NODE_ENV=testing node --harmony test",
     "jsdoc": "jsdoc -d static/docs/js -rgoo api",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
