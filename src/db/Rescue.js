@@ -1,5 +1,5 @@
 
-import { IRCNickname, JSONObject, languageCode, RescueQuote, validCMDRname } from '../classes/Validators'
+import { IRCNickname, JSONObject, languageCode, RescueQuote } from '../classes/Validators'
 import RescueView from '../view/RescueView'
 
 /* eslint max-lines-per-function:0 */
@@ -28,10 +28,7 @@ export default function Rescue (sequelize, DataTypes) {
     },
     client: {
       type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        validCMDRname
-      }
+      allowNull: false
     },
     clientNick: {
       type: DataTypes.STRING,

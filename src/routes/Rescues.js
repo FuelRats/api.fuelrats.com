@@ -45,7 +45,6 @@ export default class Rescues extends APIResource {
   @GET('/rescues')
   @websocket('rescues', 'search')
   @authenticated
-  @permissions('rescue.read')
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const result = await Rescue.findAndCountAll(query.searchObject)
@@ -55,7 +54,6 @@ export default class Rescues extends APIResource {
   @GET('/rescues/:id')
   @websocket('rescues', 'read')
   @authenticated
-  @permissions('rescue.read')
   async findById (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: Rescue })
 
@@ -88,7 +86,7 @@ export default class Rescues extends APIResource {
   @DELETE('/rescues/:id')
   @websocket('rescues', 'delete')
   @authenticated
-  @permissions('rescues.delete')
+  @permissions('rescues.write')
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Rescue })
 

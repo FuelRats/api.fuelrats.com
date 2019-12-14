@@ -638,6 +638,9 @@
     ],
     "jsdoc/require-returns": [
       "warn"
+    ],
+    "dot-notation": [
+      "error"
     ]
   }
 }
