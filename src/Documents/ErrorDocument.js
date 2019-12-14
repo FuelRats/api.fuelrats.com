@@ -1,6 +1,7 @@
 import Document, { DocumentViewType } from '.'
-import { InternalServerError, APIError } from '../classes/APIError'
+import { InternalServerError, APIError, MethodNotAllowedAPIError } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
+import API from '../classes/API'
 
 /**
  * @classdesc A JSONAPI document render for request errors
@@ -22,10 +23,13 @@ export default class ErrorDocument extends Document {
     // }
 
     errorList = errorList.map((error) => {
-      if ((error instanceof APIError) === false) {
+      if (error instanceof APIError) {
+        return error
+      } else if (error.name === 'MethodNotAllowedError') {
+        return new MethodNotAllowedAPIError({})
+      } else {
         return new InternalServerError({})
       }
-      return error
     })
 
     super({

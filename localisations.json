@@ -64,6 +64,11 @@
         "detail": "The origin server did not find a current representation for the target resource or is not willing to disclose that one exists."
       },
 
+      "method_not_allowed": {
+        "title": "Method Not Allowed",
+        "detail": "The method received in the request-line is known by the origin server but not supported by the target resource."
+      },
+
       "conflict": {
         "title": "Conflict",
         "detail": "The request could not be completed due to a conflict with the current state of the target resource."

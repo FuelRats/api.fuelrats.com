@@ -151,6 +151,16 @@ export class NotFoundAPIError extends APIError {
   }
 }
 
+export class MethodNotAllowedAPIError extends  APIError {
+  get code () {
+    return StatusCode.methodNotAllowed
+  }
+
+  get status () {
+    return 'method_not_allowed'
+  }
+}
+
 export class ConflictAPIError extends APIError {
   get code () {
     return StatusCode.conflict
