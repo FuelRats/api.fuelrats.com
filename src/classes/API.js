@@ -187,7 +187,7 @@ export class APIResource extends API {
     }
 
     if (hasPermission) {
-      const permissionResult = await hasPermission(entity)
+      const permissionResult = await hasPermission(entity).bind(this)
       if (permissionResult === false) {
         throw new ForbiddenAPIError({})
       }
@@ -289,7 +289,8 @@ export class APIResource extends API {
           throw new UnprocessableEntityAPIError({ pointer: '/data' })
         }
 
-        if (!changeRelationship.hasPermission(ctx, entity, relationship.id)) {
+
+        if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, relationship.id])) {
           throw new ForbiddenAPIError({ pointer: '/data' })
         }
         return relationshipObject.id
@@ -297,7 +298,7 @@ export class APIResource extends API {
 
       return changeRelationship[change]({ entity, ids: relationshipIds })
     } else if (validOneRelationship && changeRelationship.many === false) {
-      if (!changeRelationship.hasPermission(ctx, entity, relationship.id)) {
+      if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, relationship.id])) {
         throw new ForbiddenAPIError({ pointer: '/data' })
       }
       return changeRelationship[change]({ entity, id: data.id })
