@@ -364,7 +364,7 @@ export class APIResource extends API {
    * Validate whether the user has access to modify all the attributes in the update request
    * @param {object} arg function arguments object
    * @param {Context} arg.ctx a request context
-   * @param {[object]} arg.attributes attributes list
+   * @param {object} arg.attributes attributes list
    * @param {object} arg.entity the entity to validate
    */
   validateUpdateAccess ({ ctx, attributes, entity }) {

@@ -58,4 +58,25 @@ export default class VersionView extends DatabaseView {
   get includes () {
     return []
   }
+
+  /**
+   * @inheritdoc
+   */
+  get isGroup () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get isInternal () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get isSelf () {
+    return false
+  }
 }

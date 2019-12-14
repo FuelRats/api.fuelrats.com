@@ -153,27 +153,24 @@ export default class Ships extends API {
    * @inheritdoc
    */
   changeRelationship ({ relationship }) {
-    switch (relationship) {
-      case 'rat':
-        return {
-          many: false,
+    if (relationship === 'rat') {
+      return {
+        many: false,
 
-          add ({ entity, id }) {
-            return entity.addRat(id)
-          },
+        add ({ entity, id }) {
+          return entity.addRat(id)
+        },
 
-          patch ({ entity, id }) {
-            return entity.setRat(id)
-          },
+        patch ({ entity, id }) {
+          return entity.setRat(id)
+        },
 
-          remove ({ entity, id }) {
-            return entity.removeRat(id)
-          }
+        remove ({ entity, id }) {
+          return entity.removeRat(id)
         }
-
-      default:
-        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+      }
     }
+    throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
   }
 
   /**

@@ -1,5 +1,5 @@
 import Document, { DocumentViewType } from '.'
-import { db } from '../db'
+import View from '../view'
 import Query from '../query'
 
 /**
@@ -7,7 +7,8 @@ import Query from '../query'
  * @class
  * @augments {Document}
  */
-export default class DatabaseDocument extends Document {
+export default // noinspection JSClosureCompilerSyntax
+class DatabaseDocument extends Document {
   #result = undefined
   #query = undefined
 
@@ -15,8 +16,8 @@ export default class DatabaseDocument extends Document {
    * Create a JSONAPI document from a database result
    * @param {object} arg fucntion arguments object
    * @param {Query} arg.query the request query for this document
-   * @param {db.Model|[db.Model]} arg.result database result
-   * @param {string} arg.type the resource type
+   * @param {any} arg.result database result
+   * @param {View} arg.type the resource type
    * @param {DocumentViewType} arg.view A DocumentViewType enum describing the type of view this document should have
    * @param {object} [arg.meta] extra metdata
    */

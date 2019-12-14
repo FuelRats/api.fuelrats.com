@@ -80,4 +80,36 @@ export default class DatabaseView extends View {
       }, []))
     }, [])
   }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get defaultReadPermission () {
+    return undefined
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isGroup () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isInternal () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isSelf () {
+    return false
+  }
 }

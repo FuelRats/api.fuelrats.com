@@ -125,7 +125,7 @@ export default class Authentication {
   /**
    * Perform all available authentication flows on a request context
    * @param {object} arg function arguments object
-   * @param {string} arg.connection a request connection context
+   * @param {Context} arg.connection a request connection context
    * @returns {Promise<boolean>} true if the request was successfully authenticated, false if not
    */
   static async authenticate ({ connection }) {
