@@ -83,7 +83,8 @@ class Register {
       })
 
       await NickServ.register(nickname, ctx.data.password, email)
-
+      await NickServ.confirm(nickname)
+      
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
         where: { id: user.id }
       })
