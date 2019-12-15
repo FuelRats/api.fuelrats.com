@@ -71,25 +71,6 @@ export class APIError extends Error {
       source: this.source
     }
   }
-
-  static fromValidationError (validationError) {
-    switch (validationError.name) {
-      case 'SequelizeValidationError':
-        return validationError.errors.map((error) => {
-          return new UnprocessableEntityAPIError({
-            pointer: `/data/attributes/${error.path}`
-          })
-        })
-
-      case 'SequelizeForeignKeyConstraintError':
-        return [new UnprocessableEntityAPIError({
-          pointer: `/data/attributes/${validationError.index.split('_')[1]}`
-        })]
-
-      default:
-        return [new UnprocessableEntityAPIError({})]
-    }
-  }
 }
 
 export class BadRequestAPIError extends APIError {
