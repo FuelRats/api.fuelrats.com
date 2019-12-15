@@ -1,14 +1,26 @@
 import View from '.'
 
+/**
+ * Base class for JSONAPI Views generated from Sequelize database entries
+ */
 export default class DatabaseView extends View {
+  /**
+   * @inheritdoc
+   */
   get id () {
     return this.object.id
   }
 
+  /**
+   * @inheritdoc
+   */
   attributeForKey (key) {
     return this.object[key]
   }
 
+  /**
+   * @inheritdoc
+   */
   generateRelationships () {
     return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
       if (this.root && RelationshipView.type === this.root.type) {
@@ -45,6 +57,9 @@ export default class DatabaseView extends View {
     }, {})
   }
 
+  /**
+   * @inheritdoc
+   */
   generateIncludes ({ rootType, includeTypes }) {
     const includes = includeTypes || this.includes
 
@@ -64,5 +79,37 @@ export default class DatabaseView extends View {
         return includeCollection.concat(objectView.generateIncludes({ rootType, includeTypes }))
       }, []))
     }, [])
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get defaultReadPermission () {
+    return undefined
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isGroup () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isInternal () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isSelf () {
+    return false
   }
 }

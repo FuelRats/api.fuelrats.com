@@ -1,10 +1,19 @@
 import { ReadPermission, RatView, DatabaseView } from './'
 
+/**
+ * Get JSONAPI view for a Rescue
+ */
 export default class RescueView extends DatabaseView {
+  /**
+   * @inheritdoc
+   */
   static get type () {
     return 'rescues'
   }
 
+  /**
+   * @inheritdoc
+   */
   get attributes () {
     return class {
       static client
@@ -27,10 +36,16 @@ export default class RescueView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get defaultReadPermission () {
     return ReadPermission.group
   }
 
+  /**
+   * @inheritdoc
+   */
   get isSelf () {
     const { user } = this.query.connection.state
     if (!user) {
@@ -52,14 +67,23 @@ export default class RescueView extends DatabaseView {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   get isGroup () {
     return this.query.connection.state.permissions.includes('rescues.read')
   }
 
+  /**
+   * @inheritdoc
+   */
   get isInternal () {
     return this.query.connection.state.permissions.includes('rescues.internal')
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationships () {
     return {
       rats: RatView,
@@ -67,10 +91,16 @@ export default class RescueView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get includes () {
     return ['rats', 'firstLimpet']
   }
 
+  /**
+   * @inheritdoc
+   */
   get related () {
     return [RatView]
   }

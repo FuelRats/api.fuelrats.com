@@ -2,8 +2,8 @@ import Mail from '../classes/Mail'
 import { User, VerificationToken, db } from '../db'
 import crypto from 'crypto'
 import { NotFoundAPIError } from '../classes/APIError'
+import { Context } from '../classes/Context'
 import API, {
-  Context,
   GET,
   POST,
   parameters,
@@ -81,7 +81,7 @@ export default class Verifications extends API {
 
   /**
    * Create a verification token and send it to a user
-   * @param {db.User} user the user to send it to
+   * @param {User} user the user to send it to
    * @param {db.transaction?} transaction optional database transaction to use for the operation
    * @returns {Promise<undefined>} Resolves a promise when the operation is complete.
    */

@@ -1,6 +1,6 @@
 /**
  * Decorator to turn a class into a quasi Enum
- * @param {Object} target
+ * @param {object} target
  */
 export default function enumerable (target) {
   const properties = Reflect.ownKeys(target)

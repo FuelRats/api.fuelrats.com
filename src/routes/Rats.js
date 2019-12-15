@@ -1,10 +1,9 @@
 
 
 import { Rat } from '../db'
-import { NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
+import { UnsupportedMediaAPIError } from '../classes/APIError'
 
-import API, {
-  permissions,
+import {
   authenticated,
   GET,
   POST,
@@ -12,7 +11,8 @@ import API, {
   DELETE,
   PATCH,
   parameters,
-  protect, WritePermission, APIResource
+  WritePermission,
+  APIResource
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -22,11 +22,21 @@ import Permission from '../classes/Permission'
 import { RatView, UserView } from '../view'
 import { DocumentViewType } from '../Documents'
 
+/**
+ * Endpoint for managing rats
+ */
 export default class Rats extends APIResource {
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'rats'
   }
 
+  /**
+   * Search rats
+   * @endpoint
+   */
   @GET('/rats')
   @websocket('rats', 'search')
   async search (ctx) {
@@ -35,6 +45,10 @@ export default class Rats extends APIResource {
     return new DatabaseDocument({ query, result, type: RatView })
   }
 
+  /**
+   * Get a rat by id
+   * @endpoint
+   */
   @GET('/rats/:id')
   @websocket('rats', 'read')
   @parameters('id')
@@ -44,6 +58,10 @@ export default class Rats extends APIResource {
     return new DatabaseDocument({ query, result, type: RatView })
   }
 
+  /**
+   * Create a rat
+   * @endpoint
+   */
   @POST('/rats')
   @websocket('rats', 'create')
   @authenticated
@@ -57,6 +75,10 @@ export default class Rats extends APIResource {
     return new DatabaseDocument({ query, result, type: RatView })
   }
 
+  /**
+   * Update a rat by id
+   * @endpoint
+   */
   @PUT('/rats')
   @websocket('rats', 'update')
   @authenticated
@@ -68,12 +90,16 @@ export default class Rats extends APIResource {
     return new DatabaseDocument({ query, result, type: RatView })
   }
 
+  /**
+   * Delete a rat by id
+   * @endpoint
+   */
   @DELETE('/rats/:id')
   @websocket('rats', 'delete')
   @authenticated
   @parameters('id')
   async delete (ctx) {
-    await super.delete({ ctx, databaseType: Rat.scope('rescues'), hasPermission: async (entity) => {
+    await super.delete({ ctx, databaseType: Rat.scope('rescues'), hasPermission: (entity) => {
       if (Permission.granted({ permissions: ['rats.write'], connection: ctx })) {
         return true
       }
@@ -89,6 +115,10 @@ export default class Rats extends APIResource {
     return true
   }
 
+  /**
+   * Get a rat's user
+   * @endpoint
+   */
   @GET('/rats/:id/relationships/user')
   @websocket('rats', 'user', 'read')
   @authenticated
@@ -103,6 +133,10 @@ export default class Rats extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
+  /**
+   * Set a rat's user
+   * @endpoint
+   */
   @PATCH('/rats/:id/relationships/user')
   @websocket('rats', 'user', 'patch')
   @authenticated
@@ -118,6 +152,9 @@ export default class Rats extends APIResource {
     return true
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return {
       name: WritePermission.group,

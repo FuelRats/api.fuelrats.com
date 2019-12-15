@@ -6,6 +6,7 @@ import workerpool from 'workerpool'
 import StatusCode from '../classes/StatusCode'
 import Decals from './Decals'
 import Permission from '../classes/Permission'
+import { Context } from '../classes/Context'
 
 import {
   NotFoundAPIError,
@@ -17,7 +18,6 @@ import {
 
 import {
   APIResource,
-  Context,
   WritePermission,
   permissions,
   authenticated,
@@ -81,6 +81,10 @@ export default class Users extends APIResource {
     return new DatabaseDocument({ query, result: user, type: UserView })
   }
 
+  /**
+   * Get a user's profile
+   * @endpoint
+   */
   @GET('/profile')
   @websocket('profiles', 'read')
   @authenticated
@@ -192,7 +196,7 @@ export default class Users extends APIResource {
 
   /**
    * Update a user
-   * @param {Context} ctx a requset context
+   * @param {Context} ctx a request context
    * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
    */
   @PUT('/users/:id')

@@ -1,22 +1,25 @@
 import Document, { DocumentViewType } from '.'
+import View from '../view'
+import Query from '../query'
 
 /**
  * @classdesc A JSONAPI document render for Sequelize database results
  * @class
  * @augments {Document}
  */
-export default class DatabaseDocument extends Document {
+export default // noinspection JSClosureCompilerSyntax
+class DatabaseDocument extends Document {
   #result = undefined
   #query = undefined
 
   /**
    * Create a JSONAPI document from a database result
-   * @param query the request query for this document
-   * @param result database result
-   * @param type the resource type
-   * @param view A DocumentViewType enum describing the type of view this document should have
-   * @param [meta] extra metdata
-   * @constructor
+   * @param {object} arg function arguments object
+   * @param {Query} arg.query the request query for this document
+   * @param {any} arg.result database result
+   * @param {View} arg.type the resource type
+   * @param {DocumentViewType} arg.view A DocumentViewType enum describing the type of view this document should have
+   * @param {object} [arg.meta] extra metadata
    */
   constructor ({ query, result, type, view, meta = {} }) {
     if (result && result.rows) {
@@ -42,7 +45,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get firstPage () {
     if (!this.#result || !this.#result.rows || this.#result.count === 0) {
@@ -53,7 +56,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get lastPage () {
     if (!this.#result || !this.#result.rows || this.#result.count === 0) {
@@ -63,7 +66,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get currentPage () {
     if (!this.#result || !this.#result.rows) {
@@ -74,7 +77,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get previousPage () {
     if (!this.#result || !this.#result.rows) {
@@ -89,7 +92,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get nextPage () {
     if (!this.#result || !this.#result.rows) {
@@ -104,7 +107,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get offset () {
     if (!this.#result || !this.#result.rows) {
@@ -115,7 +118,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get limit () {
     if (!this.#result || !this.#result.rows) {
@@ -126,7 +129,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get count () {
     if (!this.#result || !this.#result.rows) {
@@ -137,7 +140,7 @@ export default class DatabaseDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get total () {
     if (!this.#result || !this.#result.rows) {

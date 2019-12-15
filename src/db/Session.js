@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 export default function Session (sequelize, DataTypes) {
   const session = sequelize.define('Session', {

@@ -8,7 +8,7 @@ import Query, { SortOrder } from '.'
 export default class DatabaseQuery extends Query {
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get searchObject () {
     return {
@@ -23,7 +23,7 @@ export default class DatabaseQuery extends Query {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get defaultSort () {
     return [{

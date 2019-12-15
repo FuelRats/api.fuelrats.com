@@ -1,21 +1,31 @@
-import API, { GET, PUT, POST, DELETE, authenticated, required, getJSONAPIData, PATCH } from '../classes/API'
+import API, { GET, POST, DELETE, authenticated, getJSONAPIData, PATCH } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import Anope from '../classes/Anope'
 import AnopeQuery from '../query/AnopeQuery'
 import ObjectDocument from '../Documents/ObjectDocument'
-import { NicknameView, UserView } from '../view'
+import { NicknameView } from '../view'
 import { BadRequestAPIError, ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
 import { DocumentViewType } from '../Documents/Document'
 import StatusCode from '../classes/StatusCode'
-import { User, Rat } from '../db'
+import { Rat } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 
+/**
+ * Endpoint for managing IRC nicknames
+ */
 export default class Nickname extends API {
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'nicknames'
   }
 
+  /**
+   * Search nicknames
+   * @endpoint
+   */
   @GET('/nicknames')
   @websocket('nicknames', 'search')
   @authenticated
@@ -26,6 +36,10 @@ export default class Nickname extends API {
     return new ObjectDocument({ query, result, type: NicknameView })
   }
 
+  /**
+   * Get info about a nickname
+   * @endpoint
+   */
   @GET('/nicknames/:nick')
   @websocket('nicknames', 'read')
   @authenticated
@@ -39,6 +53,10 @@ export default class Nickname extends API {
     return new ObjectDocument({ query, result, type: NicknameView, view: DocumentViewType.individual })
   }
 
+  /**
+   * Register a nickname
+   * @endpoint
+   */
   @POST('/nicknames')
   @websocket('nicknames', 'create')
   @authenticated
@@ -65,6 +83,10 @@ export default class Nickname extends API {
     return new ObjectDocument({ query, result: createdNick, type: NicknameView, view: DocumentViewType.individual })
   }
 
+  /**
+   * Drop a nickname
+   * @endpoint
+   */
   @DELETE('/nicknames/:nick')
   @websocket('nicknames', 'delete')
   @authenticated
@@ -87,8 +109,7 @@ export default class Nickname extends API {
 
   /**
    * Get a nicknames' linked rat relationship
-   * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} a nicknames' linked rat relationship
+   * @endpoint
    */
   @GET('/nicknames/:nick/relationships/rat')
   @websocket('nicknames', 'rat', 'read')
@@ -119,14 +140,13 @@ export default class Nickname extends API {
   }
 
   /**
-   * Set a user's display rat relationshi  p
-   * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} an updated user with updated relationships
+   * Set a user's display rat relationship
+   * @endpoint
    */
   @PATCH('/nicknames/:nick/relationships/rat')
   @websocket('nicknames', 'rat', 'patch')
   @authenticated
-  async relationshipFirstLimpetPatch (ctx) {
+  async relationshipFirstLimpetPatch () {
     // const user = await this.relationshipChange({
     //   ctx,
     //   databaseType: User,
@@ -138,19 +158,5 @@ export default class Nickname extends API {
     // const result = await Anope.mapNickname(user)
     //
     // return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
-  }
-
-  getReadPermissionFor ({ connection, entity }) {
-    if (entity.user.id === connection.state.user.id) {
-      return ['nickname.write', 'nickname.write.me']
-    }
-    return ['nickname.write']
-  }
-
-  getWritePermissionFor ({ connection, entity }) {
-    if (entity.user.id === connection.state.user.id) {
-      return ['nickname.write', 'nickname.write.me']
-    }
-    return ['nickname.write']
   }
 }

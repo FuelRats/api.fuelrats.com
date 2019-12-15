@@ -6,7 +6,6 @@ import Permission from '../classes/Permission'
 import { NotFoundAPIError, UnprocessableEntityAPIError, VerificationRequiredAPIError } from '../classes/APIError'
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
-import Clients from './Clients'
 import Authentication from '../classes/Authentication'
 import Sessions from './Sessions'
 
@@ -20,6 +19,7 @@ import API, {
 } from '../classes/API'
 import DatabaseQuery from '../query/DatabaseQuery'
 
+// noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
   resources:  localisationResources
@@ -68,7 +68,7 @@ server.grant(oauth2orize.grant.token(async (client, user, ares, areq) => {
 }))
 
 server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
-  const auth = await Code.findOne({ where: { value: code }})
+  const auth = await Code.findOne({ where: { value: code } })
 
   if (!auth || client.id !== auth.clientId || redirectUri !== auth.redirectUri) {
     return false
@@ -116,7 +116,21 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
   return token.value
 }))
 
+/**
+ * Class managing OAuth related endpoints
+ */
 export default class OAuth2 extends API {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return undefined
+  }
+
+  /**
+   * Revoke an oauth token
+   * @endpoint
+   */
   @POST('/oauth2/revoke')
   @clientAuthenticated
   @required('token')
@@ -133,6 +147,10 @@ export default class OAuth2 extends API {
     return true
   }
 
+  /**
+   * Revoke all of a client's oauth tokens
+   * @inheritdoc
+   */
   @POST('/oauth2/revokeall')
   @clientAuthenticated
   async revokeAll (ctx) {
@@ -158,6 +176,10 @@ export default class OAuth2 extends API {
     return true
   }
 
+  /**
+   * Get the information required to render an authorize page
+   * @endpoint
+   */
   @GET('/oauth2/authorize')
   @authenticated
   @parameters('scope', 'client_id', 'response_type')
@@ -176,6 +198,10 @@ export default class OAuth2 extends API {
     }
   }
 
+  /**
+   * Authorization decision handler middleware
+   * @endpoint
+   */
   static authorizationDecisionHandler (ctx) {
     ctx.type = 'application/json'
     ctx.body = { redirectUri: ctx.data.redirectUri }
@@ -184,10 +210,8 @@ export default class OAuth2 extends API {
 
 
 /**
- *
- * @param target
- * @param name
- * @param descriptor
+ * Validate the redirectUri of an authorize request
+ * @endpoint
  */
 export function validateRedirectUri (target, name, descriptor) {
   const endpoint = descriptor.value
@@ -214,14 +238,15 @@ export function validateRedirectUri (target, name, descriptor) {
 }
 
 /**
- * Check wether these scopes are valid scopes that represent a permission in the API
- * @param scopes
+ * Check whether these scopes are valid scopes that represent a permission in the API
+ * @param {[string] }scopes
  */
 function validateScopes (scopes) {
-  for (const scope of scopes) {
-    if (Permission.allPermissions.includes(scope) === false && scope !== '*') {
-      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
-    }
+  const invalid = scopes.some((scope) => {
+    return Permission.allPermissions.includes(scope) === false && scope !== '*'
+  })
+  if (invalid) {
+    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
   }
 }
 

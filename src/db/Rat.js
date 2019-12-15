@@ -1,5 +1,5 @@
+/* eslint-disable */
 import { JSONObject, validCMDRname } from '../classes/Validators'
-import RatView from '../view/RatView'
 
 export default function Rat (sequelize, DataTypes) {
   const rat = sequelize.define('Rat', {

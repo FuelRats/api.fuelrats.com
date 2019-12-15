@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 
 export default function UserGroups (sequelize, DataTypes) {

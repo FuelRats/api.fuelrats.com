@@ -1,4 +1,4 @@
-import Query, { SortOrder } from '.'
+import Query from '.'
 
 /**
  * @classdesc An API Query Handler for requests that need data from a Sequelize database table
@@ -8,7 +8,7 @@ import Query, { SortOrder } from '.'
 export default class AnopeQuery extends Query {
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get searchObject () {
     return {
@@ -16,7 +16,7 @@ export default class AnopeQuery extends Query {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get defaultSort () {
     return undefined

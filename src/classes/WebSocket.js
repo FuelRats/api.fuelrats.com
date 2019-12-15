@@ -1,3 +1,4 @@
+/* eslint-disable */
 import logger from '../logging'
 import {
   APIError,
@@ -12,12 +13,13 @@ import UUID from 'pure-uuid'
 import Authentication from './Authentication'
 import Permission from './Permission'
 import Document from '../Documents/Document'
-import { Context } from './API'
+import { Context } from './Context'
 
 const acceptedProtocols = ['FR-JSONAPI-WS']
 
 const routes = {}
 
+// eslint-disable-next-line
 export default class WebSocket {
   constructor ({ server, trafficManager }) {
     this.wss = new ws.Server({
@@ -73,6 +75,7 @@ export default class WebSocket {
   }
 
   async onConnection ({ client }) {
+    // noinspection JSClosureCompilerSyntax
     const ctx = new Context({ client, request: {} })
     const route = await WebSocket.getRoute('version', 'read')
     const result = await route(ctx)
@@ -91,6 +94,7 @@ export default class WebSocket {
       query = query || {}
       body = body || {}
 
+      // noinspection JSClosureCompilerSyntax
       const ctx = new Context({ client, query, body, message })
 
       let result = await this.route({ ctx, endpoint })

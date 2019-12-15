@@ -1,14 +1,26 @@
 import { ReadPermission, DatabaseView, UserView, RatView } from './'
 
+/**
+ * Get JSONAPI view for an IRC nickname
+ */
 export default class NicknameView extends DatabaseView {
+  /**
+   * @inheritdoc
+   */
   static get type () {
     return 'nicknames'
   }
 
+  /**
+   * @inheritdoc
+   */
   get id () {
     return this.object.id
   }
 
+  /**
+   * @inheritdoc
+   */
   get attributes () {
     return class {
       static lastQuit
@@ -30,10 +42,16 @@ export default class NicknameView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get defaultReadPermission () {
     return ReadPermission.all
   }
 
+  /**
+   * @inheritdoc
+   */
   get isSelf () {
     if (this.query.connection.state.user && this.object.user.id === this.query.connection.state.user.id) {
       return this.query.connection.state.permissions.includes('nicknames.read.me')
@@ -41,14 +59,23 @@ export default class NicknameView extends DatabaseView {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   get isGroup () {
     return this.query.connection.state.permissions.includes('nicknames.read')
   }
 
+  /**
+   * @inheritdoc
+   */
   get isInternal () {
     return this.query.connection.state.permissions.includes('nicknames.internal')
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationships () {
     return {
       user: UserView,
@@ -56,10 +83,16 @@ export default class NicknameView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get related () {
     return []
   }
 
+  /**
+   * @inheritdoc
+   */
   get includes () {
     return ['user']
   }

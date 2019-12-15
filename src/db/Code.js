@@ -5,6 +5,7 @@ const oAuthTokenMinLength = 24
 const oAuthTokenMaxLength = 128
 const oAuthRedirectUriMaxLength = 255
 
+/* eslint-disable jsdoc/require-jsdoc */
 export default function Code (sequelize, DataTypes) {
   const code = sequelize.define('Code', {
     id: {

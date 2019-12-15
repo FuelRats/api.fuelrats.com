@@ -1,5 +1,6 @@
 import { URL } from 'url'
 import config from '../../config'
+import ws from 'ws'
 
 /**
  * Request object

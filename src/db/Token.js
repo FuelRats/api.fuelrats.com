@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { OAuthScope } from '../classes/Validators'
 
 const oAuthScopeMaxLength = 128

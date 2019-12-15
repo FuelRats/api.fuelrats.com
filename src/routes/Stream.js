@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 
 import API, {
@@ -7,6 +8,10 @@ import { websocket } from '../classes/WebSocket'
 import { ConflictAPIError } from '../classes/APIError'
 
 export default class Stream extends API {
+  get type () {
+    return 'streams'
+  }
+
   @websocket('stream', 'subscribe')
   @authenticated
   subscribe (ctx) {
@@ -43,7 +48,7 @@ export default class Stream extends API {
   broadcast (ctx) {
     const applicationId = ctx.query.id
 
-    let result = CustomPresenter.render(ctx.data)
+    let result = {}
     result.meta = {}
     Object.assign(result.meta, ctx.query)
     process.emit('apiBroadcast', applicationId, ctx, result)

@@ -1,25 +1,33 @@
 import Mail from '../classes/Mail'
-import { User, Session } from '../db'
+import { Session, User, db } from '../db'
 import crypto from 'crypto'
-import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import { NotFoundAPIError } from '../classes/APIError'
+import { Context } from '../classes/Context'
 import API, {
   GET,
-  parameters,
+  parameters
 } from '../classes/API'
-import { websocket } from '../classes/WebSocket'
-import Users from './Users'
 import GeoIP from '../classes/GeoIP'
 import UAParser from 'ua-parser-js'
 
 const mail = new Mail()
-const expirationLength = 86400000
 const sessionTokenLength = 64
 
+/**
+ * Class managing user session endpoints
+ */
 export default class Sessions extends API {
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'sessions'
   }
 
+  /**
+   * Verify a session token
+   * @endpoint
+   */
   @GET('/session/:token')
   @parameters('token')
   async verify (ctx) {
@@ -42,6 +50,12 @@ export default class Sessions extends API {
     return true
   }
 
+  /**
+   * Create a user session verification
+   * @param {Context} ctx request context
+   * @param {User} user the user the session belongs to
+   * @returns {Promise<void>} completes a promise when email is sent
+   */
   static async createSession (ctx, user) {
     const session = await Session.create({
       ip: ctx.request.ip,
@@ -53,6 +67,13 @@ export default class Sessions extends API {
     return Sessions.sendSessionMail(user.email, user.preferredRat.name, session.code, ctx)
   }
 
+  /**
+   * Create a verified user session
+   * @param {Context} ctx request context
+   * @param {User} user the user the session belongs to
+   * @param {db.Transaction} transaction Sequelize transaction
+   * @returns {Session} user session
+   */
   static createVerifiedSession (ctx, user, transaction = undefined) {
     return Session.create({
       ip: ctx.request.ip,
@@ -63,6 +84,14 @@ export default class Sessions extends API {
     }, { transaction })
   }
 
+  /**
+   * Send a user session verification email
+   * @param {string} email the user's email
+   * @param {string} name the user's display name
+   * @param {string} code verification code
+   * @param {Context} ctx request context
+   * @returns {Promise<void>} completes a promise when successful
+   */
   static sendSessionMail (email, name, code, ctx) {
     const ipAddress = ctx.request.ip
 
@@ -99,6 +128,11 @@ export default class Sessions extends API {
     })
   }
 
+  /**
+   * Generate a short device description based on a user agent
+   * @param {object} userAgent parsed user agent
+   * @returns {string} short device description
+   */
   static generateDeviceDescription (userAgent) {
     const ua = new UAParser(userAgent)
     if (!ua.getBrowser().name) {
@@ -107,7 +141,12 @@ export default class Sessions extends API {
     return `${ua.getBrowser().name} ${ua.getBrowser().version} on ${ua.getOS().name}`
   }
 
-  static getVerifyLink (resetToken) {
-    return `https://fuelrats.com/verify?type=session&t=${resetToken}`
+  /**
+   * Get a verification link
+   * @param {string} verifyToken the verification token
+   * @returns {string} a verification link
+   */
+  static getVerifyLink (verifyToken) {
+    return `https://fuelrats.com/verify?type=session&t=${verifyToken}`
   }
 }

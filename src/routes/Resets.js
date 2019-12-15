@@ -6,21 +6,29 @@ import API, {
   GET,
   POST,
   parameters,
-  permissions,
   isValidJSONAPIObject
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
-import Users from './Users'
 
 const mail = new Mail()
 const expirationLength = 86400000
 const resetTokenLength = 64
 
+/**
+ * Class managing password reset endpoints
+ */
 export default class Resets extends API {
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'resets'
   }
 
+  /**
+   * Request a password reset
+   * @endpoint
+   */
   @POST('/reset')
   @websocket('resets', 'create')
   async create (ctx) {
@@ -89,6 +97,10 @@ export default class Resets extends API {
     return true
   }
 
+  /**
+   * Validate a password reset token
+   * @endpoint
+   */
   @GET('/reset/:token')
   @parameters('token')
   async validate (ctx) {
@@ -105,6 +117,10 @@ export default class Resets extends API {
     return true
   }
 
+  /**
+   * Use a token to reset a password
+   * @endpoint
+   */
   @POST('/reset/:token')
   @parameters('token')
   async reset (ctx) {
@@ -141,6 +157,11 @@ export default class Resets extends API {
     return true
   }
 
+  /**
+   * Get a password reset link
+   * @param {string} resetToken password reset token
+   * @returns {string} password reset link
+   */
   static getResetLink (resetToken) {
     return `https://fuelrats.com/verify?type=reset&t=${resetToken}`
   }

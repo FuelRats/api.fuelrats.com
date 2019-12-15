@@ -3,7 +3,13 @@ import Mailgen from 'mailgen'
 import path from 'path'
 import config from '../../config'
 
+/**
+ * Class for managing sending emails
+ */
 export default class Mail {
+  /**
+   * Create a mail sender class instance
+   */
   constructor () {
     this.transporter = nodemailer.createTransport({
       host: config.smtp.host,
@@ -23,6 +29,14 @@ export default class Mail {
     })
   }
 
+  /**
+   * Send an email
+   * @param {object} arg function arguments object
+   * @param {string} arg.to the email recipient
+   * @param {string } arg.subject the email subject
+   * @param {object} arg.body mailgen body configuration
+   * @returns {Promise<void>} fulfills a promise when successful
+   */
   async send ({ to: recipient, subject, body }) {
     const email = {
       body

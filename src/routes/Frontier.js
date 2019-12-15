@@ -11,10 +11,24 @@ import Anope from '../classes/Anope'
 import { TokenView } from '../view'
 import StatusCode from '../classes/StatusCode'
 
+/**
+ * Endpoint for managing Frontier based single sign-on
+ */
 export default class Frontier extends API {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'frontier-logins'
+  }
+
+  /**
+   * Login with a frontier token
+   * @endpoint
+   */
   @POST('/frontier/login')
   async login (ctx) {
-    const { code } = getJSONAPIData({ ctx, type: 'frontier-login' })
+    const { code } = getJSONAPIData({ ctx, type: 'frontier-logins' })
     const { access_token: token } = await FrontierAPI.exchangeToken(code)
 
     const profile = await FrontierAPI.getProfile(token)
@@ -55,7 +69,7 @@ export default class Frontier extends API {
     })
 
     if (user && !ctx.state.user) {
-      throw new UnauthorizedAPIError()
+      throw new UnauthorizedAPIError({})
     }
 
     if (!user) {
@@ -110,6 +124,10 @@ export default class Frontier extends API {
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }
 
+  /**
+   * Create a linked frontier account
+   * @endpoint
+   */
   @POST('/frontier/create')
   async create (ctx) {
     const { token, nickname, password } = getJSONAPIData({ ctx, type: 'user' })
@@ -179,6 +197,11 @@ export default class Frontier extends API {
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }
 
+  /**
+   * Convert a game platform from Frontier's platform types, to Fuel Rats platform types
+   * @param {string} frontierPlatform Frontier platform type
+   * @returns {string} fuel rats platform type
+   */
   static convertPlatform (frontierPlatform) {
     return {
       steam: 'pc',

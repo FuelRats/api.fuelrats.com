@@ -9,7 +9,7 @@ const profileImageMax = 100
 
 /**
  * Web worker that formats converts an image to an appropriate format and resolution for avatars
- * @param imageDataPackage Data buffer package containing image data
+ * @param {ArrayBuffer} imageDataPackage Data buffer package containing image data
  * @returns {Promise<any>} A transformed data buffer or an error
  */
 async function avatarImageResize (imageDataPackage) {
