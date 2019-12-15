@@ -27,7 +27,8 @@ export default class DatabaseView extends View {
         return acc
       }
 
-      let data = undefined
+      // eslint-disable-next-line no-restricted-syntax
+      let data = null
       if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
           return (new RelationshipView({
@@ -44,15 +45,10 @@ export default class DatabaseView extends View {
         })).relationshipView
       }
 
-      const linkObject = {
-        links: this.getRelationLink(key)
+      acc[key] = {
+        links: this.getRelationLink(key),
+        data
       }
-
-      if (data && (!Array.isArray(data) || data.length > 0)) {
-        linkObject.data = data
-      }
-
-      acc[key] = linkObject
       return acc
     }, {})
   }
