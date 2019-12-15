@@ -1,5 +1,10 @@
 import Document from '.'
-import { InternalServerError, APIError, MethodNotAllowedAPIError } from '../classes/APIError'
+import {
+  InternalServerError,
+  APIError,
+  MethodNotAllowedAPIError,
+  UnprocessableEntityAPIError
+} from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import Query from '../query'
 
@@ -25,19 +30,36 @@ class ErrorDocument extends Document {
       errorList = [errorList]
     }
 
-    // if (Reflect.has(errors, 'name')) {
-    //   errorList = APIError.fromValidationError(errors)
-    // }
+    errorList = errorList.reduce((errorAcc, error) => {
+      switch (true) {
+        case (error instanceof APIError):
+          errorAcc.push(error)
+          break
 
-    errorList = errorList.map((error) => {
-      if (error instanceof APIError) {
-        return error
-      } else if (error.name === 'MethodNotAllowedError') {
-        return new MethodNotAllowedAPIError({})
-      } else {
-        return new InternalServerError({})
+        case (error.name === 'SequelizeValidationError'):
+          errorAcc.push(...error.errors.map((validationError) => {
+            return new UnprocessableEntityAPIError({
+              pointer: `/data/attributes/${validationError.path}`
+            })
+          }))
+          break
+
+        case (error.name === 'SequelizeForeignKeyConstraintError'):
+          errorAcc.push(new UnprocessableEntityAPIError({
+            pointer: '/data/id'
+          }))
+          break
+
+        case (error.name === 'MethodNotAllowedError'):
+          errorAcc.push(new MethodNotAllowedAPIError({}))
+          break
+
+        default:
+          errorAcc.push(new InternalServerError({}))
       }
-    })
+
+      return errorAcc
+    }, [])
 
     super({
       objects: undefined,
