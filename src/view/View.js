@@ -118,8 +118,8 @@ export default class View {
    * @returns {string}
    */
   get self () {
-    if (this.root) {
-      return `${this.root.self}/${this.id}`
+    if (this.parent) {
+      return `${this.parent.self}/${this.id}`
     }
     return `${this.type}/${this.id}`
   }
