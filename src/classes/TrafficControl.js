@@ -122,14 +122,12 @@ export default class TrafficControl {
  * @class
  */
 class TrafficEntity {
-  #requestCount = 0
-
   /**
    * Get the number of requests made by this entity during the rate limit period
    * @returns {number} number of requests made by this entity during the rate limit period
    */
   get count () {
-    return this.#requestCount
+    return this.requestCount
   }
 
   /**
@@ -137,7 +135,7 @@ class TrafficEntity {
    * @param {number} count The number of requests made by this entity during the rate limit period
    */
   set count (count) {
-    this.#requestCount =  count
+    this.requestCount = count
   }
 }
 
@@ -147,7 +145,6 @@ class TrafficEntity {
  */
 class AuthenticatedUserEntity extends TrafficEntity {
   #user = undefined
-  #requestCount = 0
 
   /**
    * Create an entity representing the traffic made by a specific authenticated user
@@ -158,7 +155,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
   constructor ({ user, initialCount = 0 }) {
     super()
     this.#user = user
-    this.#requestCount = initialCount
+    this.requestCount = initialCount
   }
 
   /**
@@ -180,9 +177,9 @@ class AuthenticatedUserEntity extends TrafficEntity {
    */
   get remainingRequests () {
     if (this.isAdmin) {
-      return allowedAdminRequestCount - this.#requestCount
+      return allowedAdminRequestCount - this.requestCount
     }
-    return allowedAuthenticatedRequestCount - this.#requestCount
+    return allowedAuthenticatedRequestCount - this.requestCount
   }
 
   /**
@@ -202,7 +199,6 @@ class AuthenticatedUserEntity extends TrafficEntity {
  */
 class RemoteAddressEntity extends TrafficEntity {
   #remoteAddress = undefined
-  #requestCount = 0
 
   /**
    * Create an entity representing the traffic made by a specific unauthenticated remote address
@@ -213,7 +209,7 @@ class RemoteAddressEntity extends TrafficEntity {
   constructor ({ remoteAddress, initialCount = 0 }) {
     super()
     this.#remoteAddress = remoteAddress
-    this.#requestCount = initialCount
+    this.requestCount = initialCount
   }
 
   /**
@@ -221,7 +217,7 @@ class RemoteAddressEntity extends TrafficEntity {
    * @returns {number} the number of remaining requests this entity has in this period
    */
   get remainingRequests () {
-    return allowedUnauthenticatedRequestCount - this.#requestCount
+    return allowedUnauthenticatedRequestCount - this.requestCount
   }
 
   /**
