@@ -164,7 +164,7 @@ export default class Document  {
       const {
         total: rateLimitTotal,
         remaining: rateLimitRemaining,
-        nextResetDate: rateLimitReset
+        reset: rateLimitReset
       } = this.#query.connection.state.traffic
 
       traffic = {

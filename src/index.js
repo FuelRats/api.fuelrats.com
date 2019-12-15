@@ -136,7 +136,7 @@ app.use(async (ctx, next) => {
     ctx.set('X-API-Version', packageInfo.version)
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
-    ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)
+    ctx.set('X-Rate-Limit-Reset', rateLimit.reset)
 
     logger.info({ tags: ['request'] }, `Request by ${ctx.request.ip} to ${ctx.request.path}`, {
       ip: ctx.request.ip,

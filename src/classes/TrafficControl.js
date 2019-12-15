@@ -56,7 +56,8 @@ export default class TrafficControl {
     return {
       exceeded: !valid,
       remaining: entity.remainingRequests,
-      total: entity.totalRequests
+      total: entity.totalRequests,
+      reset: this.nextResetDate
     }
   }
 
