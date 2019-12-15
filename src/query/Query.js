@@ -119,14 +119,10 @@ export default class Query {
    * @returns {object} Get the subset of resulting fields to display, parsed from the API Query
    */
   get fields () {
-    const { query } = this.connection
+    const { fields = {} } = this.connection.query
 
-    return Object.entries(query).reduce((acc, [key, value]) => {
-      const matches = key.match(fieldsRegex)
-      if (matches) {
-        const [, type] = matches
-        acc[type] = value.split(',')
-      }
+    return Object.entries(fields).reduce((acc, [key, value]) => {
+      acc[key] = value.split(',')
       return acc
     }, {})
   }
