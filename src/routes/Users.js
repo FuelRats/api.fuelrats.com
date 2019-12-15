@@ -1,4 +1,4 @@
-import { User, Decal } from '../db'
+import { User, Decal, Avatar } from '../db'
 import { UserView, DecalView, RatView, ClientView, GroupView } from '../view'
 import bcrypt from 'bcrypt'
 import Anope from '../classes/Anope'
@@ -111,10 +111,17 @@ export default class Users extends APIResource {
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
   async image (ctx, next) {
-    const user = await User.scope('image')
-      .findByPk(ctx.params.id)
+    const avatar = await Avatar.scope('data').findOne({
+      where: {
+        userId: ctx.params.id
+      }
+    })
+    if (!avatar) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
     ctx.type = 'image/jpeg'
-    ctx.body = user.image
+    ctx.body = avatar.image
     next()
   }
 
@@ -250,12 +257,17 @@ export default class Users extends APIResource {
 
     const imageData = ctx.req._readableState.buffer.head.data
 
-    const formattedImageData = await Users.imageResizePool.exec('avatarImageResize', [imageData])
+    const formattedImageData = await Users.convertImageData(imageData)
 
-    await User.update({
-      image: formattedImageData
-    }, {
-      where: { id: ctx.params.id }
+    await Avatar.destroy({
+      where: {
+        userId: ctx.params.id
+      }
+    })
+
+    await Avatar.create({
+      image: formattedImageData,
+      userId: ctx.params.id
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -712,6 +724,23 @@ export default class Users extends APIResource {
       'displayRat': 'rats',
       'groups': 'groups',
       'clients': 'clients'
+    }
+  }
+
+  /**
+   * Contact the image processing web worker to process an image into the correct format and size
+   * @param {Buffer} originalImageData the original image data
+   * @returns {Promise<Buffer>} processed image data
+   */
+  static async convertImageData (originalImageData) {
+    try {
+      return Buffer.from(await Users.imageResizePool.exec('avatarImageResize', [originalImageData]))
+    } catch (error) {
+      if (error.message.includes('unsupported image format')) {
+        throw new UnsupportedMediaAPIError({})
+      } else {
+        throw error
+      }
     }
   }
 }

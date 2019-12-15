@@ -194,7 +194,7 @@ export class PayloadTooLargeAPIError extends APIError {
 
 export class UnsupportedMediaAPIError extends APIError {
   get code () {
-    return StatusCode
+    return StatusCode.unsupportedMediaType
   }
 
   get status () {

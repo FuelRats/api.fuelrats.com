@@ -193,6 +193,11 @@ export default function User (db, DataTypes) {
           }]
         },
         {
+          model: models.Avatar,
+          as: 'avatar',
+          required: false
+        },
+        {
           model: models.Rat,
           as: 'displayRat',
 
