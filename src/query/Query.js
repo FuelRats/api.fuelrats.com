@@ -136,12 +136,12 @@ export default class Query {
    * @returns {{field: string, sort: SortOrder}[]} requested sorting order
    */
   get sort () {
-    const { order } = this.connection.query
+    const { sort } = this.connection.query
 
-    if (!order) {
+    if (!sort) {
       return this.defaultSort
     }
-    return order.split(',').map((orderItem) => {
+    return sort.split(',').map((orderItem) => {
       if (orderItem.startsWith('-')) {
         return {
           field: orderItem.substring(1),
