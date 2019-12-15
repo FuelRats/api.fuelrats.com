@@ -7,6 +7,7 @@ import { Context } from '../classes/Context'
 
 const permissionList = require('../../permissions')
 
+// noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
   resources:  localisationResources

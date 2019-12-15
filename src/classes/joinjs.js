@@ -52,7 +52,7 @@ function map (resultSet, maps, mapId, columnPrefix) {
  */
 function mapOne (resultSet, maps, mapId, columnPrefix, isRequired = true) {
 
-  var mappedCollection = map(resultSet, maps, mapId, columnPrefix)
+  let mappedCollection = map(resultSet, maps, mapId, columnPrefix)
 
   if (mappedCollection.length > 0) {
     return mappedCollection[0]

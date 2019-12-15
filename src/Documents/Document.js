@@ -208,7 +208,7 @@ export default class Document  {
 
   /**
    * Get the last page number for the results this Document represents
-   * @returns {number|undefined} the first page number for the results this Docuemnt represents
+   * @returns {number|undefined} the first page number for the results this Document represents
    * @abstract
    */
   get lastPage () {
@@ -388,7 +388,7 @@ export default class Document  {
   }
 
   /**
-   * get a rendered JSONAPI documetn with only relationship and meta information
+   * get a rendered JSONAPI document with only relationship and meta information
    * @returns {object} a rendered JSONAPI document with only relationship and meta information
    */
   get relationshipDocument () {

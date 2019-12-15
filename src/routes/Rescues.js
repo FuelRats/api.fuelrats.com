@@ -195,7 +195,7 @@ export default class Rescues extends APIResource {
   @GET('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'read')
   @authenticated
-  async relationshipfirstLimpetView (ctx) {
+  async relationshipFirstLimpetView (ctx) {
     const result = await this.relationshipView({
       ctx,
       databaseType: Rescue,

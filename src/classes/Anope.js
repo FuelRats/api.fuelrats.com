@@ -280,7 +280,7 @@ export default class Anope {
    * @param {string} arg.email the email to use for the new user
    * @param {string} arg.nick the main IRC nickname for the new user
    * @param {string} arg.encryptedPassword a bcrypt encrypted password to use for the new user
-   * @param {string} arg.vhost vhoset to use for all nicknames of the new user
+   * @param {string} arg.vhost vhost to use for all nicknames of the new user
    * @param {string} [arg.ratId] the id of an optional Rat to bind to this nickname
    * @returns {Promise<Nickname>} returns a newly created Nickname entry
    */

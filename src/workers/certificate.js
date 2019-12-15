@@ -19,6 +19,7 @@ function generateSslCertificate (ratName) {
       const certificate = certStdout.substring(certBeginIndex)
 
 
+      // noinspection SpellCheckingInspection
       exec(`echo "${certificate}" | openssl x509 -sha256 -noout -fingerprint \\
       | sed -e 's/^.*=//;s/://g;y/ABCDEF/abcdef/'`,
       (fpErr, fpStdout) => {

@@ -5,6 +5,7 @@ import localisationResources from '../../localisations.json'
 import UUID from 'pure-uuid'
 import StatusCode from './StatusCode'
 
+// noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
   resources:  localisationResources

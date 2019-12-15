@@ -207,7 +207,7 @@ export class APIResource extends API {
    * @param {object} arg function arguments object
    * @param {object} arg.ctx a request context
    * @param {db.Model} arg.databaseType a database type object
-   * @param {object} arg.relationship the JSONAPI resource relattionship
+   * @param {object} arg.relationship the JSONAPI resource relationship
    * @returns {Promise<db.Model>} a find transaction
    */
   async relationshipView ({ ctx, databaseType, relationship }) {
@@ -307,7 +307,7 @@ export class APIResource extends API {
   }
 
   /**
-   * Valiadate whether the user has access to create all the attributes in the create request
+   * Validate whether the user has access to create all the attributes in the create request
    * @param {object} arg function arguments object
    * @param {Context} arg.ctx request context
    * @param {object} arg.attributes attributes list
@@ -326,6 +326,18 @@ export class APIResource extends API {
       connection: ctx
     })
 
+    this.validatePermissionForFields({ attributes, isInternal, isGroup, isSelf })
+  }
+
+  /**
+   * Validate permissions on a set of fields using a set of permissions
+   * @param {object} arg function arguments object
+   * @param {{object}} arg.attributes key-value object representing the fields we validate
+   * @param {boolean} arg.isInternal Whether we have internal access permission
+   * @param {boolean} arg.isGroup Whether we have group level access permission
+   * @param {boolean} arg.isSelf Whether we have self level access permission
+   */
+  validatePermissionForFields ({ attributes, isInternal, isGroup, isSelf }) {
     Object.entries(attributes).forEach(([key]) => {
       const attributePermissions = this.writePermissionsForFieldAccess[key]
       if (!attributePermissions) {
@@ -381,38 +393,7 @@ export class APIResource extends API {
       connection: ctx
     })
 
-    Object.entries(attributes).forEach(([key]) => {
-      const attributePermissions = this.writePermissionsForFieldAccess[key]
-      if (!attributePermissions) {
-        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
-      }
-
-      const hasPermission = () => {
-        switch (attributePermissions) {
-          case WritePermission.all:
-            return true
-
-          case WritePermission.internal:
-            return isInternal
-
-          case WritePermission.sudo:
-            return isGroup
-
-          case WritePermission.group:
-            return isGroup || isSelf
-
-          case WritePermission.self:
-            return isSelf
-
-          default:
-            return false
-        }
-      }
-
-      if (hasPermission() === false) {
-        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
-      }
-    })
+    this.validatePermissionForFields({ attributes, isInternal, isGroup, isSelf })
   }
 
   /**
@@ -455,7 +436,7 @@ export class APIResource extends API {
    * @param {object} arg function arguments object
    * @param {object}  arg.connection a request context
    * @param {object} arg.entity a resource entity
-   * @returns {boolean} whether the usre has write permission for this resource
+   * @returns {boolean} whether the user has write permission for this resource
    */
   hasWritePermission ({ connection, entity }) {
     if (this.isSelf({ ctx: connection, entity })) {
@@ -467,7 +448,7 @@ export class APIResource extends API {
   /**
    * Get a change relationship object for this resource defining the actions to perform for add, delete, and patch
    * relationship requests
-   * @param {string} relationship the relationship relative to the ressource
+   * @param {string} relationship the relationship relative to the resource
    * @returns {*} a change relationship object
    * @abstract
    */
@@ -476,8 +457,8 @@ export class APIResource extends API {
   }
 
   /**
-   * Get a map of JSONAPI ressource types for the relationships of this resource
-   * @returns {*} a map of JSONAPI ressource types
+   * Get a map of JSONAPI resource types for the relationships of this resource
+   * @returns {*} a map of JSONAPI resource types
    * @abstract
    */
   get relationTypes () {

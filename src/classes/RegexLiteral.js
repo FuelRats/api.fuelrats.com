@@ -1,5 +1,5 @@
 /**
- * @classdesc A convinience class that converts a regex within a multi-line string literal into a RegExp object
+ * @classdesc A convenience class that converts a regex within a multi-line string literal into a RegExp object
  * @class
  */
 export default class RegexLiteral {

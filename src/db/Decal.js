@@ -2,6 +2,7 @@ import { FrontierRedeemCode } from '../classes/Validators'
 
 const decalNotesMaxLength = 4096
 
+// noinspection ES6ConvertModuleExportToExport
 module.exports = function (sequelize, DataTypes) {
   const decal = sequelize.define('Decal', {
     id: {

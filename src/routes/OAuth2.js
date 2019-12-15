@@ -19,6 +19,7 @@ import API, {
 } from '../classes/API'
 import DatabaseQuery from '../query/DatabaseQuery'
 
+// noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
   resources:  localisationResources

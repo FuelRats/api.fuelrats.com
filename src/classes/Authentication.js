@@ -13,7 +13,7 @@ const basicAuthHeaderOffset = 6
  */
 export default class Authentication {
   /**
-   * Perform password authentication with email andoh rig password
+   * Perform password authentication with email and password
    * @param {object} arg function arguments object
    * @param {string} arg.email the email of the user to authenticate
    * @param {string} arg.password the password of the user to authenticate
@@ -202,7 +202,7 @@ function getBearerToken (ctx) {
 
 /**
  * Get basic auth credentials from a request object
- * @param {Context} ctx the requset object to retrieve basic auth credentials from
+ * @param {Context} ctx the request object to retrieve basic auth credentials from
  * @returns {Array} An array containing the username and password, or an empty array if none was found.
  */
 function getBasicAuth (ctx) {

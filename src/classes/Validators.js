@@ -56,7 +56,7 @@ export const UUID = new RegexLiteral(`^
 `, 'igu')
 
 /**
- * Validate wether a list of OAuth Scopes is valid
+ * Validate whether a list of OAuth Scopes is valid
  * @param {[string] }value the list of OAuth scopes to validate
  */
 export function OAuthScope (value) {
@@ -85,7 +85,7 @@ export function validCMDRname (value) {
 }
 
 /**
- * Validate wether a value is a valid JSON object for a jsonb field
+ * Validate whether a value is a valid JSON object for a jsonb field
  * @param {object} value the value to validate
  */
 export function JSONObject (value) {
@@ -103,7 +103,7 @@ const requiredQuoteFields = [
 ]
 
 /**
- * Validate wether a value is a valid list of rescue quotes
+ * Validate whether a value is a valid list of rescue quotes
  * @param {object} quotes the list of rescue quotes to validate
  */
 export function RescueQuote (quotes) {
@@ -121,7 +121,7 @@ export function RescueQuote (quotes) {
 }
 
 /**
- * Validate wether a value is a valid list of IRC nicknames
+ * Validate whether a value is a valid list of IRC nicknames
  * @param {[string] }value the list of IRC nicknames to validate
  */
 export function IRCNicknames (value) {
@@ -136,7 +136,7 @@ export function IRCNicknames (value) {
 }
 
 /**
- * Validate wether a value is a valid URL
+ * Validate whether a value is a valid URL
  * @param {string} value the URL to validate
  * @returns {URL} a url
  */

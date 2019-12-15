@@ -196,7 +196,7 @@ export default class Users extends APIResource {
 
   /**
    * Update a user
-   * @param {Context} ctx a requset context
+   * @param {Context} ctx a request context
    * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
    */
   @PUT('/users/:id')

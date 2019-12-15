@@ -26,7 +26,7 @@ const minimumRescueCount = 10
 /*
 * This query retrieves the number of decals the user is eligible to redeem.
 * A user is granted 1 decal per rat (CMDR) that had 10 rescues or more before the start of the current month.
-* This excludes rats that had a rescue before April 2016 as those were already granted a decal using a previous giveway
+* This excludes rats that had a rescue before April 2016 as those were already granted a decal using a previous giveaway
 * The number of rescue decals already redeemed by the user is subtracted from the count.
 * */
 

@@ -17,6 +17,10 @@ const CMDRnameField = 'customfield_10205'
 const emailAddressField = 'customfield_10502'
 
 export default class JiraDrillWebhook extends API {
+  get type () {
+    return 'jira-webhooks'
+  }
+
   @POST('/jira/drill')
   @IPAuthenticated
   async update (ctx) {
@@ -78,7 +82,6 @@ export default class JiraDrillWebhook extends API {
     })
 
     let userResponse = Users.presenter.render(userInstance, {})
-    await HostServ.update(userResponse)
 
     let displayRat = User.preferredRat(userResponse)
     BotServ.say(global.OVERSEER_CHANNEL,

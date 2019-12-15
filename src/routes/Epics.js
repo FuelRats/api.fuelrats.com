@@ -13,9 +13,14 @@ import API, {
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
+import Query from '../query'
 import {ConflictAPIError, NotFoundAPIError} from '../classes/APIError'
 
 class Epics extends API {
+  get type () {
+    return 'epics'
+  }
+
   @GET('/epics')
   @websocket('epics', 'search')
   @authenticated
@@ -52,7 +57,7 @@ class Epics extends API {
         }
       })
       if (existing) {
-        throw ConflictAPIError({
+        throw new ConflictAPIError({
           pointer: '/data/attributes/rescueId'
         })
       }
@@ -87,7 +92,7 @@ class Epics extends API {
         }
       })
       if (existing) {
-        throw ConflictAPIError({
+        throw new ConflictAPIError({
           pointer: '/data/attributes/rescueId'
         })
       }
@@ -131,4 +136,5 @@ class Epics extends API {
   }
 }
 
+// noinspection ES6ConvertModuleExportToExport
 module.exports =  Epics

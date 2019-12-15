@@ -14,12 +14,12 @@ class DatabaseDocument extends Document {
 
   /**
    * Create a JSONAPI document from a database result
-   * @param {object} arg fucntion arguments object
+   * @param {object} arg function arguments object
    * @param {Query} arg.query the request query for this document
    * @param {any} arg.result database result
    * @param {View} arg.type the resource type
    * @param {DocumentViewType} arg.view A DocumentViewType enum describing the type of view this document should have
-   * @param {object} [arg.meta] extra metdata
+   * @param {object} [arg.meta] extra metadata
    */
   constructor ({ query, result, type, view, meta = {} }) {
     if (result && result.rows) {
