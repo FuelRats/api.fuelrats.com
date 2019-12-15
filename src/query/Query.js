@@ -70,13 +70,16 @@ export default class Query {
    * @returns {{number: number, size: number, offset: number, limit: number}}  Page query information
    */
   get page () {
-    const { query } = this.connection
+    const { page = {} } = this.connection.query
 
-    return Object.entries(query).reduce((acc, [key, value]) => {
-      const matches = key.match(pageRegex)
-      if (matches) {
-        const [, attribute] = matches
-        acc[attribute] = Number(value)
+    return Object.entries(page).reduce((acc, [key, value]) => {
+      const parsedValue = Number(value)
+      if (Number.isInteger(parsedValue)) {
+        acc[key] = parsedValue
+      } else {
+        throw new UnprocessableEntityAPIError({
+          parameter: `page[${key}]`
+        })
       }
       return acc
     }, {
