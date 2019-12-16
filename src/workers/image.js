@@ -1,31 +1,24 @@
 import workerpool from 'workerpool'
 import sharp from 'sharp'
 
-import {
-  UnsupportedMediaAPIError
-} from '../classes/APIError'
-
-const profileImageMax = 100
+const profileImageMax = 256
 
 /**
  * Web worker that formats converts an image to an appropriate format and resolution for avatars
- * @param imageDataPackage Data buffer package containing image data
+ * @param {Uint8Array} imageDataPackage Data buffer package containing image data
  * @returns {Promise<any>} A transformed data buffer or an error
  */
-async function avatarImageResize (imageDataPackage) {
-  try {
-    return await sharp(Buffer.from(imageDataPackage.data))
-      .resize(profileImageMax, profileImageMax)
-      .jpeg({
-        quality: 80,
-        chromaSubsampling: '4:4:4'
-      })
-      .toBuffer()
-  } catch (ex) {
-    throw new UnsupportedMediaAPIError({ pointer: '/data' })
-  }
+function avatarImageResize (imageDataPackage) {
+  return sharp(Buffer.from(imageDataPackage))
+    .resize(profileImageMax, profileImageMax)
+    .jpeg({
+      quality: 80,
+      chromaSubsampling: '4:4:4'
+    })
+    .toBuffer()
 }
 
 workerpool.worker({
   avatarImageResize
 })
+

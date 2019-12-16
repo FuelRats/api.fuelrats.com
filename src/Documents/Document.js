@@ -1,6 +1,8 @@
 import packageInfo from '../../package.json'
 import config from '../../config'
 import enumerable from '../classes/Enum'
+import View from '../view'
+import Query from '../query'
 
 const jsonApiVersion = '1.0'
 
@@ -17,12 +19,12 @@ export default class Document  {
 
   /**
    * Create a JSONAPI Document
-   * @param objects result object(s) to create a jsonapi document from
-   * @param type the resource type of objects in this document
-   * @param meta meta data
-   * @param query the request query to use in this document
-   * @param view A DocumentViewType enum describing the type of view this document should have
-   * @constructor
+   * @param {object} arg function arguments object
+   * @param {[object]} arg.objects result object(s) to create a jsonapi document from
+   * @param {View} arg.type the resource type of objects in this document
+   * @param {object} arg.meta meta data
+   * @param {Query} arg.query the request query to use in this document
+   * @param {DocumentViewType} arg.view A DocumentViewType enum describing the type of view this document should have
    */
   constructor ({ objects, type, meta = {}, query, view = DocumentViewType.collection }) {
     this.#meta = meta
@@ -68,7 +70,7 @@ export default class Document  {
 
   /**
    * Get the resource type of a JSONAPI document
-   * @returns {String} the resource type of a JSONAPI document
+   * @returns {string} the resource type of a JSONAPI document
    */
   get type () {
     return this.#type
@@ -162,7 +164,7 @@ export default class Document  {
       const {
         total: rateLimitTotal,
         remaining: rateLimitRemaining,
-        nextResetDate: rateLimitReset
+        reset: rateLimitReset
       } = this.#query.connection.state.traffic
 
       traffic = {
@@ -197,7 +199,7 @@ export default class Document  {
 
   /**
    * Get the first page number for the results this Document represents
-   * @returns {Number|undefined} the first page number for the results this Document represents
+   * @returns {number|undefined} the first page number for the results this Document represents
    * @abstract
    */
   get firstPage () {
@@ -206,7 +208,7 @@ export default class Document  {
 
   /**
    * Get the last page number for the results this Document represents
-   * @returns {Number|undefined} the first page number for the results this Docuemnt represents
+   * @returns {number|undefined} the first page number for the results this Document represents
    * @abstract
    */
   get lastPage () {
@@ -215,7 +217,7 @@ export default class Document  {
 
   /**
    * Get the current page number for the results this Document represents
-   * @returns {Number|undefined} the current page number for the results this Document represents
+   * @returns {number|undefined} the current page number for the results this Document represents
    * @abstract
    */
   get currentPage () {
@@ -224,7 +226,7 @@ export default class Document  {
 
   /**
    * Get the previous page number for the results this Document represents
-   * @returns {Number|undefined} the previous page number for the results this Document represents
+   * @returns {number|undefined} the previous page number for the results this Document represents
    * @abstract
    */
   get previousPage () {
@@ -233,7 +235,7 @@ export default class Document  {
 
   /**
    * Get the next page number for the results this Document represents
-   * @returns {Number|undefined} the previous page number for the results this Document represents
+   * @returns {number|undefined} the previous page number for the results this Document represents
    * @abstract
    */
   get nextPage () {
@@ -242,7 +244,7 @@ export default class Document  {
 
   /**
    * Get the requested offset for this Document
-   * @returns {Number|undefined} the requested offset for this Document
+   * @returns {number|undefined} the requested offset for this Document
    * @abstract
    */
   get offset () {
@@ -251,7 +253,7 @@ export default class Document  {
 
   /**
    * Get the requested limit for this Document
-   * @returns {Number|undefined} the requested offset for this Document
+   * @returns {number|undefined} the requested offset for this Document
    * @abstract
    */
   get limit () {
@@ -260,7 +262,7 @@ export default class Document  {
 
   /**
    * Get the number of results displayed in this Document
-   * @returns {Number|undefined} the number of results in this Document
+   * @returns {number|undefined} the number of results in this Document
    * @abstract
    */
   get count () {
@@ -269,7 +271,7 @@ export default class Document  {
 
   /**
    * The total number of results for the request this Document represents
-   * @returns {Number|undefined} the total number of results for the request this Document represents
+   * @returns {number|undefined} the total number of results for the request this Document represents
    * @abstract
    */
   get total () {
@@ -278,7 +280,7 @@ export default class Document  {
 
   /**
    * Generate a page cursor link from a number
-   * @param {Number} page a page number
+   * @param {number} page a page number
    * @returns {string|undefined} A page cursor link
    */
   createPageCursor (page) {
@@ -345,7 +347,7 @@ export default class Document  {
 
   /**
    * Get a rendered JSONAPI document with a data or error object
-   * @returns {Object} a rendered JSONAPI document with a data or error object
+   * @returns {object} a rendered JSONAPI document with a data or error object
    */
   get document () {
     if (this.errors) {
@@ -357,7 +359,8 @@ export default class Document  {
       }
     }
     return {
-      data: this.data,
+      // eslint-disable-next-line no-restricted-syntax
+      data: this.data || null,
       meta: this.meta,
       links: this.links,
       included: this.included,
@@ -367,7 +370,7 @@ export default class Document  {
 
   /**
    * Get a rendered JSONAPI document with only meta data information
-   * @returns {Object} a rendered JSONAPI document with only meta data information
+   * @returns {object} a rendered JSONAPI document with only meta data information
    */
   get metaDocument () {
     if (this.errors) {
@@ -386,8 +389,8 @@ export default class Document  {
   }
 
   /**
-   * get a rendered JSONAPI documetn with only relationship and meta information
-   * @returns {Object} a rendered JSONAPI document with only relationship and meta information
+   * get a rendered JSONAPI document with only relationship and meta information
+   * @returns {object} a rendered JSONAPI document with only relationship and meta information
    */
   get relationshipDocument () {
     if (this.errors) {
@@ -399,7 +402,8 @@ export default class Document  {
       }
     }
     return {
-      data: this.data,
+      // eslint-disable-next-line no-restricted-syntax
+      data: this.data || null,
       meta: this.meta,
       links: this.links,
       jsonapi: this.jsonapi
@@ -408,7 +412,7 @@ export default class Document  {
 
   /**
    * Get the final rendered JSONAPI document
-   * @returns {Object} the final rendered JSONAPI document
+   * @returns {object} the final rendered JSONAPI document
    */
   render () {
     switch (this.#view) {
@@ -428,13 +432,7 @@ export default class Document  {
    * @returns {string} The final rendered JSONAPI document.
    */
   toString () {
-    return JSON.stringify(this.render(), (key, value) => {
-      if (typeof value === 'undefined') {
-        // eslint-disable-next-line no-restricted-syntax
-        return null
-      }
-      return value
-    })
+    return JSON.stringify(this.render())
   }
 }
 
@@ -442,11 +440,11 @@ export default class Document  {
 /**
  * Enumerable representing the different view types a Document can have
  * @readonly
- * @enum {Symbol}
- * @property {Symbol} collection Document represents a collection of resources
- * @property {Symbol} individual Document represents an individual requested resource
- * @property {Symbol} meta Document represents only meta data for a resource
- * @property {Symbol} relationship Document represents only relationships for a resource
+ * @enum {symbol}
+ * @property {symbol} collection Document represents a collection of resources
+ * @property {symbol} individual Document represents an individual requested resource
+ * @property {symbol} meta Document represents only meta data for a resource
+ * @property {symbol} relationship Document represents only relationships for a resource
  */
 export class DocumentViewType {
   static collection

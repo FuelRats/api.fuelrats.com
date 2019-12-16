@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 import API, {
   GET,
@@ -10,16 +11,29 @@ import API, {
   required
 } from '../classes/API'
 
-import { Group, Rat, User } from '../db'
+import { Group } from '../db'
 import { websocket } from '../classes/WebSocket'
-import {NotFoundAPIError} from '../classes/APIError'
-import Users from './Users'
+import { NotFoundAPIError } from '../classes/APIError'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
-import { RatView, GroupView } from '../view'
+import { GroupView } from '../view'
 import StatusCode from '../classes/StatusCode'
 
+/**
+ * Endpoints for managing user permission groups
+ */
 export default class Groups extends API {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'user-groups'
+  }
+
+  /**
+   * Search user groups
+   * @endpoint
+   */
   @GET('/groups')
   @websocket('groups', 'search')
   @authenticated

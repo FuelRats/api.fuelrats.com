@@ -1,8 +1,9 @@
+/* eslint-disable */
 /* eslint max-lines-per-function:0 */
 
 import bcrypt from 'bcrypt'
 import UserView from '../view/UserView'
-import { JSONObject, IRCNicknames } from '../classes/Validators'
+import { JSONObject } from '../classes/Validators'
 
 const passwordMinLength = 12
 const passwordMaxLength = 1024
@@ -190,6 +191,11 @@ export default function User (db, DataTypes) {
             required: false,
             include: []
           }]
+        },
+        {
+          model: models.Avatar,
+          as: 'avatar',
+          required: false
         },
         {
           model: models.Rat,

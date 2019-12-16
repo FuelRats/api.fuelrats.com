@@ -1,10 +1,19 @@
 import { ReadPermission, DatabaseView, RatView } from './'
 
+/**
+ * Get JSONAPI view for a Ship
+ */
 export default class ShipView extends DatabaseView {
+  /**
+   * @inheritdoc
+   */
   static get type () {
     return 'ships'
   }
 
+  /**
+   * @inheritdoc
+   */
   get attributes () {
     return {
       name: ReadPermission.all,
@@ -16,10 +25,16 @@ export default class ShipView extends DatabaseView {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get defaultReadPermission () {
     return ReadPermission.all
   }
 
+  /**
+   * @inheritdoc
+   */
   get isSelf () {
     if (this.query.connection.state.user) {
       const ratExists = this.query.connection.state.user.rats.some((rat) => {
@@ -32,20 +47,32 @@ export default class ShipView extends DatabaseView {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   get isGroup () {
     return this.query.connection.state.permissions.includes('ships.read')
   }
 
+  /**
+   * @inheritdoc
+   */
   get isInternal () {
     return this.query.connection.state.permissions.includes('ships.internal')
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationships () {
     return {
       rat: RatView
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   get related () {
     return [RatView]
   }

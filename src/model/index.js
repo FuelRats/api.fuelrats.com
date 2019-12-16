@@ -1,3 +1,4 @@
+/* eslint-disable */
 import knex from 'knex'
 import config from '../../config'
 

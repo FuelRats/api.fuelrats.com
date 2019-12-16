@@ -1,9 +1,10 @@
+/* eslint-disable */
 
 import { IRCNickname, JSONObject, languageCode, RescueQuote } from '../classes/Validators'
-import RescueView from '../view/RescueView'
 
 /* eslint max-lines-per-function:0 */
 
+// eslint-disable-next-line
 const rescueClientNameMaxLength = 64
 const rescueNotesMaxLength = 2048
 const rescueSystemMaxLength = 64

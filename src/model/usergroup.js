@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Model, { column, validate, paranoid } from './'
 import UUID from 'pure-uuid'
 

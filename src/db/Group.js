@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-jsdoc */
 import { IRCVirtualHost, OAuthScope } from '../classes/Validators'
 
 export default function Group (sequelize, DataTypes) {

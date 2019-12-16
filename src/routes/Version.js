@@ -1,9 +1,9 @@
 
 import gitrev from 'git-rev-promises'
 import packageInfo from '../../package.json'
+import { Context } from '../classes/Context'
 
 import API, {
-  Context,
   GET
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'

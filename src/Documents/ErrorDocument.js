@@ -1,36 +1,71 @@
-import Document, { DocumentViewType } from '.'
-import { InternalServerError, APIError, MethodNotAllowedAPIError } from '../classes/APIError'
+import Document from '.'
+import {
+  InternalServerError,
+  APIError,
+  MethodNotAllowedAPIError,
+  UnprocessableEntityAPIError
+} from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
-import API from '../classes/API'
+import Query from '../query'
 
 /**
  * @classdesc A JSONAPI document render for request errors
  * @class
  * @augments {Document}
  */
-export default class ErrorDocument extends Document {
+export default // noinspection JSClosureCompilerSyntax
+class ErrorDocument extends Document {
   #query = undefined
   #errors = undefined
 
+  /**
+   * Create a JSONAPI Error document
+   * @param {object} arg function arguments object
+   * @param {Query} arg.query request query
+   * @param {[Error]|Error} arg.errors the errors to include in the document
+   */
   constructor ({ query, errors }) {
     let errorList = errors
     if (Array.isArray(errorList) === false) {
       errorList = [errorList]
     }
 
-    // if (Reflect.has(errors, 'name')) {
-    //   errorList = APIError.fromValidationError(errors)
-    // }
+    errorList = errorList.reduce((errorAcc, error) => {
+      switch (true) {
+        case (error instanceof APIError):
+          errorAcc.push(error)
+          break
 
-    errorList = errorList.map((error) => {
-      if (error instanceof APIError) {
-        return error
-      } else if (error.name === 'MethodNotAllowedError') {
-        return new MethodNotAllowedAPIError({})
-      } else {
-        return new InternalServerError({})
+        case (error.name === 'SequelizeValidationError'):
+          errorAcc.push(...error.errors.map((validationError) => {
+            return new UnprocessableEntityAPIError({
+              pointer: `/data/attributes/${validationError.path}`
+            })
+          }))
+          break
+
+        case (error.name === 'SequelizeDatabaseError'):
+          errorAcc.push(new UnprocessableEntityAPIError({
+            parameter: 'filter'
+          }))
+          break
+
+        case (error.name === 'SequelizeForeignKeyConstraintError'):
+          errorAcc.push(new UnprocessableEntityAPIError({
+            pointer: '/data/id'
+          }))
+          break
+
+        case (error.name === 'MethodNotAllowedError'):
+          errorAcc.push(new MethodNotAllowedAPIError({}))
+          break
+
+        default:
+          errorAcc.push(new InternalServerError({}))
       }
-    })
+
+      return errorAcc
+    }, [])
 
     super({
       objects: undefined,
@@ -41,10 +76,18 @@ export default class ErrorDocument extends Document {
     this.#errors = errorList
   }
 
+  /**
+   * Get the list of error views
+   * @returns {*} error views
+   */
   get errors () {
     return this.#errors
   }
 
+  /**
+   * Get the overall HTTP status code for this document
+   * @returns {number} HTTP status code
+   */
   get httpStatus () {
     if (this.#errors.length > 0) {
       return this.#errors[0].code
@@ -61,56 +104,56 @@ export default class ErrorDocument extends Document {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get lastPage () {
     return undefined
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get currentPage () {
     return undefined
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get previousPage () {
     return undefined
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get nextPage () {
     return undefined
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get offset () {
     return undefined
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get limit () {
     return undefined
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get count () {
     return undefined
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    */
   get total () {
     return undefined

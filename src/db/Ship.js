@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { ShipName } from '../classes/Validators'
 import ShipView from '../view/ShipView'
 

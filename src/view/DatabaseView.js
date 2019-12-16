@@ -1,21 +1,34 @@
 import View from '.'
 
+/**
+ * Base class for JSONAPI Views generated from Sequelize database entries
+ */
 export default class DatabaseView extends View {
+  /**
+   * @inheritdoc
+   */
   get id () {
     return this.object.id
   }
 
+  /**
+   * @inheritdoc
+   */
   attributeForKey (key) {
     return this.object[key]
   }
 
+  /**
+   * @inheritdoc
+   */
   generateRelationships () {
     return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
       if (this.root && RelationshipView.type === this.root.type) {
         return acc
       }
 
-      let data = undefined
+      // eslint-disable-next-line no-restricted-syntax
+      let data = null
       if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
           return (new RelationshipView({
@@ -32,19 +45,17 @@ export default class DatabaseView extends View {
         })).relationshipView
       }
 
-      const linkObject = {
-        links: this.getRelationLink(key)
+      acc[key] = {
+        links: this.getRelationLink(key),
+        data
       }
-
-      if (data && (!Array.isArray(data) || data.length > 0)) {
-        linkObject.data = data
-      }
-
-      acc[key] = linkObject
       return acc
     }, {})
   }
 
+  /**
+   * @inheritdoc
+   */
   generateIncludes ({ rootType, includeTypes }) {
     const includes = includeTypes || this.includes
 
@@ -64,5 +75,37 @@ export default class DatabaseView extends View {
         return includeCollection.concat(objectView.generateIncludes({ rootType, includeTypes }))
       }, []))
     }, [])
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get defaultReadPermission () {
+    return undefined
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isGroup () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isInternal () {
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   * @abstract
+   */
+  get isSelf () {
+    return false
   }
 }

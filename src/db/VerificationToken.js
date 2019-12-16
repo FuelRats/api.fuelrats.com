@@ -1,3 +1,4 @@
+/* eslint-disable */
 const verificationTokenLength = 32
 
 export default function VerificationToken (sequelize, DataTypes) {

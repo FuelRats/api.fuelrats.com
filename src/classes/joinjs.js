@@ -1,3 +1,4 @@
+/* eslint-disable */
 /** Thrown when mapOne does not find an object in the resultSet and "isRequired" is passed in as true */
 function NotFoundError (message = 'Not Found') {
   this.name = 'NotFoundError'
@@ -51,7 +52,7 @@ function map (resultSet, maps, mapId, columnPrefix) {
  */
 function mapOne (resultSet, maps, mapId, columnPrefix, isRequired = true) {
 
-  var mappedCollection = map(resultSet, maps, mapId, columnPrefix)
+  let mappedCollection = map(resultSet, maps, mapId, columnPrefix)
 
   if (mappedCollection.length > 0) {
     return mappedCollection[0]

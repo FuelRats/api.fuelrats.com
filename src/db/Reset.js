@@ -1,3 +1,4 @@
+/* eslint-disable */
 const resetPasswordTokenLength = 32
 
 export default function Reset (sequelize, DataTypes) {

@@ -88,7 +88,7 @@ app.use(koaBody({
 
 /**
  * Parses an object of URL query parameters and builds a nested object by delimiting periods into sub objects.
- * @param query an array of URL query parameters
+ * @param {[object]} query an array of URL query parameters
  * @returns {{}} a nested object
  */
 function parseQuery (query) {
@@ -99,25 +99,6 @@ function parseQuery (query) {
     }, { [last]: value })
     return { ...acc, ...object }
   }, {})
-}
-
-/**
- * Goes through an object and sets properties commonly usde to hold sensitive information to a static value.
- * @param obj The object to censor
- * @returns {{}} A censored object
- */
-function censor (obj) {
-  const censoredObj = {}
-  Object.assign(censoredObj, obj)
-
-  if (censoredObj.password) {
-    censoredObj.password = '[CENSORED]'
-  }
-  if (censoredObj.secret) {
-    censoredObj.secret = '[CENSORED]'
-  }
-
-  return censoredObj
 }
 
 app.use((ctx, next) => {
@@ -155,7 +136,7 @@ app.use(async (ctx, next) => {
     ctx.set('X-API-Version', packageInfo.version)
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
-    ctx.set('X-Rate-Limit-Reset', rateLimit.nextResetDate)
+    ctx.set('X-Rate-Limit-Reset', rateLimit.reset)
 
     logger.info({ tags: ['request'] }, `Request by ${ctx.request.ip} to ${ctx.request.path}`, {
       ip: ctx.request.ip,
@@ -226,11 +207,13 @@ const routes = [
 
 const [transactionLoader, decision] = oauth2.server.decision()
 
-router.post('/oauth2/authorize',
+router.post(
+  '/oauth2/authorize',
   Authentication.isAuthenticated,
   transactionLoader,
   decision,
-  oauth2.authorizationDecisionHandler)
+  oauth2.authorizationDecisionHandler
+)
 
 router.post('/oauth2/token',
   Authentication.isClientAuthenticated,

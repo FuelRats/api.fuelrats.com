@@ -5,6 +5,7 @@ import localisationResources from '../../localisations.json'
 import UUID from 'pure-uuid'
 import StatusCode from './StatusCode'
 
+// noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
   resources:  localisationResources
@@ -68,25 +69,6 @@ export class APIError extends Error {
 
       detail: this.detail,
       source: this.source
-    }
-  }
-
-  static fromValidationError (validationError) {
-    switch (validationError.name) {
-      case 'SequelizeValidationError':
-        return validationError.errors.map((error) => {
-          return new UnprocessableEntityAPIError({
-            pointer: `/data/attributes/${error.path}`
-          })
-        })
-
-      case 'SequelizeForeignKeyConstraintError':
-        return [new UnprocessableEntityAPIError({
-          pointer: `/data/attributes/${validationError.index.split('_')[1]}`
-        })]
-
-      default:
-        return [new UnprocessableEntityAPIError({})]
     }
   }
 }
@@ -193,7 +175,7 @@ export class PayloadTooLargeAPIError extends APIError {
 
 export class UnsupportedMediaAPIError extends APIError {
   get code () {
-    return StatusCode
+    return StatusCode.unsupportedMediaType
   }
 
   get status () {

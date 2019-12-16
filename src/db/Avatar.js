@@ -1,4 +1,4 @@
-
+/* eslint-disable jsdoc/require-jsdoc */
 export default function Avatar (db, DataTypes) {
   const avatar = db.define('Avatar', {
     id: {
