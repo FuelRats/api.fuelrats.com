@@ -180,6 +180,12 @@ export default class View {
         permission = this.defaultReadPermission
       }
 
+      if (Reflect.has(this.query.fields, this.type)) {
+        if (this.query.fields[this.type].includes(attribute) === false) {
+          return acc
+        }
+      }
+
       if (this.hasPermissionForField(permission, attribute)) {
         acc[attribute] = this.attributeForKey(attribute)
       }

@@ -70,13 +70,16 @@ export default class Query {
    * @returns {{number: number, size: number, offset: number, limit: number}}  Page query information
    */
   get page () {
-    const { query } = this.connection
+    const { page = {} } = this.connection.query
 
-    return Object.entries(query).reduce((acc, [key, value]) => {
-      const matches = key.match(pageRegex)
-      if (matches) {
-        const [, attribute] = matches
-        acc[attribute] = Number(value)
+    return Object.entries(page).reduce((acc, [key, value]) => {
+      const parsedValue = Number(value)
+      if (Number.isInteger(parsedValue)) {
+        acc[key] = parsedValue
+      } else {
+        throw new UnprocessableEntityAPIError({
+          parameter: `page[${key}]`
+        })
       }
       return acc
     }, {
@@ -116,14 +119,10 @@ export default class Query {
    * @returns {object} Get the subset of resulting fields to display, parsed from the API Query
    */
   get fields () {
-    const { query } = this.connection
+    const { fields = {} } = this.connection.query
 
-    return Object.entries(query).reduce((acc, [key, value]) => {
-      const matches = key.match(fieldsRegex)
-      if (matches) {
-        const [, type] = matches
-        acc[type] = value.split(',')
-      }
+    return Object.entries(fields).reduce((acc, [key, value]) => {
+      acc[key] = value.split(',')
       return acc
     }, {})
   }
@@ -133,12 +132,12 @@ export default class Query {
    * @returns {{field: string, sort: SortOrder}[]} requested sorting order
    */
   get sort () {
-    const { order } = this.connection.query
+    const { sort } = this.connection.query
 
-    if (!order) {
+    if (!sort) {
       return this.defaultSort
     }
-    return order.split(',').map((orderItem) => {
+    return sort.split(',').map((orderItem) => {
       if (orderItem.startsWith('-')) {
         return {
           field: orderItem.substring(1),

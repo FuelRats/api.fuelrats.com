@@ -44,6 +44,12 @@ class ErrorDocument extends Document {
           }))
           break
 
+        case (error.name === 'SequelizeDatabaseError'):
+          errorAcc.push(new UnprocessableEntityAPIError({
+            parameter: 'filter'
+          }))
+          break
+
         case (error.name === 'SequelizeForeignKeyConstraintError'):
           errorAcc.push(new UnprocessableEntityAPIError({
             pointer: '/data/id'
