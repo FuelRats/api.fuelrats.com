@@ -65,7 +65,7 @@ const db = new Sequelize(database, username, password, {
  */
 function importModels (modelNames) {
   const models = modelNames.reduce((modelAcc, modelName) => {
-    modelAcc[modelName] = db.import(path.join(__dirname, modelName.toLowerCase()))
+    modelAcc[modelName] = db.import(path.join(__dirname, modelName))
     return modelAcc
   }, {})
 
