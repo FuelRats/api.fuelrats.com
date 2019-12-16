@@ -70,6 +70,10 @@ try {
   process.exit(1)
 }
 
+if (config.server.proxyEnabled) {
+  app.proxy = true
+}
+
 app.keys = [config.server.cookieSecret]
 
 const sessionConfiguration = {
