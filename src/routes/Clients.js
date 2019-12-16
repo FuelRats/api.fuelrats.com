@@ -82,7 +82,7 @@ export default class Clients extends APIResource {
 
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
-    return new DatabaseDocument({ query, result, type: ClientView })
+    return new DatabaseDocument({ query, result, type: ClientView, meta: { secret } })
   }
 
   /**
