@@ -64,8 +64,9 @@ export default class Permission {
   static getConnectionPermissions ({ connection }) {
     const { user, scope: scopes } = connection.state
     if (!user || !user.groups) {
-      return undefined
+      return []
     }
+
 
     let permissions = user.groups.reduce((accumulator, value) => {
       return accumulator.concat(value.permissions)
