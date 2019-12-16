@@ -359,7 +359,8 @@ export default class Document  {
       }
     }
     return {
-      data: this.data,
+      // eslint-disable-next-line no-restricted-syntax
+      data: this.data || null,
       meta: this.meta,
       links: this.links,
       included: this.included,
@@ -401,7 +402,8 @@ export default class Document  {
       }
     }
     return {
-      data: this.data,
+      // eslint-disable-next-line no-restricted-syntax
+      data: this.data || null,
       meta: this.meta,
       links: this.links,
       jsonapi: this.jsonapi
@@ -430,13 +432,7 @@ export default class Document  {
    * @returns {string} The final rendered JSONAPI document.
    */
   toString () {
-    return JSON.stringify(this.render(), (key, value) => {
-      if (typeof value === 'undefined') {
-        // eslint-disable-next-line no-restricted-syntax
-        return null
-      }
-      return value
-    })
+    return JSON.stringify(this.render())
   }
 }
 
