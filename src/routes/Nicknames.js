@@ -31,6 +31,12 @@ export default class Nickname extends API {
   @authenticated
   async search (ctx) {
     const { nick } = ctx.query
+    if (!nick) {
+      throw new BadRequestAPIError({
+        parameter: 'nick'
+      })
+    }
+
     const result = await Anope.findAccountFuzzyMatch(nick)
     const query = new AnopeQuery({ connection: ctx })
     return new ObjectDocument({ query, result, type: NicknameView })
