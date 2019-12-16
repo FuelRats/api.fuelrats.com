@@ -92,13 +92,17 @@ export default class Anope {
       return result.email
     })
 
-    const users = await User.findAll({
-      where: {
-        email: {
-          like: { any: emails }
+    let users = []
+
+    if (results.length > 0) {
+      users = await User.findAll({
+        where: {
+          email: {
+            like: { any: emails }
+          }
         }
-      }
-    })
+      })
+    }
 
     return results.map((result) => {
       const entry = new Nickname(result)
