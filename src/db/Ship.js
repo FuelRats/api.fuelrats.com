@@ -73,7 +73,7 @@ export default function Ship (sequelize, DataTypes) {
       type: DataTypes.ENUM(...shipTypes),
       validate: {
         notEmpty: true,
-        isIn: shipTypes
+        isIn: [shipTypes]
       }
     },
     ratId: {
@@ -83,8 +83,6 @@ export default function Ship (sequelize, DataTypes) {
         isUUID: 4
       }
     }
-  }, {
-    paranoid: true
   })
 
   ship.prototype.renderView = function () {
