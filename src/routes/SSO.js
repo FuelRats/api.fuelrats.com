@@ -4,7 +4,7 @@ import { User } from '../db'
 /**
  * Jira SSO endpoints
  */
-export default class Jira extends API {
+export default class SSO extends API {
   /**
    * @inheritdoc
    */
@@ -16,7 +16,7 @@ export default class Jira extends API {
    * User profile information for Jira SSO
    * @endpoint
    */
-  @GET('/jira/profile')
+  @GET('/sso/jira')
   @authenticated
   async profile (ctx) {
     const user = await User.findOne({
