@@ -62,4 +62,27 @@ export default class SSO extends API {
       updated_at: unixUpdateTime
     }
   }
+
+  @GET('/sso/nextcloud')
+  @authenticated
+  async nextcloudProfile (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.state.user.id
+      }
+    })
+
+    const userGroups = user.groups.map((group) => {
+      return group.id
+    })
+
+    return {
+      identifier: user.id,
+      id: user.id,
+      email: user.email,
+      displayName: user.preferredRat().name,
+      photoURL: `https://fuelrats.com/users/${user.id}/image`,
+      roles: userGroups
+    }
+  }
 }
