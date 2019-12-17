@@ -19,7 +19,7 @@ import logger from './logging'
 import Rescue from './routes/Rescues'
 import User from './routes/Users'
 import Rats from './routes/Rats'
-import Jira from './routes/Jira'
+import SSO from './routes/SSO'
 import Clients from './routes/Clients'
 import Frontier from './routes/Frontier'
 import Ships from './routes/Ships'
@@ -206,7 +206,7 @@ const routes = [
   new Stream(),
   new JiraDrillWebhook(),
   new Frontier(),
-  new Jira()
+  new SSO()
 ]
 
 // OAUTH2
