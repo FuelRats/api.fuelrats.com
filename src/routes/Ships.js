@@ -127,7 +127,7 @@ export default class Ships extends APIResource {
   }
 
   /**
-   * View a shp's rat relationship
+   * View a ship's rat relationship
    * @endpoint
    */
   @GET('/ships/:id/relationships/rat')
