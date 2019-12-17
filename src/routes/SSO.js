@@ -2,7 +2,7 @@ import API, { GET, authenticated } from '../classes/API'
 import { User } from '../db'
 
 /**
- * Jira SSO endpoints
+ * SSO endpoints
  */
 export default class SSO extends API {
   /**
@@ -18,7 +18,7 @@ export default class SSO extends API {
    */
   @GET('/sso/jira')
   @authenticated
-  async profile (ctx) {
+  async jiraProfile (ctx) {
     const user = await User.findOne({
       where: {
         id: ctx.state.user.id
@@ -37,6 +37,29 @@ export default class SSO extends API {
       profile: 'https://fuelrats.com/profile/overview',
       name: user.preferredRat().name,
       groups: userGroups
+    }
+  }
+
+  @GET('/sso/grafana')
+  @authenticated
+  async grafanaProfile (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.state.user.id
+      }
+    })
+
+    const unixUpdateTime = Math.floor(user.updatedAt.getTime() / 1000)
+
+    return {
+      sub: user.id,
+      name: user.preferredRat().name,
+      nickname: user.preferredRat().name,
+      preferred_username: user.preferredRat().name,
+      email: user.email,
+      picture: `https://fuelrats.com/users/${user.id}/image`,
+      profile: 'https://fuelrats.com/profile/overview',
+      updated_at: unixUpdateTime
     }
   }
 }
