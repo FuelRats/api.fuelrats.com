@@ -98,8 +98,8 @@ export class APIResource extends API {
       await callback({ entity })
     }
 
-    if (ctx.data.relationships instanceof Object) {
-      const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
+    if (dataObj.relationships instanceof Object) {
+      const relationshipChanges = Object.entries(dataObj.relationships).map(([relationship, data]) => {
         return this.generateRelationshipChange({ ctx, data, entity, change: 'add', relationship })
       })
 
@@ -303,6 +303,30 @@ export class APIResource extends API {
       return changeRelationship[change]({ entity, id: data.id })
     } else {
       throw new UnprocessableEntityAPIError({ pointer: '/data' })
+    }
+  }
+
+  /**
+   * Require that relationships exist in the request object
+   * @param {object} arg function arguments object
+   * @param {Context} arg.ctx request context
+   * @param {[string]} arg.relationships relationship names to require
+   */
+  requireRelationships ({ ctx, relationships }) {
+    const dataObj = getJSONAPIData({ ctx, type: this.type })
+
+    if ((dataObj.relationships instanceof Object) === false) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/relationships' })
+    }
+
+    const missingRelations = relationships.filter((relationship) => {
+      return Object.keys(dataObj.relationships).includes(relationship) === false
+    })
+
+    if (missingRelations.length > 0) {
+      throw missingRelations.map((relation) => {
+        return new UnprocessableEntityAPIError({ pointer: `/data/relationships/${relation}` })
+      })
     }
   }
 
