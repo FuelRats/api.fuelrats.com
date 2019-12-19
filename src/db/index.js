@@ -2,7 +2,7 @@
 import Sequelize from 'sequelize'
 import PaperTrail from 'sequelize-paper-trail'
 import path from 'path'
-import config from '../../config'
+import config from '../config'
 
 const { database, username, password, hostname, port } = config.postgres
 

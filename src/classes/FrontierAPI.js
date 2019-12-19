@@ -1,5 +1,5 @@
 import { URLSearchParams } from 'url'
-import config from '../../config'
+import config from '../config'
 import axios from 'axios'
 
 /**

@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import Mailgen from 'mailgen'
 import path from 'path'
-import config from '../../config'
+import config from '../config'
 
 /**
  * Class for managing sending emails

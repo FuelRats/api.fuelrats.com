@@ -1,5 +1,5 @@
 import packageInfo from '../../package.json'
-import config from '../../config'
+import config from '../config'
 import enumerable from '../classes/Enum'
 import View from '../view'
 import Query from '../query'

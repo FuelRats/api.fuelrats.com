@@ -12,8 +12,7 @@ import { UUID } from './Validators'
 import enumerable from './Enum'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { Context } from './Context'
-
-const config = require('../../config')
+import config from '../config'
 
 /**
  * @class
