@@ -203,7 +203,7 @@ app.use(router.allowedMethods({
 
 
 const server = http.createServer(app.callback())
-server.wss = new WebSocket({ server, traffic })
+server.wss = new WebSocket({ server, trafficManager: traffic })
 
 
 

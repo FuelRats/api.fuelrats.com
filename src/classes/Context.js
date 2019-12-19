@@ -15,8 +15,8 @@ export class Request {
    * @param {object} arg.body request body
    * @param {object} arg.message the message
    */
-  constructor ({ client, query, body, message }) {
-    const url = new URL(`${config.externalUrl}${client.req.url}`)
+  constructor ({ client, query = {}, body = {}, message = {} }) {
+    const url = new URL(`${config.server.externalUrl}${client.req.url}`)
 
     this.header = client.req.headers
     this.headers = client.req.headers
@@ -65,7 +65,7 @@ export class Response {
     this.header = {}
     this.headers = this.header
     this.socket = client.req.socket
-    this.status = 404
+    this.status = 200
     this.message = undefined
     this.length = 0
     this.body = undefined
@@ -117,6 +117,7 @@ export class Context {
     this.state = {}
     this.state.scope = client.scope
     this.state.user = client.user
+    this.state.permissions = client.permissions
     this.state.userAgent = client.req.headers['user-agent']
 
     this.app = {}

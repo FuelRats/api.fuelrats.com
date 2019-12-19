@@ -1,7 +1,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 /* eslint-env browser */
 
-const ws = new WebSocket('ws://localhost:8082', 'FR-JSONAPI-WS')
+const ws = new WebSocket('ws://localhost:8082/?bearer=testingadmintoken', 'FR-JSONAPI-WS')
 
 ws.onopen = function (event) {
   console.info('Websocket connection established')
@@ -12,7 +12,7 @@ ws.onclose = function (event) {
 }
 
 ws.onmessage = function (event) {
-  console.info('Message:', event.data)
+  console.info('Message:', JSON.parse(event.data))
 }
 
 

@@ -16,7 +16,7 @@ import { Epic } from '../db'
 import Query from '../query'
 import {ConflictAPIError, NotFoundAPIError} from '../classes/APIError'
 
-class Epics extends API {
+export default class Epics extends API {
   get type () {
     return 'epics'
   }
@@ -135,6 +135,3 @@ class Epics extends API {
     return EpicsPresenter
   }
 }
-
-// noinspection ES6ConvertModuleExportToExport
-module.exports =  Epics
