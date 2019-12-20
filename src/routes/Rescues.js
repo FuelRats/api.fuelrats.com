@@ -22,6 +22,7 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
+import Events from '../classes/Events'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -75,6 +76,10 @@ export default class Rescues extends APIResource {
   async create (ctx) {
     const result = await super.create({ ctx, databaseType: Rescue })
 
+    Events.broadcast(['fuelrats', 'rescues', 'create'], {
+      id: result.id
+    })
+
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: RescueView })
@@ -91,6 +96,10 @@ export default class Rescues extends APIResource {
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Rescue, updateSearch: { id:ctx.params.id } })
 
+    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+      id: result.id
+    })
+
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: RescueView })
   }
@@ -105,6 +114,10 @@ export default class Rescues extends APIResource {
   @permissions('rescues.write')
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Rescue })
+
+    Events.broadcast(['fuelrats', 'rescues', 'delete'], {
+      id: ctx.params.id
+    })
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -145,6 +158,10 @@ export default class Rescues extends APIResource {
       relationship: 'rats'
     })
 
+    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+      id: ctx.params.id
+    })
+
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -162,6 +179,10 @@ export default class Rescues extends APIResource {
       databaseType: Rescue,
       change: 'patch',
       relationship: 'rats'
+    })
+
+    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+      id: ctx.params.id
     })
 
     ctx.response.status = StatusCode.noContent
@@ -183,6 +204,9 @@ export default class Rescues extends APIResource {
       relationship: 'rats'
     })
 
+    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+      id: ctx.params.id
+    })
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -219,6 +243,10 @@ export default class Rescues extends APIResource {
       databaseType: Rescue,
       change: 'patch',
       relationship: 'firstLimpet'
+    })
+
+    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+      id: ctx.params.id
     })
 
     ctx.response.status = StatusCode.noContent

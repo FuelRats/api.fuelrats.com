@@ -1,7 +1,5 @@
 import logger from '../logging'
 import {
-  APIError,
-  InternalServerError,
   NotFoundAPIError,
   TooManyRequestsAPIError
 } from './APIError'
@@ -171,6 +169,7 @@ export default class WebSocket {
     const route = WebSocket.getRoute(...endpoint)
     return route(ctx)
   }
+
 
   /**
    * Broadcast a message to all websocket clients

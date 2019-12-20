@@ -1,13 +1,10 @@
-/* eslint-disable */
-
-
 import API, {
   authenticated
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
 import { ConflictAPIError } from '../classes/APIError'
 
-export default class Stream extends API {
+export default class Streams extends API {
   get type () {
     return 'streams'
   }
@@ -22,7 +19,7 @@ export default class Stream extends API {
     }
 
     ctx.client.subscriptions.push(applicationId)
-    return Stream.presenter.render(ctx.client.subscriptions.map((subscription) => {
+    return Streams.presenter.render(ctx.client.subscriptions.map((subscription) => {
       return {
         id: subscription
       }
@@ -30,13 +27,14 @@ export default class Stream extends API {
   }
 
   @websocket('stream', 'unsubscribe')
+  @authenticated
   unsubscribe (ctx) {
     const applicationId = ctx.query.id
 
     const subscriptionPosition = ctx.client.subscriptions.indexOf(applicationId)
     ctx.client.subscriptions.splice(subscriptionPosition, 1)
 
-    return Stream.presenter.render(ctx.client.subscriptions.map((subscription) => {
+    return Streams.presenter.render(ctx.client.subscriptions.map((subscription) => {
       return {
         id: subscription
       }
