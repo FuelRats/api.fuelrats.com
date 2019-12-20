@@ -142,6 +142,10 @@ export default class Anope {
    * @returns {Promise<[User]>} list of user objects with mapped nicknames
    */
   static async mapNicknames (users) {
+    if (users.rows.length === 0) {
+      return users
+    }
+
     const userEmails = users.rows.map((user) => {
       return user.email.toLowerCase()
     })
