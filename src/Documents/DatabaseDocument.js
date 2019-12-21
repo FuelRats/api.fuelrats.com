@@ -48,7 +48,7 @@ class DatabaseDocument extends Document {
    * @inheritdoc
    */
   get firstPage () {
-    if (!this.#result || !this.#result.rows || this.#result.count === 0) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
 
@@ -59,10 +59,11 @@ class DatabaseDocument extends Document {
    * @inheritdoc
    */
   get lastPage () {
-    if (!this.#result || !this.#result.rows || this.#result.count === 0) {
+    if (!this.#result || !this.#result.rows) {
       return undefined
     }
-    return Math.floor(this.#result.count / this.#query.limit)
+
+    return Math.ceil(this.#result.count / this.#query.limit)
   }
 
   /**
@@ -85,6 +86,10 @@ class DatabaseDocument extends Document {
     }
 
     const { currentPage } = this
+    if (this.currentPage > this.lastPage) {
+      return this.lastPage
+    }
+
     if (currentPage === 1) {
       return undefined
     }
@@ -100,7 +105,7 @@ class DatabaseDocument extends Document {
     }
 
     const { currentPage, lastPage } = this
-    if (currentPage === lastPage) {
+    if (currentPage >= lastPage) {
       return undefined
     }
     return currentPage + 1

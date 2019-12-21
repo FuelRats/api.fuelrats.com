@@ -74,7 +74,7 @@ export default class Query {
 
     return Object.entries(page).reduce((acc, [key, value]) => {
       const parsedValue = Number(value)
-      if (Number.isInteger(parsedValue)) {
+      if (Number.isInteger(parsedValue) && parsedValue >= 0) {
         acc[key] = parsedValue
       } else {
         throw new UnprocessableEntityAPIError({
