@@ -24,6 +24,7 @@
     "date-fns": "^2.8.1",
     "eslint": "^6.7.2",
     "eslint-plugin-jsdoc": "^18.4.3",
+    "eventemitter2": "^5.0.1",
     "git-rev-promises": "^1.1.0",
     "gulp-cli": "^2.2.0",
     "i18next": "^19.0.1",

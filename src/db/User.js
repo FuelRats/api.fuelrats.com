@@ -185,6 +185,7 @@ export default function User (db, DataTypes) {
         {
           model: models.Rat,
           as: 'rats',
+          required: false,
           include: [{
             model: models.Ship,
             as: 'ships',

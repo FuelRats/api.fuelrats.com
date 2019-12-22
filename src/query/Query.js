@@ -2,8 +2,6 @@ import { UnprocessableEntityAPIError } from '../classes/APIError'
 import enumerable from '../classes/Enum'
 import { Context } from '../classes/Context'
 
-const fieldsRegex = /^fields\[([a-z-]*)\]$/gu
-const pageRegex = /^page\[([a-z]*)\]$/gu
 const defaultOffset = 0
 const defaultLimit = 100
 const defaultSize = 25
@@ -74,7 +72,7 @@ export default class Query {
 
     return Object.entries(page).reduce((acc, [key, value]) => {
       const parsedValue = Number(value)
-      if (Number.isInteger(parsedValue)) {
+      if (Number.isInteger(parsedValue) && parsedValue >= 0) {
         acc[key] = parsedValue
       } else {
         throw new UnprocessableEntityAPIError({

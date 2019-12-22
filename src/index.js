@@ -14,30 +14,14 @@ import querystring from 'koa-qs'
 import WebSocket from './classes/WebSocket'
 import { db } from './db'
 import npid from 'npid'
-import config from '../config'
+import config from './config'
 import logger from './logging'
-import Rescue from './routes/Rescues'
-import User from './routes/Users'
-import Rats from './routes/Rats'
-import Clients from './routes/Clients'
-import Frontier from './routes/Frontier'
-import Ships from './routes/Ships'
-import Register from './routes/Register'
-import Reset from './routes/Resets'
-import Nicknames from './routes/Nicknames'
-import Verifications from './routes/Verifications'
-import Sessions from './routes/Sessions'
-import Statistics from './routes/Statistics'
-import Version from './routes/Version'
-import Decals from './routes/Decals'
-import Stream from './routes/Stream'
-import JiraDrillWebhook from './routes/JiraDrillWebhook'
+import * as routes from './routes'
 import Permission from './classes/Permission'
 import packageInfo from '../package'
 import ErrorDocument from './Documents/ErrorDocument'
 import Query from './query'
 import StatusCode from './classes/StatusCode'
-
 
 
 const app = new Koa()
@@ -134,6 +118,11 @@ app.use(async (ctx, next) => {
   try {
     await Authentication.authenticate({ connection: ctx })
 
+    const representing = ctx.get('x-representing')
+    if (representing) {
+      await Authentication.authenticateRepresenting({ ctx, representing })
+    }
+
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
     ctx.state.traffic = rateLimit
 
@@ -153,7 +142,6 @@ app.use(async (ctx, next) => {
     })
 
     if (rateLimit.exceeded) {
-      // noinspection ExceptionCaughtLocallyJS
       throw new TooManyRequestsAPIError({})
     }
 
@@ -188,24 +176,9 @@ app.use(async (ctx, next) => {
 // ROUTES
 // =============================================================================
 
-const routes = [
-  new Rescue(),
-  new User(),
-  new Nicknames(),
-  new Rats(),
-  new Clients(),
-  new Ships(),
-  new Register(),
-  new Reset(),
-  new Verifications(),
-  new Sessions(),
-  new Statistics(),
-  new Version(),
-  new Decals(),
-  new Stream(),
-  new JiraDrillWebhook(),
-  new Frontier()
-]
+const endpoints = Object.values(routes).map((Route) => {
+  return new Route()
+})
 
 // OAUTH2
 
@@ -233,7 +206,7 @@ app.use(router.allowedMethods({
 
 
 const server = http.createServer(app.callback())
-server.wss = new WebSocket({ server, traffic })
+server.wss = new WebSocket({ server, trafficManager: traffic })
 
 
 
@@ -248,4 +221,4 @@ server.wss = new WebSocket({ server, traffic })
   }
 })()
 
-export default routes
+export default endpoints

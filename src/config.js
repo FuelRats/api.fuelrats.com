@@ -55,7 +55,6 @@ console.log(`${configWarnings} config warnings.`)
 if (configErrors > 0) {
   console.log('FATAL CONFIGURATION PROBLEMS DETECTED, EXITING')
   process.abort()
-  return
 }
 
 /**
@@ -132,5 +131,4 @@ function optional (property, validations, defaultValue = undefined) {
   return value
 }
 
-
-module.exports = config
+export default config

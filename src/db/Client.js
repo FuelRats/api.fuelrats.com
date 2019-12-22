@@ -44,6 +44,11 @@ export default function Client (sequelize, DataTypes) {
       validate: {
         isUUID: 4
       }
+    },
+    namespaces: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      defaultValue: []
     }
   })
 
@@ -67,7 +72,7 @@ export default function Client (sequelize, DataTypes) {
     models.Client.belongsTo(models.User, { foreignKey: 'userId', as: 'user' })
 
 
-    models.Client.addScope('defaultScope', {
+    models.Client.addScope('user', {
       include: [
         {
           model: models.User.scope('norelations'),

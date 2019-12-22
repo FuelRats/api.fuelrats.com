@@ -1,6 +1,6 @@
 
 import log4js from 'log4js'
-import config from '../../config'
+import config from '../config'
 
 
 log4js.configure({

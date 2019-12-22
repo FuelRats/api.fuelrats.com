@@ -13,7 +13,7 @@ gulp.task('default', () => {
         'presets': [
           ['@babel/preset-env', {
             'targets': {
-              'node': '10.6'
+              'node': '12.6'
             },
             'shippedProposals': true
           }]
@@ -49,7 +49,7 @@ gulp.task('default', () => {
         sourceRoot
       }))
       .pipe(gulp.dest('dist')).on('error', (error) => {
-        throw error
+        reject(error)
       })
     resolve()
   })

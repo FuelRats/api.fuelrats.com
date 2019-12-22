@@ -45,7 +45,7 @@ export default class Clients extends APIResource {
   @authenticated
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Client.findAndCountAll(query.searchObject)
+    const result = await Client.scope('user').findAndCountAll(query.searchObject)
     return new DatabaseDocument({ query, result, type: ClientView })
   }
 
@@ -59,7 +59,7 @@ export default class Clients extends APIResource {
   @authenticated
   @parameters('id')
   async findById (ctx) {
-    const { query, result } = await super.findById({ ctx, databaseType: Client })
+    const { query, result } = await super.findById({ ctx, databaseType: Client.scope('user') })
 
     return new DatabaseDocument({ query, result, type: ClientView })
   }
@@ -76,7 +76,7 @@ export default class Clients extends APIResource {
     const secret = crypto.randomBytes(clientSecretLength).toString('hex')
     const result = await super.create({
       ctx,
-      databaseType: Client,
+      databaseType: Client.scope('user'),
       overrideFields: { secret, userId: ctx.state.user.id }
     })
 
@@ -95,7 +95,7 @@ export default class Clients extends APIResource {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    const result = await super.update({ ctx, databaseType: Client, updateSearch: { id:ctx.params.id } })
+    const result = await super.update({ ctx, databaseType: Client.scope('user'), updateSearch: { id:ctx.params.id } })
 
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: ClientView })
@@ -112,7 +112,7 @@ export default class Clients extends APIResource {
   @permissions('clients.write')
   @parameters('id')
   async delete (ctx) {
-    await super.delete({ ctx, databaseType: Client })
+    await super.delete({ ctx, databaseType: Client.scope('user') })
     await Code.destroy({
       where: {
         clientId: ctx.params.id
@@ -140,7 +140,7 @@ export default class Clients extends APIResource {
   async relationshipUserView (ctx) {
     const result = await this.relationshipView({
       ctx,
-      databaseType: Client,
+      databaseType: Client.scope('user'),
       relationship: 'user'
     })
 
@@ -159,7 +159,7 @@ export default class Clients extends APIResource {
   async relationshipUserPatch (ctx) {
     await this.relationshipChange({
       ctx,
-      databaseType: Client,
+      databaseType: Client.scope('user'),
       change: 'patch',
       relationship: 'user'
     })
@@ -175,6 +175,7 @@ export default class Clients extends APIResource {
     return {
       name: WritePermission.group,
       redirectUri: WritePermission.group,
+      namespaces: WritePermission.sudo,
       secret: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal

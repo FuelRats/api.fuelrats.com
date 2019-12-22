@@ -1,5 +1,5 @@
 import knex from 'knex'
-import config from '../../config'
+import config from '../config'
 import bcrypt from 'bcrypt'
 import { ConflictAPIError, NotFoundAPIError } from './APIError'
 import { parse } from 'date-fns'
@@ -142,6 +142,10 @@ export default class Anope {
    * @returns {Promise<[User]>} list of user objects with mapped nicknames
    */
   static async mapNicknames (users) {
+    if (users.rows.length === 0) {
+      return users
+    }
+
     const userEmails = users.rows.map((user) => {
       return user.email.toLowerCase()
     })
@@ -190,7 +194,7 @@ export default class Anope {
 
     account.user = await User.findOne({
       where: {
-        email: { ilike: account.email }
+        email: { iLike: account.email }
       }
     })
     return account

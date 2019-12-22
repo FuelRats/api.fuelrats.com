@@ -1,8 +1,9 @@
+/* eslint-disable */
 
 import Sequelize from 'sequelize'
 import PaperTrail from 'sequelize-paper-trail'
 import path from 'path'
-import config from '../../config'
+import config from '../config'
 
 const { database, username, password, hostname, port } = config.postgres
 
@@ -56,6 +57,17 @@ const db = new Sequelize(database, username, password, {
     acquire: 30000
   },
   operatorsAliases
+})
+
+db.addHook('beforeCount', function (options) {
+  if (this._scope.include && this._scope.include.length > 0) {
+    options.distinct = true
+    options.col = this._scope.col || options.col || `"${this.options.name.singular}".id`
+  }
+
+  if (options.include && options.include.length > 0) {
+    options.include = undefined
+  }
 })
 
 /**

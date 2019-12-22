@@ -1,7 +1,7 @@
 'use strict'
 
 const Axios = require('axios')
-const config = require('../../config.js')
+const config = require('../../src/config.js')
 const axiosHttpAdapter = require('axios/lib/adapters/http')
 const { Validator } = require('jsonapi-validator')
 const Ajv = require('ajv')

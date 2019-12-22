@@ -1,8 +1,9 @@
 import packageInfo from '../../package.json'
-import config from '../../config'
+import config from '../config'
 import enumerable from '../classes/Enum'
 import View from '../view'
 import Query from '../query'
+import { URL } from 'url'
 
 const jsonApiVersion = '1.0'
 
@@ -288,7 +289,30 @@ export default class Document  {
       return undefined
     }
 
-    return `${this.self}?page[size]=${this.#query.limit}&page[number]=${page}`
+    const url = new URL(this.self)
+    url.searchParams.append('page[size]', this.#query.limit)
+    url.searchParams.append('page[number]', page)
+
+    const { sort } = this.query.connection.query
+    if (sort) {
+      url.searchParams.append('sort', sort)
+    }
+
+    if (this.query.fields) {
+      Object.entries(this.query.fields).forEach((entity, fields) => {
+        url.searchParams.append(`fields[${entity}]`, fields.join(','))
+      })
+    }
+
+    if (this.query.include) {
+      url.searchParams.append('include', this.query.include.join(','))
+    }
+
+    if (this.query.filter) {
+      url.searchParams.append('filter', JSON.stringify(this.query.filter))
+    }
+
+    return url.href
   }
 
   /**
