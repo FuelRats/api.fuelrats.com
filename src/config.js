@@ -25,6 +25,9 @@ const config = {
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),
     password: optional('FRAPI_ANOPE_PASSWORD', [], undefined)
   },
+  geoip: {
+    directory: required('FRAPI_GEOIP_DIRECTORY', [], undefined)
+  },
   frontier: {
     clientId: recommended('FRAPI_FRONTIER_CLIENTID', [], undefined),
     sharedKey: recommended('FRAPI_FRONTIER_SHAREDKEY', [], undefined),

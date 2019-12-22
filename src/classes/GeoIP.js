@@ -1,4 +1,6 @@
 import maxmind from 'maxmind'
+import config from '../config'
+import path from 'path'
 
 let cityLookup = undefined
 let asnLookup = undefined
@@ -18,6 +20,6 @@ export default class GeoIP {
 }
 
 (async function () {
-  cityLookup = await maxmind.open('static/geoip/GeoLite2-City.mmdb')
-  asnLookup = await maxmind.open('static/geoip/GeoLite2-ASN.mmdb')
+  cityLookup = await maxmind.open(path.join(config.geoip.directory, 'GeoLite2-City.mmdb'))
+  asnLookup = await maxmind.open(path.join(config.geoip.directory, 'GeoLite2-ASN.mmdb'))
 }())
