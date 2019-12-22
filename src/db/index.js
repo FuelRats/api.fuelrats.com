@@ -21,6 +21,7 @@ const operatorsAliases = {
   is: Op.is,
   like: Op.like,
   notLike: Op.notLike,
+  ilike: Op.iLike,
   iLike: Op.iLike,
   notILike: Op.notILike,
   regexp: Op.regexp,
