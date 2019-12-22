@@ -12,7 +12,7 @@ export default class Mail {
    */
   constructor () {
     this.transporter = nodemailer.createTransport({
-      host: config.smtp.host,
+      host: config.smtp.hostname,
       port: config.smtp.port
     })
 
