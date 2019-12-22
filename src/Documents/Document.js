@@ -376,19 +376,19 @@ export default class Document  {
   get document () {
     if (this.errors) {
       return {
-        errors: this.errors,
+        jsonapi: this.jsonapi,
         meta: this.meta,
         links: this.links,
-        jsonapi: this.jsonapi
+        errors: this.errors
       }
     }
     return {
-      // eslint-disable-next-line no-restricted-syntax
-      data: this.data || null,
+      jsonapi: this.jsonapi,
       meta: this.meta,
       links: this.links,
-      included: this.included,
-      jsonapi: this.jsonapi
+      // eslint-disable-next-line no-restricted-syntax
+      data: this.data || null,
+      included: this.included
     }
   }
 
@@ -399,16 +399,16 @@ export default class Document  {
   get metaDocument () {
     if (this.errors) {
       return {
-        errors: this.errors,
+        jsonapi: this.jsonapi,
         meta: this.meta,
         links: this.links,
-        jsonapi: this.jsonapi
+        errors: this.errors
       }
     }
     return {
+      jsonapi: this.jsonapi,
       meta: this.meta,
-      links: this.links,
-      jsonapi: this.jsonapi
+      links: this.links
     }
   }
 
@@ -419,18 +419,18 @@ export default class Document  {
   get relationshipDocument () {
     if (this.errors) {
       return {
-        errors: this.errors,
+        jsonapi: this.jsonapi,
         meta: this.meta,
         links: this.links,
-        jsonapi: this.jsonapi
+        errors: this.errors
       }
     }
     return {
-      // eslint-disable-next-line no-restricted-syntax
-      data: this.data || null,
+      jsonapi: this.jsonapi,
       meta: this.meta,
       links: this.links,
-      jsonapi: this.jsonapi
+      // eslint-disable-next-line no-restricted-syntax
+      data: this.data || null
     }
   }
 
