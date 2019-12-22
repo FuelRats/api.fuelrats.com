@@ -86,8 +86,9 @@ class Register {
       await NickServ.confirm(nickname)
       
       await User.update({ nicknames: db.cast([nickname], 'citext[]') }, {
-        where: { id: user.id }
-      }, { transaction: transaction })
+        where: { id: user.id },
+        transaction: transaction
+      })
 
       await transaction.commit()
 
