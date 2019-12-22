@@ -44,6 +44,11 @@ export default function Client (sequelize, DataTypes) {
       validate: {
         isUUID: 4
       }
+    },
+    namespaces: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      defaultValue: []
     }
   })
 

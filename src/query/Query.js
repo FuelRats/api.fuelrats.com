@@ -2,8 +2,6 @@ import { UnprocessableEntityAPIError } from '../classes/APIError'
 import enumerable from '../classes/Enum'
 import { Context } from '../classes/Context'
 
-const fieldsRegex = /^fields\[([a-z-]*)\]$/gu
-const pageRegex = /^page\[([a-z]*)\]$/gu
 const defaultOffset = 0
 const defaultLimit = 100
 const defaultSize = 25

@@ -1,4 +1,4 @@
-import config from '../../config'
+import config from '../config'
 import enumerable from '../classes/Enum'
 import Query from '../query'
 

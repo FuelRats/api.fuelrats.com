@@ -40,6 +40,10 @@ export default class SSO extends API {
     }
   }
 
+  /**
+   * User profile information for Grafana SSO
+   * @endpoint
+   */
   @GET('/sso/grafana')
   @authenticated
   async grafanaProfile (ctx) {
@@ -63,6 +67,10 @@ export default class SSO extends API {
     }
   }
 
+  /**
+   * User profile information for NextCloud SSO
+   * @endpoint
+   */
   @GET('/sso/nextcloud')
   @authenticated
   async nextcloudProfile (ctx) {
