@@ -117,6 +117,7 @@ export class Context {
     this.state = {}
     this.state.scope = client.scope
     this.state.user = client.user
+    this.state.clientId = client.clientId
     this.state.permissions = client.permissions
     this.state.userAgent = client.req.headers['user-agent']
 

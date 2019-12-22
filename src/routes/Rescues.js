@@ -22,7 +22,7 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
-import Events from '../classes/Events'
+import Event from '../classes/Event'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -76,11 +76,8 @@ export default class Rescues extends APIResource {
   async create (ctx) {
     const result = await super.create({ ctx, databaseType: Rescue })
 
-    Events.broadcast(['fuelrats', 'rescues', 'create'], {
-      id: result.id
-    })
-
     const query = new DatabaseQuery({ connection: ctx })
+    Event.broadcast('fuelrats.rescuecreate', ctx.state.user, { id: result.id })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: RescueView })
   }
@@ -96,11 +93,8 @@ export default class Rescues extends APIResource {
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Rescue, updateSearch: { id:ctx.params.id } })
 
-    Events.broadcast(['fuelrats', 'rescues', 'update'], {
-      id: result.id
-    })
-
     const query = new DatabaseQuery({ connection: ctx })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, { id: result.id })
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
@@ -115,7 +109,7 @@ export default class Rescues extends APIResource {
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Rescue })
 
-    Events.broadcast(['fuelrats', 'rescues', 'delete'], {
+    Event.broadcast('fuelrats.rescuedelete', ctx.state.user, {
       id: ctx.params.id
     })
 
@@ -158,7 +152,7 @@ export default class Rescues extends APIResource {
       relationship: 'rats'
     })
 
-    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
       id: ctx.params.id
     })
 
@@ -181,7 +175,7 @@ export default class Rescues extends APIResource {
       relationship: 'rats'
     })
 
-    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
       id: ctx.params.id
     })
 
@@ -204,7 +198,7 @@ export default class Rescues extends APIResource {
       relationship: 'rats'
     })
 
-    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
       id: ctx.params.id
     })
 
@@ -245,7 +239,7 @@ export default class Rescues extends APIResource {
       relationship: 'firstLimpet'
     })
 
-    Events.broadcast(['fuelrats', 'rescues', 'update'], {
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
       id: ctx.params.id
     })
 
@@ -361,8 +355,7 @@ export default class Rescues extends APIResource {
   get relationTypes () {
     return {
       'rats': 'rats',
-      'firstLimpet': 'rats',
-      'rescueClient': 'rescue-clients'
+      'firstLimpet': 'rats'
     }
   }
 }

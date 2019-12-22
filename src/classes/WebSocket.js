@@ -5,6 +5,7 @@ import {
 } from './APIError'
 import ws from 'ws'
 import config from '../config'
+import { User } from '../db'
 
 import { URL } from 'url'
 import UUID from 'pure-uuid'
@@ -16,10 +17,15 @@ import TrafficControl from './TrafficControl'
 import StatusCode from './StatusCode'
 import Query from '../query/Query'
 import ErrorDocument from '../Documents/ErrorDocument'
+import { listen } from '../classes/Event'
+
+const maximumMessageLength = 512000
 
 const acceptedProtocols = ['FR-JSONAPI-WS']
 
 const routes = {}
+
+let singleton = undefined
 
 /**
  * Class for managing WebSocket connections
@@ -32,6 +38,10 @@ export default class WebSocket {
    * @param {TrafficControl} arg.trafficManager
    */
   constructor ({ server, trafficManager }) {
+    if (singleton) {
+      return singleton
+    }
+
     this.wss = new ws.Server({
       server,
       clientTracking: true,
@@ -58,10 +68,11 @@ export default class WebSocket {
       const url = new URL(`${config.server.externalUrl}${req.url}`)
       const bearer = url.searchParams.get('bearer')
       if (bearer) {
-        const { user, scope } = await Authentication.bearerAuthenticate({ bearer })
+        const { user, scope, clientId } = await Authentication.bearerAuthenticate({ bearer })
         if (user) {
           client.user = user
           client.scope = scope
+          client.clientId = clientId
         }
       }
 
@@ -73,6 +84,10 @@ export default class WebSocket {
 
       client.on('message', (message) => {
         try {
+          if (message.length > maximumMessageLength) {
+            client.terminate()
+          }
+
           const data = JSON.parse(String(message))
           return this.onMessage({ client, data, message })
         } catch (ex) {
@@ -84,12 +99,26 @@ export default class WebSocket {
       process.on('apiBroadcast', (id, ctx, result) => {
         this.onBroadcast({ id, ctx, result })
       })
+
+
+      // eslint-disable-next-line consistent-this
+      singleton = this
     })
   }
 
   /**
+   * Singleton instance of the WebSocket service
+   * @returns {WebSocket} websocket instance
+   */
+  static get instance () {
+    return singleton
+  }
+
+  /**
    * On websocket connection event
-   * @param {ws.Client} client websocket client
+   * @param {object} arg function arguments object
+   * @param {Context} arg.ctx request context
+   * @param {ws.Client} arg.client websocket client
    * @returns {Promise<void>} resolves promise when completed
    */
   async onConnection ({ ctx, client }) {
@@ -115,7 +144,7 @@ export default class WebSocket {
    */
   async onMessage ({ client, data, message }) {
     let [state, endpoint, query, body] = data
-    if (!state || !endpoint) {
+    if (!state || !endpoint || typeof state !== 'string') {
       client.terminate()
       return
     }
@@ -124,6 +153,12 @@ export default class WebSocket {
 
     // noinspection JSClosureCompilerSyntax
     const ctx = new Context({ client, query, body, message })
+    const { representing } = ctx.query
+    if (representing) {
+      await Authentication.authenticateRepresenting({ ctx, representing })
+      delete query.representing
+    }
+
     try {
       const result = await this.route({ ctx, endpoint })
       if (result === true) {
@@ -170,46 +205,47 @@ export default class WebSocket {
     return route(ctx)
   }
 
-
   /**
-   * Broadcast a message to all websocket clients
-   * @param id
-   * @param result
+   * Event listener for fuelrats api change events that should be broadcasted to websocket
+   * @param {User} user the user that caused the vent
+   * @param {object} data event data
    */
-  onBroadcast ({ id, result }) {
-    const clients = [...this.wss.clients].filter((client) => {
-      return client.subscriptions.includes(id)
+  @listen('fuelrats.*')
+  onEvent (user, data) {
+    const clients = [...WebSocket.instance.wss.clients].filter((client) => {
+      return typeof client.user !== 'undefined'
     })
-    WebSocket.broadcast({ clients, message: result })
-  }
 
-
-  /**
-   *
-   * @param event
-   * @param ctx
-   * @param result
-   * @param permissions
-   */
-  onEvent (event, ctx, result, permissions = undefined) {
-    const clients = [...this.wss.clients].filter((client) => {
-      if (client.clientId !== ctx.client.clientId) {
-        return (!permissions || Permission.granted({ permissions, connection: ctx }))
-      }
-      return false
-    })
-    if (!result.meta) {
-      result.meta = {}
-    }
-
-    Object.assign(result.meta, { event })
-    WebSocket.broadcast({ clients, message: result })
+    WebSocket.broadcast({ clients, message: [
+      this.event,
+      user.id,
+      data
+    ] })
   }
 
   /**
-   *
-   * @param client
-   * @param message
+   * Function that receives a broadcast from a third party application and relays it to WebSocket listeners
+   * @param {object} arg function arguments object
+   * @param {string} arg.event the event name
+   * @param {User} arg.sender the user that sent the event
+   * @param {object} arg.data event data
+   */
+  onBroadcast ({ event, sender, data }) {
+    const clients = [...this.wss.clients].filter((client) => {
+      return client.subscriptions.includes(event)
+    })
+    WebSocket.broadcast({ clients, message: [
+      event,
+      sender,
+      data
+    ] })
+  }
+
+  /**
+   * Send a message to a WebSocket client
+   * @param {object} arg function arguments object
+   * @param {ws.Client} arg.client websocket client
+   * @param {object} arg.message message data
    */
   static send ({ client, message }) {
     try {
@@ -220,20 +256,23 @@ export default class WebSocket {
   }
 
   /**
-   *
-   * @param clients
-   * @param message
+   * Send a message to multiple WebSocket clients
+   * @param {object} arg function arguments object
+   * @param {[ws.Client]} arg.clients websocket client list
+   * @param {object} arg.message message data
    */
   static broadcast ({ clients, message }) {
+    const json = JSON.stringify(message)
     for (const client of clients) {
-      WebSocket.send({ client, message })
+      client.send(json)
     }
   }
 
   /**
-   *
-   * @param route
-   * @param method
+   * Add a route to the WebSocket router
+   * @param {object} arg function arguments object
+   * @param {[string]} arg.route the route path
+   * @param {Function} arg.method the function to route to
    */
   static addRoute ({ route, method }) {
     const routeIdentifier = route.join(':')
@@ -242,9 +281,9 @@ export default class WebSocket {
   }
 
   /**
-   *
-   * @param route
-   * @returns {*}
+   * Get a route function from a route
+   * @param {...string} route route path
+   * @returns {Function|undefined} route function
    */
   static getRoute (...route) {
     const routeIdentifier = route.join(':')

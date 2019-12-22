@@ -1,8 +1,17 @@
 import bcrypt from 'bcrypt'
 import { User, Token, Client, Reset, db } from '../db'
 import { Context } from './Context'
+import UUID from 'pure-uuid'
+import Anope from '../classes/Anope'
 
-import { GoneAPIError, UnauthorizedAPIError, ResetRequiredAPIError } from './APIError'
+import {
+  GoneAPIError,
+  UnauthorizedAPIError,
+  ResetRequiredAPIError,
+  ForbiddenAPIError,
+  NotFoundAPIError
+} from './APIError'
+import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
@@ -86,7 +95,8 @@ export default class Authentication {
     const user = await User.findOne({ where: { id: token.userId } })
     return {
       user,
-      scope: token.scope
+      scope: token.scope,
+      clientId: token.clientId
     }
   }
 
@@ -148,6 +158,7 @@ export default class Authentication {
       if (bearerCheck) {
         connection.state.user = bearerCheck.user
         connection.state.scope = bearerCheck.scope
+        connection.state.clientId = bearerCheck.clientId
         return true
       }
     }
@@ -181,7 +192,49 @@ export default class Authentication {
       throw new UnauthorizedAPIError({})
     }
   }
+
+  /**
+   * Perform this request on behalf of another user, requires admin permission
+   * @param {object} arg function arguments object
+   * @param {Context} arg.ctx request context
+   * @param {string} arg.representing user id or nickname
+   * @returns {Promise<void>} resolves a promise on completion
+   */
+  static async authenticateRepresenting ({ ctx, representing }) {
+    if (!Permission.granted({ permissions: ['users.write'], connection: ctx })) {
+      throw new ForbiddenAPIError({ parameter: 'representing' })
+    }
+
+    let representedUser = undefined
+    if (UUID.parse(representing)) {
+      representedUser = await User.findOne({
+        where: {
+          representing
+        }
+      })
+    } else {
+      const nickname = await Anope.findNickname(representing)
+      if (!nickname) {
+        throw new NotFoundAPIError({
+          parameter: 'representing'
+        })
+      }
+
+      representedUser = nickname.user
+    }
+
+
+    if (!representedUser) {
+      throw new NotFoundAPIError({
+        parameter: 'representing'
+      })
+    }
+
+    ctx.state.user = representedUser
+  }
 }
+
+
 
 /**
  * Retrieve bearer token from a request object

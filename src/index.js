@@ -24,7 +24,6 @@ import Query from './query'
 import StatusCode from './classes/StatusCode'
 
 
-
 const app = new Koa()
 querystring(app)
 
@@ -119,6 +118,11 @@ app.use(async (ctx, next) => {
   try {
     await Authentication.authenticate({ connection: ctx })
 
+    const representing = ctx.get('x-representing')
+    if (representing) {
+      await Authentication.authenticateRepresenting({ ctx, representing })
+    }
+
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
     ctx.state.traffic = rateLimit
 
@@ -138,7 +142,6 @@ app.use(async (ctx, next) => {
     })
 
     if (rateLimit.exceeded) {
-      // noinspection ExceptionCaughtLocallyJS
       throw new TooManyRequestsAPIError({})
     }
 

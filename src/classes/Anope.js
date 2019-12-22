@@ -190,7 +190,7 @@ export default class Anope {
 
     account.user = await User.findOne({
       where: {
-        email: { ilike: account.email }
+        email: { iLike: account.email }
       }
     })
     return account

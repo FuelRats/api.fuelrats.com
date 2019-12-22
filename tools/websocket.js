@@ -1,4 +1,4 @@
-/* eslint-disable jsdoc/require-jsdoc */
+/* eslint-disable jsdoc/require-jsdoc,no-magic-numbers */
 /* eslint-env browser */
 
 const ws = new WebSocket('ws://localhost:8082/?bearer=testingadmintoken', 'FR-JSONAPI-WS')
@@ -20,14 +20,15 @@ ws.onerror = function (event) {
   console.error('Websocket Error', event)
 }
 
-const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-function randomString (length) {
-  const values = new Uint32Array(length)
-  crypto.getRandomValues(values)
 
-  return values.map((value) => {
-    return charset[value % charset.length]
-  })
+function dec2hex (dec) {
+  return (`0${dec.toString(16)}`).substr(-2)
+}
+
+function randomString (len) {
+  const arr = new Uint8Array((len || 40) / 2)
+  window.crypto.getRandomValues(arr)
+  return Array.from(arr, dec2hex).join('')
 }
 
 function send (endpoint, query = {}, data = {}) {
