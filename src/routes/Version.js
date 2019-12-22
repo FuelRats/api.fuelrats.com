@@ -1,5 +1,3 @@
-
-import gitrev from 'git-rev-promises'
 import packageInfo from '../../package.json'
 import { Context } from '../classes/Context'
 
@@ -11,6 +9,15 @@ import Query from '../query'
 import ObjectDocument from '../Documents/ObjectDocument'
 import { DocumentViewType } from '../Documents'
 import { VersionView } from '../view'
+import fs from 'fs'
+
+let version = undefined
+fs.readFile('build.json', (err, data) => {
+  if (err) {
+    throw err
+  }
+  version = JSON.parse(data)
+})
 
 /**
  * API endpoint to get API version information
@@ -31,12 +38,7 @@ export default class Version extends API {
   @GET('/version')
   @websocket('version', 'read')
   async read (ctx) {
-    const [hash, branch, tags, date] = await Promise.all([
-      gitrev.long(),
-      gitrev.branch(),
-      gitrev.tags(),
-      gitrev.date()
-    ])
+    const { hash, branch, tags, date } = version
 
     const result = {
       version: packageInfo.version,

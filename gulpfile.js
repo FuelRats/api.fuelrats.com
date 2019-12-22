@@ -2,6 +2,8 @@ const gulp = require('gulp')
 const babel = require('gulp-babel')
 const sourcemaps = require('gulp-sourcemaps')
 const path = require('path')
+const gitrev = require('git-rev-promises')
+const fs = require('fs')
 
 const sourceRoot = path.join(__dirname, 'src')
 
@@ -51,6 +53,23 @@ gulp.task('default', () => {
       .pipe(gulp.dest('dist')).on('error', (error) => {
         reject(error)
       })
+
+    Promise.all([
+      gitrev.long(),
+      gitrev.branch(),
+      gitrev.tags(),
+      gitrev.date()
+    ]).then(([hash, branch, tags, date]) => {
+      const json = JSON.stringify({
+        hash,
+        branch,
+        tags,
+        date
+      })
+      fs.writeFile('build.json', json, 'utf8', () => {
+        resolve()
+      })
+    })
     resolve()
   })
 })
