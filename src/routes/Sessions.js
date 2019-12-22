@@ -28,7 +28,7 @@ export default class Sessions extends API {
    * Verify a session token
    * @endpoint
    */
-  @GET('/session/:token')
+  @GET('/sessions/:token')
   @parameters('token')
   async verify (ctx) {
     const session = await Session.findOne({
