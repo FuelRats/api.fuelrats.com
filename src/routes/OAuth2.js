@@ -32,7 +32,7 @@ server.serializeClient((client) => {
 })
 
 server.deserializeClient(async (id) => {
-  const client = await Client.findByPk(id)
+  const client = await Client.scope('user').findByPk(id)
   if (!client) {
     return false
   }
@@ -219,7 +219,7 @@ export function validateRedirectUri (target, name, descriptor) {
   descriptor.value = async function (...args) {
     const [connection, next] = args
     await server.authorize(async (clientId, redirectUri) => {
-      const client = await Client.findByPk(clientId)
+      const client = await Client.scope('user').findByPk(clientId)
       if (!client) {
         return false
       }
