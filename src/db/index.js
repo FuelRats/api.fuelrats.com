@@ -4,6 +4,7 @@ import Sequelize from 'sequelize'
 import PaperTrail from 'sequelize-paper-trail'
 import path from 'path'
 import config from '../config'
+import logger from '../logging'
 
 const { database, username, password, hostname, port } = config.postgres
 
@@ -50,7 +51,9 @@ const db = new Sequelize(database, username, password, {
   host: hostname,
   port,
   dialect: 'postgres',
-  logging: true,
+  logging: (message) => {
+    logger.info(message)
+  },
 
   pool: {
     idle: 1000,
@@ -115,7 +118,7 @@ const models = importModels([
 
 
 const paperTrail = PaperTrail.init(db, {
-  debug: true,
+  debug: process.env.NODE_ENV !== 'production',
   userModel: 'User',
   exclude: [
     'createdAt',

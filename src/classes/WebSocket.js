@@ -91,7 +91,11 @@ export default class WebSocket {
           const data = JSON.parse(String(message))
           return this.onMessage({ client, data, message })
         } catch (ex) {
-          logger.info('Failed to parse incoming websocket message')
+          logger.debug({
+            GELF: true,
+            _event: 'request',
+            _message: message
+          }, 'Failed to parse incoming websocket message')
           return undefined
         }
       })
@@ -145,6 +149,7 @@ export default class WebSocket {
   async onMessage ({ client, data, message }) {
     let [state, endpoint, query, body] = data
     if (!state || !endpoint || typeof state !== 'string') {
+
       client.terminate()
       return
     }
@@ -153,6 +158,15 @@ export default class WebSocket {
 
     // noinspection JSClosureCompilerSyntax
     const ctx = new Context({ client, query, body, message })
+
+    logger.info({
+      GELF: true,
+      _ip: ctx.request.ip,
+      _state: state,
+      _endpoint: endpoint.join(':'),
+      _query: query
+    }, `Websocket Message by ${ctx.request.ip}`)
+
     const { representing } = ctx.query
     if (representing) {
       await Authentication.authenticateRepresenting({ ctx, representing })
@@ -170,7 +184,14 @@ export default class WebSocket {
       } else if (result) {
         ctx.body = result
       } else {
-        logger.error('Websocket router received a response from the endpoint that could not be processed')
+        logger.error({
+          GELF: true,
+          _event: 'request',
+          _ip: ctx.request.ip,
+          _state: state,
+          _endpoint: endpoint.join(':'),
+          _query: query
+        }, 'Websocket router received a response from the endpoint that could not be processed')
       }
     } catch (errors) {
       const documentQuery = new Query({ connection: ctx })
@@ -251,7 +272,11 @@ export default class WebSocket {
     try {
       client.send(JSON.stringify(message))
     } catch (ex) {
-      logger.info('Failed to send websocket message')
+      logger.error({
+        GELF: true,
+        _event: 'error',
+        _message: message
+      }, 'Failed to send websocket message')
     }
   }
 
