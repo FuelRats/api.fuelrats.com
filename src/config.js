@@ -8,8 +8,11 @@ const config = {
     port: required('FRAPI_PORT', [], 8080),
     externalUrl: required('FRAPI_URL', [], 'http://localhost:8080'),
     cookieSecret: required('FRAPI_COOKIE', []),
-    proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false),
-    ropcClientId: recommended('FRAPI_ROPC_CLIENTID', [])
+    proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false)
+  },
+  frontend: {
+    clientId: recommended('FRAPI_FRONTEND_CLIENTID', []),
+    url: required('FRAPI_FRONTEND_URL', [], 'https://fuelrats.com')
   },
   postgres: {
     database: required('FRAPI_POSTGRES_DATABASE', [], 'fuelrats'),

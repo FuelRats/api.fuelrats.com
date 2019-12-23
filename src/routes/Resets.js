@@ -9,6 +9,7 @@ import API, {
   isValidJSONAPIObject
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import config from '../config'
 
 const mail = new Mail()
 const expirationLength = 86400000
@@ -163,6 +164,6 @@ export default class Resets extends API {
    * @returns {string} password reset link
    */
   static getResetLink (resetToken) {
-    return `https://fuelrats.com/verify?type=reset&t=${resetToken}`
+    return `${config.frontend.url}/verify?type=reset&t=${resetToken}`
   }
 }

@@ -3,11 +3,17 @@ import crypto from 'crypto'
 import { Token, Client, Code, db, Session } from '../db'
 import { ClientView } from '../view'
 import Permission from '../classes/Permission'
-import { NotFoundAPIError, UnprocessableEntityAPIError, VerificationRequiredAPIError } from '../classes/APIError'
+import {
+  ForbiddenAPIError,
+  NotFoundAPIError,
+  UnprocessableEntityAPIError,
+  VerificationRequiredAPIError
+} from '../classes/APIError'
 import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Authentication from '../classes/Authentication'
 import Sessions from './Sessions'
+import config from '../config'
 
 import API, {
   clientAuthenticated,
@@ -86,6 +92,10 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
 }))
 
 server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, ctx) => {
+  if (client.id !== config.frontend.clientId) {
+    throw new ForbiddenAPIError({ parameter: 'username' })
+  }
+
   const user = await Authentication.passwordAuthenticate({ email: username, password })
   if (!user) {
     return false
