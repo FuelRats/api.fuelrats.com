@@ -772,7 +772,10 @@ export function required (...fields) {
     descriptor.value = function (...args) {
       const [ctx] = args
       const missingFields = fields.filter((requiredField) => {
-        return Reflect.has(ctx.data, requiredField) === false
+        if (!ctx.data.data || !ctx.data.data.attributes) {
+          return true
+        }
+        return Reflect.has(ctx.data.data.attributes, requiredField) === false
       })
       if (missingFields.length > 0) {
         throw missingFields.map((field) => {

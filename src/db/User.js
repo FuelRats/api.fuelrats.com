@@ -140,7 +140,7 @@ export default function User (db, DataTypes) {
     if (group.withoutPrefix) {
       return group.vhost
     }
-    const rat = this.preferredRat
+    const rat = this.preferredRat()
     const identifier = rat ? rat.name : user.id
 
     return `${getIRCSafeName(identifier)}.${group.vhost}`

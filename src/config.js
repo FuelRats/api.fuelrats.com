@@ -31,6 +31,17 @@ const config = {
   geoip: {
     directory: required('FRAPI_GEOIP_DIRECTORY', [], undefined)
   },
+  announcer: {
+    url: recommended('FRAPI_ANNOUNCER,URL', [], 'https://announcer-dev.fuelrats.com/api'),
+    secret: recommended('FRAPI_ANNOUNCER_SECRET', [], undefined),
+    destinations: {
+      rescue: recommended('FRAPI_ANNOUNCER_DESTINATION_RESCUE', [], '#ratchat'),
+      moderation: recommended('FRAPI_ANNOUNCER_DESTINATION_MODERATION', [], '#rat-ops'),
+      network: recommended('FRAPI_ANNOUNCER_DESTINATION_NETWORK', [], '#opers'),
+      technical: recommended('FRAPI_ANNOUNCER_DESTINATION_TECHNICAL', [], '#rattech'),
+      drill: recommended('FRAPI_ANNOUNCER_DESTINATION_DRILL', [], '#doersofstuff')
+    }
+  },
   frontier: {
     clientId: recommended('FRAPI_FRONTIER_CLIENTID', [], undefined),
     sharedKey: recommended('FRAPI_FRONTIER_SHAREDKEY', [], undefined),

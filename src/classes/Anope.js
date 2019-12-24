@@ -319,7 +319,7 @@ export default class Anope {
         }
       }
 
-      const createdUnixTime = Math.floor(Date.getTime() / 1000)
+      const createdUnixTime = Math.floor(Date.now() / 1000)
       const user = await Anope.getAccount(email)
       if (!user) {
         await transaction.insert({
@@ -333,8 +333,7 @@ export default class Anope {
           display: nick,
           email,
           memomax: 20,
-          password: encryptedPassword,
-          rat_id: ratId
+          pass: encryptedPassword
         }).into('anope_db_NickCore')
       }
 
@@ -344,7 +343,8 @@ export default class Anope {
         time_registered: createdUnixTime,
         vhost_creator: 'API',
         vhost_time: createdUnixTime,
-        vhost_host: vhost
+        vhost_host: vhost,
+        rat_id: ratId
       }).into('anope_db_NickAlias')
 
       await transaction.commit()

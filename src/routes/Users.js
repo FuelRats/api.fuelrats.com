@@ -133,7 +133,7 @@ export default class Users extends APIResource {
   @GET('/users/:id/certificate')
   @authenticated
   async certificate (ctx) {
-    const ratName = ctx.state.user.preferredRat.name
+    const ratName = ctx.state.user.preferredRat().name
     const { certificate, fingerprint }  = await Users.sslGenerationPool.exec('generateSslCertificate',
       [ratName])
 
