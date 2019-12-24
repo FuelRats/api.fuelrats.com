@@ -34,7 +34,7 @@ const config = {
     redirectUri: recommended('FRAPI_FRONTIER_REDIRECTURI', [], undefined)
   },
   graylog: {
-    database: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
+    host: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
     port: recommended('FRAPI_GRAYLOG_PORT', [], 12201),
     facility: recommended('FRAPI_GRAYLOG_FACILITY', [], 'fuelratsapi')
   },
