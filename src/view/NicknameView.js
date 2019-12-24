@@ -53,10 +53,7 @@ export default class NicknameView extends DatabaseView {
    * @inheritdoc
    */
   get isSelf () {
-    if (!this.query.connection.state.user || !this.object.user) {
-      return false
-    }
-    if (this.object.user.id !== this.query.connection.state.user.id) {
+    if (this.object.user?.id !== this.query.connection.state.user?.id) {
       return false
     }
     return this.query.connection.state.permissions.includes('nicknames.read.me')
