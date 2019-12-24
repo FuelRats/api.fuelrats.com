@@ -49,6 +49,11 @@ export default function Client (sequelize, DataTypes) {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
       defaultValue: []
+    },
+    firstParty: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   })
 

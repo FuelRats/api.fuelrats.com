@@ -9,6 +9,7 @@ import API, {
 } from '../classes/API'
 import GeoIP from '../classes/GeoIP'
 import UAParser from 'ua-parser-js'
+import config from '../config'
 
 const mail = new Mail()
 const sessionTokenLength = 64
@@ -147,6 +148,6 @@ export default class Sessions extends API {
    * @returns {string} a verification link
    */
   static getVerifyLink (verifyToken) {
-    return `https://fuelrats.com/verify?type=session&t=${verifyToken}`
+    return `${config.frontend.url}/verify?type=session&t=${verifyToken}`
   }
 }

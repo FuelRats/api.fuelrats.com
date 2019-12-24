@@ -9,6 +9,7 @@ import API, {
   parameters,
   getJSONAPIData
 } from '../classes/API'
+import config from '../config'
 
 const mail = new Mail()
 const expirationLength = 86400000
@@ -133,6 +134,6 @@ export default class Verifications extends API {
    * @returns {string} a verification link
    */
   static getVerifyLink (resetToken) {
-    return `https://fuelrats.com/verify?type=email&t=${resetToken}`
+    return `${config.frontend.url}/verify?type=email&t=${resetToken}`
   }
 }

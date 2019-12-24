@@ -19,6 +19,7 @@ export default class ClientView extends DatabaseView {
       name: ReadPermission.all,
       redirectUri: ReadPermission.all,
       namespaces: ReadPermission.all,
+      firstParty: ReadPermission.all,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,
       deletedAt: ReadPermission.internal

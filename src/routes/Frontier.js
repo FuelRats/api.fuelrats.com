@@ -42,7 +42,7 @@ export default class Frontier extends API {
     if (existingLink) {
       const newToken = await Token.create({
         value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
-        clientId: config.ropcClientId,
+        clientId: config.frontned.clientId,
         userId: existingLink.id,
         scope: ['*']
       })
@@ -114,7 +114,7 @@ export default class Frontier extends API {
 
     const newToken = await Token.create({
       value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
-      clientId: config.ropcClientId,
+      clientId: config.frontend.clientId,
       userId: user.id,
       scope: ['*']
     })

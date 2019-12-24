@@ -1,5 +1,6 @@
 import API, { GET, authenticated } from '../classes/API'
 import { User } from '../db'
+import config from '../config'
 
 /**
  * SSO endpoints
@@ -34,7 +35,7 @@ export default class SSO extends API {
       email: user.email,
       emailVerified: userGroups.includes('verified'),
       username: user.preferredRat().name,
-      profile: 'https://fuelrats.com/profile/overview',
+      profile: `${config.frontend.url}/profile/overview`,
       name: user.preferredRat().name,
       groups: userGroups
     }
@@ -61,8 +62,8 @@ export default class SSO extends API {
       nickname: user.preferredRat().name,
       preferred_username: user.preferredRat().name,
       email: user.email,
-      picture: `https://fuelrats.com/users/${user.id}/image`,
-      profile: 'https://fuelrats.com/profile/overview',
+      picture: `${config.frontend.url}/users/${user.id}/image`,
+      profile: `${config.frontend.url}/profile/overview`,
       updated_at: unixUpdateTime
     }
   }
@@ -89,7 +90,7 @@ export default class SSO extends API {
       id: user.id,
       email: user.email,
       displayName: user.preferredRat().name,
-      photoURL: `https://fuelrats.com/users/${user.id}/image`,
+      photoURL: `${config.frontend.url}/users/${user.id}/image`,
       roles: userGroups
     }
   }
