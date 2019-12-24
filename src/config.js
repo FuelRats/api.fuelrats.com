@@ -12,8 +12,7 @@ const config = {
   },
   frontend: {
     clientId: recommended('FRAPI_FRONTEND_CLIENTID', []),
-    url: required('FRAPI_FRONTEND_URL', [], 'https://fuelrats.com'),
-    restrictROPC: required('FRAPI_FRONTEND_RESTRICTROPC', [], false)
+    url: required('FRAPI_FRONTEND_URL', [], 'https://fuelrats.com')
   },
   postgres: {
     database: required('FRAPI_POSTGRES_DATABASE', [], 'fuelrats'),

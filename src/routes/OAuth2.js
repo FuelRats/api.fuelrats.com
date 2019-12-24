@@ -92,7 +92,7 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
 }))
 
 server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, ctx) => {
-  if (config.frontend.restrictROPC && client.id !== config.frontend.clientId) {
+  if (!client.firstParty) {
     throw new ForbiddenAPIError({ parameter: 'username' })
   }
 
