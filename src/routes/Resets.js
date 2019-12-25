@@ -5,14 +5,18 @@ import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIErr
 import API, {
   GET,
   POST,
+  required,
   parameters,
-  isValidJSONAPIObject
+  isValidJSONAPIObject,
+  getJSONAPIData
 } from '../classes/API'
 import { websocket } from '../classes/WebSocket'
+import config from '../config'
+import Announcer from '../classes/Announcer'
 
 const mail = new Mail()
 const expirationLength = 86400000
-const resetTokenLength = 64
+const resetTokenLength = 32
 
 /**
  * Class managing password reset endpoints
@@ -31,16 +35,15 @@ export default class Resets extends API {
    */
   @POST('/reset')
   @websocket('resets', 'create')
+  @required('email')
   async create (ctx) {
-    if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data' })
-    }
+    const data = getJSONAPIData({ ctx, type: 'resets' })
 
-    if (!(ctx.data.data.attributes instanceof Object)) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
-    }
+    const { email } = data.attributes
 
-    const { email } = ctx.data.data.attributes
+    await Announcer.sendTechnicalMessage({
+      message: `[API] Password reset for ${email} requested by ${ctx.ip}`
+    })
 
     const user = await User.findOne({
       where: {
@@ -49,31 +52,34 @@ export default class Resets extends API {
     })
 
     if (user) {
-      const existingReset = Reset.findOne({
+      const existingReset = await Reset.findOne({
         where: {
           userId: user.id
         }
       })
 
-      let required = false
+      let requiredReset = false
       if (existingReset) {
         if (existingReset.required === true) {
-          required = true
+          requiredReset = true
         }
         await existingReset.destroy()
       }
 
+      const token = crypto.randomBytes(resetTokenLength / 2).toString('hex')
+
       const reset = await Reset.create({
-        value: crypto.randomBytes(resetTokenLength / 2).toString('hex'),
+        value: token,
         expires: new Date(Date.now() + expirationLength).getTime(),
         userId: user.id,
-        required
+        required: requiredReset
       })
+
       await mail.send({
         to: user.email,
         subject: 'Fuel Rats Password Reset Requested',
         body: {
-          name: user.preferredRat.name,
+          name: user.preferredRat().name,
           intro: 'A password reset to your Fuel Rats Account has been requested.',
           action: {
             instructions: 'Click the button below to reset your password:',
@@ -163,6 +169,6 @@ export default class Resets extends API {
    * @returns {string} password reset link
    */
   static getResetLink (resetToken) {
-    return `https://fuelrats.com/verify?type=reset&t=${resetToken}`
+    return `${config.frontend.url}/verify?type=reset&t=${resetToken}`
   }
 }

@@ -37,9 +37,6 @@ export default class GroupView extends DatabaseView {
    * @inheritdoc
    */
   get isSelf () {
-    if (this.query.connection.state.user && this.object.UserGroups.userId === this.query.connection.state.user.id) {
-      return this.query.connection.state.permissions.includes('groups.read.me')
-    }
     return false
   }
 

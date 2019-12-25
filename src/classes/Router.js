@@ -1,9 +1,9 @@
 import Router from 'koa-router'
-
+import config from '../config'
 const router = new Router()
 
 router.get('/welcome', (ctx) => {
-  ctx.redirect('https://fuelrats.com/profile')
+  ctx.redirect(`${config.frontend.url}/profile`)
   ctx.status = 301
 })
 

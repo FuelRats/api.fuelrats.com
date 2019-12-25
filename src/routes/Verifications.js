@@ -9,10 +9,11 @@ import API, {
   parameters,
   getJSONAPIData
 } from '../classes/API'
+import config from '../config'
 
 const mail = new Mail()
 const expirationLength = 86400000
-const verificationTokenLength = 64
+const verificationTokenLength = 32
 
 /**
  * @classdesc API endpoint for handling account email verifications
@@ -106,7 +107,7 @@ export default class Verifications extends API {
       to: user.email,
       subject: 'Fuel Rats Email Verification Required',
       body: {
-        name: user.preferredRat.name,
+        name: user.preferredRat().name,
         intro: 'To complete the creation of your Fuel Rats Account your email address needs to be verified.',
         action: {
           instructions: 'Click the button below to verify your email:',
@@ -133,6 +134,6 @@ export default class Verifications extends API {
    * @returns {string} a verification link
    */
   static getVerifyLink (resetToken) {
-    return `https://fuelrats.com/verify?type=email&t=${resetToken}`
+    return `${config.frontend.url}/verify?type=email&t=${resetToken}`
   }
 }

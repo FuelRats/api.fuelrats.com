@@ -9,9 +9,10 @@ import API, {
 } from '../classes/API'
 import GeoIP from '../classes/GeoIP'
 import UAParser from 'ua-parser-js'
+import config from '../config'
 
 const mail = new Mail()
-const sessionTokenLength = 64
+const sessionTokenLength = 32
 
 /**
  * Class managing user session endpoints
@@ -28,7 +29,7 @@ export default class Sessions extends API {
    * Verify a session token
    * @endpoint
    */
-  @GET('/session/:token')
+  @GET('/sessions/:token')
   @parameters('token')
   async verify (ctx) {
     const session = await Session.findOne({
@@ -64,7 +65,7 @@ export default class Sessions extends API {
       userId: user.id
     })
 
-    return Sessions.sendSessionMail(user.email, user.preferredRat.name, session.code, ctx)
+    return Sessions.sendSessionMail(user.email, user.preferredRat().name, session.code, ctx)
   }
 
   /**
@@ -147,6 +148,6 @@ export default class Sessions extends API {
    * @returns {string} a verification link
    */
   static getVerifyLink (verifyToken) {
-    return `https://fuelrats.com/verify?type=session&t=${verifyToken}`
+    return `${config.frontend.url}/verify?type=session&t=${verifyToken}`
   }
 }

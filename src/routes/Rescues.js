@@ -1,4 +1,4 @@
-import { Rescue } from '../db'
+import { Rescue, db } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
 import {
   UnsupportedMediaAPIError
@@ -22,10 +22,19 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
-import Event from '../classes/Event'
+import Event, { listen } from '../classes/Event'
+import Announcer from '../classes/Announcer'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
+
+const rescueCountQuery = `
+SELECT COUNT("id") FROM "Rescues"
+WHERE 
+    "deletedAt" IS NULL AND
+    "status" = 'closed' AND
+    "outcome" = 'success'
+`
 
 /**
  * @classdesc Rescues API endpoint
@@ -74,7 +83,7 @@ export default class Rescues extends APIResource {
   @authenticated
   @permissions('rescues.write')
   async create (ctx) {
-    const result = await super.create({ ctx, databaseType: Rescue })
+    const result = await super.create({ ctx, databaseType: Rescue, allowId: true })
 
     const query = new DatabaseQuery({ connection: ctx })
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, { id: result.id })
@@ -92,6 +101,18 @@ export default class Rescues extends APIResource {
   @parameters('id')
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Rescue, updateSearch: { id:ctx.params.id } })
+
+    if (Reflect.has(ctx.data.data.attributes, 'outcome')) {
+      const caseId = result.commandIdentifier || result.id
+      await Announcer.sendRescueMessage({ message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
+      has been completed by ${ctx.state.user.preferredRat().name}` })
+
+      const [[{ count }]] = await db.query(rescueCountQuery)
+      const rescueCount = Number(count)
+      if (rescueCount % 1000 === 0) {
+        await Announcer.sendRescueMessage({ message: `This was rescue #${rescueCount}!` })
+      }
+    }
 
     const query = new DatabaseQuery({ connection: ctx })
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, { id: result.id })

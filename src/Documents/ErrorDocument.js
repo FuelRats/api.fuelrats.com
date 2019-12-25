@@ -3,10 +3,11 @@ import {
   InternalServerError,
   APIError,
   MethodNotAllowedAPIError,
-  UnprocessableEntityAPIError
+  UnprocessableEntityAPIError, ConflictAPIError
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import Query from '../query'
+import logger from '../logging'
 
 /**
  * @classdesc A JSONAPI document render for request errors
@@ -56,12 +57,31 @@ class ErrorDocument extends Document {
           }))
           break
 
+        case (error.name === 'SequelizeUniqueConstraintError'):
+          errorAcc.push(...error.errors.map((validationError) => {
+            const pointer = validationError.path === 'id' ? '/data/id' : `/data/attributes/${validationError.path}`
+            return new ConflictAPIError({
+              pointer
+            })
+          }))
+          break
+
         case (error.name === 'MethodNotAllowedError'):
           errorAcc.push(new MethodNotAllowedAPIError({}))
           break
 
-        default:
-          errorAcc.push(new InternalServerError({}))
+        default: {
+          const serverError = new InternalServerError({})
+          logger.error({
+            GELF: true,
+            _event: 'error',
+            _id: serverError.id,
+            _message: error.message,
+            _stack: error.stack
+          }, `Server Error: ${error.message}`)
+          errorAcc.push(serverError)
+        }
+
       }
 
       return errorAcc

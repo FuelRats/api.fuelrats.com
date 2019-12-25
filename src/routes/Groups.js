@@ -1,33 +1,31 @@
-/* eslint-disable */
 
-import API, {
+import {
+  APIResource,
   GET,
   PUT,
   POST,
   DELETE,
-  parameters,
   authenticated,
-  permissions,
-  required
+  permissions, WritePermission
 } from '../classes/API'
 
 import { Group } from '../db'
 import { websocket } from '../classes/WebSocket'
-import { NotFoundAPIError } from '../classes/APIError'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { GroupView } from '../view'
 import StatusCode from '../classes/StatusCode'
+import { UnsupportedMediaAPIError } from '../classes/APIError'
 
 /**
  * Endpoints for managing user permission groups
  */
-export default class Groups extends API {
+export default class Groups extends APIResource {
   /**
    * @inheritdoc
    */
   get type () {
-    return 'user-groups'
+    return 'groups'
   }
 
   /**
@@ -37,7 +35,6 @@ export default class Groups extends API {
   @GET('/groups')
   @websocket('groups', 'search')
   @authenticated
-  @permissions('group.read')
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const result = await Group.findAndCountAll(query.searchObject)
@@ -47,28 +44,18 @@ export default class Groups extends API {
   @GET('/groups/:id')
   @websocket('groups', 'read')
   @authenticated
-  @permissions('group.read')
-  @parameters('id')
   async read (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
-    const result = await Group.findOne({
-      where: {
-        id: ctx.params.id
-      }
-    })
-    if (!result) {
-      throw new NotFoundAPIError({ parameter: 'id' })
-    }
+    const { query, result } = await super.findById({ ctx, databaseType: Group })
+
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
   @POST('/groups')
   @websocket('groups', 'create')
   @authenticated
-  @permissions('group.write')
-  @required('id', 'priority', 'permissions')
+  @permissions('groups.write')
   async create (ctx) {
-    const result = await super.create({ ctx, databaseType: Group })
+    const result = await super.create({ ctx, databaseType: Group, allowId: true })
 
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
@@ -78,8 +65,7 @@ export default class Groups extends API {
   @PUT('/groups/:id')
   @websocket('groups', 'update')
   @authenticated
-  @permissions('group.write')
-  @parameters('id')
+  @permissions('groups.write')
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Group, updateSearch: { id:ctx.params.id } })
 
@@ -90,13 +76,36 @@ export default class Groups extends API {
   @DELETE('/groups/:id')
   @websocket('groups', 'delete')
   @authenticated
-  @permissions('group.delete')
-  @parameters('id')
+  @permissions('groups.write')
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Group })
 
     ctx.response.status = StatusCode.noContent
     return true
+  }
+
+  changeRelationship () {
+    throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+  }
+
+  isSelf () {
+    return false
+  }
+
+  get relationTypes () {
+    return {}
+  }
+
+  get writePermissionsForFieldAccess () {
+    return {
+      vhost: WritePermission.sudo,
+      withoutPrefix: WritePermission.sudo,
+      priority: WritePermission.sudo,
+      permissions: WritePermission.sudo,
+      createdAt: WritePermission.internal,
+      updatedAt: WritePermission.internal,
+      deletedAt: WritePermission.internal
+    }
   }
 }
 

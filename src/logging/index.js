@@ -2,8 +2,7 @@
 import log4js from 'log4js'
 import config from '../config'
 
-
-log4js.configure({
+const logConfig = {
   appenders: {
     syslog: { type: 'stdout' },
     syslogerr: { type: 'stderr' },
@@ -26,28 +25,35 @@ log4js.configure({
       recipients: 'techrats@fuelrats.com',
       SMTP: config.smtp,
       sendInterval: 3600
+    },
+    syslogFilter: {
+      type: 'logLevelFilter',
+      appender: 'syslogerr',
+      level: 'error'
     }
-    // syslogFilter: {
-    //   type: 'logLevelFilter',
-    //   appender: 'syslogerr',
-    //   level: 'error'
-    // }
   },
   categories: {
     default: {
       appenders: ['graylog'],
-      level: 'debug'
+      level: 'info'
     },
     fatal: {
       appenders: ['graylog', 'syslogerr', 'email', 'slack'],
       level: 'error'
     }
   }
-})
+}
+
+if (process.env.NODE_ENV !== 'production') {
+  logConfig.categories.default.appenders = ['syslog']
+  logConfig.categories.fatal.appenders = ['syslogerr']
+}
+
+log4js.configure(logConfig)
 
 
 const logger = log4js.getLogger()
-const fatalLogger = log4js.getLogger('fatal')
+const errorLogger = log4js.getLogger('fatal')
 
 export default logger
-export { fatalLogger }
+export { errorLogger }

@@ -22,6 +22,7 @@ import packageInfo from '../package'
 import ErrorDocument from './Documents/ErrorDocument'
 import Query from './query'
 import StatusCode from './classes/StatusCode'
+import Announcer from './classes/Announcer'
 
 
 const app = new Koa()
@@ -125,21 +126,21 @@ app.use(async (ctx, next) => {
 
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
     ctx.state.traffic = rateLimit
-
     ctx.set('X-API-Version', packageInfo.version)
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
     ctx.set('X-Rate-Limit-Reset', rateLimit.reset)
 
-    logger.info({ tags: ['request'] }, `Request by ${ctx.request.ip} to ${ctx.request.path}`, {
-      ip: ctx.request.ip,
-      headers: ctx.request.headers,
-      path: ctx.request.path,
-      rateLimitTotal: rateLimit.total,
-      rateLimitRemaining: rateLimit.remaining,
-      query: ctx.query,
-      method: ctx.request.req.method
-    })
+    logger.info({
+      GELF: true,
+      _event: 'request',
+      _ip: ctx.request.ip,
+      _headers: ctx.request.headers,
+      _path: ctx.request.path,
+      _query: ctx.query,
+      _method: ctx.request.req.method
+    }, `Request by ${ctx.request.ip} to ${ctx.request.path}`)
+
 
     if (rateLimit.exceeded) {
       throw new TooManyRequestsAPIError({})
@@ -160,7 +161,15 @@ app.use(async (ctx, next) => {
     } else if (result) {
       ctx.body = result
     } else {
-      logger.error('Router received a response from the endpoint that could not be processed')
+      logger.error({
+        GELF: true,
+        _event: 'request',
+        _ip: ctx.request.ip,
+        _headers: ctx.request.headers,
+        _path: ctx.request.path,
+        _query: ctx.query,
+        _method: ctx.request.req.method
+      }, 'Router received a request that could not be processed')
     }
 
   } catch (errors) {
@@ -209,15 +218,22 @@ const server = http.createServer(app.callback())
 server.wss = new WebSocket({ server, trafficManager: traffic })
 
 
-
 ;(async function startServer () {
   try {
     await db.sync()
     const listen = promisify(server.listen.bind(server))
     await listen(config.server.port, config.server.hostname)
-    logger.info(`HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
+    logger.info({
+      GELF: true,
+      _event: 'startup'
+    }, `HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
   } catch (error) {
-    logger.error(error)
+    logger.fatal({
+      GELF: true,
+      _event: 'error',
+      _message: error.message,
+      _stack: error.stack
+    })
   }
 })()
 

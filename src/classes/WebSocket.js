@@ -25,7 +25,6 @@ const acceptedProtocols = ['FR-JSONAPI-WS']
 
 const routes = {}
 
-let singleton = undefined
 
 /**
  * Class for managing WebSocket connections
@@ -38,11 +37,7 @@ export default class WebSocket {
    * @param {TrafficControl} arg.trafficManager
    */
   constructor ({ server, trafficManager }) {
-    if (singleton) {
-      return singleton
-    }
-
-    this.wss = new ws.Server({
+    WebSocket.wss = new ws.Server({
       server,
       clientTracking: true,
       handleProtocols: () => {
@@ -50,7 +45,7 @@ export default class WebSocket {
       }
     })
 
-    this.wss.shouldHandle = (request) => {
+    WebSocket.wss.shouldHandle = (request) => {
       const requestedProtocol = request.headers['sec-websocket-protocol']
       if (!requestedProtocol) {
         return false
@@ -59,7 +54,7 @@ export default class WebSocket {
     }
     this.traffic = trafficManager
 
-    this.wss.on('connection', async (client, req) => {
+    WebSocket.wss.on('connection', async (client, req) => {
       client.req = req
       client.clientId = new UUID(4)
       client.subscriptions = []
@@ -91,7 +86,11 @@ export default class WebSocket {
           const data = JSON.parse(String(message))
           return this.onMessage({ client, data, message })
         } catch (ex) {
-          logger.info('Failed to parse incoming websocket message')
+          logger.debug({
+            GELF: true,
+            _event: 'request',
+            _message: message
+          }, 'Failed to parse incoming websocket message')
           return undefined
         }
       })
@@ -99,19 +98,7 @@ export default class WebSocket {
       process.on('apiBroadcast', (id, ctx, result) => {
         this.onBroadcast({ id, ctx, result })
       })
-
-
-      // eslint-disable-next-line consistent-this
-      singleton = this
     })
-  }
-
-  /**
-   * Singleton instance of the WebSocket service
-   * @returns {WebSocket} websocket instance
-   */
-  static get instance () {
-    return singleton
   }
 
   /**
@@ -145,6 +132,7 @@ export default class WebSocket {
   async onMessage ({ client, data, message }) {
     let [state, endpoint, query, body] = data
     if (!state || !endpoint || typeof state !== 'string') {
+
       client.terminate()
       return
     }
@@ -153,6 +141,15 @@ export default class WebSocket {
 
     // noinspection JSClosureCompilerSyntax
     const ctx = new Context({ client, query, body, message })
+
+    logger.info({
+      GELF: true,
+      _ip: ctx.request.ip,
+      _state: state,
+      _endpoint: endpoint.join(':'),
+      _query: query
+    }, `Websocket Message by ${ctx.request.ip}`)
+
     const { representing } = ctx.query
     if (representing) {
       await Authentication.authenticateRepresenting({ ctx, representing })
@@ -170,7 +167,14 @@ export default class WebSocket {
       } else if (result) {
         ctx.body = result
       } else {
-        logger.error('Websocket router received a response from the endpoint that could not be processed')
+        logger.error({
+          GELF: true,
+          _event: 'request',
+          _ip: ctx.request.ip,
+          _state: state,
+          _endpoint: endpoint.join(':'),
+          _query: query
+        }, 'Websocket router received a response from the endpoint that could not be processed')
       }
     } catch (errors) {
       const documentQuery = new Query({ connection: ctx })
@@ -212,7 +216,7 @@ export default class WebSocket {
    */
   @listen('fuelrats.*')
   onEvent (user, data) {
-    const clients = [...WebSocket.instance.wss.clients].filter((client) => {
+    const clients = [...WebSocket.wss.clients].filter((client) => {
       return typeof client.user !== 'undefined'
     })
 
@@ -231,7 +235,7 @@ export default class WebSocket {
    * @param {object} arg.data event data
    */
   onBroadcast ({ event, sender, data }) {
-    const clients = [...this.wss.clients].filter((client) => {
+    const clients = [...WebSocket.wss.clients].filter((client) => {
       return client.subscriptions.includes(event)
     })
     WebSocket.broadcast({ clients, message: [
@@ -251,7 +255,11 @@ export default class WebSocket {
     try {
       client.send(JSON.stringify(message))
     } catch (ex) {
-      logger.info('Failed to send websocket message')
+      logger.error({
+        GELF: true,
+        _event: 'error',
+        _message: message
+      }, 'Failed to send websocket message')
     }
   }
 

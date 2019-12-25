@@ -2,12 +2,6 @@ import config from '../config'
 import crypto from 'crypto'
 import axios from 'axios'
 
-const rescueMessageDestination = '#ratchat'
-const moderationMessageDestination = '#rat-ops'
-const networkMessageDestination = '#opers'
-const technicalMessageDestination = '#rattech'
-const drillMessageDestination = '#doersofstuff'
-
 /**
  * Interface to the IRC message announcer
  */
@@ -20,6 +14,10 @@ export default class Announcer {
    * @returns {Promise<undefined>} resolve a promise when completed successfully
    */
   static async sendMessage ({ destination, message }) {
+    if (!config.announcer.url || !config.announcer.secret) {
+      return
+    }
+
     const encodedBody = JSON.stringify({
       channel: destination,
       message
@@ -43,7 +41,7 @@ export default class Announcer {
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static sendRescueMessage ({ message }) {
-    return Announcer.sendMessage({ destination:  rescueMessageDestination, message })
+    return Announcer.sendMessage({ destination:  config.announcer.destinations.rescue, message })
   }
 
   /**
@@ -52,7 +50,7 @@ export default class Announcer {
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static sendModeratorMessage ({ message }) {
-    return Announcer.sendMessage({ destination: moderationMessageDestination, message })
+    return Announcer.sendMessage({ destination: config.announcer.destinations.moderation, message })
   }
 
   /**
@@ -61,7 +59,7 @@ export default class Announcer {
    * @returns {Promise<undefined>} resolve a promise when completed successfully
    */
   static sendNetworkMessage ({ message }) {
-    return Announcer.sendMessage({ destination: networkMessageDestination, message })
+    return Announcer.sendMessage({ destination: config.announcer.destinations.network, message })
   }
 
   /**
@@ -69,8 +67,8 @@ export default class Announcer {
    * @param {string} message the message to send
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
-  static sendTechnicalMessage (message) {
-    return Announcer.sendMessage({ destination: technicalMessageDestination, message })
+  static sendTechnicalMessage ({ message }) {
+    return Announcer.sendMessage({ destination: config.announcer.destinations.technical, message })
   }
 
   /**
@@ -79,7 +77,7 @@ export default class Announcer {
    * @returns {Promise<undefined>} resolve a promise when completed successfully
    */
   static sendDrillMessage (message) {
-    return Announcer.sendMessage({ destination: drillMessageDestination, message })
+    return Announcer.sendMessage({ destination: config.announcer.destinations.drill, message })
   }
 }
 

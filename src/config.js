@@ -8,8 +8,11 @@ const config = {
     port: required('FRAPI_PORT', [], 8080),
     externalUrl: required('FRAPI_URL', [], 'http://localhost:8080'),
     cookieSecret: required('FRAPI_COOKIE', []),
-    proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false),
-    ropcClientId: recommended('FRAPI_ROPC_CLIENTID', [])
+    proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false)
+  },
+  frontend: {
+    clientId: recommended('FRAPI_FRONTEND_CLIENTID', []),
+    url: required('FRAPI_FRONTEND_URL', [], 'https://fuelrats.com')
   },
   postgres: {
     database: required('FRAPI_POSTGRES_DATABASE', [], 'fuelrats'),
@@ -28,13 +31,24 @@ const config = {
   geoip: {
     directory: required('FRAPI_GEOIP_DIRECTORY', [], undefined)
   },
+  announcer: {
+    url: recommended('FRAPI_ANNOUNCER,URL', [], 'https://announcer-dev.fuelrats.com/api'),
+    secret: recommended('FRAPI_ANNOUNCER_SECRET', [], undefined),
+    destinations: {
+      rescue: recommended('FRAPI_ANNOUNCER_DESTINATION_RESCUE', [], '#ratchat'),
+      moderation: recommended('FRAPI_ANNOUNCER_DESTINATION_MODERATION', [], '#rat-ops'),
+      network: recommended('FRAPI_ANNOUNCER_DESTINATION_NETWORK', [], '#opers'),
+      technical: recommended('FRAPI_ANNOUNCER_DESTINATION_TECHNICAL', [], '#rattech'),
+      drill: recommended('FRAPI_ANNOUNCER_DESTINATION_DRILL', [], '#doersofstuff')
+    }
+  },
   frontier: {
     clientId: recommended('FRAPI_FRONTIER_CLIENTID', [], undefined),
     sharedKey: recommended('FRAPI_FRONTIER_SHAREDKEY', [], undefined),
     redirectUri: recommended('FRAPI_FRONTIER_REDIRECTURI', [], undefined)
   },
   graylog: {
-    database: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
+    host: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
     port: recommended('FRAPI_GRAYLOG_PORT', [], 12201),
     facility: recommended('FRAPI_GRAYLOG_FACILITY', [], 'fuelratsapi')
   },
