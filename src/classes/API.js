@@ -85,13 +85,25 @@ export class APIResource extends API {
    * @param {db.Model} arg.databaseType a database type object
    * @param {Function} arg.callback optional callback to perform actions before resource is returned
    * @param {object} arg.overrideFields fields to override in the create statement
+   * @param {boolean} arg.allowId Whether request client is allowed to define an ID for the created resource
    * @returns {Promise<db.Model>} A transaction to retrieve the created object
    */
-  async create ({ ctx, databaseType, callback = undefined, overrideFields = {} }) {
+  async create ({ ctx, databaseType, callback = undefined, overrideFields = {}, allowId = false }) {
     const dataObj = getJSONAPIData({ ctx, type: this.type })
 
+    let resourceId = {}
+    if (dataObj.id) {
+      if (allowId) {
+        resourceId = { id: dataObj.id }
+      } else {
+        throw new ForbiddenAPIError({
+          pointer: '/data/id'
+        })
+      }
+    }
+
     await this.validateCreateAccess({ ctx, attributes:  dataObj.attributes })
-    const entity = await databaseType.create({ ...dataObj.attributes, ...overrideFields })
+    const entity = await databaseType.create({ ...dataObj.attributes, ...overrideFields, ...resourceId })
 
     if (callback) {
       await callback({ entity })

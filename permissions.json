@@ -1,9 +1,10 @@
 {
-  "rescue": [true],
-  "rat": [true],
-  "user": [true],
-  "client": [true],
-  "ship": [true],
-  "decal": [true, "read"],
-  "group": [false]
+  "rescues": [true],
+  "rats": [true],
+  "users": [true],
+  "clients": [true],
+  "ships": [true],
+  "decals": [true],
+  "groups": [false],
+  "nicknames": [true]
 }

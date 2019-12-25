@@ -3,7 +3,7 @@ import {
   InternalServerError,
   APIError,
   MethodNotAllowedAPIError,
-  UnprocessableEntityAPIError
+  UnprocessableEntityAPIError, ConflictAPIError
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import Query from '../query'
@@ -54,6 +54,15 @@ class ErrorDocument extends Document {
         case (error.name === 'SequelizeForeignKeyConstraintError'):
           errorAcc.push(new UnprocessableEntityAPIError({
             pointer: '/data/id'
+          }))
+          break
+
+        case (error.name === 'SequelizeUniqueConstraintError'):
+          errorAcc.push(...error.errors.map((validationError) => {
+            const pointer = validationError.path === 'id' ? '/data/id' : `/data/attributes/${validationError.path}`
+            return new ConflictAPIError({
+              pointer
+            })
           }))
           break
 

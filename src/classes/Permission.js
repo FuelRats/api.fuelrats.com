@@ -133,7 +133,7 @@ export default class Permission {
     return Object.entries(permissionList).reduce((acc, [domain, [self, ...accessTypes]]) => {
       let accessTypeList = accessTypes
       if (accessTypeList.length === 0) {
-        accessTypeList = ['read', 'write', 'delete']
+        accessTypeList = ['read', 'write']
       }
 
       acc.push(...accessTypeList.map((accessType) => {
