@@ -12,7 +12,7 @@ import UAParser from 'ua-parser-js'
 import config from '../config'
 
 const mail = new Mail()
-const sessionTokenLength = 64
+const sessionTokenLength = 32
 
 /**
  * Class managing user session endpoints
@@ -65,7 +65,7 @@ export default class Sessions extends API {
       userId: user.id
     })
 
-    return Sessions.sendSessionMail(user.email, user.preferredRat.name, session.code, ctx)
+    return Sessions.sendSessionMail(user.email, user.preferredRat().name, session.code, ctx)
   }
 
   /**

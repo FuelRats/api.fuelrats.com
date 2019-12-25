@@ -2,6 +2,7 @@ import { User, Rat, db } from '../db'
 import Anope from '../classes/Anope'
 import Verifications from './Verifications'
 import Sessions from './Sessions'
+import Announcer from '../classes/Announcer'
 
 import API, {
   getJSONAPIData,
@@ -37,8 +38,8 @@ export default class Register extends API {
   async create (ctx) {
     const formData = getJSONAPIData({ ctx, type: 'registrations' })
 
-    await Register.checkExisting(formData)
-    const { email, name, nickname, password, platform } = formData
+    await Register.checkExisting(formData.attributes)
+    const { email, name, nickname, password, platform } = formData.attributes
 
     await db.transaction(async (transaction) => {
       const user = await User.create({
@@ -58,11 +59,20 @@ export default class Register extends API {
         userId: user.id
       }, { transaction })
 
-      user.rats.push(rat)
+      user.rats = [rat]
 
-      await Anope.addNewUser(email, nickname, `bcrypt:${user.password}`)
+      await Anope.addNewUser({
+        email,
+        nick: nickname,
+        encryptedPassword: `bcrypt:${user.password}`,
+        vhost: user.vhost()
+      })
       await Verifications.createVerification(user, transaction)
 
+      await Announcer.sendModeratorMessage({
+        message: `[Registration] User with email ${email} registered. Nickname: ${nickname}. 
+        CMDR name: ${name} (IP: ${ctx.ip})`
+      })
       return Sessions.createVerifiedSession(ctx, user, transaction)
     })
 

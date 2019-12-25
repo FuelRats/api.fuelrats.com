@@ -112,7 +112,7 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
     await Sessions.createSession(ctx, user)
     throw new VerificationRequiredAPIError({})
   } else if (existingSession.verified === false) {
-    await Sessions.sendSessionMail(user.email, user.preferredRat.name, existingSession.code, ctx)
+    await Sessions.sendSessionMail(user.email, user.preferredRat().name, existingSession.code, ctx)
     throw new VerificationRequiredAPIError({})
   }
 

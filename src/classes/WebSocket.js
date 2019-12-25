@@ -25,7 +25,6 @@ const acceptedProtocols = ['FR-JSONAPI-WS']
 
 const routes = {}
 
-let singleton = undefined
 
 /**
  * Class for managing WebSocket connections
@@ -38,11 +37,7 @@ export default class WebSocket {
    * @param {TrafficControl} arg.trafficManager
    */
   constructor ({ server, trafficManager }) {
-    if (singleton) {
-      return singleton
-    }
-
-    this.wss = new ws.Server({
+    WebSocket.wss = new ws.Server({
       server,
       clientTracking: true,
       handleProtocols: () => {
@@ -50,7 +45,7 @@ export default class WebSocket {
       }
     })
 
-    this.wss.shouldHandle = (request) => {
+    WebSocket.wss.shouldHandle = (request) => {
       const requestedProtocol = request.headers['sec-websocket-protocol']
       if (!requestedProtocol) {
         return false
@@ -59,7 +54,7 @@ export default class WebSocket {
     }
     this.traffic = trafficManager
 
-    this.wss.on('connection', async (client, req) => {
+    WebSocket.wss.on('connection', async (client, req) => {
       client.req = req
       client.clientId = new UUID(4)
       client.subscriptions = []
@@ -103,19 +98,7 @@ export default class WebSocket {
       process.on('apiBroadcast', (id, ctx, result) => {
         this.onBroadcast({ id, ctx, result })
       })
-
-
-      // eslint-disable-next-line consistent-this
-      singleton = this
     })
-  }
-
-  /**
-   * Singleton instance of the WebSocket service
-   * @returns {WebSocket} websocket instance
-   */
-  static get instance () {
-    return singleton
   }
 
   /**
@@ -233,7 +216,7 @@ export default class WebSocket {
    */
   @listen('fuelrats.*')
   onEvent (user, data) {
-    const clients = [...WebSocket.instance.wss.clients].filter((client) => {
+    const clients = [...WebSocket.wss.clients].filter((client) => {
       return typeof client.user !== 'undefined'
     })
 
@@ -252,7 +235,7 @@ export default class WebSocket {
    * @param {object} arg.data event data
    */
   onBroadcast ({ event, sender, data }) {
-    const clients = [...this.wss.clients].filter((client) => {
+    const clients = [...WebSocket.wss.clients].filter((client) => {
       return client.subscriptions.includes(event)
     })
     WebSocket.broadcast({ clients, message: [

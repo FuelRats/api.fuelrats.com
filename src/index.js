@@ -22,6 +22,7 @@ import packageInfo from '../package'
 import ErrorDocument from './Documents/ErrorDocument'
 import Query from './query'
 import StatusCode from './classes/StatusCode'
+import Announcer from './classes/Announcer'
 
 
 const app = new Koa()

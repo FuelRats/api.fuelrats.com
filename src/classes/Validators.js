@@ -76,9 +76,13 @@ export function OAuthScope (value) {
 export function validCMDRname (value) {
   if (CMDRname.test(value) === true) {
     const lowerNick = value.toLowerCase()
-    return !forbiddenCMDRNameComponents.some((comp) => {
+    const forbidden = forbiddenCMDRNameComponents.some((comp) => {
       return lowerNick.includes(comp)
     })
+
+    if (!forbidden) {
+      return
+    }
   }
 
   throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name' })
