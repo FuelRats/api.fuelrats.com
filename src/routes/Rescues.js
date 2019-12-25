@@ -83,7 +83,7 @@ export default class Rescues extends APIResource {
   @authenticated
   @permissions('rescues.write')
   async create (ctx) {
-    const result = await super.create({ ctx, databaseType: Rescue })
+    const result = await super.create({ ctx, databaseType: Rescue, allowId: true })
 
     const query = new DatabaseQuery({ connection: ctx })
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, { id: result.id })
