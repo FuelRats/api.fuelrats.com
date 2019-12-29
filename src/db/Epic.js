@@ -1,60 +1,40 @@
-/* eslint-disable jsdoc/require-jsdoc */
+import Model, { column, table, validate, type } from './Model'
+
 const epicsNotesFieldMaxLength = 2048
 
-export default function Epic (sequelize, DataTypes) {
-  const epic = sequelize.define('Epic', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-      validate: {
-        len: [0, epicsNotesFieldMaxLength]
-      }
-    },
-    rescueId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      validate: {
-        isUUID: 4
-      }
-    },
-    ratId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      validate: {
-        isUUID: 4
-      }
-    },
-    approvedById: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      defaultValue: undefined,
-      validate: {
-        isUUID: 4
-      }
-    },
-    nominatedById: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      defaultValue: undefined,
-      validate: {
-        isUUID: 4
-      }
-    }
-  }, {
-    paranoid: true
-  })
+@table({ paranoid: true })
+export default class Epic extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
 
-  epic.associate = function (models) {
+  @validate({ len: [0, epicsNotesFieldMaxLength] })
+  @column(type.TEXT)
+  static notes = ''
+
+  @validate({ isUUID: true })
+  @column(type.UUID, { allowNull: true })
+  static rescueId = undefined
+
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { allowNull: true })
+  static approvedById = undefined
+
+  @validate({ isUUID: 4 })
+  @column(type.UUID)
+  static nominatedById = undefined
+
+  static associate (models) {
+    super.associate(models)
+    models.Epic.belongsToMany(models.User, {
+      as: 'users',
+      foreignKey: 'epicId',
+      through: {
+        model: models.EpicUsers,
+        foreignKey: 'epicId'
+      }
+    })
     models.Epic.belongsTo(models.Rescue, { as: 'rescue' })
-    models.Epic.belongsTo(models.Rat, { as: 'rat' })
     models.Epic.belongsTo(models.User, {
       as: 'approvedBy',
       foreignKey: 'approvedById'
@@ -64,6 +44,4 @@ export default function Epic (sequelize, DataTypes) {
       foreignKey: 'nominatedById'
     })
   }
-
-  return epic
 }

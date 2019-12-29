@@ -1,88 +1,55 @@
-/* eslint-disable */
-/* eslint max-lines-per-function:0 */
-
 import bcrypt from 'bcrypt'
 import UserView from '../view/UserView'
 import { JSONObject } from '../classes/Validators'
+import Model, { column, table, validate, type } from './Model'
 
 const passwordMinLength = 12
 const passwordMaxLength = 1024
-const nicknameMaxLength = 35
 
-export default function User (db, DataTypes) {
-  const user = db.define('User', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    data: {
-      type: DataTypes.JSONB,
-      allowNull: false,
-      defaultValue: {},
-      validate: {
-        JSONObject
-      }
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isEmail: true
-      }
-    },
-    password: {
-      type: DataTypes.STRING(passwordMaxLength),
-      allowNull: false,
-      validate: {
-        len: [passwordMinLength, passwordMaxLength]
-      }
-    },
-    frontierId: {
-      type: DataTypes.INTEGER,
-      allowNull: true
-    },
-    status: {
-      type: DataTypes.ENUM('active', 'inactive', 'legacy', 'deactivated'),
-      allowNull: false,
-      defaultValue: 'active',
-      validate: {
-        notEmpty: true,
-        isIn: [['active', 'inactive', 'legacy', 'deactivated']]
-      }
-    },
-    suspended: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: undefined
-    },
-    image: {
-      type: DataTypes.VIRTUAL,
-      get () {
-        return Boolean(this.avatar)
-      },
-      include: []
-    },
-    permissions: {
-      type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
-      get () {
-        if (!this.groups) {
-          return []
-        }
-        return this.groups.reduce((accumulator, value) => {
-          return accumulator.concat(value.permissions)
-        }, [])
-      },
-      include: []
+@table({ paranoid: true })
+export default class User extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
+
+  @validate({ JSONObject })
+  @column(type.JSONB)
+  static data = {}
+
+  @validate({ isEmail: true })
+  @column(type.STRING)
+  static email = undefined
+
+  @validate({ len: [passwordMinLength, passwordMaxLength] })
+  @column(type.STRING(passwordMaxLength))
+  static password = undefined
+
+  @validate({ isInt: true })
+  @column(type.INTEGER, { allowNull: true })
+  static frontierId = undefined
+
+  @column(type.ENUM('active', 'inactive', 'legacy', 'deactivated'))
+  static status = 'active'
+
+  @column(type.DATE, { allowNull: true })
+  static suspended = undefined
+
+  @column(type.VIRTUAL(type.BOOLEAN), { include: [], get () {
+    return Boolean(this.avatar)
+  } })
+  static image = undefined
+
+  @column(type.VIRTUAL(type.ARRAY(type.STRING)), { include: [], get () {
+    if (!this.groups) {
+      return []
     }
-  }, {
-    paranoid: true
-  })
+    return this.groups.reduce((accumulator, value) => {
+      return accumulator.concat(value.permissions)
+    }, [])
+  } })
+  static permissions = undefined
 
-  const hashPasswordHook = async function (instance) {
+  static hashPasswordHook = async function (instance) {
     if (!instance.changed('password')) {
       return
     }
@@ -90,20 +57,13 @@ export default function User (db, DataTypes) {
     instance.set('password', hash)
   }
 
-  user.beforeCreate(hashPasswordHook)
-  user.beforeUpdate(hashPasswordHook)
-
-  user.prototype.toJSON = function () {
+  toJSON () {
     const values = this.get()
     delete values.password
     return values
   }
 
-  user.prototype.renderView = function () {
-    return UserView
-  }
-
-  user.prototype.isSuspended = function () {
+  isSuspended () {
     if (!this.suspended) {
       return false
     }
@@ -111,24 +71,22 @@ export default function User (db, DataTypes) {
     return this.suspended - new Date() > 0
   }
 
-  user.prototype.isDeactivated = function () {
+  isDeactivated () {
     return this.status === 'deactivated'
   }
 
-  user.prototype.isConfirmed = function () {
+  isConfirmed () {
     return this.groups.length > 0
   }
 
-
-
-  user.prototype.preferredRat = function () {
+  preferredRat () {
     if (this.displayRat) {
       return this.displayRat
     }
     return this.rats[0]
   }
 
-  user.prototype.vhost = function () {
+  vhost () {
     if (!this.groups || this.groups.length === 0) {
       return undefined
     }
@@ -141,12 +99,83 @@ export default function User (db, DataTypes) {
       return group.vhost
     }
     const rat = this.preferredRat()
-    const identifier = rat ? rat.name : user.id
+    const identifier = rat ? rat.name : this.id
 
     return `${getIRCSafeName(identifier)}.${group.vhost}`
   }
 
-  user.associate = function (models) {
+  static getScopes (models) {
+    return {
+      defaultScope: [{
+        attributes: {
+          exclude: [
+            'permissions',
+            'image'
+          ]
+        },
+        include: [
+          {
+            model: models.Rat,
+            as: 'rats',
+            required: false,
+            include: [{
+              model: models.Ship,
+              as: 'ships',
+              required: false,
+              include: []
+            }]
+          },
+          {
+            model: models.Avatar,
+            as: 'avatar',
+            required: false
+          },
+          {
+            model: models.Rat,
+            as: 'displayRat',
+
+            include: [{
+              model: models.Ship,
+              as: 'ships',
+              required: false,
+              include: []
+            }]
+          }, {
+            model: models.Group,
+            as: 'groups',
+            required: false,
+            through: {
+              attributes: ['userId']
+            },
+            include: [],
+            order: [
+              ['priority', 'DESC']
+            ]
+          }, {
+            model: models.Client,
+            as: 'clients',
+            required: false,
+            include: []
+          }
+        ]
+      }, { override: true }],
+
+      norelations: [{
+        attributes: {
+          exclude: [
+            'permissions',
+            'image'
+          ]
+        }
+      }, { override: true }]
+    }
+  }
+
+  static associate (models) {
+    super.associate(models)
+    User.beforeCreate(User.hashPasswordHook)
+    User.beforeUpdate(User.hashPasswordHook)
+
     models.User.hasMany(models.Rat, {
       as: 'rats',
       foreignKey: 'userId'
@@ -168,78 +197,22 @@ export default function User (db, DataTypes) {
       }
     })
 
+    models.User.belongsToMany(models.Epic, {
+      as: 'epics',
+      foreignKey: 'userId',
+      through: {
+        model: models.EpicUsers,
+        foreignKey: 'userId'
+      }
+    })
+
     models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
     models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
 
     models.User.hasOne(models.Avatar, { foreignKey: 'userId', as: 'avatar' })
-
-    models.User.addScope('defaultScope', {
-      attributes: {
-        exclude: [
-          'permissions',
-          'image'
-        ]
-      },
-      include: [
-        {
-          model: models.Rat,
-          as: 'rats',
-          required: false,
-          include: [{
-            model: models.Ship,
-            as: 'ships',
-            required: false,
-            include: []
-          }]
-        },
-        {
-          model: models.Avatar,
-          as: 'avatar',
-          required: false
-        },
-        {
-          model: models.Rat,
-          as: 'displayRat',
-
-          include: [{
-            model: models.Ship,
-            as: 'ships',
-            required: false,
-            include: []
-          }]
-        }, {
-          model: models.Group,
-          as: 'groups',
-          required: false,
-          through: {
-            attributes: ['userId']
-          },
-          include: [],
-          order: [
-            ['priority', 'DESC']
-          ]
-        }, {
-          model: models.Client,
-          as: 'clients',
-          required: false,
-          include: []
-        }
-      ]
-    }, { override: true })
-
-    models.User.addScope('norelations', {
-      attributes: {
-        exclude: [
-          'permissions',
-          'image'
-        ]
-      }
-    }, { override: true })
   }
-  return user
 }
-
 
 function getIRCSafeName (rat) {
   let ratName = rat.name

@@ -1,65 +1,54 @@
-/* eslint-disable */
+import Model, { column, table, validate, type } from './Model'
 
-export default function Session (sequelize, DataTypes) {
-  const session = sequelize.define('Session', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    ip: {
-      type: DataTypes.INET,
-      allowNull: false
-    },
-    userAgent: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    lastAccess: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
-    },
-    verified: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-    code: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      validate: {
-        isUUID: 4
-      }
+
+@table({
+  indexes: [{
+    fields: ['ip', 'userAgent', 'code']
+  }]
+})
+export default class Session extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
+
+  @column(type.INET)
+  static ip = undefined
+
+  @column(type.STRING)
+  static userAgent = undefined
+
+  @column(type.DATE)
+  static lastAccess = type.NOW
+
+  @column(type.BOOLEAN)
+  static verified = false
+
+  @column(type.STRING)
+  static code = undefined
+
+  @validate({ isUUID: 4 })
+  @column(type.UUID)
+  static userId = undefined
+
+
+  static getScopes (models) {
+    return {
+      defaultScope: [{
+        include: [
+          {
+            model: models.User,
+            as: 'user',
+            required: true
+          }
+        ]
+      }, {
+        override: true
+      }]
     }
-  }, {
-    indexes: [{
-      fields: ['ip', 'userAgent', 'code']
-    }]
-  })
-
-  session.associate = function (models) {
-    models.Session.belongsTo(models.User, { as: 'user' })
-
-    models.Session.addScope('defaultScope', {
-      include: [
-        {
-          model: models.User,
-          as: 'user',
-          required: true
-        }
-      ]
-    }, {
-      override: true
-    })
   }
 
-  return session
+  static associate (models) {
+    super.associate(models)
+    models.Session.belongsTo(models.User, { as: 'user' })
+  }
 }

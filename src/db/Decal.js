@@ -1,59 +1,34 @@
 import { FrontierRedeemCode } from '../classes/Validators'
+import Model, { column, table, validate, type } from './Model'
 
 const decalNotesMaxLength = 4096
 
-// noinspection ES6ConvertModuleExportToExport
-module.exports = function (sequelize, DataTypes) {
-  const decal = sequelize.define('Decal', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    code: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      require: true,
-      validate: {
-        is: FrontierRedeemCode
-      }
-    },
-    type:  {
-      type: DataTypes.ENUM('Rescues', 'Promotional', 'Special'),
-      allowNull: false,
-      validate: {
-        isIn: [['Rescues', 'Promotional', 'Special']]
-      }
-    },
-    claimedAt: {
-      type: DataTypes.DATE,
-      allowNull: true
-    },
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-      validate: {
-        defaultValue: '',
-        len: [0, decalNotesMaxLength]
-      }
-    },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      validate: {
-        isUUID: 4
-      }
-    }
-  }, {
-    paranoid: true
-  })
+@table({ paranoid: true })
+export default class Decal extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
 
-  decal.associate = function (models) {
+  @validate({ is: FrontierRedeemCode })
+  @column(type.STRING)
+  static code = undefined
+
+  @column(type.ENUM('Rescues', 'Promotional', 'Special'))
+  static type = undefined
+
+  @column(type.DATE, { allowNull: true })
+  static claimedAt = undefined
+
+  @validate({ len: [0, decalNotesMaxLength] })
+  @column(type.TEXT)
+  static notes = ''
+
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { allowNull: true })
+  static userId = undefined
+
+  static associate (models) {
+    super.associate(models)
     models.Decal.belongsTo(models.User, { as: 'user' })
   }
-
-  return decal
 }

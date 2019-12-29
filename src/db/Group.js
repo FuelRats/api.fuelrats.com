@@ -1,48 +1,37 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { IRCVirtualHost, OAuthScope } from '../classes/Validators'
+import Model, { column, table, validate, type } from './Model'
 
-export default function Group (sequelize, DataTypes) {
-  const group = sequelize.define('Group', {
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      allowNull: false,
-      validate: {
-        isAlphanumeric: true,
-        notEmpty: true
-      }
-    },
-    vhost: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      validate: {
-        is: IRCVirtualHost
-      }
-    },
-    withoutPrefix: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-    priority: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-      validate: {
-        isInt: true
-      }
-    },
-    permissions: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      validate: {
-        OAuthScope
-      }
+@table({ paranoid: true })
+export default class Group extends Model {
+  @validate({ isAlphanumeric: true, notEmpty: true })
+  @column(type.STRING, { primaryKey: true })
+  static id = undefined
+
+  @validate({ is: IRCVirtualHost })
+  @column(type.STRING, { allowNull: true })
+  static vhost = undefined
+
+  @column(type.BOOLEAN)
+  static withoutPrefix = false
+
+  @validate({ isInt: true })
+  @column(type.INTEGER)
+  static priority = 0
+
+  @validate({ OAuthScope })
+  @column(type.ARRAY(type.STRING))
+  static permissions = []
+
+  static getScopes () {
+    return {
+      stats: [{
+        attributes: []
+      }]
     }
-  }, {
-    paranoid: true
-  })
+  }
 
-  group.associate = function (models) {
+  static associate (models) {
+    super.associate(models)
     models.Group.belongsToMany(models.User, {
       as: 'users',
       foreignKey: 'groupId',
@@ -51,11 +40,5 @@ export default function Group (sequelize, DataTypes) {
         foreignKey: 'groupId'
       }
     })
-
-    models.Group.addScope('stats', {
-      attributes: []
-    })
   }
-
-  return group
 }
