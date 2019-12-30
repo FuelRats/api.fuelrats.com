@@ -1,23 +1,23 @@
 import Model, { column, table, validate, type } from './Model'
 
 @table({})
-export default class RescueRats extends Model {
+export default class EpicUsers extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
   @validate({ isUUID: 4 })
   @column(type.UUID)
-  static rescueId = undefined
+  static epicId = undefined
 
   @validate({ isUUID: 4 })
   @column(type.UUID)
-  static ratId = undefined
+  static userId = undefined
 
   static associate (models) {
     super.associate(models)
-    models.RescueRats.belongsTo(models.Rescue, { foreignKey: 'rescueId' })
-    models.RescueRats.belongsTo(models.Rat, { foreignKey: 'ratId' })
+    models.EpicUsers.belongsTo(models.Epic, { foreignKey: 'epicId' })
+    models.EpicUsers.belongsTo(models.User, { foreignKey: 'userId' })
   }
 }
 

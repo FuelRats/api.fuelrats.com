@@ -1,48 +1,30 @@
-/* eslint-disable */
+import Model, { column, table, validate, type } from './Model'
+
 const verificationTokenLength = 32
 
-export default function VerificationToken (sequelize, DataTypes) {
-  const verification = sequelize.define('VerificationToken', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    value: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isAlphanumeric: true,
-        len: [verificationTokenLength, verificationTokenLength]
-      }
-    },
-    expires: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      validate: {
-        isDate: true
-      }
-    },
-    required: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      validate: {
-        isUUID: 4
-      }
-    }
-  })
+@table({})
+export default class VerificationToken extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
 
-  verification.associate = function (models) {
+  @validate({ isAlphanumeric: true, len: [verificationTokenLength, verificationTokenLength] })
+  @column(type.STRING)
+  static value = undefined
+
+  @validate({ isDate: true })
+  @column(type.DATE)
+  static expires = undefined
+
+  @column(type.BOOLEAN)
+  static required = false
+
+  @validate({ isUUID: 4 })
+  @column(type.UUID)
+  static userId = undefined
+
+  static associate (models) {
+    super.associate(models)
     models.VerificationToken.belongsTo(models.User, { as: 'user' })
   }
-
-  return verification
 }

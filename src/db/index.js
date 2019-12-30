@@ -75,22 +75,21 @@ db.addHook('beforeCount', function (options) {
 })
 
 /**
- * Import all database models
- * @param {[string]} modelNames the names of the models to import
- * @returns {*}
- */
+* Import all database models
+* @param {[string]} modelNames the names of the models to import
+  * @returns {*}
+*/
 function importModels (modelNames) {
   const models = modelNames.reduce((modelAcc, modelName) => {
-    modelAcc[modelName] = db.import(path.join(__dirname, modelName))
+    const model = require(`./${modelName}`).default
+    model.init(db, Sequelize)
+    modelAcc[modelName] = model
     return modelAcc
   }, {})
 
-  models.db = db
-  models.sequelize = db
-
   Object.keys(models).forEach((modelName) => {
     if (Reflect.has(models[modelName], 'associate')) {
-      models[modelName].associate(models)
+      Reflect.apply(models[modelName].associate, models[modelName], [models])
     }
   })
   return models
@@ -108,6 +107,7 @@ const models = importModels([
   'Token',
   'Reset',
   'Epic',
+  'EpicUsers',
   'Ship',
   'Decal',
   'Group',

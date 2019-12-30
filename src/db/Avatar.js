@@ -1,33 +1,29 @@
-/* eslint-disable jsdoc/require-jsdoc */
-export default function Avatar (db, DataTypes) {
-  const avatar = db.define('Avatar', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    image: {
-      type: DataTypes.BLOB(),
-      allowNull: false,
-      defaultValue: undefined
+import Model, { table, column, validate , type} from './Model'
+
+@table({})
+export default class Avatar extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
+
+  @column(type.BLOB())
+  static image = undefined
+
+  static getScopes () {
+    return {
+      defaultScope: [{
+        attributes: ['id']
+      }],
+
+      data: [{
+        attributes: ['id', 'image']
+      }]
     }
-  })
-
-  avatar.associate = function (models) {
-    avatar.belongsTo(models.User, { as: 'user' })
-
-    avatar.addScope('defaultScope', {
-      attributes: ['id']
-    })
-
-    avatar.addScope('data', {
-      attributes: ['id', 'image']
-    })
-
   }
 
-  return avatar
+  static associate (models) {
+    super.associate(models)
+
+    models.Avatar.belongsTo(models.User, { as: 'user' })
+  }
 }

@@ -436,7 +436,7 @@
           "DELETE",
           "PATCH"
         ],
-        "capIsNewExceptionPattern": "^DataTypes\\."
+        "capIsNewExceptionPattern": "^(DataTypes|type)\\."
       }
     ],
     "new-parens": [

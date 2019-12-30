@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { ShipName } from '../classes/Validators'
 import ShipView from '../view/ShipView'
+import Model, { column, table, validate, type } from './Model'
 
 
 const maxIngameShipNameLength = 22
@@ -41,57 +42,29 @@ const shipTypes = [
   'Vulture'
 ]
 
-export default function Ship (sequelize, DataTypes) {
-  const ship = sequelize.define('Ship', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    name: {
-      type: DataTypes.CHAR(maxIngameShipNameLength),
-      allowNull: false,
-      validate: {
-        is: ShipName
-      }
-    },
-    shipId:  {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: true,
-      autoIncrement: true,
-      validate: {
-        isInt: true,
-        min: 1,
-        max: 9999
-      }
-    },
-    shipType: {
-      type: DataTypes.ENUM(...shipTypes),
-      validate: {
-        notEmpty: true,
-        isIn: [shipTypes]
-      }
-    },
-    ratId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      validate: {
-        isUUID: 4
-      }
-    }
-  })
+@table({})
+export default class Ship extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
 
-  ship.prototype.renderView = function () {
-    return ShipView
-  }
+  @validate({ is: ShipName }, { name: 'name' })
+  @column(type.STRING(maxIngameShipNameLength), { name: 'name' })
+  static shipName = undefined
 
-  ship.associate = function (models) {
+  @validate({ isInt: true, min: 1, max: 9999 })
+  @column(type.INTEGER, { unique: true })
+  static shipId = undefined
+
+  @column(type.ENUM(...shipTypes))
+  static shipType = undefined
+
+  @validate({ isUUID: 4 })
+  @column(type.UUID)
+  static ratId = undefined
+
+  static associate (models) {
+    super.associate(models)
     models.Ship.belongsTo(models.Rat, { as: 'rat' })
   }
-
-  return ship
 }
