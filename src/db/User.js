@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt'
-import UserView from '../view/UserView'
 import { JSONObject } from '../classes/Validators'
 import Model, { column, table, validate, type } from './Model'
 
@@ -7,6 +6,9 @@ const passwordMinLength = 12
 const passwordMaxLength = 1024
 
 @table({ paranoid: true })
+/**
+ * Model class for users
+ */
 export default class User extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -49,6 +51,11 @@ export default class User extends Model {
   } })
   static permissions = undefined
 
+  /**
+   * Function triggered when attempting to change the value of a user password, which hashes it.
+   * @param {User} instance user model instance
+   * @returns {Promise<void>}
+   */
   static hashPasswordHook = async function (instance) {
     if (!instance.changed('password')) {
       return
@@ -57,12 +64,20 @@ export default class User extends Model {
     instance.set('password', hash)
   }
 
+  /**
+   * Override function that ensures password is removed from JSON user results
+   * @returns {object}
+   */
   toJSON () {
     const values = this.get()
     delete values.password
     return values
   }
 
+  /**
+   * Returns whether or not this user has been suspended
+   * @returns {boolean}
+   */
   isSuspended () {
     if (!this.suspended) {
       return false
@@ -71,14 +86,28 @@ export default class User extends Model {
     return this.suspended - new Date() > 0
   }
 
+  /**
+   * Returns whether or not this user has been deactivated
+   * @returns {boolean}
+   */
   isDeactivated () {
     return this.status === 'deactivated'
   }
 
+  /**
+   * Returns whether or not this user has had their email verified
+   * @returns {boolean}
+   */
   isConfirmed () {
-    return this.groups.length > 0
+    return this.groups.some((group) => {
+      return group.id === 'verified'
+    })
   }
 
+  /**
+   * Returns the "preferred" rat of a user, also known as their display rat, or display name.
+   * @returns {Model}
+   */
   preferredRat () {
     if (this.displayRat) {
       return this.displayRat
@@ -86,6 +115,10 @@ export default class User extends Model {
     return this.rats[0]
   }
 
+  /**
+   * Returns the vhost that should be used for this user based on their permission levels
+   * @returns {string|undefined}
+   */
   vhost () {
     if (!this.groups || this.groups.length === 0) {
       return undefined
@@ -104,6 +137,9 @@ export default class User extends Model {
     return `${getIRCSafeName(identifier)}.${group.vhost}`
   }
 
+  /**
+   * @inheritdoc
+   */
   static getScopes (models) {
     return {
       defaultScope: [{
@@ -156,6 +192,12 @@ export default class User extends Model {
             as: 'clients',
             required: false,
             include: []
+          }, {
+            model: models.Epic,
+            as: 'epics',
+            required: false,
+            through: {},
+            include: []
           }
         ]
       }, { override: true }],
@@ -171,6 +213,9 @@ export default class User extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     User.beforeCreate(User.hashPasswordHook)
@@ -214,6 +259,11 @@ export default class User extends Model {
   }
 }
 
+/**
+ * Get an IRC host safe version of a rat name for use in a virtual host
+ * @param {Model} rat the rat which name should be used
+ * @returns {string} the generated irc safe name
+ */
 function getIRCSafeName (rat) {
   let ratName = rat.name
   ratName = ratName.replace(/ /gu, '')

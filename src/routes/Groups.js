@@ -41,6 +41,10 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
+  /**
+   * Get user group byi d
+   * @endpoint
+   */
   @GET('/groups/:id')
   @websocket('groups', 'read')
   @authenticated
@@ -50,6 +54,10 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
+  /**
+   * Create a user permission group
+   * @endpoint
+   */
   @POST('/groups')
   @websocket('groups', 'create')
   @authenticated
@@ -62,6 +70,10 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
+  /**
+   * Update a user permission group
+   * @endpoint
+   */
   @PUT('/groups/:id')
   @websocket('groups', 'update')
   @authenticated
@@ -73,6 +85,10 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
+  /**
+   * Delete a user permission group
+   * @endpoint
+   */
   @DELETE('/groups/:id')
   @websocket('groups', 'delete')
   @authenticated
@@ -84,18 +100,30 @@ export default class Groups extends APIResource {
     return true
   }
 
+  /**
+   * @inheritdoc
+   */
   changeRelationship () {
     throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
   }
 
+  /**
+   * @inheritdoc
+   */
   isSelf () {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationTypes () {
     return {}
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return {
       vhost: WritePermission.sudo,

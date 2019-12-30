@@ -1,6 +1,4 @@
-/* eslint-disable */
 import { ShipName } from '../classes/Validators'
-import ShipView from '../view/ShipView'
 import Model, { column, table, validate, type } from './Model'
 
 
@@ -43,6 +41,9 @@ const shipTypes = [
 ]
 
 @table({})
+/**
+ * Model class for rat ships
+ */
 export default class Ship extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -63,6 +64,9 @@ export default class Ship extends Model {
   @column(type.UUID)
   static ratId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Ship.belongsTo(models.Rat, { as: 'rat' })

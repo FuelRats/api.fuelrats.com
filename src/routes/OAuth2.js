@@ -13,7 +13,6 @@ import i18next from 'i18next'
 import localisationResources from '../../localisations.json'
 import Authentication from '../classes/Authentication'
 import Sessions from './Sessions'
-import config from '../config'
 
 import API, {
   clientAuthenticated,

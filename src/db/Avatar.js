@@ -1,6 +1,9 @@
-import Model, { table, column, validate , type} from './Model'
+import Model, { table, column, validate, type } from './Model'
 
 @table({})
+/**
+ * User avatar model
+ */
 export default class Avatar extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -9,6 +12,9 @@ export default class Avatar extends Model {
   @column(type.BLOB())
   static image = undefined
 
+  /**
+   * @inheritdoc
+   */
   static getScopes () {
     return {
       defaultScope: [{
@@ -21,6 +27,9 @@ export default class Avatar extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
 

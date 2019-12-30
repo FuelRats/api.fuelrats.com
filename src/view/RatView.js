@@ -1,4 +1,4 @@
-import { ReadPermission, DatabaseView, RescueView, ShipView, UserView } from './'
+import { ReadPermission, DatabaseView, RescueView, ShipView, UserView, EpicView } from './'
 
 /**
  * Get JSONAPI view for a rat
@@ -63,7 +63,8 @@ export default class RatView extends DatabaseView {
   get relationships () {
     return {
       user: UserView,
-      ships: ShipView
+      ships: ShipView,
+      epics: EpicView
     }
   }
 

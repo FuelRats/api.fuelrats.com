@@ -1,22 +1,19 @@
-/* eslint-disable */
-
 import { IRCNickname, JSONObject, languageCode, RescueQuote } from '../classes/Validators'
 import Model, { column, validate, type, table } from './Model'
 
-/* eslint max-lines-per-function:0 */
 
-// eslint-disable-next-line
-const rescueClientNameMaxLength = 64
 const rescueNotesMaxLength = 2048
 const rescueSystemMaxLength = 64
 const rescueTitleMaxLength = 64
 
 @table({ paranoid: true, indexes: [{
-    fields: ['data'],
-    using: 'gin',
-    operator: 'jsonb_path_ops'
-  }]
-})
+  fields: ['data'],
+  using: 'gin',
+  operator: 'jsonb_path_ops'
+}] })
+/**
+ * Model class for Rescues
+ */
 export default class Rescue extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -64,12 +61,14 @@ export default class Rescue extends Model {
   @column(type.STRING, { allowNull: true })
   static system = undefined
 
-  @validate({ len: [1, rescueTitleMaxLength],isAlphanumeric: true })
+  @validate({ len: [1, rescueTitleMaxLength], isAlphanumeric: true })
   @column(type.STRING, { allowNull: true })
   static title = undefined
 
   @validate({ notEmpty: true, isIn: [['success', 'failure', 'invalid', 'other', 'purge']] })
-  @column(type.ENUM('success', 'failure', 'invalid', 'other', 'purge'), { allowNull: true })
+  @column(type.ENUM(
+    'success', 'failure', 'invalid', 'other', 'purge'
+  ), { allowNull: true })
   static outcome = undefined
 
   @column(type.ARRAY(type.STRING))
@@ -79,6 +78,9 @@ export default class Rescue extends Model {
   @column(type.UUID, { allowNull: true })
   static firstLimpetId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static getScopes (model) {
     return {
       defaultScope: [{
@@ -108,6 +110,9 @@ export default class Rescue extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Rescue.belongsTo(models.Rat, {

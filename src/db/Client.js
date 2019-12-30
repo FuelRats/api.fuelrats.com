@@ -8,6 +8,9 @@ const clientSecretMinLength = 32
 const clientSecretMaxLength = 512
 
 @table({})
+/**
+ * OAuth Client table model
+ */
 export default class Client extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -35,6 +38,11 @@ export default class Client extends Model {
   @column(type.BOOLEAN)
   static firstParty = false
 
+  /**
+   * Function that runs when one attempts to set a new value to the client secret field, hashing the value
+   * @param {Client} instance client model instance
+   * @returns {Promise<void>}
+   */
   static async hashPasswordHook (instance) {
     if (!instance.changed('secret')) {
       return
@@ -43,12 +51,19 @@ export default class Client extends Model {
     instance.set('secret', hash)
   }
 
+  /**
+   * Removes the client secret from the json output of this model
+   * @returns {object} json output of the model without the client secret
+   */
   toJSON () {
     const values = this.get()
     delete values.secret
     return values
   }
 
+  /**
+   * @inheritdoc
+   */
   static getScopes (models) {
     return {
       user: [{
@@ -65,6 +80,9 @@ export default class Client extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     Client.beforeCreate(Client.hashPasswordHook)

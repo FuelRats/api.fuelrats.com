@@ -71,7 +71,6 @@ export function OAuthScope (value) {
 /**
  * Validate whether input is a valid CMDR name
  * @param {string} value input to validate
- * @returns {boolean} whether input is a valid CMDR name
  */
 export function validCMDRname (value) {
   if (CMDRname.test(value) === true) {

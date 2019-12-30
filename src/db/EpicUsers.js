@@ -1,6 +1,9 @@
 import Model, { column, table, validate, type } from './Model'
 
 @table({})
+/**
+ * Model class for the epic nominees join table
+ */
 export default class EpicUsers extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -14,6 +17,9 @@ export default class EpicUsers extends Model {
   @column(type.UUID)
   static userId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.EpicUsers.belongsTo(models.Epic, { foreignKey: 'epicId' })
