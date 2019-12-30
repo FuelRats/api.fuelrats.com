@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { JSONObject } from '../classes/Validators'
+import { JSONObject, stripeUserId } from '../classes/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 const passwordMinLength = 12
@@ -29,6 +29,10 @@ export default class User extends Model {
   @validate({ isInt: true })
   @column(type.INTEGER, { allowNull: true })
   static frontierId = undefined
+
+  @validate({ is: stripeUserId })
+  @column(type.STRING, { allowNull: true })
+  static stripeId = undefined
 
   @column(type.ENUM('active', 'inactive', 'legacy', 'deactivated'))
   static status = 'active'
