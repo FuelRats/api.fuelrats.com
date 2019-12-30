@@ -1,6 +1,11 @@
 import Model, { column, table, validate, type } from './Model'
+
 const resetPasswordTokenLength = 32
 
+@table({})
+/**
+ * Model class for password resets
+ */
 export default class Reset extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -21,6 +26,9 @@ export default class Reset extends Model {
   @column(type.UUID)
   static userId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Reset.belongsTo(models.User, { as: 'user' })

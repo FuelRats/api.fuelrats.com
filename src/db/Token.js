@@ -6,6 +6,9 @@ const oAuthTokenMinLength = 16
 const oAuthTokenMaxLength = 128
 
 @table({})
+/**
+ * Model class for OAuth tokens
+ */
 export default class Token extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -27,6 +30,9 @@ export default class Token extends Model {
   @column(type.UUID)
   static clientId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static getScopes (models) {
     return {
       defaultScope: [{
@@ -43,10 +49,12 @@ export default class Token extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Token.belongsTo(models.User, { as: 'user' })
-    // models.Token.belongsTo(models.Client, { as: 'client' })
   }
 }
 

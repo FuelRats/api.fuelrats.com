@@ -32,12 +32,11 @@ export default class Version extends API {
 
   /**
    * GET /version - Gets version information
-   * @param {Context} ctx request context
-   * @returns {Promise<ObjectDocument>} document response
+   * @endpoint
    */
   @GET('/version')
   @websocket('version', 'read')
-  async read (ctx) {
+  read (ctx) {
     const { hash, branch, tags, date } = version
 
     const result = {

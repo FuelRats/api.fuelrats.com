@@ -1,11 +1,13 @@
 import Model, { column, table, validate, type } from './Model'
 
-
 @table({
   indexes: [{
     fields: ['ip', 'userAgent', 'code']
   }]
 })
+/**
+ * Model class for user sessions
+ */
 export default class Session extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -30,7 +32,9 @@ export default class Session extends Model {
   @column(type.UUID)
   static userId = undefined
 
-
+  /**
+   * @inheritdoc
+   */
   static getScopes (models) {
     return {
       defaultScope: [{
@@ -47,6 +51,9 @@ export default class Session extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Session.belongsTo(models.User, { as: 'user' })

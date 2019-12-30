@@ -1,7 +1,17 @@
 import Sequelize from 'sequelize'
+
 export { DataTypes as type } from 'sequelize'
 
+/**
+ * Base class for decorated database models
+ */
 export default class Model extends Sequelize.Model {
+  /**
+   * Initialise the database model
+   * @param {Sequelize} sequelize sequelize instance
+   * @returns {void}
+   *
+   */
   static init (sequelize) {
     return super.init(this.columns, {
       ...this.options,
@@ -11,6 +21,10 @@ export default class Model extends Sequelize.Model {
     })
   }
 
+  /**
+   * Base function for running associations on a model, associating it to other models and setting up scopes
+   * @param {[Sequelize.Model]} models list of database models
+   */
   static associate (models) {
     const scopes = Object.entries(this.getScopes(models))
     scopes.forEach(([scope, [definition, options]]) => {
@@ -18,17 +32,32 @@ export default class Model extends Sequelize.Model {
     })
   }
 
+  /**
+   * Get all the scopes defined for this model
+   * @returns {object} scope definition
+   */
   static getScopes () {
     return {}
   }
 }
 
+/**
+ * Decorator for defining the settings of a database table
+ * @param {object} options table options
+ * @returns {Function} decorator
+ */
 export function table (options) {
   return function (target) {
     target.options = options
   }
 }
 
+/**
+ * Decorator for defining a database table column
+ * @param {Sequelize.DataTypes} type the data type of the column
+ * @param {boolean} [allowNull] allow this column to have null values
+ * @returns {Function} decorator
+ */
 export function column (type, { allowNull = false, ...options } = {}) {
   return function (target, name) {
     const columnName = options.name || name
@@ -42,6 +71,12 @@ export function column (type, { allowNull = false, ...options } = {}) {
   }
 }
 
+/**
+ * Decorator for defining validators on a database table column
+ * @param {[object]} validations column value validations
+ * @param {object} options validation options
+ * @returns {Function} decorator
+ */
 export function validate (validations, options = {}) {
   return function (target, name) {
     const columnName = options.name || name

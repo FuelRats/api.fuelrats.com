@@ -2,6 +2,9 @@ import { IRCVirtualHost, OAuthScope } from '../classes/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 @table({ paranoid: true })
+/**
+ * Model class for permission groups
+ */
 export default class Group extends Model {
   @validate({ isAlphanumeric: true, notEmpty: true })
   @column(type.STRING, { primaryKey: true })
@@ -22,6 +25,9 @@ export default class Group extends Model {
   @column(type.ARRAY(type.STRING))
   static permissions = []
 
+  /**
+   * @inheritdoc
+   */
   static getScopes () {
     return {
       stats: [{
@@ -30,6 +36,9 @@ export default class Group extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Group.belongsToMany(models.User, {

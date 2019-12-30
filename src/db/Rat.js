@@ -1,7 +1,10 @@
-import { JSONObject, validCMDRname } from '../classes/Validators'
+import { JSONObject } from '../classes/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 @table({ paranoid: true })
+/**
+ * Model class for Rats
+ */
 export default class Rat extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -28,6 +31,9 @@ export default class Rat extends Model {
   @column(type.UUID, { allowNull: true })
   static userId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static getScopes (models) {
     return {
       defaultScope: [{
@@ -69,6 +75,9 @@ export default class Rat extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Rat.belongsTo(models.User, {
@@ -91,7 +100,5 @@ export default class Rat extends Model {
       foreignKey: 'ratId',
       as: 'ships'
     })
-
-    models.Rat.hasMany(models.Epic, { foreignKey: 'ratId', as: 'epics' })
   }
 }

@@ -38,7 +38,7 @@ export default class ShipView extends DatabaseView {
   get isSelf () {
     if (this.query.connection.state.user) {
       const ratExists = this.query.connection.state.user.rats.some((rat) => {
-        return rat.id === this.ratId
+        return rat.id === this.object.ratId
       })
       if (ratExists) {
         return this.query.connection.state.permissions.includes('ships.read.me')

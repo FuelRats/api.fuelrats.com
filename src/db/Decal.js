@@ -4,6 +4,9 @@ import Model, { column, table, validate, type } from './Model'
 const decalNotesMaxLength = 4096
 
 @table({ paranoid: true })
+/**
+ * Model class for decals
+ */
 export default class Decal extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -27,6 +30,9 @@ export default class Decal extends Model {
   @column(type.UUID, { allowNull: true })
   static userId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Decal.belongsTo(models.User, { as: 'user' })

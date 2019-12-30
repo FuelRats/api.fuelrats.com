@@ -7,6 +7,9 @@ const oAuthTokenMaxLength = 128
 const oAuthRedirectUriMaxLength = 255
 
 @table({})
+/**
+ * Model for oauth authorization codes
+ */
 export default class Code extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -32,6 +35,9 @@ export default class Code extends Model {
   @column(type.UUID)
   static clientId = undefined
 
+  /**
+   * @inheritdoc
+   */
   static getScopes (models) {
     return {
       defaultScope: [{
@@ -48,9 +54,11 @@ export default class Code extends Model {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
   static associate (models) {
     super.associate(models)
     models.Code.belongsTo(models.User, { as: 'user' })
-    // models.Code.belongsTo(models.Client, { as: 'client', foreignKey: 'clientId' })
   }
 }
