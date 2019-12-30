@@ -20,6 +20,7 @@ export default class UserView extends DatabaseView {
       static email = ReadPermission.group
       static status
       static suspended = ReadPermission.group
+      static stripeId = ReadPermission.group
       static frontierId = ReadPermission.group
       static image
       static createdAt
