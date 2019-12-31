@@ -69,6 +69,9 @@ try {
 
 app.keys = [config.cookie.secret]
 app.use(koaBody({
+  jsonLimit: '10mb',
+  textLimit: '10mb',
+  formLimit: '10mb',
   detectJSON: function (ctx) {
     if (ctx.req.url === '/stripe/webhook') {
       return false
