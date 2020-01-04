@@ -22,7 +22,7 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
-import Event, { listen } from '../classes/Event'
+import Event from '../classes/Event'
 import Announcer from '../classes/Announcer'
 
 const rescueAccessHours = 3

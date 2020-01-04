@@ -1,8 +1,5 @@
-/* eslint-disable */
-
 import Sequelize from 'sequelize'
 import PaperTrail from 'sequelize-paper-trail'
-import path from 'path'
 import config from '../config'
 import logger from '../logging'
 
@@ -63,6 +60,7 @@ const db = new Sequelize(database, username, password, {
   operatorsAliases
 })
 
+/* eslint-disable */
 db.addHook('beforeCount', function (options) {
   if (this._scope.include && this._scope.include.length > 0) {
     options.distinct = true
@@ -73,24 +71,25 @@ db.addHook('beforeCount', function (options) {
     options.include = undefined
   }
 })
+/* eslint-enable */
 
 /**
- * Import all database models
- * @param {[string]} modelNames the names of the models to import
- * @returns {*}
+ * Import database models
+ * @param {string} modelNames database model names
+ * @returns {Sequelize.Model} database models
  */
 function importModels (modelNames) {
   const models = modelNames.reduce((modelAcc, modelName) => {
-    modelAcc[modelName] = db.import(path.join(__dirname, modelName))
+    // eslint-disable-next-line global-require
+    const model = require(`./${modelName}`).default
+    model.init(db, Sequelize)
+    modelAcc[modelName] = model
     return modelAcc
   }, {})
 
-  models.db = db
-  models.sequelize = db
-
   Object.keys(models).forEach((modelName) => {
     if (Reflect.has(models[modelName], 'associate')) {
-      models[modelName].associate(models)
+      Reflect.apply(models[modelName].associate, models[modelName], [models])
     }
   })
   return models
@@ -108,6 +107,7 @@ const models = importModels([
   'Token',
   'Reset',
   'Epic',
+  'EpicUsers',
   'Ship',
   'Decal',
   'Group',

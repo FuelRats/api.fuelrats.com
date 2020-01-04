@@ -1,4 +1,4 @@
-import { ReadPermission, DatabaseView, RatView, GroupView, ClientView, NicknameView } from './'
+import { ReadPermission, DatabaseView, RatView, GroupView, ClientView, NicknameView, EpicView } from './'
 
 /**
  * Get JSONAPI view for a User
@@ -20,6 +20,7 @@ export default class UserView extends DatabaseView {
       static email = ReadPermission.group
       static status
       static suspended = ReadPermission.group
+      static stripeId = ReadPermission.group
       static frontierId = ReadPermission.group
       static image
       static createdAt
@@ -68,7 +69,8 @@ export default class UserView extends DatabaseView {
       nicknames: NicknameView,
       displayRat: RatView,
       groups: GroupView,
-      clients: ClientView
+      clients: ClientView,
+      epics: EpicView
     }
   }
 
@@ -76,6 +78,6 @@ export default class UserView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return ['rats', 'displayRat', 'groups', 'clients', 'nicknames']
+    return ['rats', 'displayRat', 'groups', 'clients', 'nicknames', 'epics']
   }
 }

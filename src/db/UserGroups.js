@@ -1,39 +1,28 @@
-/* eslint-disable */
+import Model, { column, table, validate, type } from './Model'
 
+@table({})
+/**
+ * Model class for User permissions join table
+ */
+export default class UserGroups extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
 
-export default function UserGroups (sequelize, DataTypes) {
-  const usergroups = sequelize.define('UserGroups', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    groupId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: DataTypes.STRING,
-      validate: {
-        isAlphanumeric: true,
-        notEmpty: true
-      }
-    },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    }
-  })
+  @validate({ isAlphanumeric: true, notEmpty: true })
+  @column(type.STRING)
+  static groupId = undefined
 
-  usergroups.associate = function (models) {
+  @validate({ isUUID: 4 })
+  @column(type.UUID)
+  static userId = undefined
+
+  /**
+   * @inheritdoc
+   */
+  static associate (models) {
+    super.associate(models)
     models.UserGroups.belongsTo(models.User, { foreignKey: 'userId' })
     models.UserGroups.belongsTo(models.Group, { foreignKey: 'groupId' })
   }
-
-  return usergroups
 }

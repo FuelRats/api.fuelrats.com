@@ -1,5 +1,6 @@
 import Router from 'koa-router'
 import config from '../config'
+
 const router = new Router()
 
 router.get('/welcome', (ctx) => {

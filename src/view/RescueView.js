@@ -1,4 +1,4 @@
-import { ReadPermission, RatView, DatabaseView } from './'
+import { ReadPermission, RatView, DatabaseView, EpicView } from './'
 
 /**
  * Get JSONAPI view for a Rescue
@@ -87,7 +87,8 @@ export default class RescueView extends DatabaseView {
   get relationships () {
     return {
       rats: RatView,
-      firstLimpet: RatView
+      firstLimpet: RatView,
+      epics: EpicView
     }
   }
 
@@ -95,7 +96,7 @@ export default class RescueView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return ['rats', 'firstLimpet']
+    return ['rats', 'firstLimpet', 'epics']
   }
 
   /**

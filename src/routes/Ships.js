@@ -89,8 +89,7 @@ export default class Ships extends APIResource {
     const result = await super.create({
       ctx,
       databaseType: Ship,
-      overrideFields: { shipId },
-      requireRelationship: 'rat'
+      overrideFields: { shipId }
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -149,7 +148,7 @@ export default class Ships extends APIResource {
    * @endpoint
    */
   @PATCH('/ships/:id/relationships/rat')
-  @websocket('ships')
+  @websocket('ships', 'rat', 'patch')
   @authenticated
   async relationshipRatPatch (ctx) {
     await this.relationshipChange({
@@ -185,7 +184,7 @@ export default class Ships extends APIResource {
       return rat.id === entity.ratId
     })
     if (hasRat) {
-      return Permission.granted({ permissions: ['ship.write.me'], connection: ctx })
+      return Permission.granted({ permissions: ['ships.write.me'], connection: ctx })
     }
     return false
   }

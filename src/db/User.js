@@ -1,88 +1,66 @@
-/* eslint-disable */
-/* eslint max-lines-per-function:0 */
-
 import bcrypt from 'bcrypt'
-import UserView from '../view/UserView'
-import { JSONObject } from '../classes/Validators'
+import { JSONObject, stripeUserId } from '../classes/Validators'
+import Model, { column, table, validate, type } from './Model'
 
 const passwordMinLength = 12
 const passwordMaxLength = 1024
-const nicknameMaxLength = 35
 
-export default function User (db, DataTypes) {
-  const user = db.define('User', {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-      validate: {
-        isUUID: 4
-      }
-    },
-    data: {
-      type: DataTypes.JSONB,
-      allowNull: false,
-      defaultValue: {},
-      validate: {
-        JSONObject
-      }
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isEmail: true
-      }
-    },
-    password: {
-      type: DataTypes.STRING(passwordMaxLength),
-      allowNull: false,
-      validate: {
-        len: [passwordMinLength, passwordMaxLength]
-      }
-    },
-    frontierId: {
-      type: DataTypes.INTEGER,
-      allowNull: true
-    },
-    status: {
-      type: DataTypes.ENUM('active', 'inactive', 'legacy', 'deactivated'),
-      allowNull: false,
-      defaultValue: 'active',
-      validate: {
-        notEmpty: true,
-        isIn: [['active', 'inactive', 'legacy', 'deactivated']]
-      }
-    },
-    suspended: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: undefined
-    },
-    image: {
-      type: DataTypes.VIRTUAL,
-      get () {
-        return Boolean(this.avatar)
-      },
-      include: []
-    },
-    permissions: {
-      type: DataTypes.VIRTUAL(DataTypes.ARRAY(DataTypes.STRING)),
-      get () {
-        if (!this.groups) {
-          return []
-        }
-        return this.groups.reduce((accumulator, value) => {
-          return accumulator.concat(value.permissions)
-        }, [])
-      },
-      include: []
+@table({ paranoid: true })
+/**
+ * Model class for users
+ */
+export default class User extends Model {
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { primaryKey: true })
+  static id = type.UUIDV4
+
+  @validate({ JSONObject })
+  @column(type.JSONB)
+  static data = {}
+
+  @validate({ isEmail: true })
+  @column(type.STRING)
+  static email = undefined
+
+  @validate({ len: [passwordMinLength, passwordMaxLength] })
+  @column(type.STRING(passwordMaxLength))
+  static password = undefined
+
+  @validate({ isInt: true })
+  @column(type.INTEGER, { allowNull: true })
+  static frontierId = undefined
+
+  @validate({ is: stripeUserId })
+  @column(type.STRING, { allowNull: true })
+  static stripeId = undefined
+
+  @column(type.ENUM('active', 'inactive', 'legacy', 'deactivated'))
+  static status = 'active'
+
+  @column(type.DATE, { allowNull: true })
+  static suspended = undefined
+
+  @column(type.VIRTUAL(type.BOOLEAN), { include: [], get () {
+    return Boolean(this.avatar)
+  } })
+  static image = undefined
+
+  @column(type.VIRTUAL(type.ARRAY(type.STRING)), { include: [], get () {
+    if (!this.groups) {
+      return []
     }
-  }, {
-    paranoid: true
-  })
+    return this.groups.reduce((accumulator, value) => {
+      return accumulator.concat(value.permissions)
+    }, [])
+  } })
+  static permissions = undefined
 
-  const hashPasswordHook = async function (instance) {
+  /**
+   * Function triggered when attempting to change the value of a user password, which hashes it.
+   * @param {User} instance user model instance
+   * @returns {Promise<void>}
+   */
+  static hashPasswordHook = async function (instance) {
     if (!instance.changed('password')) {
       return
     }
@@ -90,20 +68,21 @@ export default function User (db, DataTypes) {
     instance.set('password', hash)
   }
 
-  user.beforeCreate(hashPasswordHook)
-  user.beforeUpdate(hashPasswordHook)
-
-  user.prototype.toJSON = function () {
+  /**
+   * Override function that ensures password is removed from JSON user results
+   * @returns {object}
+   */
+  toJSON () {
     const values = this.get()
     delete values.password
     return values
   }
 
-  user.prototype.renderView = function () {
-    return UserView
-  }
-
-  user.prototype.isSuspended = function () {
+  /**
+   * Returns whether or not this user has been suspended
+   * @returns {boolean}
+   */
+  isSuspended () {
     if (!this.suspended) {
       return false
     }
@@ -111,24 +90,40 @@ export default function User (db, DataTypes) {
     return this.suspended - new Date() > 0
   }
 
-  user.prototype.isDeactivated = function () {
+  /**
+   * Returns whether or not this user has been deactivated
+   * @returns {boolean}
+   */
+  isDeactivated () {
     return this.status === 'deactivated'
   }
 
-  user.prototype.isConfirmed = function () {
-    return this.groups.length > 0
+  /**
+   * Returns whether or not this user has had their email verified
+   * @returns {boolean}
+   */
+  isConfirmed () {
+    return this.groups.some((group) => {
+      return group.id === 'verified'
+    })
   }
 
-
-
-  user.prototype.preferredRat = function () {
+  /**
+   * Returns the "preferred" rat of a user, also known as their display rat, or display name.
+   * @returns {Model}
+   */
+  preferredRat () {
     if (this.displayRat) {
       return this.displayRat
     }
     return this.rats[0]
   }
 
-  user.prototype.vhost = function () {
+  /**
+   * Returns the vhost that should be used for this user based on their permission levels
+   * @returns {string|undefined}
+   */
+  vhost () {
     if (!this.groups || this.groups.length === 0) {
       return undefined
     }
@@ -141,12 +136,95 @@ export default function User (db, DataTypes) {
       return group.vhost
     }
     const rat = this.preferredRat()
-    const identifier = rat ? rat.name : user.id
+    const identifier = rat ? rat.name : this.id
 
     return `${getIRCSafeName(identifier)}.${group.vhost}`
   }
 
-  user.associate = function (models) {
+  /**
+   * @inheritdoc
+   */
+  static getScopes (models) {
+    return {
+      defaultScope: [{
+        attributes: {
+          exclude: [
+            'permissions',
+            'image'
+          ]
+        },
+        include: [
+          {
+            model: models.Rat,
+            as: 'rats',
+            required: false,
+            include: [{
+              model: models.Ship,
+              as: 'ships',
+              required: false,
+              include: []
+            }]
+          },
+          {
+            model: models.Avatar,
+            as: 'avatar',
+            required: false
+          },
+          {
+            model: models.Rat,
+            as: 'displayRat',
+
+            include: [{
+              model: models.Ship,
+              as: 'ships',
+              required: false,
+              include: []
+            }]
+          }, {
+            model: models.Group,
+            as: 'groups',
+            required: false,
+            through: {
+              attributes: ['userId']
+            },
+            include: [],
+            order: [
+              ['priority', 'DESC']
+            ]
+          }, {
+            model: models.Client,
+            as: 'clients',
+            required: false,
+            include: []
+          }, {
+            model: models.Epic,
+            as: 'epics',
+            required: false,
+            through: {},
+            include: []
+          }
+        ]
+      }, { override: true }],
+
+      norelations: [{
+        attributes: {
+          exclude: [
+            'permissions',
+            'image'
+          ]
+        }
+      }, { override: true }]
+    }
+  }
+
+  /**
+   * @inheritdoc
+   */
+  static associate (models) {
+    super.associate(models)
+    User.beforeCreate(User.hashPasswordHook)
+    User.beforeUpdate(User.hashPasswordHook)
+
     models.User.hasMany(models.Rat, {
       as: 'rats',
       foreignKey: 'userId'
@@ -168,79 +246,28 @@ export default function User (db, DataTypes) {
       }
     })
 
+    models.User.belongsToMany(models.Epic, {
+      as: 'epics',
+      foreignKey: 'userId',
+      through: {
+        model: models.EpicUsers,
+        foreignKey: 'userId'
+      }
+    })
+
     models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
     models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
 
     models.User.hasOne(models.Avatar, { foreignKey: 'userId', as: 'avatar' })
-
-    models.User.addScope('defaultScope', {
-      attributes: {
-        exclude: [
-          'permissions',
-          'image'
-        ]
-      },
-      include: [
-        {
-          model: models.Rat,
-          as: 'rats',
-          required: false,
-          include: [{
-            model: models.Ship,
-            as: 'ships',
-            required: false,
-            include: []
-          }]
-        },
-        {
-          model: models.Avatar,
-          as: 'avatar',
-          required: false
-        },
-        {
-          model: models.Rat,
-          as: 'displayRat',
-
-          include: [{
-            model: models.Ship,
-            as: 'ships',
-            required: false,
-            include: []
-          }]
-        }, {
-          model: models.Group,
-          as: 'groups',
-          required: false,
-          through: {
-            attributes: ['userId']
-          },
-          include: [],
-          order: [
-            ['priority', 'DESC']
-          ]
-        }, {
-          model: models.Client,
-          as: 'clients',
-          required: false,
-          include: []
-        }
-      ]
-    }, { override: true })
-
-    models.User.addScope('norelations', {
-      attributes: {
-        exclude: [
-          'permissions',
-          'image'
-        ]
-      }
-    }, { override: true })
   }
-  return user
 }
 
-
+/**
+ * Get an IRC host safe version of a rat name for use in a virtual host
+ * @param {Model} rat the rat which name should be used
+ * @returns {string} the generated irc safe name
+ */
 function getIRCSafeName (rat) {
   let ratName = rat.name
   ratName = ratName.replace(/ /gu, '')
