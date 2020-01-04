@@ -719,7 +719,7 @@ export function IPAuthenticated (target, name, descriptor) {
 
   descriptor.value = function (...args) {
     const [ctx] = args
-    if (config.whitelist.includes(ctx.request.ip)) {
+    if (config.server.whitelist.includes(ctx.request.ip)) {
       return endpoint.apply(this, args)
     } else {
       throw new UnauthorizedAPIError({})

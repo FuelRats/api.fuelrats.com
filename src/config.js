@@ -8,7 +8,8 @@ const config = {
     port: required('FRAPI_PORT', [], 8080),
     externalUrl: required('FRAPI_URL', [], 'http://localhost:8080'),
     cookieSecret: required('FRAPI_COOKIE', []),
-    proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false)
+    proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false),
+    whitelist: optional('FRAPI_WHITELIST', [], [])
   },
   frontend: {
     clientId: recommended('FRAPI_FRONTEND_CLIENTID', []),
