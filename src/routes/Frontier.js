@@ -1,4 +1,4 @@
-import API, { POST, getJSONAPIData } from '../classes/API'
+import API, { POST, getJSONAPIData } from './API'
 import FrontierAPI from '../classes/FrontierAPI'
 import { db, Rat, Token, User } from '../db'
 import crypto from 'crypto'

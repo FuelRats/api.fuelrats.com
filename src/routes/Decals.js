@@ -2,7 +2,6 @@
 
 import { Decal, db, User } from '../db'
 import {
-  APIResource,
   authenticated,
   GET,
   POST,
@@ -10,8 +9,10 @@ import {
   DELETE,
   PATCH,
   permissions,
-  parameters, WritePermission
-} from '../classes/API'
+  parameters,
+  WritePermission
+} from './API'
+import APIResource from './APIResource'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'

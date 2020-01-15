@@ -2,7 +2,7 @@
 import API, {
   authenticated,
   GET
-} from '../classes/API'
+} from './API'
 import { websocket } from '../classes/WebSocket'
 import { db } from '../db'
 import { NotFoundAPIError } from '../classes/APIError'

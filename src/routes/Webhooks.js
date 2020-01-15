@@ -3,7 +3,7 @@ import { UnprocessableEntityAPIError } from '../classes/APIError'
 import API, {
   IPAuthenticated,
   POST
-} from '../classes/API'
+} from './API'
 import Announcer from '../classes/Announcer'
 
 const DrillType = {

@@ -8,7 +8,7 @@ import API, {
   getJSONAPIData,
   POST,
   required
-} from '../classes/API'
+} from './API'
 import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 
