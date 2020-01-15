@@ -1,3 +1,4 @@
+export Anniversaries from './Anniversaries'
 export Clients from './Clients'
 export Decals from './Decals'
 export Epics from './Epics'
