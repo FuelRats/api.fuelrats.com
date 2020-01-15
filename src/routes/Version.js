@@ -1,9 +1,8 @@
 import packageInfo from '../../package.json'
-import { Context } from '../classes/Context'
 
 import API, {
   GET
-} from '../classes/API'
+} from './API'
 import { websocket } from '../classes/WebSocket'
 import Query from '../query'
 import ObjectDocument from '../Documents/ObjectDocument'

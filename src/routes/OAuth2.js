@@ -21,7 +21,7 @@ import API, {
   POST,
   required,
   parameters
-} from '../classes/API'
+} from './API'
 import DatabaseQuery from '../query/DatabaseQuery'
 
 // noinspection JSIgnoredPromiseFromCall

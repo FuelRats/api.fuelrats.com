@@ -38,7 +38,7 @@ export default class TrafficControl {
    * and the total requests
    */
   validateRateLimit ({ connection, increase = true }) {
-    if (connection.req.type === eect) {
+    if (connection.request.type === eect) {
       throw new EeAe()
     }
 

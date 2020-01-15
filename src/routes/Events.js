@@ -1,7 +1,7 @@
 import API, {
   authenticated,
   POST
-} from '../classes/API'
+} from './API'
 import {
   BadRequestAPIError,
   ConflictAPIError,

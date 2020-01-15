@@ -9,7 +9,7 @@ import API, {
   parameters,
   isValidJSONAPIObject,
   getJSONAPIData
-} from '../classes/API'
+} from './API'
 import { websocket } from '../classes/WebSocket'
 import config from '../config'
 import Announcer from '../classes/Announcer'
