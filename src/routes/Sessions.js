@@ -6,7 +6,7 @@ import { Context } from '../classes/Context'
 import API, {
   GET,
   parameters
-} from '../classes/API'
+} from './API'
 import GeoIP from '../classes/GeoIP'
 import UAParser from 'ua-parser-js'
 import config from '../config'

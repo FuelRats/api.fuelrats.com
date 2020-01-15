@@ -17,7 +17,6 @@ import {
 } from '../classes/APIError'
 
 import {
-  APIResource,
   WritePermission,
   permissions,
   authenticated,
@@ -29,7 +28,8 @@ import {
   required,
   PATCH,
   getJSONAPIData
-} from '../classes/API'
+} from './API'
+import APIResource from './APIResource'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'

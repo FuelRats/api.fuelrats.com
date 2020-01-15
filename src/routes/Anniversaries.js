@@ -1,4 +1,4 @@
-import { APIResource, GET, authenticated } from '../classes/API'
+import API, { GET, authenticated } from './API'
 import { websocket } from '../classes/WebSocket'
 import { db } from '../db'
 import { AnniversaryView } from '../view'
@@ -7,7 +7,13 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 
 
-export default class Anniversaries extends APIResource {
+/**
+ * Endpoints for listing rat anniversaries
+ */
+export default class Anniversaries extends API {
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'anniversaries'
   }

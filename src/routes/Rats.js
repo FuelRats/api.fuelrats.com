@@ -11,9 +11,9 @@ import {
   DELETE,
   PATCH,
   parameters,
-  WritePermission,
-  APIResource
-} from '../classes/API'
+  WritePermission
+} from './API'
+import APIResource from './APIResource'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'

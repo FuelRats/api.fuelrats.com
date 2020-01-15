@@ -8,7 +8,7 @@ import API, {
   POST,
   parameters,
   getJSONAPIData
-} from '../classes/API'
+} from './API'
 import config from '../config'
 
 const mail = new Mail()

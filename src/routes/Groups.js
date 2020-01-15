@@ -1,13 +1,14 @@
 
 import {
-  APIResource,
   GET,
   PUT,
   POST,
   DELETE,
   authenticated,
-  permissions, WritePermission
-} from '../classes/API'
+  permissions,
+  WritePermission
+} from './API'
+import APIResource from './APIResource'
 
 import { Group } from '../db'
 import { websocket } from '../classes/WebSocket'

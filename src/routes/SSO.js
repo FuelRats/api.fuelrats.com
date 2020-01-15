@@ -1,4 +1,4 @@
-import API, { GET, authenticated } from '../classes/API'
+import API, { GET, authenticated } from './API'
 import { User } from '../db'
 import config from '../config'
 

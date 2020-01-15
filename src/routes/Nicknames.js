@@ -1,4 +1,4 @@
-import API, { GET, POST, DELETE, authenticated, getJSONAPIData, PATCH } from '../classes/API'
+import API, { GET, POST, DELETE, authenticated, getJSONAPIData, PATCH } from './API'
 import { websocket } from '../classes/WebSocket'
 import Anope from '../classes/Anope'
 import AnopeQuery from '../query/AnopeQuery'

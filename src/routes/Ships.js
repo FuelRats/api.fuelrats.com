@@ -2,7 +2,6 @@
 import { Ship, db } from '../db'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import {
-  APIResource,
   authenticated,
   GET,
   POST,
@@ -11,7 +10,8 @@ import {
   DELETE,
   parameters,
   WritePermission
-} from '../classes/API'
+} from './API'
+import APIResource from './APIResource'
 import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'

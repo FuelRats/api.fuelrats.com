@@ -5,7 +5,6 @@ import {
 } from '../classes/APIError'
 
 import {
-  APIResource,
   permissions,
   authenticated,
   GET,
@@ -15,7 +14,8 @@ import {
   DELETE,
   parameters,
   WritePermission
-} from '../classes/API'
+} from './API'
+import APIResource from './APIResource'
 import { websocket } from '../classes/WebSocket'
 import { RescueView, RatView } from '../view'
 import DatabaseDocument from '../Documents/DatabaseDocument'
