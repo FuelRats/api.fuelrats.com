@@ -229,7 +229,7 @@ export default class APIResource extends API {
    * @param {string} arg.relationship the relationship to change
    * @returns {Promise<db.Model>} A resource with its relationships updated
    */
-  async relationshipChange ({ ctx, databaseType, change, relationship }) {
+  async relationshipChange ({ ctx, databaseType, change, relationship, callback = undefined }) {
     if (!ctx.params.id) {
       throw new BadRequestAPIError({ parameter: 'id' })
     }
@@ -245,6 +245,10 @@ export default class APIResource extends API {
     }
 
     this.requireWritePermission({ connection: ctx, entity })
+    
+    if (callback) {
+      await callback(entity)
+    }
 
     await this.generateRelationshipChange({ ctx, data: ctx.data.data, entity, change, relationship })
 

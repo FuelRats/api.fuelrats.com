@@ -475,7 +475,10 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'add',
-      relationship: 'groups'
+      relationship: 'groups',
+      callback: (entity) => {
+        return Anope.setVirtualHost(entity.email, entity.vhost())
+      }
     })
 
     ctx.response.status = StatusCode.noContent
@@ -495,7 +498,10 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'patch',
-      relationship: 'groups'
+      relationship: 'groups',
+      callback: (entity) => {
+        return Anope.setVirtualHost(entity.email, entity.vhost())
+      }
     })
 
     ctx.response.status = StatusCode.noContent
@@ -515,7 +521,10 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'remove',
-      relationship: 'groups'
+      relationship: 'groups',
+      callback: (entity) => {
+        return Anope.setVirtualHost(entity.email, entity.vhost())
+      }
     })
 
     ctx.response.status = StatusCode.noContent
