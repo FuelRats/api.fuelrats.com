@@ -233,6 +233,24 @@ export default class Anope {
         `, [vhost, email])
   }
 
+
+  static async updatePermissions (user) {
+    await Anope.setVirtualHost(user.email, user.vhost())
+
+    const channels = user.flags()
+    if (!channels) {
+      return undefined
+    }
+
+    const permissionChanges = Object.entries(channels).reduce((promises, [channel, flags]) => {
+      promises.push(Anope.setFlags({ channel, user, flags }))
+      promises.push(Anope.setInvite({ channel, user }))
+      return promises
+    }, [])
+
+    return Promise.all(permissionChanges)
+  }
+
   /**
    * Set the password for an Anope account
    * @param {string} email the email of the account to set password for
@@ -394,6 +412,7 @@ export default class Anope {
       INNER JOIN anope_db_NickAlias ON anope_db_NickAlias.nc = anope_db_NickCore.display
       WHERE
           lower(email) = lower(:email)
+      LIMIT 1
     `, { channel, email: user.email, flags: flags.join('') })
   }
 
@@ -430,11 +449,41 @@ export default class Anope {
   static async setFlags ({ channel, user, flags }) {
     const [flagsEntry] = await Anope.getFlags({ channel, user })
 
-    if (flagsEntry) {
+    if (flagsEntry && flagsEntry.length > 0) {
       await Anope.updateFlags({ channel, user, flags })
     } else {
       await Anope.insertFlags({ channel, user, flags })
     }
+  }
+
+  /**
+   * Set an invite for a user on a channel
+   * @param {object} arg function arguments object
+   * @param {string} arg.channel the IRC channel to set invite in
+   * @param {User} arg.user the user to set an invite for
+   * @returns {Promise<knex.Raw<*>>} Knex query
+   */
+  static setInvite ({ channel, user }) {
+    return mysql.raw(`
+    INSERT INTO anope_db_ModeLock (timestamp, ci, created, name, param, \`set\`, setter)
+    SELECT
+        CURRENT_TIMESTAMP,
+        :channel,
+        UNIX_TIMESTAMP(),
+        'INVITEOVERRIDE',
+        CONCAT('~a:', anope_db_NickCore.display),
+        1,
+        'API'
+    FROM anope_db_NickCore
+    WHERE
+        lower(anope_db_NickCore.email) = lower(:email) AND
+        NOT EXISTS(
+            SELECT 1 FROM anope_db_ModeLock WHERE
+                ci = :channel AND
+                name = 'INVITEOVERRIDE' AND
+                param = CONCAT('~a:', anope_db_NickCore.display)
+        )
+    `, { channel, email: user.email })
   }
 }
 

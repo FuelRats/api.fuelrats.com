@@ -477,7 +477,7 @@ export default class Users extends APIResource {
       change: 'add',
       relationship: 'groups',
       callback: (entity) => {
-        return Anope.setVirtualHost(entity.email, entity.vhost())
+        return Anope.updatePermissions(entity)
       }
     })
 
@@ -500,7 +500,7 @@ export default class Users extends APIResource {
       change: 'patch',
       relationship: 'groups',
       callback: (entity) => {
-        return Anope.setVirtualHost(entity.email, entity.vhost())
+        return Anope.updatePermissions(entity)
       }
     })
 
@@ -523,7 +523,7 @@ export default class Users extends APIResource {
       change: 'remove',
       relationship: 'groups',
       callback: (entity) => {
-        return Anope.setVirtualHost(entity.email, entity.vhost())
+        return Anope.updatePermissions(entity)
       }
     })
 
