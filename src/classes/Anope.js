@@ -233,7 +233,11 @@ export default class Anope {
         `, [vhost, email])
   }
 
-
+  /**
+   * Update IRC permissions for a user
+   * @param {User} user the user to update permissions for
+   * @returns {Promise<void>} resolves a promise when completed
+   */
   static async updatePermissions (user) {
     await Anope.setVirtualHost(user.email, user.vhost())
 
