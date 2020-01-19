@@ -142,6 +142,28 @@ export default class User extends Model {
   }
 
   /**
+   * Get the appropriate IRC channel flags for this user
+   * @returns {*} channel flags
+   */
+  flags () {
+    if (!this.groups || this.groups.length === 0) {
+      return undefined
+    }
+
+
+    return this.groups.reduce((acc, { channels }) => {
+      Object.entries(channels).forEach(([chan, flag]) => {
+        if (acc[chan] && !acc[chan].includes(flag)) {
+          acc[chan].push(flag)
+        } else if (!acc[chan]) {
+          acc[chan] = [flag]
+        }
+      })
+      return acc
+    }, {})
+  }
+
+  /**
    * @inheritdoc
    */
   static getScopes (models) {

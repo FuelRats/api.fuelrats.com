@@ -25,6 +25,9 @@ export default class Group extends Model {
   @column(type.ARRAY(type.STRING))
   static permissions = []
 
+  @column(type.JSONB)
+  static channels = {}
+
   /**
    * @inheritdoc
    */
