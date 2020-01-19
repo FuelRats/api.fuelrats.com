@@ -175,6 +175,7 @@ export default class Users extends APIResource {
 
     user.password = newPassword
     await user.save()
+    await Anope.setPassword(user.email, user.password)
 
     const result = await Anope.mapNickname(user)
 
