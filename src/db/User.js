@@ -287,12 +287,12 @@ export default class User extends Model {
 
 /**
  * Get an IRC host safe version of a rat name for use in a virtual host
- * @param {string} rat the rat name which should be used
+ * @param {string} cmdrName the rat name which should be used
  * @returns {string} the generated irc safe name
  */
-function getIRCSafeName (rat) {
-  let ratName = rat
-  ratName = ratName.replace(/ /gu, '')
-  ratName = ratName.replace(/[^a-zA-Z0-9\s]/gu, '')
-  return ratName.toLowerCase()
+function getIRCSafeName (cmdrName) {
+  let name = cmdrName
+  name = name.replace(/ /gu, '')
+  name = name.replace(/[^a-zA-Z0-9\s]/gu, '')
+  return name.toLowerCase()
 }
