@@ -131,6 +131,7 @@ export default class Groups extends APIResource {
       withoutPrefix: WritePermission.sudo,
       priority: WritePermission.sudo,
       permissions: WritePermission.sudo,
+      channels: WritePermission.sudo,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
       deletedAt: WritePermission.internal

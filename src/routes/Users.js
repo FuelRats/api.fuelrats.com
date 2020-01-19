@@ -175,6 +175,7 @@ export default class Users extends APIResource {
 
     user.password = newPassword
     await user.save()
+    await Anope.setPassword(user.email, user.password)
 
     const result = await Anope.mapNickname(user)
 
@@ -474,7 +475,10 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'add',
-      relationship: 'groups'
+      relationship: 'groups',
+      callback: (entity) => {
+        return Anope.updatePermissions(entity)
+      }
     })
 
     ctx.response.status = StatusCode.noContent
@@ -494,7 +498,10 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'patch',
-      relationship: 'groups'
+      relationship: 'groups',
+      callback: (entity) => {
+        return Anope.updatePermissions(entity)
+      }
     })
 
     ctx.response.status = StatusCode.noContent
@@ -514,7 +521,10 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'remove',
-      relationship: 'groups'
+      relationship: 'groups',
+      callback: (entity) => {
+        return Anope.updatePermissions(entity)
+      }
     })
 
     ctx.response.status = StatusCode.noContent

@@ -20,6 +20,7 @@ export default class GroupView extends DatabaseView {
       static withoutPrefix
       static priority
       static permissions
+      static channels
       static createdAt
       static updatedAt
       static deletedAt = ReadPermission.internal
