@@ -351,6 +351,91 @@ export default class Anope {
       return new Nickname(insertedNickname)
     })
   }
+
+  /**
+   * Get a channel flags entry for a user
+   * @param {object} arg function arguments object
+   * @param {string} arg.channel channel to get flags for
+   * @param {User} arg.user user to get flags for
+   * @returns {knex.Raw<*>} Knex query
+   */
+  static getFlags ({ channel, user }) {
+    return mysql.raw(`
+        SELECT anope_db_ChanAccess.*
+        FROM anope_db_ChanAccess
+        LEFT JOIN anope_db_NickCore ON lower(email) = lower(:email)
+        WHERE
+          lower(anope_db_ChanAccess.ci) = lower(:channel) AND
+          anope_db_ChanAccess.mask = anope_db_NickCore.display
+    `, { channel, email: user.email })
+  }
+
+  /**
+   * Create a new channel permission entry for a user
+   * @param {object} arg function arguments object
+   * @param {string} arg.channel channel to set flags for
+   * @param {User} arg.user user to set flags for
+   * @param {[string]} arg.flags flags to set
+   * @returns {knex.Raw<*>} knex query
+   */
+  static insertFlags ({ channel, user, flags }) {
+    return mysql.raw(`
+      INSERT INTO anope_db_ChanAccess (timestamp, ci, created, creator, data, last_seen, mask, provider)
+      SELECT
+          CURRENT_TIMESTAMP AS timestamp,
+          :channel AS ci,
+          UNIX_TIMESTAMP() AS created,
+          'API' as creator,
+          :flags AS data,
+          anope_db_NickAlias.last_seen AS last_seen,
+          anope_db_NickCore.display AS mask,
+          'access/flags' AS provider
+      FROM anope_db_NickCore
+      INNER JOIN anope_db_NickAlias ON anope_db_NickAlias.nc = anope_db_NickCore.display
+      WHERE
+          lower(email) = lower(:email)
+    `, { channel, email: user.email, flags: flags.join('') })
+  }
+
+  /**
+   * Update an existing permission entry for a user in a channel
+   * @param {object} arg function arguments object
+   * @param {string} arg.channel channel to set flags for
+   * @param {User} arg.user user to set flags for
+   * @param {[string]} arg.flags flags to set
+   * @returns {knex.Raw<*>} knex query
+   */
+  static updateFlags ({ channel, user, flags }) {
+    return mysql.raw(`
+        UPDATE anope_db_ChanAccess
+        LEFT JOIN anope_db_NickCore ON lower(email) = lower(:email)
+        SET
+            anope_db_ChanAccess.creator = 'API',
+            anope_db_ChanAccess.timestamp = CURRENT_TIMESTAMP,
+            anope_db_ChanAccess.data = :flags
+        WHERE
+            lower(anope_db_ChanAccess.ci) = lower(:channel) AND
+            anope_db_ChanAccess.mask = anope_db_NickCore.display
+      `, { channel, email: user.email, flags: flags.join('') })
+  }
+
+  /**
+   * Set the permission flags for a user in a channel
+   * @param {object} arg function arguments object
+   * @param {string} arg.channel channel to set flags for
+   * @param {User} arg.user user to set flags for
+   * @param {[string]} arg.flags flags to set
+   * @returns {Promise<void>} resolves a promise when successful
+   */
+  static async setFlags ({ channel, user, flags }) {
+    const [flagsEntry] = await Anope.getFlags({ channel, user })
+
+    if (flagsEntry) {
+      await Anope.updateFlags({ channel, user, flags })
+    } else {
+      await Anope.insertFlags({ channel, user, flags })
+    }
+  }
 }
 
 /**
