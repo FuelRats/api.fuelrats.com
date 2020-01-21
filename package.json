@@ -57,7 +57,7 @@
     "yayson": "^2.0.8"
   },
   "engines": {
-    "node": "12.6.0"
+    "node": "13.7.0"
   },
   "devDependencies": {
     "@babel/cli": "7.7.5",
