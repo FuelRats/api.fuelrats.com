@@ -159,13 +159,17 @@ export default class Users extends APIResource {
   @authenticated
   @required()
   async setEmail (ctx) {
-    const { email } = getJSONAPIData({ ctx, type: 'email-change' })
+    const { email } = getJSONAPIData({ ctx, type: 'email-changes' })
 
     const user = await User.findOne({
       where: {
         id: ctx.params.id
       }
     })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
@@ -201,13 +205,17 @@ export default class Users extends APIResource {
   @authenticated
   @required('password', 'newPassword')
   async setPassword (ctx) {
-    const { password, newPassword } = getJSONAPIData({ ctx, type: 'password-changes' })
+    const { password, newPassword } = getJSONAPIData({ ctx, type: 'password-changes' }).attributes
 
     const user = await User.findOne({
       where: {
         id: ctx.params.id
       }
     })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
