@@ -24,7 +24,9 @@ import API, {
 } from './API'
 import DatabaseQuery from '../query/DatabaseQuery'
 import sessionEmail from '../emails/session'
-import mail from '../classes/Mail'
+import Mail from '../classes/Mail'
+
+const mail = new Mail()
 
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({

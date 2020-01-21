@@ -7,6 +7,7 @@ import StatusCode from '../classes/StatusCode'
 import Decals from './Decals'
 import Permission from '../classes/Permission'
 import { Context } from '../classes/Context'
+import Mail from '../classes/Mail'
 
 import {
   NotFoundAPIError,
@@ -36,6 +37,9 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import Verifications from './Verifications'
 import Announcer from '../classes/Announcer'
+import emailChangeEmail from '../emails/emailchange'
+
+const mail = new Mail()
 
 /**
  * Class for the /users endpoint
@@ -181,6 +185,7 @@ export default class Users extends APIResource {
 
       await user.removeGroup('verified', { transaction })
       await Verifications.createVerification(user, transaction, true)
+      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail: email }))
 
       await Announcer.sendModeratorMessage({
         message: `[Account Change] User with email ${oldEmail} has changed their email to ${email}`
