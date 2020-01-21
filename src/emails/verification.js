@@ -26,12 +26,12 @@ export default function verificationEmail ({ user, verificationToken, change = f
         button: {
           color: '#d65050',
           text: 'Verify me',
-          link:  getVerifyLink(verificationToken)
+          link:  getVerifyLink(verificationToken, change)
         }
       },
       goToAction: {
         text: 'Verify Email Address',
-        link: getVerifyLink(verificationToken),
+        link: getVerifyLink(verificationToken, change),
         description: 'Click to verify your email'
       },
       outro: 'If you are having problems with verification you may contact support@fuelrats.com',
@@ -41,10 +41,11 @@ export default function verificationEmail ({ user, verificationToken, change = f
 }
 
 /**
- * Generate a verification link from a reset token
- * @param {string} resetToken the reset token
+ * Generate a verification link from a verification token
+ * @param {string} verificationToken the verification token
+ * @param {boolean} change whether this is a change to an existing account
  * @returns {string} a verification link
  */
-function getVerifyLink (resetToken) {
-  return `${config.frontend.url}/verify?type=email&t=${resetToken}`
+function getVerifyLink (verificationToken, change) {
+  return `${config.frontend.url}/verify?type=email&t=${verificationToken}&change=${change}`
 }
