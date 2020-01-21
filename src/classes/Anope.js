@@ -267,7 +267,7 @@ export default class Anope {
     await mysql('anope_db_NickCore')
       .whereRaw('lower(email) = lower(?)', [email])
       .update({
-        password: `bcrypt:${encryptedPassword}`
+        pass: `bcrypt:${encryptedPassword}`
       })
   }
 

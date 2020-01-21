@@ -13,6 +13,7 @@ import API, {
 import { websocket } from '../classes/WebSocket'
 import config from '../config'
 import Announcer from '../classes/Announcer'
+import passwordResetEmail from '../emails/reset'
 
 const mail = new Mail()
 const expirationLength = 86400000
@@ -75,29 +76,7 @@ export default class Resets extends API {
         required: requiredReset
       })
 
-      await mail.send({
-        to: user.email,
-        subject: 'Fuel Rats Password Reset Requested',
-        body: {
-          name: user.preferredRat().name,
-          intro: 'A password reset to your Fuel Rats Account has been requested.',
-          action: {
-            instructions: 'Click the button below to reset your password:',
-            button: {
-              color: '#d65050',
-              text: 'Reset your password',
-              link:  Resets.getResetLink(reset.value)
-            }
-          },
-          goToAction: {
-            text: 'Reset Password',
-            link: Resets.getResetLink(reset.value),
-            description: 'Click to reset your password'
-          },
-          outro: 'If you did not request a password reset, no further action is required on your part.',
-          signature: 'Sincerely'
-        }
-      })
+      await mail.send(passwordResetEmail({ user, resetToken: reset.value }))
     }
 
     return true

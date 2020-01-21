@@ -1,4 +1,4 @@
-import { User, Decal, Avatar } from '../db'
+import { User, Decal, Avatar, db } from '../db'
 import { UserView, DecalView, RatView, ClientView, GroupView } from '../view'
 import bcrypt from 'bcrypt'
 import Anope from '../classes/Anope'
@@ -7,6 +7,7 @@ import StatusCode from '../classes/StatusCode'
 import Decals from './Decals'
 import Permission from '../classes/Permission'
 import { Context } from '../classes/Context'
+import Mail from '../classes/Mail'
 
 import {
   NotFoundAPIError,
@@ -34,6 +35,11 @@ import { websocket } from '../classes/WebSocket'
 import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
+import Verifications from './Verifications'
+import Announcer from '../classes/Announcer'
+import emailChangeEmail from '../emails/emailchange'
+
+const mail = new Mail()
 
 /**
  * Class for the /users endpoint
@@ -149,6 +155,52 @@ export default class Users extends APIResource {
   }
 
   /**
+   * Change a user's email
+   * @endpoint
+   */
+  @PUT('/users/:id/email')
+  @websocket('users', 'email', 'update')
+  @authenticated
+  @required()
+  async setEmail (ctx) {
+    const { email } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
+
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id
+      }
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    await db.transaction(async (transaction) => {
+      const oldEmail = user.email
+
+      user.email = email
+      await user.save({ transaction })
+
+      await user.removeGroup('verified', { transaction })
+      await Verifications.createVerification(user, transaction, true)
+      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail: email }))
+
+      await Announcer.sendModeratorMessage({
+        message: `[Account Change] User with email ${oldEmail} has changed their email to ${email}`
+      })
+
+      return user
+    })
+
+    const result = await Anope.mapNickname(user)
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView })
+  }
+
+  /**
    * Change a user's password
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} an updated user if the password change is successful
@@ -156,15 +208,19 @@ export default class Users extends APIResource {
   @PUT('/users/:id/password')
   @websocket('users', 'password', 'update')
   @authenticated
-  @required('password', 'new')
+  @required('password', 'newPassword')
   async setPassword (ctx) {
-    const { password, newPassword } = getJSONAPIData({ ctx, type: 'password-changes' })
+    const { password, newPassword } = getJSONAPIData({ ctx, type: 'password-changes' }).attributes
 
     const user = await User.findOne({
       where: {
         id: ctx.params.id
       }
     })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
 
     this.requireWritePermission({ connection: ctx, entity: user })
 

@@ -9,7 +9,7 @@ import API, {
   parameters,
   getJSONAPIData
 } from './API'
-import config from '../config'
+import verificationEmail from '../emails/verification'
 
 const mail = new Mail()
 const expirationLength = 86400000
@@ -84,9 +84,10 @@ export default class Verifications extends API {
    * Create a verification token and send it to a user
    * @param {User} user the user to send it to
    * @param {db.transaction?} transaction optional database transaction to use for the operation
+   * @param {boolean} [change] Is this a change to an existing account?
    * @returns {Promise<undefined>} Resolves a promise when the operation is complete.
    */
-  static async createVerification (user, transaction = undefined) {
+  static async createVerification (user, transaction = undefined, change = false) {
     const existingVerification = await VerificationToken.findOne({
       where: {
         userId: user.id
@@ -103,37 +104,6 @@ export default class Verifications extends API {
       userId: user.id
     }, { transaction })
 
-    await mail.send({
-      to: user.email,
-      subject: 'Fuel Rats Email Verification Required',
-      body: {
-        name: user.preferredRat().name,
-        intro: 'To complete the creation of your Fuel Rats Account your email address needs to be verified.',
-        action: {
-          instructions: 'Click the button below to verify your email:',
-          button: {
-            color: '#d65050',
-            text: 'Verify me',
-            link:  Verifications.getVerifyLink(verification.value)
-          }
-        },
-        goToAction: {
-          text: 'Verify Email Address',
-          link: Verifications.getVerifyLink(verification.value),
-          description: 'Click to verify your email'
-        },
-        outro: 'If you are having problems with verification you may contact support@fuelrats.com',
-        signature: 'Sincerely'
-      }
-    })
-  }
-
-  /**
-   * Generate a verification link from a reset token
-   * @param {string} resetToken the reset token
-   * @returns {string} a verification link
-   */
-  static getVerifyLink (resetToken) {
-    return `${config.frontend.url}/verify?type=email&t=${resetToken}`
+    await mail.send(verificationEmail({ user,  verificationToken: verification.value, change }))
   }
 }

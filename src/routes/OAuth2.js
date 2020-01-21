@@ -23,6 +23,10 @@ import API, {
   parameters
 } from './API'
 import DatabaseQuery from '../query/DatabaseQuery'
+import sessionEmail from '../emails/session'
+import Mail from '../classes/Mail'
+
+const mail = new Mail()
 
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({
@@ -111,7 +115,8 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
     await Sessions.createSession(ctx, user)
     throw new VerificationRequiredAPIError({})
   } else if (existingSession.verified === false) {
-    await Sessions.sendSessionMail(user.email, user.preferredRat().name, existingSession.code, ctx)
+
+    await mail.send(sessionEmail({ ctx, user, sessionToken: existingSession.code }))
     throw new VerificationRequiredAPIError({})
   }
 
