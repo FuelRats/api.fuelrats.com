@@ -159,7 +159,7 @@ export default class Users extends APIResource {
   @authenticated
   @required()
   async setEmail (ctx) {
-    const { email } = getJSONAPIData({ ctx, type: 'email-changes' })
+    const { email } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
 
     const user = await User.findOne({
       where: {
@@ -180,7 +180,7 @@ export default class Users extends APIResource {
       await user.save({ transaction })
 
       await user.removeGroup('verified', { transaction })
-      await Verifications.createVerification(user, transaction)
+      await Verifications.createVerification(user, transaction, true)
 
       await Announcer.sendModeratorMessage({
         message: `[Account Change] User with email ${oldEmail} has changed their email to ${email}`

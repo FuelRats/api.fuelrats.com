@@ -84,9 +84,10 @@ export default class Verifications extends API {
    * Create a verification token and send it to a user
    * @param {User} user the user to send it to
    * @param {db.transaction?} transaction optional database transaction to use for the operation
+   * @param {boolean} [change] Is this a change to an existing account?
    * @returns {Promise<undefined>} Resolves a promise when the operation is complete.
    */
-  static async createVerification (user, transaction = undefined) {
+  static async createVerification (user, transaction = undefined, change = false) {
     const existingVerification = await VerificationToken.findOne({
       where: {
         userId: user.id
@@ -103,12 +104,17 @@ export default class Verifications extends API {
       userId: user.id
     }, { transaction })
 
+    let intro = 'To complete the creation of your Fuel Rats Account your email address needs to be verified.'
+    if (change) {
+      intro = 'To complete your email change your email address needs to be verified.'
+    }
+
     await mail.send({
       to: user.email,
       subject: 'Fuel Rats Email Verification Required',
       body: {
         name: user.preferredRat().name,
-        intro: 'To complete the creation of your Fuel Rats Account your email address needs to be verified.',
+        intro,
         action: {
           instructions: 'Click the button below to verify your email:',
           button: {
