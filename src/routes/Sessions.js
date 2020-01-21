@@ -7,9 +7,7 @@ import API, {
   GET,
   parameters
 } from './API'
-import GeoIP from '../classes/GeoIP'
-import UAParser from 'ua-parser-js'
-import config from '../config'
+import sessionEmail from '../emails/session'
 
 const mail = new Mail()
 const sessionTokenLength = 32
@@ -65,7 +63,7 @@ export default class Sessions extends API {
       userId: user.id
     })
 
-    return Sessions.sendSessionMail(user.email, user.preferredRat().name, session.code, ctx)
+    return mail.send(sessionEmail({ ctx, user, sessionToken: session.code }))
   }
 
   /**
@@ -83,71 +81,5 @@ export default class Sessions extends API {
       userId: user.id,
       verified: true
     }, { transaction })
-  }
-
-  /**
-   * Send a user session verification email
-   * @param {string} email the user's email
-   * @param {string} name the user's display name
-   * @param {string} code verification code
-   * @param {Context} ctx request context
-   * @returns {Promise<void>} completes a promise when successful
-   */
-  static sendSessionMail (email, name, code, ctx) {
-    const ipAddress = ctx.request.ip
-
-    const geoip = GeoIP.lookup(ipAddress)
-    const locationString = `${geoip.city.names.en}, ${geoip.postal.code} ${geoip.country.names.en}`
-
-    return mail.send({
-      to: email,
-      subject: 'Fuel Rats: Login from a new location',
-      body: {
-        name,
-        intro: 'An attempt was made to login to your Fuel Rats account from a new location.',
-        action: {
-          instructions: 'Click the button below to authorise the login:',
-          button: {
-            color: '#d65050',
-            text: 'Authorise login',
-            link:  Sessions.getVerifyLink(code)
-          }
-        },
-        goToAction: {
-          text: 'Authorise login',
-          link: Sessions.getVerifyLink(code),
-          description: 'Click to authorise the login from a new location'
-        },
-        dictionary: {
-          'Device': Sessions.generateDeviceDescription(ctx.state.userAgent),
-          'Location': locationString,
-          'IP Address': ipAddress
-        },
-        outro: 'If this login was not by you then please change your password immediately and contact administrators!',
-        signature: 'Sincerely'
-      }
-    })
-  }
-
-  /**
-   * Generate a short device description based on a user agent
-   * @param {object} userAgent parsed user agent
-   * @returns {string} short device description
-   */
-  static generateDeviceDescription (userAgent) {
-    const ua = new UAParser(userAgent)
-    if (!ua.getBrowser().name) {
-      return 'Unknown device'
-    }
-    return `${ua.getBrowser().name} ${ua.getBrowser().version} on ${ua.getOS().name}`
-  }
-
-  /**
-   * Get a verification link
-   * @param {string} verifyToken the verification token
-   * @returns {string} a verification link
-   */
-  static getVerifyLink (verifyToken) {
-    return `${config.frontend.url}/verify?type=session&t=${verifyToken}`
   }
 }
