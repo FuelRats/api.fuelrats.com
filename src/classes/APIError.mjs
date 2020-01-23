@@ -1,9 +1,11 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import i18next from 'i18next'
-import localisationResources from '../../localisations.json'
 import UUID from 'pure-uuid'
 import StatusCode from './StatusCode'
+import fs from 'fs'
+
+const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
 
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({

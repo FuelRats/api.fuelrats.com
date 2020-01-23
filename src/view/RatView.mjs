@@ -1,4 +1,9 @@
-import { ReadPermission, DatabaseView, RescueView, ShipView, UserView, EpicView } from './'
+import { ReadPermission } from './View'
+import DatabaseView from './DatabaseView'
+import RescueView from './RescueView'
+import ShipView from './ShipView'
+import UserView from './UserView'
+import EpicView from './EpicView'
 
 /**
  * Get JSONAPI view for a rat

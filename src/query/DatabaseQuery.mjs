@@ -1,4 +1,4 @@
-import Query, { SortOrder } from '.'
+import Query, { SortOrder } from './Query'
 
 /**
  * @classdesc An API Query Handler for requests that need data from a Sequelize database table

@@ -1,11 +1,13 @@
-import packageInfo from '../../package.json'
 import config from '../config'
 import enumerable from '../classes/Enum'
 import View from '../view'
 import Query from '../query'
 import { URL } from 'url'
+import fs from 'fs'
 
 const jsonApiVersion = '1.0'
+
+const packageInfo = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
 /**
  * @classdesc A JSONAPI Document renderer

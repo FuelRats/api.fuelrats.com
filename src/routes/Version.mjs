@@ -1,5 +1,3 @@
-import packageInfo from '../../package.json'
-
 import API, {
   GET
 } from './API'
@@ -10,13 +8,7 @@ import { DocumentViewType } from '../Documents'
 import { VersionView } from '../view'
 import fs from 'fs'
 
-let version = undefined
-fs.readFile('build.json', (err, data) => {
-  if (err) {
-    throw err
-  }
-  version = JSON.parse(data)
-})
+const build = JSON.parse(fs.readFileSync('build.json', 'utf8'))
 
 /**
  * API endpoint to get API version information
@@ -36,10 +28,10 @@ export default class Version extends API {
   @GET('/version')
   @websocket('version', 'read')
   read (ctx) {
-    const { hash, branch, tags, date } = version
+    const { hash, branch, tags, date, version } = build
 
     const result = {
-      version: packageInfo.version,
+      version,
       commit: hash,
       branch,
       tags,

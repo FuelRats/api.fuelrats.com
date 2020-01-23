@@ -10,10 +10,9 @@ import {
   VerificationRequiredAPIError
 } from '../classes/APIError'
 import i18next from 'i18next'
-import localisationResources from '../../localisations.json'
 import Authentication from '../classes/Authentication'
 import Sessions from './Sessions'
-
+import fs from 'fs'
 import API, {
   clientAuthenticated,
   authenticated,
@@ -27,6 +26,7 @@ import sessionEmail from '../emails/session'
 import Mail from '../classes/Mail'
 
 const mail = new Mail()
+const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
 
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({

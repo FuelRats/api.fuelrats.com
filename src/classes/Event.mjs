@@ -1,4 +1,6 @@
-import { EventEmitter2 } from 'eventemitter2'
+import EventEmitters from 'eventemitter2'
+
+const { EventEmitter2 } = EventEmitters
 
 const server = new EventEmitter2({
   wildcard: true

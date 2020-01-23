@@ -328,7 +328,10 @@
       "error"
     ],
     "no-sync": [
-      "error"
+      "error",
+      {
+        "allowAtRootLevel": true
+      }
     ],
     "block-spacing": [
       "warn",

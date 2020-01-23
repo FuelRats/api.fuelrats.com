@@ -1,4 +1,4 @@
-import Permission from './Permission'
+// import Permission from './Permission'
 import RegexLiteral from './RegexLiteral'
 import { UnprocessableEntityAPIError } from './APIError'
 import { URL } from 'url'
@@ -63,7 +63,7 @@ export const UUID = new RegexLiteral(`^
  */
 export function OAuthScope (value) {
   const invalid = value.some((scope) => {
-    return Permission.allPermissions.includes(scope) === false && scope !== '*'
+    return true
   })
   if (invalid) {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })

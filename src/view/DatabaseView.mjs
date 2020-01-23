@@ -1,4 +1,4 @@
-import View from '.'
+import View from './View'
 
 /**
  * Base class for JSONAPI Views generated from Sequelize database entries

@@ -1,6 +1,6 @@
 import Sequelize from 'sequelize'
 
-export { DataTypes as type } from 'sequelize'
+export const type = Sequelize.DataTypes
 
 /**
  * Base class for decorated database models
@@ -54,16 +54,16 @@ export function table (options) {
 
 /**
  * Decorator for defining a database table column
- * @param {Sequelize.DataTypes} type the data type of the column
+ * @param {Sequelize.DataTypes} columnType the data type of the column
  * @param {boolean} [allowNull] allow this column to have null values
  * @returns {Function} decorator
  */
-export function column (type, { allowNull = false, ...options } = {}) {
+export function column (columnType, { allowNull = false, ...options } = {}) {
   return function (target, name) {
     const columnName = options.name || name
     target.columns = target.columns || {}
     target.columns[columnName] = {
-      type,
+      type: columnType,
       allowNull,
       ...options,
       defaultValue: target[columnName]

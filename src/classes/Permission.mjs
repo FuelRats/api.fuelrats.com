@@ -1,11 +1,12 @@
 
 
 import i18next from 'i18next'
-import localisationResources from '../../localisations.json'
 import { Group } from '../db/index'
 import { Context } from '../classes/Context'
+import fs from 'fs'
 
-const permissionList = require('../../permissions')
+const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
+const permissionList = JSON.parse(fs.readFileSync('permissions.json', 'utf8'))
 
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({

@@ -2,7 +2,7 @@ import knex from 'knex'
 import config from '../config'
 import bcrypt from 'bcrypt'
 import { ConflictAPIError, NotFoundAPIError } from './APIError'
-import { parse } from 'date-fns'
+import DateTime from 'date-fns'
 import { User, Rat } from '../db'
 
 const { database, username, hostname, port } = config.anope
@@ -510,7 +510,7 @@ class Nickname {
     this.display = obj.nc
     this.nick = obj.nick
     this.createdAt = new Date(obj.time_registered * 1000)
-    this.updatedAt = parse(obj.timestamp, 'yyyy-MM-DD HH:mm:ss', (new Date()))
+    this.updatedAt = DateTime.parse(obj.timestamp, 'yyyy-MM-DD HH:mm:ss', (new Date()))
     this.vhostSetBy = obj.vhost_creator
     this.vhost = obj.vhost_host
     this.vhostSetAt = new Date(obj.vhost_time * 1000)

@@ -1,14 +1,22 @@
-import { ReadPermission, DatabaseView } from './'
+import { ReadPermission } from './View'
+import DatabaseView from './DatabaseView'
 
 /**
- * JSONAPI view for account creation requests
+ * Get JSONAPI view for an API version response
  */
-export default class ACRView extends DatabaseView {
+export default class VersionView extends DatabaseView {
   /**
    * @inheritdoc
    */
   static get type () {
-    return 'account-creation-request'
+    return 'versions'
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get id () {
+    return this.object.commit
   }
 
   /**
@@ -16,11 +24,11 @@ export default class ACRView extends DatabaseView {
    */
   get attributes () {
     return class {
-      static name
-      static token
-      static platform
-      static createdAt
-      static updatedAt
+      static version
+      static commit
+      static branch
+      static tags
+      static date
     }
   }
 
@@ -31,10 +39,8 @@ export default class ACRView extends DatabaseView {
     return ReadPermission.all
   }
 
-
   /**
    * @inheritdoc
-   * @returns {{}}
    */
   get relationships () {
     return {}
@@ -44,6 +50,13 @@ export default class ACRView extends DatabaseView {
    * @inheritdoc
    */
   get related () {
+    return []
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get includes () {
     return []
   }
 

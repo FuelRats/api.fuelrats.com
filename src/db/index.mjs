@@ -3,6 +3,44 @@ import PaperTrail from 'sequelize-paper-trail'
 import config from '../config'
 import logger from '../logging'
 
+import Avatar from './Avatar'
+import Client from './Client'
+import Code from './Code'
+import Decal from './Decal'
+import Epic from './Epic'
+import EpicUsers from './EpicUsers'
+import Group from './Group'
+import Rat from './Rat'
+import Rescue from './Rescue'
+import RescueRats from './RescueRats'
+import Reset from './Reset'
+import Session from './Session'
+import Ship from './Ship'
+import Token from './Token'
+import User from './User'
+import UserGroups from './UserGroups'
+import VerificationToken from './VerificationToken'
+
+const models = {
+  Avatar,
+  User,
+  Rat,
+  Rescue,
+  RescueRats,
+  Client,
+  Code,
+  Token,
+  Reset,
+  Epic,
+  EpicUsers,
+  Ship,
+  Decal,
+  Group,
+  UserGroups,
+  VerificationToken,
+  Session
+}
+
 const { database, username, password, hostname, port } = config.postgres
 
 const { Op } = Sequelize
@@ -73,48 +111,15 @@ db.addHook('beforeCount', function (options) {
 })
 /* eslint-enable */
 
-/**
- * Import database models
- * @param {string} modelNames database model names
- * @returns {Sequelize.Model} database models
- */
-function importModels (modelNames) {
-  const models = modelNames.reduce((modelAcc, modelName) => {
-    // eslint-disable-next-line global-require
-    const model = require(`./${modelName}`).default
-    model.init(db, Sequelize)
-    modelAcc[modelName] = model
-    return modelAcc
-  }, {})
+Object.values(models).forEach((model) => {
+  model.init(db, Sequelize)
+})
 
-  Object.keys(models).forEach((modelName) => {
-    if (Reflect.has(models[modelName], 'associate')) {
-      Reflect.apply(models[modelName].associate, models[modelName], [models])
-    }
-  })
-  return models
-}
-
-
-const models = importModels([
-  'Avatar',
-  'User',
-  'Rat',
-  'Rescue',
-  'RescueRats',
-  'Client',
-  'Code',
-  'Token',
-  'Reset',
-  'Epic',
-  'EpicUsers',
-  'Ship',
-  'Decal',
-  'Group',
-  'UserGroups',
-  'VerificationToken',
-  'Session'
-])
+Object.values(models).forEach((model) => {
+  if (Reflect.has(model, 'associate')) {
+    Reflect.apply(model.associate, model, [models])
+  }
+})
 
 
 const paperTrail = PaperTrail.init(db, {
@@ -137,24 +142,22 @@ export {
   db,
   db as sequelize,
   Sequelize,
-  Op
-}
-
-export const {
-  Rat,
-  Rescue,
-  User,
+  Op,
   Avatar,
-  RescueRats,
   Client,
   Code,
-  Token,
-  Reset,
-  Epic,
-  Ship,
   Decal,
+  Epic,
+  EpicUsers,
   Group,
+  Rat,
+  Rescue,
+  RescueRats,
+  Reset,
+  Session,
+  Ship,
+  Token,
+  User,
   UserGroups,
-  VerificationToken,
-  Session
-} = models
+  VerificationToken
+}

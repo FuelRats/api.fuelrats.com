@@ -1,25 +1,28 @@
-import { ReadPermission, DatabaseView, NicknameView } from './'
+import { ReadPermission } from './View'
+import DatabaseView from './DatabaseView'
+import UserView from './UserView'
 
 /**
- * Get JSONAPI view for a Anniversary
+ * Get JSONAPI view for an oauth token
  */
-export default class AnniversaryView extends DatabaseView {
+export default class TokenView extends DatabaseView {
   /**
    * @inheritdoc
    */
   static get type () {
-    return 'anniversaries'
+    return 'tokens'
   }
 
   /**
    * @inheritdoc
    */
   get attributes () {
-    return class {
-      static email = ReadPermission.all
-      static preferredName
-      static years
-      static joined
+    return {
+      value: ReadPermission.self,
+      scope: ReadPermission.group,
+      createdAt: ReadPermission.all,
+      updatedAt: ReadPermission.all,
+      deletedAt: ReadPermission.internal
     }
   }
 
@@ -27,14 +30,14 @@ export default class AnniversaryView extends DatabaseView {
    * @inheritdoc
    */
   get defaultReadPermission () {
-    return ReadPermission.all
+    return ReadPermission.self
   }
 
   /**
    * @inheritdoc
    */
   get isSelf () {
-    if (this.query.connection.state.user && this.object.id === this.query.connection.state.user.id) {
+    if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
       return this.query.connection.state.permissions.includes('users.read.me')
     }
     return false
@@ -59,7 +62,7 @@ export default class AnniversaryView extends DatabaseView {
    */
   get relationships () {
     return {
-      nicknames: NicknameView
+      user: UserView
     }
   }
 
@@ -67,6 +70,6 @@ export default class AnniversaryView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return ['nicknames']
+    return []
   }
 }

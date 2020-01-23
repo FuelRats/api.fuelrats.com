@@ -1,4 +1,7 @@
-import { ReadPermission, DatabaseView, UserView, RatView } from './'
+import { ReadPermission } from './View'
+import DatabaseView from './DatabaseView'
+import UserView from './UserView'
+import RatView from './RatView'
 
 /**
  * Get JSONAPI view for an IRC nickname

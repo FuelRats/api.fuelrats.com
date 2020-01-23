@@ -1,14 +1,16 @@
-import { ReadPermission, DatabaseView, UserView } from './'
+import { ReadPermission } from './View'
+import DatabaseView from './DatabaseView'
+import UserView from './UserView'
 
 /**
- * Get JSONAPI view for an oauth token
+ * JSONAPI View for an OAuth client
  */
-export default class TokenView extends DatabaseView {
+export default class ClientView extends DatabaseView {
   /**
    * @inheritdoc
    */
   static get type () {
-    return 'tokens'
+    return 'clients'
   }
 
   /**
@@ -16,8 +18,10 @@ export default class TokenView extends DatabaseView {
    */
   get attributes () {
     return {
-      value: ReadPermission.self,
-      scope: ReadPermission.group,
+      name: ReadPermission.all,
+      redirectUri: ReadPermission.all,
+      namespaces: ReadPermission.all,
+      firstParty: ReadPermission.all,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,
       deletedAt: ReadPermission.internal
@@ -28,7 +32,7 @@ export default class TokenView extends DatabaseView {
    * @inheritdoc
    */
   get defaultReadPermission () {
-    return ReadPermission.self
+    return ReadPermission.all
   }
 
   /**
@@ -36,7 +40,7 @@ export default class TokenView extends DatabaseView {
    */
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
-      return this.query.connection.state.permissions.includes('users.read.me')
+      return this.query.connection.state.permissions.includes('clients.read.me')
     }
     return false
   }
@@ -45,14 +49,14 @@ export default class TokenView extends DatabaseView {
    * @inheritdoc
    */
   get isGroup () {
-    return this.query.connection.state.permissions.includes('users.read')
+    return this.query.connection.state.permissions.includes('clients.read')
   }
 
   /**
    * @inheritdoc
    */
   get isInternal () {
-    return this.query.connection.state.permissions.includes('users.internal')
+    return this.query.connection.state.permissions.includes('clients.internal')
   }
 
   /**
@@ -68,6 +72,6 @@ export default class TokenView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return []
+    return ['user']
   }
 }

@@ -1,4 +1,4 @@
-import Query, { SortOrder } from './'
+import Query, { SortOrder } from './Query'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 
 const leaderBoardFields = [

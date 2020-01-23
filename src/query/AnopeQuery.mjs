@@ -1,4 +1,4 @@
-import Query from '.'
+import Query from './Query'
 
 /**
  * @classdesc An API Query Handler for requests that need data from a Sequelize database table

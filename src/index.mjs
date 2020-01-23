@@ -18,18 +18,17 @@ import config from './config'
 import logger from './logging'
 import * as routes from './routes'
 import Permission from './classes/Permission'
-import packageInfo from '../package'
 import ErrorDocument from './Documents/ErrorDocument'
 import Query from './query'
 import StatusCode from './classes/StatusCode'
+import fs from 'fs'
+import { TooManyRequestsAPIError, ImATeapotAPIError } from './classes/APIError'
+
+const packageInfo = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
 
 const app = new Koa()
 querystring(app)
-
-const {
-  TooManyRequestsAPIError
-} = require('./classes/APIError')
 
 
 
@@ -109,6 +108,10 @@ const traffic = new TrafficControl()
 
 app.use(async (ctx, next) => {
   try {
+    if (ctx.request.type === 'application/coffee-pot-command') {
+      throw new ImATeapotAPIError({})
+    }
+
     await Authentication.authenticate({ connection: ctx })
 
     const representing = ctx.get('x-representing')

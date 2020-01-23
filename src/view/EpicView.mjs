@@ -1,4 +1,7 @@
-import { ReadPermission, DatabaseView, UserView, RescueView } from './'
+import { ReadPermission } from './View'
+import DatabaseView from './DatabaseView'
+import UserView from './UserView'
+import RescueView from './RescueView'
 
 /**
  * Get JSONAPI view for an Epic nomination

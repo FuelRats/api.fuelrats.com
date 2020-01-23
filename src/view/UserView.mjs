@@ -1,4 +1,10 @@
-import { ReadPermission, DatabaseView, RatView, GroupView, ClientView, NicknameView, EpicView } from './'
+import { ReadPermission } from './View'
+import DatabaseView from './DatabaseView'
+import RatView from './RatView'
+import GroupView from './GroupView'
+import ClientView from './ClientView'
+import NicknameView from './NicknameView'
+import EpicView from './EpicView'
 
 /**
  * Get JSONAPI view for a User
