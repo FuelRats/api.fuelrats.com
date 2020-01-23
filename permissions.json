@@ -6,5 +6,6 @@
   "ships": [true],
   "decals": [true],
   "groups": [false],
-  "nicknames": [true]
+  "nicknames": [true],
+  "rescue-revisions": [false]
 }
