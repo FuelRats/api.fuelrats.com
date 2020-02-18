@@ -71,12 +71,12 @@ export default class Client extends Model {
           {
             model: models.User.scope('norelations'),
             as: 'user',
-            required: true
-          }
-        ]
+            required: true,
+          },
+        ],
       }, {
-        override: true
-      }]
+        override: true,
+      }],
     }
   }
 

@@ -40,12 +40,12 @@ export default class Token extends Model {
           {
             model: models.User,
             as: 'user',
-            required: true
-          }
-        ]
+            required: true,
+          },
+        ],
       }, {
-        override: true
-      }]
+        override: true,
+      }],
     }
   }
 

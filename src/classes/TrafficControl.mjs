@@ -1,7 +1,6 @@
-
-import Permissions from './Permission'
 import { User } from '../db'
-import { Context } from '../classes/Context'
+import { Context } from './Context'
+import Permissions from './Permission'
 
 const hourTimer = 60 * 60 * 1000
 
@@ -14,7 +13,7 @@ const allowedAdminRequestCount = 10000
  * Class for managing the rate of traffic from IP addresses and users
  * @class
  */
-export default class TrafficControl {
+class TrafficControl {
   #resetTimer = 0
 
   /**
@@ -33,7 +32,7 @@ export default class TrafficControl {
    * and the total requests
    */
   validateRateLimit ({ connection, increase = true }) {
-    let entity
+    let entity = undefined
     if (connection.state.user) {
       entity = this.retrieveAuthenticatedEntity({ user: connection.state.user })
     } else {
@@ -48,7 +47,7 @@ export default class TrafficControl {
       exceeded: !valid,
       remaining: entity.remainingRequests,
       total: entity.totalRequests,
-      reset: this.nextResetDate
+      reset: this.nextResetDate,
     }
   }
 
@@ -219,3 +218,5 @@ class RemoteAddressEntity extends TrafficEntity {
     return allowedUnauthenticatedRequestCount
   }
 }
+
+export default TrafficControl

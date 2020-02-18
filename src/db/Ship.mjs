@@ -37,7 +37,7 @@ const shipTypes = [
   'Type-9 Heavy',
   'Viper MkIII',
   'Viper MkIV',
-  'Vulture'
+  'Vulture',
 ]
 
 @table({})

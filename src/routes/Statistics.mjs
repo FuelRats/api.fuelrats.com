@@ -1,20 +1,19 @@
-
-import API, {
-  authenticated,
-  GET
-} from './API'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { NotFoundAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
 import { db } from '../db'
-import { NotFoundAPIError } from '../classes/APIError'
 import DatabaseQuery from '../query/DatabaseQuery'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { UserStatisticsView, LeaderboardView } from '../view'
 import LeaderboardQuery from '../query/LeaderboardQuery'
+import { UserStatisticsView, LeaderboardView } from '../view'
+import API, {
+  authenticated,
+  GET,
+} from './API'
 
 /**
  * Endpoint for user statistics and leaderboard
  */
-export default class Statistics extends API {
+class Statistics extends API {
   /**
    * @inheritdoc
    */
@@ -37,7 +36,7 @@ export default class Statistics extends API {
 
     const binds = {
       offset: sqlParams.offset,
-      limit: sqlParams.limit
+      limit: sqlParams.limit,
     }
 
     const countBinds = {}
@@ -49,14 +48,14 @@ export default class Statistics extends API {
 
     let [{ count }] = await db.query(leaderboardCountSearch, {
       bind: countBinds,
-      type: db.QueryTypes.SELECT
+      type: db.QueryTypes.SELECT,
     })
 
     count = Number(count)
 
     let results = await db.query(leaderboardSearch, {
       bind: binds,
-      type: db.QueryTypes.SELECT
+      type: db.QueryTypes.SELECT,
     })
 
     results = results.map((result) => {
@@ -68,14 +67,18 @@ export default class Statistics extends API {
         rescueCount: Number(result.rescueCount),
         codeRedCount: Number(result.codeRedCount),
         isDispatch: result.isDispatch || false,
-        isEpic: result.isEpic || false
+        isEpic: result.isEpic || false,
       }
     })
 
-    return new DatabaseDocument({ query, result: {
-      count,
-      rows: results
-    }, type: LeaderboardView })
+    return new DatabaseDocument({
+      query,
+      result: {
+        count,
+        rows: results,
+      },
+      type: LeaderboardView,
+    })
   }
 
   /**
@@ -88,9 +91,9 @@ export default class Statistics extends API {
   async user (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
 
-    let results = await db.query(inividualStatisticsQuery, {
+    let results = await db.query(individualStatisticsQuery(), {
       bind: { userId: ctx.params.id },
-      type: db.QueryTypes.SELECT
+      type: db.QueryTypes.SELECT,
     })
 
     if (results.length === 0) {
@@ -106,7 +109,7 @@ export default class Statistics extends API {
         assists: Number(result.assists),
         failure: Number(result.failure),
         other: Number(result.other),
-        invalid: Number(result.invalid)
+        invalid: Number(result.invalid),
       }
     })
 
@@ -114,9 +117,12 @@ export default class Statistics extends API {
   }
 }
 
-
-
-const inividualStatisticsQuery = `
+/**
+ * Get the SQL query for retrieving inividual statistics
+ * @returns {string}
+ */
+function individualStatisticsQuery () {
+  return `
 SELECT
 	"Rats"."id" AS "id",
 	"Rats"."name" AS "name",
@@ -139,6 +145,7 @@ WHERE
 	"Rats"."userId" = $userId
 GROUP BY "Rats"."id"
 `
+}
 
 /**
  * Get the SQL query for retrieving the total number of leaderboard results
@@ -247,3 +254,5 @@ OFFSET $offset
 LIMIT $limit
 `
 }
+
+export default Statistics

@@ -1,22 +1,27 @@
-import { User, Decal, Avatar, db } from '../db'
-import { UserView, DecalView, RatView, ClientView, GroupView } from '../view'
 import bcrypt from 'bcrypt'
-import Anope from '../classes/Anope'
 import workerpool from 'workerpool'
-import StatusCode from '../classes/StatusCode'
-import Decals from './Decals'
-import Permission from '../classes/Permission'
-import { Context } from '../classes/Context'
-import Mail from '../classes/Mail'
-
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
 import {
   NotFoundAPIError,
   UnauthorizedAPIError,
   UnsupportedMediaAPIError,
   BadRequestAPIError,
-  InternalServerError
+  InternalServerError,
 } from '../classes/APIError'
-
+import Announcer from '../classes/Announcer'
+import Anope from '../classes/Anope'
+import { Context } from '../classes/Context'
+import Mail from '../classes/Mail'
+import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { User, Decal, Avatar, db } from '../db'
+import emailChangeEmail from '../emails/emailchange'
+import DatabaseQuery from '../query/DatabaseQuery'
+import {
+  UserView, DecalView, RatView, ClientView, GroupView,
+} from '../view'
 import {
   WritePermission,
   permissions,
@@ -28,16 +33,11 @@ import {
   parameters,
   required,
   PATCH,
-  getJSONAPIData
+  getJSONAPIData,
 } from './API'
 import APIResource from './APIResource'
-import { websocket } from '../classes/WebSocket'
-import DatabaseQuery from '../query/DatabaseQuery'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DocumentViewType } from '../Documents/Document'
+import Decals from './Decals'
 import Verifications from './Verifications'
-import Announcer from '../classes/Announcer'
-import emailChangeEmail from '../emails/emailchange'
 
 const mail = new Mail()
 
@@ -98,8 +98,8 @@ export default class Users extends APIResource {
     const query = new DatabaseQuery({ connection: ctx })
     const result = await User.findOne({
       where: {
-        id: ctx.state.user.id
-      }
+        id: ctx.state.user.id,
+      },
     })
 
     const redeemable = await Decals.getEligibleDecalCount({ user: ctx.state.user })
@@ -119,8 +119,8 @@ export default class Users extends APIResource {
   async image (ctx, next) {
     const avatar = await Avatar.scope('data').findOne({
       where: {
-        userId: ctx.params.id
-      }
+        userId: ctx.params.id,
+      },
     })
     if (!avatar) {
       throw new NotFoundAPIError({ parameter: 'id' })
@@ -140,7 +140,7 @@ export default class Users extends APIResource {
   @authenticated
   async certificate (ctx) {
     const ratName = ctx.state.user.preferredRat().name
-    const { certificate, fingerprint }  = await Users.sslGenerationPool.exec('generateSslCertificate',
+    const { certificate, fingerprint } = await Users.sslGenerationPool.exec('generateSslCertificate',
       [ratName])
 
     const anopeAccount = await Anope.getAccount(ctx.state.user.email)
@@ -167,8 +167,8 @@ export default class Users extends APIResource {
 
     const user = await User.findOne({
       where: {
-        id: ctx.params.id
-      }
+        id: ctx.params.id,
+      },
     })
 
     if (!user) {
@@ -188,7 +188,7 @@ export default class Users extends APIResource {
       await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail: email }))
 
       await Announcer.sendModeratorMessage({
-        message: `[Account Change] User with email ${oldEmail} has changed their email to ${email}`
+        message: `[Account Change] User with email ${oldEmail} has changed their email to ${email}`,
       })
 
       return user
@@ -214,8 +214,8 @@ export default class Users extends APIResource {
 
     const user = await User.findOne({
       where: {
-        id: ctx.params.id
-      }
+        id: ctx.params.id,
+      },
     })
 
     if (!user) {
@@ -283,9 +283,13 @@ export default class Users extends APIResource {
   @websocket('users', 'delete')
   @authenticated
   async delete (ctx) {
-    await super.delete({ ctx, databaseType: User, callback: (user) => {
-      return Anope.deleteAccount(user.email)
-    } })
+    await super.delete({
+      ctx,
+      databaseType: User,
+      callback: (user) => {
+        return Anope.deleteAccount(user.email)
+      },
+    })
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -302,8 +306,8 @@ export default class Users extends APIResource {
   async setimage (ctx) {
     const user = await User.findOne({
       where: {
-        id: ctx.params.id
-      }
+        id: ctx.params.id,
+      },
     })
 
     if (!user) {
@@ -318,20 +322,20 @@ export default class Users extends APIResource {
 
     await Avatar.destroy({
       where: {
-        userId: ctx.params.id
-      }
+        userId: ctx.params.id,
+      },
     })
 
     await Avatar.create({
       image: formattedImageData,
-      userId: ctx.params.id
+      userId: ctx.params.id,
     })
 
     const query = new DatabaseQuery({ connection: ctx })
     const result = await User.findOne({
       where: {
-        id: ctx.params.id
-      }
+        id: ctx.params.id,
+      },
     })
     return new DatabaseDocument({ query, result, type: UserView })
   }
@@ -346,8 +350,8 @@ export default class Users extends APIResource {
   async redeemDecal (ctx) {
     const user = await User.findOne({
       where: {
-        id: ctx.params.id
-      }
+        id: ctx.params.id,
+      },
     })
 
     this.requireWritePermission({ connection: ctx, entity: user })
@@ -361,8 +365,8 @@ export default class Users extends APIResource {
       where: {
         userId: { is: undefined },
         claimedAt: { is: undefined },
-        type: 'Rescues'
-      }
+        type: 'Rescues',
+      },
     })
 
     if (!availableDecal) {
@@ -371,7 +375,7 @@ export default class Users extends APIResource {
 
     const result = await availableDecal.update({
       userId: user.id,
-      claimedAt: Date.now()
+      claimedAt: Date.now(),
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -392,7 +396,7 @@ export default class Users extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: User,
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -412,7 +416,7 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'add',
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -432,7 +436,7 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'patch',
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     // I'm sorry Clapton, JSONAPI made me do it
@@ -453,7 +457,7 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'remove',
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -472,7 +476,7 @@ export default class Users extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: User,
-      relationship: 'displayRat'
+      relationship: 'displayRat',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -492,7 +496,7 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'patch',
-      relationship: 'displayRat'
+      relationship: 'displayRat',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -511,7 +515,7 @@ export default class Users extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: User,
-      relationship: 'groups'
+      relationship: 'groups',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -534,7 +538,7 @@ export default class Users extends APIResource {
       relationship: 'groups',
       callback: (entity) => {
         return Anope.updatePermissions(entity)
-      }
+      },
     })
 
     ctx.response.status = StatusCode.noContent
@@ -557,7 +561,7 @@ export default class Users extends APIResource {
       relationship: 'groups',
       callback: (entity) => {
         return Anope.updatePermissions(entity)
-      }
+      },
     })
 
     ctx.response.status = StatusCode.noContent
@@ -580,7 +584,7 @@ export default class Users extends APIResource {
       relationship: 'groups',
       callback: (entity) => {
         return Anope.updatePermissions(entity)
-      }
+      },
     })
 
     ctx.response.status = StatusCode.noContent
@@ -599,7 +603,7 @@ export default class Users extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: User,
-      relationship: 'clients'
+      relationship: 'clients',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -619,7 +623,7 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'add',
-      relationship: 'clients'
+      relationship: 'clients',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -639,7 +643,7 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'patch',
-      relationship: 'clients'
+      relationship: 'clients',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -659,7 +663,7 @@ export default class Users extends APIResource {
       ctx,
       databaseType: User,
       change: 'remove',
-      relationship: 'clients'
+      relationship: 'clients',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -681,7 +685,7 @@ export default class Users extends APIResource {
       frontierId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
-      deletedAt: WritePermission.internal
+      deletedAt: WritePermission.internal,
     }
   }
 
@@ -716,7 +720,7 @@ export default class Users extends APIResource {
 
           remove ({ entity, ids }) {
             return entity.removeRats(ids)
-          }
+          },
         }
 
       case 'displayRat':
@@ -732,7 +736,7 @@ export default class Users extends APIResource {
 
           patch ({ entity, id }) {
             return entity.setDisplayRat(id)
-          }
+          },
         }
 
       case 'groups':
@@ -753,7 +757,7 @@ export default class Users extends APIResource {
 
           remove ({ entity, ids }) {
             return entity.removeGroups(ids)
-          }
+          },
         }
 
       case 'clients':
@@ -774,7 +778,7 @@ export default class Users extends APIResource {
 
           remove ({ entity, ids }) {
             return entity.removeClients(ids)
-          }
+          },
         }
 
       default:
@@ -787,10 +791,10 @@ export default class Users extends APIResource {
    */
   get relationTypes () {
     return {
-      'rats': 'rats',
-      'displayRat': 'rats',
-      'groups': 'groups',
-      'clients': 'clients'
+      rats: 'rats',
+      displayRat: 'rats',
+      groups: 'groups',
+      clients: 'clients',
     }
   }
 

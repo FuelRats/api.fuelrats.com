@@ -36,17 +36,17 @@ export default class Epic extends Model {
         include: [{
           model: models.User.scope('norelations'),
           as: 'nominees',
-          required: false
+          required: false,
         }, {
           model: models.User.scope('norelations'),
           as: 'nominatedBy',
-          required: false
+          required: false,
         }, {
           model: models.User.scope('norelations'),
           as: 'approvedBy',
-          required: false
-        }]
-      }]
+          required: false,
+        }],
+      }],
     }
   }
 
@@ -60,17 +60,17 @@ export default class Epic extends Model {
       foreignKey: 'epicId',
       through: {
         model: models.EpicUsers,
-        foreignKey: 'epicId'
-      }
+        foreignKey: 'epicId',
+      },
     })
     models.Epic.belongsTo(models.Rescue, { as: 'rescue' })
     models.Epic.belongsTo(models.User, {
       as: 'approvedBy',
-      foreignKey: 'approvedById'
+      foreignKey: 'approvedById',
     })
     models.Epic.belongsTo(models.User, {
       as: 'nominatedBy',
-      foreignKey: 'nominatedById'
+      foreignKey: 'nominatedById',
     })
   }
 }

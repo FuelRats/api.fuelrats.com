@@ -34,20 +34,20 @@ export default class DatabaseView extends View {
           return (new RelationshipView({
             object: relation,
             root: this.root || this,
-            query: this.query
+            query: this.query,
           })).relationshipView
         })
       } else if (this.object[key]) {
         data = (new RelationshipView({
           object: this.object[key],
           root: this.root || this,
-          query: this.query
+          query: this.query,
         })).relationshipView
       }
 
       acc[key] = {
         links: this.getRelationLink(key),
-        data
+        data,
       }
       return acc
     }, {})

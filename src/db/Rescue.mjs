@@ -1,16 +1,18 @@
 import { IRCNickname, JSONObject, languageCode, RescueQuote } from '../classes/Validators'
 import Model, { column, validate, type, table } from './Model'
 
-
 const rescueNotesMaxLength = 2048
 const rescueSystemMaxLength = 64
 const rescueTitleMaxLength = 64
 
-@table({ paranoid: true, indexes: [{
-  fields: ['data'],
-  using: 'gin',
-  operator: 'jsonb_path_ops'
-}] })
+@table({
+  paranoid: true,
+  indexes: [{
+    fields: ['data'],
+    using: 'gin',
+    operator: 'jsonb_path_ops',
+  }],
+})
 /**
  * Model class for Rescues
  */
@@ -35,7 +37,7 @@ export default class Rescue extends Model {
   @column(type.INTEGER, { allowNull: true })
   static commandIdentifier = undefined
 
-  @column(type.BOOLEAN, { allowNull: true })
+  @column(type.BOOLEAN)
   static codeRed = false
 
   @validate({ JSONObject })
@@ -67,7 +69,7 @@ export default class Rescue extends Model {
 
   @validate({ notEmpty: true, isIn: [['success', 'failure', 'invalid', 'other', 'purge']] })
   @column(type.ENUM(
-    'success', 'failure', 'invalid', 'other', 'purge'
+    'success', 'failure', 'invalid', 'other', 'purge',
   ), { allowNull: true })
   static outcome = undefined
 
@@ -77,6 +79,16 @@ export default class Rescue extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { allowNull: true })
   static firstLimpetId = undefined
+
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { allowNull: true })
+  static lastEditUserId = undefined
+
+  @column(type.UUID, { allowNull: true })
+  static lastEditClientId = undefined
+
+  @column(type.RANGE(type.DATE))
+  static temporalPeriod = [type.now, undefined]
 
   /**
    * @inheritdoc
@@ -90,23 +102,23 @@ export default class Rescue extends Model {
             as: 'rats',
             required: false,
             through: {
-              attributes: []
-            }
+              attributes: [],
+            },
           },
           {
             model: model.Rat,
             as: 'firstLimpet',
-            required: false
+            required: false,
           },
           {
             model: model.Epic,
             as: 'epics',
-            required: false
-          }
-        ]
+            required: false,
+          },
+        ],
       }, {
-        override: true
-      }]
+        override: true,
+      }],
     }
   }
 
@@ -117,7 +129,7 @@ export default class Rescue extends Model {
     super.associate(models)
     models.Rescue.belongsTo(models.Rat, {
       as: 'firstLimpet',
-      foreignKey: 'firstLimpetId'
+      foreignKey: 'firstLimpetId',
     })
 
     models.Rescue.belongsToMany(models.Rat, {
@@ -125,8 +137,18 @@ export default class Rescue extends Model {
       foreignKey: 'rescueId',
       through: {
         model: models.RescueRats,
-        foreignKey: 'rescueId'
-      }
+        foreignKey: 'rescueId',
+      },
+    })
+
+    models.Rescue.belongsTo(models.User, {
+      as: 'lastEditUser',
+      foreignKey: 'lastEditUserId',
+    })
+
+    models.Rescue.belongsTo(models.Client, {
+      as: 'lastEditClient',
+      foreignKey: 'lastEditClientId',
     })
 
     models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })

@@ -1,6 +1,6 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
 import UserView from './UserView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a leaderboard entry

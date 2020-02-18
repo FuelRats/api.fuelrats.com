@@ -26,7 +26,7 @@ class ObjectDocument extends Document {
       type,
       meta: query.meta,
       query,
-      view
+      view,
     })
 
     this.#result = result

@@ -6,7 +6,6 @@ import Query, { SortOrder } from './Query'
  * @augments {Query}
  */
 export default class DatabaseQuery extends Query {
-
   /**
    * @inheritdoc
    */
@@ -18,7 +17,7 @@ export default class DatabaseQuery extends Query {
         return [field, sequelizeOrder]
       }),
       offset: this.offset,
-      limit: this.limit
+      limit: this.limit,
     }
   }
 
@@ -28,7 +27,7 @@ export default class DatabaseQuery extends Query {
   get defaultSort () {
     return [{
       field: 'createdAt',
-      sort: SortOrder.ascending
+      sort: SortOrder.ascending,
     }]
   }
 }

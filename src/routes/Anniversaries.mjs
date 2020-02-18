@@ -1,50 +1,10 @@
-import API, { GET, authenticated } from './API'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import Anope from '../classes/Anope'
 import { websocket } from '../classes/WebSocket'
 import { db } from '../db'
-import { AnniversaryView } from '../view'
-import Anope from '../classes/Anope'
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
-
-
-/**
- * Endpoints for listing rat anniversaries
- */
-export default class Anniversaries extends API {
-  /**
-   * @inheritdoc
-   */
-  get type () {
-    return 'anniversaries'
-  }
-
-  /**
-   * List anniversaries for today
-   * @endpoint
-   */
-  @GET('/anniversaries')
-  @websocket('anniversaries', 'list')
-  @authenticated
-  async list (ctx) {
-    const results = await db.query(anniversaryQuery, {
-      type: db.QueryTypes.SELECT
-    })
-
-    let result = {
-      count: undefined,
-      rows: results
-    }
-
-    result = await Anope.mapNicknames(result)
-    const query = new DatabaseQuery({ connection: ctx })
-
-    return new DatabaseDocument({
-      query,
-      result,
-      type: AnniversaryView
-    })
-  }
-}
+import { AnniversaryView } from '../view'
+import API, { GET, authenticated } from './API'
 
 const anniversaryQuery = `
 SELECT
@@ -71,3 +31,42 @@ HAVING
 	EXTRACT(MONTH FROM min("Rats"."joined")) = EXTRACT(MONTH from NOW())
 ORDER BY min("Rats"."joined")
 `
+
+/**
+ * Endpoints for listing rat anniversaries
+ */
+export default class Anniversaries extends API {
+  /**
+   * @inheritdoc
+   */
+  get type () {
+    return 'anniversaries'
+  }
+
+  /**
+   * List anniversaries for today
+   * @endpoint
+   */
+  @GET('/anniversaries')
+  @websocket('anniversaries', 'list')
+  @authenticated
+  async list (ctx) {
+    const results = await db.query(anniversaryQuery, {
+      type: db.QueryTypes.SELECT,
+    })
+
+    let result = {
+      count: undefined,
+      rows: results,
+    }
+
+    result = await Anope.mapNicknames(result)
+    const query = new DatabaseQuery({ connection: ctx })
+
+    return new DatabaseDocument({
+      query,
+      result,
+      type: AnniversaryView,
+    })
+  }
+}

@@ -2,7 +2,7 @@
 import enumerable from './Enum'
 
 
-@enumerable
+@enumerable()
 /**
  * Enumerable representing HTTP status codes
  * @typedef StatusCode

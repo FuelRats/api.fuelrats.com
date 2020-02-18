@@ -2,8 +2,8 @@ import Model, { column, table, validate, type } from './Model'
 
 @table({
   indexes: [{
-    fields: ['ip', 'userAgent', 'code']
-  }]
+    fields: ['ip', 'userAgent', 'code'],
+  }],
 })
 /**
  * Model class for user sessions
@@ -42,12 +42,12 @@ export default class Session extends Model {
           {
             model: models.User,
             as: 'user',
-            required: true
-          }
-        ]
+            required: true,
+          },
+        ],
       }, {
-        override: true
-      }]
+        override: true,
+      }],
     }
   }
 

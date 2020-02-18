@@ -1,5 +1,5 @@
-import Query, { SortOrder } from './Query'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
+import Query, { SortOrder } from './Query'
 
 const leaderBoardFields = [
   'preferredName',
@@ -8,7 +8,7 @@ const leaderBoardFields = [
   'rescueCount',
   'codeRedCount',
   'isDispatch',
-  'isEpic'
+  'isEpic',
 ]
 
 /**
@@ -29,7 +29,7 @@ export default class LeaderboardQuery extends Query {
         return `"${field}" ${sequelizeOrder}`
       }).join(', '),
       offset: this.offset,
-      limit: this.limit
+      limit: this.limit,
     }
   }
 
@@ -39,7 +39,7 @@ export default class LeaderboardQuery extends Query {
   get defaultSort () {
     return [{
       field: 'rescueCount',
-      sort: SortOrder.descending
+      sort: SortOrder.descending,
     }]
   }
 }

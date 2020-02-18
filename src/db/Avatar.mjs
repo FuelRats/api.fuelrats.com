@@ -18,12 +18,12 @@ export default class Avatar extends Model {
   static getScopes () {
     return {
       defaultScope: [{
-        attributes: ['id']
+        attributes: ['id'],
       }],
 
       data: [{
-        attributes: ['id', 'image']
-      }]
+        attributes: ['id', 'image'],
+      }],
     }
   }
 

@@ -1,16 +1,18 @@
 import bcrypt from 'bcrypt'
-import { User, Token, Client, Reset, db } from '../db'
-import { Context } from './Context'
 import UUID from 'pure-uuid'
-import Anope from '../classes/Anope'
+import {
+  User, Token, Client, Reset, db,
+} from '../db'
 
 import {
   GoneAPIError,
   UnauthorizedAPIError,
   ResetRequiredAPIError,
   ForbiddenAPIError,
-  NotFoundAPIError
+  NotFoundAPIError,
 } from './APIError'
+import Anope from './Anope'
+import { Context } from './Context'
 import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
@@ -20,7 +22,7 @@ const basicAuthHeaderOffset = 6
  * @classdesc Class for handling authentication mechanisms
  * @class
  */
-export default class Authentication {
+class Authentication {
   /**
    * Perform password authentication with email and password
    * @param {object} arg function arguments object
@@ -43,34 +45,33 @@ export default class Authentication {
     const requiredResets = await Reset.findAll({
       where: {
         userId: user.id,
-        required: true
-      }
+        required: true,
+      },
     })
 
     if (requiredResets.length > 0) {
       throw new ResetRequiredAPIError({
-        pointer: '/data/attributes/email'
+        pointer: '/data/attributes/email',
       })
     }
 
     const result = await bcrypt.compare(password, user.password)
     if (result === false) {
       return undefined
-    } else {
-      if (user.isSuspended() === true) {
-        throw new GoneAPIError({ pointer: '/data/attributes/email' })
-      }
-
-      if (bcrypt.getRounds(user.password) > global.BCRYPT_ROUNDS_COUNT) {
-        const newRoundPassword = await bcrypt.hash(password, global.BCRYPT_ROUNDS_COUNT)
-        User.update({
-          password: newRoundPassword
-        }, {
-          where: { id: user.id }
-        })
-      }
-      return User.findOne({ where: { email: { ilike: email } } })
     }
+    if (user.isSuspended() === true) {
+      throw new GoneAPIError({ pointer: '/data/attributes/email' })
+    }
+
+    if (bcrypt.getRounds(user.password) > global.BCRYPT_ROUNDS_COUNT) {
+      const newRoundPassword = await bcrypt.hash(password, global.BCRYPT_ROUNDS_COUNT)
+      User.update({
+        password: newRoundPassword,
+      }, {
+        where: { id: user.id },
+      })
+    }
+    return User.findOne({ where: { email: { ilike: email } } })
   }
 
   /**
@@ -85,7 +86,7 @@ export default class Authentication {
       return false
     }
     const userInstance = await User.findOne({
-      where: { id: token.userId }
+      where: { id: token.userId },
     })
 
     if (userInstance && userInstance.isSuspended()) {
@@ -96,7 +97,7 @@ export default class Authentication {
     return {
       user,
       scope: token.scope,
-      clientId: token.clientId
+      clientId: token.clientId,
     }
   }
 
@@ -122,9 +123,9 @@ export default class Authentication {
       if (bcrypt.getRounds(client.secret) > global.BCRYPT_ROUNDS_COUNT) {
         const newRoundSecret = await bcrypt.hash(secret, global.BCRYPT_ROUNDS_COUNT)
         Client.update({
-          secret: newRoundSecret
+          secret: newRoundSecret,
         }, {
-          where: { id: client.id }
+          where: { id: client.id },
         })
       }
       return client
@@ -174,9 +175,8 @@ export default class Authentication {
   static isAuthenticated (ctx, next) {
     if (ctx.state.user) {
       return next()
-    } else {
-      throw new UnauthorizedAPIError({})
     }
+    throw new UnauthorizedAPIError({})
   }
 
   /**
@@ -209,14 +209,14 @@ export default class Authentication {
     if (UUID.parse(representing)) {
       representedUser = await User.findOne({
         where: {
-          representing
-        }
+          representing,
+        },
       })
     } else {
       const nickname = await Anope.findNickname(representing)
       if (!nickname) {
         throw new NotFoundAPIError({
-          parameter: 'representing'
+          parameter: 'representing',
         })
       }
 
@@ -226,7 +226,7 @@ export default class Authentication {
 
     if (!representedUser) {
       throw new NotFoundAPIError({
-        parameter: 'representing'
+        parameter: 'representing',
       })
     }
 
@@ -244,7 +244,8 @@ export default class Authentication {
 function getBearerToken (ctx) {
   if (ctx.query.bearer) {
     return ctx.query.bearer
-  } else if (ctx.get('Authorization')) {
+  }
+  if (ctx.get('Authorization')) {
     const authorizationHeader = ctx.get('Authorization')
     if (authorizationHeader.startsWith('Bearer ') && authorizationHeader.length > bearerTokenHeaderOffset) {
       return authorizationHeader.substring(bearerTokenHeaderOffset)
@@ -266,3 +267,5 @@ function getBasicAuth (ctx) {
   }
   return []
 }
+
+export default Authentication

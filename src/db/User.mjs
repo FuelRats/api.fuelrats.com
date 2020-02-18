@@ -5,6 +5,19 @@ import Model, { column, table, validate, type } from './Model'
 const passwordMinLength = 12
 const passwordMaxLength = 1024
 
+/**
+ * Get an IRC host safe version of a rat name for use in a virtual host
+ * @param {string} cmdrName the rat name which should be used
+ * @returns {string} the generated irc safe name
+ */
+function getIRCSafeName (cmdrName) {
+  let name = cmdrName
+  name = name.replace(/ /gu, '')
+  name = name.replace(/[^a-zA-Z0-9\s]/gu, '')
+  return name.toLowerCase()
+}
+
+
 @table({ paranoid: true })
 /**
  * Model class for users
@@ -40,19 +53,25 @@ export default class User extends Model {
   @column(type.DATE, { allowNull: true })
   static suspended = undefined
 
-  @column(type.VIRTUAL(type.BOOLEAN), { include: [], get () {
-    return Boolean(this.avatar)
-  } })
+  @column(type.VIRTUAL(type.BOOLEAN), {
+    include: [],
+    get () {
+      return Boolean(this.avatar)
+    },
+  })
   static image = undefined
 
-  @column(type.VIRTUAL(type.ARRAY(type.STRING)), { include: [], get () {
-    if (!this.groups) {
-      return []
-    }
-    return this.groups.reduce((accumulator, value) => {
-      return accumulator.concat(value.permissions)
-    }, [])
-  } })
+  @column(type.VIRTUAL(type.ARRAY(type.STRING)), {
+    include: [],
+    get () {
+      if (!this.groups) {
+        return []
+      }
+      return this.groups.reduce((accumulator, value) => {
+        return accumulator.concat(value.permissions)
+      }, [])
+    },
+  })
   static permissions = undefined
 
   /**
@@ -60,7 +79,7 @@ export default class User extends Model {
    * @param {User} instance user model instance
    * @returns {Promise<void>}
    */
-  static hashPasswordHook = async function (instance) {
+  static hashPasswordHook = async (instance) => {
     if (!instance.changed('password')) {
       return
     }
@@ -172,8 +191,8 @@ export default class User extends Model {
         attributes: {
           exclude: [
             'permissions',
-            'image'
-          ]
+            'image',
+          ],
         },
         include: [
           {
@@ -184,13 +203,13 @@ export default class User extends Model {
               model: models.Ship,
               as: 'ships',
               required: false,
-              include: []
-            }]
+              include: [],
+            }],
           },
           {
             model: models.Avatar,
             as: 'avatar',
-            required: false
+            required: false,
           },
           {
             model: models.Rat,
@@ -200,42 +219,42 @@ export default class User extends Model {
               model: models.Ship,
               as: 'ships',
               required: false,
-              include: []
-            }]
+              include: [],
+            }],
           }, {
             model: models.Group,
             as: 'groups',
             required: false,
             through: {
-              attributes: ['userId']
+              attributes: ['userId'],
             },
             include: [],
             order: [
-              ['priority', 'DESC']
-            ]
+              ['priority', 'DESC'],
+            ],
           }, {
             model: models.Client,
             as: 'clients',
             required: false,
-            include: []
+            include: [],
           }, {
             model: models.Epic,
             as: 'epics',
             required: false,
             through: {},
-            include: []
-          }
-        ]
+            include: [],
+          },
+        ],
       }, { override: true }],
 
       norelations: [{
         attributes: {
           exclude: [
             'permissions',
-            'image'
-          ]
-        }
-      }, { override: true }]
+            'image',
+          ],
+        },
+      }, { override: true }],
     }
   }
 
@@ -249,14 +268,14 @@ export default class User extends Model {
 
     models.User.hasMany(models.Rat, {
       as: 'rats',
-      foreignKey: 'userId'
+      foreignKey: 'userId',
     })
 
     models.User.belongsTo(models.Rat, { as: 'displayRat', constraints: false })
 
     models.User.hasOne(models.Decal, {
       foreignKey: 'userId',
-      as: 'decal'
+      as: 'decal',
     })
 
     models.User.belongsToMany(models.Group, {
@@ -264,8 +283,8 @@ export default class User extends Model {
       foreignKey: 'userId',
       through: {
         model: models.UserGroups,
-        foreignKey: 'userId'
-      }
+        foreignKey: 'userId',
+      },
     })
 
     models.User.belongsToMany(models.Epic, {
@@ -273,8 +292,8 @@ export default class User extends Model {
       foreignKey: 'userId',
       through: {
         model: models.EpicUsers,
-        foreignKey: 'userId'
-      }
+        foreignKey: 'userId',
+      },
     })
 
     models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
@@ -283,16 +302,4 @@ export default class User extends Model {
 
     models.User.hasOne(models.Avatar, { foreignKey: 'userId', as: 'avatar' })
   }
-}
-
-/**
- * Get an IRC host safe version of a rat name for use in a virtual host
- * @param {string} cmdrName the rat name which should be used
- * @returns {string} the generated irc safe name
- */
-function getIRCSafeName (cmdrName) {
-  let name = cmdrName
-  name = name.replace(/ /gu, '')
-  name = name.replace(/[^a-zA-Z0-9\s]/gu, '')
-  return name.toLowerCase()
 }

@@ -1,6 +1,6 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
 import UserView from './UserView'
+import { ReadPermission } from './View'
 
 /**
  * JSONAPI View for an OAuth client
@@ -24,7 +24,7 @@ export default class ClientView extends DatabaseView {
       firstParty: ReadPermission.all,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,
-      deletedAt: ReadPermission.internal
+      deletedAt: ReadPermission.internal,
     }
   }
 
@@ -64,7 +64,7 @@ export default class ClientView extends DatabaseView {
    */
   get relationships () {
     return {
-      user: UserView
+      user: UserView,
     }
   }
 

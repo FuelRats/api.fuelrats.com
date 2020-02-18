@@ -1,5 +1,4 @@
 import Sequelize from 'sequelize'
-import PaperTrail from 'sequelize-paper-trail'
 import config from '../config'
 import logger from '../logging'
 
@@ -12,7 +11,9 @@ import EpicUsers from './EpicUsers'
 import Group from './Group'
 import Rat from './Rat'
 import Rescue from './Rescue'
+import RescueHistory from './RescueHistory'
 import RescueRats from './RescueRats'
+import RescueRatsHistory from './RescueRatsHistory'
 import Reset from './Reset'
 import Session from './Session'
 import Ship from './Ship'
@@ -26,7 +27,9 @@ const models = {
   User,
   Rat,
   Rescue,
+  RescueHistory,
   RescueRats,
+  RescueRatsHistory,
   Client,
   Code,
   Token,
@@ -38,10 +41,16 @@ const models = {
   Group,
   UserGroups,
   VerificationToken,
-  Session
+  Session,
 }
 
-const { database, username, password, hostname, port } = config.postgres
+const {
+  database,
+  username,
+  password,
+  hostname,
+  port,
+} = config.postgres
 
 const { Op } = Sequelize
 const operatorsAliases = {
@@ -79,7 +88,7 @@ const operatorsAliases = {
   any: Op.any,
   all: Op.all,
   values: Op.values,
-  col: Op.col
+  col: Op.col,
 }
 
 const db = new Sequelize(database, username, password, {
@@ -93,9 +102,9 @@ const db = new Sequelize(database, username, password, {
   pool: {
     idle: 1000,
     min: 0,
-    acquire: 30000
+    acquire: 30000,
   },
-  operatorsAliases
+  operatorsAliases,
 })
 
 /* eslint-disable */
@@ -121,23 +130,6 @@ Object.values(models).forEach((model) => {
   }
 })
 
-
-const paperTrail = PaperTrail.init(db, {
-  debug: process.env.NODE_ENV !== 'production',
-  userModel: 'User',
-  exclude: [
-    'createdAt',
-    'updatedAt'
-  ],
-  enableMigration: true,
-  enableRevisionChangeModel: true,
-  UUID: true,
-  continuationKey: 'userId'
-})
-paperTrail.defineModels({})
-
-models.Rescue.Revisions = models.Rescue.hasPaperTrail()
-
 export {
   db,
   db as sequelize,
@@ -152,12 +144,14 @@ export {
   Group,
   Rat,
   Rescue,
+  RescueHistory,
   RescueRats,
+  RescueRatsHistory,
   Reset,
   Session,
   Ship,
   Token,
   User,
   UserGroups,
-  VerificationToken
+  VerificationToken,
 }

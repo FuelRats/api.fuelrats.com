@@ -34,8 +34,8 @@ export default class Group extends Model {
   static getScopes () {
     return {
       stats: [{
-        attributes: []
-      }]
+        attributes: [],
+      }],
     }
   }
 
@@ -49,8 +49,8 @@ export default class Group extends Model {
       foreignKey: 'groupId',
       through: {
         model: models.UserGroups,
-        foreignKey: 'groupId'
-      }
+        foreignKey: 'groupId',
+      },
     })
   }
 }

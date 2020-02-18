@@ -2,9 +2,19 @@ import config from '../config'
 import { User } from '../db'
 
 /**
+ * Get a password reset link
+ * @param {string} resetToken password reset token
+ * @returns {string} password reset link
+ */
+function getResetLink (resetToken) {
+  return `${config.frontend.url}/verify?type=reset&t=${resetToken}`
+}
+
+/**
  * Password reset email template
- * @param {User} user the user to send the email to
- * @param {string} resetToken the reset token for this email
+ * @param {object} arg function arguments object
+ * @param {User} arg.user the user to send the email to
+ * @param {string} arg.resetToken the reset token for this email
  * @returns {object} password reset email template
  */
 export default function passwordResetEmail ({ user, resetToken }) {
@@ -19,25 +29,16 @@ export default function passwordResetEmail ({ user, resetToken }) {
         button: {
           color: '#d65050',
           text: 'Reset your password',
-          link:  getResetLink(resetToken)
-        }
+          link: getResetLink(resetToken),
+        },
       },
       goToAction: {
         text: 'Reset Password',
         link: getResetLink(resetToken),
-        description: 'Click to reset your password'
+        description: 'Click to reset your password',
       },
       outro: 'If you did not request a password reset, no further action is required on your part.',
-      signature: 'Sincerely'
-    }
+      signature: 'Sincerely',
+    },
   }
-}
-
-/**
- * Get a password reset link
- * @param {string} resetToken password reset token
- * @returns {string} password reset link
- */
-function getResetLink (resetToken) {
-  return `${config.frontend.url}/verify?type=reset&t=${resetToken}`
 }

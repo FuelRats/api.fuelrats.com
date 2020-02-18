@@ -1,6 +1,11 @@
-
-
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { UnsupportedMediaAPIError } from '../classes/APIError'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
 import { Decal, db, User } from '../db'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { DecalView } from '../view'
 import {
   authenticated,
   GET,
@@ -10,16 +15,9 @@ import {
   PATCH,
   permissions,
   parameters,
-  WritePermission
+  WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { UnsupportedMediaAPIError } from '../classes/APIError'
-import { websocket } from '../classes/WebSocket'
-import DatabaseQuery from '../query/DatabaseQuery'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DecalView } from '../view'
-import StatusCode from '../classes/StatusCode'
-import { DocumentViewType } from '../Documents'
 
 const originalDecalDeadline = '2016-04-01 00:00:00+00'
 const minimumRescueCount = 10
@@ -154,7 +152,7 @@ export default class Decals extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Decal,
-      relationship: 'rat'
+      relationship: 'rat',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -173,7 +171,7 @@ export default class Decals extends APIResource {
       ctx,
       databaseType: Decal,
       change: 'patch',
-      relationship: 'rat'
+      relationship: 'rat',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -204,8 +202,8 @@ export default class Decals extends APIResource {
     const monthTurnOver = Decals.getLastMonthTurnOver()
 
     const [result] = await db.query(decalEligibilityQuery, {
-      bind: { userId, originalDecalDeadline, monthTurnOver, minimumRescueCount  },
-      type: db.QueryTypes.SELECT
+      bind: { userId, originalDecalDeadline, monthTurnOver, minimumRescueCount },
+      type: db.QueryTypes.SELECT,
     })
 
     const { canRedeem } = result || {}
@@ -223,7 +221,7 @@ export default class Decals extends APIResource {
 
         patch ({ entity, id }) {
           return entity.setUser(id)
-        }
+        },
       }
     }
     throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
@@ -234,7 +232,7 @@ export default class Decals extends APIResource {
    */
   get relationTypes () {
     return {
-      'user': 'users'
+      user: 'users',
     }
   }
 
@@ -255,7 +253,7 @@ export default class Decals extends APIResource {
       notes: WritePermission.sudo,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
-      deletedAt: WritePermission.internal
+      deletedAt: WritePermission.internal,
     }
   }
 }

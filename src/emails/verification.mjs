@@ -2,11 +2,22 @@ import config from '../config'
 import { User } from '../db'
 
 /**
+ * Generate a verification link from a verification token
+ * @param {string} verificationToken the verification token
+ * @param {boolean} change whether this is a change to an existing account
+ * @returns {string} a verification link
+ */
+function getVerifyLink (verificationToken, change) {
+  return `${config.frontend.url}/verify?type=email&t=${verificationToken}&change=${change}`
+}
+
+
+/**
  * Verification email template
  * @param {object} arg function arguments object
  * @param {User} arg.user
- * @param {string} verificationToken the verification token for this request
- * @param {boolean} [change] Whether this email is for a change to an existing account
+ * @param {string} arg.verificationToken the verification token for this request
+ * @param {boolean} [arg.change] Whether this email is for a change to an existing account
  * @returns {object} verification email object
  */
 export default function verificationEmail ({ user, verificationToken, change = false }) {
@@ -26,26 +37,16 @@ export default function verificationEmail ({ user, verificationToken, change = f
         button: {
           color: '#d65050',
           text: 'Verify me',
-          link:  getVerifyLink(verificationToken, change)
-        }
+          link: getVerifyLink(verificationToken, change),
+        },
       },
       goToAction: {
         text: 'Verify Email Address',
         link: getVerifyLink(verificationToken, change),
-        description: 'Click to verify your email'
+        description: 'Click to verify your email',
       },
       outro: 'If you are having problems with verification you may contact support@fuelrats.com',
-      signature: 'Sincerely'
-    }
+      signature: 'Sincerely',
+    },
   }
-}
-
-/**
- * Generate a verification link from a verification token
- * @param {string} verificationToken the verification token
- * @param {boolean} change whether this is a change to an existing account
- * @returns {string} a verification link
- */
-function getVerifyLink (verificationToken, change) {
-  return `${config.frontend.url}/verify?type=email&t=${verificationToken}&change=${change}`
 }

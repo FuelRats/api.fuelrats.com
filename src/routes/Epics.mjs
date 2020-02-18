@@ -1,4 +1,12 @@
-
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { UnsupportedMediaAPIError } from '../classes/APIError'
+import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { Epic } from '../db'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { EpicView, UserView } from '../view'
 import {
   GET,
   PUT,
@@ -6,18 +14,9 @@ import {
   PATCH,
   DELETE,
   authenticated,
-  WritePermission
+  WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { websocket } from '../classes/WebSocket'
-import { Epic } from '../db'
-import DatabaseQuery from '../query/DatabaseQuery'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { EpicView, UserView } from '../view'
-import StatusCode from '../classes/StatusCode'
-import { DocumentViewType } from '../Documents'
-import Permission from '../classes/Permission'
-import { UnsupportedMediaAPIError } from '../classes/APIError'
 
 /**
  * Class managing epic nomination endpoints
@@ -68,7 +67,7 @@ export default class Epics extends APIResource {
     const result = await super.create({
       ctx,
       databaseType: Epic,
-      overrideFields: { nominatedById: ctx.state.user.id }
+      overrideFields: { nominatedById: ctx.state.user.id },
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -115,7 +114,7 @@ export default class Epics extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Epic,
-      relationship: 'nominees'
+      relationship: 'nominees',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -134,7 +133,7 @@ export default class Epics extends APIResource {
       ctx,
       databaseType: Epic,
       change: 'add',
-      relationship: 'nominees'
+      relationship: 'nominees',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -153,7 +152,7 @@ export default class Epics extends APIResource {
       ctx,
       databaseType: Epic,
       change: 'patch',
-      relationship: 'nominees'
+      relationship: 'nominees',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -172,7 +171,7 @@ export default class Epics extends APIResource {
       ctx,
       databaseType: Epic,
       change: 'remove',
-      relationship: 'nominees'
+      relationship: 'nominees',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -190,7 +189,7 @@ export default class Epics extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Epic,
-      relationship: 'nominatedBy'
+      relationship: 'nominatedBy',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -209,7 +208,7 @@ export default class Epics extends APIResource {
       ctx,
       databaseType: Epic,
       change: 'patch',
-      relationship: 'nominatedBy'
+      relationship: 'nominatedBy',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -227,7 +226,7 @@ export default class Epics extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Epic,
-      relationship: 'approvedBy'
+      relationship: 'approvedBy',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -246,7 +245,7 @@ export default class Epics extends APIResource {
       ctx,
       databaseType: Epic,
       change: 'patch',
-      relationship: 'approvedBy'
+      relationship: 'approvedBy',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -279,7 +278,7 @@ export default class Epics extends APIResource {
 
           remove ({ entity, ids }) {
             return entity.removeNominees(ids)
-          }
+          },
         }
 
       case 'nominatedBy':
@@ -296,7 +295,7 @@ export default class Epics extends APIResource {
 
           patch ({ entity, id }) {
             return entity.setNominatedBy(id)
-          }
+          },
         }
 
       case 'approvedBy':
@@ -313,7 +312,7 @@ export default class Epics extends APIResource {
 
           patch ({ entity, id }) {
             return entity.setApprovedBy(id)
-          }
+          },
         }
 
       default:
@@ -333,10 +332,10 @@ export default class Epics extends APIResource {
    */
   get relationTypes () {
     return {
-      'nominees': 'users',
-      'rescue': 'rescues',
-      'nominatedBy': 'users',
-      'approvedBy': 'users'
+      nominees: 'users',
+      rescue: 'rescues',
+      nominatedBy: 'users',
+      approvedBy: 'users',
     }
   }
 
@@ -345,7 +344,7 @@ export default class Epics extends APIResource {
    */
   get writePermissionsForFieldAccess () {
     return {
-      notes: WritePermission.group
+      notes: WritePermission.group,
     }
   }
 }

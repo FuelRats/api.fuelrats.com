@@ -45,12 +45,12 @@ export default class Code extends Model {
           {
             model: models.User,
             as: 'user',
-            required: true
-          }
-        ]
+            required: true,
+          },
+        ],
       }, {
-        override: true
-      }]
+        override: true,
+      }],
     }
   }
 

@@ -1,7 +1,7 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
-import UserView from './UserView'
 import RatView from './RatView'
+import UserView from './UserView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for an IRC nickname
@@ -82,7 +82,7 @@ export default class NicknameView extends DatabaseView {
   get relationships () {
     return {
       user: UserView,
-      rat: RatView
+      rat: RatView,
     }
   }
 

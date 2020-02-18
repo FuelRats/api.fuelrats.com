@@ -1,10 +1,14 @@
-import { Client, Code, Token } from '../db'
 import crypto from 'crypto'
-import DatabaseQuery from '../query/DatabaseQuery'
+import { DocumentViewType } from '../Documents'
 import DatabaseDocument from '../Documents/DatabaseDocument'
-import { ClientView, UserView } from '../view'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
+import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { Client, Code, Token } from '../db'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { ClientView, UserView } from '../view'
 import {
   permissions,
   authenticated,
@@ -14,13 +18,9 @@ import {
   DELETE,
   PATCH,
   parameters,
-  WritePermission
+  WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { websocket } from '../classes/WebSocket'
-import StatusCode from '../classes/StatusCode'
-import Permission from '../classes/Permission'
-import { DocumentViewType } from '../Documents'
 
 const clientSecretLength = 32
 
@@ -77,7 +77,7 @@ export default class Clients extends APIResource {
     const result = await super.create({
       ctx,
       databaseType: Client.scope('user'),
-      overrideFields: { secret, userId: ctx.state.user.id }
+      overrideFields: { secret, userId: ctx.state.user.id },
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -95,7 +95,7 @@ export default class Clients extends APIResource {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    const result = await super.update({ ctx, databaseType: Client.scope('user'), updateSearch: { id:ctx.params.id } })
+    const result = await super.update({ ctx, databaseType: Client.scope('user'), updateSearch: { id: ctx.params.id } })
 
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: ClientView })
@@ -115,14 +115,14 @@ export default class Clients extends APIResource {
     await super.delete({ ctx, databaseType: Client.scope('user') })
     await Code.destroy({
       where: {
-        clientId: ctx.params.id
-      }
+        clientId: ctx.params.id,
+      },
     })
 
     await Token.destroy({
       where: {
-        clientId: ctx.params.id
-      }
+        clientId: ctx.params.id,
+      },
     })
 
     ctx.response.status = StatusCode.noContent
@@ -141,7 +141,7 @@ export default class Clients extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Client.scope('user'),
-      relationship: 'user'
+      relationship: 'user',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -161,7 +161,7 @@ export default class Clients extends APIResource {
       ctx,
       databaseType: Client.scope('user'),
       change: 'patch',
-      relationship: 'user'
+      relationship: 'user',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -179,7 +179,7 @@ export default class Clients extends APIResource {
       firstParty: WritePermission.sudo,
       secret: WritePermission.internal,
       createdAt: WritePermission.internal,
-      updatedAt: WritePermission.internal
+      updatedAt: WritePermission.internal,
     }
   }
 
@@ -204,7 +204,7 @@ export default class Clients extends APIResource {
         hasPermission (connection, entity, id) {
           return (!entity.userId && id === connection.state.user.id) || Permission.granted({
             permissions: ['clients.write'],
-            connection
+            connection,
           })
         },
 
@@ -218,7 +218,7 @@ export default class Clients extends APIResource {
 
         remove ({ entity, id }) {
           return entity.removeUser(id)
-        }
+        },
       }
     }
 
@@ -230,7 +230,7 @@ export default class Clients extends APIResource {
    */
   get relationTypes () {
     return {
-      'user': 'users'
+      user: 'users',
     }
   }
 }

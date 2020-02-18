@@ -1,5 +1,5 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for an API version response

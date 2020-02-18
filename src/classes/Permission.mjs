@@ -1,9 +1,7 @@
-
-
-import i18next from 'i18next'
-import { Group } from '../db/index'
-import { Context } from '../classes/Context'
 import fs from 'fs'
+import i18next from 'i18next'
+import { Group } from '../db'
+import { Context } from './Context'
 
 const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
 const permissionList = JSON.parse(fs.readFileSync('permissions.json', 'utf8'))
@@ -11,13 +9,13 @@ const permissionList = JSON.parse(fs.readFileSync('permissions.json', 'utf8'))
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
-  resources:  localisationResources
+  resources: localisationResources,
 })
 
 const permissionLocaleKeys = {
-  'read': 'permissionRead',
-  'write': 'permissionWrite',
-  'delete': 'permissionDelete'
+  read: 'permissionRead',
+  write: 'permissionWrite',
+  delete: 'permissionDelete',
 }
 
 let groups = {}
@@ -31,7 +29,7 @@ let groups = {}
   groups.sort((group1, group2) => {
     return group1.priority > group2.priority
   })
-})()
+}())
 
 
 
@@ -39,7 +37,6 @@ let groups = {}
  * Class for managing user permissions
  */
 export default class Permission {
-
   /**
    * Check whether a user has the required permissions
    * @param {object} arg function arguments object
@@ -96,7 +93,7 @@ export default class Permission {
    * @param {Context} arg.connection request context
    * @returns {Array} Array of objects with localised human readable permissions
    */
-  static humanReadable ({ scopes, connection })  {
+  static humanReadable ({ scopes, connection }) {
     let scopeList = scopes
     if (scopeList.includes('*')) {
       scopeList = Permission.allPermissions
@@ -118,9 +115,9 @@ export default class Permission {
       acc.push({
         permission: i18next.t(permissionLocaleKey, {
           group: i18next.t(group, { count }),
-          count
+          count,
         }),
-        accessible
+        accessible,
       })
       return acc
     }, [])

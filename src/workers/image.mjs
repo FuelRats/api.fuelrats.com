@@ -1,5 +1,5 @@
-import workerpool from 'workerpool'
 import sharp from 'sharp'
+import workerpool from 'workerpool'
 
 const profileImageMax = 256
 
@@ -13,12 +13,12 @@ function avatarImageResize (imageDataPackage) {
     .resize(profileImageMax, profileImageMax)
     .jpeg({
       quality: 80,
-      chromaSubsampling: '4:4:4'
+      chromaSubsampling: '4:4:4',
     })
     .toBuffer()
 }
 
 workerpool.worker({
-  avatarImageResize
+  avatarImageResize,
 })
 

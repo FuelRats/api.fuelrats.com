@@ -1,6 +1,6 @@
-import API, { GET, authenticated } from './API'
-import { User } from '../db'
 import config from '../config'
+import { User } from '../db'
+import API, { GET, authenticated } from './API'
 
 /**
  * SSO endpoints
@@ -22,8 +22,8 @@ export default class SSO extends API {
   async jiraProfile (ctx) {
     const user = await User.findOne({
       where: {
-        id: ctx.state.user.id
-      }
+        id: ctx.state.user.id,
+      },
     })
 
     const userGroups = user.groups.map((group) => {
@@ -37,7 +37,7 @@ export default class SSO extends API {
       username: user.preferredRat().name,
       profile: `${config.frontend.url}/profile/overview`,
       name: user.preferredRat().name,
-      groups: userGroups
+      groups: userGroups,
     }
   }
 
@@ -50,8 +50,8 @@ export default class SSO extends API {
   async grafanaProfile (ctx) {
     const user = await User.findOne({
       where: {
-        id: ctx.state.user.id
-      }
+        id: ctx.state.user.id,
+      },
     })
 
     const unixUpdateTime = Math.floor(user.updatedAt.getTime() / 1000)
@@ -64,7 +64,7 @@ export default class SSO extends API {
       email: user.email,
       picture: `${config.frontend.url}/users/${user.id}/image`,
       profile: `${config.frontend.url}/profile/overview`,
-      updated_at: unixUpdateTime
+      updated_at: unixUpdateTime,
     }
   }
 
@@ -77,8 +77,8 @@ export default class SSO extends API {
   async nextcloudProfile (ctx) {
     const user = await User.findOne({
       where: {
-        id: ctx.state.user.id
-      }
+        id: ctx.state.user.id,
+      },
     })
 
     const userGroups = user.groups.map((group) => {
@@ -91,7 +91,7 @@ export default class SSO extends API {
       email: user.email,
       displayName: user.preferredRat().name,
       photoURL: `${config.frontend.url}/users/${user.id}/image`,
-      roles: userGroups
+      roles: userGroups,
     }
   }
 }

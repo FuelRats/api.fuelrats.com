@@ -1,6 +1,6 @@
 import Document, { DocumentViewType } from '.'
-import View from '../view'
 import Query from '../query'
+import View from '../view'
 
 /**
  * @classdesc A JSONAPI document render for Sequelize database results
@@ -21,14 +21,20 @@ class DatabaseDocument extends Document {
    * @param {DocumentViewType} arg.view A DocumentViewType enum describing the type of view this document should have
    * @param {object} [arg.meta] extra metadata
    */
-  constructor ({ query, result, type, view, meta = {} }) {
+  constructor ({
+    query,
+    result,
+    type,
+    view,
+    meta = {},
+  }) {
     if (result && result.rows) {
       super({
         objects: result.rows,
         type,
         meta: { ...meta, ...query.meta },
         query,
-        view: view || DocumentViewType.collection
+        view: view || DocumentViewType.collection,
       })
     } else {
       super({
@@ -36,7 +42,7 @@ class DatabaseDocument extends Document {
         type,
         meta: { ...meta, ...query.meta },
         query,
-        view: view || DocumentViewType.individual
+        view: view || DocumentViewType.individual,
       })
     }
 

@@ -1,33 +1,29 @@
 import DatabaseView from './DatabaseView'
-import EpicView from './EpicView'
 import RescueView from './RescueView'
-import ShipView from './ShipView'
 import UserView from './UserView'
 import { ReadPermission } from './View'
 
 /**
- * Get JSONAPI view for a rat
+ * Get JSONAPI view for a rescue revision
  */
-export default class RatView extends DatabaseView {
+export default class RescueRevisionView extends DatabaseView {
   /**
    * @inheritdoc
    */
   static get type () {
-    return 'rats'
+    return 'rescue-revisions'
   }
 
   /**
    * @inheritdoc
    */
   get attributes () {
-    return {
-      name: ReadPermission.all,
-      data: ReadPermission.all,
-      platform: ReadPermission.all,
-      frontierId: ReadPermission.group,
-      createdAt: ReadPermission.all,
-      updatedAt: ReadPermission.all,
-      deletedAt: ReadPermission.internal,
+    return class {
+      static document
+      static operation
+      static revision
+      static createdAt
+      static updatedAt
     }
   }
 
@@ -35,7 +31,7 @@ export default class RatView extends DatabaseView {
    * @inheritdoc
    */
   get defaultReadPermission () {
-    return ReadPermission.all
+    return ReadPermission.group
   }
 
   /**
@@ -43,7 +39,7 @@ export default class RatView extends DatabaseView {
    */
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
-      return this.query.connection.state.permissions.includes('rats.read.me')
+      return this.query.connection.state.permissions.includes('rescues.read.me')
     }
     return false
   }
@@ -52,14 +48,14 @@ export default class RatView extends DatabaseView {
    * @inheritdoc
    */
   get isGroup () {
-    return this.query.connection.state.permissions.includes('rats.read')
+    return this.query.connection.state.permissions.includes('rescues.read')
   }
 
   /**
    * @inheritdoc
    */
   get isInternal () {
-    return this.query.connection.state.permissions.includes('rats.internal')
+    return this.query.connection.state.permissions.includes('rescues.internal')
   }
 
   /**
@@ -67,9 +63,8 @@ export default class RatView extends DatabaseView {
    */
   get relationships () {
     return {
+      rescue: RescueView,
       user: UserView,
-      ships: ShipView,
-      epics: EpicView,
     }
   }
 
@@ -77,13 +72,13 @@ export default class RatView extends DatabaseView {
    * @inheritdoc
    */
   get related () {
-    return [RescueView, ShipView]
+    return [RescueView, UserView]
   }
 
   /**
    * @inheritdoc
    */
   get includes () {
-    return ['user', 'ships']
+    return [RescueView, UserView]
   }
 }

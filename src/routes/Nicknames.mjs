@@ -1,15 +1,22 @@
-import API, { GET, POST, DELETE, authenticated, getJSONAPIData, PATCH } from './API'
-import { websocket } from '../classes/WebSocket'
-import Anope from '../classes/Anope'
-import AnopeQuery from '../query/AnopeQuery'
-import ObjectDocument from '../Documents/ObjectDocument'
-import { NicknameView } from '../view'
-import { BadRequestAPIError, ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
-import { DocumentViewType } from '../Documents/Document'
-import StatusCode from '../classes/StatusCode'
-import { Rat } from '../db'
-import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
+import ObjectDocument from '../Documents/ObjectDocument'
+import { BadRequestAPIError, ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
+import Anope from '../classes/Anope'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { Rat } from '../db'
+import AnopeQuery from '../query/AnopeQuery'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { NicknameView } from '../view'
+import API, {
+  GET,
+  POST,
+  DELETE,
+  authenticated,
+  getJSONAPIData,
+  PATCH,
+} from './API'
 
 /**
  * Endpoint for managing IRC nicknames
@@ -33,7 +40,7 @@ export default class Nickname extends API {
     const { nick } = ctx.query
     if (!nick) {
       throw new BadRequestAPIError({
-        parameter: 'nick'
+        parameter: 'nick',
       })
     }
 
@@ -80,7 +87,7 @@ export default class Nickname extends API {
       nick,
       encryptedPassword,
       vhost: ctx.state.user.vhost,
-      ratId
+      ratId,
     })
 
     const createdNick = Anope.findNickname(nick)
@@ -136,7 +143,7 @@ export default class Nickname extends API {
     let rat = undefined
     if (nickname.ratId) {
       rat = await Rat.findOne({
-        where: { id: nickname.ratId }
+        where: { id: nickname.ratId },
       })
     }
 

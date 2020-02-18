@@ -11,6 +11,7 @@ export default class RegexLiteral {
    * @returns {RegExp} A regular expression object created from the string literal
    */
   constructor (literal, flags = 'gu') {
+    // eslint-disable-next-line no-constructor-return
     return new RegExp(literal.replace(/[\n\s]+/gu, ''), flags)
   }
 }

@@ -3,7 +3,7 @@ import EventEmitters from 'eventemitter2'
 const { EventEmitter2 } = EventEmitters
 
 const server = new EventEmitter2({
-  wildcard: true
+  wildcard: true,
 })
 
 /**
@@ -26,7 +26,7 @@ export default class Event {
  * @returns {function(...[*]=)}
  */
 export function listen (event) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     server.on(event, descriptor.value)
   }
 }

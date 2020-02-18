@@ -1,12 +1,12 @@
 import { UnprocessableEntityAPIError } from '../classes/APIError'
-import enumerable from '../classes/Enum'
 import { Context } from '../classes/Context'
+import enumerable from '../classes/Enum'
 
 const defaultOffset = 0
 const defaultLimit = 100
 const defaultSize = 25
 
-@enumerable
+@enumerable()
 /**
  * Enumerable representing the different sort orders a query can have
  * @readonly
@@ -76,7 +76,7 @@ export default class Query {
         acc[key] = parsedValue
       } else {
         throw new UnprocessableEntityAPIError({
-          parameter: `page[${key}]`
+          parameter: `page[${key}]`,
         })
       }
       return acc
@@ -84,7 +84,7 @@ export default class Query {
       number: undefined,
       size: undefined,
       offset: undefined,
-      limit: undefined
+      limit: undefined,
     })
   }
 
@@ -139,12 +139,12 @@ export default class Query {
       if (orderItem.startsWith('-')) {
         return {
           field: orderItem.substring(1),
-          sort: SortOrder.descending
+          sort: SortOrder.descending,
         }
       }
       return {
         field: orderItem,
-        sort: SortOrder.ascending
+        sort: SortOrder.ascending,
       }
     })
   }
@@ -184,7 +184,7 @@ export default class Query {
         return JSON.parse(filter)
       } catch (ex) {
         throw new UnprocessableEntityAPIError({
-          parameter: 'filter'
+          parameter: 'filter',
         })
       }
     }

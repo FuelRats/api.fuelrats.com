@@ -1,6 +1,18 @@
-import config from '../config'
-import crypto from 'crypto'
 import axios from 'axios'
+import crypto from 'crypto'
+import config from '../config'
+
+/**
+ * Generate an HMAC signature for a message
+ * @param {object} params parameters object
+ * @param {string} params.contents message contents
+ * @param {string} params.key hmac secret key
+ * @returns {string} an hmac signature for the message
+ */
+function generateHmacSignature ({ contents, key }) {
+  return crypto.createHmac('sha1', key).update(contents).digest('hex')
+}
+
 
 /**
  * Interface to the IRC message announcer
@@ -20,7 +32,7 @@ export default class Announcer {
 
     const encodedBody = JSON.stringify({
       channel: destination,
-      message
+      message,
     })
     const hmacSignature = generateHmacSignature({ contents: encodedBody, key: config.announcer.secret })
 
@@ -29,9 +41,9 @@ export default class Announcer {
       url: config.announcer.url,
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Signature': `sha1=${hmacSignature}`
+        'X-API-Signature': `sha1=${hmacSignature}`,
       },
-      data: encodedBody
+      data: encodedBody,
     })
   }
 
@@ -41,7 +53,7 @@ export default class Announcer {
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static sendRescueMessage ({ message }) {
-    return Announcer.sendMessage({ destination:  config.announcer.destinations.rescue, message })
+    return Announcer.sendMessage({ destination: config.announcer.destinations.rescue, message })
   }
 
   /**
@@ -79,15 +91,4 @@ export default class Announcer {
   static sendDrillMessage (message) {
     return Announcer.sendMessage({ destination: config.announcer.destinations.drill, message })
   }
-}
-
-/**
- * Generate an HMAC signature for a message
- * @param {object} params parameters object
- * @param {string} params.contents message contents
- * @param {string} params.key hmac secret key
- * @returns {string} an hmac signature for the message
- */
-function generateHmacSignature ({ contents, key }) {
-  return crypto.createHmac('sha1', key).update(contents).digest('hex')
 }
