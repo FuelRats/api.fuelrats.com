@@ -10,8 +10,8 @@ import {
 } from '../classes/APIError'
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
-import { UUID } from '../helpers/Validators'
 import { Rat, db } from '../db'
+import { UUID } from '../helpers/Validators'
 import DatabaseQuery from '../query/DatabaseQuery'
 import API, { getJSONAPIData, WritePermission } from './API'
 
@@ -84,25 +84,36 @@ export default class APIResource extends API {
     }
 
     await this.validateCreateAccess({ ctx, attributes: dataObj.attributes })
-    const entity = await databaseType.create({
-      ...dataObj.attributes,
-      ...overrideFields,
-      ...resourceId,
-    })
 
-    if (callback) {
-      await callback({ entity })
-    }
+    const transaction = await db.transaction()
 
-    if (dataObj.relationships instanceof Object) {
-      const relationshipChanges = Object.entries(dataObj.relationships).map(([relationship, data]) => {
-        return this.generateRelationshipChange({
-          ctx, data, entity, change: 'add', relationship,
+    let entity = undefined
+    try {
+      entity = await databaseType.create({
+        ...dataObj.attributes,
+        ...overrideFields,
+        ...resourceId,
+      }, { transaction })
+
+      if (callback) {
+        await callback({ entity, transaction })
+      }
+
+      if (dataObj.relationships instanceof Object) {
+        const relationshipChanges = Object.entries(dataObj.relationships).map(([relationship, data]) => {
+          return this.generateRelationshipChange({
+            ctx, data, entity, change: 'add', relationship, transaction,
+          })
         })
-      })
 
-      await Promise.all(relationshipChanges)
+        await Promise.all(relationshipChanges)
+      }
+    } catch (ex) {
+      await transaction.rollback()
+      throw ex
     }
+
+    await transaction.commit()
 
     return databaseType.findOne({
       where: {
@@ -141,24 +152,33 @@ export default class APIResource extends API {
 
     const { attributes } = dataObj
 
-    if (attributes instanceof Object) {
-      this.validateUpdateAccess({ ctx, attributes, entity })
+    const transaction = await db.transaction()
 
-      await entity.update({
-        ...attributes,
-        ...overrideFields,
-      }, updateSearch)
-    }
+    try {
+      if (attributes instanceof Object) {
+        this.validateUpdateAccess({ ctx, attributes, entity })
 
-    if (ctx.data.relationships instanceof Object) {
-      const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
-        return this.generateRelationshipChange({
-          ctx, data, entity, change: 'patch', relationship,
+        await entity.update({
+          ...attributes,
+          ...overrideFields,
+        }, { ...updateSearch, transaction })
+      }
+
+      if (ctx.data.relationships instanceof Object) {
+        const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
+          return this.generateRelationshipChange({
+            ctx, data, entity, change: 'patch', relationship, transaction,
+          })
         })
-      })
 
-      await Promise.all(relationshipChanges)
+        await Promise.all(relationshipChanges)
+      }
+    } catch (ex) {
+      await transaction.rollback()
+      throw ex
     }
+
+    await transaction.commit()
 
     return databaseType.findOne({
       where: {
@@ -244,7 +264,11 @@ export default class APIResource extends API {
    * @returns {Promise<db.Model>} A resource with its relationships updated
    */
   async relationshipChange ({
-    ctx, databaseType, change, relationship, callback = undefined,
+    ctx,
+    databaseType,
+    change,
+    relationship,
+    callback = undefined,
   }) {
     if (!ctx.params.id) {
       throw new BadRequestAPIError({ parameter: 'id' })
@@ -266,9 +290,18 @@ export default class APIResource extends API {
       await callback(entity)
     }
 
-    await this.generateRelationshipChange({
-      ctx, data: ctx.data.data, entity, change, relationship,
-    })
+    const transaction = await db.transaction()
+
+    try {
+      await this.generateRelationshipChange({
+        ctx, data: ctx.data.data, entity, change, relationship, transaction,
+      })
+    } catch (ex) {
+      await transaction.rollback()
+      throw ex
+    }
+
+    await transaction.commit()
 
     return databaseType.findOne({
       where: {
@@ -284,10 +317,11 @@ export default class APIResource extends API {
    * @param {object} arg.entity the entity to change the relationship of
    * @param {string} arg.change the type of change to perform (add, patch, remove)
    * @param {string} arg.relationship The relationship to change
+   * @param {db.Transaction} arg.transaction optional transaction to use for database operations
    * @returns {Promise<undefined>} a database change promise for updating the relationships
    */
   generateRelationshipChange ({
-    ctx, data, entity, change, relationship,
+    ctx, data, entity, change, relationship, transaction,
   }) {
     const changeRelationship = this.changeRelationship({ relationship })
     const validOneRelationship = this.isValidOneRelationship({ relationship: data, relation: relationship })
@@ -309,13 +343,13 @@ export default class APIResource extends API {
         return relationshipObject.id
       })
 
-      return changeRelationship[change]({ entity, ids: relationshipIds, ctx })
+      return changeRelationship[change]({ entity, ids: relationshipIds, ctx, transaction })
     }
     if (validOneRelationship && changeRelationship.many === false) {
       if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, relationship.id])) {
         throw new ForbiddenAPIError({ pointer: '/data' })
       }
-      return changeRelationship[change]({ entity, id: data.id, ctx })
+      return changeRelationship[change]({ entity, id: data.id, ctx, transaction })
     }
     throw new UnprocessableEntityAPIError({ pointer: '/data' })
   }

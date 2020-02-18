@@ -364,21 +364,40 @@ export default class Rescues extends APIResource {
             })
           },
 
-          add ({ entity, ids, ctx }) {
-            return entity.addRats(ids, {
+          async add ({ entity, ids, ctx, transaction }) {
+            await entity.addRats(ids, {
               through: {
                 assignerUserId: ctx.state.user.id,
                 assignerClientId: ctx.state.clientId,
               },
+              transaction,
             })
+
+            const rescue = entity
+            rescue.lastEditUserId = ctx.state.user.id
+            rescue.lastEditClientId = ctx.state.clientId
+            return rescue.save({ transaction })
           },
 
-          patch ({ entity, ids, ctx }) {
-            return entity.setRats(ids, { through: { assignedById: ctx.state.user.id } })
+          async patch ({ entity, ids, ctx, transaction }) {
+            await entity.setRats(ids, {
+              through: { assignerUserId: ctx.state.user.id, assignerClientId: ctx.state.clientId },
+              transaction,
+            })
+
+            const rescue = entity
+            rescue.lastEditUserId = ctx.state.user.id
+            rescue.lastEditClientId = ctx.state.clientId
+            return rescue.save({ transaction })
           },
 
-          remove ({ entity, ids }) {
-            return entity.removeRats(ids)
+          async remove ({ entity, ids, ctx, transaction }) {
+            await entity.removeRats(ids, { transaction })
+
+            const rescue = entity
+            rescue.lastEditUserId = ctx.state.user.id
+            rescue.lastEditClientId = ctx.state.clientId
+            return rescue.save({ transaction })
           },
         }
 
@@ -393,12 +412,12 @@ export default class Rescues extends APIResource {
             })
           },
 
-          patch ({ entity, id, ctx }) {
+          patch ({ entity, id, ctx, transaction }) {
             const rescue = entity
             rescue.firstLimpetId = id
             rescue.lastEditUserId = ctx.state.user.id
             rescue.lastEditClientId = ctx.state.clientId
-            return rescue.save()
+            return rescue.save({ transaction })
           },
         }
 
