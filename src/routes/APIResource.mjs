@@ -10,7 +10,7 @@ import {
 } from '../classes/APIError'
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
-import { UUID } from '../classes/Validators'
+import { UUID } from '../helpers/Validators'
 import { Rat, db } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
 import API, { getJSONAPIData, WritePermission } from './API'

@@ -1,4 +1,4 @@
-import { OAuthScope, isURL } from '../classes/Validators'
+import { OAuthScope, isURL } from '../helpers/Validators'
 import Model, { column, validate, table, type } from './Model'
 
 const oAuthScopeMaxLength = 128

@@ -1,6 +1,6 @@
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
-import enumerable from '../classes/Enum'
+import enumerable from '../helpers/Enum'
 
 const defaultOffset = 0
 const defaultLimit = 100

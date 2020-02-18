@@ -1,4 +1,4 @@
-import { ShipName } from '../classes/Validators'
+import { ShipName } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 

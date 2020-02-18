@@ -1,4 +1,4 @@
-import { JSONObject } from '../classes/Validators'
+import { JSONObject } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 @table({ paranoid: true })

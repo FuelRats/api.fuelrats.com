@@ -1,4 +1,4 @@
-import { IRCVirtualHost, OAuthScope } from '../classes/Validators'
+import { IRCVirtualHost, OAuthScope } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 @table({ paranoid: true })

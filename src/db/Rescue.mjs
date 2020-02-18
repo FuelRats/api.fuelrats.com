@@ -1,4 +1,4 @@
-import { IRCNickname, JSONObject, languageCode, RescueQuote } from '../classes/Validators'
+import { IRCNickname, JSONObject, languageCode, RescueQuote } from '../helpers/Validators'
 import Model, { column, validate, type, table } from './Model'
 
 const rescueNotesMaxLength = 2048

@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 
-import { OAuthClientName, isURL } from '../classes/Validators'
+import { OAuthClientName, isURL } from '../helpers/Validators'
 import Model, { column, table, type, validate } from './Model'
 
 const clientSecretEncodedMaxLength = 1024

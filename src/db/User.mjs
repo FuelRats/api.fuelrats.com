@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { JSONObject, stripeUserId } from '../classes/Validators'
+import { JSONObject, stripeUserId } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 const passwordMinLength = 12

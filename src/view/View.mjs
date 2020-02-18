@@ -1,4 +1,4 @@
-import enumerable from '../classes/Enum'
+import enumerable from '../helpers/Enum'
 import config from '../config'
 import Query from '../query'
 
