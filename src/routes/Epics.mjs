@@ -268,16 +268,16 @@ export default class Epics extends APIResource {
             return Permission.granted({ permissions: ['epics.write'], connection })
           },
 
-          add ({ entity, ids }) {
-            return entity.addNominees(ids)
+          add ({ entity, ids, transaction }) {
+            return entity.addNominees(ids, { transaction })
           },
 
-          patch ({ entity, ids }) {
-            return entity.setNominees(ids)
+          patch ({ entity, ids, transaction }) {
+            return entity.setNominees(ids, { transaction })
           },
 
-          remove ({ entity, ids }) {
-            return entity.removeNominees(ids)
+          remove ({ entity, ids, transaction }) {
+            return entity.removeNominees(ids, { transaction })
           },
         }
 
@@ -289,12 +289,12 @@ export default class Epics extends APIResource {
             return Permission.granted({ permissions: ['epics.write'], connection })
           },
 
-          add ({ entity, id }) {
-            return entity.setNominatedBy(id)
+          add ({ entity, id, transaction }) {
+            return entity.setNominatedBy(id, { transaction })
           },
 
-          patch ({ entity, id }) {
-            return entity.setNominatedBy(id)
+          patch ({ entity, id, transaction }) {
+            return entity.setNominatedBy(id, { transaction })
           },
         }
 
@@ -306,12 +306,12 @@ export default class Epics extends APIResource {
             return Permission.granted({ permissions: ['epics.write'], connection })
           },
 
-          add ({ entity, id }) {
-            return entity.setApprovedBy(id)
+          add ({ entity, id, transaction }) {
+            return entity.setApprovedBy(id, { transaction })
           },
 
-          patch ({ entity, id }) {
-            return entity.setApprovedBy(id)
+          patch ({ entity, id, transaction }) {
+            return entity.setApprovedBy(id, { transaction })
           },
         }
 

@@ -208,16 +208,16 @@ export default class Clients extends APIResource {
           })
         },
 
-        add ({ entity, id }) {
-          return entity.addUser(id)
+        add ({ entity, id, transaction }) {
+          return entity.addUser(id, { transaction })
         },
 
-        patch ({ entity, id }) {
-          return entity.setUser(id)
+        patch ({ entity, id, transaction }) {
+          return entity.setUser(id, { transaction })
         },
 
-        remove ({ entity, id }) {
-          return entity.removeUser(id)
+        remove ({ entity, id, transaction }) {
+          return entity.removeUser(id, { transaction })
         },
       }
     }

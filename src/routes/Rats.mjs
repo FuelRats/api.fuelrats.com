@@ -196,8 +196,8 @@ export default class Rats extends APIResource {
           return Permission.granted({ permissions: ['rats.write'], connection })
         },
 
-        patch ({ entity, id }) {
-          return entity.setUser(id)
+        patch ({ entity, id, transaction }) {
+          return entity.setUser(id, { transaction })
         },
       }
     }

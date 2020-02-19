@@ -207,12 +207,12 @@ export default class Ships extends APIResource {
           return (hasEntityRat && hasNewRat) || Permission.granted({ permissions: ['rats.write'], connection })
         },
 
-        add ({ entity, id }) {
-          return entity.setRat(id)
+        add ({ entity, id, transaction }) {
+          return entity.setRat(id, { transaction })
         },
 
-        patch ({ entity, id }) {
-          return entity.setRat(id)
+        patch ({ entity, id, transaction }) {
+          return entity.setRat(id, { transaction })
         },
       }
     }

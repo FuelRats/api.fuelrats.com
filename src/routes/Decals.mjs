@@ -219,8 +219,8 @@ export default class Decals extends APIResource {
       return {
         many: false,
 
-        patch ({ entity, id }) {
-          return entity.setUser(id)
+        patch ({ entity, id, transaction }) {
+          return entity.setUser(id, { transaction })
         },
       }
     }

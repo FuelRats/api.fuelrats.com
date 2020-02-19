@@ -710,16 +710,16 @@ export default class Users extends APIResource {
             return Permission.granted({ permissions: ['rats.write'], connection })
           },
 
-          add ({ entity, ids }) {
-            return entity.addRats(ids)
+          add ({ entity, ids, transaction }) {
+            return entity.addRats(ids, { transaction })
           },
 
-          patch ({ entity, ids }) {
-            return entity.setRats(ids)
+          patch ({ entity, ids, transaction }) {
+            return entity.setRats(ids, { transaction })
           },
 
-          remove ({ entity, ids }) {
-            return entity.removeRats(ids)
+          remove ({ entity, ids, transaction }) {
+            return entity.removeRats(ids, { transaction })
           },
         }
 
@@ -734,8 +734,8 @@ export default class Users extends APIResource {
             return hasRat || Permission.granted({ permissions: ['rats.write'], connection })
           },
 
-          patch ({ entity, id }) {
-            return entity.setDisplayRat(id)
+          patch ({ entity, id, transaction }) {
+            return entity.setDisplayRat(id, { transaction })
           },
         }
 
@@ -747,16 +747,16 @@ export default class Users extends APIResource {
             return Permission.granted({ permissions: ['groups.write'], connection })
           },
 
-          add ({ entity, ids }) {
-            return entity.addGroups(ids)
+          add ({ entity, ids, transaction }) {
+            return entity.addGroups(ids, { transaction })
           },
 
-          patch ({ entity, ids }) {
-            return entity.setGroups(ids)
+          patch ({ entity, ids, transaction }) {
+            return entity.setGroups(ids, { transaction })
           },
 
-          remove ({ entity, ids }) {
-            return entity.removeGroups(ids)
+          remove ({ entity, ids, transaction }) {
+            return entity.removeGroups(ids, { transaction })
           },
         }
 
@@ -768,16 +768,16 @@ export default class Users extends APIResource {
             return Permission.granted({ permissions: ['clients.write'], connection })
           },
 
-          add ({ entity, ids }) {
-            return entity.addClients(ids)
+          add ({ entity, ids, transaction }) {
+            return entity.addClients(ids, { transaction })
           },
 
-          patch ({ entity, ids }) {
-            return entity.setClients(ids)
+          patch ({ entity, ids, transaction }) {
+            return entity.setClients(ids, { transaction })
           },
 
-          remove ({ entity, ids }) {
-            return entity.removeClients(ids)
+          remove ({ entity, ids, transaction }) {
+            return entity.removeClients(ids, { transaction })
           },
         }
 
