@@ -60,8 +60,8 @@ export function table (options) {
  */
 export function column (columnType, { allowNull = false, ...options } = {}) {
   return (target, name) => {
-    const columnName = options.name || name
-    target.columns = target.columns || {}
+    const columnName = options.name ?? name
+    target.columns = target.columns ?? {}
     target.columns[columnName] = {
       type: columnType,
       allowNull,

@@ -68,7 +68,7 @@ server.deserializeClient(async (id) => {
 server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq) => {
   validateScopes(areq.scope)
 
-  const clientRedirectUri = redirectUri || client.redirectUri
+  const clientRedirectUri = redirectUri ?? client.redirectUri
 
   const code = await Code.create({
     value: crypto.randomBytes(global.OAUTH_CODE_LENGTH).toString('hex'),
@@ -256,7 +256,7 @@ function validateRedirectUri (target, name, descriptor) {
         const query = new DatabaseQuery({ connection })
         const clientView = (new ClientView({ object: client, query })).render()
 
-        const clientRedirectUri = redirectUri || client.redirectUri
+        const clientRedirectUri = redirectUri ?? client.redirectUri
         return [clientView, clientRedirectUri]
       }
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })

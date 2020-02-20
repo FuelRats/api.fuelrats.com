@@ -1,5 +1,5 @@
-import enumerable from '../helpers/Enum'
 import config from '../config'
+import enumerable from '../helpers/Enum'
 import Query from '../query'
 
 /**

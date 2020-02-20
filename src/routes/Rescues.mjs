@@ -373,10 +373,8 @@ export default class Rescues extends APIResource {
               transaction,
             })
 
-            const rescue = entity
-            rescue.lastEditUserId = ctx.state.user.id
-            rescue.lastEditClientId = ctx.state.clientId
-            return rescue.save({ transaction })
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
           },
 
           async patch ({ entity, ids, ctx, transaction }) {
@@ -385,19 +383,15 @@ export default class Rescues extends APIResource {
               transaction,
             })
 
-            const rescue = entity
-            rescue.lastEditUserId = ctx.state.user.id
-            rescue.lastEditClientId = ctx.state.clientId
-            return rescue.save({ transaction })
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
           },
 
           async remove ({ entity, ids, ctx, transaction }) {
             await entity.removeRats(ids, { transaction })
 
-            const rescue = entity
-            rescue.lastEditUserId = ctx.state.user.id
-            rescue.lastEditClientId = ctx.state.clientId
-            return rescue.save({ transaction })
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
           },
         }
 
@@ -415,8 +409,7 @@ export default class Rescues extends APIResource {
           patch ({ entity, id, ctx, transaction }) {
             const rescue = entity
             rescue.firstLimpetId = id
-            rescue.lastEditUserId = ctx.state.user.id
-            rescue.lastEditClientId = ctx.state.clientId
+            rescue.setChangelogDetails(ctx)
             return rescue.save({ transaction })
           },
         }

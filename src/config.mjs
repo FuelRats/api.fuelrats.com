@@ -89,7 +89,7 @@ if (configErrors > 0) {
  * @returns {*|undefined}
  */
 function required (property, validations = [], defaultValue = undefined) {
-  const value = process.env[property] || defaultValue
+  const value = process.env[property] ?? defaultValue
   if (typeof value === 'undefined') {
     console.error(`FATAL ERROR: Required config parameter ${property} is not provided`)
     configErrors += 1
@@ -115,7 +115,7 @@ function required (property, validations = [], defaultValue = undefined) {
  * @returns {*|undefined}
  */
 function recommended (property, validations = [], defaultValue = undefined) {
-  const value = process.env[property] || defaultValue
+  const value = process.env[property] ?? defaultValue
   if (typeof value === 'undefined') {
     console.error(`WARNING: Config parameter ${property} is not configured, 
     functionality will be limited and/or unstable`)
@@ -142,7 +142,7 @@ function recommended (property, validations = [], defaultValue = undefined) {
  * @returns {*|undefined}
  */
 function optional (property, validations, defaultValue = undefined) {
-  const value = process.env[property] || defaultValue
+  const value = process.env[property] ?? defaultValue
 
   validations.forEach((validation) => {
     const validationMessage = validation.call(value, value)

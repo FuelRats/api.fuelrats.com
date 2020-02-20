@@ -57,7 +57,7 @@ export default class DatabaseView extends View {
    * @inheritdoc
    */
   generateIncludes ({ rootType, includeTypes }) {
-    const includes = includeTypes || this.includes
+    const includes = includeTypes ?? this.includes
 
     return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
       let objects = this.object[key]
@@ -70,7 +70,7 @@ export default class DatabaseView extends View {
       }
 
       return acc.concat(objects.reduce((includeCollection, object) => {
-        const objectView = (new RelationshipView({ object, root: this.root || this, query: this.query }))
+        const objectView = (new RelationshipView({ object, root: this.root ?? this, query: this.query }))
         includeCollection.push(objectView.view)
         return includeCollection.concat(objectView.generateIncludes({ rootType, includeTypes }))
       }, []))

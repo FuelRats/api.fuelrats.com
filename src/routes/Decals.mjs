@@ -206,7 +206,7 @@ export default class Decals extends APIResource {
       type: db.QueryTypes.SELECT,
     })
 
-    const { canRedeem } = result || {}
+    const { canRedeem } = result ?? {}
     return canRedeem || 0
   }
 

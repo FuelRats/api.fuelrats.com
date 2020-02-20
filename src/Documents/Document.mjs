@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { URL } from 'url'
-import enumerable from '../helpers/Enum'
 import config from '../config'
+import enumerable from '../helpers/Enum'
 import Query from '../query'
 import View from '../view'
 

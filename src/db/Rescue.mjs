@@ -153,4 +153,11 @@ export default class Rescue extends Model {
 
     models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })
   }
+
+  setChangelogDetails (ctx) {
+    this.set('lastEditUserId', ctx.state.user.id)
+    this.set('lastEditClientId', ctx.state.clientId)
+    this.set('updatedAt', new Date())
+    this.changed('updatedAt', true)
+  }
 }
