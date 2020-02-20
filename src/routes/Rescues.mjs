@@ -120,7 +120,7 @@ export default class Rescues extends APIResource {
     })
 
     if (Reflect.has(ctx.data.data.attributes, 'outcome')) {
-      const caseId = result.commandIdentifier || result.id
+      const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
         message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
       has been completed by ${ctx.state.user.preferredRat().name}`,
