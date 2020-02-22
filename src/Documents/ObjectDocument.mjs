@@ -1,6 +1,6 @@
-import Document, { DocumentViewType } from '.'
 import Query from '../query'
 import View from '../view'
+import Document, { DocumentViewType } from './Document'
 
 /**
  * @classdesc A JSONAPI document render for simple object results

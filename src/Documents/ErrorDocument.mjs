@@ -1,4 +1,3 @@
-import Document from '.'
 import {
   InternalServerError,
   APIError,
@@ -8,6 +7,7 @@ import {
 import StatusCode from '../classes/StatusCode'
 import logger from '../logging'
 import Query from '../query'
+import Document from './Document'
 
 /**
  * @classdesc A JSONAPI document render for request errors
