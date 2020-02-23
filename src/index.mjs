@@ -10,7 +10,7 @@ import npid from 'npid'
 import { promisify } from 'util'
 import Document from './Documents/Document'
 import ErrorDocument from './Documents/ErrorDocument'
-import { TooManyRequestsAPIError, ImATeapotAPIError } from './classes/APIError'
+import { TooManyRequestsAPIError, ImATeapotAPIError, InternalServerError } from './classes/APIError'
 import Authentication from './classes/Authentication'
 import Permission from './classes/Permission'
 import router from './classes/Router'
@@ -166,6 +166,8 @@ app.use(async (ctx, next) => {
         _query: ctx.query,
         _method: ctx.request.req.method,
       }, 'Router received a request that could not be processed')
+
+      throw new InternalServerError({})
     }
   } catch (errors) {
     const query = new Query({ connection: ctx })
