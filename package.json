@@ -73,7 +73,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.8.3",
     "@babel/plugin-transform-strict-mode": "^7.8.3",
     "@babel/preset-env": "^7.8.3",
-    "@fuelrats/eslint-config": "^2.0.0",
+    "@fuelrats/eslint-config": "^2.1.0",
     "@rollup/plugin-json": "^4.0.1",
     "@rollup/plugin-node-resolve": "^7.0.0",
     "ajv": "^6.10.2",

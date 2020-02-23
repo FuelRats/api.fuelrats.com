@@ -888,10 +888,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@fuelrats/eslint-config@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@fuelrats/eslint-config/-/eslint-config-2.0.0.tgz#600aadb19a833bb6fe061f992883cb271db5b348"
-  integrity sha512-1FlR3KKSdpJJzxz0hrNwtQqDOcmLhUc5DArTTQThaz0wGnF//RKnHWYFnt2ftazyq50W1XDDotxfMBfvodlxZg==
+"@fuelrats/eslint-config@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@fuelrats/eslint-config/-/eslint-config-2.1.0.tgz#3faa8115580466e98892725704a5c6bdc21fdc19"
+  integrity sha512-Hpf4kaaXwCVJtVdZFUNr2elm7lzN6TEt0rwj1WXbhwcIuLg+fnKt3PoJCTXeuYZKLxLCMLSjBMLVQcBj6slJGQ==
   dependencies:
     eslint-restricted-globals "^0.2.0"
 

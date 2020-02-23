@@ -13,5 +13,11 @@
   },
   "extends": [
     "@fuelrats/eslint-config"
-  ]
+  ],
+  "rules":{
+    "no-restricted-syntax": [
+      "error",
+      "VariableDeclarator LogicalExpression[operator=\"||\"]"
+    ]
+  }
 }
