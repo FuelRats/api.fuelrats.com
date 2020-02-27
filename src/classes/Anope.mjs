@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 import DateTime from 'date-fns'
 import knex from 'knex'
+import UUID from 'pure-uuid'
 import config from '../config'
 import { User, Rat } from '../db'
 import { ConflictAPIError, NotFoundAPIError } from './APIError'
@@ -505,7 +506,7 @@ class Nickname {
    * @param {object} user the user that this Nickname belongs to
    */
   constructor (obj, user = undefined) {
-    this.id = obj.id
+    this.id = new UUID(5, 'ns:URL', `https://api.fuelrats.com/nicknames/${obj.id}`)
     this.lastQuit = obj.last_quit
     this.lastRealHost = obj.last_realhost
     this.lastRealName = obj.last_realname
