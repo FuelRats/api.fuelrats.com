@@ -18,6 +18,7 @@ export default class GroupView extends DatabaseView {
    */
   get attributes () {
     return class {
+      static name
       static vhost
       static withoutPrefix
       static priority

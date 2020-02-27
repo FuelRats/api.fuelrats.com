@@ -27,7 +27,7 @@ export default class SSO extends API {
     })
 
     const userGroups = user.groups.map((group) => {
-      return group.id
+      return group.name
     })
 
     return {
@@ -82,7 +82,7 @@ export default class SSO extends API {
     })
 
     const userGroups = user.groups.map((group) => {
-      return group.id
+      return group.name
     })
 
     return {

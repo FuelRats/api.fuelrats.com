@@ -123,7 +123,7 @@ export default class User extends Model {
    */
   isConfirmed () {
     return this.groups.some((group) => {
-      return group.id === 'verified'
+      return group.name === 'verified'
     })
   }
 

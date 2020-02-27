@@ -7,8 +7,12 @@ import Model, { column, table, validate, type } from './Model'
  */
 export default class Group extends Model {
   @validate({ isAlphanumeric: true, notEmpty: true })
-  @column(type.STRING, { primaryKey: true })
+  @column(type.UUID, { primaryKey: true })
   static id = undefined
+
+  @validate({ isAlphanumeric: true, notEmpty: true })
+  @column(type.STRING, { allowNull: false })
+  static name = undefined
 
   @validate({ is: IRCVirtualHost })
   @column(type.STRING, { allowNull: true })
