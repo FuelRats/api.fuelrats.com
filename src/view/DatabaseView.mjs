@@ -29,7 +29,9 @@ export default class DatabaseView extends View {
 
       // eslint-disable-next-line no-restricted-syntax
       let data = null
-      if (Array.isArray(this.object[key])) {
+      if (Reflect.has(this.object, key) === false && Reflect.has(this.object, `${key}Id`) === false) {
+        data = []
+      } else if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
           return (new RelationshipView({
             object: relation,

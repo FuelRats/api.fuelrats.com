@@ -69,7 +69,6 @@ export default class RatView extends DatabaseView {
     return {
       user: UserView,
       ships: ShipView,
-      epics: EpicView,
     }
   }
 
