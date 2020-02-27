@@ -10,9 +10,9 @@ export default class Group extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = undefined
 
-  @validate({ isAlphanumeric: true, notEmpty: true })
-  @column(type.STRING, { allowNull: false })
-  static name = undefined
+  @validate({ isAlphanumeric: true, notEmpty: true }, { name: 'name' })
+  @column(type.STRING, { allowNull: false, unique: true, name: 'name' })
+  static groupName = undefined
 
   @validate({ is: IRCVirtualHost })
   @column(type.STRING, { allowNull: true })

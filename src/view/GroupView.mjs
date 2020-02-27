@@ -17,16 +17,16 @@ export default class GroupView extends DatabaseView {
    * @inheritdoc
    */
   get attributes () {
-    return class {
-      static name
-      static vhost
-      static withoutPrefix
-      static priority
-      static permissions
-      static channels
-      static createdAt
-      static updatedAt
-      static deletedAt = ReadPermission.internal
+    return {
+      name: ReadPermission.group,
+      vhost: ReadPermission.group,
+      withoutPrefix: ReadPermission.group,
+      priority: ReadPermission.group,
+      permissions: ReadPermission.group,
+      channels: ReadPermission.group,
+      createdAt: ReadPermission.group,
+      updatedAt: ReadPermission.group,
+      deletedAt: ReadPermission.internal,
     }
   }
 
