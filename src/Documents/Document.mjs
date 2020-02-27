@@ -151,7 +151,7 @@ class Document {
    */
   get links () {
     return {
-      self: this.currentCursor,
+      self: this.currentCursor || this.self,
       first: this.firstCursor,
       last: this.lastCursor,
       previous: this.previousCursor,
