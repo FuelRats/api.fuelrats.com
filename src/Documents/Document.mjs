@@ -104,7 +104,7 @@ class Document {
    */
   get meta () {
     if (this.#view === DocumentViewType.individual) {
-      return this.#meta
+      return { ...this.#meta, ...this.defaultMeta }
     }
 
     return { ...this.#meta, ...this.pageMeta, ...this.defaultMeta }
