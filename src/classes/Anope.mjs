@@ -515,7 +515,7 @@ class Nickname {
     this.display = obj.nc
     this.nick = obj.nick
     this.createdAt = new Date(obj.time_registered * 1000)
-    this.updatedAt = DateTime.parse(obj.timestamp, 'yyyy-MM-DD HH:mm:ss', (new Date()))
+    this.updatedAt = obj.timestamp
     this.vhostSetBy = obj.vhost_creator
     this.vhost = obj.vhost_host
     this.vhostSetAt = new Date(obj.vhost_time * 1000)
@@ -526,6 +526,7 @@ class Nickname {
     this.ratId = obj.rat_id
 
     this.user = user
+    this.rat = undefined
   }
 }
 
