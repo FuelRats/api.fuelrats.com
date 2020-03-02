@@ -1,6 +1,6 @@
 import { URL } from 'url'
-import config from '../config'
 import ws from 'ws'
+import config from '../config'
 
 /**
  * Request object
@@ -128,7 +128,7 @@ export class Context {
       },
       set: () => {
         return undefined
-      }
+      },
     }
 
     this.header = request.header

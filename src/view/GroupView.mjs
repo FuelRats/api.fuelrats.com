@@ -1,6 +1,6 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
 import UserView from './UserView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a permission group
@@ -17,15 +17,16 @@ export default class GroupView extends DatabaseView {
    * @inheritdoc
    */
   get attributes () {
-    return class {
-      static vhost
-      static withoutPrefix
-      static priority
-      static permissions
-      static channels
-      static createdAt
-      static updatedAt
-      static deletedAt = ReadPermission.internal
+    return {
+      name: ReadPermission.group,
+      vhost: ReadPermission.group,
+      withoutPrefix: ReadPermission.group,
+      priority: ReadPermission.group,
+      permissions: ReadPermission.group,
+      channels: ReadPermission.group,
+      createdAt: ReadPermission.group,
+      updatedAt: ReadPermission.group,
+      deletedAt: ReadPermission.internal,
     }
   }
 

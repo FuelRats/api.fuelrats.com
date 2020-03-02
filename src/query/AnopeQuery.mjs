@@ -6,7 +6,6 @@ import Query from './Query'
  * @augments {Query}
  */
 export default class AnopeQuery extends Query {
-
   /**
    * @inheritdoc
    */

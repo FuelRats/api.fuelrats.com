@@ -1,7 +1,7 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
-import UserView from './UserView'
 import RescueView from './RescueView'
+import UserView from './UserView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for an Epic nomination
@@ -22,7 +22,7 @@ export default class EpicView extends DatabaseView {
       notes: ReadPermission.sudo,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,
-      deletedAt: ReadPermission.internal
+      deletedAt: ReadPermission.internal,
     }
   }
 
@@ -67,7 +67,7 @@ export default class EpicView extends DatabaseView {
       nominees: UserView,
       rescue: RescueView,
       nominatedBy: UserView,
-      approvedBy: UserView
+      approvedBy: UserView,
     }
   }
 

@@ -1,6 +1,6 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
 import UserView from './UserView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for an oauth token
@@ -22,7 +22,7 @@ export default class TokenView extends DatabaseView {
       scope: ReadPermission.group,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,
-      deletedAt: ReadPermission.internal
+      deletedAt: ReadPermission.internal,
     }
   }
 
@@ -62,7 +62,7 @@ export default class TokenView extends DatabaseView {
    */
   get relationships () {
     return {
-      user: UserView
+      user: UserView,
     }
   }
 

@@ -1,6 +1,6 @@
+import axios from 'axios'
 import { URLSearchParams } from 'url'
 import config from '../config'
-import axios from 'axios'
 
 /**
  * Class for managing Frontier API related functions
@@ -23,9 +23,9 @@ export default class FrontierAPI {
       method: 'POST',
       url: 'https://auth.frontierstore.net/token',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      data: params
+      data: params,
     })
 
     return result.data
@@ -40,14 +40,14 @@ export default class FrontierAPI {
     const [user, profile] = await Promise.all([
       axios.get('https://auth.frontierstore.net/me', {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       }),
       axios.get('https://companion.orerve.net/profile', {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      }),
     ])
 
     return { ...user.data, ...profile.data }

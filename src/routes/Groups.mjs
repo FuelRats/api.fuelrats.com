@@ -1,4 +1,10 @@
-
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { UnsupportedMediaAPIError } from '../classes/APIError'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { Group } from '../db'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { GroupView } from '../view'
 import {
   GET,
   PUT,
@@ -6,17 +12,10 @@ import {
   DELETE,
   authenticated,
   permissions,
-  WritePermission
+  WritePermission,
 } from './API'
 import APIResource from './APIResource'
 
-import { Group } from '../db'
-import { websocket } from '../classes/WebSocket'
-import DatabaseQuery from '../query/DatabaseQuery'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { GroupView } from '../view'
-import StatusCode from '../classes/StatusCode'
-import { UnsupportedMediaAPIError } from '../classes/APIError'
 
 /**
  * Endpoints for managing user permission groups
@@ -80,7 +79,7 @@ export default class Groups extends APIResource {
   @authenticated
   @permissions('groups.write')
   async update (ctx) {
-    const result = await super.update({ ctx, databaseType: Group, updateSearch: { id:ctx.params.id } })
+    const result = await super.update({ ctx, databaseType: Group, updateSearch: { id: ctx.params.id } })
 
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: GroupView })
@@ -134,7 +133,7 @@ export default class Groups extends APIResource {
       channels: WritePermission.sudo,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
-      deletedAt: WritePermission.internal
+      deletedAt: WritePermission.internal,
     }
   }
 }

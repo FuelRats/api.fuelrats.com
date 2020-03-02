@@ -1,9 +1,9 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
+import EpicView from './EpicView'
 import RescueView from './RescueView'
 import ShipView from './ShipView'
 import UserView from './UserView'
-import EpicView from './EpicView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a rat
@@ -27,7 +27,7 @@ export default class RatView extends DatabaseView {
       frontierId: ReadPermission.group,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,
-      deletedAt: ReadPermission.internal
+      deletedAt: ReadPermission.internal,
     }
   }
 
@@ -69,7 +69,6 @@ export default class RatView extends DatabaseView {
     return {
       user: UserView,
       ships: ShipView,
-      epics: EpicView
     }
   }
 

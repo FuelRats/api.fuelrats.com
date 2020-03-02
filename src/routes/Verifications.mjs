@@ -1,15 +1,15 @@
-import Mail from '../classes/Mail'
-import { User, VerificationToken, db } from '../db'
 import crypto from 'crypto'
 import { NotFoundAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
+import Mail from '../classes/Mail'
+import { User, VerificationToken, db } from '../db'
+import verificationEmail from '../emails/verification'
 import API, {
   GET,
   POST,
   parameters,
-  getJSONAPIData
+  getJSONAPIData,
 } from './API'
-import verificationEmail from '../emails/verification'
 
 const mail = new Mail()
 const expirationLength = 86400000
@@ -38,8 +38,8 @@ export default class Verifications extends API {
 
     const user = await User.findOne({
       where: {
-        email: { ilike: email }
-      }
+        email: { ilike: email },
+      },
     })
 
     if (user) {
@@ -59,8 +59,8 @@ export default class Verifications extends API {
   async verify (ctx) {
     const verification = await VerificationToken.findOne({
       where: {
-        value: ctx.params.token
-      }
+        value: ctx.params.token,
+      },
     })
 
     if (!verification) {
@@ -69,8 +69,8 @@ export default class Verifications extends API {
 
     const user = await User.findOne({
       where: {
-        id: verification.userId
-      }
+        id: verification.userId,
+      },
     })
 
     user.addGroup('verified')
@@ -90,8 +90,8 @@ export default class Verifications extends API {
   static async createVerification (user, transaction = undefined, change = false) {
     const existingVerification = await VerificationToken.findOne({
       where: {
-        userId: user.id
-      }
+        userId: user.id,
+      },
     })
 
     if (existingVerification) {
@@ -101,9 +101,9 @@ export default class Verifications extends API {
     const verification = await VerificationToken.create({
       value: crypto.randomBytes(verificationTokenLength / 2).toString('hex'),
       expires: new Date(Date.now() + expirationLength).getTime(),
-      userId: user.id
+      userId: user.id,
     }, { transaction })
 
-    await mail.send(verificationEmail({ user,  verificationToken: verification.value, change }))
+    await mail.send(verificationEmail({ user, verificationToken: verification.value, change }))
   }
 }

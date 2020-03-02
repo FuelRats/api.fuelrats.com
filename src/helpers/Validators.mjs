@@ -1,14 +1,23 @@
 // import Permission from './Permission'
-import RegexLiteral from './RegexLiteral'
-import { UnprocessableEntityAPIError } from './APIError'
 import { URL } from 'url'
+import { UnprocessableEntityAPIError } from '../classes/APIError'
+import RegexLiteral from './RegexLiteral'
+
+
+const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]', 'CMDR']
+const requiredQuoteFields = [
+  'message',
+  'author',
+  'lastAuthor',
+  'createdAt',
+  'updatedAt',
+]
 
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/u
 export const IRCNickname = /^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}]{1,29})?$/u
-export const languageCode = /^[a-z]{2}-[A-Z]{2}$./u
+export const languageCode = /^[a-z]{2}-[A-Z]{2}$/u
 export const stripeUserId = /cus_[A-Za-z0-9]{14}$/u
 
-const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]', 'CMDR']
 
 // language=JSUnicodeRegexp
 export const FrontierRedeemCode = new RegexLiteral(`^
@@ -62,7 +71,7 @@ export const UUID = new RegexLiteral(`^
  * @param {[string] }value the list of OAuth scopes to validate
  */
 export function OAuthScope (value) {
-  const invalid = value.some((scope) => {
+  const invalid = value.some(() => {
     return true
   })
   if (invalid) {
@@ -99,13 +108,6 @@ export function JSONObject (value) {
   }
 }
 
-const requiredQuoteFields = [
-  'message',
-  'author',
-  'lastAuthor',
-  'createdAt',
-  'updatedAt'
-]
 
 /**
  * Validate whether a value is a valid list of rescue quotes

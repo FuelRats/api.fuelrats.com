@@ -1,5 +1,5 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
+import { ReadPermission } from './View'
 
 /**
  * JSONAPI view for account creation requests

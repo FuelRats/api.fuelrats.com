@@ -1,13 +1,13 @@
-import Document from '.'
 import {
   InternalServerError,
   APIError,
   MethodNotAllowedAPIError,
-  UnprocessableEntityAPIError, ConflictAPIError
+  UnprocessableEntityAPIError, ConflictAPIError,
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
-import Query from '../query'
 import logger from '../logging'
+import Query from '../query'
+import Document from './Document'
 
 /**
  * @classdesc A JSONAPI document render for request errors
@@ -40,20 +40,20 @@ class ErrorDocument extends Document {
         case (error.name === 'SequelizeValidationError'):
           errorAcc.push(...error.errors.map((validationError) => {
             return new UnprocessableEntityAPIError({
-              pointer: `/data/attributes/${validationError.path}`
+              pointer: `/data/attributes/${validationError.path}`,
             })
           }))
           break
 
         case (error.name === 'SequelizeDatabaseError'):
           errorAcc.push(new UnprocessableEntityAPIError({
-            parameter: 'filter'
+            parameter: 'filter',
           }))
           break
 
         case (error.name === 'SequelizeForeignKeyConstraintError'):
           errorAcc.push(new UnprocessableEntityAPIError({
-            pointer: '/data/id'
+            pointer: '/data/id',
           }))
           break
 
@@ -61,7 +61,7 @@ class ErrorDocument extends Document {
           errorAcc.push(...error.errors.map((validationError) => {
             const pointer = validationError.path === 'id' ? '/data/id' : `/data/attributes/${validationError.path}`
             return new ConflictAPIError({
-              pointer
+              pointer,
             })
           }))
           break
@@ -77,11 +77,10 @@ class ErrorDocument extends Document {
             _event: 'error',
             _id: serverError.id,
             _message: error.message,
-            _stack: error.stack
+            _stack: error.stack,
           }, `Server Error: ${error.message}`)
           errorAcc.push(serverError)
         }
-
       }
 
       return errorAcc
@@ -90,7 +89,7 @@ class ErrorDocument extends Document {
     super({
       objects: undefined,
       meta: query.meta,
-      query
+      query,
     })
     this.#query = query
     this.#errors = errorList

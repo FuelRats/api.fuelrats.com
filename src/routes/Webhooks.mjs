@@ -1,14 +1,14 @@
-import { User, Rat } from '../db'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
+import Announcer from '../classes/Announcer'
+import { User, Rat } from '../db'
 import API, {
   IPAuthenticated,
-  POST
+  POST,
 } from './API'
-import Announcer from '../classes/Announcer'
 
 const DrillType = {
   10200: 'rat',
-  10201: 'dispatch'
+  10201: 'dispatch',
 }
 const cmdrNameField = 'customfield_10205'
 
@@ -44,9 +44,9 @@ export default class Webhooks extends API {
         as: 'rats',
         required: true,
         where: {
-          name: { ilike: cmdrName }
-        }
-      }]
+          name: { ilike: cmdrName },
+        },
+      }],
     })
 
     if (!user) {

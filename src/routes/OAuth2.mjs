@@ -1,29 +1,45 @@
-import oauth2orize from 'oauth2orize-koa-fr'
 import crypto from 'crypto'
-import { Token, Client, Code, db, Session } from '../db'
-import { ClientView } from '../view'
-import Permission from '../classes/Permission'
+import fs from 'fs'
+import i18next from 'i18next'
+import oauth2orize from 'oauth2orize-koa-fr'
 import {
   ForbiddenAPIError,
   NotFoundAPIError,
   UnprocessableEntityAPIError,
-  VerificationRequiredAPIError
+  VerificationRequiredAPIError,
 } from '../classes/APIError'
-import i18next from 'i18next'
 import Authentication from '../classes/Authentication'
-import Sessions from './Sessions'
-import fs from 'fs'
+import Mail from '../classes/Mail'
+import Permission from '../classes/Permission'
+import {
+  Token, Client, Code, db, Session,
+} from '../db'
+import sessionEmail from '../emails/session'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { ClientView } from '../view'
 import API, {
   clientAuthenticated,
   authenticated,
   GET,
   POST,
   required,
-  parameters
+  parameters,
 } from './API'
-import DatabaseQuery from '../query/DatabaseQuery'
-import sessionEmail from '../emails/session'
-import Mail from '../classes/Mail'
+import Sessions from './Sessions'
+
+
+/**
+ * Check whether these scopes are valid scopes that represent a permission in the API
+ * @param {[string] }scopes
+ */
+function validateScopes (scopes) {
+  const invalid = scopes.some((scope) => {
+    return Permission.allPermissions.includes(scope) === false && scope !== '*'
+  })
+  if (invalid) {
+    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
+  }
+}
 
 const mail = new Mail()
 const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
@@ -31,7 +47,7 @@ const localisationResources = JSON.parse(fs.readFileSync('localisations.json', '
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
-  resources:  localisationResources
+  resources: localisationResources,
 })
 
 const server = oauth2orize.createServer()
@@ -52,14 +68,14 @@ server.deserializeClient(async (id) => {
 server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq) => {
   validateScopes(areq.scope)
 
-  const clientRedirectUri = redirectUri || client.redirectUri
+  const clientRedirectUri = redirectUri ?? client.redirectUri
 
   const code = await Code.create({
     value: crypto.randomBytes(global.OAUTH_CODE_LENGTH).toString('hex'),
     scope: areq.scope,
     redirectUri: clientRedirectUri,
     clientId: client.id,
-    userId: user.id
+    userId: user.id,
   })
   return code.value
 }))
@@ -71,7 +87,7 @@ server.grant(oauth2orize.grant.token(async (client, user, ares, areq) => {
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
     scope: areq.scope,
     clientId: client.id,
-    userId: user.id
+    userId: user.id,
   })
   return token.value
 }))
@@ -89,7 +105,7 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
     scope: auth.scope,
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
     clientId: client.id,
-    userId: auth.userId
+    userId: auth.userId,
   })
   return token.value
 }))
@@ -107,15 +123,14 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
   const existingSession = await Session.findOne({
     where: {
       ip: ctx.request.ip,
-      userAgent: ctx.state.userAgent
-    }
+      userAgent: ctx.state.userAgent,
+    },
   })
 
   if (!existingSession) {
     await Sessions.createSession(ctx, user)
     throw new VerificationRequiredAPIError({})
   } else if (existingSession.verified === false) {
-
     await mail.send(sessionEmail({ ctx, user, sessionToken: existingSession.code }))
     throw new VerificationRequiredAPIError({})
   }
@@ -124,7 +139,7 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
     clientId: client.id,
     userId: user.id,
-    scope: ['*']
+    scope: ['*'],
   })
 
   return token.value
@@ -133,7 +148,7 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
 /**
  * Class managing OAuth related endpoints
  */
-export default class OAuth2 extends API {
+class OAuth2 extends API {
   /**
    * @inheritdoc
    */
@@ -170,8 +185,8 @@ export default class OAuth2 extends API {
   async revokeAll (ctx) {
     const tokens = await Token.findAll({
       where: {
-        clientId: ctx.state.client.id
-      }
+        clientId: ctx.state.client.id,
+      },
     })
 
     const transaction = await db.transaction()
@@ -208,7 +223,7 @@ export default class OAuth2 extends API {
       user: ctx.user,
       client,
       scopes: Permission.humanReadable({ scopes: ctx.state.oauth2.req.scope, connection: ctx }),
-      scope: ctx.state.oauth2.req.scope.join(' ')
+      scope: ctx.state.oauth2.req.scope.join(' '),
     }
   }
 
@@ -227,10 +242,10 @@ export default class OAuth2 extends API {
  * Validate the redirectUri of an authorize request
  * @endpoint
  */
-export function validateRedirectUri (target, name, descriptor) {
+function validateRedirectUri (target, name, descriptor) {
   const endpoint = descriptor.value
 
-  descriptor.value = async function (...args) {
+  descriptor.value = async function value (...args) {
     const [connection, next] = args
     await server.authorize(async (clientId, redirectUri) => {
       const client = await Client.scope('user').findByPk(clientId)
@@ -241,29 +256,16 @@ export function validateRedirectUri (target, name, descriptor) {
         const query = new DatabaseQuery({ connection })
         const clientView = (new ClientView({ object: client, query })).render()
 
-        const clientRedirectUri = redirectUri || client.redirectUri
+        const clientRedirectUri = redirectUri ?? client.redirectUri
         return [clientView, clientRedirectUri]
-      } else {
-        throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
       }
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
     })(connection, next)
     return endpoint.apply(this, args)
   }
 }
 
-/**
- * Check whether these scopes are valid scopes that represent a permission in the API
- * @param {[string] }scopes
- */
-function validateScopes (scopes) {
-  const invalid = scopes.some((scope) => {
-    return Permission.allPermissions.includes(scope) === false && scope !== '*'
-  })
-  if (invalid) {
-    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
-  }
-}
-
 OAuth2.server = server
 
-
+export default OAuth2
+export { validateRedirectUri }

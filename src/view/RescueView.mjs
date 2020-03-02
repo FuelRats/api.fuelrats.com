@@ -1,7 +1,7 @@
-import { ReadPermission } from './View'
-import RatView from './RatView'
 import DatabaseView from './DatabaseView'
 import EpicView from './EpicView'
+import RatView from './RatView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a Rescue
@@ -91,7 +91,7 @@ export default class RescueView extends DatabaseView {
     return {
       rats: RatView,
       firstLimpet: RatView,
-      epics: EpicView
+      epics: EpicView,
     }
   }
 

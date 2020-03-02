@@ -1,4 +1,3 @@
-
 import log4js from 'log4js'
 import config from '../config'
 
@@ -10,13 +9,13 @@ const logConfig = {
       type: '@log4js-node/slack',
       token: config.slack.token,
       channel_id: 'development',
-      username: config.slack.username
+      username: config.slack.username,
     },
     graylog: {
       type: '@log4js-node/gelf',
       host: config.graylog.host,
       port: config.graylog.port,
-      facility: config.graylog.facility
+      facility: config.graylog.facility,
     },
     email: {
       type: '@log4js-node/smtp',
@@ -24,24 +23,24 @@ const logConfig = {
       sender: 'blackhole@fuelrats.com',
       recipients: 'techrats@fuelrats.com',
       SMTP: config.smtp,
-      sendInterval: 3600
+      sendInterval: 3600,
     },
     syslogFilter: {
       type: 'logLevelFilter',
       appender: 'syslogerr',
-      level: 'error'
-    }
+      level: 'error',
+    },
   },
   categories: {
     default: {
       appenders: ['graylog'],
-      level: 'info'
+      level: 'info',
     },
     fatal: {
       appenders: ['graylog', 'syslogerr', 'email', 'slack'],
-      level: 'error'
-    }
-  }
+      level: 'error',
+    },
+  },
 }
 
 if (process.env.NODE_ENV !== 'production') {

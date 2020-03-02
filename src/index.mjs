@@ -1,28 +1,28 @@
+import fs from 'fs'
+import http from 'http'
 import Koa from 'koa'
-import session from 'koa-session'
+import koaBody from 'koa-body'
 import conditional from 'koa-conditional-get'
 import etag from 'koa-etag'
-import router from './classes/Router'
-import koaBody from 'koa-body'
-import TrafficControl from './classes/TrafficControl'
-import http from 'http'
-import Document from './Documents/Document'
-import { promisify } from 'util'
-import Authentication from './classes/Authentication'
-import oauth2 from './routes/OAuth2'
 import querystring from 'koa-qs'
-import WebSocket from './classes/WebSocket'
-import { db } from './db'
+import session from 'koa-session'
 import npid from 'npid'
-import config from './config'
-import logger from './logging'
-import * as routes from './routes'
-import Permission from './classes/Permission'
+import { promisify } from 'util'
+import Document from './Documents/Document'
 import ErrorDocument from './Documents/ErrorDocument'
-import Query from './query'
+import { TooManyRequestsAPIError, ImATeapotAPIError, InternalServerError } from './classes/APIError'
+import Authentication from './classes/Authentication'
+import Permission from './classes/Permission'
+import router from './classes/Router'
 import StatusCode from './classes/StatusCode'
-import fs from 'fs'
-import { TooManyRequestsAPIError, ImATeapotAPIError } from './classes/APIError'
+import TrafficControl from './classes/TrafficControl'
+import WebSocket from './classes/WebSocket'
+import config from './config'
+import { db } from './db'
+import logger from './logging'
+import Query from './query'
+import * as routes from './routes'
+import oauth2 from './routes/OAuth2'
 
 const packageInfo = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
@@ -37,6 +37,7 @@ global.WEBSOCKET_IDENTIFIER_ROUNDS = 16
 global.BCRYPT_ROUNDS_COUNT = 16
 global.OAUTH_CODE_LENGTH = 24
 global.OAUTH_TOKEN_LENTH = 32
+global.UUID_VERSION = 4
 
 try {
   npid.remove('api.pid')
@@ -55,7 +56,7 @@ app.keys = [config.server.cookieSecret]
 const sessionConfiguration = {
   key: 'fuelrats:session',
   overwrite: true,
-  signed: true
+  signed: true,
 }
 
 app.use(conditional())
@@ -63,7 +64,7 @@ app.use(etag())
 app.use(session(sessionConfiguration, app))
 app.use(koaBody({
   strict: false,
-  multipart: true
+  multipart: true,
 }))
 
 /**
@@ -133,7 +134,7 @@ app.use(async (ctx, next) => {
       _headers: ctx.request.headers,
       _path: ctx.request.path,
       _query: ctx.query,
-      _method: ctx.request.req.method
+      _method: ctx.request.req.method,
     }, `Request by ${ctx.request.ip} to ${ctx.request.path}`)
 
 
@@ -163,10 +164,11 @@ app.use(async (ctx, next) => {
         _headers: ctx.request.headers,
         _path: ctx.request.path,
         _query: ctx.query,
-        _method: ctx.request.req.method
+        _method: ctx.request.req.method,
       }, 'Router received a request that could not be processed')
-    }
 
+      throw new InternalServerError({})
+    }
   } catch (errors) {
     const query = new Query({ connection: ctx })
     const errorDocument = new ErrorDocument({ query, errors })
@@ -193,7 +195,7 @@ router.post(
   Authentication.isAuthenticated,
   transactionLoader,
   decision,
-  oauth2.authorizationDecisionHandler
+  oauth2.authorizationDecisionHandler,
 )
 
 router.post('/oauth2/token',
@@ -204,7 +206,7 @@ router.post('/oauth2/token',
 
 app.use(router.routes())
 app.use(router.allowedMethods({
-  throw: true
+  throw: true,
 }))
 
 
@@ -220,16 +222,16 @@ server.wss = new WebSocket({ server, trafficManager: traffic })
     await listen(config.server.port, config.server.hostname)
     logger.info({
       GELF: true,
-      _event: 'startup'
+      _event: 'startup',
     }, `HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
   } catch (error) {
     logger.fatal({
       GELF: true,
       _event: 'error',
       _message: error.message,
-      _stack: error.stack
+      _stack: error.stack,
     })
   }
-})()
+}())
 
 export default endpoints

@@ -17,6 +17,15 @@ export default class RescueRats extends Model {
   @column(type.UUID)
   static ratId = undefined
 
+  @column(type.UUID, { allowNull: true })
+  static assignerUserId = undefined
+
+  @column(type.UUID, { allowNull: true })
+  static assignerClientId = undefined
+
+  @column(type.RANGE(type.DATE))
+  static temporalPeriod = [type.now, undefined]
+
   /**
    * @inheritdoc
    */
@@ -24,6 +33,8 @@ export default class RescueRats extends Model {
     super.associate(models)
     models.RescueRats.belongsTo(models.Rescue, { foreignKey: 'rescueId' })
     models.RescueRats.belongsTo(models.Rat, { foreignKey: 'ratId' })
+    models.RescueRats.belongsTo(models.User, { as: 'assignerUser', foreignKey: 'assignerUserId' })
+    models.RescueRats.belongsTo(models.Client, { as: 'assignerClient', foreignKey: 'assignerClientId' })
   }
 }
 

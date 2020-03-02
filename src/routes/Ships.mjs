@@ -1,6 +1,12 @@
-
-import { Ship, db } from '../db'
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
+import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { Ship, db } from '../db'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { ShipView, RatView } from '../view'
 import {
   authenticated,
   GET,
@@ -9,16 +15,9 @@ import {
   PATCH,
   DELETE,
   parameters,
-  WritePermission
+  WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { websocket } from '../classes/WebSocket'
-import DatabaseQuery from '../query/DatabaseQuery'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { ShipView, RatView } from '../view'
-import StatusCode from '../classes/StatusCode'
-import Permission from '../classes/Permission'
-import { DocumentViewType } from '../Documents'
 
 
 const availableShipIdQuery = `
@@ -89,7 +88,7 @@ export default class Ships extends APIResource {
     const result = await super.create({
       ctx,
       databaseType: Ship,
-      overrideFields: { shipId }
+      overrideFields: { shipId },
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -105,7 +104,7 @@ export default class Ships extends APIResource {
   @websocket('ships', 'update')
   @authenticated
   async update (ctx) {
-    const result = await super.update({ ctx, databaseType: Ship, updateSearch: { id:ctx.params.id } })
+    const result = await super.update({ ctx, databaseType: Ship, updateSearch: { id: ctx.params.id } })
 
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: ShipView })
@@ -136,7 +135,7 @@ export default class Ships extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Ship,
-      relationship: 'rat'
+      relationship: 'rat',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -155,7 +154,7 @@ export default class Ships extends APIResource {
       ctx,
       databaseType: Ship,
       change: 'patch',
-      relationship: 'rat'
+      relationship: 'rat',
     })
 
     ctx.response.status = StatusCode.noContent
@@ -172,7 +171,7 @@ export default class Ships extends APIResource {
       shipId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
-      deletedAt: WritePermission.internal
+      deletedAt: WritePermission.internal,
     }
   }
 
@@ -208,13 +207,13 @@ export default class Ships extends APIResource {
           return (hasEntityRat && hasNewRat) || Permission.granted({ permissions: ['rats.write'], connection })
         },
 
-        add ({ entity, id }) {
-          return entity.setRat(id)
+        add ({ entity, id, transaction }) {
+          return entity.setRat(id, { transaction })
         },
 
-        patch ({ entity, id }) {
-          return entity.setRat(id)
-        }
+        patch ({ entity, id, transaction }) {
+          return entity.setRat(id, { transaction })
+        },
       }
     }
     throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
@@ -225,7 +224,7 @@ export default class Ships extends APIResource {
    */
   get relationTypes () {
     return {
-      'rat': 'rats'
+      rat: 'rats',
     }
   }
 }

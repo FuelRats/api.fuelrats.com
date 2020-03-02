@@ -1,9 +1,9 @@
-import config from '../config'
-import enumerable from '../classes/Enum'
-import View from '../view'
-import Query from '../query'
-import { URL } from 'url'
 import fs from 'fs'
+import { URL } from 'url'
+import config from '../config'
+import enumerable from '../helpers/Enum'
+import Query from '../query'
+import View from '../view'
 
 const jsonApiVersion = '1.0'
 
@@ -13,7 +13,7 @@ const packageInfo = JSON.parse(fs.readFileSync('package.json', 'utf8'))
  * @classdesc A JSONAPI Document renderer
  * @class
  */
-export default class Document  {
+class Document {
   #objects = undefined
   #meta = undefined
   #type = undefined
@@ -29,7 +29,9 @@ export default class Document  {
    * @param {Query} arg.query the request query to use in this document
    * @param {DocumentViewType} arg.view A DocumentViewType enum describing the type of view this document should have
    */
-  constructor ({ objects, type, meta = {}, query, view = DocumentViewType.collection }) {
+  constructor ({
+    objects, type, meta = {}, query, view = DocumentViewType.collection,
+  }) {
     this.#meta = meta
     this.#objects = objects
     this.#type = type
@@ -51,7 +53,8 @@ export default class Document  {
           return this.objects.map((object) => {
             return (new this.#type({ object, query: this.#query })).relationshipView
           })
-        } else if (this.#objects) {
+        }
+        if (this.#objects) {
           return (new this.#type({ object: this.objects, query: this.#query })).relationshipView
         }
         return undefined
@@ -101,7 +104,7 @@ export default class Document  {
    */
   get meta () {
     if (this.#view === DocumentViewType.individual) {
-      return this.#meta
+      return { ...this.#meta, ...this.defaultMeta }
     }
 
     return { ...this.#meta, ...this.pageMeta, ...this.defaultMeta }
@@ -120,12 +123,14 @@ export default class Document  {
     const includes = objects.reduce((acc, object) => {
       return acc.concat((new Type({
         object,
-        query: this.#query
+        query: this.#query,
       })).generateIncludes({ rootType: this.#type.type }))
     }, [])
 
     return Object.values(includes.reduce((acc, include) => {
-      acc[include.id] = include
+      if (!acc[include.id]) {
+        acc[include.id] = include
+      }
       return acc
     }, {}))
   }
@@ -138,9 +143,8 @@ export default class Document  {
     if (this.#view === DocumentViewType.individual) {
       const singleObjectId = (new this.#type({ object: this.#objects })).id
       return `${config.server.externalUrl}/${this.#type.type}/${singleObjectId}`
-    } else {
-      return `${config.server.externalUrl}/${this.#type.type}`
     }
+    return `${config.server.externalUrl}/${this.#type.type}`
   }
 
   /**
@@ -149,11 +153,11 @@ export default class Document  {
    */
   get links () {
     return {
-      self: this.currentCursor,
+      self: this.currentCursor || this.self,
       first: this.firstCursor,
       last: this.lastCursor,
       previous: this.previousCursor,
-      next: this.nextCursor
+      next: this.nextCursor,
     }
   }
 
@@ -167,18 +171,18 @@ export default class Document  {
       const {
         total: rateLimitTotal,
         remaining: rateLimitRemaining,
-        reset: rateLimitReset
+        reset: rateLimitReset,
       } = this.#query.connection.state.traffic
 
       traffic = {
         rateLimitTotal,
         rateLimitRemaining,
-        rateLimitReset
+        rateLimitReset,
       }
     }
 
     const meta = {
-      apiVersion: packageInfo.version
+      apiVersion: packageInfo.version,
     }
 
     return { ...meta, ...traffic }
@@ -196,7 +200,7 @@ export default class Document  {
       nextPage: this.nextPage,
       offset: this.offset,
       limit: this.limit,
-      total: this.total
+      total: this.total,
     }
   }
 
@@ -366,8 +370,8 @@ export default class Document  {
     return {
       version: jsonApiVersion,
       meta: {
-        apiVersion: packageInfo.version
-      }
+        apiVersion: packageInfo.version,
+      },
     }
   }
 
@@ -381,7 +385,7 @@ export default class Document  {
         jsonapi: this.jsonapi,
         meta: this.meta,
         links: this.links,
-        errors: this.errors
+        errors: this.errors,
       }
     }
     return {
@@ -390,7 +394,7 @@ export default class Document  {
       links: this.links,
       // eslint-disable-next-line no-restricted-syntax
       data: this.data || null,
-      included: this.included
+      included: this.included,
     }
   }
 
@@ -404,13 +408,13 @@ export default class Document  {
         jsonapi: this.jsonapi,
         meta: this.meta,
         links: this.links,
-        errors: this.errors
+        errors: this.errors,
       }
     }
     return {
       jsonapi: this.jsonapi,
       meta: this.meta,
-      links: this.links
+      links: this.links,
     }
   }
 
@@ -424,7 +428,7 @@ export default class Document  {
         jsonapi: this.jsonapi,
         meta: this.meta,
         links: this.links,
-        errors: this.errors
+        errors: this.errors,
       }
     }
     return {
@@ -432,7 +436,7 @@ export default class Document  {
       meta: this.meta,
       links: this.links,
       // eslint-disable-next-line no-restricted-syntax
-      data: this.data || null
+      data: this.data || null,
     }
   }
 
@@ -462,7 +466,6 @@ export default class Document  {
   }
 }
 
-@enumerable
 /**
  * Enumerable representing the different view types a Document can have
  * @readonly
@@ -472,7 +475,8 @@ export default class Document  {
  * @property {symbol} meta Document represents only meta data for a resource
  * @property {symbol} relationship Document represents only relationships for a resource
  */
-export class DocumentViewType {
+@enumerable()
+class DocumentViewType {
   static collection
   static individual
   static meta
@@ -491,3 +495,6 @@ class NotImplementedError extends Error {
     super(`${description} requires implementation by subclass`)
   }
 }
+
+export default Document
+export { DocumentViewType }

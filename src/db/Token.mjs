@@ -1,4 +1,4 @@
-import { OAuthScope } from '../classes/Validators'
+import { OAuthScope } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 const oAuthScopeMaxLength = 128
@@ -40,12 +40,12 @@ export default class Token extends Model {
           {
             model: models.User,
             as: 'user',
-            required: true
-          }
-        ]
+            required: true,
+          },
+        ],
       }, {
-        override: true
-      }]
+        override: true,
+      }],
     }
   }
 

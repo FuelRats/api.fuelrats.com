@@ -1,6 +1,6 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
 import NicknameView from './NicknameView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a Anniversary
@@ -61,7 +61,7 @@ export default class AnniversaryView extends DatabaseView {
    */
   get relationships () {
     return {
-      nicknames: NicknameView
+      nicknames: NicknameView,
     }
   }
 

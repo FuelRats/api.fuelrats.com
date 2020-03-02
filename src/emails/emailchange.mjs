@@ -14,7 +14,7 @@ export default function emailChangeEmail ({ email, name, newEmail }) {
       name,
       intro: `Your Fuel Rats registered email has been changed to ${newEmail}`,
       outro: 'If this change was not requested by you please contact support@fuelrats.com',
-      signature: 'Sincerely'
-    }
+      signature: 'Sincerely',
+    },
   }
 }

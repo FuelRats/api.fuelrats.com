@@ -1,4 +1,4 @@
-import { JSONObject } from '../classes/Validators'
+import { JSONObject } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 @table({ paranoid: true })
@@ -40,12 +40,12 @@ export default class Rat extends Model {
         include: [{
           model: models.User.scope('norelations'),
           as: 'user',
-          required: false
+          required: false,
         }, {
           model: models.Ship,
           as: 'ships',
-          required: false
-        }]
+          required: false,
+        }],
       }, { override: true }],
 
       stats: [{}],
@@ -54,24 +54,24 @@ export default class Rat extends Model {
         include: [{
           model: models.User.scope('norelations'),
           as: 'user',
-          required: false
+          required: false,
         }, {
           model: models.Ship,
           as: 'ships',
-          required: false
+          required: false,
         }, {
           model: models.Rescue.scope(undefined),
           as: 'firstLimpet',
-          required: false
+          required: false,
         }, {
           model: models.Rescue.scope(undefined),
           as: 'rescues',
           required: false,
           through: {
-            attributes: []
-          }
-        }]
-      }]
+            attributes: [],
+          },
+        }],
+      }],
     }
   }
 
@@ -82,7 +82,7 @@ export default class Rat extends Model {
     super.associate(models)
     models.Rat.belongsTo(models.User, {
       as: 'user',
-      foreignKey: 'userId'
+      foreignKey: 'userId',
     })
 
     models.Rat.belongsToMany(models.Rescue, {
@@ -90,15 +90,15 @@ export default class Rat extends Model {
       foreignKey: 'ratId',
       through: {
         model: models.RescueRats,
-        foreignKey: 'ratId'
-      }
+        foreignKey: 'ratId',
+      },
     })
 
     models.Rat.hasMany(models.Rescue, { foreignKey: 'firstLimpetId', as: 'firstLimpet' })
 
     models.Rat.hasMany(models.Ship, {
       foreignKey: 'ratId',
-      as: 'ships'
+      as: 'ships',
     })
   }
 }

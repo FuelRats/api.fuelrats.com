@@ -1,9 +1,10 @@
-import knex from 'knex'
-import config from '../config'
 import bcrypt from 'bcrypt'
-import { ConflictAPIError, NotFoundAPIError } from './APIError'
 import DateTime from 'date-fns'
+import knex from 'knex'
+import UUID from 'pure-uuid'
+import config from '../config'
 import { User, Rat } from '../db'
+import { ConflictAPIError, NotFoundAPIError } from './APIError'
 
 const { database, username, hostname, port } = config.anope
 const anopeBcryptRounds = 10
@@ -16,15 +17,15 @@ const mysql = knex({
     host: hostname,
     port,
     user: username,
-    database
+    database,
   },
   pool: {
     afterCreate (conn, done) {
       conn.query('ALTER TABLE anope_db_NickAlias ADD COLUMN IF NOT EXISTS rat_id BINARY(16);', (err) => {
         done(err, conn)
       })
-    }
-  }
+    },
+  },
 })
 
 
@@ -32,7 +33,7 @@ const mysql = knex({
  * @classdesc Class managing the interface to Anope
  * @class
  */
-export default class Anope {
+class Anope {
   /**
    * Get an account entry from Anope
    * @param {string} email The user's email
@@ -98,9 +99,9 @@ export default class Anope {
       users = await User.findAll({
         where: {
           email: {
-            like: { any: emails }
-          }
-        }
+            like: { any: emails },
+          },
+        },
       })
     }
 
@@ -119,21 +120,23 @@ export default class Anope {
    * @returns {Promise<User>} user object with mapped nicknames
    */
   static async mapNickname (user) {
+    const ircUser = user
+
     const [results] = await mysql.raw(`
         SELECT *
         FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE lower(email) = lower(:email)
     `, {
-      email: user.email
+      email: user.email,
     })
 
     // noinspection JSUndefinedPropertyAssignment
-    user.nicknames = results.map((result) => {
+    ircUser.nicknames = results.map((result) => {
       return new Nickname(result, user)
     })
 
-    return user
+    return ircUser
   }
 
   /**
@@ -142,6 +145,7 @@ export default class Anope {
    * @returns {Promise<[User]>} list of user objects with mapped nicknames
    */
   static async mapNicknames (users) {
+    const ircUsers = users
     if (users.rows.length === 0) {
       return users
     }
@@ -156,11 +160,11 @@ export default class Anope {
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE lower(email) IN (:emails)
     `, {
-      emails: userEmails
+      emails: userEmails,
     })
 
-    users.rows = users.rows.map((user) => {
-      user.nicknames = results.reduce((nicknames, result) => {
+    ircUsers.rows = users.rows.map((user) => {
+      ircUsers.nicknames = results.reduce((nicknames, result) => {
         if (result.email.toLowerCase() === user.email.toLowerCase()) {
           const nickname = new Nickname(result, user)
           nicknames.push(nickname)
@@ -171,7 +175,7 @@ export default class Anope {
       return user
     })
 
-    return users
+    return ircUsers
   }
 
   /**
@@ -194,8 +198,8 @@ export default class Anope {
 
     account.user = await User.findOne({
       where: {
-        email: { iLike: account.email }
-      }
+        email: { iLike: account.email },
+      },
     })
     return account
   }
@@ -210,7 +214,7 @@ export default class Anope {
     await mysql('anope_db_NickCore')
       .whereRaw('lower(email) = lower(?)', [currentEmail])
       .update({
-        email: newEmail
+        email: newEmail,
       })
   }
 
@@ -267,7 +271,7 @@ export default class Anope {
     await mysql('anope_db_NickCore')
       .whereRaw('lower(email) = lower(?)', [email])
       .update({
-        pass: `bcrypt:${encryptedPassword}`
+        pass: `bcrypt:${encryptedPassword}`,
       })
   }
 
@@ -314,18 +318,20 @@ export default class Anope {
    * @param {string} [arg.ratId] the id of an optional Rat to bind to this nickname
    * @returns {Promise<Nickname>} returns a newly created Nickname entry
    */
-  static addNewUser ({ email, nick, encryptedPassword, vhost, ratId }) {
+  static addNewUser ({
+    email, nick, encryptedPassword, vhost, ratId,
+  }) {
     return mysql.transaction(async (transaction) => {
       if (ratId) {
         const rat = await Rat.findOne({
           where: {
-            id: ratId
-          }
+            id: ratId,
+          },
         })
 
         if (!rat) {
           throw new NotFoundAPIError({
-            pointer: '/data/attributes/ratId'
+            pointer: '/data/attributes/ratId',
           })
         }
       }
@@ -334,11 +340,10 @@ export default class Anope {
       if (existingNickname) {
         if (existingNickname.email.toLowerCase() === email.toLowerCase()) {
           return existingNickname
-        } else {
-          throw new ConflictAPIError({
-            pointer: '/data/attributes/nickname'
-          })
         }
+        throw new ConflictAPIError({
+          pointer: '/data/attributes/nickname',
+        })
       }
 
       const createdUnixTime = Math.floor(Date.now() / 1000)
@@ -355,7 +360,7 @@ export default class Anope {
           display: nick,
           email,
           memomax: 20,
-          pass: encryptedPassword
+          pass: encryptedPassword,
         }).into('anope_db_NickCore')
       }
 
@@ -366,7 +371,7 @@ export default class Anope {
         vhost_creator: 'API',
         vhost_time: createdUnixTime,
         vhost_host: vhost,
-        rat_id: ratId
+        rat_id: ratId,
       }).into('anope_db_NickAlias')
 
       await transaction.commit()
@@ -501,7 +506,7 @@ class Nickname {
    * @param {object} user the user that this Nickname belongs to
    */
   constructor (obj, user = undefined) {
-    this.id = obj.id
+    this.id = new UUID(5, 'ns:URL', `https://api.fuelrats.com/nicknames/${obj.id}`)
     this.lastQuit = obj.last_quit
     this.lastRealHost = obj.last_realhost
     this.lastRealName = obj.last_realname
@@ -510,7 +515,7 @@ class Nickname {
     this.display = obj.nc
     this.nick = obj.nick
     this.createdAt = new Date(obj.time_registered * 1000)
-    this.updatedAt = DateTime.parse(obj.timestamp, 'yyyy-MM-DD HH:mm:ss', (new Date()))
+    this.updatedAt = obj.timestamp
     this.vhostSetBy = obj.vhost_creator
     this.vhost = obj.vhost_host
     this.vhostSetAt = new Date(obj.vhost_time * 1000)
@@ -521,5 +526,8 @@ class Nickname {
     this.ratId = obj.rat_id
 
     this.user = user
+    this.rat = undefined
   }
 }
+
+export default Anope

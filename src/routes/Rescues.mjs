@@ -1,9 +1,18 @@
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
+import {
+  NotFoundAPIError,
+  UnsupportedMediaAPIError,
+} from '../classes/APIError'
+import Announcer from '../classes/Announcer'
+import Event from '../classes/Event'
+import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
 import { Rescue, db } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
-import {
-  UnsupportedMediaAPIError
-} from '../classes/APIError'
 
+import { RescueView, RatView } from '../view'
 import {
   permissions,
   authenticated,
@@ -13,17 +22,9 @@ import {
   PATCH,
   DELETE,
   parameters,
-  WritePermission
+  WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { websocket } from '../classes/WebSocket'
-import { RescueView, RatView } from '../view'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DocumentViewType } from '../Documents/Document'
-import Permission from '../classes/Permission'
-import StatusCode from '../classes/StatusCode'
-import Event from '../classes/Event'
-import Announcer from '../classes/Announcer'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -83,7 +84,15 @@ export default class Rescues extends APIResource {
   @authenticated
   @permissions('rescues.write')
   async create (ctx) {
-    const result = await super.create({ ctx, databaseType: Rescue, allowId: true })
+    const result = await super.create({
+      ctx,
+      databaseType: Rescue,
+      allowId: true,
+      overrideFields: {
+        lastEditUserId: ctx.state.user.id,
+        lastEditClientId: ctx.state.clientId,
+      },
+    })
 
     const query = new DatabaseQuery({ connection: ctx })
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, { id: result.id })
@@ -100,12 +109,22 @@ export default class Rescues extends APIResource {
   @authenticated
   @parameters('id')
   async update (ctx) {
-    const result = await super.update({ ctx, databaseType: Rescue, updateSearch: { id:ctx.params.id } })
+    const result = await super.update({
+      ctx,
+      databaseType: Rescue,
+      updateSearch: { id: ctx.params.id },
+      overrideFields: {
+        lastEditUserId: ctx.state.user.id,
+        lastEditClientId: ctx.state.clientId,
+      },
+    })
 
-    if (Reflect.has(ctx.data.data.attributes, 'outcome')) {
-      const caseId = result.commandIdentifier || result.id
-      await Announcer.sendRescueMessage({ message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
-      has been completed by ${ctx.state.user.preferredRat().name}` })
+    if (ctx.data.data.attributes.outcome) {
+      const caseId = result.commandIdentifier ?? result.id
+      await Announcer.sendRescueMessage({
+        message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
+      has been completed by ${ctx.state.user.preferredRat().name}`,
+      })
 
       const [[{ count }]] = await db.query(rescueCountQuery)
       const rescueCount = Number(count)
@@ -128,10 +147,19 @@ export default class Rescues extends APIResource {
   @authenticated
   @permissions('rescues.write')
   async delete (ctx) {
-    await super.delete({ ctx, databaseType: Rescue })
+    const rescue = await super.findById({ ctx, databaseType: Rescue, requirePermission: false })
+
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    await Rescue.update({
+      deletedAt: new Date(),
+      lastModifiedById: ctx.state.user.id,
+    }, { id: rescue.id })
 
     Event.broadcast('fuelrats.rescuedelete', ctx.state.user, {
-      id: ctx.params.id
+      id: ctx.params.id,
     })
 
     ctx.response.status = StatusCode.noContent
@@ -151,7 +179,7 @@ export default class Rescues extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Rescue,
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -170,11 +198,11 @@ export default class Rescues extends APIResource {
       ctx,
       databaseType: Rescue,
       change: 'add',
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id
+      id: ctx.params.id,
     })
 
     ctx.response.status = StatusCode.noContent
@@ -193,11 +221,11 @@ export default class Rescues extends APIResource {
       ctx,
       databaseType: Rescue,
       change: 'patch',
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id
+      id: ctx.params.id,
     })
 
     ctx.response.status = StatusCode.noContent
@@ -216,11 +244,11 @@ export default class Rescues extends APIResource {
       ctx,
       databaseType: Rescue,
       change: 'remove',
-      relationship: 'rats'
+      relationship: 'rats',
     })
 
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id
+      id: ctx.params.id,
     })
 
     ctx.response.status = StatusCode.noContent
@@ -238,7 +266,7 @@ export default class Rescues extends APIResource {
     const result = await this.relationshipView({
       ctx,
       databaseType: Rescue,
-      relationship: 'firstLimpet'
+      relationship: 'firstLimpet',
     })
 
     const query = new DatabaseQuery({ connection: ctx })
@@ -257,11 +285,11 @@ export default class Rescues extends APIResource {
       ctx,
       databaseType: Rescue,
       change: 'patch',
-      relationship: 'firstLimpet'
+      relationship: 'firstLimpet',
     })
 
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id
+      id: ctx.params.id,
     })
 
     ctx.response.status = StatusCode.noContent
@@ -283,12 +311,13 @@ export default class Rescues extends APIResource {
       platform: WritePermission.group,
       system: WritePermission.group,
       title: WritePermission.sudo,
+      status: WritePermission.group,
       unidentifiedRats: WritePermission.group,
       outcome: WritePermission.group,
       quotes: WritePermission.group,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
-      deletedAt: WritePermission.internal
+      deletedAt: WritePermission.internal,
     }
   }
 
@@ -332,21 +361,39 @@ export default class Rescues extends APIResource {
           hasPermission (connection, entity) {
             return this.isSelf({ ctx: connection, entity }) || Permission.granted({
               permissions: ['rescues.write'],
-              connection
+              connection,
             })
           },
 
-          add ({ entity, ids }) {
-            return entity.addRats(ids)
+          async add ({ entity, ids, ctx, transaction }) {
+            await entity.addRats(ids, {
+              through: {
+                assignerUserId: ctx.state.user.id,
+                assignerClientId: ctx.state.clientId,
+              },
+              transaction,
+            })
+
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
           },
 
-          patch ({ entity, ids }) {
-            return entity.setRats(ids)
+          async patch ({ entity, ids, ctx, transaction }) {
+            await entity.setRats(ids, {
+              through: { assignerUserId: ctx.state.user.id, assignerClientId: ctx.state.clientId },
+              transaction,
+            })
+
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
           },
 
-          remove ({ entity, ids }) {
-            return entity.removeRats(ids)
-          }
+          async remove ({ entity, ids, ctx, transaction }) {
+            await entity.removeRats(ids, { transaction })
+
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
+          },
         }
 
       case 'firstLimpet':
@@ -356,13 +403,16 @@ export default class Rescues extends APIResource {
           hasPermission (connection, entity) {
             return this.isSelf({ ctx: connection, entity }) || Permission.granted({
               permissions: ['rescues.write'],
-              connection
+              connection,
             })
           },
 
-          patch ({ entity, id }) {
-            return entity.setFirstLimpet(id)
-          }
+          patch ({ entity, id, ctx, transaction }) {
+            const rescue = entity
+            rescue.firstLimpetId = id
+            rescue.setChangelogDetails(ctx)
+            return rescue.save({ transaction })
+          },
         }
 
       default:
@@ -375,8 +425,8 @@ export default class Rescues extends APIResource {
    */
   get relationTypes () {
     return {
-      'rats': 'rats',
-      'firstLimpet': 'rats'
+      rats: 'rats',
+      firstLimpet: 'rats',
     }
   }
 }

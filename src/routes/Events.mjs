@@ -1,17 +1,17 @@
-import API, {
-  authenticated,
-  POST
-} from './API'
 import {
   BadRequestAPIError,
   ConflictAPIError,
   ForbiddenAPIError,
   NotFoundAPIError,
-  UnprocessableEntityAPIError
+  UnprocessableEntityAPIError,
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
-import { Client } from '../db'
 import WebSocket, { websocket } from '../classes/WebSocket'
+import { Client } from '../db'
+import API, {
+  authenticated,
+  POST,
+} from './API'
 
 /**
  * WebSocket event subscription endpoint
@@ -35,7 +35,7 @@ export default class Events extends API {
 
     if (!Array.isArray(events)) {
       throw new UnprocessableEntityAPIError({
-        parameter: 'events'
+        parameter: 'events',
       })
     }
 
@@ -62,7 +62,7 @@ export default class Events extends API {
 
     if (!Array.isArray(events)) {
       throw new UnprocessableEntityAPIError({
-        parameter: 'events'
+        parameter: 'events',
       })
     }
 
@@ -99,19 +99,19 @@ export default class Events extends API {
 
     const client = await Client.findOne({
       where: {
-        id: ctx.state.clientId
-      }
+        id: ctx.state.clientId,
+      },
     })
 
     if (!client) {
       throw new BadRequestAPIError({
-        parameter: 'event'
+        parameter: 'event',
       })
     }
 
     if (!client.namespaces.includes(namespace)) {
       throw new ForbiddenAPIError({
-        parameter: 'event'
+        parameter: 'event',
       })
     }
 
@@ -120,7 +120,7 @@ export default class Events extends API {
     WebSocket.instance.onBroadcast({
       event,
       sender: ctx.state.user.id,
-      data
+      data,
     })
 
     ctx.response.status = StatusCode.noContent

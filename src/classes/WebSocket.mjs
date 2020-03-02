@@ -1,23 +1,23 @@
-import logger from '../logging'
-import {
-  NotFoundAPIError,
-  TooManyRequestsAPIError
-} from './APIError'
+import UUID from 'pure-uuid'
+import { URL } from 'url'
 import ws from 'ws'
+import Document from '../Documents/Document'
+import ErrorDocument from '../Documents/ErrorDocument'
 import config from '../config'
 import { User } from '../db'
-
-import { URL } from 'url'
-import UUID from 'pure-uuid'
-import Authentication from './Authentication'
-import Permission from './Permission'
-import Document from '../Documents/Document'
-import { Context } from './Context'
-import TrafficControl from './TrafficControl'
-import StatusCode from './StatusCode'
+import logger from '../logging'
 import Query from '../query/Query'
-import ErrorDocument from '../Documents/ErrorDocument'
-import { listen } from '../classes/Event'
+import {
+  NotFoundAPIError,
+  TooManyRequestsAPIError,
+} from './APIError'
+
+import Authentication from './Authentication'
+import { Context } from './Context'
+import { listen } from './Event'
+import Permission from './Permission'
+import StatusCode from './StatusCode'
+import TrafficControl from './TrafficControl'
 
 const maximumMessageLength = 512000
 
@@ -42,7 +42,7 @@ export default class WebSocket {
       clientTracking: true,
       handleProtocols: () => {
         return acceptedProtocols
-      }
+      },
     })
 
     WebSocket.wss.shouldHandle = (request) => {
@@ -56,7 +56,7 @@ export default class WebSocket {
 
     WebSocket.wss.on('connection', async (client, req) => {
       client.req = req
-      client.clientId = new UUID(4)
+      client.clientId = new UUID(global.UUID_VERSION)
       client.subscriptions = []
 
 
@@ -89,7 +89,7 @@ export default class WebSocket {
           logger.debug({
             GELF: true,
             _event: 'request',
-            _message: message
+            _message: message,
           }, 'Failed to parse incoming websocket message')
           return undefined
         }
@@ -114,11 +114,14 @@ export default class WebSocket {
 
     ctx.state.traffic = this.traffic.validateRateLimit({ connection: ctx, increase: false })
 
-    WebSocket.send({ client, message: [
-      'connection',
-      ctx.status,
-      result.render()
-    ] })
+    WebSocket.send({
+      client,
+      message: [
+        'connection',
+        ctx.status,
+        result.render(),
+      ],
+    })
   }
 
   /**
@@ -132,7 +135,6 @@ export default class WebSocket {
   async onMessage ({ client, data, message }) {
     let [state, endpoint, query, body] = data
     if (!state || !endpoint || typeof state !== 'string') {
-
       client.terminate()
       return
     }
@@ -147,7 +149,7 @@ export default class WebSocket {
       _ip: ctx.request.ip,
       _state: state,
       _endpoint: endpoint.join(':'),
-      _query: query
+      _query: query,
     }, `Websocket Message by ${ctx.request.ip}`)
 
     const { representing } = ctx.query
@@ -173,7 +175,7 @@ export default class WebSocket {
           _ip: ctx.request.ip,
           _state: state,
           _endpoint: endpoint.join(':'),
-          _query: query
+          _query: query,
         }, 'Websocket router received a response from the endpoint that could not be processed')
       }
     } catch (errors) {
@@ -183,11 +185,14 @@ export default class WebSocket {
       ctx.status = errorDocument.httpStatus
       ctx.body = errorDocument.render()
     } finally {
-      WebSocket.send({ client, message: [
-        state,
-        ctx.status,
-        ctx.body
-      ] })
+      WebSocket.send({
+        client,
+        message: [
+          state,
+          ctx.status,
+          ctx.body,
+        ],
+      })
     }
   }
 
@@ -220,11 +225,14 @@ export default class WebSocket {
       return typeof client.user !== 'undefined'
     })
 
-    WebSocket.broadcast({ clients, message: [
-      this.event,
-      user.id,
-      data
-    ] })
+    WebSocket.broadcast({
+      clients,
+      message: [
+        this.event,
+        user.id,
+        data,
+      ],
+    })
   }
 
   /**
@@ -238,11 +246,14 @@ export default class WebSocket {
     const clients = [...WebSocket.wss.clients].filter((client) => {
       return client.subscriptions.includes(event)
     })
-    WebSocket.broadcast({ clients, message: [
-      event,
-      sender,
-      data
-    ] })
+    WebSocket.broadcast({
+      clients,
+      message: [
+        event,
+        sender,
+        data,
+      ],
+    })
   }
 
   /**
@@ -258,7 +269,7 @@ export default class WebSocket {
       logger.error({
         GELF: true,
         _event: 'error',
-        _message: message
+        _message: message,
       }, 'Failed to send websocket message')
     }
   }
@@ -309,7 +320,7 @@ export default class WebSocket {
  * @returns {Function} An ESNext decorator function
  */
 export function websocket (...route) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     WebSocket.addRoute({ route, method: descriptor.value })
   }
 }

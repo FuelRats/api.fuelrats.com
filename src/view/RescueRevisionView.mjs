@@ -1,30 +1,29 @@
 import DatabaseView from './DatabaseView'
+import RescueView from './RescueView'
 import UserView from './UserView'
 import { ReadPermission } from './View'
 
 /**
- * JSONAPI View for an OAuth client
+ * Get JSONAPI view for a rescue revision
  */
-export default class ClientView extends DatabaseView {
+export default class RescueRevisionView extends DatabaseView {
   /**
    * @inheritdoc
    */
   static get type () {
-    return 'clients'
+    return 'rescue-revisions'
   }
 
   /**
    * @inheritdoc
    */
   get attributes () {
-    return {
-      name: ReadPermission.all,
-      redirectUri: ReadPermission.all,
-      namespaces: ReadPermission.all,
-      firstParty: ReadPermission.all,
-      createdAt: ReadPermission.all,
-      updatedAt: ReadPermission.all,
-      deletedAt: ReadPermission.internal,
+    return class {
+      static document
+      static operation
+      static revision
+      static createdAt
+      static updatedAt
     }
   }
 
@@ -32,7 +31,7 @@ export default class ClientView extends DatabaseView {
    * @inheritdoc
    */
   get defaultReadPermission () {
-    return ReadPermission.all
+    return ReadPermission.group
   }
 
   /**
@@ -40,7 +39,7 @@ export default class ClientView extends DatabaseView {
    */
   get isSelf () {
     if (this.query.connection.state.user && this.object.userId === this.query.connection.state.user.id) {
-      return this.query.connection.state.permissions.includes('clients.read.me')
+      return this.query.connection.state.permissions.includes('rescues.read.me')
     }
     return false
   }
@@ -49,14 +48,14 @@ export default class ClientView extends DatabaseView {
    * @inheritdoc
    */
   get isGroup () {
-    return this.query.connection.state.permissions.includes('clients.read')
+    return this.query.connection.state.permissions.includes('rescues.read')
   }
 
   /**
    * @inheritdoc
    */
   get isInternal () {
-    return this.query.connection.state.permissions.includes('clients.internal')
+    return this.query.connection.state.permissions.includes('rescues.internal')
   }
 
   /**
@@ -64,6 +63,7 @@ export default class ClientView extends DatabaseView {
    */
   get relationships () {
     return {
+      rescue: RescueView,
       user: UserView,
     }
   }
@@ -71,7 +71,14 @@ export default class ClientView extends DatabaseView {
   /**
    * @inheritdoc
    */
+  get related () {
+    return [RescueView, UserView]
+  }
+
+  /**
+   * @inheritdoc
+   */
   get includes () {
-    return ['user']
+    return [RescueView, UserView]
   }
 }

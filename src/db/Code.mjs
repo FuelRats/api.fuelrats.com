@@ -1,4 +1,4 @@
-import { OAuthScope, isURL } from '../classes/Validators'
+import { OAuthScope, isURL } from '../helpers/Validators'
 import Model, { column, validate, table, type } from './Model'
 
 const oAuthScopeMaxLength = 128
@@ -45,12 +45,12 @@ export default class Code extends Model {
           {
             model: models.User,
             as: 'user',
-            required: true
-          }
-        ]
+            required: true,
+          },
+        ],
       }, {
-        override: true
-      }]
+        override: true,
+      }],
     }
   }
 

@@ -1,4 +1,4 @@
-import { ReadPermission, DatabaseView, UserView } from './'
+import { ReadPermission, DatabaseView, UserView } from '.'
 
 /**
  * Get JSONAPI view for a Decal
@@ -61,7 +61,7 @@ export default class DecalView extends DatabaseView {
    */
   get relationships () {
     return {
-      user: UserView
+      user: UserView,
     }
   }
 

@@ -1,10 +1,10 @@
-import { ReadPermission } from './View'
-import DatabaseView from './DatabaseView'
-import RatView from './RatView'
-import GroupView from './GroupView'
 import ClientView from './ClientView'
-import NicknameView from './NicknameView'
+import DatabaseView from './DatabaseView'
 import EpicView from './EpicView'
+import GroupView from './GroupView'
+import NicknameView from './NicknameView'
+import RatView from './RatView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a User
@@ -76,7 +76,7 @@ export default class UserView extends DatabaseView {
       displayRat: RatView,
       groups: GroupView,
       clients: ClientView,
-      epics: EpicView
+      epics: EpicView,
     }
   }
 

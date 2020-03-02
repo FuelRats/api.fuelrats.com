@@ -1,17 +1,15 @@
-import { User, Rat, db } from '../db'
-import Anope from '../classes/Anope'
-import Verifications from './Verifications'
-import Sessions from './Sessions'
+import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
-
+import Anope from '../classes/Anope'
+import StatusCode from '../classes/StatusCode'
+import { User, Rat, db } from '../db'
 import API, {
   getJSONAPIData,
   POST,
-  required
+  required,
 } from './API'
-import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
-import StatusCode from '../classes/StatusCode'
-
+import Sessions from './Sessions'
+import Verifications from './Verifications'
 
 const platforms = ['pc', 'xb', 'ps']
 
@@ -33,30 +31,32 @@ export default class Register extends API {
    */
   @POST('/register')
   @required(
-    'email', 'password', 'name', 'platform', 'nickname'
+    'email', 'password', 'name', 'platform', 'nickname',
   )
   async create (ctx) {
     const formData = getJSONAPIData({ ctx, type: 'registrations' })
 
     await Register.checkExisting(formData.attributes)
-    const { email, name, nickname, password, platform } = formData.attributes
+    const {
+      email, name, nickname, password, platform,
+    } = formData.attributes
 
     await db.transaction(async (transaction) => {
       const user = await User.create({
         email,
-        password
+        password,
       }, { transaction })
 
       if (platforms.includes(platform) === false) {
         throw new UnprocessableEntityAPIError({
-          pointer: '/data/attributes/platform'
+          pointer: '/data/attributes/platform',
         })
       }
 
       const rat = await Rat.create({
         name,
         platform,
-        userId: user.id
+        userId: user.id,
       }, { transaction })
 
       user.rats = [rat]
@@ -65,13 +65,13 @@ export default class Register extends API {
         email,
         nick: nickname,
         encryptedPassword: `bcrypt:${user.password}`,
-        vhost: user.vhost()
+        vhost: user.vhost(),
       })
       await Verifications.createVerification(user, transaction)
 
       await Announcer.sendModeratorMessage({
         message: `[Registration] User with email ${email} registered. Nickname: ${nickname}. 
-        CMDR name: ${name} (IP: ${ctx.ip})`
+        CMDR name: ${name} (IP: ${ctx.ip})`,
       })
       return Sessions.createVerifiedSession(ctx, user, transaction)
     })
@@ -89,21 +89,25 @@ export default class Register extends API {
    * @returns {Promise<undefined>} resolves a promise if successful
    */
   static async checkExisting ({ email, name, platform }) {
-    const existingUser = await User.findOne({ where: {
-      email: {
-        ilike: email
-      }
-    } })
+    const existingUser = await User.findOne({
+      where: {
+        email: {
+          ilike: email,
+        },
+      },
+    })
     if (existingUser) {
       throw new ConflictAPIError({ pointer: '/data/attributes/email' })
     }
 
-    const existingRat = await Rat.findOne({ where: {
-      name: {
-        ilike: name
+    const existingRat = await Rat.findOne({
+      where: {
+        name: {
+          ilike: name,
+        },
+        platform,
       },
-      platform
-    } })
+    })
     if (existingRat) {
       throw new ConflictAPIError({ pointer: '/data/attributes/name' })
     }

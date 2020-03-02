@@ -1,12 +1,12 @@
-import API, {
-  GET
-} from './API'
+import fs from 'fs'
+import { DocumentViewType } from '../Documents'
+import ObjectDocument from '../Documents/ObjectDocument'
 import { websocket } from '../classes/WebSocket'
 import Query from '../query'
-import ObjectDocument from '../Documents/ObjectDocument'
-import { DocumentViewType } from '../Documents'
 import { VersionView } from '../view'
-import fs from 'fs'
+import API, {
+  GET,
+} from './API'
 
 const build = JSON.parse(fs.readFileSync('build.json', 'utf8'))
 
@@ -28,18 +28,19 @@ export default class Version extends API {
   @GET('/version')
   @websocket('version', 'read')
   read (ctx) {
-    const { hash, branch, tags, date, version } = build
+    const {
+      hash, branch, tags, date, version,
+    } = build
 
     const result = {
       version,
       commit: hash,
       branch,
       tags,
-      date
+      date,
     }
 
     const query = new Query({ connection: ctx })
     return new ObjectDocument({ query, result, type: VersionView, view: DocumentViewType.individual })
   }
-
 }

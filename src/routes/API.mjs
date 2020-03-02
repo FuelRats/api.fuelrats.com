@@ -1,14 +1,14 @@
-import router from '../classes/Router'
 import {
   BadRequestAPIError,
   ForbiddenAPIError,
   UnauthorizedAPIError,
-  UnprocessableEntityAPIError
+  UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import config from '../config'
-import Permission from '../classes/Permission'
-import enumerable from '../classes/Enum'
 import { Context } from '../classes/Context'
+import Permission from '../classes/Permission'
+import router from '../classes/Router'
+import config from '../config'
+import enumerable from '../helpers/Enum'
 
 /**
  * @class
@@ -35,10 +35,10 @@ export default class API {
  * @returns {Function} An ESNExt decorator function
  */
 export function GET (route) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
       return endpoint.apply(this, args)
@@ -53,10 +53,10 @@ export function GET (route) {
  * @returns {Function}
  */
 export function POST (route) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
       return endpoint.apply(this, args)
@@ -71,10 +71,10 @@ export function POST (route) {
  * @returns {Function}
  */
 export function PUT (route) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
       return endpoint.apply(this, args)
@@ -90,10 +90,10 @@ export function PUT (route) {
  * @returns {Function}
  */
 export function PATCH (route) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
       return endpoint.apply(this, args)
@@ -108,10 +108,10 @@ export function PATCH (route) {
  * @returns {Function}
  */
 export function DELETE (route) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
       return endpoint.apply(this, args)
@@ -127,13 +127,12 @@ export function DELETE (route) {
 export function authenticated (target, name, descriptor) {
   const endpoint = descriptor.value
 
-  descriptor.value = function (...args) {
+  descriptor.value = function value (...args) {
     const [ctx] = args
     if (ctx.state.user) {
       return endpoint.apply(target, args)
-    } else {
-      throw new UnauthorizedAPIError({})
     }
+    throw new UnauthorizedAPIError({})
   }
 }
 
@@ -144,13 +143,12 @@ export function authenticated (target, name, descriptor) {
 export function clientAuthenticated (target, name, descriptor) {
   const endpoint = descriptor.value
 
-  descriptor.value = function (...args) {
+  descriptor.value = function value (...args) {
     const [ctx] = args
     if (ctx.state.client) {
       return endpoint.apply(this, args)
-    } else {
-      throw new UnauthorizedAPIError({})
     }
+    throw new UnauthorizedAPIError({})
   }
 }
 
@@ -161,13 +159,12 @@ export function clientAuthenticated (target, name, descriptor) {
 export function IPAuthenticated (target, name, descriptor) {
   const endpoint = descriptor.value
 
-  descriptor.value = function (...args) {
+  descriptor.value = function value (...args) {
     const [ctx] = args
     if (config.server.whitelist.includes(ctx.request.ip)) {
       return endpoint.apply(this, args)
-    } else {
-      throw new UnauthorizedAPIError({})
     }
+    throw new UnauthorizedAPIError({})
   }
 }
 
@@ -177,16 +174,15 @@ export function IPAuthenticated (target, name, descriptor) {
  * @returns {Function} A decorator function
  */
 export function permissions (...perms) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       if (Permission.granted({ permissions: perms, connection: ctx })) {
         return endpoint.apply(this, args)
-      } else {
-        throw new ForbiddenAPIError({})
       }
+      throw new ForbiddenAPIError({})
     }
   }
 }
@@ -197,13 +193,13 @@ export function permissions (...perms) {
  * @returns {Function} A decorator function
  */
 export function parameters (...fields) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       const missingFields = fields.filter((requiredField) => {
-        return (requiredField in ctx.params === false && requiredField in ctx.query === false)
+        return (Reflect.has(ctx.params, requiredField) === false && Reflect.has(ctx.query, requiredField) === false)
       })
       if (missingFields.length > 0) {
         throw missingFields.map((field) => {
@@ -222,10 +218,10 @@ export function parameters (...fields) {
  *
  */
 export function required (...fields) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       const missingFields = fields.filter((requiredField) => {
         if (!ctx.data.data?.attributes) {
@@ -249,10 +245,10 @@ export function required (...fields) {
  * @returns {Function} A decorator function
  */
 export function disallow (...fields) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
         fields.map((cleanField) => {
@@ -272,10 +268,10 @@ export function disallow (...fields) {
  * @returns {Function} A decorator function
  */
 export function protect (permission, ...fields) {
-  return function (target, name, descriptor) {
+  return (target, name, descriptor) => {
     const endpoint = descriptor.value
 
-    descriptor.value = function (...args) {
+    descriptor.value = function value (...args) {
       const [ctx] = args
       if (ctx.data) {
         fields.map((field) => {
@@ -329,7 +325,7 @@ export function getJSONAPIData ({ ctx, type }) {
   return ctx.data.data
 }
 
-@enumerable
+@enumerable()
 /**
  * Enum for types of write permissions that can be required for a field
  */

@@ -29,25 +29,27 @@ export default class DatabaseView extends View {
 
       // eslint-disable-next-line no-restricted-syntax
       let data = null
-      if (Array.isArray(this.object[key])) {
+      if (Reflect.has(this.object, key) === false && Reflect.has(this.object, `${key}Id`) === false) {
+        data = []
+      } else if (Array.isArray(this.object[key])) {
         data = this.object[key].map((relation) => {
           return (new RelationshipView({
             object: relation,
             root: this.root || this,
-            query: this.query
+            query: this.query,
           })).relationshipView
         })
       } else if (this.object[key]) {
         data = (new RelationshipView({
           object: this.object[key],
           root: this.root || this,
-          query: this.query
+          query: this.query,
         })).relationshipView
       }
 
       acc[key] = {
         links: this.getRelationLink(key),
-        data
+        data,
       }
       return acc
     }, {})
@@ -57,7 +59,7 @@ export default class DatabaseView extends View {
    * @inheritdoc
    */
   generateIncludes ({ rootType, includeTypes }) {
-    const includes = includeTypes || this.includes
+    const includes = includeTypes ?? this.includes
 
     return Object.entries(this.relationships).reduce((acc, [key, RelationshipView]) => {
       let objects = this.object[key]
@@ -70,7 +72,7 @@ export default class DatabaseView extends View {
       }
 
       return acc.concat(objects.reduce((includeCollection, object) => {
-        const objectView = (new RelationshipView({ object, root: this.root || this, query: this.query }))
+        const objectView = (new RelationshipView({ object, root: this.root ?? this, query: this.query }))
         includeCollection.push(objectView.view)
         return includeCollection.concat(objectView.generateIncludes({ rootType, includeTypes }))
       }, []))

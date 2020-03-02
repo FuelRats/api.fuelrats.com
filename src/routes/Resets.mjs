@@ -1,19 +1,19 @@
-import Mail from '../classes/Mail'
-import { User, Reset } from '../db'
 import crypto from 'crypto'
 import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import Announcer from '../classes/Announcer'
+import Mail from '../classes/Mail'
+import { websocket } from '../classes/WebSocket'
+import config from '../config'
+import { User, Reset } from '../db'
+import passwordResetEmail from '../emails/reset'
 import API, {
   GET,
   POST,
   required,
   parameters,
   isValidJSONAPIObject,
-  getJSONAPIData
+  getJSONAPIData,
 } from './API'
-import { websocket } from '../classes/WebSocket'
-import config from '../config'
-import Announcer from '../classes/Announcer'
-import passwordResetEmail from '../emails/reset'
 
 const mail = new Mail()
 const expirationLength = 86400000
@@ -43,20 +43,20 @@ export default class Resets extends API {
     const { email } = data.attributes
 
     await Announcer.sendTechnicalMessage({
-      message: `[API] Password reset for ${email} requested by ${ctx.ip}`
+      message: `[API] Password reset for ${email} requested by ${ctx.ip}`,
     })
 
     const user = await User.findOne({
       where: {
-        email: { ilike: email }
-      }
+        email: { ilike: email },
+      },
     })
 
     if (user) {
       const existingReset = await Reset.findOne({
         where: {
-          userId: user.id
-        }
+          userId: user.id,
+        },
       })
 
       let requiredReset = false
@@ -73,7 +73,7 @@ export default class Resets extends API {
         value: token,
         expires: new Date(Date.now() + expirationLength).getTime(),
         userId: user.id,
-        required: requiredReset
+        required: requiredReset,
       })
 
       await mail.send(passwordResetEmail({ user, resetToken: reset.value }))
@@ -91,8 +91,8 @@ export default class Resets extends API {
   async validate (ctx) {
     const reset = await Reset.findOne({
       where: {
-        value: ctx.params.token
-      }
+        value: ctx.params.token,
+      },
     })
 
     if (!reset) {
@@ -111,8 +111,8 @@ export default class Resets extends API {
   async reset (ctx) {
     const reset = await Reset.findOne({
       where: {
-        value: ctx.params.token
-      }
+        value: ctx.params.token,
+      },
     })
 
     if (!reset) {
@@ -131,8 +131,8 @@ export default class Resets extends API {
 
     const user = await User.findOne({
       where: {
-        id: reset.userId
-      }
+        id: reset.userId,
+      },
     })
 
     user.password = password

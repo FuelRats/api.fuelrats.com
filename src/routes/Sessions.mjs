@@ -1,13 +1,13 @@
-import Mail from '../classes/Mail'
-import { Session, User, db } from '../db'
 import crypto from 'crypto'
 import { NotFoundAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
+import Mail from '../classes/Mail'
+import { Session, User, db } from '../db'
+import sessionEmail from '../emails/session'
 import API, {
   GET,
-  parameters
+  parameters,
 } from './API'
-import sessionEmail from '../emails/session'
 
 const mail = new Mail()
 const sessionTokenLength = 32
@@ -33,8 +33,8 @@ export default class Sessions extends API {
     const session = await Session.findOne({
       where: {
         code: ctx.params.token,
-        verified: false
-      }
+        verified: false,
+      },
     })
 
     if (!session) {
@@ -43,7 +43,7 @@ export default class Sessions extends API {
 
     await session.update({
       verified: true,
-      lastAccess: Date.now()
+      lastAccess: Date.now(),
     })
 
     return true
@@ -60,7 +60,7 @@ export default class Sessions extends API {
       ip: ctx.request.ip,
       userAgent: ctx.state.userAgent,
       code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
-      userId: user.id
+      userId: user.id,
     })
 
     return mail.send(sessionEmail({ ctx, user, sessionToken: session.code }))
@@ -79,7 +79,7 @@ export default class Sessions extends API {
       userAgent: ctx.state.userAgent,
       code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
       userId: user.id,
-      verified: true
+      verified: true,
     }, { transaction })
   }
 }

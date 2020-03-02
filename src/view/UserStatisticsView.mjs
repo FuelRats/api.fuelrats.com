@@ -1,6 +1,6 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
 import RatView from './RatView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a user statistics result
@@ -31,7 +31,7 @@ export default class UserStatisticsView extends DatabaseView {
       assists: ReadPermission.all,
       failure: ReadPermission.all,
       other: ReadPermission.all,
-      invalid: ReadPermission.all
+      invalid: ReadPermission.all,
     }
   }
 

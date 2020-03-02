@@ -1,6 +1,6 @@
-import { ReadPermission } from './View'
 import DatabaseView from './DatabaseView'
 import RatView from './RatView'
+import { ReadPermission } from './View'
 
 /**
  * Get JSONAPI view for a Ship
@@ -23,7 +23,7 @@ export default class ShipView extends DatabaseView {
       shipType: ReadPermission.all,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,
-      deletedAt: ReadPermission.internal
+      deletedAt: ReadPermission.internal,
     }
   }
 
@@ -68,7 +68,7 @@ export default class ShipView extends DatabaseView {
    */
   get relationships () {
     return {
-      rat: RatView
+      rat: RatView,
     }
   }
 

@@ -1,5 +1,5 @@
 import config from '../config'
-import enumerable from '../classes/Enum'
+import enumerable from '../helpers/Enum'
 import Query from '../query'
 
 /**
@@ -109,7 +109,7 @@ export default class View {
    */
   get links () {
     return {
-      self: `${config.server.externalUrl}/${this.self}`
+      self: `${config.server.externalUrl}/${this.self}`,
     }
   }
 
@@ -132,7 +132,7 @@ export default class View {
   getRelationLink (relation) {
     return {
       self: `${config.server.externalUrl}/${this.self}/relationships/${relation}`,
-      related: `${config.server.externalUrl}/${this.self}/${relation}`
+      related: `${config.server.externalUrl}/${this.self}/${relation}`,
     }
   }
 
@@ -154,7 +154,7 @@ export default class View {
       id: this.id,
       attributes: this.generateAttributes(),
       relationships: this.generateRelationships(),
-      links: this.links
+      links: this.links,
     }
   }
 
@@ -165,7 +165,7 @@ export default class View {
   get relationshipView () {
     return {
       type: this.type,
-      id: this.id
+      id: this.id,
     }
   }
 
@@ -279,7 +279,7 @@ export default class View {
   }
 }
 
-@enumerable
+@enumerable()
 /**
  * Field Read permission
  */

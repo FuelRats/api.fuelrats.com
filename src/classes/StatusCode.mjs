@@ -1,8 +1,8 @@
 /* eslint-disable no-magic-numbers */
-import enumerable from './Enum'
+import enumerable from '../helpers/Enum'
 
 
-@enumerable
+@enumerable()
 /**
  * Enumerable representing HTTP status codes
  * @typedef StatusCode

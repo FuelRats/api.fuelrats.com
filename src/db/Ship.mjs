@@ -1,4 +1,4 @@
-import { ShipName } from '../classes/Validators'
+import { ShipName } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 
@@ -37,7 +37,7 @@ const shipTypes = [
   'Type-9 Heavy',
   'Viper MkIII',
   'Viper MkIV',
-  'Vulture'
+  'Vulture',
 ]
 
 @table({})

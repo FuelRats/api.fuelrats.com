@@ -1,15 +1,15 @@
-import API, { POST, getJSONAPIData } from './API'
-import FrontierAPI from '../classes/FrontierAPI'
-import { db, Rat, Token, User } from '../db'
 import crypto from 'crypto'
-import config from '../config'
-import { ConflictAPIError, UnauthorizedAPIError } from '../classes/APIError'
-import Sessions from './Sessions'
-import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { ConflictAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import Anope from '../classes/Anope'
-import { TokenView } from '../view'
+import FrontierAPI from '../classes/FrontierAPI'
 import StatusCode from '../classes/StatusCode'
+import config from '../config'
+import { db, Rat, Token, User } from '../db'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { TokenView } from '../view'
+import API, { POST, getJSONAPIData } from './API'
+import Sessions from './Sessions'
 
 /**
  * Endpoint for managing Frontier based single sign-on
@@ -35,8 +35,8 @@ export default class Frontier extends API {
 
     const existingLink = await User.findOne({
       where: {
-        frontierId: profile.customer_id
-      }
+        frontierId: profile.customer_id,
+      },
     })
 
     if (existingLink) {
@@ -44,7 +44,7 @@ export default class Frontier extends API {
         value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
         clientId: config.frontned.clientId,
         userId: existingLink.id,
-        scope: ['*']
+        scope: ['*'],
       })
 
       ctx.status.code = StatusCode.created
@@ -58,14 +58,14 @@ export default class Frontier extends API {
     const user = await User.findOne({
       where: {
         or: [{
-          email: { ilike: profile.email }
+          email: { ilike: profile.email },
         }, {
           and: {
             name: { ilike: profile.commander.name },
-            platform
-          }
-        }]
-      }
+            platform,
+          },
+        }],
+      },
     })
 
     if (user && !ctx.state.user) {
@@ -78,7 +78,7 @@ export default class Frontier extends API {
         name: profile.commander.name,
         platform,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       }
       const query = new DatabaseQuery({ connection: ctx })
       return new DatabaseDocument({ query, creationRequest, type: TokenView })
@@ -87,7 +87,7 @@ export default class Frontier extends API {
     db.transaction(async (transaction) => {
       if (user && ctx.state.user) {
         await user.update({
-          frontierId: profile.customer_id
+          frontierId: profile.customer_id,
         }, { transaction })
 
         const matchingRat = user.rats.find((rat) => {
@@ -96,14 +96,14 @@ export default class Frontier extends API {
 
         if (matchingRat) {
           await matchingRat.update({
-            frontierId: profile.commander.id
+            frontierId: profile.commander.id,
           }, { transaction })
         } else {
           await Rat.create({
             name: profile.commander.name,
             platform,
             userId: user.id,
-            frontierId: profile.commander.id
+            frontierId: profile.commander.id,
           }, { transaction })
         }
       }
@@ -116,7 +116,7 @@ export default class Frontier extends API {
       value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
       clientId: config.frontend.clientId,
       userId: user.id,
-      scope: ['*']
+      scope: ['*'],
     })
 
     ctx.status.code = StatusCode.created
@@ -135,8 +135,8 @@ export default class Frontier extends API {
 
     const existingLink = await User.findOne({
       where: {
-        frontierId: profile.customer_id
-      }
+        frontierId: profile.customer_id,
+      },
     })
 
     if (existingLink) {
@@ -148,14 +148,14 @@ export default class Frontier extends API {
     const existingUser = await User.findOne({
       where: {
         or: [{
-          email: { ilike: profile.email }
+          email: { ilike: profile.email },
         }, {
           and: {
             name: { ilike: profile.commander.name },
-            platform
-          }
-        }]
-      }
+            platform,
+          },
+        }],
+      },
     })
 
     if (existingUser) {
@@ -166,20 +166,20 @@ export default class Frontier extends API {
       const user = await User.create({
         email: profile.email,
         password,
-        frontierId: profile.customer_id
+        frontierId: profile.customer_id,
       }, { transaction })
 
       await Rat.create({
         name: profile.commander.name,
         platform,
         userId: user.id,
-        frontierId: profile.commander.id
+        frontierId: profile.commander.id,
       }, { transaction })
 
 
       await Anope.addNewUser(profile.email, nickname, `bcrypt:${user.password}`)
       await user.addGroup('verified', {
-        transaction
+        transaction,
       })
       await Sessions.createVerifiedSession(ctx, user, transaction)
       return user
@@ -189,7 +189,7 @@ export default class Frontier extends API {
       value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
       clientId: config.ropcClientId,
       userId: newUser.id,
-      scope: ['*']
+      scope: ['*'],
     })
 
     ctx.status.code = StatusCode.created
@@ -207,7 +207,7 @@ export default class Frontier extends API {
       steam: 'pc',
       frontier: 'pc',
       xbox: 'xb',
-      psn: 'ps'
+      psn: 'ps',
     }[frontierPlatform]
   }
 }

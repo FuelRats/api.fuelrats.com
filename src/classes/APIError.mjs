@@ -1,16 +1,16 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
+import fs from 'fs'
 import i18next from 'i18next'
 import UUID from 'pure-uuid'
 import StatusCode from './StatusCode'
-import fs from 'fs'
 
 const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
 
 // noinspection JSIgnoredPromiseFromCall
 i18next.init({
   lng: 'en',
-  resources:  localisationResources
+  resources: localisationResources,
 })
 
 /**
@@ -25,7 +25,7 @@ export class APIError extends Error {
   constructor (source) {
     super()
 
-    this.id = new UUID(4)
+    this.id = new UUID(global.UUID_VERSION)
     this.source = source
   }
 
@@ -57,20 +57,20 @@ export class APIError extends Error {
 
   get links () {
     return {
-      about: `https://httpstatuses.com/${this.code}`
+      about: `https://httpstatuses.com/${this.code}`,
     }
   }
 
   toJSON () {
     return {
-      id:     this.id.format(),
-      links:  this.links,
+      id: this.id.format(),
+      links: this.links,
       status: this.status,
-      code:   this.code,
-      title:  this.title,
+      code: this.code,
+      title: this.title,
 
       detail: this.detail,
-      source: this.source
+      source: this.source,
     }
   }
 }
@@ -135,7 +135,7 @@ export class NotFoundAPIError extends APIError {
   }
 }
 
-export class MethodNotAllowedAPIError extends  APIError {
+export class MethodNotAllowedAPIError extends APIError {
   get code () {
     return StatusCode.methodNotAllowed
   }

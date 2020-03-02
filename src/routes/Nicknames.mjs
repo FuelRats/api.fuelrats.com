@@ -1,15 +1,27 @@
-import API, { GET, POST, DELETE, authenticated, getJSONAPIData, PATCH } from './API'
-import { websocket } from '../classes/WebSocket'
-import Anope from '../classes/Anope'
-import AnopeQuery from '../query/AnopeQuery'
-import ObjectDocument from '../Documents/ObjectDocument'
-import { NicknameView } from '../view'
-import { BadRequestAPIError, ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
-import { DocumentViewType } from '../Documents/Document'
-import StatusCode from '../classes/StatusCode'
-import { Rat } from '../db'
-import DatabaseQuery from '../query/DatabaseQuery'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
+import ObjectDocument from '../Documents/ObjectDocument'
+import {
+  BadRequestAPIError,
+  ConflictAPIError,
+  NotFoundAPIError,
+  UnprocessableEntityAPIError
+} from '../classes/APIError'
+import Anope from '../classes/Anope'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { Rat } from '../db'
+import AnopeQuery from '../query/AnopeQuery'
+import DatabaseQuery from '../query/DatabaseQuery'
+import { NicknameView } from '../view'
+import API, {
+  GET,
+  POST,
+  DELETE,
+  authenticated,
+  getJSONAPIData,
+  PATCH,
+} from './API'
 
 /**
  * Endpoint for managing IRC nicknames
@@ -33,7 +45,7 @@ export default class Nickname extends API {
     const { nick } = ctx.query
     if (!nick) {
       throw new BadRequestAPIError({
-        parameter: 'nick'
+        parameter: 'nick',
       })
     }
 
@@ -67,8 +79,14 @@ export default class Nickname extends API {
   @websocket('nicknames', 'create')
   @authenticated
   async create (ctx) {
-    const { nick, ratId } = getJSONAPIData({ ctx, type: this.type })
-    const existingNick = Anope.findNickname(nick)
+    const { nick, ratId } = getJSONAPIData({ ctx, type: this.type }).attributes
+    if (!nick) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/attributes/nick',
+      })
+    }
+
+    const existingNick = await Anope.findNickname(nick)
     if (existingNick) {
       throw new ConflictAPIError({ pointer: '/data/attributes/nick' })
     }
@@ -79,11 +97,11 @@ export default class Nickname extends API {
       email: ctx.state.user.email,
       nick,
       encryptedPassword,
-      vhost: ctx.state.user.vhost,
-      ratId
+      vhost: ctx.state.user.vhost(),
+      ratId,
     })
 
-    const createdNick = Anope.findNickname(nick)
+    const createdNick = await Anope.findNickname(nick)
     const query = new AnopeQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new ObjectDocument({ query, result: createdNick, type: NicknameView, view: DocumentViewType.individual })
@@ -136,7 +154,7 @@ export default class Nickname extends API {
     let rat = undefined
     if (nickname.ratId) {
       rat = await Rat.findOne({
-        where: { id: nickname.ratId }
+        where: { id: nickname.ratId },
       })
     }
 
