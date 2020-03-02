@@ -72,6 +72,9 @@ export default class APIResource extends API {
   }) {
     const dataObj = getJSONAPIData({ ctx, type: this.type })
 
+    delete dataObj.attributes.createdAt
+    delete dataObj.attributes.updatedAt
+
     let resourceId = {}
     if (dataObj.id) {
       if (allowId) {
@@ -102,7 +105,7 @@ export default class APIResource extends API {
       if (dataObj.relationships instanceof Object) {
         const relationshipChanges = Object.entries(dataObj.relationships).map(([relationship, data]) => {
           return this.generateRelationshipChange({
-            ctx, data, entity, change: 'add', relationship, transaction,
+            ctx, data: data.data, entity, change: 'add', relationship, transaction,
           })
         })
 
@@ -151,6 +154,8 @@ export default class APIResource extends API {
     this.requireWritePermission({ connection: ctx, entity })
 
     const { attributes } = dataObj
+    delete attributes.createdAt
+    delete attributes.updatedAt
 
     const transaction = await db.transaction()
 
@@ -327,6 +332,9 @@ export default class APIResource extends API {
     const validOneRelationship = this.isValidOneRelationship({ relationship: data, relation: relationship })
 
     if (Array.isArray(data) && changeRelationship.many === true) {
+      if (data.length === 0) {
+        return undefined
+      }
       const relationshipIds = data.map((relationshipObject) => {
         const validManyRelationship = this.isValidManyRelationship({
           relationship: relationshipObject,
@@ -346,6 +354,10 @@ export default class APIResource extends API {
       return changeRelationship[change]({ entity, ids: relationshipIds, ctx, transaction })
     }
     if (validOneRelationship && changeRelationship.many === false) {
+      if (!data) {
+        return undefined
+      }
+
       if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, relationship.id])) {
         throw new ForbiddenAPIError({ pointer: '/data' })
       }
