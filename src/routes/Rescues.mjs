@@ -119,7 +119,7 @@ export default class Rescues extends APIResource {
       },
     })
 
-    if (Reflect.has(ctx.data.data.attributes, 'outcome')) {
+    if (ctx.data.data.attributes.outcome) {
       const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
         message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
@@ -311,6 +311,7 @@ export default class Rescues extends APIResource {
       platform: WritePermission.group,
       system: WritePermission.group,
       title: WritePermission.sudo,
+      status: WritePermission.group,
       unidentifiedRats: WritePermission.group,
       outcome: WritePermission.group,
       quotes: WritePermission.group,
