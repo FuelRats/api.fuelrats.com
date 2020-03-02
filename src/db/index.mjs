@@ -11,9 +11,7 @@ import EpicUsers from './EpicUsers'
 import Group from './Group'
 import Rat from './Rat'
 import Rescue from './Rescue'
-import RescueHistory from './RescueHistory'
 import RescueRats from './RescueRats'
-import RescueRatsHistory from './RescueRatsHistory'
 import Reset from './Reset'
 import Session from './Session'
 import Ship from './Ship'
@@ -27,9 +25,7 @@ const models = {
   User,
   Rat,
   Rescue,
-  RescueHistory,
   RescueRats,
-  RescueRatsHistory,
   Client,
   Code,
   Token,
@@ -144,9 +140,7 @@ export {
   Group,
   Rat,
   Rescue,
-  RescueHistory,
   RescueRats,
-  RescueRatsHistory,
   Reset,
   Session,
   Ship,
