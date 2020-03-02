@@ -1,7 +1,12 @@
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import ObjectDocument from '../Documents/ObjectDocument'
-import { BadRequestAPIError, ConflictAPIError, NotFoundAPIError } from '../classes/APIError'
+import {
+  BadRequestAPIError,
+  ConflictAPIError,
+  NotFoundAPIError,
+  UnprocessableEntityAPIError
+} from '../classes/APIError'
 import Anope from '../classes/Anope'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
@@ -74,8 +79,14 @@ export default class Nickname extends API {
   @websocket('nicknames', 'create')
   @authenticated
   async create (ctx) {
-    const { nick, ratId } = getJSONAPIData({ ctx, type: this.type })
-    const existingNick = Anope.findNickname(nick)
+    const { nick, ratId } = getJSONAPIData({ ctx, type: this.type }).attributes
+    if (!nick) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/attributes/nick',
+      })
+    }
+
+    const existingNick = await Anope.findNickname(nick)
     if (existingNick) {
       throw new ConflictAPIError({ pointer: '/data/attributes/nick' })
     }
@@ -86,11 +97,11 @@ export default class Nickname extends API {
       email: ctx.state.user.email,
       nick,
       encryptedPassword,
-      vhost: ctx.state.user.vhost,
+      vhost: ctx.state.user.vhost(),
       ratId,
     })
 
-    const createdNick = Anope.findNickname(nick)
+    const createdNick = await Anope.findNickname(nick)
     const query = new AnopeQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new ObjectDocument({ query, result: createdNick, type: NicknameView, view: DocumentViewType.individual })
