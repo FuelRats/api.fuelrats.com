@@ -128,7 +128,9 @@ class Document {
     }, [])
 
     return Object.values(includes.reduce((acc, include) => {
-      acc[include.id] = include
+      if (!acc[include.id]) {
+        acc[include.id] = include
+      }
       return acc
     }, {}))
   }
