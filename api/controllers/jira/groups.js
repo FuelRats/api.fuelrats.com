@@ -11,7 +11,9 @@ class JiraGroups {
 
     return {
       id: profile.id,
-      role: getRole(profile)
+      role: ['recruit', ...profile.groups.map((group) => {
+        return group.id
+      })]
     }
   }
 }
