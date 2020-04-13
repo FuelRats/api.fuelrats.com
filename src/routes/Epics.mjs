@@ -14,7 +14,7 @@ import {
   PATCH,
   DELETE,
   authenticated,
-  WritePermission,
+  WritePermission, parameters
 } from './API'
 import APIResource from './APIResource'
 
@@ -48,6 +48,7 @@ export default class Epics extends APIResource {
    */
   @GET('/epics/:id')
   @websocket('epics', 'read')
+  @parameters('id')
   @authenticated
   async read (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: Epic })
@@ -81,6 +82,7 @@ export default class Epics extends APIResource {
    */
   @PUT('/epics/:id')
   @websocket('epics', 'update')
+  @parameters('id')
   @authenticated
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Epic, updateSearch: { id: ctx.params.id } })
@@ -95,6 +97,7 @@ export default class Epics extends APIResource {
    */
   @DELETE('/epics/:id')
   @websocket('epics', 'delete')
+  @parameters('id')
   @authenticated
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Epic })
@@ -109,6 +112,7 @@ export default class Epics extends APIResource {
    */
   @GET('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'read')
+  @parameters('id')
   @authenticated
   async relationshipNomineesView (ctx) {
     const result = await this.relationshipView({
@@ -127,6 +131,7 @@ export default class Epics extends APIResource {
    */
   @POST('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'create')
+  @parameters('id')
   @authenticated
   async relationshipNomineesAdd (ctx) {
     await this.relationshipChange({
@@ -146,6 +151,7 @@ export default class Epics extends APIResource {
    */
   @PATCH('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipNomineesPatch (ctx) {
     await this.relationshipChange({
@@ -165,6 +171,7 @@ export default class Epics extends APIResource {
    */
   @DELETE('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'delete')
+  @parameters('id')
   @authenticated
   async relationshipNomineesDelete (ctx) {
     await this.relationshipChange({
@@ -184,6 +191,7 @@ export default class Epics extends APIResource {
    */
   @GET('/epics/:id/relationships/nominatedBy')
   @websocket('epics', 'nominatedBy', 'read')
+  @parameters('id')
   @authenticated
   async relationshipNominatedByView (ctx) {
     const result = await this.relationshipView({
@@ -202,6 +210,7 @@ export default class Epics extends APIResource {
    */
   @PATCH('/epics/:id/relationships/nominatedBy')
   @websocket('epics', 'nominatedBy', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipNominatedByPatch (ctx) {
     await this.relationshipChange({
@@ -221,6 +230,7 @@ export default class Epics extends APIResource {
    */
   @GET('/epics/:id/relationships/approvedBy')
   @websocket('epics', 'approvedBy', 'read')
+  @parameters('id')
   @authenticated
   async relationshipApprovedByView (ctx) {
     const result = await this.relationshipView({
@@ -239,6 +249,7 @@ export default class Epics extends APIResource {
    */
   @PATCH('/epics/:id/relationships/approvedBy')
   @websocket('epics', 'approvedBy', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipApprovedByPatch (ctx) {
     await this.relationshipChange({

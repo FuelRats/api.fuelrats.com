@@ -1,6 +1,6 @@
 import * as errors from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
-import API, { GET } from './API'
+import API, { GET, parameters } from './API'
 
 /**
  * Endpoints for requesting any API error to be thrown, for usage by clients for testing.
@@ -12,6 +12,7 @@ export default class Errors extends API {
    */
   @GET('/errors/:code')
   @websocket('errors', 'read')
+  @parameters('code')
   read (ctx) {
     const { code } = ctx.params
 

@@ -8,7 +8,7 @@ import config from '../config'
 import { db, Rat, Token, User } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { TokenView } from '../view'
-import API, { POST, getJSONAPIData } from './API'
+import API, { POST, getJSONAPIData, parameters } from './API'
 import Sessions from './Sessions'
 
 /**

@@ -116,6 +116,7 @@ export default class Users extends APIResource {
    */
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
+  @parameters('id')
   async image (ctx, next) {
     const avatar = await Avatar.scope('data').findOne({
       where: {
@@ -137,6 +138,7 @@ export default class Users extends APIResource {
    * @returns {Promise<undefined>} resolves a promise upon completion
    */
   @GET('/users/:id/certificate')
+  @parameters('id')
   @authenticated
   async certificate (ctx) {
     const ratName = ctx.state.user.preferredRat().name
@@ -160,6 +162,7 @@ export default class Users extends APIResource {
    */
   @PUT('/users/:id/email')
   @websocket('users', 'email', 'update')
+  @parameters('id')
   @authenticated
   @required()
   async setEmail (ctx) {
@@ -207,6 +210,7 @@ export default class Users extends APIResource {
    */
   @PUT('/users/:id/password')
   @websocket('users', 'password', 'update')
+  @parameters('id')
   @authenticated
   @required('password', 'newPassword')
   async setPassword (ctx) {
@@ -265,6 +269,7 @@ export default class Users extends APIResource {
    */
   @PUT('/users/:id')
   @websocket('users', 'update')
+  @parameters('id')
   @authenticated
   async update (ctx) {
     const user = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
@@ -281,6 +286,7 @@ export default class Users extends APIResource {
    */
   @DELETE('/users/:id')
   @websocket('users', 'delete')
+  @parameters('id')
   @authenticated
   async delete (ctx) {
     await super.delete({
@@ -302,6 +308,7 @@ export default class Users extends APIResource {
    */
   @POST('/users/:id/image')
   @websocket('users', 'image')
+  @parameters('id')
   @authenticated
   async setimage (ctx) {
     const user = await User.findOne({
@@ -346,6 +353,7 @@ export default class Users extends APIResource {
    * @returns {Promise<DatabaseDocument>} a decal
    */
   @POST('/users/:id/decals')
+  @parameters('id')
   @authenticated
   async redeemDecal (ctx) {
     const user = await User.findOne({
@@ -391,6 +399,7 @@ export default class Users extends APIResource {
    */
   @GET('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'read')
+  @parameters('id')
   @authenticated
   async relationshipRatsView (ctx) {
     const result = await this.relationshipView({
@@ -410,6 +419,7 @@ export default class Users extends APIResource {
    */
   @POST('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'create')
+  @parameters('id')
   @authenticated
   async relationshipRatsCreate (ctx) {
     await this.relationshipChange({
@@ -430,6 +440,7 @@ export default class Users extends APIResource {
    */
   @PATCH('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipRatsPatch (ctx) {
     await this.relationshipChange({
@@ -451,6 +462,7 @@ export default class Users extends APIResource {
    */
   @DELETE('/users/:id/relationships/rats')
   @websocket('users', 'rats', 'delete')
+  @parameters('id')
   @authenticated
   async relationshipRatsDelete (ctx) {
     await this.relationshipChange({
@@ -471,6 +483,7 @@ export default class Users extends APIResource {
    */
   @GET('/users/:id/relationships/displayRat')
   @websocket('users', 'displayRat', 'read')
+  @parameters('id')
   @authenticated
   async relationshipDisplayRatView (ctx) {
     const result = await this.relationshipView({
@@ -490,6 +503,7 @@ export default class Users extends APIResource {
    */
   @PATCH('/users/:id/relationships/displayRat')
   @websocket('users', 'displayRat', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipDisplayRatPatch (ctx) {
     await this.relationshipChange({
@@ -510,6 +524,7 @@ export default class Users extends APIResource {
    */
   @GET('/users/:id/relationships/groups')
   @websocket('users', 'groups', 'read')
+  @parameters('id')
   @authenticated
   async relationshipGroupsView (ctx) {
     const result = await this.relationshipView({
@@ -529,6 +544,7 @@ export default class Users extends APIResource {
    */
   @POST('/users/:id/relationships/groups')
   @websocket('users', 'groups', 'create')
+  @parameters('id')
   @authenticated
   async relationshipGroupsCreate (ctx) {
     await this.relationshipChange({
@@ -552,6 +568,7 @@ export default class Users extends APIResource {
    */
   @PATCH('/users/:id/relationships/groups')
   @websocket('users', 'groups', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipGroupsPatch (ctx) {
     await this.relationshipChange({
@@ -575,6 +592,7 @@ export default class Users extends APIResource {
    */
   @DELETE('/users/:id/relationships/groups')
   @websocket('users', 'groups', 'delete')
+  @parameters('id')
   @authenticated
   async relationshipGroupsDelete (ctx) {
     await this.relationshipChange({
@@ -598,6 +616,7 @@ export default class Users extends APIResource {
    */
   @GET('/users/:id/relationships/clients')
   @websocket('users', 'clients', 'read')
+  @parameters('id')
   @authenticated
   async relationshipClientsView (ctx) {
     const result = await this.relationshipView({
@@ -617,6 +636,7 @@ export default class Users extends APIResource {
    */
   @POST('/users/:id/relationships/clients')
   @websocket('users', 'clients', 'create')
+  @parameters('id')
   @authenticated
   async relationshipClientsCreate (ctx) {
     await this.relationshipChange({
@@ -637,6 +657,7 @@ export default class Users extends APIResource {
    */
   @PATCH('/users/:id/relationships/clients')
   @websocket('users', 'clients', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipClientsPatch (ctx) {
     await this.relationshipChange({
@@ -657,6 +678,7 @@ export default class Users extends APIResource {
    */
   @DELETE('/users/:id/relationships/clients')
   @websocket('users', 'clients', 'delete')
+  @parameters('id')
   @authenticated
   async relationshipClientsDelete (ctx) {
     await this.relationshipChange({

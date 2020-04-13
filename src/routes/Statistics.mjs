@@ -7,7 +7,7 @@ import LeaderboardQuery from '../query/LeaderboardQuery'
 import { UserStatisticsView, LeaderboardView } from '../view'
 import API, {
   authenticated,
-  GET,
+  GET, parameters
 } from './API'
 
 /**
@@ -87,6 +87,7 @@ class Statistics extends API {
    */
   @GET('/users/:id/statistics')
   @websocket('users', 'statistics')
+  @parameters('id')
   @authenticated
   async user (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
