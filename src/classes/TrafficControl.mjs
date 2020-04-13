@@ -177,7 +177,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {number} total number of requests
    */
   get totalRequests () {
-    return this.userRateLimit || allowedAuthenticatedRequestCount
+    return this.userRateLimit ?? allowedAuthenticatedRequestCount
   }
 }
 
