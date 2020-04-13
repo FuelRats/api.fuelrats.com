@@ -36,7 +36,7 @@ class TrafficControl {
     if (connection.state.user) {
       entity = this.retrieveAuthenticatedEntity({ user: connection.state.user })
     } else {
-      entity = this.retrieveUnauthenticatedEntity({ remoteAddress: connection.inet })
+      entity = this.retrieveUnauthenticatedEntity({ remoteAddress: connection.request.ip })
     }
 
     const valid = entity.remainingRequests > 0
@@ -154,11 +154,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    */
   get isAdmin () {
     const user = this.#user
-    return Permissions.groups.find((group) => {
-      return group.isAdministrator && user.groups.find((uGroup) => {
-        return uGroup.id === group.id
-      })
-    })
+    return user.permissions.includes('users.write')
   }
 
   /**
