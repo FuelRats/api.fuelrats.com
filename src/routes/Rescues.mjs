@@ -1,8 +1,8 @@
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import {
-  NotFoundAPIError,
-  UnsupportedMediaAPIError,
+  NotFoundAPIError, UnprocessableEntityAPIError,
+  UnsupportedMediaAPIError
 } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Event from '../classes/Event'
@@ -286,6 +286,16 @@ export default class Rescues extends APIResource {
       databaseType: Rescue,
       change: 'patch',
       relationship: 'firstLimpet',
+      callback: (rescue) => {
+        const hasRat = rescue.rats.some((rat) => {
+          return rat.id === ctx.data.data.id
+        })
+        if (!hasRat) {
+          throw new UnprocessableEntityAPIError({
+            pointer: '/data/id',
+          })
+        }
+      },
     })
 
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
