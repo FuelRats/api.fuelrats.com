@@ -63,7 +63,7 @@ export default class Rescue extends Model {
   @column(type.STRING, { allowNull: true })
   static system = undefined
 
-  @validate({ len: [1, rescueTitleMaxLength], isAlphanumeric: true })
+  @validate({ len: [1, rescueTitleMaxLength] })
   @column(type.STRING, { allowNull: true })
   static title = undefined
 
