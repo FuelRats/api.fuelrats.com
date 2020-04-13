@@ -156,7 +156,7 @@ export default class Rescues extends APIResource {
     await Rescue.update({
       deletedAt: new Date(),
       lastModifiedById: ctx.state.user.id,
-    }, { id: rescue.id })
+    }, { where: { id: rescue.result.id } })
 
     Event.broadcast('fuelrats.rescuedelete', ctx.state.user, {
       id: ctx.params.id,
