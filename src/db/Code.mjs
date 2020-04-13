@@ -1,4 +1,5 @@
-import { OAuthScope, isURL } from '../helpers/Validators'
+import Permission from '../classes/Permission'
+import { isURL } from '../helpers/Validators'
 import Model, { column, validate, table, type } from './Model'
 
 const oAuthScopeMaxLength = 128
@@ -15,7 +16,7 @@ export default class Code extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
-  @validate({ OAuthScope })
+  @validate({ scope: Permission.assertOAuthScopes })
   @column(type.ARRAY(type.STRING(oAuthScopeMaxLength)))
   static scope = []
 

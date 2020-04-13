@@ -66,18 +66,6 @@ export const UUID = new RegexLiteral(`^
   [0-9a-f]{12}
 `, 'igu')
 
-/**
- * Validate whether a list of OAuth Scopes is valid
- * @param {[string] }value the list of OAuth scopes to validate
- */
-export function OAuthScope (value) {
-  const invalid = value.some(() => {
-    return true
-  })
-  if (invalid) {
-    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
-  }
-}
 
 /**
  * Validate whether input is a valid CMDR name

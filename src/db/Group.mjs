@@ -1,4 +1,5 @@
-import { IRCVirtualHost, OAuthScope } from '../helpers/Validators'
+import Permission from '../classes/Permission'
+import { IRCVirtualHost } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 @table({ paranoid: true })
@@ -25,7 +26,7 @@ export default class Group extends Model {
   @column(type.INTEGER)
   static priority = 0
 
-  @validate({ OAuthScope })
+  @validate({ scope: Permission.assertOAuthScopes })
   @column(type.ARRAY(type.STRING))
   static permissions = []
 
