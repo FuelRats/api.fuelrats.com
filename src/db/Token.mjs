@@ -1,4 +1,4 @@
-import { OAuthScope } from '../helpers/Validators'
+import Permission from '../classes/Permission'
 import Model, { column, table, validate, type } from './Model'
 
 const oAuthScopeMaxLength = 128
@@ -14,7 +14,7 @@ export default class Token extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
-  @validate({ OAuthScope })
+  @validate({ scope: Permission.assertOAuthScopes })
   @column(type.ARRAY(type.STRING(oAuthScopeMaxLength)))
   static scope = []
 

@@ -27,20 +27,6 @@ import API, {
 } from './API'
 import Sessions from './Sessions'
 
-
-/**
- * Check whether these scopes are valid scopes that represent a permission in the API
- * @param {[string] }scopes
- */
-function validateScopes (scopes) {
-  const invalid = scopes.some((scope) => {
-    return Permission.allPermissions.includes(scope) === false && scope !== '*'
-  })
-  if (invalid) {
-    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
-  }
-}
-
 const mail = new Mail()
 const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
 
@@ -66,7 +52,7 @@ server.deserializeClient(async (id) => {
 })
 
 server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq) => {
-  validateScopes(areq.scope)
+  Permission.assertOAuthScopes(areq.scope.split(' '))
 
   const clientRedirectUri = redirectUri ?? client.redirectUri
 
@@ -81,7 +67,7 @@ server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq
 }))
 
 server.grant(oauth2orize.grant.token(async (client, user, ares, areq) => {
-  validateScopes(areq.scope)
+  Permission.assertOAuthScopes(areq.scope.split(' '))
 
   const token = await Token.create({
     value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),

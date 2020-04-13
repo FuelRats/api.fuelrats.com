@@ -1,11 +1,11 @@
 {
-  "rescues": [true],
-  "rats": [true],
-  "users": [true],
-  "clients": [true],
-  "ships": [true],
-  "decals": [true],
-  "groups": [false],
-  "nicknames": [true],
-  "rescue-revisions": [false]
+  "rescues": ["read.me", "read", "write.me", "write"],
+  "rats": ["read.me", "read", "write.me", "write"],
+  "users": ["read.me", "read", "write.me", "write"],
+  "clients": ["read.me", "read", "write.me", "write"],
+  "ships": ["read.me", "read", "write.me", "write"],
+  "decals": ["read.me", "read", "write.me", "write"],
+  "groups": ["read", "write"],
+  "nicknames": ["read.me", "read", "write.me", "write"],
+  "rescue-revisions": ["read", "write"]
 }

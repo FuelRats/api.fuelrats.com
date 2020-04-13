@@ -1,6 +1,6 @@
 import fs from 'fs'
 import i18next from 'i18next'
-import { Group } from '../db'
+import { UnprocessableEntityAPIError } from './APIError'
 import { Context } from './Context'
 
 const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
@@ -11,26 +11,6 @@ i18next.init({
   lng: 'en',
   resources: localisationResources,
 })
-
-const permissionLocaleKeys = {
-  read: 'permissionRead',
-  write: 'permissionWrite',
-  delete: 'permissionDelete',
-}
-
-let groups = {}
-
-/**
- * Fetches all the permissions from the database
- * @returns {Promise.<void>}
- */
-;(async function fetchPermissions () {
-  groups = await Group.findAll({})
-  groups.sort((group1, group2) => {
-    return group1.priority > group2.priority
-  })
-}())
-
 
 
 /**
@@ -79,48 +59,26 @@ export default class Permission {
   }
 
   /**
-   * Get the available permissions/oauth scopes
-   * @returns {object}
+   * Check whether a permission/scope is valid
+   * @param {string} scope a permission/scope
+   * @returns {boolean}
    */
-  static get groups () {
-    return groups
+  static isValidOAuthScope (scope) {
+    return scope === '*' || Permission.allPermissions.includes(scope)
   }
 
   /**
-   * Get a list of localised human readable permissions from a list of OAuth scopes
-   * @param {object} arg function arguments object
-   * @param {Array} arg.scopes Array of OAuth scopes
-   * @param {Context} arg.connection request context
-   * @returns {Array} Array of objects with localised human readable permissions
+   * Throw an exception if one of the scopes in the list are not a valid permission
+   * @param {[string]} scopes list of permissions/scopes
+   * @throws UnprocessableEntityAPIError
    */
-  static humanReadable ({ scopes, connection }) {
-    let scopeList = scopes
-    if (scopeList.includes('*')) {
-      scopeList = Permission.allPermissions
+  static assertOAuthScopes (scopes) {
+    const allScopesValid = scopes.every((scope) => {
+      return Permission.isValidOAuthScope(scope)
+    })
+    if (allScopesValid === false) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
     }
-
-    return scopeList.reduce((acc, permission) => {
-      const permissionComponents = permission.split('.')
-      const [group, action, isSelf] = permissionComponents
-
-      let permissionLocaleKey = permissionLocaleKeys[action]
-      permissionLocaleKey += isSelf ? 'Own' : 'All'
-      const accessible = Permission.granted({ permissions: [permission], connection })
-      if (isSelf && scopeList.includes(`${group}.${action}`)) {
-        return acc
-      }
-
-      const count = group === 'user' && isSelf ? 1 : 0
-
-      acc.push({
-        permission: i18next.t(permissionLocaleKey, {
-          group: i18next.t(group, { count }),
-          count,
-        }),
-        accessible,
-      })
-      return acc
-    }, [])
   }
 
   /**
@@ -128,21 +86,10 @@ export default class Permission {
    * @returns {[string, any]} All existing permissions
    */
   static get allPermissions () {
-    return Object.entries(permissionList).reduce((acc, [domain, [self, ...accessTypes]]) => {
-      let accessTypeList = accessTypes
-      if (accessTypeList.length === 0) {
-        accessTypeList = ['read', 'write']
-      }
-
-      acc.push(...accessTypeList.map((accessType) => {
+    return Object.entries(permissionList).reduce((acc, [domain, accessTypes]) => {
+      acc.push(...accessTypes.map((accessType) => {
         return `${domain}.${accessType}`
       }))
-
-      if (self) {
-        acc.push(...accessTypeList.map((accessType) => {
-          return `${domain}.${accessType}.me`
-        }))
-      }
 
       return acc
     }, [])
