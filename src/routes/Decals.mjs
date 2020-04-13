@@ -119,6 +119,7 @@ export default class Decals extends APIResource {
    */
   @PUT('/decals/:id')
   @websocket('decals', 'update')
+  @parameters('id')
   @authenticated
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Decal, updateSearch: { id: ctx.params.id } })
@@ -133,6 +134,7 @@ export default class Decals extends APIResource {
    */
   @DELETE('/decals/:id')
   @websocket('decals', 'delete')
+  @parameters('id')
   @authenticated
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Decal })
@@ -147,6 +149,7 @@ export default class Decals extends APIResource {
    */
   @GET('/decals/:id/relationships/rat')
   @websocket('decals', 'rat', 'view')
+  @parameters('id')
   @authenticated
   async relationshipRatView (ctx) {
     const result = await this.relationshipView({
@@ -165,6 +168,7 @@ export default class Decals extends APIResource {
    */
   @PATCH('/decals/:id/relationships/rat')
   @websocket('decals', 'rat', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipRatPatch (ctx) {
     const result = await this.relationshipChange({

@@ -1,8 +1,8 @@
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import {
-  NotFoundAPIError,
-  UnsupportedMediaAPIError,
+  NotFoundAPIError, UnprocessableEntityAPIError,
+  UnsupportedMediaAPIError
 } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Event from '../classes/Event'
@@ -68,6 +68,7 @@ export default class Rescues extends APIResource {
    */
   @GET('/rescues/:id')
   @websocket('rescues', 'read')
+  @parameters('id')
   @authenticated
   async findById (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: Rescue })
@@ -144,6 +145,7 @@ export default class Rescues extends APIResource {
    */
   @DELETE('/rescues/:id')
   @websocket('rescues', 'delete')
+  @parameters('id')
   @authenticated
   @permissions('rescues.write')
   async delete (ctx) {
@@ -174,6 +176,7 @@ export default class Rescues extends APIResource {
    */
   @GET('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'read')
+  @parameters('id')
   @authenticated
   async relationshipRatsView (ctx) {
     const result = await this.relationshipView({
@@ -192,6 +195,7 @@ export default class Rescues extends APIResource {
    */
   @POST('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'create')
+  @parameters('id')
   @authenticated
   async relationshipRatsCreate (ctx) {
     await this.relationshipChange({
@@ -215,6 +219,7 @@ export default class Rescues extends APIResource {
    */
   @PATCH('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipRatsPatch (ctx) {
     await this.relationshipChange({
@@ -238,6 +243,7 @@ export default class Rescues extends APIResource {
    */
   @DELETE('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'delete')
+  @parameters('id')
   @authenticated
   async relationshipRatsDelete (ctx) {
     await this.relationshipChange({
@@ -261,6 +267,7 @@ export default class Rescues extends APIResource {
    */
   @GET('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'read')
+  @parameters('id')
   @authenticated
   async relationshipFirstLimpetView (ctx) {
     const result = await this.relationshipView({
@@ -279,6 +286,7 @@ export default class Rescues extends APIResource {
    */
   @PATCH('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipFirstLimpetPatch (ctx) {
     await this.relationshipChange({
@@ -286,6 +294,16 @@ export default class Rescues extends APIResource {
       databaseType: Rescue,
       change: 'patch',
       relationship: 'firstLimpet',
+      callback: (rescue) => {
+        const hasRat = rescue.rats.some((rat) => {
+          return rat.id === ctx.data.data.id
+        })
+        if (!hasRat) {
+          throw new UnprocessableEntityAPIError({
+            pointer: '/data/id',
+          })
+        }
+      },
     })
 
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
