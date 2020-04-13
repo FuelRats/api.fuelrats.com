@@ -116,6 +116,7 @@ export default class Ships extends APIResource {
    */
   @DELETE('/ships/:id')
   @websocket('ships', 'delete')
+  @parameters('id')
   @authenticated
   async delete (ctx) {
     await super.delete({ ctx, databaseType: Ship })
@@ -130,6 +131,7 @@ export default class Ships extends APIResource {
    */
   @GET('/ships/:id/relationships/rat')
   @websocket('ships', 'rat', 'read')
+  @parameters('id')
   @authenticated
   async relationshipRatView (ctx) {
     const result = await this.relationshipView({
@@ -148,6 +150,7 @@ export default class Ships extends APIResource {
    */
   @PATCH('/ships/:id/relationships/rat')
   @websocket('ships', 'rat', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipRatPatch (ctx) {
     await this.relationshipChange({

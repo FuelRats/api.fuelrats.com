@@ -9,8 +9,8 @@ import StatusCode from '../classes/StatusCode'
 import WebSocket, { websocket } from '../classes/WebSocket'
 import { Client } from '../db'
 import API, {
-  authenticated,
-  POST,
+  authenticated, parameters,
+  POST
 } from './API'
 
 /**
@@ -29,6 +29,7 @@ export default class Events extends API {
    * @endpoint
    */
   @websocket('events', 'subscribe')
+  @parameters('events')
   @authenticated
   subscribe (ctx) {
     const { events } = ctx.query
@@ -56,6 +57,7 @@ export default class Events extends API {
    * @endpoint
    */
   @websocket('events', 'unsubscribe')
+  @parameters('events')
   @authenticated
   unsubscribe (ctx) {
     const { events } = ctx.query()
@@ -87,6 +89,7 @@ export default class Events extends API {
    */
   @POST('/events/:event')
   @websocket('events', 'broadcast')
+  @parameters('event')
   @authenticated
   async broadcast (ctx) {
     let { event } = ctx.query
