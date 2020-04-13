@@ -33,6 +33,9 @@ export default class Group extends Model {
   @column(type.JSONB)
   static channels = {}
 
+  @column(type.INTEGER, { allowNull: true })
+  static rateLimit = undefined
+
   /**
    * @inheritdoc
    */

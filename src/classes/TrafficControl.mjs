@@ -1,12 +1,10 @@
 import { User } from '../db'
 import { Context } from './Context'
-import Permissions from './Permission'
 
 const hourTimer = 60 * 60 * 1000
 
 const allowedUnauthenticatedRequestCount = 360
 const allowedAuthenticatedRequestCount = 3600
-const allowedAdminRequestCount = 10000
 
 
 /**
@@ -148,13 +146,22 @@ class AuthenticatedUserEntity extends TrafficEntity {
     this.requestCount = initialCount
   }
 
+
   /**
-   * Whether the authenticated user this entity belongs to is an admin
-   * @returns {boolean} true if the authenticated user this entity belongs to is an admin
+   * Get the highest available rate limit for this user
+   * @returns {number|undefined} highest available rate limit
    */
-  get isAdmin () {
+  get userRateLimit () {
     const user = this.#user
-    return user.permissions.includes('users.write')
+    return user.groups.reduce((acc, group) => {
+      let rateLimit = acc
+      if (group.rateLimit) {
+        if (!rateLimit || group.rateLimit > rateLimit) {
+          rateLimit = group.rateLimit
+        }
+      }
+      return rateLimit
+    })
   }
 
   /**
@@ -162,10 +169,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {number} the number of remaining requests this entity has in this period
    */
   get remainingRequests () {
-    if (this.isAdmin) {
-      return allowedAdminRequestCount - this.requestCount
-    }
-    return allowedAuthenticatedRequestCount - this.requestCount
+    return this.totalRequests - this.requestCount
   }
 
   /**
@@ -173,10 +177,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
    * @returns {number} total number of requests
    */
   get totalRequests () {
-    if (this.isAdmin) {
-      return allowedAdminRequestCount
-    }
-    return allowedAuthenticatedRequestCount
+    return this.userRateLimit || allowedAuthenticatedRequestCount
   }
 }
 
