@@ -158,7 +158,7 @@ app.use(async (ctx, next) => {
       ctx.body = result
     } else if (typeof result === 'undefined' && !ctx.body) {
       throw new NotFoundAPIError({})
-    } else {
+    } else if (!ctx.body) {
       logger.error({
         GELF: true,
         _event: 'request',
