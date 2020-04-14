@@ -10,18 +10,19 @@ import {
 import Anope from '../classes/Anope'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
-import { Rat } from '../db'
+import { Rat, User } from '../db'
 import AnopeQuery from '../query/AnopeQuery'
 import DatabaseQuery from '../query/DatabaseQuery'
-import { NicknameView } from '../view'
+import { NicknameView, UserView } from '../view'
 import API, {
   GET,
   POST,
   DELETE,
   authenticated,
   getJSONAPIData,
-  PATCH,
+  PATCH, parameters
 } from './API'
+import Decals from './Decals'
 
 /**
  * Endpoint for managing IRC nicknames
@@ -60,6 +61,7 @@ export default class Nickname extends API {
    */
   @GET('/nicknames/:nick')
   @websocket('nicknames', 'read')
+  @parameters('nick')
   @authenticated
   async findById (ctx) {
     const { nick } = ctx.params
@@ -113,6 +115,7 @@ export default class Nickname extends API {
    */
   @DELETE('/nicknames/:nick')
   @websocket('nicknames', 'delete')
+  @parameters('nick')
   @authenticated
   async delete (ctx) {
     const { nick } = ctx.params
@@ -131,6 +134,28 @@ export default class Nickname extends API {
     return true
   }
 
+  @GET('/nicknames/:nick/relationships/user')
+  @websocket('nicknames', 'user', 'read')
+  @parameters('nick')
+  @authenticated
+  async relationshipUserView (ctx) {
+    const { nick } = ctx.params
+    const nickname = await Anope.findNickname(nick)
+    if (!nickname) {
+      throw new NotFoundAPIError({ parameter: 'nick' })
+    }
+
+
+    const user = await User.findOne({
+      where: {
+        email: { iLike: nickname.email },
+      },
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result: user, type: UserView })
+  }
+
   /**
    * Get a nicknames' linked rat relationship
    * @endpoint
@@ -139,17 +164,11 @@ export default class Nickname extends API {
   @websocket('nicknames', 'rat', 'read')
   @authenticated
   async relationshipDisplayRatView (ctx) {
-    if (!ctx.params.nick) {
-      throw new BadRequestAPIError({ parameter: 'nick' })
-    }
-
     const nickname = await Anope.findNickname(ctx.params.nick)
 
     if (!nickname) {
       throw new NotFoundAPIError({ parameter: 'nick' })
     }
-
-    this.requireReadPermission({ connection: ctx, entity: nickname })
 
     let rat = undefined
     if (nickname.ratId) {
