@@ -156,7 +156,7 @@ app.use(async (ctx, next) => {
       ctx.body = result.toString()
     } else if (result) {
       ctx.body = result
-    } else if (typeof result === 'undefined') {
+    } else if (typeof result === 'undefined' && !ctx.body) {
       throw new NotFoundAPIError({})
     } else {
       logger.error({
