@@ -10,7 +10,7 @@ import npid from 'npid'
 import { promisify } from 'util'
 import Document from './Documents/Document'
 import ErrorDocument from './Documents/ErrorDocument'
-import { TooManyRequestsAPIError, ImATeapotAPIError, InternalServerError } from './classes/APIError'
+import { TooManyRequestsAPIError, ImATeapotAPIError, InternalServerError, NotFoundAPIError } from './classes/APIError'
 import Authentication from './classes/Authentication'
 import Permission from './classes/Permission'
 import router from './classes/Router'
@@ -156,6 +156,8 @@ app.use(async (ctx, next) => {
       ctx.body = result.toString()
     } else if (result) {
       ctx.body = result
+    } else if (typeof result === 'undefined') {
+      throw new NotFoundAPIError({})
     } else {
       logger.error({
         GELF: true,

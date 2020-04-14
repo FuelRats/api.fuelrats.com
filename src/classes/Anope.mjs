@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt'
-import DateTime from 'date-fns'
 import knex from 'knex'
 import UUID from 'pure-uuid'
 import config from '../config'

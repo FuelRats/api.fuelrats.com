@@ -87,6 +87,17 @@ export default class NicknameView extends DatabaseView {
   }
 
   /**
+   * The view's self link
+   * @returns {string}
+   */
+  get self () {
+    if (this.parent) {
+      return `${this.parent.self}/${this.object.nick}`
+    }
+    return `${this.type}/${this.object.nick}`
+  }
+
+  /**
    * @inheritdoc
    */
   get related () {
