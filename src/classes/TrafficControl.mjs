@@ -161,7 +161,7 @@ class AuthenticatedUserEntity extends TrafficEntity {
         }
       }
       return rateLimit
-    }, allowedUnauthenticatedRequestCount)
+    }, allowedAuthenticatedRequestCount)
   }
 
   /**
