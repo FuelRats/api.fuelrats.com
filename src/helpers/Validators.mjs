@@ -14,7 +14,7 @@ const requiredQuoteFields = [
 ]
 
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/u
-export const IRCNickname = /^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}]{1,29})?$/u
+export const IRCNickname = /^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$/u
 export const languageCode = /^[a-z]{2}-[A-Z]{2}$/u
 export const stripeUserId = /cus_[A-Za-z0-9]{14}$/u
 
@@ -66,18 +66,6 @@ export const UUID = new RegexLiteral(`^
   [0-9a-f]{12}
 `, 'igu')
 
-/**
- * Validate whether a list of OAuth Scopes is valid
- * @param {[string] }value the list of OAuth scopes to validate
- */
-export function OAuthScope (value) {
-  const invalid = value.some(() => {
-    return true
-  })
-  if (invalid) {
-    throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/scope' })
-  }
-}
 
 /**
  * Validate whether input is a valid CMDR name

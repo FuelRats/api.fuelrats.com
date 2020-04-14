@@ -144,7 +144,10 @@ class Document {
       const singleObjectId = (new this.#type({ object: this.#objects })).id
       return `${config.server.externalUrl}/${this.#type.type}/${singleObjectId}`
     }
-    return `${config.server.externalUrl}/${this.#type.type}`
+    if (this.#type) {
+      return `${config.server.externalUrl}/${this.#type.type}`
+    }
+    return undefined
   }
 
   /**

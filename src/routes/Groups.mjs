@@ -12,7 +12,7 @@ import {
   DELETE,
   authenticated,
   permissions,
-  WritePermission,
+  WritePermission, parameters
 } from './API'
 import APIResource from './APIResource'
 
@@ -47,6 +47,7 @@ export default class Groups extends APIResource {
    */
   @GET('/groups/:id')
   @websocket('groups', 'read')
+  @parameters('id')
   @authenticated
   async read (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: Group })
@@ -76,6 +77,7 @@ export default class Groups extends APIResource {
    */
   @PUT('/groups/:id')
   @websocket('groups', 'update')
+  @parameters('id')
   @authenticated
   @permissions('groups.write')
   async update (ctx) {
@@ -91,6 +93,7 @@ export default class Groups extends APIResource {
    */
   @DELETE('/groups/:id')
   @websocket('groups', 'delete')
+  @parameters('id')
   @authenticated
   @permissions('groups.write')
   async delete (ctx) {

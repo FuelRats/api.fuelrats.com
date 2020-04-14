@@ -145,6 +145,7 @@ export default class Rats extends APIResource {
    */
   @PATCH('/rats/:id/relationships/user')
   @websocket('rats', 'user', 'patch')
+  @parameters('id')
   @authenticated
   async relationshipUserPatch (ctx) {
     await this.relationshipChange({
