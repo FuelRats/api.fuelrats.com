@@ -8,8 +8,10 @@ import { User } from '../db'
 import logger from '../logging'
 import Query from '../query/Query'
 import {
+  ForbiddenAPIError,
   NotFoundAPIError,
   TooManyRequestsAPIError,
+  UnauthorizedAPIError,
 } from './APIError'
 
 import Authentication from './Authentication'
@@ -152,10 +154,30 @@ export default class WebSocket {
       _query: query,
     }, `Websocket Message by ${ctx.request.ip}`)
 
-    const { representing } = ctx.query
+    const { representing, permanentDeletion, username, password } = ctx.query
+    if (username && password) {
+      const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
+      if (!basicUser) {
+        throw new UnauthorizedAPIError({})
+      }
+      ctx.state.user = basicUser
+      ctx.state.basicAuth = true
+    }
     if (representing) {
       await Authentication.authenticateRepresenting({ ctx, representing })
       delete query.representing
+    }
+
+    if (permanentDeletion) {
+      if (!ctx.state.basicAuth) {
+        throw new ForbiddenAPIError({ parameter: 'permanentDeletion' })
+      }
+
+      if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
+        ctx.state.forceDelete = true
+      } else {
+        throw new ForbiddenAPIError({ parameter: 'permanentDeletion' })
+      }
     }
 
     try {

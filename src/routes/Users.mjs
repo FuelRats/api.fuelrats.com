@@ -38,6 +38,7 @@ import {
 import APIResource from './APIResource'
 import Decals from './Decals'
 import Verifications from './Verifications'
+import Authentication from '../classes/Authentication'
 
 const mail = new Mail()
 
@@ -701,7 +702,16 @@ export default class Users extends APIResource {
       data: WritePermission.group,
       email: WritePermission.sudo,
       password: WritePermission.sudo,
-      status: WritePermission.sudo,
+      status: (ctx, entity, value) => {
+        if (ctx.state.user.permissions.includes('users.write')) {
+          return true
+        }
+
+        if (entity && entity.id === ctx.state.user.id && value === 'deactivated') {
+          return ctx.state.basicAuth === true
+        }
+        return false
+      },
       suspended: WritePermission.sudo,
       stripeId: WritePermission.group,
       frontierId: WritePermission.internal,

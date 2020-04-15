@@ -7,5 +7,6 @@
   "decals": ["read.me", "read", "write.me", "write"],
   "groups": ["read", "write"],
   "nicknames": ["read.me", "read", "write.me", "write"],
-  "rescue-revisions": ["read", "write"]
+  "rescue-revisions": ["read", "write"],
+  "resources": ["forcedelete"]
 }
