@@ -161,7 +161,7 @@ export default class APIResource extends API {
 
     try {
       if (attributes instanceof Object) {
-        this.validateUpdateAccess({ ctx, attributes, entity })
+        await this.validateUpdateAccess({ ctx, attributes, entity })
 
         await entity.update({
           ...attributes,
@@ -396,7 +396,7 @@ export default class APIResource extends API {
    * @param {Context} arg.ctx request context
    * @param {object} arg.attributes attributes list
    */
-  validateCreateAccess ({ ctx, attributes }) {
+  async validateCreateAccess ({ ctx, attributes }) {
     const isGroup = Permission.granted({
       permissions: [`${this.type}.write`],
       connection: ctx,
@@ -410,7 +410,14 @@ export default class APIResource extends API {
       connection: ctx,
     })
 
-    this.validatePermissionForFields({ attributes, isInternal, isGroup, isSelf })
+    await this.validatePermissionForFields({
+      attributes,
+      isInternal,
+      isGroup,
+      isSelf,
+      ctx,
+      entity: undefined,
+    })
   }
 
   /**
@@ -420,40 +427,91 @@ export default class APIResource extends API {
    * @param {boolean} arg.isInternal Whether we have internal access permission
    * @param {boolean} arg.isGroup Whether we have group level access permission
    * @param {boolean} arg.isSelf Whether we have self level access permission
+   * @param {Context} arg.ctx Connection object
+   * @param {object} arg.entity the entity that permissions are being validated for
+   * @throws ForbiddenAPIError
    */
-  validatePermissionForFields ({ attributes, isInternal, isGroup, isSelf }) {
-    Object.entries(attributes).forEach(([key]) => {
-      const attributePermissions = this.writePermissionsForFieldAccess[key]
-      if (!attributePermissions) {
-        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
-      }
-
-      const hasPermission = () => {
-        switch (attributePermissions) {
-          case WritePermission.all:
-            return true
-
-          case WritePermission.internal:
-            return isInternal
-
-          case WritePermission.sudo:
-            return isGroup
-
-          case WritePermission.group:
-            return isGroup ?? isSelf
-
-          case WritePermission.self:
-            return isSelf
-
-          default:
-            return false
-        }
-      }
-
-      if (hasPermission() === false) {
-        throw new ForbiddenAPIError({ pointer: `/data/attributes/${key}` })
-      }
+  async validatePermissionForFields ({
+    attributes,
+    isInternal,
+    isGroup,
+    isSelf,
+    ctx,
+    entity,
+  }) {
+    const fieldChecks = Object.entries(attributes).map(([field, value]) => {
+      return this.validatePermissionForField({
+        ctx,
+        entity,
+        field,
+        value,
+        isInternal,
+        isGroup,
+        isSelf,
+      })
     })
+
+    await Promise.all(fieldChecks)
+  }
+
+  /**
+   *
+   * @param {object} arg function arguments object
+   * @param {Context} arg.ctx Connection object
+   * @param {object} arg.entity the entity that permissions are being validated for
+   * @param {string} arg.field the field that pmerissions are being validated for
+   * @param {*} arg.value the value that is being set
+   * @param {boolean} arg.isInternal Whether we have internal access permission
+   * @param {boolean} arg.isGroup Whether we have group level access permission
+   * @param {boolean} arg.isSelf Whether we have self level access permission
+   * @returns {Promise<void>}
+   * @throws ForbiddenAPIError
+   */
+  async validatePermissionForField ({
+    ctx,
+    entity,
+    field,
+    value,
+    isInternal,
+    isGroup,
+    isSelf,
+  }) {
+    const attributePermissions = this.writePermissionsForFieldAccess[field]
+    if (!attributePermissions) {
+      throw new ForbiddenAPIError({ pointer: `/data/attributes/${field}` })
+    }
+
+    const hasPermission = () => {
+      if (typeof attributePermissions === 'function') {
+        return attributePermissions(ctx, entity, value)
+      }
+
+      switch (attributePermissions) {
+        case WritePermission.all:
+          return true
+
+        case WritePermission.internal:
+          return isInternal
+
+        case WritePermission.sudo:
+          return isGroup
+
+        case WritePermission.group:
+          return isGroup ?? isSelf
+
+        case WritePermission.self:
+          return isSelf
+
+        default:
+          return false
+      }
+    }
+
+    const hasPermissionForField = await hasPermission()
+
+    if (hasPermissionForField === false) {
+      throw new ForbiddenAPIError({ pointer: `/data/attributes/${field}` })
+    }
   }
 
   /**
@@ -463,7 +521,7 @@ export default class APIResource extends API {
    * @param {object} arg.attributes attributes list
    * @param {object} arg.entity the entity to validate
    */
-  validateUpdateAccess ({ ctx, attributes, entity }) {
+  async validateUpdateAccess ({ ctx, attributes, entity }) {
     const isGroup = Permission.granted({
       permissions: [`${this.type}.write`],
       connection: ctx,
@@ -477,7 +535,14 @@ export default class APIResource extends API {
       connection: ctx,
     })
 
-    this.validatePermissionForFields({ attributes, isInternal, isGroup, isSelf })
+    await this.validatePermissionForFields({
+      attributes,
+      isInternal,
+      isGroup,
+      isSelf,
+      ctx,
+      entity,
+    })
   }
 
   /**

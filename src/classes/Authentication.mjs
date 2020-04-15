@@ -168,6 +168,13 @@ class Authentication {
    * @returns {Promise<boolean>} true if the request was successfully authenticated, false if not
    */
   static async authenticate ({ connection }) {
+    const basicUser = await Authentication.basicUserAuthentication({ connection })
+    if (basicUser) {
+      connection.state.user = basicUser
+      connection.state.basicAuth = true
+      return true
+    }
+
     if (connection.session.userId) {
       const user = await User.findOne({ where: { id: connection.session.userId } })
       if (user) {

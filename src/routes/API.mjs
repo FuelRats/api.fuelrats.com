@@ -4,7 +4,7 @@ import {
   UnauthorizedAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import Authentication, { getBasicAuth } from '../classes/Authentication'
+import Authentication from '../classes/Authentication'
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import router from '../classes/Router'
@@ -157,10 +157,9 @@ export function clientAuthenticated (target, name, descriptor) {
 export function basicAuthenticated (target, name, descriptor) {
   const endpoint = descriptor.value
 
-  descriptor.value = async function value (...args) {
+  descriptor.value = function value (...args) {
     const [ctx] = args
-    const user = Authentication.basicUserAuthentication({ connection: ctx })
-    if (user.id === await ctx.state.user.id) {
+    if (ctx.state.basicAuth === true) {
       return endpoint.apply(this, args)
     }
     throw new UnauthorizedAPIError({})
