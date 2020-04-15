@@ -154,16 +154,23 @@ export default class WebSocket {
       _query: query,
     }, `Websocket Message by ${ctx.request.ip}`)
 
-    const { representing, permanentDeletion } = ctx.query
+    const { representing, permanentDeletion, username, password } = ctx.query
+    if (username && password) {
+      const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
+      if (!basicUser) {
+        throw new UnauthorizedAPIError({})
+      }
+      ctx.state.user = basicUser
+      ctx.state.basicAuth = true
+    }
     if (representing) {
       await Authentication.authenticateRepresenting({ ctx, representing })
       delete query.representing
     }
 
     if (permanentDeletion) {
-      const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
-      if (basicUser.id !== ctx.state.user.id) {
-        throw new UnauthorizedAPIError({})
+      if (!ctx.state.basicAuth) {
+        throw new ForbiddenAPIError({ parameter: 'permanentDeletion' })
       }
 
       if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
