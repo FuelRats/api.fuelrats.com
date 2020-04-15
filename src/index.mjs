@@ -10,7 +10,13 @@ import npid from 'npid'
 import { promisify } from 'util'
 import Document from './Documents/Document'
 import ErrorDocument from './Documents/ErrorDocument'
-import { TooManyRequestsAPIError, ImATeapotAPIError, InternalServerError, NotFoundAPIError } from './classes/APIError'
+import {
+  TooManyRequestsAPIError,
+  ImATeapotAPIError,
+  InternalServerError,
+  NotFoundAPIError,
+  ForbiddenAPIError
+} from './classes/APIError'
 import Authentication from './classes/Authentication'
 import Permission from './classes/Permission'
 import router from './classes/Router'
@@ -147,6 +153,14 @@ app.use(async (ctx, next) => {
     }
 
     ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
+
+    if (ctx.get('X-Permanent-Deletion')) {
+      if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
+        ctx.state.forceDelete = true
+      } else {
+        throw new ForbiddenAPIError({ parameter: 'X-Permanent-Deletion' })
+      }
+    }
 
     const result = await next()
     if (result === true) {

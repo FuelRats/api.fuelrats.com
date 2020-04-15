@@ -228,7 +228,7 @@ export default class APIResource extends API {
       await callback(entity)
     }
 
-    return entity.destroy()
+    return entity.destroy({ force: ctx.state.forceDelete })
   }
 
   /**
