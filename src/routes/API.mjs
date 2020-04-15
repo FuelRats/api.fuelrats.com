@@ -4,6 +4,7 @@ import {
   UnauthorizedAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
+import Authentication, { getBasicAuth } from '../classes/Authentication'
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import router from '../classes/Router'
@@ -143,9 +144,23 @@ export function authenticated (target, name, descriptor) {
 export function clientAuthenticated (target, name, descriptor) {
   const endpoint = descriptor.value
 
-  descriptor.value = function value (...args) {
+  descriptor.value = async function value (...args) {
+    await Authentication.requireClientAuthentication({ connection: args[0] })
+    return endpoint.apply(this, args)
+  }
+}
+
+// eslint-disable-next-line jsdoc/require-param
+/**
+ * ESNext decorator for requiring basic user authentication on an endpoint
+ */
+export function basicAuthenticated (target, name, descriptor) {
+  const endpoint = descriptor.value
+
+  descriptor.value = async function value (...args) {
     const [ctx] = args
-    if (ctx.state.client) {
+    const user = Authentication.basicUserAuthentication({ connection: ctx })
+    if (user.id === await ctx.state.user.id) {
       return endpoint.apply(this, args)
     }
     throw new UnauthorizedAPIError({})

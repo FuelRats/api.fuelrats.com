@@ -102,6 +102,34 @@ class Authentication {
   }
 
   /**
+   * Assert that client authentication is provided in the request
+   * @param {object} obj function arguments object
+   * @param {Context} obj.connection connection object
+   * @returns {Promise<Client>}  OAuth client
+   */
+  static requireClientAuthentication ({ connection }) {
+    const [clientId, clientSecret] = getBasicAuth(connection)
+    if (clientId) {
+      return Authentication.clientAuthenticate({ clientId, secret: clientSecret })
+    }
+    throw new UnauthorizedAPIError({})
+  }
+
+  /**
+   * Perform basic user authentication
+   * @param {object} obj function arguments object
+   * @param {Context} obj.connection connection object
+   * @returns {Promise<db.User|undefined>} authenticated user
+   */
+  static basicUserAuthentication ({ connection }) {
+    const [email, password] = getBasicAuth(connection)
+    if (email && password) {
+      return Authentication.passwordAuthenticate({ email, password })
+    }
+    return undefined
+  }
+
+  /**
    * Authenticate an OAuth client using client id and client secret
    * @param {object} arg function arguments object
    * @param {string} arg.clientId the ID of the OAuth client to authenticate
@@ -140,11 +168,6 @@ class Authentication {
    * @returns {Promise<boolean>} true if the request was successfully authenticated, false if not
    */
   static async authenticate ({ connection }) {
-    const [clientId, clientSecret] = getBasicAuth(connection)
-    if (clientId) {
-      connection.state.client = await Authentication.clientAuthenticate({ clientId, secret: clientSecret })
-    }
-
     if (connection.session.userId) {
       const user = await User.findOne({ where: { id: connection.session.userId } })
       if (user) {
@@ -186,11 +209,11 @@ class Authentication {
    * @returns {Promise<void>}
    */
   static async isClientAuthenticated (ctx, next) {
-    if (ctx.state.client) {
-      await next()
-    } else {
-      throw new UnauthorizedAPIError({})
-    }
+    const client = await Authentication.requireClientAuthentication({ connection: ctx })
+    ctx.state.client = client
+    ctx.state.user = client
+
+    return next()
   }
 
   /**
@@ -259,7 +282,7 @@ function getBearerToken (ctx) {
  * @param {Context} ctx the request object to retrieve basic auth credentials from
  * @returns {Array} An array containing the username and password, or an empty array if none was found.
  */
-function getBasicAuth (ctx) {
+export function getBasicAuth (ctx) {
   const authorizationHeader = ctx.get('Authorization')
   if (authorizationHeader.startsWith('Basic ') && authorizationHeader.length > basicAuthHeaderOffset) {
     const authString = Buffer.from(authorizationHeader.substring(basicAuthHeaderOffset), 'base64').toString('utf8')

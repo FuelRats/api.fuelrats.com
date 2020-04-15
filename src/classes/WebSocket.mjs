@@ -10,7 +10,8 @@ import Query from '../query/Query'
 import {
   ForbiddenAPIError,
   NotFoundAPIError,
-  TooManyRequestsAPIError
+  TooManyRequestsAPIError,
+  UnauthorizedAPIError,
 } from './APIError'
 
 import Authentication from './Authentication'
@@ -160,6 +161,11 @@ export default class WebSocket {
     }
 
     if (permanentDeletion) {
+      const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
+      if (basicUser.id !== ctx.state.user.id) {
+        throw new UnauthorizedAPIError({})
+      }
+
       if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
         ctx.state.forceDelete = true
       } else {

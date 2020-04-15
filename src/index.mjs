@@ -15,7 +15,7 @@ import {
   ImATeapotAPIError,
   InternalServerError,
   NotFoundAPIError,
-  ForbiddenAPIError
+  ForbiddenAPIError, UnauthorizedAPIError
 } from './classes/APIError'
 import Authentication from './classes/Authentication'
 import Permission from './classes/Permission'
@@ -155,6 +155,11 @@ app.use(async (ctx, next) => {
     ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
 
     if (ctx.get('X-Permanent-Deletion')) {
+      const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
+      if (basicUser.id !== ctx.state.user.id) {
+        throw new UnauthorizedAPIError({})
+      }
+
       if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
         ctx.state.forceDelete = true
       } else {
