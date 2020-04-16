@@ -8,7 +8,7 @@ import API, {
   GET,
 } from './API'
 
-const build = JSON.parse(fs.readFileSync('build.json', 'utf8'))
+export const build = JSON.parse(fs.readFileSync('build.json', 'utf8'))
 
 /**
  * API endpoint to get API version information
