@@ -68,8 +68,7 @@ class Register {
         transaction: transaction
       })
 
-      name = name.trim()
-      name = name.replace(/CMDR/i, '')
+      name = name.replace(/CMDR/i, '').trim()
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
         throw Errors.template('invalid_parameter', 'platform')
