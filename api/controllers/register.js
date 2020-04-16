@@ -68,6 +68,7 @@ class Register {
         transaction: transaction
       })
 
+      name = name.trim()
       name = name.replace(/CMDR/i, '')
       if (platforms.includes(platform) === false) {
         // noinspection ExceptionCaughtLocallyJS
