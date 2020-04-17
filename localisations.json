@@ -1,38 +1,6 @@
 {
   "en": {
     "translation": {
-      "rescues": "rescue",
-      "rescues_plural": "rescues",
-      "clients": "OAuth Client",
-      "clients_plural": "OAuth Clients",
-      "rats": "rat",
-      "rats_plural": "rats",
-      "users": "user profile",
-      "users_plural": "user profiles",
-      "group": "user permissions",
-      "groups_plural": "user permissions",
-      "decals": "decal",
-      "decals_plural": "decals",
-      "ships": "ship",
-      "ships_plural": "ships",
-
-      "permissionReadAll": "View {{group}}",
-      "permissionReadAll_plural": "View all {{group}}",
-      "permissionReadOwn": "View your {{group}}",
-      "permissionReadOwn_plural": "View all your {{group}}",
-      "permissionWriteAll": "Modify {{group}}",
-      "permissionWriteAll_plural": "Modify all {{group}}",
-      "permissionWriteOwn": "Modify your {{group}}",
-      "permissionWriteOwn_plural": "Modify all your {{group}}",
-      "permissionDeleteAll": "Delete {{group}}",
-      "permissionDeleteAll_plural": "Delete all {{group}}",
-      "permissionDeleteOwn": "Delete your {{group}}",
-      "permissionDeleteOwn_plural": "Delete all your {{group}}",
-      "permissionGroupAll": "Modify user permissions",
-      "permissionGroupAll_plural": "Modify all user permissions",
-      "permissionGroupOwn": "Modify your permissions",
-      "permissionGroupOwn_plural": "Modify your permissions",
-
       "bad_request": {
         "title": "Bad Request",
         "detail": "The server cannot or will not process the request due to something that is perceived to be a client error"
