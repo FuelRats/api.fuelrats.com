@@ -5,7 +5,7 @@ import {
   BadRequestAPIError,
   ConflictAPIError,
   NotFoundAPIError,
-  UnprocessableEntityAPIError
+  UnprocessableEntityAPIError,
 } from '../classes/APIError'
 import Anope from '../classes/Anope'
 import StatusCode from '../classes/StatusCode'
@@ -20,7 +20,7 @@ import API, {
   DELETE,
   authenticated,
   getJSONAPIData,
-  PATCH, parameters
+  PATCH, parameters,
 } from './API'
 import Decals from './Decals'
 

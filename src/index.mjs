@@ -15,7 +15,8 @@ import {
   ImATeapotAPIError,
   InternalServerError,
   NotFoundAPIError,
-  ForbiddenAPIError, UnauthorizedAPIError
+  ForbiddenAPIError,
+  UnauthorizedAPIError,
 } from './classes/APIError'
 import Authentication from './classes/Authentication'
 import Permission from './classes/Permission'
