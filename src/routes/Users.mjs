@@ -234,9 +234,13 @@ export default class Users extends APIResource {
       throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
     }
 
-    user.password = newPassword
-    await user.save()
-    await Anope.setPassword(user.email, user.password)
+    await db.transaction(async (transaction) => {
+      user.password = newPassword
+      await user.save({ transaction })
+      await Anope.setPassword(user.email, user.password)
+
+      return user
+    })
 
     const result = await Anope.mapNickname(user)
 
