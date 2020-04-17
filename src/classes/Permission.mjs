@@ -1,16 +1,6 @@
-import fs from 'fs'
-import i18next from 'i18next'
+import permissionList from '../files/permissions'
 import { UnprocessableEntityAPIError } from './APIError'
 import { Context } from './Context'
-
-const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
-const permissionList = JSON.parse(fs.readFileSync('permissions.json', 'utf8'))
-
-// noinspection JSIgnoredPromiseFromCall
-i18next.init({
-  lng: 'en',
-  resources: localisationResources,
-})
 
 
 /**

@@ -1,4 +1,4 @@
-import { build } from '../routes/Version'
+import buildFile from '../files/build'
 import { Context } from './Context'
 import StatusCode from './StatusCode'
 
@@ -38,7 +38,7 @@ export default class EventStream {
 
     const {
       hash, branch, tags, date, version,
-    } = build
+    } = buildFile
 
     eventStream.send({
       event: 'version',

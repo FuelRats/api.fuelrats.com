@@ -26,12 +26,11 @@ import TrafficControl from './classes/TrafficControl'
 import WebSocket from './classes/WebSocket'
 import config from './config'
 import { db } from './db'
+import packageInfo from './files/package'
 import logger from './logging'
 import Query from './query'
 import * as routes from './routes'
 import oauth2 from './routes/OAuth2'
-
-const packageInfo = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
 
 const app = new Koa()
