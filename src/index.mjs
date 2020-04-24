@@ -34,6 +34,8 @@ import oauth2 from './routes/OAuth2'
 
 
 const app = new Koa()
+app.maxIpsCount = 1
+app.proxyIpHeader = 'x-real-ip'
 querystring(app)
 
 
