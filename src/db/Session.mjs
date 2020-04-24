@@ -19,6 +19,9 @@ export default class Session extends Model {
   @column(type.STRING)
   static userAgent = undefined
 
+  @column(type.STRING)
+  static fingerprint = undefined
+
   @column(type.DATE)
   static lastAccess = type.NOW
 

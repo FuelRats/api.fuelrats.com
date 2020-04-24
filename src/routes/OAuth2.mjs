@@ -5,6 +5,7 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError,
   VerificationRequiredAPIError,
+  BadRequestAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import Mail from '../classes/Mail'
@@ -92,6 +93,14 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
     throw new ForbiddenAPIError({ parameter: 'username' })
   }
 
+  if (!ctx.state.userAgent) {
+    throw new BadRequestAPIError({ parameter: 'User-Agent' })
+  }
+
+  if (!ctx.state.fingerprint) {
+    throw new BadRequestAPIError({ parameteR: 'X-Fingerprint' })
+  }
+
   const user = await Authentication.passwordAuthenticate({ email: username, password })
   if (!user) {
     return false
@@ -100,6 +109,7 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
   const existingSession = await Session.findOne({
     where: {
       ip: ctx.request.ip,
+      fingerprint: ctx.state.fingerprint,
       userAgent: ctx.state.userAgent,
     },
   })

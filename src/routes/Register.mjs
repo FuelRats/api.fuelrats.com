@@ -1,4 +1,4 @@
-import { ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import { BadRequestAPIError, ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Anope from '../classes/Anope'
 import StatusCode from '../classes/StatusCode'
@@ -34,6 +34,14 @@ export default class Register extends API {
     'email', 'password', 'name', 'platform', 'nickname',
   )
   async create (ctx) {
+    if (!ctx.state.userAgent) {
+      throw new BadRequestAPIError({ parameter: 'User-Agent' })
+    }
+
+    if (!ctx.state.fingerprint) {
+      throw new BadRequestAPIError({ parameter: 'X-Fingerprint' })
+    }
+
     const formData = getJSONAPIData({ ctx, type: 'registrations' })
 
     await Register.checkExisting(formData.attributes)

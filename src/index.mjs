@@ -96,7 +96,7 @@ app.use((ctx, next) => {
   ctx.query = parseQuery(query)
 
   ctx.state.userAgent = ctx.request.headers['user-agent']
-
+  ctx.state.fingerprint = ctx.request.headers['x-fingerprint']
 
   return next()
 })
