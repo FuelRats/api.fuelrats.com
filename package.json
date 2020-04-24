@@ -88,7 +88,8 @@
     "rollup": "^1.29.1",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-babel": "^4.3.3",
-    "source-map-support": "^0.5.16"
+    "source-map-support": "^0.5.16",
+    "sequelize-cli": "^5.5.1"
   },
   "jest": {
     "browser": false
