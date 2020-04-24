@@ -243,10 +243,11 @@ SELECT
 	min("RescueStats"."joinedAt") as "joinedAt",
 	min("RescueStats"."rescueCount") as "rescueCount",
 	min("RescueStats"."codeRedCount") AS "codeRedCount",
-	bool_or("UserGroups"."groupId" = 'dispatch') AS "isDispatch",
+	bool_or("Groups"."name" = 'dispatch') AS "isDispatch",
 	bool_or("Epics"."approvedById" IS NOT NULL) AS "isEpic"
 FROM "RescueStats"
 LEFT JOIN "UserGroups" ON "UserGroups"."userId" = "RescueStats"."id"
+LEFT JOIN "Groups" ON "Groups"."id" = "UserGroups"."groupId"
 LEFT JOIN "EpicUsers" ON "EpicUsers"."userId" = "RescueStats"."id"
 LEFT JOIN "Epics" ON "Epics"."id" = "EpicUsers"."epicId"
 GROUP BY "RescueStats"."id"

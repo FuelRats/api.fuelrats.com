@@ -155,10 +155,17 @@ export default class Rescues extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    await Rescue.update({
-      deletedAt: new Date(),
-      lastModifiedById: ctx.state.user.id,
-    }, { where: { id: rescue.result.id } })
+    if (ctx.state.forceDelete) {
+      await Rescue.destroy({
+        force: true,
+      })
+    } else {
+      await Rescue.update({
+        deletedAt: new Date(),
+        lastModifiedById: ctx.state.user.id,
+      }, { where: { id: rescue.result.id } })
+    }
+
 
     Event.broadcast('fuelrats.rescuedelete', ctx.state.user, {
       id: ctx.params.id,

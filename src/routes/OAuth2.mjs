@@ -1,6 +1,4 @@
 import crypto from 'crypto'
-import fs from 'fs'
-import i18next from 'i18next'
 import oauth2orize from 'oauth2orize-koa-fr'
 import {
   ForbiddenAPIError,
@@ -28,13 +26,6 @@ import API, {
 import Sessions from './Sessions'
 
 const mail = new Mail()
-const localisationResources = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
-
-// noinspection JSIgnoredPromiseFromCall
-i18next.init({
-  lng: 'en',
-  resources: localisationResources,
-})
 
 const server = oauth2orize.createServer()
 
@@ -208,7 +199,6 @@ class OAuth2 extends API {
       transactionId: ctx.state.oauth2.transactionID,
       user: ctx.user,
       client,
-      scopes: Permission.humanReadable({ scopes: ctx.state.oauth2.req.scope, connection: ctx }),
       scope: ctx.state.oauth2.req.scope.join(' '),
     }
   }

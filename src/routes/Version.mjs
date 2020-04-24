@@ -1,14 +1,12 @@
-import fs from 'fs'
 import { DocumentViewType } from '../Documents'
 import ObjectDocument from '../Documents/ObjectDocument'
 import { websocket } from '../classes/WebSocket'
+import buildFile from '../files/build'
 import Query from '../query'
 import { VersionView } from '../view'
 import API, {
   GET,
 } from './API'
-
-const build = JSON.parse(fs.readFileSync('build.json', 'utf8'))
 
 /**
  * API endpoint to get API version information
@@ -30,7 +28,7 @@ export default class Version extends API {
   read (ctx) {
     const {
       hash, branch, tags, date, version,
-    } = build
+    } = buildFile
 
     const result = {
       version,

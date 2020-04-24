@@ -10,7 +10,14 @@ import npid from 'npid'
 import { promisify } from 'util'
 import Document from './Documents/Document'
 import ErrorDocument from './Documents/ErrorDocument'
-import { TooManyRequestsAPIError, ImATeapotAPIError, InternalServerError, NotFoundAPIError } from './classes/APIError'
+import {
+  TooManyRequestsAPIError,
+  ImATeapotAPIError,
+  InternalServerError,
+  NotFoundAPIError,
+  ForbiddenAPIError,
+  UnauthorizedAPIError,
+} from './classes/APIError'
 import Authentication from './classes/Authentication'
 import Permission from './classes/Permission'
 import router from './classes/Router'
@@ -19,12 +26,11 @@ import TrafficControl from './classes/TrafficControl'
 import WebSocket from './classes/WebSocket'
 import config from './config'
 import { db } from './db'
+import packageInfo from './files/package'
 import logger from './logging'
 import Query from './query'
 import * as routes from './routes'
 import oauth2 from './routes/OAuth2'
-
-const packageInfo = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
 
 const app = new Koa()
@@ -147,6 +153,19 @@ app.use(async (ctx, next) => {
     }
 
     ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
+
+    if (ctx.get('X-Permanent-Deletion')) {
+      const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
+      if (basicUser.id !== ctx.state.user.id) {
+        throw new UnauthorizedAPIError({})
+      }
+
+      if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
+        ctx.state.forceDelete = true
+      } else {
+        throw new ForbiddenAPIError({ parameter: 'X-Permanent-Deletion' })
+      }
+    }
 
     const result = await next()
     if (result === true) {
