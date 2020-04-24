@@ -35,7 +35,7 @@ export default class GeoIP {
       return `${geoip.city.names.en}, ${geoip.postal.code} ${geoip.country.names.en}`
     }
     if (geoip.country) {
-      return `${geoip.city.names.en}, ${geoip.postal.code} ${geoip.country.names.en}`
+      return `Unknown City, ${geoip.country.names.en}`
     }
     return 'Unknown location'
   }
