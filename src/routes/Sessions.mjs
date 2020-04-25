@@ -59,6 +59,7 @@ export default class Sessions extends API {
     const session = await Session.create({
       ip: ctx.request.ip,
       userAgent: ctx.state.userAgent,
+      fingerprint: ctx.state.fingerprint,
       code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
       userId: user.id,
     })
@@ -77,6 +78,7 @@ export default class Sessions extends API {
     return Session.create({
       ip: ctx.request.ip,
       userAgent: ctx.state.userAgent,
+      fingerprint: ctx.state.fingerprint,
       code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
       userId: user.id,
       verified: true,
