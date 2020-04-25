@@ -23,4 +23,20 @@ export default class GeoIP {
   static lookup (ip) {
     return { ...cityLookup.get(ip), ...asnLookup.get(ip) }
   }
+
+  /**
+   * Get the GeoIP information about an IP address as a string
+   * @param {string} ip the ip address to look up
+   * @returns {string} geoip information string
+   */
+  static locationString (ip) {
+    const geoip = GeoIP.lookup(ip)
+    if (geoip.city && geoip.country) {
+      return `${geoip.city.names.en}, ${geoip.postal.code} ${geoip.country.names.en}`
+    }
+    if (geoip.country) {
+      return `Unknown City, ${geoip.country.names.en}`
+    }
+    return 'Unknown location'
+  }
 }

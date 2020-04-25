@@ -39,8 +39,7 @@ function generateDeviceDescription (userAgent) {
 export default function sessionEmail ({ ctx, user, sessionToken }) {
   const ipAddress = ctx.request.ip
 
-  const geoip = GeoIP.lookup(ipAddress)
-  const location = `${geoip.city.names.en}, ${geoip.postal.code} ${geoip.country.names.en}`
+  const location = GeoIP.locationString(ipAddress)
   const deviceDescription = generateDeviceDescription(ctx.state.userAgent)
 
   return {
