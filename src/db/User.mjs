@@ -43,10 +43,6 @@ export default class User extends Model {
   @column(type.INTEGER, { allowNull: true })
   static frontierId = undefined
 
-  @validate({ is: stripeUserId })
-  @column(type.STRING, { allowNull: true })
-  static stripeId = undefined
-
   @column(type.ENUM('active', 'inactive', 'legacy', 'deactivated'))
   static status = 'active'
 
