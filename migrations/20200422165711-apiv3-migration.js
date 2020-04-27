@@ -394,6 +394,18 @@ module.exports = {
       }, { transaction })
       await migration.removeColumn('Users', 'image', { transaction })
 
+      console.log('- Setting Rats createdAt value to their joined value for old rats')
+      await migration.sequelize.query(`
+        UPDATE "Rats"
+        SET
+          "createdAt" = "joined"
+        WHERE
+          "createdAt" > "joined"
+      `)
+
+      console.log('- Removing the deprecated Rats joined field')
+      await migration.removeColumn('Rats', 'joined', { transaction })
+
       console.log('- Adding Frontier ID fields')
       await migration.addColumn('Rats', 'frontierId', {
         type: type.INTEGER,
