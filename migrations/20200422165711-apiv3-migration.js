@@ -401,7 +401,7 @@ module.exports = {
           "createdAt" = "joined"
         WHERE
           "createdAt" > "joined"
-      `)
+      `, { transaction })
 
       console.log('- Removing the deprecated Rats joined field')
       await migration.removeColumn('Rats', 'joined', { transaction })
