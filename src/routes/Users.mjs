@@ -38,7 +38,6 @@ import {
 import APIResource from './APIResource'
 import Decals from './Decals'
 import Verifications from './Verifications'
-import Authentication from '../classes/Authentication'
 
 const mail = new Mail()
 
@@ -103,10 +102,10 @@ export default class Users extends APIResource {
       },
     })
 
-    const redeemable = await Decals.getEligibleDecalCount({ user: ctx.state.user })
 
     const user = await Anope.mapNickname(result)
-    return new DatabaseDocument({ query, result: user, type: UserView, meta: { redeemable } })
+    user.redeemable = await Decals.getEligibleDecalCount({ user: ctx.state.user })
+    return new DatabaseDocument({ query, result: user, type: UserView })
   }
 
   /**
