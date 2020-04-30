@@ -1,16 +1,13 @@
-import crypto from 'crypto'
-import { NotFoundAPIError } from '../classes/APIError'
+import { customAlphabet } from 'nanoid/async'
 import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { Session, User, db } from '../db'
 import sessionEmail from '../emails/session'
-import API, {
-  GET,
-  parameters,
-} from './API'
+import API from './API'
 
 const mail = new Mail()
-const sessionTokenLength = 32
+const sessionTokenLength = 6
+const generateToken = customAlphabet('1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', sessionTokenLength)
 
 /**
  * Class managing user session endpoints
@@ -24,43 +21,18 @@ export default class Sessions extends API {
   }
 
   /**
-   * Verify a session token
-   * @endpoint
-   */
-  @GET('/sessions/:token')
-  @parameters('token')
-  async verify (ctx) {
-    const session = await Session.findOne({
-      where: {
-        code: ctx.params.token,
-        verified: false,
-      },
-    })
-
-    if (!session) {
-      throw new NotFoundAPIError({ parameter: 'token' })
-    }
-
-    await session.update({
-      verified: true,
-      lastAccess: Date.now(),
-    })
-
-    return true
-  }
-
-  /**
    * Create a user session verification
    * @param {Context} ctx request context
    * @param {User} user the user the session belongs to
    * @returns {Promise<void>} completes a promise when email is sent
    */
   static async createSession (ctx, user) {
+    const code = await generateToken()
     const session = await Session.create({
       ip: ctx.request.ip,
       userAgent: ctx.state.userAgent,
       fingerprint: ctx.state.fingerprint,
-      code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
+      code,
       userId: user.id,
     })
 
@@ -72,14 +44,16 @@ export default class Sessions extends API {
    * @param {Context} ctx request context
    * @param {User} user the user the session belongs to
    * @param {db.Transaction} transaction Sequelize transaction
-   * @returns {Session} user session
+   * @returns {Promise<Session>} user session
    */
-  static createVerifiedSession (ctx, user, transaction = undefined) {
+  static async createVerifiedSession (ctx, user, transaction = undefined) {
+    const code = await generateToken()
+
     return Session.create({
       ip: ctx.request.ip,
       userAgent: ctx.state.userAgent,
       fingerprint: ctx.state.fingerprint,
-      code: crypto.randomBytes(sessionTokenLength / 2).toString('hex'),
+      code,
       userId: user.id,
       verified: true,
     }, { transaction })

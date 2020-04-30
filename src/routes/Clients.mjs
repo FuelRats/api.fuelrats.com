@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { customAlphabet } from 'nanoid/async'
 import { DocumentViewType } from '../Documents'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
@@ -21,8 +22,7 @@ import {
   WritePermission,
 } from './API'
 import APIResource from './APIResource'
-
-const clientSecretLength = 32
+import { clientSecretGenerator } from '../classes/TokenGenerators'
 
 /**
  * OAuth clients endpoints
@@ -73,7 +73,7 @@ export default class Clients extends APIResource {
   @websocket('clients', 'create')
   @authenticated
   async create (ctx) {
-    const secret = crypto.randomBytes(clientSecretLength).toString('hex')
+    const secret = await clientSecretGenerator()
     const result = await super.create({
       ctx,
       databaseType: Client.scope('user'),

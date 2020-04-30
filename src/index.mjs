@@ -37,12 +37,8 @@ const app = new Koa()
 querystring(app)
 
 
-
-// Import controllers
 global.WEBSOCKET_IDENTIFIER_ROUNDS = 16
 global.BCRYPT_ROUNDS_COUNT = 16
-global.OAUTH_CODE_LENGTH = 24
-global.OAUTH_TOKEN_LENTH = 32
 global.UUID_VERSION = 4
 
 try {

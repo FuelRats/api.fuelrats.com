@@ -1,7 +1,7 @@
-import crypto from 'crypto'
 import { NotFoundAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
+import { verificationTokenGenerator } from '../classes/TokenGenerators'
 import { User, VerificationToken, db } from '../db'
 import verificationEmail from '../emails/verification'
 import API, {
@@ -13,7 +13,6 @@ import API, {
 
 const mail = new Mail()
 const expirationLength = 86400000
-const verificationTokenLength = 32
 
 /**
  * @classdesc API endpoint for handling account email verifications
@@ -99,7 +98,7 @@ export default class Verifications extends API {
     }
 
     const verification = await VerificationToken.create({
-      value: crypto.randomBytes(verificationTokenLength / 2).toString('hex'),
+      value: await verificationTokenGenerator(),
       expires: new Date(Date.now() + expirationLength).getTime(),
       userId: user.id,
     }, { transaction })
