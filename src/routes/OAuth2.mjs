@@ -5,7 +5,7 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError,
   VerificationRequiredAPIError,
-  BadRequestAPIError,
+  BadRequestAPIError, UnauthorizedAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import Mail from '../classes/Mail'
@@ -90,6 +90,9 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
 }))
 
 server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, ctx) => {
+  if (!client) {
+    return false
+  }
   if (!client.firstParty) {
     throw new ForbiddenAPIError({ parameter: 'username' })
   }
