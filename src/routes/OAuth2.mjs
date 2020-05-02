@@ -114,7 +114,6 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
     where: {
       ip: ctx.request.ip,
       fingerprint: ctx.state.fingerprint,
-      userAgent: ctx.state.userAgent,
     },
   })
 
@@ -124,11 +123,11 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
   }
 
   if (existingSession.verified === false) {
-    if (!ctx.body.verify || existingSession.createdAt - Date() > sessionExpiryTime) {
+    if (!ctx.request.body.verify || existingSession.createdAt - Date() > sessionExpiryTime) {
       await existingSession.destroy()
       await Sessions.createSession(ctx, user)
       throw new VerificationRequiredAPIError({})
-    } else if (ctx.body.verify.toUpperCase() !== existingSession.code) {
+    } else if (ctx.request.body.verify.toUpperCase() !== existingSession.code) {
       throw new VerificationRequiredAPIError({})
     }
   }
@@ -139,7 +138,7 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
   })
 
   const token = await Token.create({
-    value: oAuthTokenGenerator(),
+    value: await oAuthTokenGenerator(),
     clientId: client.id,
     userId: user.id,
     scope: ['*'],
