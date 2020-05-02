@@ -1,23 +1,24 @@
-import babel from 'rollup-plugin-babel'
-import resolve from '@rollup/plugin-node-resolve'
+/* eslint-disable no-console */
 import json from '@rollup/plugin-json'
-import autoExternal from 'rollup-plugin-auto-external'
-import pkg from './package.json'
+import resolve from '@rollup/plugin-node-resolve'
 import fs from 'fs'
 import gitrev from 'git-rev-promises'
+import autoExternal from 'rollup-plugin-auto-external'
+import babel from 'rollup-plugin-babel'
+import pkg from './package.json'
 
 Promise.all([
   gitrev.long(),
   gitrev.branch(),
   gitrev.tags(),
-  gitrev.date()
+  gitrev.date(),
 ]).then(([hash, branch, tags, date]) => {
   const buildJson = JSON.stringify({
     version: pkg.version,
     hash,
     branch,
     tags,
-    date
+    date,
   })
   fs.writeFile('build.json', buildJson, 'utf8', () => {
     console.info('Build information saved')
@@ -30,10 +31,11 @@ const config = {
     dir: 'dist',
     format: 'esm',
     entryFileNames: '[name].mjs',
-    sourcemap: true
+    sourcemap: true,
   },
+  external: ['nanoid/async'],
   preserveModules: true,
-  plugins: [autoExternal(), json(), resolve(), babel({ externalHelpers: true })]
+  plugins: [autoExternal(), json(), resolve(), babel({ externalHelpers: true })],
 }
 
 export default config
