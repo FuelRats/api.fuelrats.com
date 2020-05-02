@@ -1,25 +1,15 @@
-import { customAlphabet } from 'nanoid/async'
-import { Context } from '../classes/Context'
-import Mail from '../classes/Mail'
 import { Session, User, db } from '../db'
 import sessionEmail from '../emails/session'
-import API from './API'
+import { Context } from './Context'
+import Mail from './Mail'
+import { sessionTokenGenerator } from './TokenGenerators'
 
 const mail = new Mail()
-const sessionTokenLength = 6
-const generateToken = customAlphabet('1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', sessionTokenLength)
 
 /**
  * Class managing user session endpoints
  */
-export default class Sessions extends API {
-  /**
-   * @inheritdoc
-   */
-  get type () {
-    return 'sessions'
-  }
-
+export default class Sessions {
   /**
    * Create a user session verification
    * @param {Context} ctx request context
@@ -27,7 +17,7 @@ export default class Sessions extends API {
    * @returns {Promise<void>} completes a promise when email is sent
    */
   static async createSession (ctx, user) {
-    const code = await generateToken()
+    const code = await sessionTokenGenerator()
     const session = await Session.create({
       ip: ctx.request.ip,
       userAgent: ctx.state.userAgent,

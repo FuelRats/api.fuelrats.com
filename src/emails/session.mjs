@@ -1,15 +1,5 @@
 import UAParser from 'ua-parser-js'
 import GeoIP from '../classes/GeoIP'
-import config from '../config'
-
-/**
- * Get a verification link
- * @param {string} verifyToken the verification token
- * @returns {string} a verification link
- */
-function getVerifyLink (verifyToken) {
-  return `${config.frontend.url}/verify?type=session&t=${verifyToken}`
-}
 
 /**
  * Generate a short device description based on a user agent
@@ -49,17 +39,11 @@ export default function sessionEmail ({ ctx, user, sessionToken }) {
       name: user.preferredRat().name,
       intro: 'An attempt was made to login to your Fuel Rats account from a new location.',
       action: {
-        instructions: 'Click the button below to authorise the login:',
+        instructions: 'Enter the code below to authorise the login:',
         button: {
           color: '#d65050',
-          text: 'Authorise login',
-          link: getVerifyLink(sessionToken),
+          text: sessionToken.toUpperCase(),
         },
-      },
-      goToAction: {
-        text: 'Authorise login',
-        link: getVerifyLink(sessionToken),
-        description: 'Click to authorise the login from a new location',
       },
       dictionary: {
         Device: deviceDescription,

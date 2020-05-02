@@ -30,7 +30,7 @@ export default class EventStream {
   /**
    * Create a server side events stream from a context
    * @param {Context} ctx request context
-   * @returns {Promise<undefined>} returns an indefinite process to keep the Koa connection alive
+   * @returns {Promise<undefined>} returns an indefinite promise to keep the Koa connection alive
    */
   static fromConnection (ctx) {
     const eventStream = new EventStream(ctx)

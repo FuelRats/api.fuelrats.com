@@ -8,7 +8,7 @@ import API, {
   POST,
   required,
 } from './API'
-import Sessions from './Sessions'
+import Sessions from '../classes/Sessions'
 import Verifications from './Verifications'
 
 const platforms = ['pc', 'xb', 'ps']
