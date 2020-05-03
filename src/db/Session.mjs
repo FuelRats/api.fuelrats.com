@@ -1,5 +1,7 @@
 import Model, { column, table, validate, type } from './Model'
 
+const sessionTokenLength = 6
+
 @table({
   indexes: [{
     fields: ['ip', 'userAgent', 'code'],
@@ -28,7 +30,8 @@ export default class Session extends Model {
   @column(type.BOOLEAN)
   static verified = false
 
-  @column(type.STRING)
+  @validate({ isUppercase: true })
+  @column(type.STRING(sessionTokenLength))
   static code = undefined
 
   @validate({ isUUID: 4 })

@@ -1,4 +1,4 @@
-/* eslint-disable no-console,max-statements */
+/* eslint-disable no-console,max-statements,no-magic-numbers */
 'use strict'
 
 module.exports = {
@@ -341,7 +341,7 @@ module.exports = {
           defaultValue: false,
         },
         code: {
-          type: type.STRING,
+          type: type.STRING(6),
         },
         userId: {
           type: type.UUID,
