@@ -2,7 +2,7 @@ import {
   InternalServerError,
   APIError,
   MethodNotAllowedAPIError,
-  UnprocessableEntityAPIError, ConflictAPIError,
+  UnprocessableEntityAPIError, ConflictAPIError, ForbiddenAPIError,
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import logger from '../logging'
@@ -63,6 +63,12 @@ class ErrorDocument extends Document {
             return new ConflictAPIError({
               pointer,
             })
+          }))
+          break
+
+        case (error.name === 'ForbiddenError' && error.message.includes('Unable to load OAuth 2.0 transaction')):
+          errorAcc.push(new ForbiddenAPIError({
+            parameter: 'transaction_id',
           }))
           break
 

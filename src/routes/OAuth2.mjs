@@ -1,4 +1,3 @@
-import crypto from 'crypto'
 import oauth2orize from 'oauth2orize-koa-fr'
 import {
   ForbiddenAPIError,
@@ -8,12 +7,12 @@ import {
   BadRequestAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
-import Mail from '../classes/Mail'
 import Permission from '../classes/Permission'
+import Sessions from '../classes/Sessions'
+import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import {
   Token, Client, Code, db, Session,
 } from '../db'
-import sessionEmail from '../emails/session'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { ClientView } from '../view'
 import API, {
@@ -24,9 +23,8 @@ import API, {
   required,
   parameters,
 } from './API'
-import Sessions from './Sessions'
 
-const mail = new Mail()
+const sessionExpiryTime = 60 * 60 * 1000
 
 const server = oauth2orize.createServer()
 
@@ -44,12 +42,12 @@ server.deserializeClient(async (id) => {
 })
 
 server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq) => {
-  Permission.assertOAuthScopes(areq.scope.split(' '))
+  Permission.assertOAuthScopes(areq.scope)
 
   const clientRedirectUri = redirectUri ?? client.redirectUri
 
   const code = await Code.create({
-    value: crypto.randomBytes(global.OAUTH_CODE_LENGTH).toString('hex'),
+    value: await oAuthTokenGenerator(),
     scope: areq.scope,
     redirectUri: clientRedirectUri,
     clientId: client.id,
@@ -59,10 +57,10 @@ server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq
 }))
 
 server.grant(oauth2orize.grant.token(async (client, user, ares, areq) => {
-  Permission.assertOAuthScopes(areq.scope.split(' '))
+  Permission.assertOAuthScopes(areq.scope)
 
   const token = await Token.create({
-    value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
+    value: await oAuthTokenGenerator(),
     scope: areq.scope,
     clientId: client.id,
     userId: user.id,
@@ -81,7 +79,7 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
 
   const token = await Token.create({
     scope: auth.scope,
-    value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
+    value: await oAuthTokenGenerator(),
     clientId: client.id,
     userId: auth.userId,
   })
@@ -89,6 +87,9 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectUri) => {
 }))
 
 server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, ctx) => {
+  if (!client) {
+    return false
+  }
   if (!client.firstParty) {
     throw new ForbiddenAPIError({ parameter: 'username' })
   }
@@ -98,7 +99,7 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
   }
 
   if (!ctx.state.fingerprint) {
-    throw new BadRequestAPIError({ parameteR: 'X-Fingerprint' })
+    throw new BadRequestAPIError({ parameter: 'X-Fingerprint' })
   }
 
   const user = await Authentication.passwordAuthenticate({ email: username, password })
@@ -110,20 +111,31 @@ server.exchange(oauth2orize.exchange.password(async (client, username, password,
     where: {
       ip: ctx.request.ip,
       fingerprint: ctx.state.fingerprint,
-      userAgent: ctx.state.userAgent,
     },
   })
 
   if (!existingSession) {
     await Sessions.createSession(ctx, user)
     throw new VerificationRequiredAPIError({})
-  } else if (existingSession.verified === false) {
-    await mail.send(sessionEmail({ ctx, user, sessionToken: existingSession.code }))
-    throw new VerificationRequiredAPIError({})
   }
 
+  if (existingSession.verified === false) {
+    if (!ctx.request.body.verify || existingSession.createdAt - Date() > sessionExpiryTime) {
+      await existingSession.destroy()
+      await Sessions.createSession(ctx, user)
+      throw new VerificationRequiredAPIError({})
+    } else if (ctx.request.body.verify.toUpperCase() !== existingSession.code) {
+      throw new VerificationRequiredAPIError({})
+    }
+  }
+
+  await existingSession.update({
+    verified: true,
+    lastAccess: Date.now(),
+  })
+
   const token = await Token.create({
-    value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
+    value: await oAuthTokenGenerator(),
     clientId: client.id,
     userId: user.id,
     scope: ['*'],
@@ -219,7 +231,7 @@ class OAuth2 extends API {
    */
   static authorizationDecisionHandler (ctx) {
     ctx.type = 'application/json'
-    ctx.body = { redirectUri: ctx.data.redirectUri }
+    ctx.response.body = { redirectUri: ctx.state.redirect }
   }
 }
 

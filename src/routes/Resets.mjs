@@ -1,7 +1,7 @@
-import crypto from 'crypto'
 import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Mail from '../classes/Mail'
+import { resetTokenGenerator } from '../classes/TokenGenerators'
 import { websocket } from '../classes/WebSocket'
 import config from '../config'
 import { User, Reset } from '../db'
@@ -17,7 +17,6 @@ import API, {
 
 const mail = new Mail()
 const expirationLength = 86400000
-const resetTokenLength = 32
 
 /**
  * Class managing password reset endpoints
@@ -67,7 +66,7 @@ export default class Resets extends API {
         await existingReset.destroy()
       }
 
-      const token = crypto.randomBytes(resetTokenLength / 2).toString('hex')
+      const token = await resetTokenGenerator()
 
       const reset = await Reset.create({
         value: token,

@@ -37,12 +37,8 @@ const app = new Koa()
 querystring(app)
 
 
-
-// Import controllers
 global.WEBSOCKET_IDENTIFIER_ROUNDS = 16
 global.BCRYPT_ROUNDS_COUNT = 16
-global.OAUTH_CODE_LENGTH = 24
-global.OAUTH_TOKEN_LENTH = 32
 global.UUID_VERSION = 4
 
 try {
@@ -174,10 +170,10 @@ app.use(async (ctx, next) => {
       ctx.type = 'application/vnd.api+json'
       ctx.body = result.toString()
     } else if (result) {
-      ctx.body = result
-    } else if (typeof result === 'undefined' && !ctx.body) {
+      ctx.response.body = result
+    } else if (typeof result === 'undefined' && !ctx.response.body) {
       throw new NotFoundAPIError({})
-    } else if (!ctx.body) {
+    } else if (!ctx.response.body) {
       logger.error({
         GELF: true,
         _event: 'request',

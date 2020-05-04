@@ -83,6 +83,18 @@ export default class UserView extends DatabaseView {
   /**
    * @inheritdoc
    */
+  get meta () {
+    if (Reflect.has(this.object, 'redeemable')) {
+      return {
+        redeemable: this.object.redeemable,
+      }
+    }
+    return {}
+  }
+
+  /**
+   * @inheritdoc
+   */
   get includes () {
     return ['rats', 'displayRat', 'groups', 'clients', 'nicknames', 'epics']
   }

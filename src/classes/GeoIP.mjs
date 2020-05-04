@@ -8,6 +8,10 @@ let asnLookup = undefined
 ;(async () => {
   cityLookup = await maxmind.open(path.join(config.geoip.directory, 'GeoLite2-City.mmdb'))
   asnLookup = await maxmind.open(path.join(config.geoip.directory, 'GeoLite2-ASN.mmdb'))
+
+  if (!cityLookup || !asnLookup) {
+    throw new Error('Failed to load GeoIP databases')
+  }
 })()
 
 

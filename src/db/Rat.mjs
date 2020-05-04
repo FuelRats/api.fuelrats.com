@@ -18,9 +18,6 @@ export default class Rat extends Model {
   @column(type.JSONB)
   static data = {}
 
-  @column(type.DATE)
-  static joined = type.NOW
-
   @column(type.ENUM('pc', 'xb', 'ps'))
   static platform = undefined
 

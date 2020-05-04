@@ -104,6 +104,14 @@ export default class View {
   }
 
   /**
+   * Returns meta information for this resource
+   * @returns {object} meta information
+   */
+  get meta () {
+    return {}
+  }
+
+  /**
    * The view's JSONAPI links
    * @returns {object}
    */
@@ -153,6 +161,7 @@ export default class View {
       type: this.type,
       id: this.id,
       attributes: this.generateAttributes(),
+      meta: this.meta,
       relationships: this.generateRelationships(),
       links: this.links,
     }

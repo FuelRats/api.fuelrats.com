@@ -1,15 +1,15 @@
-import crypto from 'crypto'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { ConflictAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import Anope from '../classes/Anope'
 import FrontierAPI from '../classes/FrontierAPI'
+import Sessions from '../classes/Sessions'
 import StatusCode from '../classes/StatusCode'
 import config from '../config'
 import { db, Rat, Token, User } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { TokenView } from '../view'
-import API, { POST, getJSONAPIData, parameters } from './API'
-import Sessions from './Sessions'
+import API, { POST, getJSONAPIData } from './API'
+import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 
 /**
  * Endpoint for managing Frontier based single sign-on
@@ -41,7 +41,7 @@ export default class Frontier extends API {
 
     if (existingLink) {
       const newToken = await Token.create({
-        value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
+        value: await oAuthTokenGenerator(),
         clientId: config.frontned.clientId,
         userId: existingLink.id,
         scope: ['*'],
@@ -113,7 +113,7 @@ export default class Frontier extends API {
     })
 
     const newToken = await Token.create({
-      value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
+      value: await oAuthTokenGenerator(),
       clientId: config.frontend.clientId,
       userId: user.id,
       scope: ['*'],
@@ -186,7 +186,7 @@ export default class Frontier extends API {
     })
 
     const newToken = await Token.create({
-      value: crypto.randomBytes(global.OAUTH_TOKEN_LENTH).toString('hex'),
+      value: await oAuthTokenGenerator(),
       clientId: config.ropcClientId,
       userId: newUser.id,
       scope: ['*'],
