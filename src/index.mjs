@@ -170,10 +170,10 @@ app.use(async (ctx, next) => {
       ctx.type = 'application/vnd.api+json'
       ctx.body = result.toString()
     } else if (result) {
-      ctx.body = result
-    } else if (typeof result === 'undefined' && !ctx.body) {
+      ctx.response.body = result
+    } else if (typeof result === 'undefined' && !ctx.response.body) {
       throw new NotFoundAPIError({})
-    } else if (!ctx.body) {
+    } else if (!ctx.response.body) {
       logger.error({
         GELF: true,
         _event: 'request',

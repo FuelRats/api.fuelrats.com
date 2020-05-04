@@ -1,14 +1,12 @@
-import crypto from 'crypto'
 import oauth2orize from 'oauth2orize-koa-fr'
 import {
   ForbiddenAPIError,
   NotFoundAPIError,
   UnprocessableEntityAPIError,
   VerificationRequiredAPIError,
-  BadRequestAPIError, UnauthorizedAPIError,
+  BadRequestAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
-import Mail from '../classes/Mail'
 import Permission from '../classes/Permission'
 import Sessions from '../classes/Sessions'
 import { oAuthTokenGenerator } from '../classes/TokenGenerators'
@@ -27,7 +25,6 @@ import API, {
 } from './API'
 
 const sessionExpiryTime = 60 * 60 * 1000
-const mail = new Mail()
 
 const server = oauth2orize.createServer()
 
@@ -45,7 +42,7 @@ server.deserializeClient(async (id) => {
 })
 
 server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq) => {
-  Permission.assertOAuthScopes(areq.scope.split(' '))
+  Permission.assertOAuthScopes(areq.scope)
 
   const clientRedirectUri = redirectUri ?? client.redirectUri
 
@@ -60,7 +57,7 @@ server.grant(oauth2orize.grant.code(async (client, redirectUri, user, ares, areq
 }))
 
 server.grant(oauth2orize.grant.token(async (client, user, ares, areq) => {
-  Permission.assertOAuthScopes(areq.scope.split(' '))
+  Permission.assertOAuthScopes(areq.scope)
 
   const token = await Token.create({
     value: await oAuthTokenGenerator(),
@@ -234,7 +231,7 @@ class OAuth2 extends API {
    */
   static authorizationDecisionHandler (ctx) {
     ctx.type = 'application/json'
-    ctx.body = { redirectUri: ctx.data.redirectUri }
+    ctx.response.body = { redirectUri: ctx.state.redirect }
   }
 }
 
