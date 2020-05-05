@@ -10,6 +10,7 @@ import Permission from '../classes/Permission'
 import router from '../classes/Router'
 import config from '../config'
 import enumerable from '../helpers/Enum'
+import { InvalidClientOAuthError } from '../classes/OAuthError'
 
 /**
  * @class
@@ -145,8 +146,13 @@ export function clientAuthenticated (target, name, descriptor) {
   const endpoint = descriptor.value
 
   descriptor.value = async function value (...args) {
-    await Authentication.requireClientAuthentication({ connection: args[0] })
-    return endpoint.apply(this, args)
+    const [ctx] = args
+    const client = await Authentication.requireClientAuthentication({ connection: args[0] })
+    if (!client) {
+      throw new InvalidClientOAuthError()
+    }
+    ctx.state.client = client
+    return endpoint.apply(target, args)
   }
 }
 
