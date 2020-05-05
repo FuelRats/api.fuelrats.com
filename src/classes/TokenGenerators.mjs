@@ -17,10 +17,14 @@ const resetTokenGenerator = customAlphabet(tokenCharset, resetTokenLength)
 const verificationTokenLength = 32
 const verificationTokenGenerator = customAlphabet(tokenCharset, verificationTokenLength)
 
+const transactionTokenLength = 32
+const transactionGenerator = customAlphabet(tokenCharset, transactionTokenLength)
+
 export {
   clientSecretGenerator,
   sessionTokenGenerator,
   oAuthTokenGenerator,
   resetTokenGenerator,
   verificationTokenGenerator,
+  transactionGenerator,
 }
