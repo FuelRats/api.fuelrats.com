@@ -1,4 +1,3 @@
-import fs from 'fs'
 import http from 'http'
 import Koa from 'koa'
 import koaBody from 'koa-body'
@@ -19,6 +18,7 @@ import {
   UnauthorizedAPIError,
 } from './classes/APIError'
 import Authentication from './classes/Authentication'
+import { OAuthError } from './classes/OAuthError'
 import Permission from './classes/Permission'
 import router from './classes/Router'
 import StatusCode from './classes/StatusCode'
@@ -30,7 +30,6 @@ import packageInfo from './files/package'
 import logger from './logging'
 import Query from './query'
 import * as routes from './routes'
-import oauth2 from './routes/OAuth2'
 
 
 const app = new Koa()
@@ -187,6 +186,12 @@ app.use(async (ctx, next) => {
       throw new InternalServerError({})
     }
   } catch (errors) {
+    if (errors instanceof OAuthError) {
+      ctx.status = StatusCode.badRequest
+      ctx.type = 'application/json'
+      ctx.body = errors.toString()
+      return
+    }
     const query = new Query({ connection: ctx })
     const errorDocument = new ErrorDocument({ query, errors })
 
@@ -202,23 +207,6 @@ app.use(async (ctx, next) => {
 const endpoints = Object.values(routes).map((Route) => {
   return new Route()
 })
-
-// OAUTH2
-
-const [transactionLoader, decision] = oauth2.server.decision()
-
-router.post(
-  '/oauth2/authorize',
-  Authentication.isAuthenticated,
-  transactionLoader,
-  decision,
-  oauth2.authorizationDecisionHandler,
-)
-
-router.post('/oauth2/token',
-  Authentication.isClientAuthenticated,
-  oauth2.server.token(),
-  oauth2.server.errorHandler())
 
 
 app.use(router.routes())

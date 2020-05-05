@@ -86,6 +86,22 @@ export function validCMDRname (value) {
   throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name' })
 }
 
+export function isValidRedirectUri (urlString) {
+  if (typeof urlString !== 'string' || urlString.length === 0) {
+    return false
+  }
+
+  let url = undefined
+  try {
+    url = new URL(urlString)
+  } catch (ex) {
+    return false
+  }
+
+  return (url.search.length === 0 && url.hash.length === 0)
+}
+
+
 /**
  * Validate whether a value is a valid JSON object for a jsonb field
  * @param {object} value the value to validate
