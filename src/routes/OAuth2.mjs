@@ -74,7 +74,7 @@ class OAuth extends API {
       return callbackError(redirectUri, new InvalidRequestOAuthError('response_type'))
     }
 
-    if (!scope || typeof scope !== 'string' || scope.length === 0) {
+    if (typeof scope !== 'string' || scope.length === 0) {
       return callbackError(redirectUri, new InvalidRequestOAuthError('scope'))
     }
 

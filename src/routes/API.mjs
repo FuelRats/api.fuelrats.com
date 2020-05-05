@@ -147,7 +147,7 @@ export function clientAuthenticated (target, name, descriptor) {
 
   descriptor.value = async function value (...args) {
     const [ctx] = args
-    const client = await Authentication.requireClientAuthentication({ connection: args[0] })
+    const client = await Authentication.requireClientAuthentication({ connection: ctx })
     if (!client) {
       throw new InvalidClientOAuthError()
     }

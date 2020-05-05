@@ -87,7 +87,7 @@ export function validCMDRname (value) {
 }
 
 export function isValidRedirectUri (urlString) {
-  if (!urlString || typeof urlString !== 'string' || urlString.length === 0) {
+  if (typeof urlString !== 'string' || urlString.length === 0) {
     return false
   }
 
