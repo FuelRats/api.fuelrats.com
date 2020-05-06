@@ -62,6 +62,7 @@ class OAuth extends API {
       state,
     } = ctx.query
 
+    /* Check valid parameters */
     if (!isValidRedirectUri(redirectUri)) {
       throw new BadRequestAPIError({ parameter: 'redirect_uri' })
     }
@@ -78,6 +79,7 @@ class OAuth extends API {
       return callbackError(redirectUri, new InvalidRequestOAuthError('scope'))
     }
 
+    /* Check valid scopes */
     const scopes = scope.split(' ')
     const invalidScopes = scopes.filter((scopeEntry) => {
       return Permission.isValidOAuthScope(scopeEntry) === false
@@ -86,6 +88,7 @@ class OAuth extends API {
       return callbackError(redirectUri, throw new InvalidScopeOAuthError(invalidScopes.join(',')))
     }
 
+    /* Check if OAuth client exists */
     const client = await Client.findOne({
       where: { id: clientId },
     })
@@ -93,6 +96,8 @@ class OAuth extends API {
       return callbackError(redirectUri, new InvalidRequestOAuthError('client'))
     }
 
+    /* Implicit Grant requires the redirectUri to be the same as stored in the OAuth client database entry
+    * as the redirectUri serves as the only form of client authentication */
     if (responseType === 'token') {
       if (redirectUri !== client.redirectUri) {
         return callbackError(redirectUri, new InvalidRequestOAuthError('redirect_uri'))
@@ -100,6 +105,49 @@ class OAuth extends API {
     }
 
     if (responseType === 'code' || responseType === 'token') {
+      /* Check if the user has previously granted this application access to these permissions */
+      const existingToken = Token.findOne({
+        userId: ctx.state.user.id,
+        clientId,
+        scope: {
+          overlap: scopes,
+        },
+      })
+
+      /* User has previously granted access, skip immediately to returning an Auth code */
+      if (existingToken && responseType === 'code') {
+        const code = await Code.create({
+          value: await oAuthTokenGenerator(),
+          scope: scopes,
+          redirectUri,
+          clientId,
+          userId: ctx.state.user.id,
+        })
+
+        return callbackResponse(redirectUri, {
+          code: code.value,
+          state,
+        })
+      }
+
+      /* User has previously granted access, skip immediately to returning a token */
+      if (existingToken && responseType === 'token') {
+        const token = await Token.create({
+          value: await oAuthTokenGenerator(),
+          scope: scopes,
+          clientId,
+          userId: ctx.state.user.id,
+        })
+
+        return callbackResponse(redirectUri, {
+          access_token: token.value,
+          token_type: 'bearer',
+          scope: scopes.join(','),
+          state,
+        })
+      }
+
+      /* User has not previously granted access, return authorize decision information */
       const transactionId = await transactionGenerator()
       OAuth.transactions.set(transactionId, {
         responseType,
@@ -137,6 +185,7 @@ class OAuth extends API {
   async decision (ctx) {
     const { transactionId, allow } = ctx.request.body
 
+    /* Validate parameters */
     if (!transactionId) {
       throw new BadRequestAPIError({ pointer: 'transactionId' })
     }
@@ -145,6 +194,7 @@ class OAuth extends API {
       throw new BadRequestAPIError({ pointer: 'allow' })
     }
 
+    /* Lookup this oauth transaction */
     const transaction = OAuth.transactions.get(transactionId)
     if (!transaction) {
       throw new ForbiddenAPIError({ parameter: 'transactionId' })
@@ -159,19 +209,24 @@ class OAuth extends API {
       state,
     } = transaction
 
+    /* As a security measure transaction ID is both stored as a session cookie and as a request parameter
+    * Check that they match */
     const sessionTransaction = ctx.session.transactionId
     if (transactionId !== sessionTransaction) {
       throw new ForbiddenAPIError({ parameter: 'transactionId' })
     }
 
+    /* This transaction does not belong to the currently authenticated user */
     if (ctx.state.user.id !== userId) {
       throw new ForbiddenAPIError({})
     }
 
+    /* User denied access to the application */
     if (!allow) {
       return callbackError(redirectUri, new AccessDeniedOAuthError('allow'))
     }
 
+    /* User allowed access, return authorization code */
     if (transaction.responseType === 'code') {
       const code = await Code.create({
         value: await oAuthTokenGenerator(),
@@ -187,6 +242,7 @@ class OAuth extends API {
       })
     }
 
+    /* User allowed access, return bearer token */
     if (transaction.responseType === 'token') {
       const token = await Token.create({
         value: await oAuthTokenGenerator(),
@@ -240,6 +296,7 @@ class OAuth extends API {
       redirect_uri: redirectUri,
     } = ctx.request.body
 
+    /* Validate parameters */
     if (!code) {
       throw new InvalidRequestOAuthError('code')
     }
@@ -248,6 +305,7 @@ class OAuth extends API {
       throw new InvalidRequestOAuthError('redirect_uri')
     }
 
+    /* Lookup the Auth Code */
     const { client } = ctx.state
     const authCode = await Code.findOne({
       where: {
@@ -259,18 +317,22 @@ class OAuth extends API {
       throw new InvalidRequestOAuthError('code')
     }
 
+    /* Only 10 minutes is allowed to pass between requesting an auth code and exchanging it for a token */
     if (Date() - authCode.createdAt > transactionTimeout) {
       throw new InvalidRequestOAuthError('code')
     }
 
+    /* The currently authenticated client does not match the client requesting the auth code */
     if (authCode.clientId !== client.id) {
       throw new InvalidClientOAuthError()
     }
 
+    /* The redirectUri in the current request does not match the redirectUri of the auth code request */
     if (authCode.redirectUri !== redirectUri) {
       throw new InvalidRequestOAuthError('redirect_uri')
     }
 
+    /* Exchange successful, return bearer token */
     const token = await Token.create({
       value: await oAuthTokenGenerator(),
       scope: authCode.scope,
@@ -292,6 +354,7 @@ class OAuth extends API {
   async resourceOwnerPasswordCredentials (ctx) {
     let { username, password, scope } = ctx.request.body
 
+    /* Validate parameters */
     if (!username) {
       throw new InvalidRequestOAuthError('username')
     }
@@ -300,9 +363,12 @@ class OAuth extends API {
       throw new InvalidRequestOAuthError('password')
     }
 
+    /* For ROPC, if no scope is defined we grant full access */
     if (typeof scope === 'undefined') {
       scope = '*'
     }
+
+    /* If scope is defined but its value is invalid, we throw an error */
     if (typeof scope !== 'string' || scope.length === 0) {
       throw new InvalidRequestOAuthError('scope')
     }
@@ -317,23 +383,28 @@ class OAuth extends API {
 
     const { client } = ctx.state
 
+    /* Only first party Fuel Rats clients are allowed to use ROPC */
     if (!client.firstParty) {
       throw new UnauthorisedClientOAuthError()
     }
 
+    /* ROPC clients are required to provide a user agent */
     if (!ctx.state.userAgent) {
       throw new InvalidRequestOAuthError('userAgent')
     }
 
+    /* ROPC clients are required to provide a 'fingerprint' that uniquely identifies the current device */
     if (!ctx.state.fingerprint) {
       throw new InvalidRequestOAuthError('X-Fingerprint')
     }
 
+    /* Validate username and password */
     const user = await Authentication.passwordAuthenticate({ email: username, password })
     if (!user) {
       throw new UnauthorizedAPIError({})
     }
 
+    /* Check if the user has an existing login session */
     const existingSession = await Session.findOne({
       where: {
         ip: ctx.request.ip,
@@ -341,6 +412,7 @@ class OAuth extends API {
       },
     })
 
+    /* No existing session is found, send a session verification email and error */
     if (!existingSession) {
       await Sessions.createSession(ctx, user)
       throw new VerificationRequiredAPIError({})
@@ -348,14 +420,21 @@ class OAuth extends API {
 
     if (existingSession.verified === false) {
       if (!ctx.request.body.verify || existingSession.createdAt - Date() > sessionExpiryTime) {
+        /* An existing session was found but it is not yet verified and the client did not pass a verification token.
+        *  Assume the user has lost their verification email and send a new one.
+        * */
         await existingSession.destroy()
         await Sessions.createSession(ctx, user)
         throw new VerificationRequiredAPIError({})
       } else if (ctx.request.body.verify.toUpperCase() !== existingSession.code) {
+        /* An existing unverified session was found and the user passed a code,
+        but the code was invalid, throw an error */
         throw new InvalidRequestOAuthError('verify')
       }
     }
 
+    /* An existing session was found and it was either already verified,
+    or the client passed a valid verification token. Return bearer token. */
     await existingSession.update({
       verified: true,
       lastAccess: Date.now(),
