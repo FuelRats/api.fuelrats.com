@@ -84,12 +84,15 @@ export default class UserView extends DatabaseView {
    * @inheritdoc
    */
   get meta () {
+    const meta = {}
     if (Reflect.has(this.object, 'redeemable')) {
-      return {
-        redeemable: this.object.redeemable,
-      }
+      meta.redeemable = this.object.redeemable
     }
-    return {}
+
+    if (Reflect.has(this.object, 'permissions')) {
+      meta.permissions = this.object.permissions
+    }
+    return meta
   }
 
   /**
