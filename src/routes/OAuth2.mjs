@@ -106,7 +106,7 @@ class OAuth extends API {
 
     if (responseType === 'code' || responseType === 'token') {
       /* Check if the user has previously granted this application access to these permissions */
-      const existingToken = Token.findOne({
+      const existingToken = await Token.findOne({
         userId: ctx.state.user.id,
         clientId,
         scope: {
