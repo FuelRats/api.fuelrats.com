@@ -38,6 +38,22 @@ class Document {
   }
 
   /**
+   * Get the request query of a document
+   * @returns {Query} request query
+   */
+  get query () {
+    return this.#query
+  }
+
+  /**
+   * Set the request query of a document
+   * @param {Query} query request query
+   */
+  set query (query) {
+    this.#query = query
+  }
+
+  /**
    * Get the data section of a JSONAPI document
    * @returns {*} the data section of a JSONAPI document
    */
@@ -78,14 +94,6 @@ class Document {
    */
   get type () {
     return this.#type
-  }
-
-  /**
-   * Get the query used to create the JSONAPI document
-   * @returns {Query} the query used to create the JSONAPI document
-   */
-  get query () {
-    return this.#query
   }
 
   /**

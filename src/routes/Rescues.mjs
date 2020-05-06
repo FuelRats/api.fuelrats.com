@@ -2,7 +2,7 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
-  UnsupportedMediaAPIError
+  UnsupportedMediaAPIError,
 } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Event from '../classes/Event'
@@ -72,7 +72,6 @@ export default class Rescues extends APIResource {
   @authenticated
   async findById (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: Rescue })
-
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
@@ -96,9 +95,10 @@ export default class Rescues extends APIResource {
     })
 
     const query = new DatabaseQuery({ connection: ctx })
-    Event.broadcast('fuelrats.rescuecreate', ctx.state.user, { id: result.id })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescuecreate', ctx.state.user, result.id, document)
     ctx.response.status = StatusCode.created
-    return new DatabaseDocument({ query, result, type: RescueView })
+    return document
   }
 
   /**
@@ -135,8 +135,9 @@ export default class Rescues extends APIResource {
     }
 
     const query = new DatabaseQuery({ connection: ctx })
-    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, { id: result.id })
-    return new DatabaseDocument({ query, result, type: RescueView })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, result.id, document)
+    return document
   }
 
   /**
@@ -167,9 +168,7 @@ export default class Rescues extends APIResource {
     }
 
 
-    Event.broadcast('fuelrats.rescuedelete', ctx.state.user, {
-      id: ctx.params.id,
-    })
+    Event.broadcast('fuelrats.rescuedelete', ctx.state.user, ctx.params.id)
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -205,16 +204,15 @@ export default class Rescues extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsCreate (ctx) {
-    await this.relationshipChange({
+    const result = await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'add',
       relationship: 'rats',
     })
-
-    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id,
-    })
+    const query = new DatabaseQuery({ connection: ctx })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -229,16 +227,16 @@ export default class Rescues extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsPatch (ctx) {
-    await this.relationshipChange({
+    const result = await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'patch',
       relationship: 'rats',
     })
 
-    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id,
-    })
+    const query = new DatabaseQuery({ connection: ctx })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -253,16 +251,16 @@ export default class Rescues extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsDelete (ctx) {
-    await this.relationshipChange({
+    const result = await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'remove',
       relationship: 'rats',
     })
 
-    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id,
-    })
+    const query = new DatabaseQuery({ connection: ctx })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -296,7 +294,7 @@ export default class Rescues extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipFirstLimpetPatch (ctx) {
-    await this.relationshipChange({
+    const result = await this.relationshipChange({
       ctx,
       databaseType: Rescue,
       change: 'patch',
@@ -313,9 +311,9 @@ export default class Rescues extends APIResource {
       },
     })
 
-    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, {
-      id: ctx.params.id,
-    })
+    const query = new DatabaseQuery({ connection: ctx })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
 
     ctx.response.status = StatusCode.noContent
     return true
