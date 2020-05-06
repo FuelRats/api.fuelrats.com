@@ -1,3 +1,4 @@
+import Document from '../Documents/Document'
 import {
   BadRequestAPIError,
   ConflictAPIError,
@@ -17,6 +18,7 @@ import API, {
   GET,
   POST,
 } from './API'
+import Query from '../query/Query'
 
 /**
  * WebSocket and SSE subscription endpoint
@@ -43,11 +45,27 @@ export default class Events extends API {
   /**
    * Event listener for fuelrats api change events that should be broadcasted to SSE
    * @param {object} user the user that caused the vent
+   * @param {string} id the id of the resource this event relates to
    * @param {object} data event data
    */
   @listen('fuelrats.*')
-  onListen (user, data) {
-    EventStream.sendAll({ event: this.event, data: { user: user.id, data } })
+  onListen (user, id, data) {
+    EventStream.subscriptions.forEach((stream) => {
+      let document = data
+      if (document instanceof Document) {
+        document.query = new Query({ connection: stream.ctx })
+        document = document.render()
+      }
+
+      stream.send({
+        event: this.event,
+        data: {
+          id,
+          user,
+          data: document,
+        },
+      })
+    })
   }
 
   /**

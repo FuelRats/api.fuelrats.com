@@ -239,22 +239,33 @@ export default class WebSocket {
   /**
    * Event listener for fuelrats api change events that should be broadcasted to websocket
    * @param {User} user the user that caused the vent
+   * @param {string} id the id of the resource this event relates to
    * @param {object} data event data
    */
   @listen('fuelrats.*')
-  onEvent (user, data) {
+  onEvent (user, id, data) {
     const clients = [...WebSocket.wss.clients].filter((client) => {
       return typeof client.user !== 'undefined'
     })
 
-    WebSocket.broadcast({
-      clients,
-      message: [
-        this.event,
-        user.id,
-        data,
-      ],
-    })
+    for (const client of clients) {
+      let document = data
+      if (document instanceof Document) {
+        const context = new Context({ client, request: {} })
+        document.query = new Query({ connection: context })
+        document = document.render()
+      }
+
+      WebSocket.send({
+        client,
+        message: [
+          this.event,
+          user.id,
+          id,
+          document,
+        ],
+      })
+    }
   }
 
   /**
