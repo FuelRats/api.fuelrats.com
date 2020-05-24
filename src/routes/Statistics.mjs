@@ -7,7 +7,8 @@ import LeaderboardQuery from '../query/LeaderboardQuery'
 import { UserStatisticsView, LeaderboardView } from '../view'
 import API, {
   authenticated,
-  GET, parameters
+  GET,
+  parameters,
 } from './API'
 
 /**
@@ -211,7 +212,7 @@ WITH "RescueStats" AS (
 		(array_agg(DISTINCT "Rats"."name"))[1]
 	) AS "preferredName",
 	array_agg(DISTINCT "Rats"."name") AS "ratNames",
-	min("Rats"."joined") AS "joinedAt",
+	min("Rats"."createdAt") AS "joinedAt",
 	SUM(CASE WHEN 
 		"Rescues"."outcome" = 'success' AND 
 		"Rescues"."firstLimpetId" = "Rats"."id" 
