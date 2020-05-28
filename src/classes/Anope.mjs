@@ -45,7 +45,7 @@ class Anope {
       .whereRaw('lower(email) = lower(?)', [email])
 
     if (results.length > 0) {
-      return results
+      return results[0]
     }
     return undefined
   }
