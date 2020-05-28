@@ -363,7 +363,7 @@ class Anope {
         }).into('anope_db_NickCore')
       }
 
-      const accountNick = user ? user.display : nick
+      const accountNick = user ? user.nc : nick
 
       const insertedNickname = await transaction.insert({
         nc: accountNick,
