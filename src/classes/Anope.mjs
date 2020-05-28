@@ -513,7 +513,7 @@ class Nickname {
     this.lastRealName = obj.last_realname
     this.lastSeen = new Date(obj.last_seen * 1000)
     this.lastUserMask = obj.last_usermask
-    this.display = obj.nc
+    this.display = obj.display ?? obj.nc
     this.nick = obj.nick
     this.createdAt = new Date(obj.time_registered * 1000)
     this.updatedAt = obj.timestamp
