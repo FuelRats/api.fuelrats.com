@@ -5,16 +5,17 @@ import {
   BadRequestAPIError,
   ConflictAPIError,
   NotFoundAPIError,
-  UnprocessableEntityAPIError,
+  UnprocessableEntityAPIError, UnsupportedMediaAPIError,
 } from '../classes/APIError'
 import Anope from '../classes/Anope'
+import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Rat, User } from '../db'
 import AnopeQuery from '../query/AnopeQuery'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { NicknameView, UserView } from '../view'
-import API, {
+import {
   GET,
   POST,
   DELETE,
@@ -22,12 +23,12 @@ import API, {
   getJSONAPIData,
   PATCH, parameters,
 } from './API'
-import Decals from './Decals'
+import APIResource from './APIResource'
 
 /**
  * Endpoint for managing IRC nicknames
  */
-export default class Nickname extends API {
+export default class Nickname extends APIResource {
   /**
    * @inheritdoc
    */
@@ -201,5 +202,33 @@ export default class Nickname extends API {
     // const result = await Anope.mapNickname(user)
     //
     // return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.meta })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  changeRelationship () {
+    throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  isSelf ({ ctx, entity }) {
+    if (entity.email.toLowerCase() === ctx.state.user.email.toLowerCase()) {
+      return Permission.granted({ permissions: ['users.write.me'], connection: ctx })
+    }
+    return false
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get relationTypes () {
+    return { }
+  }
+
+  get writePermissionsForFieldAccess () {
+    return undefined
   }
 }
