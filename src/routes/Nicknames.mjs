@@ -60,13 +60,13 @@ export default class Nickname extends APIResource {
    * Get info about a nickname
    * @endpoint
    */
-  @GET('/nicknames/:nick')
+  @GET('/nicknames/:id')
   @websocket('nicknames', 'read')
-  @parameters('nick')
+  @parameters('id')
   @authenticated
   async findById (ctx) {
-    const { nick } = ctx.params
-    const result = await Anope.findNickname(nick)
+    const { id } = ctx.params
+    const result = await Anope.findId(id)
     if (!result) {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
@@ -114,34 +114,34 @@ export default class Nickname extends APIResource {
    * Drop a nickname
    * @endpoint
    */
-  @DELETE('/nicknames/:nick')
+  @DELETE('/nicknames/:id')
   @websocket('nicknames', 'delete')
-  @parameters('nick')
+  @parameters('id')
   @authenticated
   async delete (ctx) {
-    const { nick } = ctx.params
-    const nickname = await Anope.findNickname(nick)
+    const { id } = ctx.params
+    const nickname = await Anope.findId(id)
     if (!nickname) {
-      throw new NotFoundAPIError({ parameter: 'nick' })
+      throw new NotFoundAPIError({ parameter: 'id' })
     }
 
     if (nickname.display === nickname.nick) {
-      throw new ConflictAPIError({ parameter: 'nick' })
+      throw new ConflictAPIError({ parameter: 'id' })
     }
 
     this.requireWritePermission({ connection: ctx, entity: nickname })
-    await Anope.removeNickname(nick)
+    await Anope.removeNickname(nickname.nick)
     ctx.response.status = StatusCode.noContent
     return true
   }
 
-  @GET('/nicknames/:nick/relationships/user')
+  @GET('/nicknames/:id/relationships/user')
   @websocket('nicknames', 'user', 'read')
-  @parameters('nick')
+  @parameters('id')
   @authenticated
   async relationshipUserView (ctx) {
-    const { nick } = ctx.params
-    const nickname = await Anope.findNickname(nick)
+    const { id } = ctx.params
+    const nickname = await Anope.findId(id)
     if (!nickname) {
       throw new NotFoundAPIError({ parameter: 'nick' })
     }
