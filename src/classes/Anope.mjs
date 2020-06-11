@@ -122,7 +122,10 @@ class Anope {
     const ircUser = user
 
     const [results] = await mysql.raw(`
-        SELECT *
+        SELECT
+            *,
+            anope_db_NickAlias.id AS id,
+            anope_db_NickCore.id AS accountId
         FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE lower(email) = lower(:email)
@@ -154,7 +157,10 @@ class Anope {
     })
 
     const [results] = await mysql.raw(`
-        SELECT *
+        SELECT
+            *,
+            anope_db_NickAlias.id AS id,
+            anope_db_NickCore.id AS accountId
         FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE lower(email) IN (:emails)
