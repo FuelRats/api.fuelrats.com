@@ -179,12 +179,48 @@ class Anope {
 
   /**
    *
+   * @param {string} id Get a database nickname entry from a nickname id
+   * @returns {Promise<Nickname>} a database nickname result
+   */
+  static async findId (id) {
+    const anopeId = uuidToInt(id)
+
+    let [[account]] = await mysql.raw(`
+        SELECT
+            *,
+            anope_db_NickAlias.id AS id,
+            anope_db_NickCore.id AS accountId
+        FROM anope_db_NickAlias
+        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        WHERE
+            lower(anope_db_NickAlias.id) = ?
+    `, [anopeId])
+    if (!account) {
+      return undefined
+    }
+
+    account = new Nickname(account)
+
+    account.user = await User.findOne({
+      where: {
+        email: { iLike: account.email },
+      },
+    })
+    return account
+  }
+
+  /**
+   *
    * @param {string} nickname Get a database nickname entry from a nickname string
    * @returns {Promise<Nickname>} a database nickname result
    */
   static async findNickname (nickname) {
     let [[account]] = await mysql.raw(`
-        SELECT * FROM anope_db_NickAlias
+        SELECT
+            *,
+            anope_db_NickAlias.id AS id,
+            anope_db_NickCore.id AS accountId
+        FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE
             lower(anope_db_NickAlias.nick) = lower(?)
@@ -507,7 +543,8 @@ class Nickname {
    * @param {object} user the user that this Nickname belongs to
    */
   constructor (obj, user = undefined) {
-    this.id = new UUID(5, 'ns:URL', `https://api.fuelrats.com/nicknames/${obj.id}`)
+    this.id = intToUuid(obj.id)
+    this.anopeId = obj.id
     this.lastQuit = obj.last_quit
     this.lastRealHost = obj.last_realhost
     this.lastRealName = obj.last_realname
@@ -529,6 +566,30 @@ class Nickname {
     this.user = user
     this.rat = undefined
   }
+}
+
+const base16 = 16
+const uuidPadding = 12
+const uuidComponents = 4
+
+/**
+ * Convert a UUIDv4 string to an Integer
+ * @param {string} stringUuid a UUIDv4 stirng
+ * @returns {number} an integer derived from the UUID string
+ */
+function uuidToInt (stringUuid) {
+  const uuid = BigInt(`0x${stringUuid.split('-')[uuidComponents]}`)
+  return Number(uuid)
+}
+
+/**
+ * Convert an integer to a UUIDv4 string
+ * @param {number} number a number to convert to a UUIDv4 string
+ * @returns {string} a UUIDv4 string derived from the number
+ */
+function intToUuid (number) {
+  const bigInt = BigInt(number)
+  return `00000000-000-4000-0000-${bigInt.toString(base16).padStart(uuidPadding, 0)}`
 }
 
 export default Anope
