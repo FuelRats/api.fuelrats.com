@@ -79,9 +79,9 @@ export default class Decals extends APIResource {
   @permissions('decals.read')
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
-    const results = await Decal.findAndCountAll(query.searchObject)
+    const result = await Decal.findAndCountAll(query.searchObject)
 
-    return new DatabaseDocument({ query, results, type: DecalView })
+    return new DatabaseDocument({ query, result, type: DecalView })
   }
 
   /**
