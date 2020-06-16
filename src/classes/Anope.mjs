@@ -595,7 +595,7 @@ function uuidToInt (stringUuid) {
  */
 function intToUuid (number) {
   const bigInt = BigInt(number)
-  return `00000000-000-4000-0000-${bigInt.toString(base16).padStart(uuidPadding, 0)}`
+  return `00000000-0000-4000-0000-${bigInt.toString(base16).padStart(uuidPadding, 0)}`
 }
 
 export default Anope
