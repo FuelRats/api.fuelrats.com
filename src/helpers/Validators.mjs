@@ -25,7 +25,7 @@ export const FrontierRedeemCode = new RegexLiteral(`^
   [A-Z0-9]{5}-
   [A-Z0-9]{5}-
   [A-Z0-9]{5}-
-  FUE[0-9]{2}
+  (FUE|FRT)[0-9]{2}
 $`, 'gu')
 
 // noinspection RegExpRepeatedSpace
