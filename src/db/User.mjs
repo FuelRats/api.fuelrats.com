@@ -203,6 +203,12 @@ export default class User extends Model {
             }],
           },
           {
+            model: models.Decal,
+            as: 'decals',
+            required: false,
+            include: [],
+          },
+          {
             model: models.Avatar,
             as: 'avatar',
             required: false,
@@ -293,6 +299,7 @@ export default class User extends Model {
     })
 
     models.User.hasMany(models.Client, { foreignKey: 'userId', as: 'clients' })
+    models.User.hasMany(models.Decal, { foreignKey: 'userId', as: 'decals' })
     models.User.hasMany(models.Epic, { foreignKey: 'approvedById', as: 'approvedEpics' })
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
 

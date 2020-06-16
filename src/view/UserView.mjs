@@ -1,5 +1,6 @@
 import ClientView from './ClientView'
 import DatabaseView from './DatabaseView'
+import DecalView from './DecalView'
 import EpicView from './EpicView'
 import GroupView from './GroupView'
 import NicknameView from './NicknameView'
@@ -77,6 +78,7 @@ export default class UserView extends DatabaseView {
       groups: GroupView,
       clients: ClientView,
       epics: EpicView,
+      decals: DecalView,
     }
   }
 
@@ -99,6 +101,6 @@ export default class UserView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return ['rats', 'displayRat', 'groups', 'clients', 'nicknames', 'epics']
+    return ['rats', 'displayRat', 'groups', 'clients', 'nicknames', 'epics', 'decals']
   }
 }
