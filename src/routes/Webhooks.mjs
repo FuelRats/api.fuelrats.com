@@ -1,8 +1,10 @@
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
+import twitter from '../classes/Twitter'
 import { User, Rat } from '../db'
 import API, {
-  IPAuthenticated,
+  authenticated,
+  IPAuthenticated, permissions,
   POST,
 } from './API'
 
@@ -61,5 +63,21 @@ export default class Webhooks extends API {
     await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${user.preferredRat().name}`)
 
     return true
+  }
+
+  /**
+   * Post to Twitter webhook
+   * @endpoint
+   */
+  @POST('/webhooks/twitter')
+  @authenticated
+  @permissions('twitter.write')
+  async tweet (ctx) {
+    const { message } = ctx.data
+    await twitter.post('statuses/update', {
+      status: message,
+    })
+
+    return { ok: true }
   }
 }
