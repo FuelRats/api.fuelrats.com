@@ -8,5 +8,6 @@
   "groups": ["read", "write"],
   "nicknames": ["read.me", "read", "write.me", "write"],
   "rescue-revisions": ["read", "write"],
-  "resources": ["forcedelete"]
+  "resources": ["forcedelete"],
+  "twitter": ["write"]
 }
