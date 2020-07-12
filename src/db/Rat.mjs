@@ -1,4 +1,4 @@
-import { JSONObject } from '../helpers/Validators'
+import { JSONObject, CMDRname } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 @table({ paranoid: true })
@@ -10,7 +10,7 @@ export default class Rat extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
-  @validate({ isUUID: 4 }, { name: 'name' })
+  @validate({ is: CMDRname }, { name: 'name' })
   @column(type.STRING, { name: 'name' })
   static ratName = undefined
 
