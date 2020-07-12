@@ -140,6 +140,7 @@ export class Context {
     this.href = request.href
     this.path = request.path
     this.query = request.query
+    this.params = request.query
     this.querystring = request.querystring
     this.host = request.host
     this.hostname = request.hostname

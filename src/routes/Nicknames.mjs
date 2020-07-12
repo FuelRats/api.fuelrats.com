@@ -12,6 +12,7 @@ import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Rat, User } from '../db'
+import { IRCNickname } from '../helpers/Validators'
 import AnopeQuery from '../query/AnopeQuery'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { NicknameView, UserView } from '../view'
@@ -83,7 +84,7 @@ export default class Nickname extends APIResource {
   @authenticated
   async create (ctx) {
     const { nick, ratId } = getJSONAPIData({ ctx, type: this.type }).attributes
-    if (!nick) {
+    if (!nick || IRCNickname.test(nick) === false) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/nick',
       })

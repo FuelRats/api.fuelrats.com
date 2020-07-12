@@ -72,6 +72,12 @@ const config = {
     username: recommended('FRAPI_JIRA_USERNAME', [], undefined),
     password: recommended('FRAPI_JIRA_PASSWORD', [], undefined),
   },
+  twitter: {
+    consumerKey: optional('FRAPI_TWITTER_CONSUMER_KEY', [], undefined),
+    consumerSecret: optional('FRAPI_TWITTER_CONSUMER_SECRET', [], undefined),
+    token: optional('FRAPI_TWITTER_TOKEN', [], undefined),
+    tokenSecret: optional('FRAPI_TWITTER_TOKEN_SECRET', [], undefined),
+  },
 }
 
 console.log(`${configErrors} config errors.`)
