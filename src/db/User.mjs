@@ -54,6 +54,7 @@ export default class User extends Model {
     get () {
       return Boolean(this.avatar)
     },
+    allowNull: true,
   })
   static image = undefined
 
@@ -67,6 +68,7 @@ export default class User extends Model {
         return accumulator.concat(value.permissions)
       }, [])
     },
+    allowNull: true,
   })
   static permissions = undefined
 

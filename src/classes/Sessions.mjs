@@ -37,7 +37,7 @@ export default class Sessions {
    * @returns {Promise<Session>} user session
    */
   static async createVerifiedSession (ctx, user, transaction = undefined) {
-    const code = await generateToken()
+    const code = await sessionTokenGenerator()
 
     return Session.create({
       ip: ctx.request.ip,
