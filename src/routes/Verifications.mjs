@@ -1,8 +1,8 @@
-import { NotFoundAPIError } from '../classes/APIError'
+import { InternalServerError, NotFoundAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'
-import { User, VerificationToken, db } from '../db'
+import { User, VerificationToken, Group, db } from '../db'
 import verificationEmail from '../emails/verification'
 import API, {
   GET,
@@ -72,7 +72,17 @@ export default class Verifications extends API {
       },
     })
 
-    user.addGroup('verified')
+    const verificationGroup = await Group.findOne({
+      where: {
+        name: 'verified',
+      },
+    })
+
+    if (!verificationGroup) {
+      throw new InternalServerError({})
+    }
+
+    user.addGroup(verificationGroup.id)
 
     await user.save()
     await verification.destroy()
