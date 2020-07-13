@@ -236,7 +236,7 @@ class Authentication {
     }
 
     let representedUser = undefined
-    if (UUID.parse(representing)) {
+    if (new UUID(representing)) {
       representedUser = await User.findOne({
         where: {
           representing,
