@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt'
-import UUID from 'pure-uuid'
 import {
   User, Token, Client, Reset, db,
 } from '../db'
@@ -14,6 +13,7 @@ import {
 import Anope from './Anope'
 import { Context } from './Context'
 import Permission from './Permission'
+import { UUID } from '../helpers/Validators'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
@@ -236,7 +236,7 @@ class Authentication {
     }
 
     let representedUser = undefined
-    if (new UUID(representing)) {
+    if (UUID.test(representing)) {
       representedUser = await User.findOne({
         where: {
           representing,
