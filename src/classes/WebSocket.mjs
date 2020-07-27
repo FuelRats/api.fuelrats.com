@@ -155,32 +155,36 @@ export default class WebSocket {
     }, `Websocket Message by ${ctx.request.ip}`)
 
     const { representing, permanentDeletion, username, password } = ctx.query
-    if (username && password) {
-      const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
-      if (!basicUser) {
-        throw new UnauthorizedAPIError({})
-      }
-      ctx.state.user = basicUser
-      ctx.state.basicAuth = true
-    }
-    if (representing) {
-      await Authentication.authenticateRepresenting({ ctx, representing })
-      delete query.representing
-    }
-
-    if (permanentDeletion) {
-      if (!ctx.state.basicAuth) {
-        throw new ForbiddenAPIError({ parameter: 'permanentDeletion' })
-      }
-
-      if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
-        ctx.state.forceDelete = true
-      } else {
-        throw new ForbiddenAPIError({ parameter: 'permanentDeletion' })
-      }
-    }
 
     try {
+      if (username && password) {
+        const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
+        if (!basicUser) {
+          throw new UnauthorizedAPIError({})
+        }
+        ctx.state.user = basicUser
+        ctx.state.basicAuth = true
+      }
+      if (representing) {
+        if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
+          throw new UnauthorizedAPIError({
+            parameter: 'representing',
+          })
+        }
+        delete query.representing
+      }
+
+      if (permanentDeletion) {
+        if (!ctx.state.basicAuth) {
+          throw new ForbiddenAPIError({ parameter: 'permanentDeletion' })
+        }
+
+        if (Permission.granted({ connection: ctx, permissions: ['resources.forcedelete'] })) {
+          ctx.state.forceDelete = true
+        } else {
+          throw new ForbiddenAPIError({ parameter: 'permanentDeletion' })
+        }
+      }
       const result = await this.route({ ctx, endpoint })
       if (result === true) {
         ctx.status = StatusCode.noContent

@@ -245,9 +245,7 @@ class Authentication {
     } else {
       const nickname = await Anope.findNickname(representing)
       if (!nickname) {
-        throw new NotFoundAPIError({
-          parameter: 'representing',
-        })
+        return false
       }
 
       representedUser = nickname.user
@@ -255,12 +253,11 @@ class Authentication {
 
 
     if (!representedUser) {
-      throw new NotFoundAPIError({
-        parameter: 'representing',
-      })
+      return false
     }
 
     ctx.state.user = representedUser
+    return true
   }
 }
 

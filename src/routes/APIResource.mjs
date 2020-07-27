@@ -153,7 +153,7 @@ export default class APIResource extends API {
 
     this.requireWritePermission({ connection: ctx, entity })
 
-    const { attributes } = dataObj
+    const { attributes, relationships } = dataObj
     delete attributes.createdAt
     delete attributes.updatedAt
 
@@ -169,8 +169,8 @@ export default class APIResource extends API {
         }, { ...updateSearch, transaction })
       }
 
-      if (ctx.data.relationships instanceof Object) {
-        const relationshipChanges = Object.entries(ctx.data.relationships).map(([relationship, data]) => {
+      if (relationships instanceof Object) {
+        const relationshipChanges = Object.entries(relationships).map(([relationship, data]) => {
           return this.generateRelationshipChange({
             ctx, data, entity, change: 'patch', relationship, transaction,
           })
