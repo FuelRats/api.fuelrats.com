@@ -2,7 +2,7 @@ import {
   InternalServerError,
   APIError,
   MethodNotAllowedAPIError,
-  UnprocessableEntityAPIError, ConflictAPIError, ForbiddenAPIError,
+  UnprocessableEntityAPIError, ConflictAPIError, ForbiddenAPIError, BadRequestAPIError,
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import logger from '../logging'
@@ -74,6 +74,10 @@ class ErrorDocument extends Document {
 
         case (error.name === 'MethodNotAllowedError'):
           errorAcc.push(new MethodNotAllowedAPIError({}))
+          break
+
+        case (error.message.includes('Invalid value')):
+          errorAcc.push(new BadRequestAPIError({ parameter: 'filter' }))
           break
 
         default: {
