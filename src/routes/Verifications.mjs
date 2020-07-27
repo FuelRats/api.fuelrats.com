@@ -1,4 +1,4 @@
-import { InternalServerError, NotFoundAPIError } from '../classes/APIError'
+import { ConflictAPIError, InternalServerError, NotFoundAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'
@@ -40,6 +40,16 @@ export default class Verifications extends API {
         email: { ilike: email },
       },
     })
+
+    const verified = user.groups.exists((group) => {
+      return group.name === 'verified'
+    })
+
+    if (verified) {
+      throw new ConflictAPIError({
+        pointer: '/data/attributes/email',
+      })
+    }
 
     if (user) {
       await Verifications.createVerification(user)
