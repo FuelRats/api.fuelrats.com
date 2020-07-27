@@ -411,6 +411,7 @@ class OAuth extends API {
       where: {
         ip: ctx.request.ip,
         fingerprint: ctx.state.fingerprint,
+        userId: user.id,
       },
     })
 
