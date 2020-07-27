@@ -118,7 +118,11 @@ app.use(async (ctx, next) => {
 
     const representing = ctx.get('x-representing')
     if (representing) {
-      await Authentication.authenticateRepresenting({ ctx, representing })
+      if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
+        throw new UnauthorizedAPIError({
+          parameter: 'representing',
+        })
+      }
     }
 
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
