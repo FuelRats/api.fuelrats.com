@@ -6,11 +6,11 @@ import {
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import { Context } from '../classes/Context'
+import { InvalidClientOAuthError } from '../classes/OAuthError'
 import Permission from '../classes/Permission'
 import router from '../classes/Router'
 import config from '../config'
 import enumerable from '../helpers/Enum'
-import { InvalidClientOAuthError } from '../classes/OAuthError'
 
 /**
  * @class
@@ -43,7 +43,7 @@ export function GET (route) {
     descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
     router.get(route, descriptor.value)
   }
@@ -61,7 +61,7 @@ export function POST (route) {
     descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
     router.post(route, descriptor.value)
   }
@@ -79,7 +79,7 @@ export function PUT (route) {
     descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
     router.put(route, descriptor.value)
     router.patch(route, descriptor.value)
@@ -98,7 +98,7 @@ export function PATCH (route) {
     descriptor.value = function value (...args) {
       const [ctx] = args
       ctx.endpoint = this
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
     router.patch(route, descriptor.value)
   }
@@ -166,7 +166,7 @@ export function basicAuthenticated (target, name, descriptor) {
   descriptor.value = function value (...args) {
     const [ctx] = args
     if (ctx.state.basicAuth === true) {
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
     throw new UnauthorizedAPIError({})
   }
@@ -182,7 +182,7 @@ export function IPAuthenticated (target, name, descriptor) {
   descriptor.value = function value (...args) {
     const [ctx] = args
     if (config.server.whitelist.includes(ctx.request.ip)) {
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
     throw new UnauthorizedAPIError({})
   }
@@ -200,7 +200,7 @@ export function permissions (...perms) {
     descriptor.value = function value (...args) {
       const [ctx] = args
       if (Permission.granted({ permissions: perms, connection: ctx })) {
-        return endpoint.apply(this, args)
+        return endpoint.apply(target, args)
       }
       throw new ForbiddenAPIError({})
     }
@@ -226,7 +226,7 @@ export function parameters (...fields) {
           return new BadRequestAPIError({ parameter: field })
         })
       }
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
   }
 }
@@ -254,7 +254,7 @@ export function required (...fields) {
           return new BadRequestAPIError({ pointer: `/data/attributes/${field}` })
         })
       }
-      return endpoint.apply(this, args)
+      return endpoint.apply(target, args)
     }
   }
 }
