@@ -118,7 +118,7 @@ export default class Resets extends API {
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 
-    const { password } = getJSONAPIData({ ctx, type: 'resets' })
+    const { password } = getJSONAPIData({ ctx, type: 'resets' }).attributes
 
     const user = await User.findOne({
       where: {
