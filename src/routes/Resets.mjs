@@ -33,7 +33,7 @@ export default class Resets extends API {
    * Request a password reset
    * @endpoint
    */
-  @POST('/reset')
+  @POST('/resets')
   @websocket('resets', 'create')
   @required('email')
   async create (ctx) {
@@ -85,7 +85,7 @@ export default class Resets extends API {
    * Validate a password reset token
    * @endpoint
    */
-  @GET('/reset/:token')
+  @GET('/resets/:token')
   @parameters('token')
   async validate (ctx) {
     const reset = await Reset.findOne({
@@ -105,7 +105,7 @@ export default class Resets extends API {
    * Use a token to reset a password
    * @endpoint
    */
-  @POST('/reset/:token')
+  @POST('/resets/:token')
   @parameters('token')
   async reset (ctx) {
     const reset = await Reset.findOne({
@@ -118,15 +118,7 @@ export default class Resets extends API {
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 
-    if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data' })
-    }
-
-    if (!(ctx.data.data.attributes instanceof Object)) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
-    }
-
-    const { password } = ctx.data.data.attributes
+    const { password } = getJSONAPIData({ ctx, type: 'resets' }).attributes
 
     const user = await User.findOne({
       where: {
