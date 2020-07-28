@@ -118,15 +118,7 @@ export default class Resets extends API {
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 
-    if (!isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== this.type) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data' })
-    }
-
-    if (!(ctx.data.data.attributes instanceof Object)) {
-      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
-    }
-
-    const { password } = ctx.data.data.attributes
+    const { password } = getJSONAPIData({ ctx, type: 'resets' })
 
     const user = await User.findOne({
       where: {
