@@ -37,7 +37,7 @@ querystring(app)
 
 
 global.WEBSOCKET_IDENTIFIER_ROUNDS = 16
-global.BCRYPT_ROUNDS_COUNT = 16
+global.BCRYPT_ROUNDS_COUNT = 99
 global.UUID_VERSION = 4
 
 try {
