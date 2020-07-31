@@ -172,7 +172,7 @@ export default class APIResource extends API {
       if (relationships instanceof Object) {
         const relationshipChanges = Object.entries(relationships).map(([relationship, data]) => {
           return this.generateRelationshipChange({
-            ctx, data, entity, change: 'patch', relationship, transaction,
+            ctx, data: data.data, entity, change: 'patch', relationship, transaction,
           })
         })
 
