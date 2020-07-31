@@ -28,7 +28,7 @@ export default class Frontier extends API {
    */
   @POST('/frontier/login')
   async login (ctx) {
-    const { code } = getJSONAPIData({ ctx, type: 'frontier-logins' })
+    const { code } = getJSONAPIData({ ctx, type: 'frontier-logins' }).attributes
     const { access_token: token } = await FrontierAPI.exchangeToken(code)
 
     const profile = await FrontierAPI.getProfile(token)
@@ -130,7 +130,7 @@ export default class Frontier extends API {
    */
   @POST('/frontier/create')
   async create (ctx) {
-    const { token, nickname, password } = getJSONAPIData({ ctx, type: 'user' })
+    const { token, nickname, password } = getJSONAPIData({ ctx, type: 'user' }).attributes
     const profile = await FrontierAPI.getProfile(token)
 
     const existingLink = await User.findOne({
