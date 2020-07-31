@@ -10,7 +10,7 @@ export default class UserStatisticsView extends DatabaseView {
    * @inheritdoc
    */
   static get type () {
-    return 'user-statistics'
+    return 'rat-statistics'
   }
 
   /**
