@@ -33,7 +33,7 @@ export default class Verifications extends API {
    */
   @POST('/verifications')
   async create (ctx) {
-    const { email } = getJSONAPIData({ ctx, type: 'verifications' })
+    const { email } = getJSONAPIData({ ctx, type: 'verifications' }).attributes
 
     const user = await User.findOne({
       where: {
