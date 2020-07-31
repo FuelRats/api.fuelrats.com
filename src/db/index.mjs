@@ -74,6 +74,8 @@ const operatorsAliases = {
   overlap: Op.overlap,
   contains: Op.contains,
   contained: Op.contained,
+  startsWith: Op.startsWith,
+  endsWith: Op.endsWith,
   adjacent: Op.adjacent,
   strictLeft: Op.strictLeft,
   strictRight: Op.strictRight,
