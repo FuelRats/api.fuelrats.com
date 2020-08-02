@@ -54,10 +54,6 @@ class DatabaseDocument extends Document {
    * @inheritdoc
    */
   get firstPage () {
-    if (!this.#result || !this.#result.rows) {
-      return undefined
-    }
-
     return 1
   }
 
@@ -66,10 +62,14 @@ class DatabaseDocument extends Document {
    */
   get lastPage () {
     if (!this.#result || !this.#result.rows) {
-      return undefined
+      return 1
     }
 
-    return Math.ceil(this.#result.count / this.#query.limit)
+    if (this.#result.count) {
+      return Math.ceil(this.#result.count / this.#query.limit)
+    }
+
+    return Math.ceil(this.#result.rows.length / this.#query.limit)
   }
 
   /**
