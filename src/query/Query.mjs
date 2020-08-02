@@ -1,4 +1,4 @@
-import { UnprocessableEntityAPIError } from '../classes/APIError'
+import { BadRequestAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
 import enumerable from '../helpers/Enum'
 
@@ -49,9 +49,22 @@ export default class Query {
    * Create a new instance of an API Query
    * @param {object} arg function arguments object
    * @param {Context} arg.connection request context
+   * @param {boolean} [arg.validate] whether to validate query parameters (true by default)
    */
-  constructor ({ connection }) {
+  constructor ({ connection, validate = true }) {
     this.connection = connection
+
+    if (validate && this.isWebsocket === false) {
+      const invalidParams = Object.keys(connection.query).filter((key) => {
+        return key.startsWith('_') === false && this.supportedQueryParameters.includes(key) === false
+      })
+
+      if (invalidParams.length > 0) {
+        throw invalidParams.map((invalidParam) => {
+          return new BadRequestAPIError({ parameter: invalidParam })
+        })
+      }
+    }
   }
 
   /**
@@ -154,7 +167,7 @@ export default class Query {
    * @returns {string[]|undefined} subset of relationships that should have related data included in the query
    */
   get include () {
-    const { include } = this.connection
+    const { include } = this.connection.query
     if (!include) {
       return undefined
     }
@@ -189,5 +202,13 @@ export default class Query {
       }
     }
     return filter
+  }
+
+  /**
+   * Query parameters that are supported by the JSONAPI specification
+   * @returns {string[]} Supported Query parameters
+   */
+  get supportedQueryParameters () {
+    return ['page', 'filter', 'include', 'sort', 'fields']
   }
 }
