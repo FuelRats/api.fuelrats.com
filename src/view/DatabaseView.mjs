@@ -28,7 +28,7 @@ export default class DatabaseView extends View {
       }
 
       // eslint-disable-next-line no-restricted-syntax
-      let data = null
+      let data = undefined
       if (Reflect.has(this.object, key) === false && Reflect.has(this.object, `${key}Id`) === false) {
         data = []
       } else if (Array.isArray(this.object[key])) {
@@ -39,12 +39,17 @@ export default class DatabaseView extends View {
             query: this.query,
           })).relationshipView
         })
-      } else if (this.object[key]) {
-        data = (new RelationshipView({
-          object: this.object[key],
-          root: this.root || this,
-          query: this.query,
-        })).relationshipView
+      } else if (Reflect.has(this.object, key)) {
+        // eslint-disable-next-line eqeqeq
+        if (this.object[key] === null) {
+          data = null
+        } else {
+          data = (new RelationshipView({
+            object: this.object[key],
+            root: this.root || this,
+            query: this.query,
+          })).relationshipView
+        }
       }
 
       acc[key] = {
