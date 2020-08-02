@@ -205,7 +205,7 @@ export default class WebSocket {
         }, 'Websocket router received a response from the endpoint that could not be processed')
       }
     } catch (errors) {
-      const documentQuery = new Query({ connection: ctx })
+      const documentQuery = new Query({ connection: ctx, validate: false })
       const errorDocument = new ErrorDocument({ query: documentQuery, errors })
 
       ctx.status = errorDocument.httpStatus
