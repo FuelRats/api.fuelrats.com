@@ -196,7 +196,7 @@ app.use(async (ctx, next) => {
       ctx.body = errors.toString()
       return
     }
-    const query = new Query({ connection: ctx })
+    const query = new Query({ connection: ctx, validate: false })
     const errorDocument = new ErrorDocument({ query, errors })
 
     ctx.status = errorDocument.httpStatus

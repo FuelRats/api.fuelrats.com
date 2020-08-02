@@ -108,6 +108,7 @@ export class Context {
     const request = new Request({ client, query, body, message })
     const response = new Response({ client })
     this.client = client
+    this.isWebsocket = true
 
     this.req = client.req
     this.res = client.req
