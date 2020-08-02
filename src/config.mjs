@@ -11,6 +11,7 @@ const config = {
     proxyEnabled: required('FRAPI_PROXY_ENABLED', [], false),
     whitelist: optional('FRAPI_WHITELIST', [], []),
   },
+  documentationUrl: required('FRAPI_DOCUMENTATION', [], 'https://github.com/FuelRats/FuelRats-API-Docs/blob/master/beta.md'),
   frontend: {
     clientId: recommended('FRAPI_FRONTEND_CLIENTID', []),
     url: required('FRAPI_FRONTEND_URL', [], 'https://fuelrats.com'),

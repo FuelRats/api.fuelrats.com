@@ -3,10 +3,9 @@ import config from '../config'
 import StatusCode from './StatusCode'
 
 const router = new Router()
-const documentationUrl = 'https://github.com/FuelRats/FuelRats-API-Docs/blob/master/beta.md'
 
 router.get('/', (ctx) => {
-  ctx.redirect(documentationUrl)
+  ctx.redirect(config.documentationUrl)
   ctx.status = StatusCode.seeOther
 })
 
