@@ -43,7 +43,7 @@ export default class DatabaseView extends View {
         // eslint-disable-next-line eqeqeq
         if (this.object[key] === null) {
           data = null
-        } else {
+        } else if (this.object[key]) {
           data = (new RelationshipView({
             object: this.object[key],
             root: this.root || this,
