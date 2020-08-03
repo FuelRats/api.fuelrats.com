@@ -64,9 +64,9 @@ export default class User extends Model {
       if (!this.groups) {
         return []
       }
-      return this.groups.reduce((accumulator, value) => {
+      return Array.from(new Set(this.groups.reduce((accumulator, value) => {
         return accumulator.concat(value.permissions)
-      }, [])
+      }, [])))
     },
     allowNull: true,
   })
