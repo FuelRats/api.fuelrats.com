@@ -1,4 +1,9 @@
-import { ConflictAPIError, InternalServerError, NotFoundAPIError } from '../classes/APIError'
+import {
+  ConflictAPIError,
+  InternalServerError,
+  NotFoundAPIError,
+  UnprocessableEntityAPIError,
+} from '../classes/APIError'
 import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'
@@ -35,13 +40,17 @@ export default class Verifications extends API {
   async create (ctx) {
     const { email } = getJSONAPIData({ ctx, type: 'verifications' }).attributes
 
+    if (!email) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/email' })
+    }
+
     const user = await User.findOne({
       where: {
         email: { ilike: email },
       },
     })
 
-    const verified = user.groups.exists((group) => {
+    const verified = user.groups.some((group) => {
       return group.name === 'verified'
     })
 
