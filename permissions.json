@@ -9,5 +9,6 @@
   "nicknames": ["read.me", "read", "write.me", "write"],
   "rescue-revisions": ["read", "write"],
   "resources": ["forcedelete"],
-  "twitter": ["write"]
+  "twitter": ["write"],
+  "dispatch": ["read"]
 }
