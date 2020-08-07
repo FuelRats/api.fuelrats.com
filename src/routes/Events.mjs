@@ -61,7 +61,7 @@ export default class Events extends API {
         event: this.event,
         data: {
           id,
-          user,
+          user: user.id,
           data: document,
         },
       })
