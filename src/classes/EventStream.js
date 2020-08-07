@@ -1,13 +1,14 @@
 import buildFile from '../files/build'
 import { Context } from './Context'
 import StatusCode from './StatusCode'
+import UUID from 'pure-uuid'
 
 /**
  * Class for Server-Side event streams
  * @class
  */
 export default class EventStream {
-  static subscriptions = []
+  static subscriptions = new Map()
 
   /**
    * Create a new Server-Side events stream
@@ -34,7 +35,8 @@ export default class EventStream {
    */
   static fromConnection (ctx) {
     const eventStream = new EventStream(ctx)
-    EventStream.subscriptions.push(eventStream)
+    eventStream.id = new UUID(4)
+    EventStream.subscriptions.set(eventStream.id, eventStream)
 
     const {
       hash, branch, tags, date, version,
@@ -86,11 +88,7 @@ export default class EventStream {
    * Event fired when an SSE connection is closed for any reason
    */
   onClose () {
-    const socketIndex = EventStream.subscriptions.indexOf(this)
-
-    if (socketIndex) {
-      EventStream.subscriptions.splice(socketIndex, 1)
-    }
+    EventStream.subscriptions.delete(this.id)
 
     if (this.resolve) {
       this.resolve()
