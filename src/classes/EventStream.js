@@ -79,6 +79,7 @@ export default class EventStream {
     if (data) {
       this.ctx.res.write(`data: ${JSON.stringify(data)}\n\n`)
     }
+    this.ctx.res.flushHeaders()
   }
 
   /**
