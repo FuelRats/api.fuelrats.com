@@ -86,7 +86,12 @@ export default class EventStream {
    * Event fired when an SSE connection is closed for any reason
    */
   onClose () {
-    EventStream.subscriptions.splice(EventStream.subscriptions.indexOf(this), 1)
+    const socketIndex = EventStream.subscriptions.indexOf(this)
+
+    if (socketIndex) {
+      EventStream.subscriptions.splice(socketIndex, 1)
+    }
+
     if (this.resolve) {
       this.resolve()
     }
