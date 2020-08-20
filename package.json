@@ -21,7 +21,7 @@
     "@log4js-node/slack": "^1.0.0",
     "@log4js-node/smtp": "^1.1.0",
     "axios": "^0.19.0",
-    "bcrypt": "^3.0.7",
+    "bcrypt": "^5.0.0",
     "date-fns": "^2.8.1",
     "eventemitter2": "^5.0.1",
     "git-rev-promises": "^1.1.0",
