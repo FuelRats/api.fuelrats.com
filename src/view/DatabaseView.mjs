@@ -52,6 +52,10 @@ export default class DatabaseView extends View {
         }
       }
 
+      if (typeof data === 'undefined') {
+        return acc
+      }
+
       acc[key] = {
         links: this.getRelationLink(key),
         data,
