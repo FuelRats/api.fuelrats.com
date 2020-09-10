@@ -139,7 +139,7 @@ export default class APIResource extends API {
       throw new BadRequestAPIError({ parameter: 'id' })
     }
 
-    const dataObj = getJSONAPIData({ ctx, type: this.type })
+    const dataObj = getJSONAPIData({ ctx, type: this.type, requireAttributes: false })
 
     const entity = await databaseType.findOne({
       where: {
@@ -154,13 +154,14 @@ export default class APIResource extends API {
     this.requireWritePermission({ connection: ctx, entity })
 
     const { attributes, relationships } = dataObj
-    delete attributes.createdAt
-    delete attributes.updatedAt
 
     const transaction = await db.transaction()
 
     try {
       if (attributes instanceof Object) {
+        delete attributes.createdAt
+        delete attributes.updatedAt
+
         await this.validateUpdateAccess({ ctx, attributes, entity })
 
         await entity.update({
@@ -332,9 +333,6 @@ export default class APIResource extends API {
     const validOneRelationship = this.isValidOneRelationship({ relationship: data, relation: relationship })
 
     if (Array.isArray(data) && changeRelationship.many === true) {
-      if (data.length === 0) {
-        return undefined
-      }
       const relationshipIds = data.map((relationshipObject) => {
         const validManyRelationship = this.isValidManyRelationship({
           relationship: relationshipObject,

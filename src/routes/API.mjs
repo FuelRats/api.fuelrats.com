@@ -331,14 +331,15 @@ export function isValidJSONAPIObject ({ object }) {
  * @param {object} arg function arguments object
  * @param {Context} arg.ctx request context
  * @param {string} arg.type the JSONAPI resource type
+ * @param {boolean} [arg.requireAttributes] Whether to require attributes to be present in the object
  * @returns {object} JSONAPI data field
  */
-export function getJSONAPIData ({ ctx, type }) {
+export function getJSONAPIData ({ ctx, type, requireAttributes = true }) {
   if (!ctx.data.data || !isValidJSONAPIObject({ object: ctx.data.data }) || ctx.data.data.type !== type) {
     throw new UnprocessableEntityAPIError({ pointer: '/data' })
   }
 
-  if (!(ctx.data.data.attributes instanceof Object)) {
+  if (!(ctx.data.data.attributes instanceof Object) && requireAttributes) {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes' })
   }
 

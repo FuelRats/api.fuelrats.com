@@ -120,7 +120,8 @@ export default class Rescues extends APIResource {
       },
     })
 
-    if (ctx.data.data.attributes.outcome) {
+    const { outcome } = ctx.data.data.attributes
+    if (outcome && outcome !== 'purge') {
       const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
         message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
