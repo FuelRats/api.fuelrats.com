@@ -25,7 +25,7 @@ export default class Rescue extends Model {
   @column(type.STRING)
   static client = undefined
 
-  @validate({ is: [IRCNickname, 'i'] })
+  @validate({ notEmpty: true })
   @column(type.STRING, { allowNull: true })
   static clientNick = undefined
 
