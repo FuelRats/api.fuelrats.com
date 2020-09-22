@@ -359,7 +359,7 @@ export default class APIResource extends API {
       if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, relationship.id])) {
         throw new ForbiddenAPIError({ pointer: '/data' })
       }
-      return changeRelationship[change]({ entity, id: data.id, ctx, transaction })
+      return changeRelationship.patch({ entity, id: data.id, ctx, transaction })
     }
     throw new UnprocessableEntityAPIError({ pointer: '/data' })
   }
