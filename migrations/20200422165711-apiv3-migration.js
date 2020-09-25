@@ -52,6 +52,11 @@ module.exports = {
         },
       }, { transaction })
 
+      await migration.addColumn('Epics', 'deletedAt', {
+        type: type.DATE,
+        allowNull: true,
+      })
+
       console.log('- Removing old single nominated rat field from Epic')
       await migration.removeColumn('Epics', 'ratId', { transaction })
 
