@@ -476,7 +476,7 @@ export default class APIResource extends API {
   }) {
     const attributePermissions = this.writePermissionsForFieldAccess[field]
     if (!attributePermissions) {
-      throw new ForbiddenAPIError({ pointer: `/data/attributes/${field}` })
+      throw new UnprocessableEntityAPIError({ pointer: `/data/attributes/${field}` })
     }
 
     const hasPermission = () => {
