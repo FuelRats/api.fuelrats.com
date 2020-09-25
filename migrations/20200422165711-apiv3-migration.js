@@ -60,6 +60,12 @@ module.exports = {
       console.log('- Removing old single nominated rat field from Epic')
       await migration.removeColumn('Epics', 'ratId', { transaction })
 
+      console.log('- Adding soft delete column to Epics')
+      await migration.addColumn('Epics', 'deletedAt', {
+        type: type.DATE,
+        allowNull: true,
+      }, { transaction })
+
       console.log('- Creating a join table for the users nominated for an epic')
       await migration.createTable('EpicUsers', {
         id: {
@@ -117,10 +123,6 @@ module.exports = {
       }, { transaction })
 
       console.log('- Transitioning the Groups table from string primary keys based on the name to UUIDs')
-      await migration.addColumn('Groups', 'name', {
-        type: type.STRING,
-      }, { transaction })
-
       console.log('- Creating the new ID field and populating it with random UUIDs')
       await migration.addColumn('Groups', 'id2', {
         type: type.UUID,
@@ -138,7 +140,7 @@ module.exports = {
         SET "groupId" = "Groups"."id2"
         FROM "Groups"
         WHERE
-            "Groups"."name" = "UserGroups"."GroupId"
+            "Groups"."id" = "UserGroups"."GroupId"
       `, { transaction })
 
       console.log('- Removing the old string Group Id column')
@@ -146,7 +148,7 @@ module.exports = {
 
       console.log('- Removing Primary Key constraint on old group ID and make it the "name" field')
       await migration.removeConstraint('Groups', 'Groups_pkey', { transaction })
-      await migration.renameColumn('Groups', 'id', 'name2', { transaction })
+      await migration.renameColumn('Groups', 'id', 'name', { transaction })
 
       console.log('- Changing the name of the new UUID field to "id" and make it the primary key')
       await migration.renameColumn('Groups', 'id2', 'id', { transaction })
@@ -165,6 +167,37 @@ module.exports = {
         },
       }, { transaction })
 
+      console.log('- Marking existing users as verified')
+      const verified = await migration.findOne({
+        where: {
+          name: 'default',
+        },
+        transaction,
+      })
+
+      // The old 'default' permission group is now called 'verified' as it only applies to users with a verified email, users without has no permissions.
+      verified.name = 'verified'
+      await verified.save({ transaction })
+
+      await migration.sequelize.query(`
+          INSERT INTO "UserGroups" (id, "userId", "groupId", "createdAt", "updatedAt")
+          SELECT uuid_generate_v4(),
+                 "Users"."id",
+                 $groupId,
+                 NOW(),
+                 NOW()
+          FROM "Users"
+                   LEFT JOIN "UserGroups" ON "UserGroups"."userId" = "Users"."id"
+                   LEFT JOIN "Rats" ON "Rats"."userId" = "Users"."id" AND "Rats"."deletedAt" IS NULL
+                   LEFT JOIN "RescueRats" ON "RescueRats"."ratId" = "Rats"."id"
+          WHERE "Users"."deletedAt" IS NULL
+          GROUP BY "Users"."id"
+          HAVING COUNT("UserGroups"."id") > 0
+              OR COUNT("RescueRats"."id") > 0
+      `, {
+        bind: { groupId: verified.id },
+        transaction,
+      })
 
       /*
       **************************************
@@ -407,6 +440,16 @@ module.exports = {
         WHERE
           "createdAt" > "joined"
       `, { transaction })
+
+      console.log('- Retroactively setting the user createdAt value to the rat joined date for old rats')
+      await migration.sequelize.query(`
+          UPDATE "Users"
+          SET "createdAt" = "Rats"."joined"
+          FROM "Rats"
+          WHERE "Rats"."deletedAt" IS NULL
+            AND "Rats"."userId" = "Users"."id"
+            AND "Rats"."joined" < "Users"."createdAt"
+      `)
 
       console.log('- Removing the deprecated Rats joined field')
       await migration.removeColumn('Rats', 'joined', { transaction })
