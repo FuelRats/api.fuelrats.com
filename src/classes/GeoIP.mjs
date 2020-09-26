@@ -36,7 +36,8 @@ export default class GeoIP {
   static locationString (ip) {
     const geoip = GeoIP.lookup(ip)
     if (geoip.city && geoip.country) {
-      return `${geoip.city.names.en}, ${geoip.postal.code} ${geoip.country.names.en}`
+      const postal = geoip.postal ? `${geoip.postal.code}, ` : ''
+      return `${geoip.city.names.en}, ${postal}${geoip.country.names.en}`
     }
     if (geoip.country) {
       return `Unknown City, ${geoip.country.names.en}`
