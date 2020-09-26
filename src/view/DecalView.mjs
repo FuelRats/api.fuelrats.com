@@ -19,6 +19,7 @@ export default class DecalView extends DatabaseView {
       static code
       static type
       static notes
+      static claimedAt
       static createdAt
       static updatedAt
       static deletedAt = ReadPermission.internal
