@@ -5,7 +5,7 @@ import config from '../config'
 import { User, Rat } from '../db'
 import { ConflictAPIError, NotFoundAPIError } from './APIError'
 
-const { database, username, hostname, port } = config.anope
+const { database, username, hostname, port, password } = config.anope
 const anopeBcryptRounds = 10
 const defaultMaximumEditDistance = 5
 
@@ -17,6 +17,7 @@ const mysql = knex({
     port,
     user: username,
     database,
+    password,
   },
   pool: {
     afterCreate (conn, done) {

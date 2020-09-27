@@ -38,10 +38,6 @@ export default class Rat extends Model {
           model: models.User.scope('norelations'),
           as: 'user',
           required: false,
-        }, {
-          model: models.Ship,
-          as: 'ships',
-          required: false,
         }],
       }, { override: true }],
 
@@ -51,10 +47,6 @@ export default class Rat extends Model {
         include: [{
           model: models.User.scope('norelations'),
           as: 'user',
-          required: false,
-        }, {
-          model: models.Ship,
-          as: 'ships',
           required: false,
         }, {
           model: models.Rescue.scope(undefined),
