@@ -29,7 +29,6 @@ export default class Rescue extends Model {
   @column(type.STRING, { allowNull: true })
   static clientNick = undefined
 
-  @validate({ is: [languageCode, ''] })
   @column(type.STRING, { allowNull: true })
   static clientLanguage = undefined
 
