@@ -470,8 +470,10 @@ class OAuth extends API {
     }
 
     const authToken = Token.findOne({
-      value: token,
-      clientId: ctx.state.client.id,
+      where: {
+        value: token,
+        clientId: ctx.state.client.id,
+      }
     })
 
     if (authToken) {

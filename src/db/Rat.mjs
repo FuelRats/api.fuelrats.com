@@ -53,10 +53,6 @@ export default class Rat extends Model {
           as: 'user',
           required: false,
         }, {
-          model: models.Ship,
-          as: 'ships',
-          required: false,
-        }, {
           model: models.Rescue.scope(undefined),
           as: 'firstLimpet',
           required: false,
