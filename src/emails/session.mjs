@@ -39,7 +39,7 @@ export default function sessionEmail ({ ctx, user, sessionToken }) {
       name: user.preferredRat().name,
       intro: 'An attempt was made to login to your Fuel Rats account from a new location.',
       action: {
-        instructions: 'Enter the code below to authorise the login:',
+        instructions: `Enter the code below to authorise the login:  ${sessionToken.toUpperCase()}`,
         button: {
           color: '#d65050',
           text: sessionToken.toUpperCase(),
