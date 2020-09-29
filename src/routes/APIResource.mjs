@@ -520,10 +520,8 @@ export default class APIResource extends API {
    * @param {object} arg.entity the entity to validate
    */
   async validateUpdateAccess ({ ctx, attributes, entity }) {
-    const isGroup = Permission.granted({
-      permissions: [`${this.type}.write`],
-      connection: ctx,
-    })
+    const isGroup = Permission.granted({ permissions: [`${this.type}.write`], connection: ctx })
+      || Permission.granted({ permissions: [`${this.type}.write.me`], connection: ctx })
     const isSelf = this.isSelf({ ctx, entity }) && Permission.granted({
       permissions: [`${this.type}.write.me`],
       connection: ctx,
@@ -587,7 +585,8 @@ export default class APIResource extends API {
    */
   hasWritePermission ({ connection, entity }) {
     if (this.isSelf({ ctx: connection, entity })) {
-      return Permission.granted({ permissions: [`${this.type}.write.me`, `${this.type}.write`], connection })
+      return Permission.granted({ permissions: [`${this.type}.write.me`], connection })
+        || Permission.granted({ permissions: [`${this.type}.write`], connection })
     }
     return Permission.granted({ permissions: [`${this.type}.write`], connection })
   }
