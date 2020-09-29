@@ -10,11 +10,10 @@ export default function emailChangeEmail ({ email, name, newEmail }) {
   return {
     to: email,
     subject: 'Fuel Rats Email has been changed',
-    body: {
+    template: 'emailchange',
+    params: {
       name,
-      intro: `Your Fuel Rats registered email has been changed to ${newEmail}`,
-      outro: 'If this change was not requested by you please contact support@fuelrats.com',
-      signature: 'Sincerely',
+      newEmail,
     },
   }
 }

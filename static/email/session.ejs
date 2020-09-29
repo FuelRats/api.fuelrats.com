@@ -1,0 +1,17 @@
+<%- include('layout/header') %>
+<p>An attempt was made to login to your Fuel Rats account from a new location.</p>
+<p>Enter the code below to authorise the login:</p>
+<p>
+    <%- include('components/token-display', { token: token }) %>
+</p>
+<p>
+    <ul>
+        <li><b>Device:</b> <%= device %></li>
+        <li><b>Location:</b> <%= location %></li>
+        <li><b>IP Address:</b> <%= ipAddress %></li>
+    </ul>
+</p>
+<p>
+    If this login was not by you then please change your password immediately and contact administrators!
+</p>
+<%- include('layout/footer') %>
