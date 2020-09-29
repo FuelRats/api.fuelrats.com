@@ -8,7 +8,7 @@ Device: %{device}
 Location: %{location}
 IP Address: %{ipAddress}
 
-If this login was not by you then please change your password immediately and contact administrators!
+If this login was not by you then please change your password immediately and contact administrators at ops@fuelrats.com!
 
 
 Sincerely,
