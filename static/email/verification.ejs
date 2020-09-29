@@ -1,0 +1,10 @@
+<%- include('layout/header') %>
+    <p><%= intro %></p>
+    <p>Click the button below to verify your email:</p>
+    <p>
+        <%- include('components/action-button', { link: verifyLink, title: 'Verify me' }); %>
+    </p>
+    <p>
+        If you are having problems with verification you may contact support@fuelrats.com
+    </p>
+<%- include('layout/footer') %>

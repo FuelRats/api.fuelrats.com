@@ -1,0 +1,11 @@
+Hello %{name},
+A password reset to your Fuel Rats Account has been requested.
+
+Please copy this link into your web browser to reset your password:
+%{resetLink}
+
+If you did not request a password reset, no further action is required on your part.
+
+
+Sincerely,
+The Fuel Rats

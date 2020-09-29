@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title><%= title %></title>
+        <style type="text/css">
+            body {
+                background: #1a1a1a;
+                color: #ffffff;
+                font-family: '.AppleSystemUIFont', 'SF Pro Display', 'Helvetica', 'Arial', sans-serif;
+                max-width: max-content;
+                margin: auto;
+            }
+
+            a {
+                color: #d65050;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            header {
+                text-align: center;
+                padding: 2em;
+            }
+
+            footer {
+                padding-top: 2em;
+            }
+
+            header .logo {
+                display: inline-block;
+                width: 120px;
+                height: 120px;
+            }
+
+            main {
+                padding: 1em;
+            }
+
+            .sub {
+                font-size: 0.8em;
+            }
+
+            .action {
+                text-align: center;
+                padding: 2em;
+            }
+
+            .actionButton {
+                display: inline-block;
+                background: #d65050;
+                color: #ffffff;
+                border: none;
+                padding: 0.5em;
+                font-size: 1.5em;
+                margin-bottom: 1em;
+            }
+
+            .actionButton:hover {
+                background: #d96666;
+                text-decoration: none;
+            }
+
+            .tokenView {
+                font-size: 3em;
+                padding: 0.2em;
+                display: inline-block;
+                background: #333;
+            }
+        </style>
+
+    </head>
+    <body>
+        <header>
+            <a href="https://fuelrats.com">
+                <img class="logo" src="https://wordpress.fuelrats.com/wp-content/uploads/2018/09/email.jpg" alt="Fuel Rats Logo" />
+            </a>
+        </header>
+        <main>
+            <h3>Hi <%= name %>,</h3>

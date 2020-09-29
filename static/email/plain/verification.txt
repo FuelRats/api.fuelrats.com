@@ -1,0 +1,11 @@
+Hello %{name},
+%{intro}
+
+Please copy this link into your web browser to verify your email:
+%{verifyLink}
+
+If you are having problems with verification you may contact support@fuelrats.com
+
+
+Sincerely,
+The Fuel Rats

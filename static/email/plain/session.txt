@@ -1,0 +1,15 @@
+Hello %{name},
+An attempt was made to login to your Fuel Rats account from a new location.
+
+Enter the code below to authorise the login:
+%{token}
+
+Device: %{device}
+Location: %{location}
+IP Address: %{ipAddress}
+
+If this login was not by you then please change your password immediately and contact administrators at ops@fuelrats.com!
+
+
+Sincerely,
+The Fuel Rats
