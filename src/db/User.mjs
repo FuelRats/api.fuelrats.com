@@ -62,11 +62,16 @@ export default class User extends Model {
     include: [],
     get () {
       if (!this.groups) {
-        return []
+        return undefined
       }
-      return Array.from(new Set(this.groups.reduce((accumulator, value) => {
+      const permissions = Array.from(new Set(this.groups.reduce((accumulator, value) => {
         return accumulator.concat(value.permissions)
       }, [])))
+
+      if (permissions.length === 0) {
+        return undefined
+      }
+      return permissions
     },
     allowNull: true,
   })
@@ -197,12 +202,6 @@ export default class User extends Model {
             model: models.Rat,
             as: 'rats',
             required: false,
-            include: [{
-              model: models.Ship,
-              as: 'ships',
-              required: false,
-              include: [],
-            }],
           },
           {
             model: models.Decal,
@@ -218,13 +217,6 @@ export default class User extends Model {
           {
             model: models.Rat,
             as: 'displayRat',
-
-            include: [{
-              model: models.Ship,
-              as: 'ships',
-              required: false,
-              include: [],
-            }],
           }, {
             model: models.Group,
             as: 'groups',
