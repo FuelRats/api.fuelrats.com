@@ -96,6 +96,18 @@ class ErrorDocument extends Document {
       return errorAcc
     }, [])
 
+    for (const error of errorList) {
+      if (error instanceof Error && (error instanceof InternalServerError) === false) {
+        logger.info({
+          GELF: true,
+          _event: 'error',
+          _id: error.id.toString(),
+          _message: error.message,
+          _stack: error.stack,
+        }, `Server Error: ${error.message}`)
+      }
+    }
+
     super({
       objects: undefined,
       meta: query.meta,
