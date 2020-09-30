@@ -4,6 +4,7 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
+import Anope from '../classes/Anope'
 import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'
@@ -101,9 +102,12 @@ export default class Verifications extends API {
       throw new InternalServerError({})
     }
 
-    user.addGroup(verificationGroup.id)
+    await user.addGroup(verificationGroup.id)
 
-    await user.save()
+    const updatedUser = await User.findOne({
+      where: { id: user.id },
+    })
+    await Anope.updatePermissions(updatedUser)
     await verification.destroy()
     return true
   }

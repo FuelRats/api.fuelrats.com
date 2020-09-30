@@ -1,5 +1,6 @@
 import { InternalServerError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
+import Anope from '../classes/Anope'
 import twitter from '../classes/Twitter'
 import { User, Rat, Group } from '../db'
 import API, {
@@ -58,7 +59,6 @@ export default class Webhooks extends API {
       throw new UnprocessableEntityAPIError({ pointer: `/data/issue/fields/${cmdrName}` })
     }
 
-    const groupId = DrillType[fields.issuetype.id]
     const permissionGroup = await Group.findOne({
       where: {
         name: DrillType[fields.issuetype.id],
@@ -69,10 +69,13 @@ export default class Webhooks extends API {
       throw new InternalServerError({})
     }
 
-    user.addGroup(permissionGroup.id)
+    await user.addGroup(permissionGroup.id)
 
-    await user.addGroup(groupId)
-    await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${user.preferredRat().name}`)
+    const updatedUser = await User.findOne({
+      where: { id: user.id },
+    })
+    await Anope.updatePermissions(updatedUser)
+    await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${updatedUser.preferredRat().name}`)
 
     return true
   }

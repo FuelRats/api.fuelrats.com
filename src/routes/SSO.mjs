@@ -1,6 +1,7 @@
 import config from '../config'
 import { User } from '../db'
 import API, { GET, authenticated } from './API'
+import { ForbiddenAPIError } from '../classes/APIError'
 
 /**
  * SSO endpoints
@@ -26,6 +27,10 @@ export default class SSO extends API {
       },
     })
 
+    if (ctx.state.permissions.includes('users.verified')) {
+      throw new ForbiddenAPIError({})
+    }
+
     const userGroups = user.groups.map((group) => {
       return group.name
     })
@@ -33,7 +38,7 @@ export default class SSO extends API {
     return {
       id: user.id,
       email: user.email,
-      emailVerified: userGroups.includes('verified'),
+      emailVerified: true,
       username: user.preferredRat().name,
       profile: `${config.frontend.url}/profile/overview`,
       name: user.preferredRat().name,
@@ -80,6 +85,10 @@ export default class SSO extends API {
         id: ctx.state.user.id,
       },
     })
+
+    if (ctx.state.permissions.includes('users.verified')) {
+      throw new ForbiddenAPIError({})
+    }
 
     const userGroups = user.groups.map((group) => {
       return group.name

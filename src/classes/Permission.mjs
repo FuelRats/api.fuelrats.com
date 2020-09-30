@@ -2,6 +2,7 @@ import permissionList from '../files/permissions'
 import { UnprocessableEntityAPIError } from './APIError'
 import { Context } from './Context'
 
+const defaultPermissions = ['users.read.me', 'rats.read.me']
 
 /**
  * Class for managing user permissions
@@ -36,9 +37,9 @@ export default class Permission {
     }
 
 
-    let permissions = user.groups.reduce((accumulator, value) => {
+    let permissions = defaultPermissions.concat(user.groups.reduce((accumulator, value) => {
       return accumulator.concat(value.permissions)
-    }, [])
+    }, []))
 
     if (scopes) {
       permissions = permissions.filter((permission) => {
