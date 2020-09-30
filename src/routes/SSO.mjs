@@ -1,6 +1,7 @@
 import config from '../config'
 import { User } from '../db'
 import API, { GET, authenticated } from './API'
+import { ForbiddenAPIError } from '../classes/APIError'
 
 /**
  * SSO endpoints
@@ -25,6 +26,10 @@ export default class SSO extends API {
         id: ctx.state.user.id,
       },
     })
+
+    if (ctx.state.permissions.includes('rescues.read') === false) {
+      throw new ForbiddenAPIError({})
+    }
 
     const userGroups = user.groups.map((group) => {
       return group.name
@@ -80,6 +85,10 @@ export default class SSO extends API {
         id: ctx.state.user.id,
       },
     })
+
+    if (ctx.state.permissions.includes('rescues.read') === false) {
+      throw new ForbiddenAPIError({})
+    }
 
     const userGroups = user.groups.map((group) => {
       return group.name
