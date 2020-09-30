@@ -151,7 +151,7 @@ export default class User extends Model {
     }
 
     const [group] = this.groups.sort((group1, group2) => {
-      return group1.priority - group2.priority
+      return group2.priority - group1.priority
     })
 
     if (group.withoutPrefix) {
