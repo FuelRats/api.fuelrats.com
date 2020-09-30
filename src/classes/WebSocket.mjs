@@ -122,6 +122,7 @@ export default class WebSocket {
         'connection',
         ctx.status,
         result.render(),
+        {},
       ],
     })
   }
@@ -253,7 +254,7 @@ export default class WebSocket {
     })
 
     for (const client of clients) {
-      let document = data
+      let document = data ?? {}
       if (document instanceof Document) {
         const context = new Context({ client, request: {} })
         document.query = new Query({ connection: context })

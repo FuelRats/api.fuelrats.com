@@ -162,7 +162,10 @@ export default class Events extends API {
       })
     }
 
-    const { data } = ctx
+    let { data } = ctx
+    if (!data) {
+      data = {}
+    }
 
     WebSocket.instance.onBroadcast({
       event,
