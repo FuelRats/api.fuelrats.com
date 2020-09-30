@@ -27,7 +27,7 @@ export default class SSO extends API {
       },
     })
 
-    if (ctx.state.permissions.includes('rescues.read') === false) {
+    if (ctx.state.permissions.includes('users.verified')) {
       throw new ForbiddenAPIError({})
     }
 
@@ -38,7 +38,7 @@ export default class SSO extends API {
     return {
       id: user.id,
       email: user.email,
-      emailVerified: userGroups.includes('verified'),
+      emailVerified: true,
       username: user.preferredRat().name,
       profile: `${config.frontend.url}/profile/overview`,
       name: user.preferredRat().name,
@@ -86,7 +86,7 @@ export default class SSO extends API {
       },
     })
 
-    if (ctx.state.permissions.includes('rescues.read') === false) {
+    if (ctx.state.permissions.includes('users.verified')) {
       throw new ForbiddenAPIError({})
     }
 
