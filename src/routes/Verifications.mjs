@@ -102,10 +102,12 @@ export default class Verifications extends API {
       throw new InternalServerError({})
     }
 
-    user.addGroup(verificationGroup.id)
+    await user.addGroup(verificationGroup.id)
 
-    await user.save()
-    await Anope.updatePermissions(user)
+    const updatedUser = await User.findOne({
+      where: { id: user.id },
+    })
+    await Anope.updatePermissions(updatedUser)
     await verification.destroy()
     return true
   }

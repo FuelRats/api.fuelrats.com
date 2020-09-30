@@ -1,7 +1,7 @@
 {
   "rescues": ["read.me", "read", "write.me", "write"],
   "rats": ["read.me", "read", "write.me", "write"],
-  "users": ["read.me", "read", "write.me", "write"],
+  "users": ["read.me", "read", "write.me", "write", "verified"],
   "clients": ["read.me", "read", "write.me", "write"],
   "ships": ["read.me", "read", "write.me", "write"],
   "decals": ["read.me", "read", "write.me", "write"],

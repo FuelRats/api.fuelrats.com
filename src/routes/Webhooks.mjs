@@ -69,10 +69,13 @@ export default class Webhooks extends API {
       throw new InternalServerError({})
     }
 
-    user.addGroup(permissionGroup.id)
-    await user.save()
-    await Anope.updatePermissions(user)
-    await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${user.preferredRat().name}`)
+    await user.addGroup(permissionGroup.id)
+
+    const updatedUser = await User.findOne({
+      where: { id: user.id },
+    })
+    await Anope.updatePermissions(updatedUser)
+    await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${updatedUser.preferredRat().name}`)
 
     return true
   }
