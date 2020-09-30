@@ -411,7 +411,6 @@ class Anope {
         vhost_creator: 'API',
         vhost_time: createdUnixTime,
         vhost_host: vhost,
-        rat_id: ratId,
       }).into('anope_db_NickAlias')
 
       await transaction.commit()
