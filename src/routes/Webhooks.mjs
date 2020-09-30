@@ -1,7 +1,7 @@
-import { UnprocessableEntityAPIError } from '../classes/APIError'
+import { InternalServerError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import twitter from '../classes/Twitter'
-import { User, Rat } from '../db'
+import { User, Rat, Group } from '../db'
 import API, {
   authenticated,
   IPAuthenticated, permissions,
@@ -59,6 +59,18 @@ export default class Webhooks extends API {
     }
 
     const groupId = DrillType[fields.issuetype.id]
+    const permissionGroup = await Group.findOne({
+      where: {
+        name: DrillType[fields.issuetype.id],
+      },
+    })
+
+    if (!permissionGroup) {
+      throw new InternalServerError({})
+    }
+
+    user.addGroup(permissionGroup.id)
+
     await user.addGroup(groupId)
     await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${user.preferredRat().name}`)
 

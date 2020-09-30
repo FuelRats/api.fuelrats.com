@@ -35,23 +35,13 @@ export default function sessionEmail ({ ctx, user, sessionToken }) {
   return {
     to: user.email,
     subject: 'Fuel Rats: Login from a new location',
-    body: {
+    template: 'session',
+    params: {
       name: user.preferredRat().name,
-      intro: 'An attempt was made to login to your Fuel Rats account from a new location.',
-      action: {
-        instructions: 'Enter the code below to authorise the login:',
-        button: {
-          color: '#d65050',
-          text: sessionToken.toUpperCase(),
-        },
-      },
-      dictionary: {
-        Device: deviceDescription,
-        Location: location,
-        'IP Address': ipAddress,
-      },
-      outro: 'If this login was not by you then please change your password immediately and contact administrators!',
-      signature: 'Sincerely',
+      token: sessionToken.toUpperCase(),
+      device: deviceDescription,
+      location,
+      ipAddress,
     },
   }
 }

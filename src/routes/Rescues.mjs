@@ -368,7 +368,7 @@ export default class Rescues extends APIResource {
     }
 
     if (isAssigned || isFirstLimpet) {
-      return Permission.granted({ permissions: ['rescues.write'], connection: ctx })
+      return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
     }
     return false
   }

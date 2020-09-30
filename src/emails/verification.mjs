@@ -29,24 +29,11 @@ export default function verificationEmail ({ user, verificationToken, change = f
   return {
     to: user.email,
     subject: 'Fuel Rats Email Verification Required',
-    body: {
+    template: 'verification',
+    params: {
       name: user.preferredRat().name,
       intro,
-      action: {
-        instructions: 'Click the button below to verify your email:',
-        button: {
-          color: '#d65050',
-          text: 'Verify me',
-          link: getVerifyLink(verificationToken, change),
-        },
-      },
-      goToAction: {
-        text: 'Verify Email Address',
-        link: getVerifyLink(verificationToken, change),
-        description: 'Click to verify your email',
-      },
-      outro: 'If you are having problems with verification you may contact support@fuelrats.com',
-      signature: 'Sincerely',
+      verifyLink: getVerifyLink(verificationToken, change),
     },
   }
 }

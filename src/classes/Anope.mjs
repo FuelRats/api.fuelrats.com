@@ -5,7 +5,7 @@ import config from '../config'
 import { User, Rat } from '../db'
 import { ConflictAPIError, NotFoundAPIError } from './APIError'
 
-const { database, username, hostname, port } = config.anope
+const { database, username, hostname, port, password } = config.anope
 const anopeBcryptRounds = 10
 const defaultMaximumEditDistance = 5
 
@@ -17,6 +17,7 @@ const mysql = knex({
     port,
     user: username,
     database,
+    password,
   },
   pool: {
     afterCreate (conn, done) {
@@ -73,20 +74,16 @@ class Anope {
    * @returns {Promise<[Nickname]>} a list of nick search results
    */
   static async findAccountFuzzyMatch (nickname) {
-    const distance = Math.min(Math.ceil(nickname.length / 2), defaultMaximumEditDistance)
-
     const [results] = await mysql.raw(`
         SELECT
                *,
                anope_db_NickAlias.id AS id,
-               anope_db_NickCore.id AS accountId,
-               levenshtein(anope_db_NickAlias.nick, :nickname) AS score
+               anope_db_NickCore.id AS accountId
         FROM anope_db_NickAlias
                  LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
-        WHERE levenshtein(anope_db_NickAlias.nick, :nickname) <= :distance
-        ORDER BY score
+        WHERE anope_db_NickAlias.nick = :nickname
         LIMIT 10
-    `, { nickname, distance })
+    `, { nickname })
 
     const emails = results.map((result) => {
       return result.email
@@ -414,7 +411,6 @@ class Anope {
         vhost_creator: 'API',
         vhost_time: createdUnixTime,
         vhost_host: vhost,
-        rat_id: ratId,
       }).into('anope_db_NickAlias')
 
       await transaction.commit()

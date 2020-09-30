@@ -151,7 +151,7 @@ export default class User extends Model {
     }
 
     const [group] = this.groups.sort((group1, group2) => {
-      return group1.priority - group2.priority
+      return group2.priority - group1.priority
     })
 
     if (group.withoutPrefix) {
@@ -202,12 +202,6 @@ export default class User extends Model {
             model: models.Rat,
             as: 'rats',
             required: false,
-            include: [{
-              model: models.Ship,
-              as: 'ships',
-              required: false,
-              include: [],
-            }],
           },
           {
             model: models.Decal,
@@ -223,13 +217,6 @@ export default class User extends Model {
           {
             model: models.Rat,
             as: 'displayRat',
-
-            include: [{
-              model: models.Ship,
-              as: 'ships',
-              required: false,
-              include: [],
-            }],
           }, {
             model: models.Group,
             as: 'groups',

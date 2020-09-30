@@ -108,7 +108,11 @@ class Authentication {
    * @returns {Promise<Client>}  OAuth client
    */
   static requireClientAuthentication ({ connection }) {
-    const [clientId, clientSecret] = getBasicAuth(connection)
+    let [clientId, clientSecret] = getBasicAuth(connection)
+    if (!clientId && connection.data) {
+      clientId = connection.data.client_id
+      clientSecret = connection.data.client_secret
+    }
     if (clientId) {
       return Authentication.clientAuthenticate({ clientId, secret: clientSecret })
     }
