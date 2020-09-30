@@ -58,7 +58,6 @@ export default class Webhooks extends API {
       throw new UnprocessableEntityAPIError({ pointer: `/data/issue/fields/${cmdrName}` })
     }
 
-    const groupId = DrillType[fields.issuetype.id]
     const permissionGroup = await Group.findOne({
       where: {
         name: DrillType[fields.issuetype.id],
@@ -70,8 +69,6 @@ export default class Webhooks extends API {
     }
 
     user.addGroup(permissionGroup.id)
-
-    await user.addGroup(groupId)
     await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${user.preferredRat().name}`)
 
     return true
