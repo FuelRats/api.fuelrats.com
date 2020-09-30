@@ -1,5 +1,6 @@
 import { InternalServerError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
+import Anope from '../classes/Anope'
 import twitter from '../classes/Twitter'
 import { User, Rat, Group } from '../db'
 import API, {
@@ -69,6 +70,8 @@ export default class Webhooks extends API {
     }
 
     user.addGroup(permissionGroup.id)
+    await user.save()
+    await Anope.updatePermissions(user)
     await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${user.preferredRat().name}`)
 
     return true
