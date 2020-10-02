@@ -26,6 +26,7 @@ class Statistics extends API {
    * Get the leaderboard
    * @endpoint
    */
+  @GET('/leaderboard')
   @websocket('leaderboard')
   async leaderboard (ctx) {
     const query = new LeaderboardQuery({ connection: ctx })
@@ -85,6 +86,7 @@ class Statistics extends API {
    * Get statistics for a user
    * @endpoint
    */
+  @GET('/users/:id/statistics')
   @websocket('users', 'statistics')
   @parameters('id')
   @authenticated
