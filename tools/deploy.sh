@@ -14,7 +14,7 @@ case $GITHUB_REF in
   ;;
 
 "refs/heads/main")
-  DEPLOY_DIR="api.fuelrats.com"
+  DEPLOY_DIR="api3.fuelrats.com"
   SERVICE_NAME="fr-api"
   ;;
 
