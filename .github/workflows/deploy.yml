@@ -53,6 +53,7 @@ jobs:
             tools \
             views \
             .sequelizerc \
+            build.json \
             database_example.json \
             LICENSE.md \
             localisations.json \
