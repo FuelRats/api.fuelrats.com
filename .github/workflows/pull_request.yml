@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Read node version (package.json)
-        uses: culshaw/read-package-node-version-actions@v2
+        uses: culshaw/read-package-node-version-actions@v2.0.0
         id: package-node-version
 
       - name: Use Node.js (package.json)
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Read node version (package.json)
-        uses: culshaw/read-package-node-version-actions@v2
+        uses: culshaw/read-package-node-version-actions@v2.0.0
         id: package-node-version
 
       - name: Use Node.js (package.json)
