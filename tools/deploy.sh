@@ -14,7 +14,7 @@ beta)
   ;;
 
 
-master)
+main)
   DEPLOY_DIR="api.fuelrats.com"
   SERVICE_NAME="fr-api"
   ;;
