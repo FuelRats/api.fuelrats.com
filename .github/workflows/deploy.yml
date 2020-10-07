@@ -40,15 +40,12 @@ jobs:
 
       - name: Build
         run: yarn build
-        env:
-          NODE_ENV: production
 
       - name: Prepare artifact
         run: |
           tar -czf fr-api.tar.gz \
             dist \
             migrations \
-            schema \
             static \
             tools \
             views \
