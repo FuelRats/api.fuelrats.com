@@ -224,7 +224,7 @@ WITH "RescueStats" AS (
 	THEN 1 ELSE 0 END) AS "codeRedCount"
 	FROM "Users"
 	LEFT JOIN "Rats" ON "Rats"."userId" = "Users"."id"
-	LEFT JOIN "Rats" AS "displayRat" ON "diplayRat"."id" = "Users"."displayRatId"
+	LEFT JOIN "Rats" AS "displayRat" ON "displayRat"."id" = "Users"."displayRatId"
 	LEFT JOIN "RescueRats" ON "RescueRats"."ratId" = "Rats"."id"
 	LEFT JOIN "Rescues" ON "Rescues"."id" = "RescueRats"."rescueId"
 	${filter}
