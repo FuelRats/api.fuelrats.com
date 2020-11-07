@@ -495,7 +495,7 @@ export default class APIResource extends API {
           return isGroup
 
         case WritePermission.group:
-          return isGroup ?? isSelf
+          return isGroup || isSelf
 
         case WritePermission.self:
           return isSelf
