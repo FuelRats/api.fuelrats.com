@@ -54,8 +54,8 @@ export default class Rescue extends Model {
   @column(type.ARRAY(type.JSONB))
   static quotes = []
 
-  @validate({ notEmpty: true, isIn: [['open', 'inactive', 'closed']] })
-  @column(type.ENUM('open', 'inactive', 'closed'))
+  @validate({ notEmpty: true, isIn: [['open', 'inactive', 'queued', 'closed']] })
+  @column(type.ENUM('open', 'inactive', 'queued', 'closed'))
   static status = 'open'
 
   @validate({ len: [1, rescueSystemMaxLength], isUppercase: true })
