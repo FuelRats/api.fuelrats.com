@@ -116,4 +116,4 @@ jobs:
           known_hosts: ${{ secrets.FR_KNOWN_HOSTS }}
 
       - name: Deploy
-        run: sh ./scripts/deploy.sh
+        run: sh ./tools/deploy.sh
