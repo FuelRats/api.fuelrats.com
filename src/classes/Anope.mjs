@@ -394,7 +394,7 @@ class Anope {
           KILLPROTECT: 1,
           MEMO_RECEIVE: 1,
           MEMO_SIGNON: 1,
-          NA_NO_EXPIRE: 1,
+          NS_NO_EXPIRE: 1,
           NS_PRIVATE: 1,
           NS_SECURE: 1,
           display: nick,
