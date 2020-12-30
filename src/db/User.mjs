@@ -150,7 +150,11 @@ export default class User extends Model {
       return undefined
     }
 
-    const [group] = this.groups.sort((group1, group2) => {
+    const groups = this.groups.filter((group) => {
+      return Boolean(group.vhost)
+    })
+
+    const [group] = groups.sort((group1, group2) => {
       return group2.priority - group1.priority
     })
 
