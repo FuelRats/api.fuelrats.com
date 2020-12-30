@@ -473,7 +473,7 @@ class OAuth extends API {
       where: {
         value: token,
         clientId: ctx.state.client.id,
-      }
+      },
     })
 
     if (authToken) {

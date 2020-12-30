@@ -81,7 +81,7 @@ export default class Rats extends APIResource {
    * Update a rat by id
    * @endpoint
    */
-  @PUT('/rats')
+  @PUT('/rats/:id')
   @websocket('rats', 'update')
   @authenticated
   @parameters('id')

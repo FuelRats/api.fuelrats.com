@@ -7,7 +7,7 @@ import Model, { column, table, validate, type } from './Model'
  * Model class for permission groups
  */
 export default class Group extends Model {
-  @validate({ isAlphanumeric: true, notEmpty: true })
+  @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
   static id = undefined
 

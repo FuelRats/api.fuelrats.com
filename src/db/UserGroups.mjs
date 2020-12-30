@@ -9,7 +9,7 @@ export default class UserGroups extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
-  @validate({ isAlphanumeric: true, notEmpty: true })
+  @validate({ isUUID: 4 })
   @column(type.STRING)
   static groupId = undefined
 

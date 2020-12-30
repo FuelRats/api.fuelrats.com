@@ -85,8 +85,8 @@ class ErrorDocument extends Document {
           logger.error({
             GELF: true,
             _event: 'error',
-            _id: serverError.id.toString(),
-            _message: error.message,
+            _error_id: serverError.id.toString(),
+            _error_message: error.message,
             _stack: error.stack,
           }, `Server Error: ${error.message}`)
           errorAcc.push(serverError)
@@ -101,8 +101,8 @@ class ErrorDocument extends Document {
         logger.info({
           GELF: true,
           _event: 'error',
-          _id: error.id.toString(),
-          _message: error.message,
+          _error_id: error.id.toString(),
+          _error_message: error.message,
           _stack: error.stack,
         }, `Server Error: ${error.message}`)
       }

@@ -216,7 +216,7 @@ export default class APIResource extends API {
     }
 
     if (hasPermission) {
-      const permissionResult = await hasPermission(entity).bind(this)
+      const permissionResult = await Reflect.apply(hasPermission, this, [entity])
       if (permissionResult === false) {
         throw new ForbiddenAPIError({})
       }
@@ -495,7 +495,7 @@ export default class APIResource extends API {
           return isGroup
 
         case WritePermission.group:
-          return isGroup ?? isSelf
+          return isGroup || isSelf
 
         case WritePermission.self:
           return isSelf
