@@ -469,7 +469,7 @@ class OAuth extends API {
       throw new InvalidRequestOAuthError('token')
     }
 
-    const authToken = Token.findOne({
+    const authToken = await Token.findOne({
       where: {
         value: token,
         clientId: ctx.state.client.id,
