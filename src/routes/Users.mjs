@@ -236,7 +236,7 @@ export default class Users extends APIResource {
     await db.transaction(async (transaction) => {
       user.password = newPassword
       await user.save({ transaction })
-      await Anope.setPassword(user.email, user.password)
+      await Anope.setPassword(user.email, newPassword)
 
       return user
     })
