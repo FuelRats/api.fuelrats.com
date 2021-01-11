@@ -32,6 +32,7 @@ const routes = {}
  * Class for managing WebSocket connections
  */
 export default class WebSocket {
+  static let instance = undefined
   /**
    * Initialise a new websocket server
    * @param {object} arg function arguments object
@@ -39,6 +40,7 @@ export default class WebSocket {
    * @param {TrafficControl} arg.trafficManager
    */
   constructor ({ server, trafficManager }) {
+    WebSocket.instance = this
     WebSocket.wss = new ws.Server({
       server,
       clientTracking: true,
