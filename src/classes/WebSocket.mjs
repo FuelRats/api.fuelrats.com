@@ -32,7 +32,7 @@ const routes = {}
  * Class for managing WebSocket connections
  */
 export default class WebSocket {
-  static let instance = undefined
+  static instance = undefined
   /**
    * Initialise a new websocket server
    * @param {object} arg function arguments object
