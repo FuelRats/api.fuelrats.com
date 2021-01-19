@@ -187,7 +187,7 @@ export default class Users extends APIResource {
       await user.save({ transaction })
       const verifiedGroup = user.groups.find((group) => { return group.name === 'verified' })
       if (verifiedGroup) {
-        await user.removeGroup('verified', { transaction })
+        await user.removeGroup(verifiedGroup, { transaction })
       }
 
       await Verifications.createVerification(user, transaction, true)
