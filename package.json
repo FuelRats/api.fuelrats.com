@@ -20,7 +20,7 @@
     "@log4js-node/gelf": "^1.0.2",
     "@log4js-node/slack": "^1.0.0",
     "@log4js-node/smtp": "^1.1.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "bcrypt": "^3.0.7",
     "date-fns": "^2.8.1",
     "ejs": "^3.1.5",
