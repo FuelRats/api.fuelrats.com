@@ -354,10 +354,6 @@ export default class Rescues extends APIResource {
       return false
     }
 
-    if ((Date.now() - entity.createdAt) < rescueAccessTime) {
-      return true
-    }
-
     const isAssigned = entity.rats.some((rat) => {
       return rat.userId === user.id
     })
@@ -369,6 +365,11 @@ export default class Rescues extends APIResource {
 
     if (isAssigned || isFirstLimpet) {
       return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
+    }
+    
+    
+    if ((Date.now() - entity.createdAt) < rescueAccessTime) {
+      return Permission.granted({ permissions: ['dispatch.write'], connection: ctx })
     }
     return false
   }

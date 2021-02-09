@@ -185,8 +185,11 @@ export default class Users extends APIResource {
 
       user.email = email
       await user.save({ transaction })
+      const verifiedGroup = user.groups.find((group) => { return group.name === 'verified' })
+      if (verifiedGroup) {
+        await user.removeGroup(verifiedGroup, { transaction })
+      }
 
-      await user.removeGroup('verified', { transaction })
       await Verifications.createVerification(user, transaction, true)
       await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail: email }))
 
@@ -236,7 +239,7 @@ export default class Users extends APIResource {
     await db.transaction(async (transaction) => {
       user.password = newPassword
       await user.save({ transaction })
-      await Anope.setPassword(user.email, user.password)
+      await Anope.setPassword(user.email, newPassword)
 
       return user
     })

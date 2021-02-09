@@ -197,8 +197,7 @@ function leaderboardCountQuery (filterName = false) {
  * @returns {string} SQL query
  */
 function leaderboardQuery (order, filterName = false) {
-  const nameFilterQuery = `
-  INNER JOIN "Rats" matchRat ON matchRat."userId" = "Users"."id" AND matchRat."name" ILIKE $name`
+  const nameFilterQuery = `AND bool_or("Rats".name ILIKE $name)`
 
   const filter = filterName ? nameFilterQuery : ''
 
@@ -227,7 +226,6 @@ WITH "RescueStats" AS (
 	LEFT JOIN "Rats" AS "displayRat" ON "displayRat"."id" = "Users"."displayRatId"
 	LEFT JOIN "RescueRats" ON "RescueRats"."ratId" = "Rats"."id"
 	LEFT JOIN "Rescues" ON "Rescues"."id" = "RescueRats"."rescueId"
-	${filter}
 	WHERE
 		"Users"."deletedAt" IS NULL AND
 		"Rescues"."deletedAt" IS NULL
@@ -236,6 +234,7 @@ WITH "RescueStats" AS (
 		"Rescues"."outcome" = 'success' AND 
 		"Rescues"."firstLimpetId" = "Rats"."id" 
 	THEN 1 ELSE 0 END) > 0
+	${filter}
 )
 SELECT
 	"RescueStats"."id" AS "id",
