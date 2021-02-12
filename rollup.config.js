@@ -35,7 +35,7 @@ const config = {
   },
   external: ['nanoid/async'],
   preserveModules: true,
-  plugins: [autoExternal(), json(), resolve(), babel()],
+  plugins: [autoExternal(), json(), resolve(), babel({ babelHelpers: 'bundled' })],
 }
 
 export default config

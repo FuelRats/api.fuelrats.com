@@ -1,6 +1,5 @@
 {
   "parser": "babel-eslint",
-  "plugins": ["@babel/plugin-external-helpers"],
   "env": {
     "node": true,
     "es6": true
