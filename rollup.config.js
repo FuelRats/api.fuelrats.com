@@ -4,7 +4,7 @@ import resolve from '@rollup/plugin-node-resolve'
 import fs from 'fs'
 import gitrev from 'git-rev-promises'
 import autoExternal from 'rollup-plugin-auto-external'
-import babel from 'rollup-plugin-babel'
+import babel from '@rollup/plugin-babel'
 import pkg from './package.json'
 
 Promise.all([
@@ -35,7 +35,7 @@ const config = {
   },
   external: ['nanoid/async'],
   preserveModules: true,
-  plugins: [autoExternal(), json(), resolve(), babel({ externalHelpers: true })],
+  plugins: [autoExternal(), json(), resolve(), babel()],
 }
 
 export default config
