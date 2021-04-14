@@ -352,7 +352,10 @@ export default class Epics extends APIResource {
           return {
             many: false,
 
-            hasPermission (connection) {
+            hasPermission (connection, entity) {
+              if (!entity.approvedById && entity.nominatedById === connection.state.user.id) {
+                return Permission.granted({ permissions: ['epics.write.me'], connection })
+              }
               return Permission.granted({ permissions: ['epics.write'], connection })
             },
 
