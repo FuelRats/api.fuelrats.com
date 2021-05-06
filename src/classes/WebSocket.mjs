@@ -65,7 +65,7 @@ export default class WebSocket {
 
 
       const url = new URL(`${config.server.externalUrl}${req.url}`)
-      const bearer = url.searchParams.get('bearer')
+      let bearer = url.searchParams.get('bearer')
       if (!bearer) {
         bearer = req.headers['x-bearer']
       }
