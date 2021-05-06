@@ -148,7 +148,7 @@ export default class WebSocket {
 
     // noinspection JSClosureCompilerSyntax
     const ctx = new Context({ client, query, body, message })
-    context.state.user = client.user
+    ctx.state.user = client.user
 
     logger.info({
       GELF: true,
