@@ -50,6 +50,9 @@ export default class Rescue extends Model {
   @column(type.ENUM('pc', 'xb', 'ps'), { allowNull: true })
   static platform = undefined
 
+  @column(type.BOOLEAN)
+  static odyssey = false
+
   @validate({ RescueQuote })
   @column(type.ARRAY(type.JSONB))
   static quotes = []
