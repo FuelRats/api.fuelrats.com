@@ -8,6 +8,7 @@ import API, {
   IPAuthenticated, permissions,
   POST,
 } from './API'
+import Event from '../classes/Event.mjs'
 
 const DrillType = {
   10200: 'rat',
@@ -75,6 +76,7 @@ export default class Webhooks extends API {
       where: { id: user.id },
     })
     await Anope.updatePermissions(updatedUser)
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, updatedUser.id, {})
     await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${updatedUser.preferredRat().name}`)
 
     return true
