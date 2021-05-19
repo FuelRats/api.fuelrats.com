@@ -19,6 +19,7 @@ import {
   WritePermission,
 } from './API'
 import APIResource from './APIResource'
+import Event from '../classes/Event.mjs'
 
 /**
  * Endpoint for managing rats
@@ -72,6 +73,7 @@ export default class Rats extends APIResource {
       },
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.state.user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: RatView })
@@ -88,6 +90,7 @@ export default class Rats extends APIResource {
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Rat, updateSearch: { id: ctx.params.id } })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, result.userId, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: RatView })
   }
@@ -167,6 +170,7 @@ export default class Rats extends APIResource {
       name: WritePermission.group,
       data: WritePermission.group,
       platform: WritePermission.group,
+      odyssey: WritePermission.group,
       frontierId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,

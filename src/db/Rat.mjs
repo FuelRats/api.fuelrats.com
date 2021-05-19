@@ -21,6 +21,9 @@ export default class Rat extends Model {
   @column(type.ENUM('pc', 'xb', 'ps'))
   static platform = undefined
 
+  @column(type.BOOLEAN)
+  static odyssey = false
+
   @column(type.INTEGER, { allowNull: true })
   static frontierId = undefined
 

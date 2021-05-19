@@ -38,6 +38,7 @@ import {
 import APIResource from './APIResource'
 import Decals from './Decals'
 import Verifications from './Verifications'
+import Event from '../classes/Event.mjs'
 
 const mail = new Mail()
 
@@ -202,6 +203,7 @@ export default class Users extends APIResource {
 
     const result = await Anope.mapNickname(user)
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: UserView })
   }
@@ -245,7 +247,7 @@ export default class Users extends APIResource {
     })
 
     const result = await Anope.mapNickname(user)
-
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: UserView })
   }
@@ -283,6 +285,7 @@ export default class Users extends APIResource {
 
     const query = new DatabaseQuery({ connection: ctx })
     const result = await Anope.mapNickname(user)
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
@@ -345,6 +348,7 @@ export default class Users extends APIResource {
       userId: ctx.params.id,
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     const result = await User.findOne({
       where: {
@@ -393,6 +397,7 @@ export default class Users extends APIResource {
       claimedAt: Date.now(),
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: DecalView })
   }
@@ -436,6 +441,7 @@ export default class Users extends APIResource {
       relationship: 'rats',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -457,6 +463,7 @@ export default class Users extends APIResource {
       relationship: 'rats',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     // I'm sorry Clapton, JSONAPI made me do it
     ctx.response.status = StatusCode.noContent
     return true
@@ -479,6 +486,7 @@ export default class Users extends APIResource {
       relationship: 'rats',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -520,6 +528,7 @@ export default class Users extends APIResource {
       relationship: 'displayRat',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -564,6 +573,7 @@ export default class Users extends APIResource {
       },
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -588,6 +598,7 @@ export default class Users extends APIResource {
       },
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -612,6 +623,7 @@ export default class Users extends APIResource {
       },
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -653,6 +665,7 @@ export default class Users extends APIResource {
       relationship: 'clients',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -674,6 +687,7 @@ export default class Users extends APIResource {
       relationship: 'clients',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -695,6 +709,7 @@ export default class Users extends APIResource {
       relationship: 'clients',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
   }

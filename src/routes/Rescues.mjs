@@ -333,6 +333,7 @@ export default class Rescues extends APIResource {
       data: WritePermission.group,
       notes: WritePermission.group,
       platform: WritePermission.group,
+      odyssey: WritePermission.group,
       system: WritePermission.group,
       title: WritePermission.sudo,
       status: WritePermission.group,
@@ -366,8 +367,8 @@ export default class Rescues extends APIResource {
     if (isAssigned || isFirstLimpet) {
       return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
     }
-    
-    
+
+
     if ((Date.now() - entity.createdAt) < rescueAccessTime) {
       return Permission.granted({ permissions: ['dispatch.write'], connection: ctx })
     }

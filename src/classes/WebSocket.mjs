@@ -65,7 +65,10 @@ export default class WebSocket {
 
 
       const url = new URL(`${config.server.externalUrl}${req.url}`)
-      const bearer = url.searchParams.get('bearer')
+      let bearer = url.searchParams.get('bearer')
+      if (!bearer) {
+        bearer = req.headers['x-bearer']
+      }
       if (bearer) {
         const { user, scope, clientId } = await Authentication.bearerAuthenticate({ bearer })
         if (user) {
@@ -148,6 +151,7 @@ export default class WebSocket {
 
     // noinspection JSClosureCompilerSyntax
     const ctx = new Context({ client, query, body, message })
+    ctx.state.user = client.user
 
     logger.info({
       GELF: true,
