@@ -8,7 +8,7 @@
     "xlexious <alex@sorlie.co.uk>"
   ],
   "scripts": {
-    "dev": "node --harmony dist/index.js",
+    "dev": "node --inspect --harmony dist/index.mjs",
     "build": "rollup --config",
     "test": "NODE_ENV=testing node --harmony test",
     "jsdoc": "jsdoc -d static/docs/js -rgoo api",
