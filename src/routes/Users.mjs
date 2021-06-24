@@ -12,6 +12,7 @@ import {
 import Announcer from '../classes/Announcer'
 import Anope from '../classes/Anope'
 import { Context } from '../classes/Context'
+import Event from '../classes/Event'
 import Mail from '../classes/Mail'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
@@ -38,7 +39,6 @@ import {
 import APIResource from './APIResource'
 import Decals from './Decals'
 import Verifications from './Verifications'
-import Event from '../classes/Event.mjs'
 
 const mail = new Mail()
 
@@ -186,7 +186,9 @@ export default class Users extends APIResource {
 
       user.email = email
       await user.save({ transaction })
-      const verifiedGroup = user.groups.find((group) => { return group.name === 'verified' })
+      const verifiedGroup = user.groups.find((group) => {
+        return group.name === 'verified'
+      })
       if (verifiedGroup) {
         await user.removeGroup(verifiedGroup, { transaction })
       }
