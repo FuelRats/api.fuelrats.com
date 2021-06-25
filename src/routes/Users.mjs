@@ -888,8 +888,8 @@ export default class Users extends APIResource {
    * Contact the image processing web worker to process an image into the correct format and size
    * @param {Buffer} originalImageData the original image data
    * @param {object?} options Output options for the transformed image data
-   * @param {number} options.size Output size of the image
-   * @param {string} options.format Output format of the image
+   * @param {number?} options.size Output size of the image
+   * @param {string?} options.format Output format of the image
    * @returns {Promise<Buffer>} processed image data
    */
   static async convertImageData (originalImageData, options = {}) {
