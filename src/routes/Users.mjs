@@ -46,8 +46,8 @@ const mail = new Mail()
  * Class for the /users endpoint
  */
 export default class Users extends APIResource {
-  static imageResizePool = workerpool.pool('./dist/workers/image.js')
-  static sslGenerationPool = workerpool.pool('./dist/workers/certificate.js')
+  static imageFormatPool = workerpool.pool('./dist/workers/image.mjs')
+  static sslGenerationPool = workerpool.pool('./dist/workers/certificate.mjs')
 
   /**
    * @inheritdoc
