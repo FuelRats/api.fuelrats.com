@@ -368,10 +368,7 @@ export default class Users extends APIResource {
 
     const imageData = await fsp.readFile(ctx.request.files.image.path)
 
-    const formattedImageData = await Users.convertImageData(imageData, {
-      format: defaultAvatarFormat,
-      size: avatarMaxSize,
-    })
+    const formattedImageData = await Users.convertImageData(imageData)
 
     await Avatar.destroy({
       where: {
