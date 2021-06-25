@@ -9,6 +9,7 @@ import {
   UnsupportedMediaAPIError,
   BadRequestAPIError,
   InternalServerError,
+  ImATeapotAPIError,
 } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Anope from '../classes/Anope'
@@ -44,7 +45,7 @@ import Verifications from './Verifications'
 const mail = new Mail()
 
 const avatarCacheTime = 604800000 // 1 Week
-const validAvatarFormats = ['webp', 'jpeg']
+const validAvatarFormats = ['webp', 'png', 'jpeg']
 const defaultAvatarFormat = 'webp'
 const avatarMinSize = 32
 const avatarMaxSize = 256
@@ -362,8 +363,9 @@ export default class Users extends APIResource {
     this.requireWritePermission({ connection: ctx, entity: user })
 
     if (!ctx.request.files?.image) {
-      throw new BadRequestAPIError({ pointer: 'image' })
+      throw new ImATeapotAPIError()
     }
+
     const imageData = await fsp.readFile(ctx.request.files.image.path)
 
     const formattedImageData = await Users.convertImageData(imageData, {
