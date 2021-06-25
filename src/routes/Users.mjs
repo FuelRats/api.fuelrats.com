@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import { promises as fsp } from 'fs'
 import workerpool from 'workerpool'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
@@ -41,6 +42,12 @@ import Decals from './Decals'
 import Verifications from './Verifications'
 
 const mail = new Mail()
+
+const avatarCacheTime = 604800000 // 1 Week
+const validAvatarFormats = ['webp', 'jpeg']
+const defaultAvatarFormat = 'webp'
+const avatarMinSize = 32
+const avatarMaxSize = 256
 
 /**
  * Class for the /users endpoint
@@ -128,8 +135,27 @@ export default class Users extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    ctx.type = 'image/jpeg'
-    ctx.body = avatar.image
+    const { format = defaultAvatarFormat } = ctx.query
+    const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
+
+    if (format !== defaultAvatarFormat || size !== avatarMaxSize) {
+      if (!validAvatarFormats.includes(format)) {
+        throw new BadRequestAPIError({ parameter: 'format' })
+      }
+
+
+      if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
+        throw new BadRequestAPIError({ parameter: 'size' })
+      }
+
+      ctx.body = await Users.convertImageData(avatar.image, { format, size })
+    } else {
+      ctx.body = avatar.image
+    }
+
+    ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
+    ctx.type = `image/${format}`
+
     next()
   }
 
@@ -335,9 +361,15 @@ export default class Users extends APIResource {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    const imageData = ctx.req._readableState.buffer.head.data
+    if (!ctx.request.files?.image) {
+      throw new BadRequestAPIError({ pointer: 'image' })
+    }
+    const imageData = await fsp.readFile(ctx.request.files.image.path)
 
-    const formattedImageData = await Users.convertImageData(imageData)
+    const formattedImageData = await Users.convertImageData(imageData, {
+      format: defaultAvatarFormat,
+      size: avatarMaxSize,
+    })
 
     await Avatar.destroy({
       where: {
@@ -856,13 +888,20 @@ export default class Users extends APIResource {
   /**
    * Contact the image processing web worker to process an image into the correct format and size
    * @param {Buffer} originalImageData the original image data
+   * @param {object?} options Output options for the transformed image data
+   * @param {number} options.size Output size of the image
+   * @param {string} options.format Output format of the image
    * @returns {Promise<Buffer>} processed image data
    */
-  static async convertImageData (originalImageData) {
+  static async convertImageData (originalImageData, options = {}) {
     try {
-      return Buffer.from(await Users.imageResizePool.exec('avatarImageResize', [originalImageData]))
+      return Buffer.from(await Users.imageFormatPool.exec('avatarImageFormat', [originalImageData, {
+        size: options.size ?? avatarMaxSize,
+        format: options.format ?? defaultAvatarFormat,
+      }]))
     } catch (error) {
       if (error.message.includes('unsupported image format')) {
+        // Thrown when input format is unsupported
         throw new UnsupportedMediaAPIError({})
       } else {
         throw error
