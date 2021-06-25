@@ -25,18 +25,29 @@ Promise.all([
   })
 })
 
-const config = {
-  input: 'src/index.mjs',
-  output: {
-    dir: 'dist',
-    format: 'esm',
-    entryFileNames: '[name].mjs',
-    sourcemap: true,
-  },
-  external: ['nanoid/async'],
-  preserveModules: true,
-  plugins: [autoExternal(), json(), resolve(), babel({ externalHelpers: true })],
+
+
+const defineEntry = (input, outputDir) => {
+  return {
+    input,
+    output: {
+      dir: outputDir,
+      format: 'esm',
+      entryFileNames: '[name].mjs',
+      sourcemap: true,
+    },
+    external: ['nanoid/async'],
+    preserveModules: true,
+    plugins: [autoExternal(), json(), resolve(), babel({ externalHelpers: true })],
+  }
 }
+
+const config = [
+  defineEntry('src/index.mjs', 'dist'),
+  defineEntry('src/workers/certificate.mjs', 'dist/workers'),
+  defineEntry('src/workers/image.mjs', 'dist/workers'),
+]
+
 
 export default config
 
