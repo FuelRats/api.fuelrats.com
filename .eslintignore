@@ -1,0 +1,5 @@
+# Ignore build output
+dist
+
+# Tooling is kinda messed up and unused so we ignore it
+tools

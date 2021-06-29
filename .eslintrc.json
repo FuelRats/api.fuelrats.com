@@ -1,5 +1,4 @@
 {
-  "parser": "babel-eslint",
   "env": {
     "node": true,
     "es6": true
@@ -19,5 +18,13 @@
       "error",
       "VariableDeclarator LogicalExpression[operator=\"||\"]"
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.js"],
+      "env": {
+        "jest": true
+      }
+    }
+  ]
 }
