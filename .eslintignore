@@ -1,5 +1,9 @@
-# Ignore build output
-dist
+# Opt into dotfile linting
+!.*
 
-# Tooling is kinda messed up and unused so we ignore it
-tools
+# Compiled sources
+.github
+.yarn
+dist
+node_modules
+/tools
