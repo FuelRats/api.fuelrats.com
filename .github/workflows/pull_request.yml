@@ -42,8 +42,9 @@ jobs:
         with:
           github_token: ${{ secrets.github_token }}
           eslint: true
+          eslint_extensions: js,mjs
           eslint_args: "--max-warnings 0"
-          eslint_dir: src/
+
 
   build:
     runs-on: ubuntu-latest
