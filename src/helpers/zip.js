@@ -1,4 +1,3 @@
-// eslint-disable-next-line jsdoc/require-returns
 /**
  * Implementation of an equivalent to python's zip() function in JavaScript
  * @generator

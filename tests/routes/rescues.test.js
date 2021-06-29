@@ -1,12 +1,12 @@
 'use strict'
 
+const Ajv = require('ajv')
 const Axios = require('axios')
-const config = require('../../src/config.js')
 const axiosHttpAdapter = require('axios/lib/adapters/http')
 const { Validator } = require('jsonapi-validator')
-const Ajv = require('ajv')
 
-const rescueSchema = require('../../schema/rescue')
+const rescueSchema = require('../../schema/rescue.json')
+const config = require('../../src/config')
 
 const ajv = new Ajv()
 const rescueValidate = ajv.compile(rescueSchema)
@@ -18,9 +18,9 @@ const axios = Axios.create({
   timeout: 5000,
   headers: {
     common: {
-      'authorization': `Bearer ${config.testing.token}`
-    }
-  }
+      authorization: `Bearer ${config.testing.token}`,
+    },
+  },
 })
 
 axios.defaults.adapter = axiosHttpAdapter
