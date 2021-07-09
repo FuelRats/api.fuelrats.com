@@ -6,7 +6,7 @@ import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
 import DatabaseQuery from '../query/DatabaseQuery'
-import { EpicView, UserView } from '../view'
+import { EpicView, UserView, RescueView } from '../view'
 import {
   GET,
   PUT,
@@ -262,6 +262,45 @@ export default class Epics extends APIResource {
     ctx.response.status = StatusCode.noContent
     return true
   }
+  
+    /**
+   * Get the rescue associated with this epic
+   * @endpoint
+   */
+  @GET('/epics/:id/relationships/rescue')
+  @websocket('epics', 'rescue', 'read')
+  @parameters('id')
+  @authenticated
+  async relationshipRescueView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Epic,
+      relationship: 'rescue',
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.relationship })
+  }
+
+  /**
+   * Set the rescue associated with this epic
+   * @endpoint
+   */
+  @PATCH('/epics/:id/relationships/rescue')
+  @websocket('epics', 'rescue', 'patch')
+  @parameters('id')
+  @authenticated
+  async relationshipRescuePatch (ctx) {
+    await this.relationshipChange({
+      ctx,
+      databaseType: Epic,
+      change: 'patch',
+      relationship: 'rescue',
+    })
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
 
   /**
    * @inheritdoc
@@ -308,6 +347,26 @@ export default class Epics extends APIResource {
             return entity.setNominatedBy(id, { transaction })
           },
         }
+        
+        case 'rescue':
+          return {
+            many: false,
+
+            hasPermission (connection, entity) {
+              if (!entity.approvedById && entity.nominatedById === connection.state.user.id) {
+                return Permission.granted({ permissions: ['epics.write.me'], connection })
+              }
+              return Permission.granted({ permissions: ['epics.write'], connection })
+            },
+
+            add ({ entity, id, transaction }) {
+              return entity.setRescue(id, { transaction })
+            },
+
+            patch ({ entity, id, transaction }) {
+              return entity.setRescue(id, { transaction })
+            },
+          }
 
       case 'approvedBy':
         return {

@@ -9,7 +9,7 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "node --harmony dist/index.mjs",
+    "dev": "node --inspect --harmony dist/index.mjs",
     "build": "rollup --config",
     "test": "NODE_ENV=testing node --harmony test",
     "jsdoc": "jsdoc -d static/docs/js -rgoo api",

@@ -15,7 +15,7 @@ export default class Epic extends Model {
   @column(type.TEXT)
   static notes = ''
 
-  @validate({ isUUID: true })
+  @validate({ isUUID: 4 })
   @column(type.UUID, { allowNull: true })
   static rescueId = undefined
 
