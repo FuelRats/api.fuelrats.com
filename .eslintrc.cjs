@@ -4,10 +4,7 @@ const styleRules = require('@fuelrats/eslint-config/core/style')
 module.exports = {
   env: {
     node: true,
-    es6: true,
-  },
-  parserOptions: {
-    ecmaVersion: 2020,
+    es2021: true,
   },
   extends: [
     '@fuelrats/eslint-config',
