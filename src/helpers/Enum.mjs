@@ -1,6 +1,7 @@
 /**
  * Decorator to turn a class into a quasi Enum
- * @param {object} target
+ * @param {object?} target
+ * @param {boolean?} target.symbols Use symbols to represent enum members with no defined value (Default: `true`)
  * @returns {Function} enumerable class decorator
  */
 export default function enumerable ({ symbols = true } = {}) {

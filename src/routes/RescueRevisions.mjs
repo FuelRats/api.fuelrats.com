@@ -1,14 +1,31 @@
-import { NotFoundAPIError } from '../classes/APIError'
+import { NotFoundAPIError, NotImplementedAPIError } from '../classes/APIError'
+
+import { Context } from '../classes/Context'
 import { websocket } from '../classes/WebSocket'
-import { Rescue, RescueHistory, RescueRatsHistory } from '../db'
+import {
+  Rescue,
+  // RescueHistory,
+  // RescueRatsHistory,
+} from '../db'
 import { GET, authenticated } from './API'
 import APIResource from './APIResource'
 
+/**
+ * @classdesc Endpoint handling Rescue revisions
+ * @class
+ */
 export default class RescueRevisions extends APIResource {
+  /**
+   * @inheritdoc
+   */
   get type () {
     return 'rescue-revisions'
   }
 
+  /**
+   * List all revisions of a rescue
+   * @param {Context} ctx Request context
+   */
   @GET('/rescues/:id/revisions')
   @websocket('rescues', 'revisions', 'search')
   @authenticated
@@ -21,40 +38,58 @@ export default class RescueRevisions extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    const rescueHistory = await RescueHistory.findAndCountAll({
-      where: {
-        id: ctx.params.id,
-      },
-    })
+    // const rescueHistory = await RescueHistory.findAndCountAll({
+    //   where: {
+    //     id: ctx.params.id,
+    //   },
+    // })
 
-    const assignHistory = await RescueRatsHistory.findAndCountAll({
-      where: {
-        rescueId: ctx.params.id,
-      },
-    })
+    // const assignHistory = await RescueRatsHistory.findAndCountAll({
+    //   where: {
+    //     rescueId: ctx.params.id,
+    //   },
+    // })
 
-    console.log(rescueHistory, assignHistory)
+    // console.log(rescueHistory, assignHistory)
+
+    throw new NotImplementedAPIError()
   }
 
+
+  /**
+   * Compare two rescue revisions
+   */
   @GET('/rescues/:id/revisions/:revision/compare/:revision')
   @authenticated
-  async rescueRevisionById (ctx) {
-
+  rescueRevisionById () {
+    throw new NotImplementedAPIError()
   }
 
 
-  changeRelationship ({ relationship }) {
+  /**
+   * @inheritdoc
+   */
+  changeRelationship () {
     return undefined
   }
 
-  isSelf ({ ctx, entity }) {
+  /**
+   * @inheritdoc
+   */
+  isSelf () {
     return false
   }
 
+  /**
+   * @inheritdoc
+   */
   get relationTypes () {
     return undefined
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return undefined
   }

@@ -288,10 +288,10 @@ export default class View {
   }
 }
 
-@enumerable()
 /**
  * Field Read permission
  */
+@enumerable()
 export class ReadPermission {
   static internal
   static self

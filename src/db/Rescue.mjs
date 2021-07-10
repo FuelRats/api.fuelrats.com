@@ -1,10 +1,14 @@
-import { IRCNickname, JSONObject, languageCode, RescueQuote } from '../helpers/Validators'
+import { Context } from '../classes/Context'
+import { JSONObject, RescueQuote } from '../helpers/Validators'
 import Model, { column, validate, type, table } from './Model'
 
 const rescueNotesMaxLength = 2048
 const rescueSystemMaxLength = 64
 const rescueTitleMaxLength = 64
 
+/**
+ * Model class for Rescues
+ */
 @table({
   paranoid: true,
   indexes: [{
@@ -13,9 +17,6 @@ const rescueTitleMaxLength = 64
     operator: 'jsonb_path_ops',
   }],
 })
-/**
- * Model class for Rescues
- */
 export default class Rescue extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -156,6 +157,9 @@ export default class Rescue extends Model {
     models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })
   }
 
+  /**
+   * @param {Context} ctx
+   */
   setChangelogDetails (ctx) {
     this.set('lastEditUserId', ctx.state.user.id)
     this.set('lastEditClientId', ctx.state.clientId)

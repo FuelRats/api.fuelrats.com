@@ -1,10 +1,10 @@
-import { DocumentViewType } from '../Documents'
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { EpicView, UserView, RescueView } from '../view'
 import {
@@ -14,7 +14,7 @@ import {
   PATCH,
   DELETE,
   authenticated,
-  WritePermission, parameters
+  WritePermission, parameters,
 } from './API'
 import APIResource from './APIResource'
 
@@ -262,8 +262,8 @@ export default class Epics extends APIResource {
     ctx.response.status = StatusCode.noContent
     return true
   }
-  
-    /**
+
+  /**
    * Get the rescue associated with this epic
    * @endpoint
    */
@@ -347,26 +347,26 @@ export default class Epics extends APIResource {
             return entity.setNominatedBy(id, { transaction })
           },
         }
-        
-        case 'rescue':
-          return {
-            many: false,
 
-            hasPermission (connection, entity) {
-              if (!entity.approvedById && entity.nominatedById === connection.state.user.id) {
-                return Permission.granted({ permissions: ['epics.write.me'], connection })
-              }
-              return Permission.granted({ permissions: ['epics.write'], connection })
-            },
+      case 'rescue':
+        return {
+          many: false,
 
-            add ({ entity, id, transaction }) {
-              return entity.setRescue(id, { transaction })
-            },
+          hasPermission (connection, entity) {
+            if (!entity.approvedById && entity.nominatedById === connection.state.user.id) {
+              return Permission.granted({ permissions: ['epics.write.me'], connection })
+            }
+            return Permission.granted({ permissions: ['epics.write'], connection })
+          },
 
-            patch ({ entity, id, transaction }) {
-              return entity.setRescue(id, { transaction })
-            },
-          }
+          add ({ entity, id, transaction }) {
+            return entity.setRescue(id, { transaction })
+          },
+
+          patch ({ entity, id, transaction }) {
+            return entity.setRescue(id, { transaction })
+          },
+        }
 
       case 'approvedBy':
         return {

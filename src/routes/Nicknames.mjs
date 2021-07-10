@@ -1,17 +1,18 @@
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DocumentViewType } from '../Documents/Document'
-import ObjectDocument from '../Documents/ObjectDocument'
+import Anope from '../classes/Anope'
 import {
   BadRequestAPIError,
   ConflictAPIError,
   NotFoundAPIError,
   UnprocessableEntityAPIError, UnsupportedMediaAPIError,
 } from '../classes/APIError'
-import Anope from '../classes/Anope'
+import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Rat, User } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
+import ObjectDocument from '../Documents/ObjectDocument'
 import { IRCNickname } from '../helpers/Validators'
 import AnopeQuery from '../query/AnopeQuery'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -136,6 +137,10 @@ export default class Nickname extends APIResource {
     return true
   }
 
+  /**
+   * @param {Context} ctx Request context
+   * @returns {DatabaseDocument}
+   */
   @GET('/nicknames/:id/relationships/user')
   @websocket('nicknames', 'user', 'read')
   @parameters('id')
@@ -229,6 +234,9 @@ export default class Nickname extends APIResource {
     return { }
   }
 
+  /**
+   * @inheritdoc
+   */
   get writePermissionsForFieldAccess () {
     return undefined
   }

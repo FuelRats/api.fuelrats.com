@@ -1,7 +1,7 @@
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import Anope from '../classes/Anope'
 import { websocket } from '../classes/WebSocket'
 import { db } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { AnniversaryView } from '../view'
 import API, { GET, authenticated } from './API'

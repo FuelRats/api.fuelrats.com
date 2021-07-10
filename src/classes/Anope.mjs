@@ -1,13 +1,18 @@
 import bcrypt from 'bcrypt'
 import knex from 'knex'
-import UUID from 'pure-uuid'
 import config from '../config'
 import { User, Rat } from '../db'
 import { ConflictAPIError, NotFoundAPIError } from './APIError'
 
-const { database, username, hostname, port, password } = config.anope
+const {
+  database,
+  username,
+  hostname,
+  port,
+  password,
+} = config.anope
 const anopeBcryptRounds = 10
-const defaultMaximumEditDistance = 5
+// const defaultMaximumEditDistance = 5
 
 
 const mysql = knex({
@@ -336,7 +341,7 @@ class Anope {
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE
             lower(anope_db_NickCore.email) = lower(:email)
-            
+
     `, { email })
 
     return mysql.raw(`

@@ -79,7 +79,7 @@ export function column (columnType, { allowNull = false, ...options } = {}) {
  */
 export function validate (validations, options = {}) {
   return (target, name) => {
-    const columnName = options.name || name
+    const columnName = options.name ?? name
     if (Reflect.has(target.columns, columnName) === false) {
       throw new TypeError('Attempted to validate a field that has not been declared as a column')
     }

@@ -1,9 +1,9 @@
 import Model, { table, column, validate, type } from './Model'
 
-@table({})
 /**
  * User avatar model
  */
+@table({})
 export default class Avatar extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

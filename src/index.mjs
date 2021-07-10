@@ -7,8 +7,6 @@ import querystring from 'koa-qs'
 import session from 'koa-session'
 import npid from 'npid'
 import { promisify } from 'util'
-import Document from './Documents/Document'
-import ErrorDocument from './Documents/ErrorDocument'
 import {
   TooManyRequestsAPIError,
   ImATeapotAPIError,
@@ -26,6 +24,8 @@ import TrafficControl from './classes/TrafficControl'
 import WebSocket from './classes/WebSocket'
 import config from './config'
 import { db } from './db'
+import Document from './Documents/Document'
+import ErrorDocument from './Documents/ErrorDocument'
 import packageInfo from './files/package'
 import logger from './logging'
 import Query from './query'

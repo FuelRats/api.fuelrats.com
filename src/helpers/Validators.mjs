@@ -93,6 +93,11 @@ export function validCMDRname (value) {
   throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name' })
 }
 
+/**
+ * Validate whether a value is a valid OAuth2 redirect URL
+ * @param {string} urlString the value to validate
+ * @returns {boolean}
+ */
 export function isValidRedirectUri (urlString) {
   if (typeof urlString !== 'string' || urlString.length === 0) {
     return false

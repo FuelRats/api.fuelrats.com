@@ -2,10 +2,11 @@ import Model, { column, table, validate, type } from './Model'
 
 const verificationTokenLength = 32
 
-@table({})
+
 /**
  * Model class for account verification tokens
  */
+@table({})
 export default class VerificationToken extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

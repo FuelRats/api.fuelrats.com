@@ -1,10 +1,10 @@
 import UUID from 'pure-uuid'
 import { URL } from 'url'
 import ws from 'ws'
-import Document from '../Documents/Document'
-import ErrorDocument from '../Documents/ErrorDocument'
 import config from '../config'
 import { User } from '../db'
+import Document from '../Documents/Document'
+import ErrorDocument from '../Documents/ErrorDocument'
 import logger from '../logging'
 import Query from '../query/Query'
 import {

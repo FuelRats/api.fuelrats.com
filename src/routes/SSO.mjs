@@ -1,7 +1,7 @@
+import { ForbiddenAPIError } from '../classes/APIError'
 import config from '../config'
 import { User } from '../db'
 import API, { GET, authenticated } from './API'
-import { ForbiddenAPIError } from '../classes/APIError'
 
 /**
  * SSO endpoints

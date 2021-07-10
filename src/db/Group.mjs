@@ -2,10 +2,10 @@ import Permission from '../classes/Permission'
 import { IRCVirtualHost } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
-@table({ paranoid: true })
 /**
  * Model class for permission groups
  */
+@table({ paranoid: true })
 export default class Group extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

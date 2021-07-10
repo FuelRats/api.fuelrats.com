@@ -1,11 +1,11 @@
-import { DocumentViewType } from '../Documents'
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
+import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Rat } from '../db'
-
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { RatView, UserView } from '../view'
 import {
@@ -19,7 +19,6 @@ import {
   WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import Event from '../classes/Event.mjs'
 
 /**
  * Endpoint for managing rats

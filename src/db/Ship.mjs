@@ -40,10 +40,10 @@ const shipTypes = [
   'Vulture',
 ]
 
-@table({})
 /**
  * Model class for rat ships
  */
+@table({})
 export default class Ship extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

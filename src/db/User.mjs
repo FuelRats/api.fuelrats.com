@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { JSONObject, stripeUserId } from '../helpers/Validators'
+import { JSONObject } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 const passwordMinLength = 12
@@ -18,10 +18,10 @@ function getIRCSafeName (cmdrName) {
 }
 
 
-@table({ paranoid: true })
 /**
  * Model class for users
  */
+@table({ paranoid: true })
 export default class User extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
