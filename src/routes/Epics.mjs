@@ -1,12 +1,12 @@
-import { DocumentViewType } from '../Documents'
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
-import { EpicView, UserView } from '../view'
+import { EpicView, UserView, RescueView } from '../view'
 import {
   GET,
   PUT,
@@ -14,7 +14,7 @@ import {
   PATCH,
   DELETE,
   authenticated,
-  WritePermission, parameters
+  WritePermission, parameters,
 } from './API'
 import APIResource from './APIResource'
 
@@ -264,6 +264,45 @@ export default class Epics extends APIResource {
   }
 
   /**
+   * Get the rescue associated with this epic
+   * @endpoint
+   */
+  @GET('/epics/:id/relationships/rescue')
+  @websocket('epics', 'rescue', 'read')
+  @parameters('id')
+  @authenticated
+  async relationshipRescueView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Epic,
+      relationship: 'rescue',
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.relationship })
+  }
+
+  /**
+   * Set the rescue associated with this epic
+   * @endpoint
+   */
+  @PATCH('/epics/:id/relationships/rescue')
+  @websocket('epics', 'rescue', 'patch')
+  @parameters('id')
+  @authenticated
+  async relationshipRescuePatch (ctx) {
+    await this.relationshipChange({
+      ctx,
+      databaseType: Epic,
+      change: 'patch',
+      relationship: 'rescue',
+    })
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
+
+  /**
    * @inheritdoc
    */
   changeRelationship ({ relationship }) {
@@ -306,6 +345,26 @@ export default class Epics extends APIResource {
 
           patch ({ entity, id, transaction }) {
             return entity.setNominatedBy(id, { transaction })
+          },
+        }
+
+      case 'rescue':
+        return {
+          many: false,
+
+          hasPermission (connection, entity) {
+            if (!entity.approvedById && entity.nominatedById === connection.state.user.id) {
+              return Permission.granted({ permissions: ['epics.write.me'], connection })
+            }
+            return Permission.granted({ permissions: ['epics.write'], connection })
+          },
+
+          add ({ entity, id, transaction }) {
+            return entity.setRescue(id, { transaction })
+          },
+
+          patch ({ entity, id, transaction }) {
+            return entity.setRescue(id, { transaction })
           },
         }
 

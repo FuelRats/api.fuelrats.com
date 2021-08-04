@@ -5,10 +5,11 @@ const oAuthScopeMaxLength = 128
 const oAuthTokenMinLength = 16
 const oAuthTokenMaxLength = 128
 
-@table({})
+
 /**
  * Model class for OAuth tokens
  */
+@table({})
 export default class Token extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

@@ -1,7 +1,7 @@
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { NotFoundAPIError } from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
 import { db } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import LeaderboardQuery from '../query/LeaderboardQuery'
 import { UserStatisticsView, LeaderboardView } from '../view'
@@ -197,7 +197,7 @@ function leaderboardCountQuery (filterName = false) {
  * @returns {string} SQL query
  */
 function leaderboardQuery (order, filterName = false) {
-  const nameFilterQuery = `AND bool_or("Rats".name ILIKE $name)`
+  const nameFilterQuery = 'AND bool_or("Rats".name ILIKE $name)'
 
   const filter = filterName ? nameFilterQuery : ''
 

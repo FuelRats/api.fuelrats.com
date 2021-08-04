@@ -1,5 +1,4 @@
 import DatabaseView from './DatabaseView'
-import EpicView from './EpicView'
 import RescueView from './RescueView'
 import ShipView from './ShipView'
 import UserView from './UserView'
@@ -24,6 +23,7 @@ export default class RatView extends DatabaseView {
       name: ReadPermission.all,
       data: ReadPermission.all,
       platform: ReadPermission.all,
+      odyssey: ReadPermission.all,
       frontierId: ReadPermission.group,
       createdAt: ReadPermission.all,
       updatedAt: ReadPermission.all,

@@ -2,10 +2,10 @@ import Model, { column, table, validate, type } from './Model'
 
 const epicsNotesFieldMaxLength = 2048
 
-@table({ paranoid: true })
 /**
  * Model class for Epic nominations
  */
+@table({ paranoid: true })
 export default class Epic extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -15,7 +15,7 @@ export default class Epic extends Model {
   @column(type.TEXT)
   static notes = ''
 
-  @validate({ isUUID: true })
+  @validate({ isUUID: 4 })
   @column(type.UUID, { allowNull: true })
   static rescueId = undefined
 

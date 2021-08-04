@@ -1,10 +1,10 @@
 import { JSONObject, CMDRname } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
-@table({ paranoid: true })
 /**
  * Model class for Rats
  */
+@table({ paranoid: true })
 export default class Rat extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -20,6 +20,9 @@ export default class Rat extends Model {
 
   @column(type.ENUM('pc', 'xb', 'ps'))
   static platform = undefined
+
+  @column(type.BOOLEAN)
+  static odyssey = false
 
   @column(type.INTEGER, { allowNull: true })
   static frontierId = undefined

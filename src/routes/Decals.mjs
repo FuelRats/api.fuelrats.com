@@ -1,9 +1,9 @@
-import { DocumentViewType } from '../Documents'
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Decal, db, User } from '../db'
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { DecalView } from '../view'
 import {

@@ -1,10 +1,10 @@
+import Anope from '../classes/Anope'
 import {
   ConflictAPIError,
   InternalServerError,
   NotFoundAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import Anope from '../classes/Anope'
 import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'

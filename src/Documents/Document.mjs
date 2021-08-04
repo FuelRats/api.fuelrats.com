@@ -401,7 +401,6 @@ class Document {
       jsonapi: this.jsonapi,
       meta: this.meta,
       links: this.links,
-      // eslint-disable-next-line no-restricted-syntax
       data: this.data || null,
       included: this.included,
     }
@@ -444,7 +443,6 @@ class Document {
       jsonapi: this.jsonapi,
       meta: this.meta,
       links: this.links,
-      // eslint-disable-next-line no-restricted-syntax
       data: this.data || null,
     }
   }

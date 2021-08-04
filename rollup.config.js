@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
+import babel from '@rollup/plugin-babel'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import fs from 'fs'
 import gitrev from 'git-rev-promises'
 import autoExternal from 'rollup-plugin-auto-external'
-import babel from '@rollup/plugin-babel'
 import pkg from './package.json'
 
 Promise.all([
@@ -25,18 +25,29 @@ Promise.all([
   })
 })
 
-const config = {
-  input: 'src/index.mjs',
-  output: {
-    dir: 'dist',
-    format: 'esm',
-    entryFileNames: '[name].mjs',
-    sourcemap: true,
-  },
-  external: ['nanoid/async'],
-  preserveModules: true,
-  plugins: [autoExternal(), json(), resolve(), babel({ babelHelpers: 'bundled' })],
+
+
+const defineEntry = (input, outputDir) => {
+  return {
+    input,
+    output: {
+      dir: outputDir,
+      format: 'esm',
+      entryFileNames: '[name].mjs',
+      sourcemap: true,
+    },
+    external: ['nanoid/async'],
+    preserveModules: true,
+    plugins: [autoExternal(), json(), resolve(), babel({ babelHelpers: 'bundled' })],
+  }
 }
+
+const config = [
+  defineEntry('src/index.mjs', 'dist'),
+  defineEntry('src/workers/certificate.mjs', 'dist/workers'),
+  defineEntry('src/workers/image.mjs', 'dist/workers'),
+]
+
 
 export default config
 

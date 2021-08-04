@@ -1,11 +1,11 @@
-import { DocumentViewType } from '../Documents'
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
+import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Rat } from '../db'
-
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { RatView, UserView } from '../view'
 import {
@@ -72,6 +72,7 @@ export default class Rats extends APIResource {
       },
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.state.user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: RatView })
@@ -88,6 +89,7 @@ export default class Rats extends APIResource {
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Rat, updateSearch: { id: ctx.params.id } })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, result.userId, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: RatView })
   }
@@ -167,6 +169,7 @@ export default class Rats extends APIResource {
       name: WritePermission.group,
       data: WritePermission.group,
       platform: WritePermission.group,
+      odyssey: WritePermission.group,
       frontierId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,

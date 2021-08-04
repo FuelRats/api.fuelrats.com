@@ -1,5 +1,8 @@
 import Model, { column, validate, type, table } from './Model'
 
+/**
+ * Model class for RescueRatsHistory
+ */
 @table({ tableName: 'rescueratshistory' })
 export default class RescueRatsHistory extends Model {
   /*  Override the ID field from rescues to not be set as a primary key,
