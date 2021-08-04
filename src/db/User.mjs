@@ -52,7 +52,10 @@ export default class User extends Model {
   @column(type.VIRTUAL(type.BOOLEAN), {
     include: [],
     get () {
-      return Boolean(this.avatar)
+      // This is a workaround hack so image is not included in 'norelation' scope.
+      // Virtual/Getter columns cannot be excluded, and the issue still exists even on the latest version of Sequelize.
+      // Assume that no avatar = unknown state, so don't include it.
+      return this.avatar ? true : undefined
     },
     allowNull: true,
   })
