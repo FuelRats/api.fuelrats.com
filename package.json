@@ -14,7 +14,7 @@
     "test": "NODE_ENV=testing node --harmony test",
     "jsdoc": "jsdoc -d static/docs/js -rgoo api",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
-    "eslint": "eslint --ext js,mjs ."
+    "eslint": "eslint --ext js,cjs,mjs ."
   },
   "license": "BSD-3",
   "dependencies": {
@@ -59,8 +59,8 @@
     "node": "16.4.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.14.5",
-    "@babel/core": "^7.14.6",
+    "@babel/cli": "7.14.8",
+    "@babel/core": "^7.14.8",
     "@babel/eslint-parser": "^7.14.7",
     "@babel/eslint-plugin": "^7.14.5",
     "@babel/plugin-external-helpers": "^7.14.5",
@@ -76,17 +76,17 @@
     "@babel/plugin-proposal-throw-expressions": "^7.14.5",
     "@babel/plugin-transform-modules-commonjs": "^7.14.5",
     "@babel/plugin-transform-strict-mode": "^7.14.5",
-    "@babel/preset-env": "^7.14.7",
+    "@babel/preset-env": "^7.14.9",
     "@fuelrats/eslint-config": "^2.3.0",
     "@fuelrats/eslint-plugin": "^2.3.0",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
     "ajv": "^6.12.6",
-    "eslint": "^7.30.0",
+    "eslint": "^7.32.0",
     "eslint-plugin-babel": "^5.3.1",
     "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-jsdoc": "^35.4.2",
+    "eslint-plugin-jsdoc": "^36.0.6",
     "jest": "^24.9.0",
     "jsdoc": "^3.6.7",
     "jsonapi-validator": "^3.0.5",
