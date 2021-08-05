@@ -127,7 +127,7 @@ export default class Users extends APIResource {
   @websocket('users', 'image', 'read')
   @parameters('id')
   async image (ctx, next) {
-    const avatar = await Avatar.scope('data').findOne({
+    const avatar = await Avatar.scope('imageData').findOne({
       where: {
         userId: ctx.params.id,
       },
@@ -346,7 +346,7 @@ export default class Users extends APIResource {
    * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
    */
   @POST('/users/:id/image')
-  @websocket('users', 'image')
+  @websocket('users', 'image', 'create')
   @parameters('id')
   @authenticated
   async setimage (ctx) {
