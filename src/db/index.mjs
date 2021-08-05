@@ -23,8 +23,8 @@ import UserGroups from './UserGroups'
 import VerificationToken from './VerificationToken'
 
 const models = {
-  Avatar,
   User,
+  Avatar,
   Rat,
   Rescue,
   RescueRats,
