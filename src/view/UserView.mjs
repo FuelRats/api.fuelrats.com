@@ -1,3 +1,5 @@
+import config from '../config'
+import AvatarView from './AvatarView'
 import ClientView from './ClientView'
 import DatabaseView from './DatabaseView'
 import DecalView from './DecalView'
@@ -29,7 +31,6 @@ export default class UserView extends DatabaseView {
       static suspended = ReadPermission.group
       static stripeId = ReadPermission.group
       static frontierId = ReadPermission.group
-      static image
       static createdAt
       static updatedAt
       static deletedAt = ReadPermission.internal
@@ -72,6 +73,7 @@ export default class UserView extends DatabaseView {
    */
   get relationships () {
     return {
+      avatar: AvatarView,
       rats: RatView,
       nicknames: NicknameView,
       displayRat: RatView,
@@ -80,6 +82,22 @@ export default class UserView extends DatabaseView {
       epics: EpicView,
       decals: DecalView,
     }
+  }
+
+  /**
+   * @inheritdoc
+   */
+  getRelationLink (relation) {
+    const links = {
+      self: `${config.server.externalUrl}/${this.self}/relationships/${relation}`,
+      related: `${config.server.externalUrl}/${this.self}/${relation}`,
+    }
+
+    if (relation === 'avatar') {
+      links.image = `${config.server.externalUrl}/${this.self}/image`
+    }
+
+    return links
   }
 
   /**
@@ -101,6 +119,15 @@ export default class UserView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return ['rats', 'displayRat', 'groups', 'clients', 'nicknames', 'epics', 'decals']
+    return [
+      'avatar',
+      'rats',
+      'displayRat',
+      'groups',
+      'clients',
+      'nicknames',
+      'epics',
+      'decals',
+    ]
   }
 }
