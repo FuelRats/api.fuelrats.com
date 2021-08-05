@@ -29,8 +29,7 @@ export default class AvatarView extends DatabaseView {
    */
   get links () {
     return {
-      self: `${config.server.externalUrl}/${this.self}`,
-      image: `${config.server.externalUrl}/users/${this.object.userId}/image`,
+      self: `${config.server.externalUrl}/users/${this.object.userId}/image`,
     }
   }
 

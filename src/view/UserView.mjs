@@ -88,16 +88,15 @@ export default class UserView extends DatabaseView {
    * @inheritdoc
    */
   getRelationLink (relation) {
-    const links = {
-      self: `${config.server.externalUrl}/${this.self}/relationships/${relation}`,
-      related: `${config.server.externalUrl}/${this.self}/${relation}`,
-    }
+    switch (relation) {
+      case 'avatar':
+        return {
+          self: `${config.server.externalUrl}/${this.self}/image`,
+        }
 
-    if (relation === 'avatar') {
-      links.image = `${config.server.externalUrl}/${this.self}/image`
+      default:
+        return super.getRelationLink(relation)
     }
-
-    return links
   }
 
   /**
