@@ -380,10 +380,6 @@ export default class Users extends APIResource {
       userId: ctx.params.id,
     })
 
-    user.changed('updatedAt', true)
-    await user.save()
-
-
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     const result = await User.findOne({
