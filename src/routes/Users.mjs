@@ -346,7 +346,6 @@ export default class Users extends APIResource {
    * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
    */
   @POST('/users/:id/image')
-  @websocket('users', 'image', 'create')
   @parameters('id')
   @authenticated
   async setimage (ctx) {
