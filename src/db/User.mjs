@@ -49,18 +49,6 @@ export default class User extends Model {
   @column(type.DATE, { allowNull: true })
   static suspended = undefined
 
-  @column(type.VIRTUAL(type.BOOLEAN), {
-    include: [],
-    get () {
-      // This is a workaround hack so image is not included in 'norelation' scope.
-      // Virtual/Getter columns cannot be excluded, and the issue still exists even on the latest version of Sequelize.
-      // Assume that no avatar = unknown state, so don't include it.
-      return this.avatar ? true : undefined
-    },
-    allowNull: true,
-  })
-  static image = undefined
-
   @column(type.VIRTUAL(type.ARRAY(type.STRING)), {
     include: [],
     get () {
@@ -201,7 +189,6 @@ export default class User extends Model {
         attributes: {
           exclude: [
             'permissions',
-            'image',
           ],
         },
         include: [
@@ -254,7 +241,6 @@ export default class User extends Model {
         attributes: {
           exclude: [
             'permissions',
-            'image',
           ],
         },
       }, { override: true }],
