@@ -27,9 +27,9 @@ export default class Avatar extends Model {
         },
         include: [
           {
-            model: models.User,
+            model: models.User.scope('norelations'),
             as: 'user',
-            required: true,
+            required: false,
           },
         ],
       }],
