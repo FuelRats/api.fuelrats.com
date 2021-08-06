@@ -49,15 +49,6 @@ export default class User extends Model {
   @column(type.DATE, { allowNull: true })
   static suspended = undefined
 
-  @column(type.VIRTUAL(type.BOOLEAN), {
-    include: [],
-    get () {
-      return Boolean(this.avatar)
-    },
-    allowNull: true,
-  })
-  static image = undefined
-
   @column(type.VIRTUAL(type.ARRAY(type.STRING)), {
     include: [],
     get () {
@@ -198,7 +189,6 @@ export default class User extends Model {
         attributes: {
           exclude: [
             'permissions',
-            'image',
           ],
         },
         include: [
@@ -251,7 +241,6 @@ export default class User extends Model {
         attributes: {
           exclude: [
             'permissions',
-            'image',
           ],
         },
       }, { override: true }],
