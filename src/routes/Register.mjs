@@ -1,6 +1,7 @@
-import { BadRequestAPIError, ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Anope from '../classes/Anope'
+import { BadRequestAPIError, ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import Sessions from '../classes/Sessions'
 import StatusCode from '../classes/StatusCode'
 import { User, Rat, db } from '../db'
 import API, {
@@ -8,7 +9,6 @@ import API, {
   POST,
   required,
 } from './API'
-import Sessions from '../classes/Sessions'
 import Verifications from './Verifications'
 
 const platforms = ['pc', 'xb', 'ps']

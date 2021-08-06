@@ -1,8 +1,8 @@
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Group } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { GroupView } from '../view'
 import {
@@ -12,7 +12,8 @@ import {
   DELETE,
   authenticated,
   permissions,
-  WritePermission, parameters
+  WritePermission,
+  parameters,
 } from './API'
 import APIResource from './APIResource'
 

@@ -2,10 +2,10 @@ import Model, { column, table, validate, type } from './Model'
 
 const resetPasswordTokenLength = 32
 
-@table({})
 /**
  * Model class for password resets
  */
+@table({})
 export default class Reset extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

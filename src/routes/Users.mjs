@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt'
 import { promises as fsp } from 'fs'
 import workerpool from 'workerpool'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DocumentViewType } from '../Documents/Document'
+import Announcer from '../classes/Announcer'
+import Anope from '../classes/Anope'
 import {
   NotFoundAPIError,
   UnauthorizedAPIError,
@@ -11,8 +11,6 @@ import {
   InternalServerError,
   ImATeapotAPIError,
 } from '../classes/APIError'
-import Announcer from '../classes/Announcer'
-import Anope from '../classes/Anope'
 import { Context } from '../classes/Context'
 import Event from '../classes/Event'
 import Mail from '../classes/Mail'
@@ -20,6 +18,8 @@ import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { User, Decal, Avatar, db } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
 import emailChangeEmail from '../emails/emailchange'
 import DatabaseQuery from '../query/DatabaseQuery'
 import {
@@ -127,7 +127,7 @@ export default class Users extends APIResource {
   @websocket('users', 'image', 'read')
   @parameters('id')
   async image (ctx, next) {
-    const avatar = await Avatar.scope('data').findOne({
+    const avatar = await Avatar.scope('imageData').findOne({
       where: {
         userId: ctx.params.id,
       },
@@ -346,7 +346,6 @@ export default class Users extends APIResource {
    * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
    */
   @POST('/users/:id/image')
-  @websocket('users', 'image')
   @parameters('id')
   @authenticated
   async setimage (ctx) {

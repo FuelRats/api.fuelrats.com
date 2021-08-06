@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
+import babel from '@rollup/plugin-babel'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import fs from 'fs'
 import gitrev from 'git-rev-promises'
 import autoExternal from 'rollup-plugin-auto-external'
-import babel from 'rollup-plugin-babel'
 import pkg from './package.json'
 
 Promise.all([
@@ -38,7 +38,7 @@ const defineEntry = (input, outputDir) => {
     },
     external: ['nanoid/async'],
     preserveModules: true,
-    plugins: [autoExternal(), json(), resolve(), babel({ externalHelpers: true })],
+    plugins: [autoExternal(), json(), resolve(), babel({ babelHelpers: 'bundled' })],
   }
 }
 

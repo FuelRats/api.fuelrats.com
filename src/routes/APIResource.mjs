@@ -198,6 +198,8 @@ export default class APIResource extends API {
    * @param {object} arg function arguments object
    * @param {object} arg.ctx a request context
    * @param {db.Model} arg.databaseType a database type object
+   * @param {Function} arg.hasPermission
+   * @param {Function} arg.callback
    * @returns {Promise<undefined>} A delete transaction
    */
   async delete ({ ctx, databaseType, hasPermission = undefined, callback }) {
@@ -267,6 +269,7 @@ export default class APIResource extends API {
    * @param {db.Model} arg.databaseType the sequelize object for this data type
    * @param {string} arg.change The type of relationship change to perform (add, patch, remove)
    * @param {string} arg.relationship the relationship to change
+   * @param {Function} arg.callback
    * @returns {Promise<db.Model>} A resource with its relationships updated
    */
   async relationshipChange ({
@@ -324,6 +327,7 @@ export default class APIResource extends API {
    * @param {string} arg.change the type of change to perform (add, patch, remove)
    * @param {string} arg.relationship The relationship to change
    * @param {db.Transaction} arg.transaction optional transaction to use for database operations
+   * @param {Context} arg.ctx Request context
    * @returns {Promise<undefined>} a database change promise for updating the relationships
    */
   generateRelationshipChange ({
@@ -495,6 +499,7 @@ export default class APIResource extends API {
           return isGroup
 
         case WritePermission.group:
+          // eslint-disable-next-line no-restricted-syntax -- intentional logical OR expression
           return isGroup || isSelf
 
         case WritePermission.self:
@@ -520,6 +525,7 @@ export default class APIResource extends API {
    * @param {object} arg.entity the entity to validate
    */
   async validateUpdateAccess ({ ctx, attributes, entity }) {
+    // eslint-disable-next-line no-restricted-syntax -- intentional logical or expression
     const isGroup = Permission.granted({ permissions: [`${this.type}.write`], connection: ctx })
       || Permission.granted({ permissions: [`${this.type}.write.me`], connection: ctx })
     const isSelf = this.isSelf({ ctx, entity }) && Permission.granted({

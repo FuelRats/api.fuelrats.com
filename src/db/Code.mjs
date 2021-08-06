@@ -7,10 +7,10 @@ const oAuthTokenMinLength = 24
 const oAuthTokenMaxLength = 128
 const oAuthRedirectUriMaxLength = 255
 
-@table({})
 /**
  * Model for oauth authorization codes
  */
+@table({})
 export default class Code extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

@@ -1,15 +1,15 @@
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { ConflictAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import Anope from '../classes/Anope'
+import { ConflictAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import FrontierAPI from '../classes/FrontierAPI'
 import Sessions from '../classes/Sessions'
 import StatusCode from '../classes/StatusCode'
+import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import config from '../config'
 import { db, Rat, Token, User } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { TokenView } from '../view'
 import API, { POST, getJSONAPIData } from './API'
-import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 
 /**
  * Endpoint for managing Frontier based single sign-on

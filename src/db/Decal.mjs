@@ -3,10 +3,10 @@ import Model, { column, table, validate, type } from './Model'
 
 const decalNotesMaxLength = 4096
 
-@table({ paranoid: true })
 /**
  * Model class for decals
  */
+@table({ paranoid: true })
 export default class Decal extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

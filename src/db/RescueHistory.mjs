@@ -1,5 +1,8 @@
 import Model, { column, validate, type, table } from './Model'
 
+/**
+ * Model class for RescueHistory
+ */
 @table({ tableName: 'rescueshistory' })
 export default class RescueHistory extends Model {
   /*  Override the ID field from rescues to not be set as a primary key,
@@ -70,7 +73,6 @@ export default class RescueHistory extends Model {
   /**
    * @inheritdoc
    */
-  // eslint-disable-next-line no-empty-function
   static getScopes () {
     return {}
   }

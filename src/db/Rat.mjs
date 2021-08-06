@@ -1,10 +1,10 @@
 import { JSONObject, CMDRname } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
-@table({ paranoid: true })
 /**
  * Model class for Rats
  */
+@table({ paranoid: true })
 export default class Rat extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

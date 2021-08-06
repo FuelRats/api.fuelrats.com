@@ -1,9 +1,9 @@
 import Model, { table, column, validate, type } from './Model'
 
-@table({})
 /**
  * User avatar model
  */
+@table({})
 export default class Avatar extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -12,16 +12,29 @@ export default class Avatar extends Model {
   @column(type.BLOB())
   static image = undefined
 
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { allowNull: true })
+  static userId = undefined
+
   /**
    * @inheritdoc
    */
-  static getScopes () {
+  static getScopes (models) {
     return {
       defaultScope: [{
-        attributes: ['id'],
+        attributes: {
+          exclude: ['image'],
+        },
+        include: [
+          {
+            model: models.User.scope('norelations'),
+            as: 'user',
+            required: false,
+          },
+        ],
       }],
 
-      data: [{
+      imageData: [{
         attributes: ['id', 'image'],
       }],
     }
@@ -33,6 +46,6 @@ export default class Avatar extends Model {
   static associate (models) {
     super.associate(models)
 
-    models.Avatar.belongsTo(models.User, { as: 'user' })
+    models.Avatar.belongsTo(models.User, { as: 'user', foreignKey: 'userId' })
   }
 }

@@ -150,7 +150,6 @@ function injectResultInObject (result, mappedObject, maps, mapId, columnPrefix =
     properties.forEach((property) => {
       // If property is a string, convert it to an object
       if (typeof property === 'string') {
-        // eslint-disable-next-line
         property = { name: property, column: property, transform: null }
       }
 

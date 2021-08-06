@@ -1,5 +1,5 @@
-import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
+import { NotFoundAPIError } from '../classes/APIError'
 import Mail from '../classes/Mail'
 import { resetTokenGenerator } from '../classes/TokenGenerators'
 import { websocket } from '../classes/WebSocket'
@@ -11,7 +11,6 @@ import API, {
   POST,
   required,
   parameters,
-  isValidJSONAPIObject,
   getJSONAPIData,
 } from './API'
 

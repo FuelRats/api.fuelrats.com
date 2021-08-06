@@ -3,17 +3,16 @@ import {
   User, Token, Client, Reset, db,
 } from '../db'
 
+import { UUID } from '../helpers/Validators'
+import Anope from './Anope'
 import {
   GoneAPIError,
   UnauthorizedAPIError,
   ResetRequiredAPIError,
   ForbiddenAPIError,
-  NotFoundAPIError,
 } from './APIError'
-import Anope from './Anope'
 import { Context } from './Context'
 import Permission from './Permission'
-import { UUID } from '../helpers/Validators'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6

@@ -2,13 +2,13 @@
 import enumerable from '../helpers/Enum'
 
 
-@enumerable()
 /**
  * Enumerable representing HTTP status codes
  * @typedef StatusCode
  * @readonly
  * @enum {number}
  */
+@enumerable()
 export default class StatusCode {
   /**
    * The initial part of a request has been received and has not yet been rejected by the server.

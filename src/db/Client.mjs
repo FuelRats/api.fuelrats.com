@@ -7,10 +7,10 @@ const clientSecretEncodedMaxLength = 1024
 const clientSecretMinLength = 32
 const clientSecretMaxLength = 512
 
-@table({})
 /**
  * OAuth Client table model
  */
+@table({})
 export default class Client extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

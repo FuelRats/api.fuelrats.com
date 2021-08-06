@@ -2,14 +2,14 @@ import Model, { column, table, validate, type } from './Model'
 
 const sessionTokenLength = 6
 
+/**
+ * Model class for user sessions
+ */
 @table({
   indexes: [{
     fields: ['ip', 'userAgent', 'code'],
   }],
 })
-/**
- * Model class for user sessions
- */
 export default class Session extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

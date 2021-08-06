@@ -1,5 +1,7 @@
 import UAParser from 'ua-parser-js'
+import { Context } from '../classes/Context'
 import GeoIP from '../classes/GeoIP'
+import { User } from '../db'
 
 /**
  * Generate a short device description based on a user agent
@@ -18,12 +20,9 @@ function generateDeviceDescription (userAgent) {
 /**
  * Session verification email template
  * @param {object} arg function arguments object
- * @param {string} arg.name the recipient's name
- * @param {string} arg.email the recipient's email
+ * @param {Context} arg.ctx request context
+ * @param {User} arg.user The recipient's user object
  * @param {string} arg.sessionToken the session token for this verification
- * @param {string} arg.deviceDescription a device description string
- * @param {string} arg.location a user location string
- * @param {string} arg.ipAddress the IP address of the session
  * @returns {object} session email template
  */
 export default function sessionEmail ({ ctx, user, sessionToken }) {
