@@ -4,45 +4,46 @@ import {
   optional,
   recommended,
   ensureValidConfig,
-  isBoolean,
-  isArray,
+  isBaseUrl,
   isIrcChannel,
-  isNumber,
   isUUID,
+  toArray,
+  toStrictBoolean,
+  toNumber,
 } from './helpers/ConfigValidators'
 
 const config = {
   server: {
     hostname: required('FRAPI_HOSTNAME', [], 'localhost'),
-    port: required('FRAPI_PORT', [isNumber], 8080),
-    externalUrl: required('FRAPI_URL', [], 'http://localhost:8080'),
+    port: required('FRAPI_PORT', [toNumber], 8080),
+    externalUrl: required('FRAPI_URL', [isBaseUrl], 'http://localhost:8080'),
     cookieSecret: required('FRAPI_COOKIE', [], undefined),
-    proxyEnabled: required('FRAPI_PROXY_ENABLED', [isBoolean], false),
-    whitelist: optional('FRAPI_WHITELIST', [isArray], []),
+    proxyEnabled: required('FRAPI_PROXY_ENABLED', [toStrictBoolean], false),
+    whitelist: optional('FRAPI_WHITELIST', [toArray], []),
   },
   documentationUrl: required('FRAPI_DOCUMENTATION', [], 'https://github.com/FuelRats/FuelRats-API-Docs/blob/master/beta.md'),
   frontend: {
     clientId: recommended('FRAPI_FRONTEND_CLIENTID', [isUUID], undefined),
-    url: required('FRAPI_FRONTEND_URL', [], 'https://fuelrats.com'),
+    url: required('FRAPI_FRONTEND_URL', [isBaseUrl], 'https://fuelrats.com'),
   },
   postgres: {
     database: required('FRAPI_POSTGRES_DATABASE', [], 'fuelrats'),
     hostname: required('FRAPI_POSTGRES_HOSTNAME', [], 'localhost'),
-    port: required('FRAPI_POSTGRES_PORT', [isNumber], 5432),
+    port: required('FRAPI_POSTGRES_PORT', [toNumber], 5432),
     username: required('FRAPI_POSTGRES_USERNAME', [], 'fuelrats'),
     password: optional('FRAPI_POSTGRES_PASSWORD', [], undefined),
   },
   anope: {
     database: required('FRAPI_ANOPE_DATABASE', [], 'anope'),
     hostname: required('FRAPI_ANOPE_HOSTNAME', [], 'localhost'),
-    port: required('FRAPI_ANOPE_PORT', [isNumber], 3306),
+    port: required('FRAPI_ANOPE_PORT', [toNumber], 3306),
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),
     password: optional('FRAPI_ANOPE_PASSWORD', [], undefined),
   },
   irc: {
     server: recommended('FRAPI_IRC_SERVER', [], undefined),
     serverName: recommended('FRAPI_IRC_SERVERNAME', [], undefined),
-    port: recommended('FRAPI_IRC_PORT', [isNumber], 6900),
+    port: recommended('FRAPI_IRC_PORT', [toNumber], 6900),
     password: recommended('FRAPI_IRC_PASSWORD', [], undefined),
   },
   geoip: {
@@ -66,7 +67,7 @@ const config = {
   },
   graylog: {
     host: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
-    port: recommended('FRAPI_GRAYLOG_PORT', [isNumber], 12201),
+    port: recommended('FRAPI_GRAYLOG_PORT', [toNumber], 12201),
     facility: recommended('FRAPI_GRAYLOG_FACILITY', [], 'fuelratsapi'),
   },
   slack: {
@@ -75,7 +76,7 @@ const config = {
   },
   smtp: {
     hostname: recommended('FRAPI_SMTP_HOSTNAME', [], 'smtp-relay.gmail.com'),
-    port: recommended('FRAPI_SMTP_PORT', [isNumber], 587),
+    port: recommended('FRAPI_SMTP_PORT', [toNumber], 587),
     sender: recommended('FRAPI_SMTP_SENDER', [], 'blackhole@fuelrats.com'),
   },
   jira: {
