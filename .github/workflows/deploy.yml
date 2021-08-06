@@ -49,6 +49,7 @@ jobs:
             static \
             tools \
             views \
+            .nvmrc \
             .sequelizerc \
             build.json \
             database_example.json \
