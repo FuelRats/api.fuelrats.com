@@ -1,4 +1,4 @@
-import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import { NotFoundAPIError, UnprocessableEntityAPIError, TooManyRequestsAPIError } from '../classes/APIError'
 import Announcer from '../classes/Announcer'
 import Mail from '../classes/Mail'
 import { resetTokenGenerator } from '../classes/TokenGenerators'
@@ -17,6 +17,7 @@ import API, {
 
 const mail = new Mail()
 const expirationLength = 86400000
+const resetCooldown = 300000
 
 /**
  * Class managing password reset endpoints
@@ -60,6 +61,10 @@ export default class Resets extends API {
 
       let requiredReset = false
       if (existingReset) {
+        const currentDate = new Date()
+        if (currentDate - existingReset.createdAt < resetCooldown) {
+          throw new TooManyRequestsAPIError()
+        }
         if (existingReset.required === true) {
           requiredReset = true
         }
