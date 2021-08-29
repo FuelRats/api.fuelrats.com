@@ -17,7 +17,7 @@ import API, {
 
 const mail = new Mail()
 const expirationLength = 86400000
-const resetCooldown = 300
+const resetCooldown = 300000
 
 /**
  * Class managing password reset endpoints
