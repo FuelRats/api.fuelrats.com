@@ -49,7 +49,8 @@ export default class Announcer {
 
   /**
    * Send a message to the rescue back-channel using the announcer
-   * @param {string} message the message to send
+   * @param {object} arg function arguments object
+   * @param {string} arg.message the message to send
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static sendRescueMessage ({ message }) {
@@ -58,7 +59,8 @@ export default class Announcer {
 
   /**
    * Sends a message to the moderation channel using the announcer
-   * @param {string} message the message to send
+   * @param {object} arg function arguments object
+   * @param {string} arg.message the message to send
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static sendModeratorMessage ({ message }) {
@@ -67,7 +69,8 @@ export default class Announcer {
 
   /**
    * Sends a message to the network administration channel using the announcer
-   * @param {string} message the message to send
+   * @param {object} arg function arguments object
+   * @param {string} arg.message the message to send
    * @returns {Promise<undefined>} resolve a promise when completed successfully
    */
   static sendNetworkMessage ({ message }) {
@@ -76,7 +79,8 @@ export default class Announcer {
 
   /**
    * Sends a message to the technical operations channel
-   * @param {string} message the message to send
+   * @param {object} arg function arguments object
+   * @param {string} arg.message the message to send
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static sendTechnicalMessage ({ message }) {
@@ -85,10 +89,11 @@ export default class Announcer {
 
   /**
    * Sends a message to the drill management channel
-   * @param {string} message the message to send
+   * @param {object} arg function arguments object
+   * @param {string} arg.message the message to send
    * @returns {Promise<undefined>} resolve a promise when completed successfully
    */
-  static sendDrillMessage (message) {
+  static sendDrillMessage ({ message }) {
     return Announcer.sendMessage({ destination: config.announcer.destinations.drill, message })
   }
 }

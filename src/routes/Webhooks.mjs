@@ -54,8 +54,10 @@ export default class Webhooks extends API {
     })
 
     if (!user) {
-      await Announcer.sendDrillMessage(`[API] Unable to update permissions for "${cmdrName}"
-      could not find a CMDR by that name.`)
+      await Announcer.sendDrillMessage({
+        message: `[API] Unable to update permissions for "${cmdrName}"
+      could not find a CMDR by that name.`,
+      })
 
       throw new UnprocessableEntityAPIError({ pointer: `/data/issue/fields/${cmdrName}` })
     }
@@ -77,7 +79,7 @@ export default class Webhooks extends API {
     })
     await Anope.updatePermissions(updatedUser)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, updatedUser.id, {})
-    await Announcer.sendDrillMessage(`[API] Permissions has been updated for user ${updatedUser.preferredRat().name}`)
+    await Announcer.sendDrillMessage({ message: `[API] Permissions has been updated for user ${updatedUser.preferredRat().name}` })
 
     return true
   }
