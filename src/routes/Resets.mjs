@@ -1,4 +1,4 @@
-import Announcer from '../classes/Announcer'
+import Announcer, { ThrottledAnnouncer } from '../classes/Announcer'
 import { NotFoundAPIError } from '../classes/APIError'
 import Mail from '../classes/Mail'
 import { resetTokenGenerator } from '../classes/TokenGenerators'
@@ -15,7 +15,11 @@ import API, {
 } from './API'
 
 const mail = new Mail()
-const expirationLength = 86400000
+const expirationLength = 86400000 // 24 Hours
+const resetAnnouncer = new ThrottledAnnouncer({
+  resetRate: 300000, // 5 minutes
+  method: Announcer.sendTechnicalMessage,
+})
 
 /**
  * Class managing password reset endpoints
@@ -40,14 +44,15 @@ export default class Resets extends API {
 
     const { email } = data.attributes
 
-    await Announcer.sendTechnicalMessage({
-      message: `[API] Password reset for ${email} requested by ${ctx.ip}`,
-    })
-
     const user = await User.findOne({
       where: {
         email: { ilike: email },
       },
+    })
+
+    await resetAnnouncer.sendMessage({
+      key: email,
+      message: `[API] Password reset for ${email}${user ? '' : ' (Not in DB)'} requested by ${ctx.ip}`,
     })
 
     if (user) {
