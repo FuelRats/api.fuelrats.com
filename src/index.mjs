@@ -116,15 +116,6 @@ app.use(async (ctx, next) => {
 
     await Authentication.authenticate({ connection: ctx })
 
-    const representing = ctx.get('x-representing')
-    if (representing) {
-      if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
-        throw new UnauthorizedAPIError({
-          parameter: 'representing',
-        })
-      }
-    }
-
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
     ctx.state.traffic = rateLimit
     ctx.set('X-API-Version', packageInfo.version)
@@ -150,8 +141,16 @@ app.use(async (ctx, next) => {
     if (ctx.state.client) {
       ctx.state.user = ctx.state.client
     }
-
-    ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
+    
+    const representing = ctx.get('x-representing')
+    if (representing) {
+      if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
+        throw new UnauthorizedAPIError({
+          parameter: 'representing',
+        })
+      }
+      ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
+    }
 
     if (ctx.get('X-Permanent-Deletion')) {
       const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
