@@ -143,7 +143,7 @@ app.use(async (ctx, next) => {
     }
 
     ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
-    
+
     const representing = ctx.get('x-representing')
     if (representing) {
       if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
