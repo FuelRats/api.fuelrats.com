@@ -141,7 +141,7 @@ app.use(async (ctx, next) => {
     if (ctx.state.client) {
       ctx.state.user = ctx.state.client
     }
-    
+
     const representing = ctx.get('x-representing')
     if (representing) {
       if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
