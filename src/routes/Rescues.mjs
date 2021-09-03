@@ -1,15 +1,15 @@
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DocumentViewType } from '../Documents/Document'
+import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
   UnsupportedMediaAPIError,
 } from '../classes/APIError'
-import Announcer from '../classes/Announcer'
 import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Rescue, db } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
 import DatabaseQuery from '../query/DatabaseQuery'
 
 import { RescueView, RatView } from '../view'

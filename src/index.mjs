@@ -7,8 +7,6 @@ import querystring from 'koa-qs'
 import session from 'koa-session'
 import npid from 'npid'
 import { promisify } from 'util'
-import Document from './Documents/Document'
-import ErrorDocument from './Documents/ErrorDocument'
 import {
   TooManyRequestsAPIError,
   ImATeapotAPIError,
@@ -26,6 +24,8 @@ import TrafficControl from './classes/TrafficControl'
 import WebSocket from './classes/WebSocket'
 import config from './config'
 import { db } from './db'
+import Document from './Documents/Document'
+import ErrorDocument from './Documents/ErrorDocument'
 import packageInfo from './files/package'
 import logger from './logging'
 import Query from './query'
@@ -116,15 +116,6 @@ app.use(async (ctx, next) => {
 
     await Authentication.authenticate({ connection: ctx })
 
-    const representing = ctx.get('x-representing')
-    if (representing) {
-      if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
-        throw new UnauthorizedAPIError({
-          parameter: 'representing',
-        })
-      }
-    }
-
     const rateLimit = traffic.validateRateLimit({ connection: ctx })
     ctx.state.traffic = rateLimit
     ctx.set('X-API-Version', packageInfo.version)
@@ -152,6 +143,16 @@ app.use(async (ctx, next) => {
     }
 
     ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
+
+    const representing = ctx.get('x-representing')
+    if (representing) {
+      if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
+        throw new UnauthorizedAPIError({
+          parameter: 'representing',
+        })
+      }
+      ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
+    }
 
     if (ctx.get('X-Permanent-Deletion')) {
       const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })

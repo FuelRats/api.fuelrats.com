@@ -1,9 +1,9 @@
 import Model, { column, table, validate, type } from './Model'
 
-@table({})
 /**
  * Model class for the epic nominees join table
  */
+@table({})
 export default class EpicUsers extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { JSONObject, stripeUserId } from '../helpers/Validators'
+import { JSONObject } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
 
 const passwordMinLength = 12
@@ -18,10 +18,10 @@ function getIRCSafeName (cmdrName) {
 }
 
 
-@table({ paranoid: true })
 /**
  * Model class for users
  */
+@table({ paranoid: true })
 export default class User extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
@@ -48,15 +48,6 @@ export default class User extends Model {
 
   @column(type.DATE, { allowNull: true })
   static suspended = undefined
-
-  @column(type.VIRTUAL(type.BOOLEAN), {
-    include: [],
-    get () {
-      return Boolean(this.avatar)
-    },
-    allowNull: true,
-  })
-  static image = undefined
 
   @column(type.VIRTUAL(type.ARRAY(type.STRING)), {
     include: [],
@@ -198,7 +189,6 @@ export default class User extends Model {
         attributes: {
           exclude: [
             'permissions',
-            'image',
           ],
         },
         include: [
@@ -251,7 +241,6 @@ export default class User extends Model {
         attributes: {
           exclude: [
             'permissions',
-            'image',
           ],
         },
       }, { override: true }],

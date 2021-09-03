@@ -6,7 +6,7 @@ const defaultOffset = 0
 const defaultLimit = 100
 const defaultSize = 25
 
-@enumerable()
+
 /**
  * Enumerable representing the different sort orders a query can have
  * @readonly
@@ -14,6 +14,7 @@ const defaultSize = 25
  * @property {symbol} ascending the query is sorted in ascending order
  * @property {symbol} descending the query is sorted in descending order
  */
+@enumerable()
 export class SortOrder {
   static ascending
   static descending

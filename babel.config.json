@@ -2,7 +2,7 @@
   "presets": [
     ["@babel/preset-env", {
       "targets": {
-        "node": "13.7"
+        "node": "16.4"
       },
       "shippedProposals": true
     }]
@@ -15,9 +15,12 @@
       "sourceMaps": false
     }
   },
+  "assumptions": {
+    "setPublicClassFields": true
+  },
   "plugins": [
     ["@babel/plugin-proposal-decorators", { "legacy": true }],
-    ["@babel/plugin-proposal-class-properties", { "loose": true }],
+    ["@babel/plugin-proposal-class-properties"],
     "@babel/plugin-proposal-function-bind",
     "@babel/plugin-proposal-optional-catch-binding",
     "@babel/plugin-transform-strict-mode",

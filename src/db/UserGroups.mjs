@@ -1,9 +1,9 @@
 import Model, { column, table, validate, type } from './Model'
 
-@table({})
 /**
  * Model class for User permissions join table
  */
+@table({})
 export default class UserGroups extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })

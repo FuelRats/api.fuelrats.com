@@ -1,5 +1,4 @@
 import DatabaseView from './DatabaseView'
-import EpicView from './EpicView'
 import RescueView from './RescueView'
 import ShipView from './ShipView'
 import UserView from './UserView'

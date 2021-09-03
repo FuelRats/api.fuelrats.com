@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import net from 'net'
 import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import GeoIP from '../classes/GeoIP'

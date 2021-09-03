@@ -1,6 +1,6 @@
+import { websocket } from '../classes/WebSocket'
 import { DocumentViewType } from '../Documents'
 import ObjectDocument from '../Documents/ObjectDocument'
-import { websocket } from '../classes/WebSocket'
 import buildFile from '../files/build'
 import Query from '../query'
 import { VersionView } from '../view'

@@ -1,13 +1,12 @@
-import crypto from 'crypto'
-import { customAlphabet } from 'nanoid/async'
-import { DocumentViewType } from '../Documents'
-import DatabaseDocument from '../Documents/DatabaseDocument'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
+import { clientSecretGenerator } from '../classes/TokenGenerators'
 import { websocket } from '../classes/WebSocket'
 import { Client, Code, Token } from '../db'
+import { DocumentViewType } from '../Documents'
+import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { ClientView, UserView } from '../view'
 import {
@@ -22,7 +21,6 @@ import {
   WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { clientSecretGenerator } from '../classes/TokenGenerators'
 
 /**
  * OAuth clients endpoints

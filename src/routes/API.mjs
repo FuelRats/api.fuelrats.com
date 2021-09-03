@@ -314,7 +314,8 @@ export function protect (permission, ...fields) {
 
 /**
  * Validate whether an object is a valid JSONAPI Object
- * @param {object} object an object
+ * @param {object} arg function arguments object
+ * @param {object} arg.object object to validate
  * @returns {boolean} True if valid, false is not valid
  */
 export function isValidJSONAPIObject ({ object }) {
@@ -346,10 +347,10 @@ export function getJSONAPIData ({ ctx, type, requireAttributes = true }) {
   return ctx.data.data
 }
 
-@enumerable()
 /**
  * Enum for types of write permissions that can be required for a field
  */
+@enumerable()
 export class WritePermission {
   static internal
   static self

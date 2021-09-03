@@ -508,12 +508,12 @@ module.exports = {
       console.log('Committing Transaction..')
     })
     console.log(`
-    
+
     --- MIGRATION COMPLETE ---
     `)
   },
 
-  down: (migration, type) => {
+  down: () => {
     /*
       Add reverting commands here.
       Return a promise to correctly handle asynchronicity.

@@ -1,5 +1,5 @@
-import { NotFoundAPIError, UnprocessableEntityAPIError, TooManyRequestsAPIError } from '../classes/APIError'
-import Announcer from '../classes/Announcer'
+import Announcer, { ThrottledAnnouncer } from '../classes/Announcer'
+import { NotFoundAPIError } from '../classes/APIError'
 import Mail from '../classes/Mail'
 import { resetTokenGenerator } from '../classes/TokenGenerators'
 import { websocket } from '../classes/WebSocket'
@@ -11,13 +11,15 @@ import API, {
   POST,
   required,
   parameters,
-  isValidJSONAPIObject,
   getJSONAPIData,
 } from './API'
 
 const mail = new Mail()
-const expirationLength = 86400000
-const resetCooldown = 300000
+const expirationLength = 86400000 // 24 Hours
+const resetAnnouncer = new ThrottledAnnouncer({
+  resetRate: 300000, // 5 minutes
+  method: Announcer.sendTechnicalMessage,
+})
 
 /**
  * Class managing password reset endpoints
@@ -42,14 +44,15 @@ export default class Resets extends API {
 
     const { email } = data.attributes
 
-    await Announcer.sendTechnicalMessage({
-      message: `[API] Password reset for ${email} requested by ${ctx.ip}`,
-    })
-
     const user = await User.findOne({
       where: {
         email: { ilike: email },
       },
+    })
+
+    await resetAnnouncer.sendMessage({
+      key: email,
+      message: `[API] Password reset for ${email}${user ? '' : ' (Not in DB)'} requested by ${ctx.ip}`,
     })
 
     if (user) {
@@ -61,10 +64,6 @@ export default class Resets extends API {
 
       let requiredReset = false
       if (existingReset) {
-        const currentDate = new Date()
-        if (currentDate - existingReset.createdAt < resetCooldown) {
-          throw new TooManyRequestsAPIError()
-        }
         if (existingReset.required === true) {
           requiredReset = true
         }
