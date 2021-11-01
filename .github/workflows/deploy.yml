@@ -24,7 +24,7 @@ jobs:
 
       - name: Read `yarn cache dir`
         id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
 
       - name: Load yarn cache
         uses: actions/cache@v2
@@ -36,7 +36,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Build
         run: yarn build
@@ -44,6 +44,8 @@ jobs:
       - name: Prepare artifact
         run: |
           tar -czf fr-api.tar.gz \
+            .yarn/plugins \
+            .yarn/releases \
             dist \
             migrations \
             static \
@@ -51,6 +53,7 @@ jobs:
             views \
             .nvmrc \
             .sequelizerc \
+            .yarnrc.yml \
             build.json \
             database_example.json \
             LICENSE.md \
@@ -96,7 +99,7 @@ jobs:
 
       - name: Read `yarn cache dir`
         id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
 
       - name: Load yarn cache
         uses: actions/cache@v2
@@ -108,7 +111,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
