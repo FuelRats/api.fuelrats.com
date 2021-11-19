@@ -1,5 +1,5 @@
 export Anniversaries from './Anniversaries'
-export Authenticator from './Authenticators.mjs'
+export Authenticator from './Authenticators'
 export Clients from './Clients'
 export Decals from './Decals'
 export Errors from './Errors'

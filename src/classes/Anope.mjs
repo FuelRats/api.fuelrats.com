@@ -279,7 +279,7 @@ class Anope {
    */
   static async setEmail (currentEmail, newEmail) {
     if (!config.anope.database) {
-      return undefined
+      return
     }
 
     await mysql('anope_db_NickCore')
@@ -297,7 +297,7 @@ class Anope {
    */
   static async setVirtualHost (email, vhost) {
     if (!config.anope.database) {
-      return undefined
+      return
     }
 
     await mysql.raw(`
@@ -346,7 +346,7 @@ class Anope {
    */
   static async setPassword (email, newPassword) {
     if (!config.anope.database) {
-      return undefined
+      return
     }
 
     const encryptedPassword = await bcrypt.hash(newPassword, anopeBcryptRounds)

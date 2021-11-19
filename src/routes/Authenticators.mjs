@@ -1,14 +1,15 @@
 import { authenticator as totp } from 'otplib'
 import UUID from 'pure-uuid'
-import { DocumentViewType } from '../Documents/Document'
-import ObjectDocument from '../Documents/ObjectDocument'
 import {
   ConflictAPIError,
   NotFoundAPIError, UnauthorizedAPIError,
   UnprocessableEntityAPIError,
-  UnsupportedMediaAPIError
+  UnsupportedMediaAPIError,
 } from '../classes/APIError'
+import StatusCode from '../classes/StatusCode'
 import { Authenticator, User } from '../db'
+import { DocumentViewType } from '../Documents/Document'
+import ObjectDocument from '../Documents/ObjectDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { GeneratedAuthenticatorView } from '../view'
 import {
@@ -19,19 +20,31 @@ import {
   authenticated,
   required, WritePermission,
 } from './API'
-import StatusCode from '../classes/StatusCode'
-import APIResource from './APIResource.mjs'
+import APIResource from './APIResource'
 
+const UUID_VERSION = 4
+
+/**
+ *
+ */
 export default class Authenticators extends APIResource {
+  /**
+   * Return JSONAPI type
+   * @returns {string} JSONAPI type
+   */
   get type () {
     return 'users'
   }
 
+  /**
+   * Request an authenticator secret
+   * @endpoint
+   */
   @GET('/users/:id/authenticator')
   @authenticated
   async generateAuthenticator (ctx) {
     const user = await User.findOne({
-      id: ctx.params.id
+      id: ctx.params.id,
     })
     if (!user) {
       throw new NotFoundAPIError({ parameter: 'id' })
@@ -54,7 +67,7 @@ export default class Authenticators extends APIResource {
     const secret = totp.generateSecret()
     const dataUri = totp.keyuri(ctx.state.user.email, 'Fuel Rats', secret)
     const result = {
-      id: new UUID(4),
+      id: new UUID(UUID_VERSION),
       secret,
       dataUri,
       user: ctx.state.user,
@@ -64,12 +77,16 @@ export default class Authenticators extends APIResource {
     return new ObjectDocument({ query, result, type: GeneratedAuthenticatorView, view: DocumentViewType.individual })
   }
 
+  /**
+   * Link an authenticator
+   * @endpoint
+   */
   @POST('/users/:id/authenticator')
   @authenticated
   @required('secret', 'token', 'description')
   async addAuthenticator (ctx) {
     const user = await User.findOne({
-      id: ctx.params.id
+      id: ctx.params.id,
     })
     if (!user) {
       throw new NotFoundAPIError({ parameter: 'id' })
@@ -93,7 +110,6 @@ export default class Authenticators extends APIResource {
     let isValid = false
     try {
       isValid = totp.check(token, secret)
-
     } catch (ex) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/secret' })
     }
@@ -112,11 +128,15 @@ export default class Authenticators extends APIResource {
     return true
   }
 
+  /**
+   * Delete an authenticator
+   * @endpoint
+   */
   @DELETE('/users/:id/authenticator')
   @authenticated
   async removeAuthenticator (ctx) {
     const user = await User.findOne({
-      id: ctx.params.id
+      id: ctx.params.id,
     })
     if (!user) {
       throw new NotFoundAPIError({ parameter: 'id' })
@@ -136,7 +156,7 @@ export default class Authenticators extends APIResource {
     }
 
     const verifyHeader = ctx.req.headers['x-verify']
-    let verified
+    let verified = undefined
     try {
       verified = totp.check(verifyHeader, existingAuthenticator.secret)
     } catch {
@@ -174,7 +194,7 @@ export default class Authenticators extends APIResource {
    *
    * @inheritdoc
    */
-  changeRelationship ({ relationship }) {
+  changeRelationship () {
     throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
   }
 

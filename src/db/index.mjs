@@ -2,7 +2,7 @@ import Sequelize from 'sequelize'
 import config from '../config'
 import logger from '../logging'
 
-import Authenticator from './Authenticator.mjs'
+import Authenticator from './Authenticator'
 import Avatar from './Avatar'
 import Client from './Client'
 import Code from './Code'

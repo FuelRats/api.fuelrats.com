@@ -1,4 +1,5 @@
 import config from '../config'
+import AuthenticatorView from './AuthenticatorView'
 import AvatarView from './AvatarView'
 import ClientView from './ClientView'
 import DatabaseView from './DatabaseView'
@@ -8,7 +9,6 @@ import GroupView from './GroupView'
 import NicknameView from './NicknameView'
 import RatView from './RatView'
 import { ReadPermission } from './View'
-import AuthenticatorView from './AuthenticatorView.mjs'
 
 /**
  * Get JSONAPI view for a User

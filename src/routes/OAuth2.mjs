@@ -430,7 +430,7 @@ class OAuth extends API {
     if (existingSession.verified === false) {
       const verifyCode = ctx.request.body.verify?.toUpperCase()
       if (user.authenticator && verifyCode) {
-        let verified
+        let verified = undefined
         try {
           verified = totp.check(verifyCode, user.authenticator.secret)
         } catch {

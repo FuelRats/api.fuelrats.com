@@ -1,4 +1,4 @@
-import { Session, db } from '../db'
+import { Session, User, db } from '../db'
 import sessionEmail from '../emails/session'
 import { Context } from './Context'
 import Mail from './Mail'
@@ -26,19 +26,18 @@ export default class Sessions {
       })
 
       return undefined
-    } else {
-      const code = await sessionTokenGenerator()
-      const session = await Session.create({
-        ip: ctx.request.ip,
-        userAgent: ctx.state.userAgent,
-        fingerprint: ctx.state.fingerprint,
-        code,
-        userId: user.id,
-      })
-
-      return mail.send(sessionEmail({ ctx, user, sessionToken: session.code }))
     }
 
+    const code = await sessionTokenGenerator()
+    const session = await Session.create({
+      ip: ctx.request.ip,
+      userAgent: ctx.state.userAgent,
+      fingerprint: ctx.state.fingerprint,
+      code,
+      userId: user.id,
+    })
+
+    return mail.send(sessionEmail({ ctx, user, sessionToken: session.code }))
   }
 
   /**
