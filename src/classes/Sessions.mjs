@@ -1,4 +1,4 @@
-import { Session, User, db } from '../db'
+import { Session, db } from '../db'
 import sessionEmail from '../emails/session'
 import { Context } from './Context'
 import Mail from './Mail'
@@ -17,16 +17,28 @@ export default class Sessions {
    * @returns {Promise<void>} completes a promise when email is sent
    */
   static async createSession (ctx, user) {
-    const code = await sessionTokenGenerator()
-    const session = await Session.create({
-      ip: ctx.request.ip,
-      userAgent: ctx.state.userAgent,
-      fingerprint: ctx.state.fingerprint,
-      code,
-      userId: user.id,
-    })
+    if (user.authenticator) {
+      await Session.create({
+        ip: ctx.request.ip,
+        userAgent: ctx.state.userAgent,
+        fingerprint: ctx.state.fingerprint,
+        userId: user.id,
+      })
 
-    return mail.send(sessionEmail({ ctx, user, sessionToken: session.code }))
+      return undefined
+    } else {
+      const code = await sessionTokenGenerator()
+      const session = await Session.create({
+        ip: ctx.request.ip,
+        userAgent: ctx.state.userAgent,
+        fingerprint: ctx.state.fingerprint,
+        code,
+        userId: user.id,
+      })
+
+      return mail.send(sessionEmail({ ctx, user, sessionToken: session.code }))
+    }
+
   }
 
   /**

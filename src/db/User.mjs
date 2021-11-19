@@ -234,6 +234,11 @@ export default class User extends Model {
             through: {},
             include: [],
           },
+          {
+            model: models.Authenticator,
+            as: 'authenticator',
+            required: false,
+          },
         ],
       }, { override: true }],
 
@@ -291,5 +296,6 @@ export default class User extends Model {
     models.User.hasMany(models.Epic, { foreignKey: 'nominatedById', as: 'nominatedEpics' })
 
     models.User.hasOne(models.Avatar, { foreignKey: 'userId', as: 'avatar' })
+    models.User.hasOne(models.Authenticator, { foreignKey: 'userId', as: 'authenticator' })
   }
 }

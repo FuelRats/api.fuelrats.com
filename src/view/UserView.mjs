@@ -8,6 +8,7 @@ import GroupView from './GroupView'
 import NicknameView from './NicknameView'
 import RatView from './RatView'
 import { ReadPermission } from './View'
+import AuthenticatorView from './AuthenticatorView.mjs'
 
 /**
  * Get JSONAPI view for a User
@@ -81,6 +82,7 @@ export default class UserView extends DatabaseView {
       clients: ClientView,
       epics: EpicView,
       decals: DecalView,
+      authenticator: AuthenticatorView,
     }
   }
 
@@ -127,6 +129,7 @@ export default class UserView extends DatabaseView {
       'nicknames',
       'epics',
       'decals',
+      'authenticator',
     ]
   }
 }
