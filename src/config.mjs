@@ -34,7 +34,7 @@ const config = {
     password: optional('FRAPI_POSTGRES_PASSWORD', [], undefined),
   },
   anope: {
-    database: required('FRAPI_ANOPE_DATABASE', [], 'anope'),
+    database: optional('FRAPI_ANOPE_DATABASE', [], undefined),
     hostname: required('FRAPI_ANOPE_HOSTNAME', [], 'localhost'),
     port: required('FRAPI_ANOPE_PORT', [toNumber], 3306),
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),

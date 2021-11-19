@@ -45,6 +45,9 @@ class Anope {
    * @returns {Promise<[Nickname]|undefined>} a list of nickname entries
    */
   static async getAccount (email) {
+    if (!config.anope.database) {
+      return undefined
+    }
     const results = await mysql.select('*')
       .from('anope_db_NickCore')
       .leftJoin('anope_db_NickAlias', 'anope_db_NickCore.display', 'anope_db_NickAlias.nc')
@@ -64,6 +67,9 @@ class Anope {
    * @returns {Promise<undefined>} resolves a promise when completed
    */
   static setFingerprint (email, fingerprint) {
+    if (!config.anope.database) {
+      return undefined
+    }
     return mysql.raw(`
         UPDATE anope_db_NickCore
         SET
@@ -79,6 +85,9 @@ class Anope {
    * @returns {Promise<[Nickname]>} a list of nick search results
    */
   static async findAccountFuzzyMatch (nickname) {
+    if (!config.anope.database) {
+      return []
+    }
     const [results] = await mysql.raw(`
         SELECT
                *,
@@ -121,6 +130,9 @@ class Anope {
    * @returns {Promise<User>} user object with mapped nicknames
    */
   static async mapNickname (user) {
+    if (!config.anope.database) {
+      return user
+    }
     const ircUser = user
 
     const [results] = await mysql.raw(`
@@ -149,6 +161,10 @@ class Anope {
    * @returns {Promise<[User]>} list of user objects with mapped nicknames
    */
   static async mapNicknames (users) {
+    if (!config.anope.database) {
+      return users
+    }
+
     const ircUsers = users
     if (users.rows.length === 0) {
       return users
@@ -191,6 +207,10 @@ class Anope {
    * @returns {Promise<Nickname>} a database nickname result
    */
   static async findId (id) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     const anopeId = uuidToInt(id)
 
     let [[account]] = await mysql.raw(`
@@ -223,6 +243,10 @@ class Anope {
    * @returns {Promise<Nickname>} a database nickname result
    */
   static async findNickname (nickname) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     let [[account]] = await mysql.raw(`
         SELECT
             *,
@@ -254,6 +278,10 @@ class Anope {
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static async setEmail (currentEmail, newEmail) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     await mysql('anope_db_NickCore')
       .whereRaw('lower(email) = lower(?)', [currentEmail])
       .update({
@@ -268,6 +296,10 @@ class Anope {
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static async setVirtualHost (email, vhost) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     await mysql.raw(`
         UPDATE anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
@@ -286,6 +318,10 @@ class Anope {
    * @returns {Promise<void>} resolves a promise when completed
    */
   static async updatePermissions (user) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     await Anope.setVirtualHost(user.email, user.vhost())
 
     const channels = user.flags()
@@ -309,6 +345,10 @@ class Anope {
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static async setPassword (email, newPassword) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     const encryptedPassword = await bcrypt.hash(newPassword, anopeBcryptRounds)
 
     await mysql('anope_db_NickCore')
@@ -324,6 +364,10 @@ class Anope {
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
   static removeNickname (nickname) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     return mysql.raw(`
       DELETE FROM anope_db_NickAlias
       WHERE  lower(nick) = lower(?)
@@ -336,6 +380,10 @@ class Anope {
    * @returns {Promise<undefined>} Promise is void on completion
    */
   static async deleteAccount (email) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     await mysql.raw(`
         DELETE anope_db_NickAlias.* FROM anope_db_NickAlias
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
@@ -364,6 +412,10 @@ class Anope {
   static addNewUser ({
     email, nick, encryptedPassword, vhost, ratId,
   }) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
     return mysql.transaction(async (transaction) => {
       if (ratId) {
         const rat = await Rat.findOne({
