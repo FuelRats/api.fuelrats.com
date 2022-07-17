@@ -1,38 +1,19 @@
 import Model, { column, table, validate, type } from './Model'
 
-const sessionTokenLength = 6
-
 /**
  * Model class for user sessions
  */
-@table({
-  indexes: [{
-    fields: ['ip', 'userAgent', 'code'],
-  }],
-})
-export default class Session extends Model {
+@table({})
+export default class Authenticator extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
-  @column(type.INET)
-  static ip = undefined
+  @column(type.STRING)
+  static description = undefined
 
   @column(type.STRING)
-  static userAgent = undefined
-
-  @column(type.STRING)
-  static fingerprint = undefined
-
-  @column(type.DATE)
-  static lastAccess = type.NOW
-
-  @column(type.BOOLEAN)
-  static verified = false
-
-  @validate({ isUppercase: true })
-  @column(type.STRING(sessionTokenLength), { allowNull: true })
-  static code = undefined
+  static secret = undefined
 
   @validate({ isUUID: 4 })
   @column(type.UUID)
@@ -46,9 +27,9 @@ export default class Session extends Model {
       defaultScope: [{
         include: [
           {
-            model: models.User,
+            model: models.User.scope('norelations'),
             as: 'user',
-            required: true,
+            required: false,
           },
         ],
       }, {
@@ -62,6 +43,6 @@ export default class Session extends Model {
    */
   static associate (models) {
     super.associate(models)
-    models.Session.belongsTo(models.User, { as: 'user' })
+    models.Authenticator.belongsTo(models.User, { as: 'user' })
   }
 }

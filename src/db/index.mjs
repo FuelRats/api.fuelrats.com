@@ -2,6 +2,7 @@ import Sequelize from 'sequelize'
 import config from '../config'
 import logger from '../logging'
 
+import Authenticator from './Authenticator'
 import Avatar from './Avatar'
 import Client from './Client'
 import Code from './Code'
@@ -24,6 +25,7 @@ import VerificationToken from './VerificationToken'
 
 const models = {
   User,
+  Authenticator,
   Avatar,
   Rat,
   Rescue,
@@ -135,6 +137,7 @@ export {
   db as sequelize,
   Sequelize,
   Op,
+  Authenticator,
   Avatar,
   Client,
   Code,
