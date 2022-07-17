@@ -1,8 +1,10 @@
+import { authenticator as totp } from 'otplib'
 import {
   BadRequestAPIError,
   ForbiddenAPIError,
   UnauthorizedAPIError,
   VerificationRequiredAPIError,
+  AuthenticatorRequiredAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import {
@@ -418,18 +420,37 @@ class OAuth extends API {
     /* No existing session is found, send a session verification email and error */
     if (!existingSession) {
       await Sessions.createSession(ctx, user)
-      throw new VerificationRequiredAPIError({})
+      if (user.authenticator) {
+        throw new AuthenticatorRequiredAPIError({})
+      } else {
+        throw new VerificationRequiredAPIError({})
+      }
     }
 
     if (existingSession.verified === false) {
-      if (!ctx.request.body.verify || existingSession.createdAt - Date() > sessionExpiryTime) {
+      const verifyCode = ctx.request.body.verify?.toUpperCase()
+      if (user.authenticator && verifyCode) {
+        let verified = undefined
+        try {
+          verified = totp.check(verifyCode, user.authenticator.secret)
+        } catch {
+          verified = false
+        }
+        if (!verified) {
+          throw new InvalidRequestOAuthError('verify')
+        }
+      } else if (!verifyCode || existingSession.createdAt - Date() > sessionExpiryTime) {
         /* An existing session was found but it is not yet verified and the client did not pass a verification token.
         *  Assume the user has lost their verification email and send a new one.
         * */
         await existingSession.destroy()
         await Sessions.createSession(ctx, user)
-        throw new VerificationRequiredAPIError({})
-      } else if (ctx.request.body.verify.toUpperCase() !== existingSession.code) {
+        if (user.authenticator) {
+          throw new AuthenticatorRequiredAPIError({})
+        } else {
+          throw new VerificationRequiredAPIError({})
+        }
+      } else if (verifyCode !== existingSession.code) {
         /* An existing unverified session was found and the user passed a code,
         but the code was invalid, throw an error */
         throw new InvalidRequestOAuthError('verify')

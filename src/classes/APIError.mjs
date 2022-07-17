@@ -107,6 +107,16 @@ export class VerificationRequiredAPIError extends APIError {
   }
 }
 
+export class AuthenticatorRequiredAPIError extends APIError {
+  get code () {
+    return StatusCode.forbidden
+  }
+
+  get status () {
+    return 'authenticator_required'
+  }
+}
+
 export class ResetRequiredAPIError extends APIError {
   get code () {
     return StatusCode.forbidden
