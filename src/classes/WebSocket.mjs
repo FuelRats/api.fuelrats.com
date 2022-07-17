@@ -1,6 +1,6 @@
 import UUID from 'pure-uuid'
 import { URL } from 'url'
-import ws from 'ws'
+import { WebSocketServer } from 'ws'
 import config from '../config'
 import { User } from '../db'
 import Document from '../Documents/Document'
@@ -41,7 +41,7 @@ export default class WebSocket {
    */
   constructor ({ server, trafficManager }) {
     WebSocket.instance = this
-    WebSocket.wss = new ws.Server({
+    WebSocket.wss = new WebSocketServer({
       server,
       clientTracking: true,
       handleProtocols: () => {
@@ -112,7 +112,7 @@ export default class WebSocket {
    * On websocket connection event
    * @param {object} arg function arguments object
    * @param {Context} arg.ctx request context
-   * @param {ws.Client} arg.client websocket client
+   * @param {WebSocketServer.Client} arg.client websocket client
    * @returns {Promise<void>} resolves promise when completed
    */
   async onConnection ({ ctx, client }) {
@@ -135,7 +135,7 @@ export default class WebSocket {
   /**
    * On WebSocket message event
    * @param {object} arg function arguments object
-   * @param {ws.Client} arg.client
+   * @param {WebSocketServer.Client} arg.client
    * @param {object} arg.data
    * @param {object} arg.message
    * @returns {Promise<void>}
@@ -303,7 +303,7 @@ export default class WebSocket {
   /**
    * Send a message to a WebSocket client
    * @param {object} arg function arguments object
-   * @param {ws.Client} arg.client websocket client
+   * @param {WebSocketServer.Client} arg.client websocket client
    * @param {object} arg.message message data
    */
   static send ({ client, message }) {
