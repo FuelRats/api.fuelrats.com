@@ -27,7 +27,7 @@ export default class RescueView extends DatabaseView {
       static data
       static notes
       static platform
-      static odyssey
+      static expansion
       static system
       static title
       static unidentifiedRats
