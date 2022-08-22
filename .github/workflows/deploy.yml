@@ -44,7 +44,6 @@ jobs:
       - name: Prepare artifact
         run: |
           tar -czf fr-api.tar.gz \
-            .yarn/plugins \
             .yarn/releases \
             dist \
             migrations \
