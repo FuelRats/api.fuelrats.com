@@ -169,7 +169,7 @@ export default class Rats extends APIResource {
       name: WritePermission.group,
       data: WritePermission.group,
       platform: WritePermission.group,
-      odyssey: WritePermission.group,
+      expansion: WritePermission.group,
       frontierId: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,
