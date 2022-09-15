@@ -1,8 +1,10 @@
+import { authenticator as totp } from 'otplib'
 import {
   BadRequestAPIError,
   ForbiddenAPIError,
   UnauthorizedAPIError,
   VerificationRequiredAPIError,
+  AuthenticatorRequiredAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import {

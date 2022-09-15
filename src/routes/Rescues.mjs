@@ -333,7 +333,7 @@ export default class Rescues extends APIResource {
       data: WritePermission.group,
       notes: WritePermission.group,
       platform: WritePermission.group,
-      odyssey: WritePermission.group,
+      expansion: WritePermission.group,
       system: WritePermission.group,
       title: WritePermission.sudo,
       status: WritePermission.group,

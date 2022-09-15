@@ -46,7 +46,7 @@ export default class Register extends API {
 
     await Register.checkExisting(formData.attributes)
     const {
-      email, name, nickname, password, platform, odyssey = false,
+      email, name, nickname, password, platform, expansion = 'horizons3',
     } = formData.attributes
 
     await db.transaction(async (transaction) => {
@@ -64,7 +64,7 @@ export default class Register extends API {
       const rat = await Rat.create({
         name,
         platform,
-        odyssey,
+        expansion,
         userId: user.id,
       }, { transaction })
 

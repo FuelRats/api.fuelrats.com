@@ -1,4 +1,5 @@
 import config from '../config'
+import AuthenticatorView from './AuthenticatorView'
 import AvatarView from './AvatarView'
 import ClientView from './ClientView'
 import DatabaseView from './DatabaseView'
@@ -81,6 +82,7 @@ export default class UserView extends DatabaseView {
       clients: ClientView,
       epics: EpicView,
       decals: DecalView,
+      authenticator: AuthenticatorView,
     }
   }
 
@@ -127,6 +129,7 @@ export default class UserView extends DatabaseView {
       'nicknames',
       'epics',
       'decals',
+      'authenticator',
     ]
   }
 }
