@@ -134,6 +134,7 @@ export default class Resets extends API {
 
     await user.save()
     await reset.destroy()
+    await Anope.setPassword(user.email, password)
     return true
   }
 
