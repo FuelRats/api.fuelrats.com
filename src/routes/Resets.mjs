@@ -1,4 +1,5 @@
 import Announcer, { ThrottledAnnouncer } from '../classes/Announcer'
+import Anope from '../classes/Anope'
 import { NotFoundAPIError } from '../classes/APIError'
 import Mail from '../classes/Mail'
 import { resetTokenGenerator } from '../classes/TokenGenerators'
