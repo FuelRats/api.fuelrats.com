@@ -41,6 +41,7 @@ export const CMDRname = new RegexLiteral(`^[
   \\p{Paragraph_Separator}
   \\p{Dash_Punctuation}
   \\p{Other_Punctuation}
+  \\p{Other_Number}
   \\+
   |
 ]{3,64}$`, 'gui')
