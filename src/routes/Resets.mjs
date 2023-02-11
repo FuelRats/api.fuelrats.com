@@ -1,4 +1,5 @@
 import Announcer, { ThrottledAnnouncer } from '../classes/Announcer'
+import Anope from '../classes/Anope'
 import { NotFoundAPIError } from '../classes/APIError'
 import Mail from '../classes/Mail'
 import { resetTokenGenerator } from '../classes/TokenGenerators'
@@ -134,6 +135,7 @@ export default class Resets extends API {
 
     await user.save()
     await reset.destroy()
+    await Anope.setPassword(user.email, password)
     return true
   }
 
