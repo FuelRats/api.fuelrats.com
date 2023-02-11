@@ -349,13 +349,22 @@ export default class Rescues extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
+    const query = {}
+    if (rescue.platform === 'pc') {
+      query.pc = true
+    }
+    if (rescue.platform === 'xb') {
+      query.xb = true
+    }
+    if (rescue.platform === 'ps') {
+      query.ps = true
+    }
+    if (rescue.expansion === 'odyssey') {
+      query.odyssey = true
+    }
 
     const subscriptions = WebPushSubscription.findAll({
-      where: {
-        pc: rescue.platform === 'pc',
-        xb: rescue.platform === 'xb',
-        ps: rescue.platform === 'ps',
-      },
+      where: query,
     })
     webPushPool.exec('webPushBroadcast', [subscriptions, rescue])
     if (apnProvider) {

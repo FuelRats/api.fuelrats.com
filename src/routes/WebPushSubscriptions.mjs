@@ -31,7 +31,13 @@ export default class WebPushSubscriptions extends API {
   @authenticated
   async subscribeWeb (ctx) {
     const {
-      endpoint, expirationTime, keys: { auth, p256dh }, pc = true, xb = true, ps = true,
+      endpoint,
+      expirationTime,
+      keys: { auth, p256dh },
+      pc = true,
+      xb = true,
+      ps = true,
+      odyssey = true,
     } = ctx.data
     if (!endpoint) {
       throw new UnprocessableEntityAPIError({ pointer: 'endpoint' })
@@ -53,6 +59,7 @@ export default class WebPushSubscriptions extends API {
       pc,
       xb,
       ps,
+      odyssey,
       userId: ctx.state.user.id,
     })
     return true

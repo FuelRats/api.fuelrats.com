@@ -37,6 +37,9 @@ export default class WebPushSubscription extends Model {
   @column(type.BOOLEAN)
   static ps = true
 
+  @column(type.BOOLEAN)
+  static odyssey = true
+
   @validate({ isUUID: 4 })
   @column(type.UUID)
   static userId = undefined
