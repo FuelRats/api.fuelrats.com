@@ -56,7 +56,7 @@ export default class Register extends API {
 
     const rescue = await Rescue.findOne({
       where: {
-        name: {
+        client: {
           iLike: name,
         },
         status: 'open',
