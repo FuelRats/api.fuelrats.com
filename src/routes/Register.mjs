@@ -1,9 +1,14 @@
 import Announcer from '../classes/Announcer'
 import Anope from '../classes/Anope'
-import { BadRequestAPIError, ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import {
+  BadRequestAPIError,
+  ConflictAPIError,
+  ForbiddenAPIError,
+  UnprocessableEntityAPIError,
+} from '../classes/APIError'
 import Sessions from '../classes/Sessions'
 import StatusCode from '../classes/StatusCode'
-import { User, Rat, db } from '../db'
+import { User, Rat, db, Rescue } from '../db'
 import API, {
   getJSONAPIData,
   POST,
@@ -48,6 +53,20 @@ export default class Register extends API {
     const {
       email, name, nickname, password, platform, expansion = 'horizons3',
     } = formData.attributes
+
+    const rescue = await Rescue.findOne({
+      where: {
+        name: {
+          ilike: name,
+        },
+        status: 'open',
+      },
+    })
+    if (rescue) {
+      throw new ForbiddenAPIError({
+        pointer: '/data/attributes/name',
+      })
+    }
 
     await db.transaction(async (transaction) => {
       const user = await User.create({
@@ -122,4 +141,3 @@ export default class Register extends API {
     }
   }
 }
-
