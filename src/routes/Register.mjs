@@ -63,6 +63,9 @@ export default class Register extends API {
       },
     })
     if (rescue) {
+      await Announcer.sendModeratorMessage({
+        message: `[Registration] Rejected signup attempt by CMDR ${name} as they have an active case`
+      })
       throw new ForbiddenAPIError({
         pointer: '/data/attributes/name',
       })
