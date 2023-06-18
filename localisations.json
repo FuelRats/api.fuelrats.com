@@ -18,13 +18,18 @@
 
 
       "verification_required": {
-        "title": "Forbidden",
-        "detail": "Authentication credentials were provided in the request, but the server considers them insufficient to grant access"
+        "title": "Verification Required",
+        "detail": "An email-based session verification code is required to access this account"
+      },
+
+      "authenticator_required": {
+        "title": "Authenticator Required",
+        "detail": "A TOTP 2-factor authenticator is required to access this account"
       },
 
       "reset_required": {
-        "title": "Forbidden",
-        "detail": "Authentication credentials were provided in the request, but the server considers them insufficient to grant access"
+        "title": "Password Reset Required",
+        "detail": "A password reset is required to access this account"
       },
 
       "not_found": {

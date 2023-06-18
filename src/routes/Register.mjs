@@ -1,9 +1,14 @@
 import Announcer from '../classes/Announcer'
 import Anope from '../classes/Anope'
-import { BadRequestAPIError, ConflictAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import {
+  BadRequestAPIError,
+  ConflictAPIError,
+  ForbiddenAPIError,
+  UnprocessableEntityAPIError,
+} from '../classes/APIError'
 import Sessions from '../classes/Sessions'
 import StatusCode from '../classes/StatusCode'
-import { User, Rat, db } from '../db'
+import { User, Rat, db, Rescue } from '../db'
 import API, {
   getJSONAPIData,
   POST,
@@ -46,8 +51,25 @@ export default class Register extends API {
 
     await Register.checkExisting(formData.attributes)
     const {
-      email, name, nickname, password, platform, odyssey = false,
+      email, name, nickname, password, platform, expansion = 'horizons3',
     } = formData.attributes
+
+    const rescue = await Rescue.findOne({
+      where: {
+        client: {
+          iLike: name,
+        },
+        status: 'open',
+      },
+    })
+    if (rescue) {
+      await Announcer.sendModeratorMessage({
+        message: `[Registration] Rejected signup attempt by CMDR ${name} as they have an active case`
+      })
+      throw new ForbiddenAPIError({
+        pointer: '/data/attributes/name',
+      })
+    }
 
     await db.transaction(async (transaction) => {
       const user = await User.create({
@@ -64,7 +86,7 @@ export default class Register extends API {
       const rat = await Rat.create({
         name,
         platform,
-        odyssey,
+        expansion,
         userId: user.id,
       }, { transaction })
 
@@ -122,4 +144,3 @@ export default class Register extends API {
     }
   }
 }
-

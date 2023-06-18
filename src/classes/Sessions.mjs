@@ -17,6 +17,17 @@ export default class Sessions {
    * @returns {Promise<void>} completes a promise when email is sent
    */
   static async createSession (ctx, user) {
+    if (user.authenticator) {
+      await Session.create({
+        ip: ctx.request.ip,
+        userAgent: ctx.state.userAgent,
+        fingerprint: ctx.state.fingerprint,
+        userId: user.id,
+      })
+
+      return undefined
+    }
+
     const code = await sessionTokenGenerator()
     const session = await Session.create({
       ip: ctx.request.ip,

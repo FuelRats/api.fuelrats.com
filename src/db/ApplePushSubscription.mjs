@@ -1,38 +1,20 @@
 import Model, { column, table, validate, type } from './Model'
 
-const sessionTokenLength = 6
-
 /**
  * Model class for user sessions
  */
 @table({
   indexes: [{
-    fields: ['ip', 'userAgent', 'code'],
+    fields: ['deviceToken', 'userId'],
   }],
 })
-export default class Session extends Model {
+export default class ApplePushSubscription extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
-  @column(type.INET)
-  static ip = undefined
-
-  @column(type.STRING)
-  static userAgent = undefined
-
-  @column(type.STRING)
-  static fingerprint = undefined
-
-  @column(type.DATE)
-  static lastAccess = type.NOW
-
-  @column(type.BOOLEAN)
-  static verified = false
-
-  @validate({ isUppercase: true })
-  @column(type.STRING(sessionTokenLength), { allowNull: true })
-  static code = undefined
+  @column(type.STRING, { unique: true })
+  static deviceToken = undefined
 
   @validate({ isUUID: 4 })
   @column(type.UUID)
@@ -62,6 +44,6 @@ export default class Session extends Model {
    */
   static associate (models) {
     super.associate(models)
-    models.Session.belongsTo(models.User, { as: 'user' })
+    models.ApplePushSubscription.belongsTo(models.User, { as: 'user' })
   }
 }

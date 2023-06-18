@@ -1,38 +1,44 @@
 import Model, { column, table, validate, type } from './Model'
 
-const sessionTokenLength = 6
-
 /**
  * Model class for user sessions
  */
 @table({
   indexes: [{
-    fields: ['ip', 'userAgent', 'code'],
+    fields: ['endpoint', 'userId'],
   }],
 })
-export default class Session extends Model {
+export default class WebPushSubscription extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
-  @column(type.INET)
-  static ip = undefined
+  @column(type.STRING, { unique: true })
+  static endpoint = undefined
+
+  @column(type.INTEGER, { allowNull: true })
+  static expirationTime = undefined
 
   @column(type.STRING)
-  static userAgent = undefined
+  static auth = undefined
 
   @column(type.STRING)
-  static fingerprint = undefined
-
-  @column(type.DATE)
-  static lastAccess = type.NOW
+  static p256dh = undefined
 
   @column(type.BOOLEAN)
-  static verified = false
+  static alertsOnly = true
 
-  @validate({ isUppercase: true })
-  @column(type.STRING(sessionTokenLength), { allowNull: true })
-  static code = undefined
+  @column(type.BOOLEAN)
+  static pc = true
+
+  @column(type.BOOLEAN)
+  static xb = true
+
+  @column(type.BOOLEAN)
+  static ps = true
+
+  @column(type.BOOLEAN)
+  static odyssey = true
 
   @validate({ isUUID: 4 })
   @column(type.UUID)
@@ -62,6 +68,6 @@ export default class Session extends Model {
    */
   static associate (models) {
     super.associate(models)
-    models.Session.belongsTo(models.User, { as: 'user' })
+    models.WebPushSubscription.belongsTo(models.User, { as: 'user' })
   }
 }

@@ -34,7 +34,7 @@ const config = {
     password: optional('FRAPI_POSTGRES_PASSWORD', [], undefined),
   },
   anope: {
-    database: required('FRAPI_ANOPE_DATABASE', [], 'anope'),
+    database: optional('FRAPI_ANOPE_DATABASE', [], undefined),
     hostname: required('FRAPI_ANOPE_HOSTNAME', [], 'localhost'),
     port: required('FRAPI_ANOPE_PORT', [toNumber], 3306),
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),
@@ -88,6 +88,17 @@ const config = {
     consumerSecret: optional('FRAPI_TWITTER_CONSUMER_SECRET', [], undefined),
     token: optional('FRAPI_TWITTER_TOKEN', [], undefined),
     tokenSecret: optional('FRAPI_TWITTER_TOKEN_SECRET', [], undefined),
+  },
+  webpush: {
+    privateKey: recommended('FRAPI_WEBPUSH_PRIVATE_KEY', [], undefined),
+    publicKey: recommended('FRAPI_WEBPUSH_PUBLIC_KEY', [], undefined),
+  },
+  apn: {
+    token: {
+      key: recommended('FRAPI_APN_PATH', [], undefined),
+      keyId: recommended('FRAPI_APN_ID', [], undefined),
+      teamId: recommended('FRAPI_APN_TEAM', [], undefined),
+    },
   },
 }
 

@@ -2,6 +2,8 @@ import Sequelize from 'sequelize'
 import config from '../config'
 import logger from '../logging'
 
+import ApplePushSubscription from './ApplePushSubscription'
+import Authenticator from './Authenticator'
 import Avatar from './Avatar'
 import Client from './Client'
 import Code from './Code'
@@ -21,9 +23,12 @@ import Token from './Token'
 import User from './User'
 import UserGroups from './UserGroups'
 import VerificationToken from './VerificationToken'
+import WebPushSubscription from './WebPushSubscription'
 
 const models = {
+  ApplePushSubscription,
   User,
+  Authenticator,
   Avatar,
   Rat,
   Rescue,
@@ -40,6 +45,7 @@ const models = {
   UserGroups,
   VerificationToken,
   Session,
+  WebPushSubscription,
 }
 
 const {
@@ -135,6 +141,8 @@ export {
   db as sequelize,
   Sequelize,
   Op,
+  ApplePushSubscription,
+  Authenticator,
   Avatar,
   Client,
   Code,
@@ -154,4 +162,5 @@ export {
   User,
   UserGroups,
   VerificationToken,
+  WebPushSubscription,
 }
