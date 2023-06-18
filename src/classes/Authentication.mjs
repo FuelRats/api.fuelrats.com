@@ -36,7 +36,13 @@ class Authentication {
 
     // const user = await User.findByEmail(email)
 
-    const user = await User.findOne({ where: { email: { ilike: email } } })
+    const user = await User.findOne({
+      where: {
+        email: { ilike: email },
+        suspended: null,
+        status: 'active',
+      },
+    })
     if (!user) {
       return undefined
     }
@@ -70,7 +76,13 @@ class Authentication {
         where: { id: user.id },
       })
     }
-    return User.findOne({ where: { email: { ilike: email } } })
+    return User.findOne({
+      where: {
+        email: { ilike: email },
+        suspended: null,
+        status: 'active',
+      },
+    })
   }
 
   /**
@@ -92,7 +104,13 @@ class Authentication {
       throw new GoneAPIError({})
     }
 
-    const user = await User.findOne({ where: { id: token.userId } })
+    const user = await User.findOne({
+      where: {
+        id: token.userId,
+        suspended: null,
+        status: 'active',
+      },
+    })
     return {
       user,
       scope: token.scope,

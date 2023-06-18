@@ -1,3 +1,4 @@
+import apn from 'apn'
 import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
@@ -7,7 +8,7 @@ import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
-import { Rescue, db } from '../db'
+import { Rescue, db, ApplePushSubscription, WebPushSubscription } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -25,6 +26,7 @@ import {
   WritePermission,
 } from './API'
 import APIResource from './APIResource'
+import { apnProvider, webPushPool } from './WebPushSubscriptions'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -96,8 +98,22 @@ export default class Rescues extends APIResource {
 
     const query = new DatabaseQuery({ connection: ctx })
     const document = new DatabaseDocument({ query, result, type: RescueView })
+
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, result.id, document)
     ctx.response.status = StatusCode.created
+    if (apnProvider) {
+      const apnSubscriptions = await ApplePushSubscription.findAll({})
+      const deviceTokens = apnSubscriptions.map((sub) => {
+        return sub.deviceToken
+      })
+      const notification = new apn.Notification({
+        'content-available': 1,
+        sound: 'Ping.aiff',
+        category: 'rescue',
+        payload: result,
+      })
+      await apnProvider.send(notification, deviceTokens)
+    }
     return document
   }
 
@@ -317,6 +333,53 @@ export default class Rescues extends APIResource {
     Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
 
     ctx.response.status = StatusCode.noContent
+    return true
+  }
+
+  /**
+   * @endpoint
+   */
+  @POST('/rescues/:id/alert')
+  @authenticated
+  @parameters('id')
+  @permissions('rescues.write')
+  async postRescueAlert (ctx) {
+    const rescue = await Rescue.findOne({ where: { id: ctx.params.id } })
+    if (!rescue) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    const query = {}
+    if (rescue.platform === 'pc') {
+      query.pc = true
+    }
+    if (rescue.platform === 'xb') {
+      query.xb = true
+    }
+    if (rescue.platform === 'ps') {
+      query.ps = true
+    }
+    if (rescue.expansion === 'odyssey') {
+      query.odyssey = true
+    }
+
+    const subscriptions = WebPushSubscription.findAll({
+      where: query,
+    })
+    webPushPool.exec('webPushBroadcast', [subscriptions, rescue])
+    if (apnProvider) {
+      const apnSubscriptions = await ApplePushSubscription.findAll({})
+      const deviceTokens = apnSubscriptions.map((sub) => {
+        return sub.deviceToken
+      })
+      const notification = new apn.Notification({
+        'content-available': 1,
+        sound: 'Ping.aiff',
+        category: 'alert',
+        payload: rescue,
+      })
+      await apnProvider.send(notification, deviceTokens)
+    }
     return true
   }
 
