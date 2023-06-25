@@ -1,10 +1,8 @@
-import { authenticator as totp } from 'otplib'
+// import { authenticator as totp } from 'otplib'
 import {
   BadRequestAPIError,
   ForbiddenAPIError,
   UnauthorizedAPIError,
-  VerificationRequiredAPIError,
-  AuthenticatorRequiredAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import {
@@ -17,9 +15,8 @@ import {
   UnsupportedResponseTypeOAuthError,
 } from '../classes/OAuthError'
 import Permission from '../classes/Permission'
-import Sessions from '../classes/Sessions'
 import { oAuthTokenGenerator, transactionGenerator } from '../classes/TokenGenerators'
-import { Client, Code, Session } from '../db'
+import { Client, Code } from '../db'
 import Token from '../db/Token'
 import { isValidRedirectUri } from '../helpers/Validators'
 import API, {
@@ -32,7 +29,7 @@ import API, {
 
 const transactionTimeoutMinutes = 10
 const transactionTimeout = transactionTimeoutMinutes * 60 * 1000
-const sessionExpiryTime = 60 * 60 * 1000
+// const sessionExpiryTime = 60 * 60 * 1000
 
 /**
  * Class for managing OAuth 2 requests
@@ -408,42 +405,42 @@ class OAuth extends API {
       throw new UnauthorizedAPIError({})
     }
 
-//     /* Check if the user has an existing login session */
-//     const existingSession = await Session.findOne({
-//       where: {
-//         ip: ctx.request.ip,
-//         fingerprint: ctx.state.fingerprint,
-//         userId: user.id,
-//       },
-//     })
+    //     /* Check if the user has an existing login session */
+    //     const existingSession = await Session.findOne({
+    //       where: {
+    //         ip: ctx.request.ip,
+    //         fingerprint: ctx.state.fingerprint,
+    //         userId: user.id,
+    //       },
+    //     })
 
-//     /* No existing session is found, send a session verification email and error */
-//     if (!existingSession) {
-//       await Sessions.createSession(ctx, user)
-//       throw new VerificationRequiredAPIError({})
-//     }
+    //     /* No existing session is found, send a session verification email and error */
+    //     if (!existingSession) {
+    //       await Sessions.createSession(ctx, user)
+    //       throw new VerificationRequiredAPIError({})
+    //     }
 
-//     if (existingSession.verified === false) {
-//       if (!ctx.request.body.verify || existingSession.createdAt - Date() > sessionExpiryTime) {
-//         /* An existing session was found but it is not yet verified and the client did not pass a verification token.
-//         *  Assume the user has lost their verification email and send a new one.
-//         * */
-//         await existingSession.destroy()
-//         await Sessions.createSession(ctx, user)
-//         throw new VerificationRequiredAPIError({})
-//       } else if (ctx.request.body.verify.toUpperCase() !== existingSession.code) {
-//         /* An existing unverified session was found and the user passed a code,
-//         but the code was invalid, throw an error */
-//         throw new InvalidRequestOAuthError('verify')
-//       }
-//     }
+    //     if (existingSession.verified === false) {
+    //       if (!ctx.request.body.verify || existingSession.createdAt - Date() > sessionExpiryTime) {
+    //         /* An existing session was found but it is not yet verified and the client did not pass a verification token.
+    //         *  Assume the user has lost their verification email and send a new one.
+    //         * */
+    //         await existingSession.destroy()
+    //         await Sessions.createSession(ctx, user)
+    //         throw new VerificationRequiredAPIError({})
+    //       } else if (ctx.request.body.verify.toUpperCase() !== existingSession.code) {
+    //         /* An existing unverified session was found and the user passed a code,
+    //         but the code was invalid, throw an error */
+    //         throw new InvalidRequestOAuthError('verify')
+    //       }
+    //     }
 
-//     /* An existing session was found and it was either already verified,
-//     or the client passed a valid verification token. Return bearer token. */
-//     await existingSession.update({
-//       verified: true,
-//       lastAccess: Date.now(),
-//     })
+    //     /* An existing session was found and it was either already verified,
+    //     or the client passed a valid verification token. Return bearer token. */
+    //     await existingSession.update({
+    //       verified: true,
+    //       lastAccess: Date.now(),
+    //     })
 
     const token = await Token.create({
       value: await oAuthTokenGenerator(),

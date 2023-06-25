@@ -148,7 +148,8 @@ module.exports = {
       console.log('- Changing the name of the new UUID field to "id" and make it the primary key')
       await migration.renameColumn('Groups', 'id2', 'id', { transaction })
 
-      await migration.addConstraint('Groups', ['id'], {
+      await migration.addConstraint('Groups', {
+        fields: ['id'],
         type: 'primary key',
         transaction,
       })
