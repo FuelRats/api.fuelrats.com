@@ -62,7 +62,12 @@ export default class Rat extends Model {
           through: {
             attributes: [],
           },
-        }],
+        }, {
+          model: models.Ship.scope(undefined),
+          as: 'ships',
+          required: false,
+        }
+        ],
       }],
     }
   }
