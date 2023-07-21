@@ -231,7 +231,8 @@ class Anope {
 
     account.user = await User.findOne({
       where: {
-        email: { iLike: account.email, status: 'active' },
+        email: { iLike: account.email },
+        status: 'active',
       },
     })
     return account
@@ -265,7 +266,8 @@ class Anope {
 
     account.user = await User.findOne({
       where: {
-        email: { iLike: account.email, status: 'active' },
+        email: { iLike: account.email },
+        status: 'active',
       },
     })
     return account

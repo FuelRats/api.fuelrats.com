@@ -182,7 +182,7 @@ export default class Rats extends APIResource {
    */
   isSelf ({ ctx, entity }) {
     if (entity.userId === ctx.state.user.id) {
-      return Permission.granted({ permissions: ['rat.write.me'], connection: ctx })
+      return Permission.granted({ permissions: ['rats.write.me'], connection: ctx })
     }
     return false
   }
