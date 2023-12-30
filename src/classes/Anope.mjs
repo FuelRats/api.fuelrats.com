@@ -453,7 +453,6 @@ class Anope {
           KILLPROTECT: 1,
           MEMO_RECEIVE: 1,
           MEMO_SIGNON: 1,
-          NS_NO_EXPIRE: 1,
           NS_PRIVATE: 1,
           NS_SECURE: 1,
           display: nick,
@@ -472,6 +471,7 @@ class Anope {
         vhost_creator: 'API',
         vhost_time: createdUnixTime,
         vhost_host: vhost,
+        NS_NO_EXPIRE: 1,
       }).into('anope_db_NickAlias')
 
       await transaction.commit()
