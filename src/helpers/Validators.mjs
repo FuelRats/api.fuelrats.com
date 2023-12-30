@@ -4,7 +4,7 @@ import { UnprocessableEntityAPIError } from '../classes/APIError'
 import RegexLiteral from './RegexLiteral'
 
 
-const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]', 'CMDR']
+const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]', 'cmdr']
 const requiredQuoteFields = [
   'message',
   'author',
