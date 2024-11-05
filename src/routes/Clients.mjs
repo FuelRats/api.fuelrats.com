@@ -201,8 +201,8 @@ export default class Clients extends APIResource {
     if (relationship === 'user') {
       return {
         many: false,
-        hasPermission (connection, entity, id) {
-          return (!entity.userId && id === connection.state.user.id) || Permission.granted({
+        hasPermission (connection) {
+          return Permission.granted({
             permissions: ['clients.write'],
             connection,
           })
