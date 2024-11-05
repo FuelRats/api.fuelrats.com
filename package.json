@@ -30,7 +30,6 @@
     "git-rev-promises": "^1.1.0",
     "gulp-cli": "^2.2.0",
     "i18next": "^19.0.1",
-    "join-js": "xlexi/joinjs",
     "knex": "~2.4.2",
     "koa": "^2.11.0",
     "koa-body": "^4.1.1",

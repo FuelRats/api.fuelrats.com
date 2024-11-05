@@ -2746,7 +2746,6 @@ __metadata:
     gulp-cli: ^2.2.0
     i18next: ^19.0.1
     jest: ^24.9.0
-    join-js: xlexi/joinjs
     jsdoc: ^3.6.7
     jsonapi-validator: ^3.0.5
     knex: ~2.4.2
@@ -7057,13 +7056,6 @@ __metadata:
   bin:
     jest: ./bin/jest.js
   checksum: 7bc61d47f94b18d52f354d785a9743883045222d0f1309a1131f0843479bdf8d98de1d62b9f519a562e99f883c51bd8af6a52f9e5a19596dae97d835abbc2cff
-  languageName: node
-  linkType: hard
-
-join-js@xlexi/joinjs:
-  version: 0.0.0-development
-  resolution: "join-js@https://github.com/xlexi/joinjs.git#commit=d159421c5179c27b076bf7b19dc3276bd85136b7"
-  checksum: 8cf321d4e5fedb17c3b0c7b9a26da5b6a865068e5365470b6c2ea0abf5cd560e1a2d2b20d1a142b3d510efd2cb3121ce111dc9f4b27a6f8ad3c168e771e8ea50
   languageName: node
   linkType: hard
 
