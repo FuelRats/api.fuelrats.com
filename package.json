@@ -22,7 +22,7 @@
     "@log4js-node/slack": "^1.0.0",
     "@log4js-node/smtp": "^1.1.0",
     "apn": "^2.2.0",
-    "axios": "^0.21.1",
+    "axios": "^0.28.0",
     "bcrypt": "^3.0.7",
     "date-fns": "^2.8.1",
     "ejs": "^3.1.5",
