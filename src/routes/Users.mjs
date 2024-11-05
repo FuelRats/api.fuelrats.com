@@ -196,7 +196,7 @@ export default class Users extends APIResource {
   @authenticated
   @required()
   async setEmail (ctx) {
-    const { email } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
+    const { email: newEmail } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
 
     const user = await User.findOne({
       where: {
@@ -208,12 +208,12 @@ export default class Users extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
+    const oldEmail = user.email
+
     this.requireWritePermission({ connection: ctx, entity: user })
 
     await db.transaction(async (transaction) => {
-      const oldEmail = user.email
-
-      user.email = email
+      user.email = newEmail
       await user.save({ transaction })
       const verifiedGroup = user.groups.find((group) => {
         return group.name === 'verified'
@@ -223,14 +223,16 @@ export default class Users extends APIResource {
       }
 
       await Verifications.createVerification(user, transaction, true)
-      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail: email }))
+      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail }))
 
       await Announcer.sendModeratorMessage({
-        message: `[Account Change] User with email ${oldEmail} has changed their email to ${email}`,
+        message: `[Account Change] User with email ${oldEmail} has changed their email to ${newEmail}`,
       })
 
       return user
     })
+
+    await Anope.setEmail(oldEmail, newEmail)
 
     const result = await Anope.mapNickname(user)
 

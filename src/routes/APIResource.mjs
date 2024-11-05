@@ -360,7 +360,7 @@ export default class APIResource extends API {
         return undefined
       }
 
-      if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, relationship.id])) {
+      if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, data.id])) {
         throw new ForbiddenAPIError({ pointer: '/data' })
       }
       return changeRelationship.patch({ entity, id: data.id, ctx, transaction })

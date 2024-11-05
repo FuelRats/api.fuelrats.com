@@ -11,10 +11,10 @@ jobs:
     name: Lint
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'yarn'
@@ -23,7 +23,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Lint
-        uses: wearerequired/lint-action@v1.9.0
+        uses: wearerequired/lint-action@v2.3.0
         with:
           github_token: ${{ secrets.github_token }}
           eslint: true
@@ -36,10 +36,10 @@ jobs:
     name: Build Test
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'yarn'

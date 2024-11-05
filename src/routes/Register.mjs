@@ -64,7 +64,7 @@ export default class Register extends API {
     })
     if (rescue) {
       await Announcer.sendModeratorMessage({
-        message: `[Registration] Rejected signup attempt by CMDR ${name} as they have an active case`
+        message: `[Registration] Rejected signup attempt by CMDR ${name} as they have an active case`,
       })
       throw new ForbiddenAPIError({
         pointer: '/data/attributes/name',
@@ -101,7 +101,7 @@ export default class Register extends API {
       await Verifications.createVerification(user, transaction)
 
       await Announcer.sendModeratorMessage({
-        message: `[Registration] User with email ${email} registered. Nickname: ${nickname}. 
+        message: `[Registration] User with email ${email} registered. Nickname: ${nickname}.
         CMDR name: ${name} (IP: ${ctx.ip})`,
       })
       return Sessions.createVerifiedSession(ctx, user, transaction)
