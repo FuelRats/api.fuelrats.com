@@ -39,6 +39,7 @@ const config = {
     port: required('FRAPI_ANOPE_PORT', [toNumber], 3306),
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),
     password: optional('FRAPI_ANOPE_PASSWORD', [], undefined),
+    xmlrpc: optional('FRAPI_ANOPE_XMLRPC', [], undefined),
   },
   irc: {
     server: recommended('FRAPI_IRC_SERVER', [], undefined),

@@ -1,8 +1,12 @@
 import bcrypt from 'bcrypt'
+import xmlrpc from 'homematic-xmlrpc'
+import { XmlEntities as Entities } from 'html-entities'
 import knex from 'knex'
 import config from '../config'
 import { User, Rat } from '../db'
-import { ConflictAPIError, NotFoundAPIError } from './APIError'
+import {
+  APIError, ForbiddenAPIError, UnauthorizedAPIError, UnprocessableEntityAPIError, ConflictAPIError, NotFoundAPIError,
+} from './APIError'
 
 const {
   database,
@@ -59,6 +63,48 @@ class Anope {
     return undefined
   }
 
+  /**
+   * @param {string} service the anope service to command (e.g NickServ)
+   * @param {string} user the user to act as when callign the command
+   * @param {string} command the command to run
+   * @returns {Promise<*>} a promise that resolves with the result of the command
+   */
+  static runCommand (service, user, command) {
+    let client = null
+
+    if (config.anope.xmlrpc.startsWith('https')) {
+      client = xmlrpc.createSecureClient(config.anope.xmlrpc)
+    } else {
+      client = xmlrpc.createClient(config.anope.xmlrpc)
+    }
+
+    return new Promise((resolve, reject) => {
+      const encodedService = Entities.encode(service)
+      const encodedUser = Entities.encode(user)
+      const encodedCommand = Entities.encode(command)
+      client.methodCall('command', [[encodedService, encodedUser, encodedCommand]], (error, data) => {
+        if (error) {
+          return reject(error)
+        }
+        const response = processAnopeResponse(data)
+        if (response instanceof APIError) {
+          return reject(response)
+        }
+        return resolve(response)
+      })
+    })
+  }
+
+  /**
+   * Update the IRC state
+   * @param {string} nickname the nickname to update the state of
+   */
+  static async updateIRCState (nickname) {
+    if (!config.anope.xmlrpc) {
+      return
+    }
+    await Anope.command('NickServ', nickname, 'UPDATE')
+  }
 
   /**
    *
@@ -605,7 +651,7 @@ class Nickname {
    * @param {object} obj database object to use for creating the new result
    * @param {object} user the user that this Nickname belongs to
    */
-  constructor (obj, user = undefined) {
+  constructor(obj, user = undefined) {
     this.id = intToUuid(obj.id)
     this.anopeId = obj.id
     this.lastQuit = obj.last_quit
@@ -654,5 +700,34 @@ function intToUuid (number) {
   const bigInt = BigInt(number)
   return `00000000-0000-4000-0000-${bigInt.toString(base16).padStart(uuidPadding, 0)}`
 }
+
+
+const responseTranslations = {
+  'isn&#39;t registered': new NotFoundAPIError({ pointer: '/data/attributes/nickname' }),
+  'Password authentication required': new UnauthorizedAPIError({ pointer: '/data/attributes/password' }),
+  'more obscure password': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
+  'password is too long': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
+  'may not be registered': new UnprocessableEntityAPIError({ pointer: '/data/attributes/nickname' }),
+  'is already registered': new ConflictAPIError({ pointer: '/data/attributes/nickname' }),
+  'may not drop other Services Operator': new ForbiddenAPIError({ pointer: '/data/attributes/nickname' }),
+  'Invalid parameters': new UnprocessableEntityAPIError({}),
+}
+
+/**
+ * Process an Anope response into a useable result
+ * @param {any} result an unrpocessed Anope response
+ * @returns {*} a processed result or an APIError
+ */
+function processAnopeResponse (result) {
+  let [, translation] = Object.entries(responseTranslations).find(([key]) => {
+    const response = result.return ?? result.error
+    return new RegExp(key, 'giu').test(response)
+  }) ?? []
+  if (!translation) {
+    translation = result
+  }
+  return translation
+}
+
 
 export default Anope
