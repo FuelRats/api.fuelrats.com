@@ -14,10 +14,10 @@ export class APIError extends Error {
    * Create an API error instance with a jsonapi source
    * @param {object} source
    */
-  constructor (source) {
+  constructor(source) {
     super()
 
-    this.id = new UUID(global.UUID_VERSION)
+    this.id = new UUID(4)
     this.source = source
   }
 

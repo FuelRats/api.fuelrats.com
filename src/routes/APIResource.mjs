@@ -11,9 +11,9 @@ import {
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import { Rat, db } from '../db'
+import API, { getJSONAPIData, WritePermission } from './API'
 import { UUID } from '../helpers/Validators'
 import DatabaseQuery from '../query/DatabaseQuery'
-import API, { getJSONAPIData, WritePermission } from './API'
 
 /**
  * @class
@@ -302,6 +302,7 @@ export default class APIResource extends API {
     const transaction = await db.transaction()
 
     try {
+      console.log(ctx.data)
       await this.generateRelationshipChange({
         ctx, data: ctx.data.data, entity, change, relationship, transaction,
       })
