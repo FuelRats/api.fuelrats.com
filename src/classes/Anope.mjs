@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 import xmlrpc from 'homematic-xmlrpc'
-import { XmlEntities as Entities } from 'html-entities'
+import { encode } from 'html-entities'
 import knex from 'knex'
 import config from '../config'
 import { User, Rat } from '../db'
@@ -16,6 +16,7 @@ const {
   password,
 } = config.anope
 const anopeBcryptRounds = 10
+const nickUpdateWait = 5000
 // const defaultMaximumEditDistance = 5
 
 
@@ -79,9 +80,9 @@ class Anope {
     }
 
     return new Promise((resolve, reject) => {
-      const encodedService = Entities.encode(service)
-      const encodedUser = Entities.encode(user)
-      const encodedCommand = Entities.encode(command)
+      const encodedService = encode(service, { level: 'xml' })
+      const encodedUser = encode(user, { level: 'xml' })
+      const encodedCommand = encode(command, { level: 'xml' })
       client.methodCall('command', [[encodedService, encodedUser, encodedCommand]], (error, data) => {
         if (error) {
           return reject(error)
@@ -97,13 +98,30 @@ class Anope {
 
   /**
    * Update the IRC state
-   * @param {string} nickname the nickname to update the state of
+   * @param {any} user the user to update the state of
    */
-  static async updateIRCState (nickname) {
+  static async updateIRCState (user) {
     if (!config.anope.xmlrpc) {
       return
     }
-    await Anope.command('NickServ', nickname, 'UPDATE')
+
+    const results = await mysql.select('*')
+      .from('anope_db_NickCore')
+      .leftJoin('anope_db_NickAlias', 'anope_db_NickCore.display', 'anope_db_NickAlias.nc')
+      .whereRaw('lower(email) = lower(?)', [user.email])
+
+    if (results.length === 0) {
+      return
+    }
+
+    const nicks = results.map((result) => {
+      return new Nickname(result, user)
+    })
+
+    const updates = nicks.map((nick) => {
+      return Anope.runCommand('NickServ', nick.nick, 'UPDATE')
+    })
+    await Promise.all(updates)
   }
 
   /**
@@ -382,6 +400,11 @@ class Anope {
       promises.push(Anope.setInvite({ channel, user }))
       return promises
     }, [])
+
+
+    setTimeout(() => {
+      Anope.updateIRCState(user)
+    }, nickUpdateWait)
 
     return Promise.all(permissionChanges)
   }
@@ -729,5 +752,15 @@ function processAnopeResponse (result) {
   return translation
 }
 
+/**
+ * @param ms
+ */
+function asyncSleep (ms) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      return resolve()
+    }, ms)
+  })
+}
 
 export default Anope

@@ -22,4 +22,4 @@ ENV FRAPI_GEOIP_DIRECTORY=/app/geoip
 
 EXPOSE 8080
 
-CMD ["node", "dist/index.mjs"]
+CMD ["node", "--enable-source-maps", "dist/index.mjs"]
