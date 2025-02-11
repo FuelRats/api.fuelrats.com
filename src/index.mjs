@@ -1,6 +1,6 @@
 import http from 'http'
 import Koa from 'koa'
-import koaBody from 'koa-body'
+import { koaBody } from 'koa-body'
 import conditional from 'koa-conditional-get'
 import etag from 'koa-etag'
 import querystring from 'koa-qs'
@@ -225,7 +225,12 @@ const server = http.createServer(app.callback())
 server.wss = new WebSocket({ server, trafficManager: traffic })
 
 
-;(async function startServer () {
+logger.info({
+  GELF: true,
+  _event: 'startup',
+}, 'Starting HTTP Server...')
+
+; (async function startServer () {
   try {
     await db.sync()
     const listen = promisify(server.listen.bind(server))

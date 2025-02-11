@@ -1,4 +1,4 @@
-import UAParser from 'ua-parser-js'
+import { UAParser } from 'ua-parser-js'
 import { Context } from '../classes/Context'
 import GeoIP from '../classes/GeoIP'
 import { User } from '../db'

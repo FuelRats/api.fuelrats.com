@@ -1,12 +1,9 @@
 import UUID from 'pure-uuid'
 import { URL } from 'url'
-import ws from 'ws'
+import { WebSocketServer } from 'ws'
 import config from '../config'
 import { User } from '../db'
-import Document from '../Documents/Document'
-import ErrorDocument from '../Documents/ErrorDocument'
 import logger from '../logging'
-import Query from '../query/Query'
 import {
   ForbiddenAPIError,
   NotFoundAPIError,
@@ -20,6 +17,9 @@ import { listen } from './Event'
 import Permission from './Permission'
 import StatusCode from './StatusCode'
 import TrafficControl from './TrafficControl'
+import Document from '../Documents/Document'
+import ErrorDocument from '../Documents/ErrorDocument'
+import Query from '../query/Query'
 
 const maximumMessageLength = 512000
 
@@ -41,7 +41,7 @@ export default class WebSocket {
    */
   constructor ({ server, trafficManager }) {
     WebSocket.instance = this
-    WebSocket.wss = new ws.Server({
+    WebSocket.wss = new WebSocketServer({
       server,
       clientTracking: true,
       handleProtocols: () => {
