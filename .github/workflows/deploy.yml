@@ -27,7 +27,6 @@ jobs:
       - name: Prepare artifact
         run: |
           tar -czf fr-api.tar.gz \
-            .yarn/releases \
             dist \
             migrations \
             static \
@@ -43,7 +42,7 @@ jobs:
             package.json \
             permissions.json \
             README.md \
-            yarn.lock
+            package-lock.json
 
       - name: Publish artifact
         uses: actions/upload-artifact@v4
