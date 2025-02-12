@@ -36,10 +36,6 @@ const app = new Koa()
 querystring(app)
 
 
-global.WEBSOCKET_IDENTIFIER_ROUNDS = 16
-global.BCRYPT_ROUNDS_COUNT = 12
-global.UUID_VERSION = 4
-
 try {
   npid.remove('api.pid')
   const pid = npid.create('api.pid')

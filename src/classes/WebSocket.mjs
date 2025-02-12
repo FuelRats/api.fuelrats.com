@@ -2,6 +2,7 @@ import UUID from 'pure-uuid'
 import { URL } from 'url'
 import { WebSocketServer } from 'ws'
 import config from '../config'
+import * as constants from '../constants'
 import { User } from '../db'
 import logger from '../logging'
 import {
@@ -60,7 +61,7 @@ export default class WebSocket {
 
     WebSocket.wss.on('connection', async (client, req) => {
       client.req = req
-      client.clientId = new UUID(global.UUID_VERSION)
+      client.clientId = new UUID(constants.uuidVersion)
       client.subscriptions = []
 
 

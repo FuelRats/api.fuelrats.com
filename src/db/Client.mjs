@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
 
+import * as constants from '../constants'
 import Model, { column, table, type, validate } from './Model'
 import { OAuthClientName, isURL } from '../helpers/Validators'
 
@@ -47,7 +48,7 @@ export default class Client extends Model {
     if (!instance.changed('secret')) {
       return
     }
-    const hash = await bcrypt.hash(instance.get('secret'), global.BCRYPT_ROUNDS_COUNT)
+    const hash = await bcrypt.hash(instance.get('secret'), constants.bcryptRoundsCount)
     instance.set('secret', hash)
   }
 
