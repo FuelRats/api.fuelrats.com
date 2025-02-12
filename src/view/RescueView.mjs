@@ -102,7 +102,7 @@ export default class RescueView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return ['rats', 'firstLimpet', 'epics', 'users']
+    return ['rats', 'firstLimpet', 'epics', 'lastEditUser']
   }
 
   /**

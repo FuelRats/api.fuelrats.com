@@ -544,6 +544,8 @@ export default class Users extends APIResource {
       relationship: 'displayRat',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
+
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }

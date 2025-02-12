@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
-import { JSONObject } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
+import { JSONObject } from '../helpers/Validators'
 
 const passwordMinLength = 12
 const passwordMaxLength = 1024
@@ -241,6 +241,31 @@ export default class User extends Model {
           },
         ],
       }, { override: true }],
+
+      public: [{
+        attributes: {
+          exclude: [
+            'permissions',
+          ],
+        },
+        include: [
+          {
+            model: models.Rat,
+            as: 'rats',
+            required: false,
+          },
+          {
+            model: models.Avatar,
+            as: 'avatar',
+            required: false,
+          },
+          {
+            model: models.Rat,
+            as: 'displayRat',
+          },
+        ],
+      }, { override: true }],
+
 
       norelations: [{
         attributes: {

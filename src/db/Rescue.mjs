@@ -119,7 +119,7 @@ export default class Rescue extends Model {
             required: false,
           },
           {
-            model: model.User,
+            model: model.User.scope('public'),
             as: 'lastEditUser',
             required: false,
           },
