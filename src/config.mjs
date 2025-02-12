@@ -81,6 +81,7 @@ const config = {
     sender: recommended('FRAPI_SMTP_SENDER', [], 'blackhole@fuelrats.com'),
   },
   jira: {
+    url: recommended('FRAPI_JIRA_URL', [isBaseUrl], undefined),
     username: recommended('FRAPI_JIRA_USERNAME', [], undefined),
     password: recommended('FRAPI_JIRA_PASSWORD', [], undefined),
   },

@@ -1,30 +1,6 @@
 import bcrypt from 'bcrypt'
 import { promises as fsp } from 'fs'
 import workerpool from 'workerpool'
-import Announcer from '../classes/Announcer'
-import Anope from '../classes/Anope'
-import {
-  NotFoundAPIError,
-  UnauthorizedAPIError,
-  UnsupportedMediaAPIError,
-  BadRequestAPIError,
-  InternalServerError,
-  ImATeapotAPIError,
-} from '../classes/APIError'
-import { Context } from '../classes/Context'
-import Event from '../classes/Event'
-import Mail from '../classes/Mail'
-import Permission from '../classes/Permission'
-import StatusCode from '../classes/StatusCode'
-import { websocket } from '../classes/WebSocket'
-import { User, Decal, Avatar, db } from '../db'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DocumentViewType } from '../Documents/Document'
-import emailChangeEmail from '../emails/emailchange'
-import DatabaseQuery from '../query/DatabaseQuery'
-import {
-  UserView, DecalView, RatView, ClientView, GroupView,
-} from '../view'
 import {
   WritePermission,
   permissions,
@@ -41,6 +17,31 @@ import {
 import APIResource from './APIResource'
 import Decals from './Decals'
 import Verifications from './Verifications'
+import Announcer from '../classes/Announcer'
+import Anope from '../classes/Anope'
+import {
+  NotFoundAPIError,
+  UnauthorizedAPIError,
+  UnsupportedMediaAPIError,
+  BadRequestAPIError,
+  InternalServerError,
+  ImATeapotAPIError,
+} from '../classes/APIError'
+import { Context } from '../classes/Context'
+import Event from '../classes/Event'
+import Jira from '../classes/Jira'
+import Mail from '../classes/Mail'
+import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { User, Decal, Avatar, db } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
+import emailChangeEmail from '../emails/emailchange'
+import DatabaseQuery from '../query/DatabaseQuery'
+import {
+  UserView, DecalView, RatView, ClientView, GroupView,
+} from '../view'
 
 const mail = new Mail()
 
@@ -215,23 +216,24 @@ export default class Users extends APIResource {
     await db.transaction(async (transaction) => {
       user.email = newEmail
       await user.save({ transaction })
-      const verifiedGroup = user.groups.find((group) => {
-        return group.name === 'verified'
-      })
-      if (verifiedGroup) {
-        await user.removeGroup(verifiedGroup, { transaction })
-      }
+      // const verifiedGroup = user.groups.find((group) => {
+      //   return group.name === 'verified'
+      // })
+      // if (verifiedGroup) {
+      //   await user.removeGroup(verifiedGroup, { transaction })
+      // }
 
-      await Verifications.createVerification(user, transaction, true)
-      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail }))
+      // await Verifications.createVerification(user, transaction, true)
+      // await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail }))
 
-      await Announcer.sendModeratorMessage({
-        message: `[Account Change] User with email ${oldEmail} has changed their email to ${newEmail}`,
-      })
+      // await Announcer.sendModeratorMessage({
+      //  message: `[Account Change] User with email ${oldEmail} has changed their email to ${newEmail}`,
+      // })
 
       return user
     })
 
+    await Jira.setEmail(user.preferredRat().name, newEmail)
     await Anope.setEmail(oldEmail, newEmail)
 
     const result = await Anope.mapNickname(user)
