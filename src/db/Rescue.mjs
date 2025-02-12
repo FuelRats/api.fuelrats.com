@@ -1,6 +1,6 @@
+import Model, { column, validate, type, table } from './Model'
 import { Context } from '../classes/Context'
 import { JSONObject, RescueQuote } from '../helpers/Validators'
-import Model, { column, validate, type, table } from './Model'
 
 const rescueNotesMaxLength = 2048
 const rescueSystemMaxLength = 64
@@ -116,6 +116,11 @@ export default class Rescue extends Model {
           {
             model: model.Epic,
             as: 'epics',
+            required: false,
+          },
+          {
+            model: model.User,
+            as: 'lastEditUser',
             required: false,
           },
         ],

@@ -1,6 +1,7 @@
 import DatabaseView from './DatabaseView'
 import EpicView from './EpicView'
 import RatView from './RatView'
+import UserView from './UserView'
 import { ReadPermission } from './View'
 
 /**
@@ -93,6 +94,7 @@ export default class RescueView extends DatabaseView {
       rats: RatView,
       firstLimpet: RatView,
       epics: EpicView,
+      lastEditUser: UserView,
     }
   }
 
@@ -100,7 +102,7 @@ export default class RescueView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return ['rats', 'firstLimpet', 'epics']
+    return ['rats', 'firstLimpet', 'epics', 'users']
   }
 
   /**
