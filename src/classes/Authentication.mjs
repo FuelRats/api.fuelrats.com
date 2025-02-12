@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt'
+import UUID from 'pure-uuid'
 import {
   User, Token, Client, Reset, db,
 } from '../db'
 
-import { UUID } from '../helpers/Validators'
 import Anope from './Anope'
 import {
   GoneAPIError,
@@ -257,10 +257,10 @@ class Authentication {
     }
 
     let representedUser = undefined
-    if (UUID.test(representing)) {
+    if (new UUID(4).parse(representing)) {
       representedUser = await User.findOne({
         where: {
-          representing,
+          id: representing,
         },
       })
     } else {
