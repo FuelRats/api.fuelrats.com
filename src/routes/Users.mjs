@@ -216,19 +216,19 @@ export default class Users extends APIResource {
     await db.transaction(async (transaction) => {
       user.email = newEmail
       await user.save({ transaction })
-      // const verifiedGroup = user.groups.find((group) => {
-      //   return group.name === 'verified'
-      // })
-      // if (verifiedGroup) {
-      //   await user.removeGroup(verifiedGroup, { transaction })
-      // }
+      const verifiedGroup = user.groups.find((group) => {
+        return group.name === 'verified'
+      })
+      if (verifiedGroup) {
+        await user.removeGroup(verifiedGroup, { transaction })
+      }
 
-      // await Verifications.createVerification(user, transaction, true)
-      // await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail }))
+      await Verifications.createVerification(user, transaction, true)
+      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail }))
 
-      // await Announcer.sendModeratorMessage({
-      //  message: `[Account Change] User with email ${oldEmail} has changed their email to ${newEmail}`,
-      // })
+      await Announcer.sendModeratorMessage({
+        message: `[Account Change] User with email ${oldEmail} has changed their email to ${newEmail}`,
+      })
 
       return user
     })
