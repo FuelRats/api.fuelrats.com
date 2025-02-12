@@ -427,7 +427,7 @@ export default class Rescues extends APIResource {
       isFirstLimpet = entity.firstLimpet.userId === user.id
     }
 
-    if (isAssigned || isFirstLimpet) {
+    if (isAssigned || isFirstLimpet || entity.status !== 'closed') {
       return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
     }
 
