@@ -298,11 +298,9 @@ export default class APIResource extends API {
     if (callback) {
       await callback(entity)
     }
-
     const transaction = await db.transaction()
 
     try {
-      console.log(ctx.data)
       await this.generateRelationshipChange({
         ctx, data: ctx.data.data, entity, change, relationship, transaction,
       })
@@ -313,11 +311,13 @@ export default class APIResource extends API {
 
     await transaction.commit()
 
-    return databaseType.findOne({
+    const updatedEntity = await databaseType.findOne({
       where: {
         id: ctx.params.id,
       },
     })
+
+    return { entity, updatedEntity }
   }
 
   /**

@@ -335,10 +335,9 @@ export default class Users extends APIResource {
     await super.delete({
       ctx,
       databaseType: User,
-      callback: (user) => {
-        return Anope.deleteAccount(user.email)
-      },
     })
+
+    await Anope.deleteAccount(ctx.state.user.email)
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -599,16 +598,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipGroupsCreate (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'groups',
-      callback: (entity) => {
-        return Anope.updatePermissions(entity)
-      },
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -624,15 +621,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipGroupsPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'groups',
-      callback: (entity) => {
-        return Anope.updatePermissions(entity)
-      },
     })
+
+    await Anope.updatePermissions(updatedEntity)
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
@@ -649,15 +645,21 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipGroupsDelete (ctx) {
-    await this.relationshipChange({
+    const { entity, updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'groups',
-      callback: (entity) => {
-        return Anope.updatePermissions(entity)
-      },
     })
+
+    const removedGroupPermissions = ctx.data.data.map((group) => {
+      const entityGroup = entity.groups.find((userGroup) => {
+        return userGroup.id.toLowerCase() === group.id.toLowerCase()
+      })
+      return Anope.removeChannelPermissions(entity, entityGroup)
+    })
+    await Promise.all(removedGroupPermissions)
+    Anope.updatePermissions(updatedEntity)
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent

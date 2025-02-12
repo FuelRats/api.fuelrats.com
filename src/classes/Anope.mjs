@@ -97,6 +97,15 @@ class Anope {
   }
 
   /**
+   * Sync the state of an IRC channel
+   * @param {string} channel the irc channel
+   * @returns {Promise<*>} a promise that resolves with the result of the command
+   */
+  static syncChannel (channel) {
+    return Anope.runCommand('ChanServ', 'xlexious', `SYNC ${channel}`)
+  }
+
+  /**
    * Update the IRC state
    * @param {any} user the user to update the state of
    */
@@ -401,11 +410,36 @@ class Anope {
       return promises
     }, [])
 
+    const syncs = Object.keys(channels).map((channel) => {
+      return Anope.syncChannel(channel)
+    })
+    await Promise.all(syncs)
 
     setTimeout(() => {
       Anope.updateIRCState(user)
     }, nickUpdateWait)
 
+    return Promise.all(permissionChanges)
+  }
+
+  /**
+   * Remove all permissions related to a group for a user
+   * @param {any} user the user object to remove permissions for
+   * @param {any} group the group to remove permissions for
+   * @returns {Promise<undefined>} resolves a promise when completed
+   */
+  static removeChannelPermissions (user, group) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
+    if (!group || Object.keys(group.channels).length === 0) {
+      return undefined
+    }
+
+    const permissionChanges = Object.keys(group.channels).map((channel) => {
+      return Anope.removeFlags({ channel, user })
+    })
     return Promise.all(permissionChanges)
   }
 
@@ -617,6 +651,26 @@ class Anope {
   }
 
   /**
+   * @param {object} arg function arguments object
+   * @param {string} arg.channel channel to set flags for
+   * @param {User} arg.user user to set flags for}
+   */
+  static async removeFlags ({ channel, user }) {
+    const account = await Anope.getAccount(user.email)
+    if (!account) {
+      return
+    }
+
+    await mysql.raw(`
+    DELETE
+    FROM anope_db_ChanAccess
+    WHERE 
+    lower(anope_db_ChanAccess.ci) = lower(:channel)
+    AND anope_db_ChanAccess.mask = :display;
+    `, { channel, display: account.display })
+  }
+
+  /**
    * Set the permission flags for a user in a channel
    * @param {object} arg function arguments object
    * @param {string} arg.channel channel to set flags for
@@ -674,7 +728,7 @@ class Nickname {
    * @param {object} obj database object to use for creating the new result
    * @param {object} user the user that this Nickname belongs to
    */
-  constructor(obj, user = undefined) {
+  constructor (obj, user = undefined) {
     this.id = intToUuid(obj.id)
     this.anopeId = obj.id
     this.lastQuit = obj.last_quit
@@ -750,17 +804,6 @@ function processAnopeResponse (result) {
     translation = result
   }
   return translation
-}
-
-/**
- * @param ms
- */
-function asyncSleep (ms) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      return resolve()
-    }, ms)
-  })
 }
 
 export default Anope
