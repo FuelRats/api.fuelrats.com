@@ -662,12 +662,15 @@ class Anope {
     }
 
     await mysql.raw(`
-    DELETE
-    FROM anope_db_ChanAccess
-    WHERE 
-    lower(anope_db_ChanAccess.ci) = lower(:channel)
-    AND anope_db_ChanAccess.mask = :display;
-    `, { channel, display: account.display })
+        UPDATE anope_db_ChanAccess
+        LEFT JOIN anope_db_NickCore ON lower(email) = lower(:email)
+        SET
+            anope_db_ChanAccess.timestamp = NULL
+        WHERE
+            lower(anope_db_ChanAccess.ci) = lower(:channel) AND
+            anope_db_ChanAccess.mask = anope_db_NickCore.display
+
+`, { channel, email: user.email })
   }
 
   /**
