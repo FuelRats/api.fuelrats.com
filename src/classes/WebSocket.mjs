@@ -112,7 +112,7 @@ export default class WebSocket {
    * On websocket connection event
    * @param {object} arg function arguments object
    * @param {Context} arg.ctx request context
-   * @param {ws.Client} arg.client websocket client
+   * @param {WebSocketServer.Client} arg.client websocket client
    * @returns {Promise<void>} resolves promise when completed
    */
   async onConnection ({ ctx, client }) {
@@ -135,7 +135,7 @@ export default class WebSocket {
   /**
    * On WebSocket message event
    * @param {object} arg function arguments object
-   * @param {ws.Client} arg.client
+   * @param {WebSocketServer.Client} arg.client
    * @param {object} arg.data
    * @param {object} arg.message
    * @returns {Promise<void>}
@@ -303,7 +303,7 @@ export default class WebSocket {
   /**
    * Send a message to a WebSocket client
    * @param {object} arg function arguments object
-   * @param {ws.Client} arg.client websocket client
+   * @param {WebSocketServer.Client} arg.client websocket client
    * @param {object} arg.message message data
    */
   static send ({ client, message }) {
@@ -321,7 +321,7 @@ export default class WebSocket {
   /**
    * Send a message to multiple WebSocket clients
    * @param {object} arg function arguments object
-   * @param {[ws.Client]} arg.clients websocket client list
+   * @param {[WebSocketServer.Client]} arg.clients websocket client list
    * @param {object} arg.message message data
    */
   static broadcast ({ clients, message }) {
