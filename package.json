@@ -1,6 +1,6 @@
 {
   "name": "api.fuelrats.com",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "main": "dist/index.mjs",
   "description": "",
   "authors": [
