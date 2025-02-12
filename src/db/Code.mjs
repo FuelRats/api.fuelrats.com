@@ -1,6 +1,6 @@
+import Model, { column, validate, table, type } from './Model'
 import Permission from '../classes/Permission'
 import { isURL } from '../helpers/Validators'
-import Model, { column, validate, table, type } from './Model'
 
 const oAuthScopeMaxLength = 128
 const oAuthTokenMinLength = 24

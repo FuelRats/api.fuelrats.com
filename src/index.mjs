@@ -231,23 +231,23 @@ logger.info({
   _event: 'startup',
 }, 'Starting HTTP Server...')
 
-  ; (async function startServer () {
-    try {
-      await db.sync()
-      const listen = promisify(server.listen.bind(server))
-      await listen(config.server.port, config.server.hostname)
-      logger.info({
-        GELF: true,
-        _event: 'startup',
-      }, `HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
-    } catch (error) {
-      logger.fatal({
-        GELF: true,
-        _event: 'error',
-        _message: error.message,
-        _stack: error.stack,
-      })
-    }
-  }())
+; (async function startServer () {
+  try {
+    await db.sync()
+    const listen = promisify(server.listen.bind(server))
+    await listen(config.server.port, config.server.hostname)
+    logger.info({
+      GELF: true,
+      _event: 'startup',
+    }, `HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
+  } catch (error) {
+    logger.fatal({
+      GELF: true,
+      _event: 'error',
+      _message: error.message,
+      _stack: error.stack,
+    })
+  }
+}())
 
 export default endpoints

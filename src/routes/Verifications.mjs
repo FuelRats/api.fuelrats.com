@@ -1,3 +1,9 @@
+import API, {
+  GET,
+  POST,
+  parameters,
+  getJSONAPIData,
+} from './API'
 import Anope from '../classes/Anope'
 import {
   ConflictAPIError,
@@ -10,12 +16,6 @@ import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'
 import { User, VerificationToken, Group, db } from '../db'
 import verificationEmail from '../emails/verification'
-import API, {
-  GET,
-  POST,
-  parameters,
-  getJSONAPIData,
-} from './API'
 
 const mail = new Mail()
 const expirationLength = 86400000

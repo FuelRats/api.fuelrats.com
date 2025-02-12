@@ -1,8 +1,8 @@
 import net from 'net'
+import API, { GET, parameters, permissions } from './API'
 import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
 import GeoIP from '../classes/GeoIP'
 import { websocket } from '../classes/WebSocket'
-import API, { GET, parameters, permissions } from './API'
 
 /**
  * Endpoints for requesting any API error to be thrown, for usage by clients for testing.

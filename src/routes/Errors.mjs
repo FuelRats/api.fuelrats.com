@@ -1,6 +1,6 @@
+import API, { GET, parameters } from './API'
 import * as errors from '../classes/APIError'
 import { websocket } from '../classes/WebSocket'
-import API, { GET, parameters } from './API'
 
 /**
  * Endpoints for requesting any API error to be thrown, for usage by clients for testing.
