@@ -39,6 +39,7 @@ const config = {
     port: required('FRAPI_ANOPE_PORT', [toNumber], 3306),
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),
     password: optional('FRAPI_ANOPE_PASSWORD', [], undefined),
+    xmlrpc: optional('FRAPI_ANOPE_XMLRPC', [], undefined),
   },
   irc: {
     server: recommended('FRAPI_IRC_SERVER', [], undefined),
@@ -80,6 +81,7 @@ const config = {
     sender: recommended('FRAPI_SMTP_SENDER', [], 'blackhole@fuelrats.com'),
   },
   jira: {
+    url: recommended('FRAPI_JIRA_URL', [isBaseUrl], undefined),
     username: recommended('FRAPI_JIRA_USERNAME', [], undefined),
     password: recommended('FRAPI_JIRA_PASSWORD', [], undefined),
   },

@@ -1,3 +1,10 @@
+import API, {
+  GET,
+  POST,
+  required,
+  parameters,
+  getJSONAPIData,
+} from './API'
 import Announcer, { ThrottledAnnouncer } from '../classes/Announcer'
 import Anope from '../classes/Anope'
 import { NotFoundAPIError } from '../classes/APIError'
@@ -7,13 +14,6 @@ import { websocket } from '../classes/WebSocket'
 import config from '../config'
 import { User, Reset } from '../db'
 import passwordResetEmail from '../emails/reset'
-import API, {
-  GET,
-  POST,
-  required,
-  parameters,
-  getJSONAPIData,
-} from './API'
 
 const mail = new Mail()
 const expirationLength = 86400000 // 24 Hours

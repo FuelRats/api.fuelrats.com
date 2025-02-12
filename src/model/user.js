@@ -66,7 +66,6 @@ export default class User extends Model {
       .andWhere('email', 'ilike', email)
 
     let users = User.map(results)
-    console.log(users)
   }
 
   static map (results) {

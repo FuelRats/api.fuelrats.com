@@ -1,4 +1,4 @@
-import { customAlphabet } from 'nanoid/async'
+import { customAlphabet } from 'nanoid'
 
 const tokenCharset = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 

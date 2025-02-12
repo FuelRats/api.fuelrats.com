@@ -1,8 +1,12 @@
 import bcrypt from 'bcrypt'
+import xmlrpc from 'homematic-xmlrpc'
+import { encode } from 'html-entities'
 import knex from 'knex'
 import config from '../config'
 import { User, Rat } from '../db'
-import { ConflictAPIError, NotFoundAPIError } from './APIError'
+import {
+  APIError, ForbiddenAPIError, UnauthorizedAPIError, UnprocessableEntityAPIError, ConflictAPIError, NotFoundAPIError,
+} from './APIError'
 
 const {
   database,
@@ -12,6 +16,7 @@ const {
   password,
 } = config.anope
 const anopeBcryptRounds = 10
+const nickUpdateWait = 5000
 // const defaultMaximumEditDistance = 5
 
 
@@ -59,6 +64,74 @@ class Anope {
     return undefined
   }
 
+  /**
+   * @param {string} service the anope service to command (e.g NickServ)
+   * @param {string} user the user to act as when callign the command
+   * @param {string} command the command to run
+   * @returns {Promise<*>} a promise that resolves with the result of the command
+   */
+  static runCommand (service, user, command) {
+    let client = null
+
+    if (config.anope.xmlrpc.startsWith('https')) {
+      client = xmlrpc.createSecureClient(config.anope.xmlrpc)
+    } else {
+      client = xmlrpc.createClient(config.anope.xmlrpc)
+    }
+
+    return new Promise((resolve, reject) => {
+      const encodedService = encode(service, { level: 'xml' })
+      const encodedUser = encode(user, { level: 'xml' })
+      const encodedCommand = encode(command, { level: 'xml' })
+      client.methodCall('command', [[encodedService, encodedUser, encodedCommand]], (error, data) => {
+        if (error) {
+          return reject(error)
+        }
+        const response = processAnopeResponse(data)
+        if (response instanceof APIError) {
+          return reject(response)
+        }
+        return resolve(response)
+      })
+    })
+  }
+
+  /**
+   * Sync the state of an IRC channel
+   * @param {string} channel the irc channel
+   * @returns {Promise<*>} a promise that resolves with the result of the command
+   */
+  static syncChannel (channel) {
+    return Anope.runCommand('ChanServ', 'xlexious', `SYNC ${channel}`)
+  }
+
+  /**
+   * Update the IRC state
+   * @param {any} user the user to update the state of
+   */
+  static async updateIRCState (user) {
+    if (!config.anope.xmlrpc) {
+      return
+    }
+
+    const results = await mysql.select('*')
+      .from('anope_db_NickCore')
+      .leftJoin('anope_db_NickAlias', 'anope_db_NickCore.display', 'anope_db_NickAlias.nc')
+      .whereRaw('lower(email) = lower(?)', [user.email])
+
+    if (results.length === 0) {
+      return
+    }
+
+    const nicks = results.map((result) => {
+      return new Nickname(result, user)
+    })
+
+    const updates = nicks.map((nick) => {
+      return Anope.runCommand('NickServ', nick.nick, 'UPDATE')
+    })
+    await Promise.all(updates)
+  }
 
   /**
    *
@@ -337,6 +410,36 @@ class Anope {
       return promises
     }, [])
 
+    const syncs = Object.keys(channels).map((channel) => {
+      return Anope.syncChannel(channel)
+    })
+    await Promise.all(syncs)
+
+    setTimeout(() => {
+      Anope.updateIRCState(user)
+    }, nickUpdateWait)
+
+    return Promise.all(permissionChanges)
+  }
+
+  /**
+   * Remove all permissions related to a group for a user
+   * @param {any} user the user object to remove permissions for
+   * @param {any} group the group to remove permissions for
+   * @returns {Promise<undefined>} resolves a promise when completed
+   */
+  static removeChannelPermissions (user, group) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
+    if (!group || Object.keys(group.channels).length === 0) {
+      return undefined
+    }
+
+    const permissionChanges = Object.keys(group.channels).map((channel) => {
+      return Anope.removeFlags({ channel, user })
+    })
     return Promise.all(permissionChanges)
   }
 
@@ -548,6 +651,29 @@ class Anope {
   }
 
   /**
+   * @param {object} arg function arguments object
+   * @param {string} arg.channel channel to set flags for
+   * @param {User} arg.user user to set flags for}
+   */
+  static async removeFlags ({ channel, user }) {
+    const account = await Anope.getAccount(user.email)
+    if (!account) {
+      return
+    }
+
+    await mysql.raw(`
+        UPDATE anope_db_ChanAccess
+        LEFT JOIN anope_db_NickCore ON lower(email) = lower(:email)
+        SET
+            anope_db_ChanAccess.timestamp = NULL
+        WHERE
+            lower(anope_db_ChanAccess.ci) = lower(:channel) AND
+            anope_db_ChanAccess.mask = anope_db_NickCore.display
+
+`, { channel, email: user.email })
+  }
+
+  /**
    * Set the permission flags for a user in a channel
    * @param {object} arg function arguments object
    * @param {string} arg.channel channel to set flags for
@@ -653,6 +779,34 @@ function uuidToInt (stringUuid) {
 function intToUuid (number) {
   const bigInt = BigInt(number)
   return `00000000-0000-4000-0000-${bigInt.toString(base16).padStart(uuidPadding, 0)}`
+}
+
+
+const responseTranslations = {
+  'isn&#39;t registered': new NotFoundAPIError({ pointer: '/data/attributes/nickname' }),
+  'Password authentication required': new UnauthorizedAPIError({ pointer: '/data/attributes/password' }),
+  'more obscure password': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
+  'password is too long': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
+  'may not be registered': new UnprocessableEntityAPIError({ pointer: '/data/attributes/nickname' }),
+  'is already registered': new ConflictAPIError({ pointer: '/data/attributes/nickname' }),
+  'may not drop other Services Operator': new ForbiddenAPIError({ pointer: '/data/attributes/nickname' }),
+  'Invalid parameters': new UnprocessableEntityAPIError({}),
+}
+
+/**
+ * Process an Anope response into a useable result
+ * @param {any} result an unrpocessed Anope response
+ * @returns {*} a processed result or an APIError
+ */
+function processAnopeResponse (result) {
+  let [, translation] = Object.entries(responseTranslations).find(([key]) => {
+    const response = result.return ?? result.error
+    return new RegExp(key, 'giu').test(response)
+  }) ?? []
+  if (!translation) {
+    translation = result
+  }
+  return translation
 }
 
 export default Anope

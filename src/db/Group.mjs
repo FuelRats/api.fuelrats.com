@@ -1,6 +1,6 @@
+import Model, { column, table, validate, type } from './Model'
 import Permission from '../classes/Permission'
 import { IRCVirtualHost } from '../helpers/Validators'
-import Model, { column, table, validate, type } from './Model'
 
 /**
  * Model class for permission groups

@@ -64,6 +64,7 @@ app.use(conditional())
 app.use(etag())
 app.use(session(sessionConfiguration, app))
 app.use(koaBody({
+  jsonStrict: false,
   strict: false,
   multipart: true,
 }))
@@ -225,7 +226,12 @@ const server = http.createServer(app.callback())
 server.wss = new WebSocket({ server, trafficManager: traffic })
 
 
-;(async function startServer () {
+logger.info({
+  GELF: true,
+  _event: 'startup',
+}, 'Starting HTTP Server...')
+
+; (async function startServer () {
   try {
     await db.sync()
     const listen = promisify(server.listen.bind(server))

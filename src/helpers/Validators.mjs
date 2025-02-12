@@ -1,7 +1,7 @@
 // import Permission from './Permission'
 import { URL } from 'url'
-import { UnprocessableEntityAPIError } from '../classes/APIError'
 import RegexLiteral from './RegexLiteral'
+import { UnprocessableEntityAPIError } from '../classes/APIError'
 
 
 const forbiddenCMDRNameComponents = ['[pc]', '[xb]', '[ps]', 'cmdr']

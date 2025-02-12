@@ -1,6 +1,6 @@
-import buildFile from '../files/build'
 import { Context } from './Context'
 import StatusCode from './StatusCode'
+import buildFile from '../files/build'
 
 /**
  * Class for Server-Side event streams

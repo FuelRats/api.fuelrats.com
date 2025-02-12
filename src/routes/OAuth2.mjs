@@ -1,4 +1,11 @@
 // import { authenticator as totp } from 'otplib'
+import API, {
+  authenticated,
+  clientAuthenticated,
+  GET,
+  parameters,
+  POST,
+} from './API'
 import {
   BadRequestAPIError,
   ForbiddenAPIError,
@@ -19,13 +26,6 @@ import { oAuthTokenGenerator, transactionGenerator } from '../classes/TokenGener
 import { Client, Code } from '../db'
 import Token from '../db/Token'
 import { isValidRedirectUri } from '../helpers/Validators'
-import API, {
-  authenticated,
-  clientAuthenticated,
-  GET,
-  parameters,
-  POST,
-} from './API'
 
 const transactionTimeoutMinutes = 10
 const transactionTimeout = transactionTimeoutMinutes * 60 * 1000

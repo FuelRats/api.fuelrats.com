@@ -17,13 +17,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'yarn'
 
       - name: Install Dependencies
-        run: yarn install --immutable
+        run: npm ci
 
       - name: Build Project
-        run: yarn build
+        run: npm rebuild && npm run build
 
       - name: Prepare artifact
         run: |
@@ -75,10 +74,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: npm ci
 
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2

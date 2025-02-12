@@ -43,7 +43,7 @@ export default class SSO extends API {
       profile: `${config.frontend.url}/profile/overview`,
       name: user.preferredRat().name,
       groups: userGroups,
-      groupsJoined: userGroups.join(","),
+      groupsJoined: userGroups.join(','),
     }
   }
 

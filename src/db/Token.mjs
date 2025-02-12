@@ -1,5 +1,5 @@
-import Permission from '../classes/Permission'
 import Model, { column, table, validate, type } from './Model'
+import Permission from '../classes/Permission'
 
 const oAuthScopeMaxLength = 128
 const oAuthTokenMinLength = 16

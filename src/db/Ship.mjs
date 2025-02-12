@@ -1,5 +1,5 @@
-import { ShipName } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
+import { ShipName } from '../helpers/Validators'
 
 
 const maxIngameShipNameLength = 22

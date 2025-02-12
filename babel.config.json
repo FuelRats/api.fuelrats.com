@@ -1,11 +1,14 @@
 {
   "presets": [
-    ["@babel/preset-env", {
-      "targets": {
-        "node": "16.4"
-      },
-      "shippedProposals": true
-    }]
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "node": "16.4"
+        },
+        "shippedProposals": true
+      }
+    ]
   ],
   "env": {
     "development": {
@@ -19,14 +22,21 @@
     "setPublicClassFields": true
   },
   "plugins": [
-    ["@babel/plugin-proposal-decorators", { "legacy": true }],
-    ["@babel/plugin-proposal-class-properties"],
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ],
+    [
+      "@babel/plugin-transform-class-properties"
+    ],
     "@babel/plugin-proposal-function-bind",
-    "@babel/plugin-proposal-optional-catch-binding",
+    "@babel/plugin-transform-optional-catch-binding",
     "@babel/plugin-transform-strict-mode",
     "@babel/plugin-proposal-throw-expressions",
-    "@babel/plugin-proposal-numeric-separator",
-    "@babel/plugin-proposal-logical-assignment-operators",
+    "@babel/plugin-transform-numeric-separator",
+    "@babel/plugin-transform-logical-assignment-operators",
     "@babel/plugin-proposal-function-sent",
     "@babel/plugin-proposal-export-default-from"
   ]
