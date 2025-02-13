@@ -1,6 +1,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
-
 import UUID from 'pure-uuid'
+import * as constants from '../constants'
+
 import i18next from './Localisation'
 import StatusCode from './StatusCode'
 
@@ -17,7 +18,7 @@ export class APIError extends Error {
   constructor (source) {
     super()
 
-    this.id = new UUID(global.UUID_VERSION)
+    this.id = new UUID(constants.uuidVersion)
     this.source = source
   }
 
