@@ -130,7 +130,7 @@ class Anope {
     const updates = nicks.map((nick) => {
       return Anope.runCommand('NickServ', nick.nick, 'UPDATE')
     })
-    await Promise.all(updates)
+    await Promise.allSettled(updates)
   }
 
   /**
@@ -413,7 +413,7 @@ class Anope {
     const syncs = Object.keys(channels).map((channel) => {
       return Anope.syncChannel(channel)
     })
-    await Promise.all(syncs)
+    await Promise.allSettled(syncs)
 
     setTimeout(() => {
       Anope.updateIRCState(user)
