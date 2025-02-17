@@ -127,10 +127,10 @@ class Anope {
       return new Nickname(result, user)
     })
 
-    const updates = nicks.map((nick) => {
-      return Anope.runCommand('NickServ', nick.nick, 'UPDATE')
-    })
-    await Promise.allSettled(updates)
+    /* eslint-disable no-await-in-loop */
+    for (const nick of nicks) {
+      await Anope.runCommand('NickServ', nick.nick, 'UPDATE')
+    }
   }
 
   /**
@@ -404,22 +404,20 @@ class Anope {
       return undefined
     }
 
-    const permissionChanges = Object.entries(channels).reduce((promises, [channel, flags]) => {
-      promises.push(Anope.setFlags({ channel, user, flags }))
-      promises.push(Anope.setInvite({ channel, user }))
-      return promises
-    }, [])
+    for (const [channel, flags] of Object.entries(channels)) {
+      await Anope.setFlags({ channel, user, flags })
+      await Anope.setInvite({ channel, user })
+    }
 
-    const syncs = Object.keys(channels).map((channel) => {
-      return Anope.syncChannel(channel)
-    })
-    await Promise.allSettled(syncs)
+    for (const channel of Object.keys(channels)) {
+      await Anope.syncChannel(channel)
+    }
 
     setTimeout(() => {
       Anope.updateIRCState(user)
     }, nickUpdateWait)
 
-    return Promise.all(permissionChanges)
+    return undefined
   }
 
   /**
