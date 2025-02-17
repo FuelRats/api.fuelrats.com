@@ -4,6 +4,7 @@ import { encode } from 'html-entities'
 import knex from 'knex'
 import config from '../config'
 import { User, Rat } from '../db'
+import logger from '../logging'
 import {
   APIError, ForbiddenAPIError, UnauthorizedAPIError, UnprocessableEntityAPIError, ConflictAPIError, NotFoundAPIError,
 } from './APIError'
@@ -397,26 +398,29 @@ class Anope {
       return undefined
     }
 
-    await Anope.setVirtualHost(user.email, user.vhost())
+    try {
+      await Anope.setVirtualHost(user.email, user.vhost())
 
-    const channels = user.flags()
-    if (!channels) {
-      return undefined
+      const channels = user.flags()
+      if (!channels) {
+        return undefined
+      }
+
+      for (const [channel, flags] of Object.entries(channels)) {
+        await Anope.setFlags({ channel, user, flags })
+        await Anope.setInvite({ channel, user })
+      }
+
+      for (const channel of Object.keys(channels)) {
+        await Anope.syncChannel(channel)
+      }
+
+      setTimeout(() => {
+        Anope.updateIRCState(user)
+      }, nickUpdateWait)
+    } catch {
+      logger.error('Failed to update permissions for user', user)
     }
-
-    for (const [channel, flags] of Object.entries(channels)) {
-      await Anope.setFlags({ channel, user, flags })
-      await Anope.setInvite({ channel, user })
-    }
-
-    for (const channel of Object.keys(channels)) {
-      await Anope.syncChannel(channel)
-    }
-
-    setTimeout(() => {
-      Anope.updateIRCState(user)
-    }, nickUpdateWait)
-
     return undefined
   }
 
