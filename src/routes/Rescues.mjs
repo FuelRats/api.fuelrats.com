@@ -140,8 +140,7 @@ export default class Rescues extends APIResource {
     if (outcome && outcome !== 'purge') {
       const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
-        message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
-      has been completed by ${user.displayName()}`,
+        message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) has been completed by ${ctx.state.user.displayName()}`,
       })
 
       const [[{ count }]] = await db.query(rescueCountQuery)
