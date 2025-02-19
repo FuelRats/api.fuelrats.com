@@ -224,7 +224,7 @@ export default class Users extends APIResource {
       }
 
       await Verifications.createVerification(user, transaction, true)
-      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail }))
+      await mail.send(emailChangeEmail({ email: oldEmail, name: user.displayName(), newEmail }))
 
       await Announcer.sendModeratorMessage({
         message: `[Account Change] User with email ${oldEmail} has changed their email to ${newEmail}`,
@@ -233,7 +233,7 @@ export default class Users extends APIResource {
       return user
     })
 
-    await Jira.setEmail(user.preferredRat().name, newEmail)
+    await Jira.setEmail(user.displayName(), newEmail)
     await Anope.setEmail(oldEmail, newEmail)
 
     const result = await Anope.mapNickname(user)

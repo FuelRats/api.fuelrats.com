@@ -31,7 +31,7 @@ export default function verificationEmail ({ user, verificationToken, change = f
     subject: 'Fuel Rats Email Verification Required',
     template: 'verification',
     params: {
-      name: user.preferredRat().name,
+      name: user.displayName(),
       intro,
       verifyLink: getVerifyLink(verificationToken, change),
     },

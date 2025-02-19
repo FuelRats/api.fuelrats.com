@@ -23,7 +23,7 @@ export default function passwordResetEmail ({ user, resetToken }) {
     subject: 'Fuel Rats Password Reset Requested',
     template: 'reset',
     params: {
-      name: user.preferredRat().name,
+      name: user.displayName(),
       resetLink: getResetLink(resetToken),
     },
   }

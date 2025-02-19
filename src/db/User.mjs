@@ -134,6 +134,21 @@ export default class User extends Model {
   }
 
   /**
+   * Returns the display name of the user, which is the name of their preferred rat
+   * @returns {string} the display name of the user
+   */
+  displayName () {
+    if (this.displayRat) {
+      return this.displayRat.name
+    }
+
+    if (this.rats.length > 0) {
+      return this.rats[0].name
+    }
+    return this.id
+  }
+
+  /**
    * Returns the vhost that should be used for this user based on their permission levels
    * @returns {string|undefined}
    */
@@ -155,7 +170,6 @@ export default class User extends Model {
     }
     const rat = this.preferredRat()
     const identifier = rat ? rat.name : this.id
-
     return `${getIRCSafeName(identifier)}.${group.vhost}`
   }
 

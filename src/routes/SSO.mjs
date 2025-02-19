@@ -39,9 +39,9 @@ export default class SSO extends API {
       id: user.id,
       email: user.email,
       emailVerified: true,
-      username: user.preferredRat().name,
+      username: user.displayName(),
       profile: `${config.frontend.url}/profile/overview`,
-      name: user.preferredRat().name,
+      name: user.displayName(),
       groups: userGroups,
       groupsJoined: userGroups.join(','),
     }
@@ -64,9 +64,9 @@ export default class SSO extends API {
 
     return {
       sub: user.id,
-      name: user.preferredRat().name,
-      nickname: user.preferredRat().name,
-      preferred_username: user.preferredRat().name,
+      name: user.displayName(),
+      nickname: user.displayName(),
+      preferred_username: user.displayName(),
       email: user.email,
       picture: `${config.frontend.url}/users/${user.id}/image`,
       profile: `${config.frontend.url}/profile/overview`,
@@ -99,7 +99,7 @@ export default class SSO extends API {
       identifier: user.id,
       id: user.id,
       email: user.email,
-      displayName: user.preferredRat().name,
+      displayName: user.displayName(),
       photoURL: `${config.frontend.url}/users/${user.id}/image`,
       roles: userGroups,
     }

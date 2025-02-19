@@ -141,7 +141,7 @@ export default class Rescues extends APIResource {
       const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
         message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
-      has been completed by ${ctx.state.user.preferredRat().name}`,
+      has been completed by ${user.displayName()}`,
       })
 
       const [[{ count }]] = await db.query(rescueCountQuery)
