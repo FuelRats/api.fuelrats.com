@@ -504,7 +504,7 @@ export default class Rescues extends APIResource {
         }
 
       default:
-        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+        return undefined
     }
   }
 
