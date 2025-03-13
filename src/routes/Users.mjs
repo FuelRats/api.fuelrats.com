@@ -771,7 +771,8 @@ export default class Users extends APIResource {
         }
 
         if (entity && entity.id === ctx.state.user.id && value === 'deactivated') {
-          return ctx.state.basicAuth === true
+          return false
+          // return ctx.state.basicAuth === true
         }
         return false
       },
