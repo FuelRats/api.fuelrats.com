@@ -39,7 +39,7 @@ const defineEntry = (input, outputDir) => {
       entryFileNames: '[name].mjs',
       sourcemap: true,
     },
-    external: ['nanod'],
+    external: ['nanoid'],
     preserveModules: true,
     plugins: [autoExternal(), json(), resolve(), babel({ babelHelpers: 'bundled' })],
   }
