@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
-import { JSONObject } from '../helpers/Validators'
+import * as constants from '../constants'
 import Model, { column, table, validate, type } from './Model'
+import { JSONObject } from '../helpers/Validators'
 
 const passwordMinLength = 12
 const passwordMaxLength = 1024
@@ -77,7 +78,7 @@ export default class User extends Model {
     if (!instance.changed('password')) {
       return
     }
-    const hash = await bcrypt.hash(instance.get('password'), global.BCRYPT_ROUNDS_COUNT)
+    const hash = await bcrypt.hash(instance.get('password'), constants.bcryptRoundsCount)
     instance.set('password', hash)
   }
 
@@ -133,6 +134,21 @@ export default class User extends Model {
   }
 
   /**
+   * Returns the display name of the user, which is the name of their preferred rat
+   * @returns {string} the display name of the user
+   */
+  displayName () {
+    if (this.displayRat) {
+      return this.displayRat.name
+    }
+
+    if (this.rats.length > 0) {
+      return this.rats[0].name
+    }
+    return this.id
+  }
+
+  /**
    * Returns the vhost that should be used for this user based on their permission levels
    * @returns {string|undefined}
    */
@@ -154,7 +170,6 @@ export default class User extends Model {
     }
     const rat = this.preferredRat()
     const identifier = rat ? rat.name : this.id
-
     return `${getIRCSafeName(identifier)}.${group.vhost}`
   }
 
@@ -241,6 +256,31 @@ export default class User extends Model {
           },
         ],
       }, { override: true }],
+
+      public: [{
+        attributes: {
+          exclude: [
+            'permissions',
+          ],
+        },
+        include: [
+          {
+            model: models.Rat,
+            as: 'rats',
+            required: false,
+          },
+          {
+            model: models.Avatar,
+            as: 'avatar',
+            required: false,
+          },
+          {
+            model: models.Rat,
+            as: 'displayRat',
+          },
+        ],
+      }, { override: true }],
+
 
       norelations: [{
         attributes: {

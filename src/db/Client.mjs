@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt'
 
-import { OAuthClientName, isURL } from '../helpers/Validators'
+import * as constants from '../constants'
 import Model, { column, table, type, validate } from './Model'
+import { OAuthClientName, isURL } from '../helpers/Validators'
 
 const clientSecretEncodedMaxLength = 1024
 const clientSecretMinLength = 32
@@ -47,7 +48,7 @@ export default class Client extends Model {
     if (!instance.changed('secret')) {
       return
     }
-    const hash = await bcrypt.hash(instance.get('secret'), global.BCRYPT_ROUNDS_COUNT)
+    const hash = await bcrypt.hash(instance.get('secret'), constants.bcryptRoundsCount)
     instance.set('secret', hash)
   }
 

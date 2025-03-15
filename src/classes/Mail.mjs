@@ -26,9 +26,17 @@ export default class Mail {
    * Create a mail sender class instance
    */
   constructor () {
+    let auth = undefined
+    if (config.smtp.username && config.smtp.password) {
+      auth = {
+        user: config.smtp.username,
+        pass: config.smtp.password,
+      }
+    }
     this.transporter = nodemailer.createTransport({
       host: config.smtp.hostname,
       port: config.smtp.port,
+      auth,
     })
   }
 

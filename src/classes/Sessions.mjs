@@ -1,8 +1,8 @@
 import { Session, User, db } from '../db'
-import sessionEmail from '../emails/session'
 import { Context } from './Context'
 import Mail from './Mail'
 import { sessionTokenGenerator } from './TokenGenerators'
+import sessionEmail from '../emails/session'
 
 const mail = new Mail()
 

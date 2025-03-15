@@ -11,9 +11,9 @@ import {
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import { Rat, db } from '../db'
+import API, { getJSONAPIData, WritePermission } from './API'
 import { UUID } from '../helpers/Validators'
 import DatabaseQuery from '../query/DatabaseQuery'
-import API, { getJSONAPIData, WritePermission } from './API'
 
 /**
  * @class
@@ -172,6 +172,9 @@ export default class APIResource extends API {
 
       if (relationships instanceof Object) {
         const relationshipChanges = Object.entries(relationships).map(([relationship, data]) => {
+          if (relationship === 'lastEditUser') {
+            return undefined
+          }
           return this.generateRelationshipChange({
             ctx, data: data.data, entity, change: 'patch', relationship, transaction,
           })
@@ -298,7 +301,6 @@ export default class APIResource extends API {
     if (callback) {
       await callback(entity)
     }
-
     const transaction = await db.transaction()
 
     try {
@@ -312,11 +314,13 @@ export default class APIResource extends API {
 
     await transaction.commit()
 
-    return databaseType.findOne({
+    const updatedEntity = await databaseType.findOne({
       where: {
         id: ctx.params.id,
       },
     })
+
+    return { entity, updatedEntity }
   }
 
   /**

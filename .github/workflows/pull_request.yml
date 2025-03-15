@@ -17,10 +17,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: npm ci
 
       - name: Lint
         uses: wearerequired/lint-action@v2.3.0
@@ -42,10 +41,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: npm ci
 
       - name: Build
-        run: yarn build
+        run: npm rebuild && npm run build

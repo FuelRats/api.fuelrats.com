@@ -1,5 +1,6 @@
 import fs from 'fs'
-import i18next from 'i18next'
+
+import * as i18next from 'i18next'
 
 const localisationFile = JSON.parse(fs.readFileSync('localisations.json', 'utf8'))
 

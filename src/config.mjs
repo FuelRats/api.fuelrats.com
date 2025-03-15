@@ -39,6 +39,7 @@ const config = {
     port: required('FRAPI_ANOPE_PORT', [toNumber], 3306),
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),
     password: optional('FRAPI_ANOPE_PASSWORD', [], undefined),
+    xmlrpc: optional('FRAPI_ANOPE_XMLRPC', [], undefined),
   },
   irc: {
     server: recommended('FRAPI_IRC_SERVER', [], undefined),
@@ -75,11 +76,14 @@ const config = {
     username: recommended('FRAPI_SLACK_USERNAME', [], undefined),
   },
   smtp: {
-    hostname: recommended('FRAPI_SMTP_HOSTNAME', [], 'smtp-relay.gmail.com'),
+    hostname: optional('FRAPI_SMTP_HOSTNAME', [], 'smtp-relay.gmail.com'),
+    username: optional('FRAPI_SMTP_USERNAME', [], undefined),
+    password: optional('FRAPI_SMTP_PASSWORD', [], undefined),
     port: recommended('FRAPI_SMTP_PORT', [toNumber], 587),
     sender: recommended('FRAPI_SMTP_SENDER', [], 'blackhole@fuelrats.com'),
   },
   jira: {
+    url: recommended('FRAPI_JIRA_URL', [isBaseUrl], undefined),
     username: recommended('FRAPI_JIRA_USERNAME', [], undefined),
     password: recommended('FRAPI_JIRA_PASSWORD', [], undefined),
   },

@@ -140,8 +140,7 @@ export default class Rescues extends APIResource {
     if (outcome && outcome !== 'purge') {
       const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
-        message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) 
-      has been completed by ${ctx.state.user.preferredRat().name}`,
+        message: `[Paperwork] Paperwork for case ${caseId} (${result.client}) has been completed by ${ctx.state.user.displayName()}`,
       })
 
       const [[{ count }]] = await db.query(rescueCountQuery)
@@ -427,7 +426,7 @@ export default class Rescues extends APIResource {
       isFirstLimpet = entity.firstLimpet.userId === user.id
     }
 
-    if (isAssigned || isFirstLimpet) {
+    if (isAssigned || isFirstLimpet || entity.status !== 'closed') {
       return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
     }
 
@@ -505,7 +504,7 @@ export default class Rescues extends APIResource {
         }
 
       default:
-        throw new UnsupportedMediaAPIError({ pointer: '/relationships' })
+        return undefined
     }
   }
 

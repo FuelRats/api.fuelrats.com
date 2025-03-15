@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt'
+import UUID from 'pure-uuid'
+import * as constants from '../constants'
 import {
   User, Token, Client, Reset, db,
 } from '../db'
 
-import { UUID } from '../helpers/Validators'
 import Anope from './Anope'
 import {
   GoneAPIError,
@@ -68,8 +69,8 @@ class Authentication {
       throw new GoneAPIError({ pointer: '/data/attributes/email' })
     }
 
-    if (bcrypt.getRounds(user.password) > global.BCRYPT_ROUNDS_COUNT) {
-      const newRoundPassword = await bcrypt.hash(password, global.BCRYPT_ROUNDS_COUNT)
+    if (bcrypt.getRounds(user.password) > constants.bcryptRoundsCount) {
+      const newRoundPassword = await bcrypt.hash(password, constants.bcryptRoundsCount)
       User.update({
         password: newRoundPassword,
       }, {
@@ -169,8 +170,8 @@ class Authentication {
         throw new GoneAPIError({})
       }
 
-      if (bcrypt.getRounds(client.secret) > global.BCRYPT_ROUNDS_COUNT) {
-        const newRoundSecret = await bcrypt.hash(secret, global.BCRYPT_ROUNDS_COUNT)
+      if (bcrypt.getRounds(client.secret) > constants.bcryptRoundsCount) {
+        const newRoundSecret = await bcrypt.hash(secret, constants.bcryptRoundsCount)
         Client.update({
           secret: newRoundSecret,
         }, {
@@ -257,10 +258,10 @@ class Authentication {
     }
 
     let representedUser = undefined
-    if (UUID.test(representing)) {
+    if (new UUID(constants.uuidVersion).parse(representing)) {
       representedUser = await User.findOne({
         where: {
-          representing,
+          id: representing,
         },
       })
     } else {

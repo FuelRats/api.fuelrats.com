@@ -1,4 +1,4 @@
-import UAParser from 'ua-parser-js'
+import { UAParser } from 'ua-parser-js'
 import { Context } from '../classes/Context'
 import GeoIP from '../classes/GeoIP'
 import { User } from '../db'
@@ -36,7 +36,7 @@ export default function sessionEmail ({ ctx, user, sessionToken }) {
     subject: 'Fuel Rats: Login from a new location',
     template: 'session',
     params: {
-      name: user.preferredRat().name,
+      name: user.displayName(),
       token: sessionToken.toUpperCase(),
       device: deviceDescription,
       location,

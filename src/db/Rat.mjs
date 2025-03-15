@@ -1,5 +1,5 @@
-import { JSONObject, CMDRname } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
+import { JSONObject, CMDRname } from '../helpers/Validators'
 
 /**
  * Model class for Rats

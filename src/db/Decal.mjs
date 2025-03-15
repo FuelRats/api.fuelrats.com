@@ -1,5 +1,5 @@
-import { FrontierRedeemCode } from '../helpers/Validators'
 import Model, { column, table, validate, type } from './Model'
+import { FrontierRedeemCode } from '../helpers/Validators'
 
 const decalNotesMaxLength = 4096
 

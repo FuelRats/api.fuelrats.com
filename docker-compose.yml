@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: fuelrats
+      POSTGRES_PASSWORD: squeak
+      POSTGRES_DB: fuelrats
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    environment:
+      NODE_ENV: development
+      FRAPI_HOSTNAME: 0.0.0.0
+      FRAPI_PORT: 8080
+      FRAPI_URL: http://localhost:8080
+      FRAPI_COOKIE: ${FRAPI_COOKIE}
+      FRAPI_FRONTEND_CLIENTID: ${FRAPI_FRONTEND_CLIENTID}
+      FRAPI_FRONTEND_URL: ${FRAPI_FRONTEND_URL}
+      FRAPI_POSTGRES_DATABASE: fuelrats
+      FRAPI_POSTGRES_USERNAME: fuelrats
+      FRAPI_POSTGRES_HOSTNAME: db
+      FRAPI_POSTGRES_PASSWORD: squeak
+
+      FRAPI_JIRA_URL: ${FRAPI_JIRA_URL}
+      FRAPI_JIRA_USERNAME: ${FRAPI_JIRA_USERNAME}
+      FRAPI_JIRA_PASSWORD: ${FRAPI_JIRA_PASSWORD}
+
+      FRAPI_ANOPE_DATABASE: ${FRAPI_ANOPE_DATABASE}
+      FRAPI_ANOPE_HOSTNAME: ${FRAPI_ANOPE_HOSTNAME}
+      FRAPI_ANOPE_PORT: ${FRAPI_ANOPE_PORT}
+      FRAPI_ANOPE_USERNAME: ${FRAPI_ANOPE_USERNAME}
+      FRAPI_ANOPE_PASSWORD: ${FRAPI_ANOPE_PASSWORD}
+      FRAPI_ANOPE_XMLRPC: ${FRAPI_ANOPE_XMLRPC}
+
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

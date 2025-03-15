@@ -1,3 +1,9 @@
+import API, {
+  authenticated,
+  parameters,
+  GET,
+  POST,
+} from './API'
 import {
   BadRequestAPIError,
   ConflictAPIError,
@@ -13,12 +19,6 @@ import WebSocket, { websocket } from '../classes/WebSocket'
 import { Client } from '../db'
 import Document from '../Documents/Document'
 import Query from '../query/Query'
-import API, {
-  authenticated,
-  parameters,
-  GET,
-  POST,
-} from './API'
 
 /**
  * WebSocket and SSE subscription endpoint

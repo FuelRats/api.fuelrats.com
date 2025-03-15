@@ -4,8 +4,11 @@ import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import fs from 'fs'
 import gitrev from 'git-rev-promises'
+import { createRequire } from 'module'
 import autoExternal from 'rollup-plugin-auto-external'
-import pkg from './package.json'
+
+const require = createRequire(import.meta.url)
+const pkg = require('./package.json')
 
 Promise.all([
   gitrev.long(),
@@ -36,7 +39,7 @@ const defineEntry = (input, outputDir) => {
       entryFileNames: '[name].mjs',
       sourcemap: true,
     },
-    external: ['nanoid/async'],
+    external: ['nanoid'],
     preserveModules: true,
     plugins: [autoExternal(), json(), resolve(), babel({ babelHelpers: 'bundled' })],
   }

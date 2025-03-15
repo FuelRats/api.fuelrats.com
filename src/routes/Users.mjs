@@ -1,30 +1,6 @@
 import bcrypt from 'bcrypt'
 import { promises as fsp } from 'fs'
 import workerpool from 'workerpool'
-import Announcer from '../classes/Announcer'
-import Anope from '../classes/Anope'
-import {
-  NotFoundAPIError,
-  UnauthorizedAPIError,
-  UnsupportedMediaAPIError,
-  BadRequestAPIError,
-  InternalServerError,
-  ImATeapotAPIError,
-} from '../classes/APIError'
-import { Context } from '../classes/Context'
-import Event from '../classes/Event'
-import Mail from '../classes/Mail'
-import Permission from '../classes/Permission'
-import StatusCode from '../classes/StatusCode'
-import { websocket } from '../classes/WebSocket'
-import { User, Decal, Avatar, db } from '../db'
-import DatabaseDocument from '../Documents/DatabaseDocument'
-import { DocumentViewType } from '../Documents/Document'
-import emailChangeEmail from '../emails/emailchange'
-import DatabaseQuery from '../query/DatabaseQuery'
-import {
-  UserView, DecalView, RatView, ClientView, GroupView,
-} from '../view'
 import {
   WritePermission,
   permissions,
@@ -41,6 +17,31 @@ import {
 import APIResource from './APIResource'
 import Decals from './Decals'
 import Verifications from './Verifications'
+import Announcer from '../classes/Announcer'
+import Anope from '../classes/Anope'
+import {
+  NotFoundAPIError,
+  UnauthorizedAPIError,
+  UnsupportedMediaAPIError,
+  BadRequestAPIError,
+  InternalServerError,
+  ImATeapotAPIError,
+} from '../classes/APIError'
+import { Context } from '../classes/Context'
+import Event from '../classes/Event'
+import Jira from '../classes/Jira'
+import Mail from '../classes/Mail'
+import Permission from '../classes/Permission'
+import StatusCode from '../classes/StatusCode'
+import { websocket } from '../classes/WebSocket'
+import { User, Decal, Avatar, db } from '../db'
+import DatabaseDocument from '../Documents/DatabaseDocument'
+import { DocumentViewType } from '../Documents/Document'
+import emailChangeEmail from '../emails/emailchange'
+import DatabaseQuery from '../query/DatabaseQuery'
+import {
+  UserView, DecalView, RatView, ClientView, GroupView,
+} from '../view'
 
 const mail = new Mail()
 
@@ -223,7 +224,7 @@ export default class Users extends APIResource {
       }
 
       await Verifications.createVerification(user, transaction, true)
-      await mail.send(emailChangeEmail({ email: oldEmail, name: user.preferredRat().name, newEmail }))
+      await mail.send(emailChangeEmail({ email: oldEmail, name: user.displayName(), newEmail }))
 
       await Announcer.sendModeratorMessage({
         message: `[Account Change] User with email ${oldEmail} has changed their email to ${newEmail}`,
@@ -232,6 +233,7 @@ export default class Users extends APIResource {
       return user
     })
 
+    await Jira.setEmail(user.displayName(), newEmail)
     await Anope.setEmail(oldEmail, newEmail)
 
     const result = await Anope.mapNickname(user)
@@ -335,10 +337,9 @@ export default class Users extends APIResource {
     await super.delete({
       ctx,
       databaseType: User,
-      callback: (user) => {
-        return Anope.deleteAccount(user.email)
-      },
     })
+
+    await Anope.deleteAccount(ctx.state.user.email)
 
     ctx.response.status = StatusCode.noContent
     return true
@@ -543,6 +544,8 @@ export default class Users extends APIResource {
       relationship: 'displayRat',
     })
 
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
+
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
@@ -599,16 +602,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipGroupsCreate (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'groups',
-      callback: (entity) => {
-        return Anope.updatePermissions(entity)
-      },
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -624,15 +625,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipGroupsPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'groups',
-      callback: (entity) => {
-        return Anope.updatePermissions(entity)
-      },
     })
+
+    await Anope.updatePermissions(updatedEntity)
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
@@ -649,15 +649,21 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipGroupsDelete (ctx) {
-    await this.relationshipChange({
+    const { entity, updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'groups',
-      callback: (entity) => {
-        return Anope.updatePermissions(entity)
-      },
     })
+
+    const removedGroupPermissions = ctx.data.data.map((group) => {
+      const entityGroup = entity.groups.find((userGroup) => {
+        return userGroup.id.toLowerCase() === group.id.toLowerCase()
+      })
+      return Anope.removeChannelPermissions(entity, entityGroup)
+    })
+    await Promise.all(removedGroupPermissions)
+    Anope.updatePermissions(updatedEntity)
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
@@ -765,7 +771,8 @@ export default class Users extends APIResource {
         }
 
         if (entity && entity.id === ctx.state.user.id && value === 'deactivated') {
-          return ctx.state.basicAuth === true
+          return false
+          // return ctx.state.basicAuth === true
         }
         return false
       },
