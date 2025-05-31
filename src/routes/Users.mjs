@@ -264,7 +264,7 @@ export default class Users extends APIResource {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    await Anope.updatePermissions(updatedEntity)
+    await Anope.updatePermissions(user)
 
     const result = await Anope.mapNickname(user)
 
