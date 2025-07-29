@@ -18,7 +18,6 @@ import RescueRats from './RescueRats'
 import RescueRatsHistory from './RescueRatsHistory'
 import Reset from './Reset'
 import Session from './Session'
-import Ship from './Ship'
 import Token from './Token'
 import User from './User'
 import UserGroups from './UserGroups'
@@ -38,7 +37,6 @@ const models = {
   Reset,
   Epic,
   EpicUsers,
-  Ship,
   Decal,
   Group,
   UserGroups,
@@ -156,7 +154,6 @@ export {
   RescueRatsHistory,
   Reset,
   Session,
-  Ship,
   Token,
   User,
   UserGroups,

@@ -46,18 +46,6 @@ export const CMDRname = new RegexLiteral(`^[
   |
 ]{3,64}$`, 'gui')
 // language=JSUnicodeRegexp
-export const ShipName = new RegexLiteral(`^[
-  \\p{Letter}
-  \\p{Mark}
-  \\p{Decimal_Number}
-  \\p{Connector_Punctuation}
-  \\p{Space_Separator}
-  \\p{Paragraph_Separator}
-  \\p{Dash_Punctuation}
-  \\p{Other_Punctuation}
-  |
-]{3,22}$`, 'gu')
-// language=JSUnicodeRegexp
 export const OAuthClientName = new RegexLiteral(`^[
   \\p{Letter}
   \\p{Mark}
