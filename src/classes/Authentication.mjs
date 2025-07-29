@@ -1,12 +1,14 @@
 import bcrypt from 'bcrypt'
+import { authenticator as totp } from 'otplib'
 import UUID from 'pure-uuid'
 import * as constants from '../constants'
 import {
-  User, Token, Client, Reset, db,
+  User, Token, Client, Reset, Authenticator, db,
 } from '../db'
 
 import Anope from './Anope'
 import {
+  AuthenticatorRequiredAPIError,
   GoneAPIError,
   UnauthorizedAPIError,
   ResetRequiredAPIError,
@@ -28,9 +30,10 @@ class Authentication {
    * @param {object} arg function arguments object
    * @param {string} arg.email the email of the user to authenticate
    * @param {string} arg.password the password of the user to authenticate
+   * @param {string} [arg.code] optional 2FA code
    * @returns {Promise<undefined|Promise<db.Model>>} A promise returning the authenticated user object
    */
-  static async passwordAuthenticate ({ email, password }) {
+  static async passwordAuthenticate ({ email, password, code }) {
     if (!email || !password) {
       return undefined
     }
@@ -77,6 +80,35 @@ class Authentication {
         where: { id: user.id },
       })
     }
+
+    // Check for 2FA requirement
+    const authenticator = await Authenticator.findOne({
+      where: {
+        userId: user.id,
+      },
+    })
+
+    if (authenticator) {
+      if (!code) {
+        throw new AuthenticatorRequiredAPIError({
+          pointer: '/data/attributes/code',
+        })
+      }
+
+      let isValidCode = false
+      try {
+        isValidCode = totp.check(code, authenticator.secret)
+      } catch {
+        isValidCode = false
+      }
+
+      if (!isValidCode) {
+        throw new AuthenticatorRequiredAPIError({
+          pointer: '/data/attributes/code',
+        })
+      }
+    }
+
     return User.findOne({
       where: {
         email: { ilike: email },
@@ -144,9 +176,9 @@ class Authentication {
    * @returns {Promise<db.User|undefined>} authenticated user
    */
   static basicUserAuthentication ({ connection }) {
-    const [email, password] = getBasicAuth(connection)
+    const [email, password, code] = getBasicAuth(connection)
     if (email && password) {
-      return Authentication.passwordAuthenticate({ email, password })
+      return Authentication.passwordAuthenticate({ email, password, code })
     }
     return undefined
   }
@@ -306,7 +338,7 @@ function getBearerToken (ctx) {
 /**
  * Get basic auth credentials from a request object
  * @param {Context} ctx the request object to retrieve basic auth credentials from
- * @returns {Array} An array containing the username and password, or an empty array if none was found.
+ * @returns {Array} An array containing the username, password, and optional 2FA code, or an empty array if none was found.
  */
 export function getBasicAuth (ctx) {
   const authorizationHeader = ctx.get('Authorization')

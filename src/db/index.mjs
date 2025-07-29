@@ -10,6 +10,7 @@ import Decal from './Decal'
 import Epic from './Epic'
 import EpicUsers from './EpicUsers'
 import Group from './Group'
+import Passkey from './Passkey'
 import Rat from './Rat'
 import Rescue from './Rescue'
 import RescueHistory from './RescueHistory'
@@ -147,6 +148,7 @@ export {
   Epic,
   EpicUsers,
   Group,
+  Passkey,
   Rat,
   Rescue,
   RescueHistory,

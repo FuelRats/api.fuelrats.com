@@ -1,4 +1,4 @@
-// import { authenticator as totp } from 'otplib'
+// 2FA is handled in Authentication.passwordAuthenticate
 import API, {
   authenticated,
   clientAuthenticated,
@@ -353,7 +353,7 @@ class OAuth extends API {
    * @endpoint
    */
   async resourceOwnerPasswordCredentials (ctx) {
-    let { username, password, scope } = ctx.request.body
+    let { username, password, code, scope } = ctx.request.body
 
     /* Validate parameters */
     if (!username) {
@@ -400,7 +400,7 @@ class OAuth extends API {
     }
 
     /* Validate username and password */
-    const user = await Authentication.passwordAuthenticate({ email: username, password })
+    const user = await Authentication.passwordAuthenticate({ email: username, password, code })
     if (!user) {
       throw new UnauthorizedAPIError({})
     }
