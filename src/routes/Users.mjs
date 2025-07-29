@@ -165,27 +165,25 @@ export default class Users extends APIResource {
    * Generate and set a certificate for use with IRC identification
    * @param {Context} ctx request context
    * @returns {Promise<undefined>} resolves a promise upon completion
-   *
-   * Disabled due to FRVE-2. Pending re-implementation when frontend is ready.
    */
-  // @GET('/users/:id/certificate')
-  // @parameters('id')
-  // @authenticated
-  // async certificate (ctx) {
-  //   const ratName = ctx.state.user.preferredRat().name
-  //   const { certificate, fingerprint } = await Users.sslGenerationPool.exec('generateSslCertificate',
-  //     [ratName])
+  @GET('/users/:id/certificate')
+  @parameters('id')
+  @authenticated
+  async certificate (ctx) {
+    const ratName = ctx.state.user.preferredRat().name
+    const { certificate, fingerprint } = await Users.sslGenerationPool.exec('generateSslCertificate',
+      [ratName])
 
-  //   const anopeAccount = await Anope.getAccount(ctx.state.user.email)
-  //   if (!anopeAccount) {
-  //     throw new BadRequestAPIError()
-  //   }
+    const anopeAccount = await Anope.getAccount(ctx.state.user.email)
+    if (!anopeAccount) {
+      throw new BadRequestAPIError()
+    }
 
-  //   await Anope.setFingerprint(ctx.state.user.email, fingerprint)
-  //   ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
-  //   ctx.set('Content-type', 'application/x-pem-file')
-  //   ctx.body = certificate
-  // }
+    await Anope.setFingerprint(ctx.state.user.email, fingerprint)
+    ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
+    ctx.set('Content-type', 'application/x-pem-file')
+    ctx.body = certificate
+  }
 
   /**
    * Change a user's email
