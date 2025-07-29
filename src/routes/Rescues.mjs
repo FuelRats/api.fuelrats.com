@@ -1,4 +1,4 @@
-import apn from 'apn'
+import apn from '@parse/node-apn'
 import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,

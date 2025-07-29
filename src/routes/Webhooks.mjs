@@ -2,11 +2,9 @@ import Announcer from '../classes/Announcer'
 import Anope from '../classes/Anope'
 import { InternalServerError, UnprocessableEntityAPIError } from '../classes/APIError'
 import Event from '../classes/Event'
-import twitter from '../classes/Twitter'
 import { User, Rat, Group } from '../db'
 import API, {
-  authenticated,
-  IPAuthenticated, permissions,
+  IPAuthenticated,
   POST,
 } from './API'
 
@@ -84,21 +82,5 @@ export default class Webhooks extends API {
     })
 
     return true
-  }
-
-  /**
-   * Post to Twitter webhook
-   * @endpoint
-   */
-  @POST('/webhooks/twitter')
-  @authenticated
-  @permissions('twitter.write')
-  async tweet (ctx) {
-    const { message } = ctx.data
-    await twitter.post('statuses/update', {
-      status: message,
-    })
-
-    return { ok: true }
   }
 }
