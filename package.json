@@ -21,6 +21,7 @@
     "@log4js-node/gelf": "^1.0.2",
     "@log4js-node/slack": "^1.0.0",
     "@log4js-node/smtp": "^2.0.8",
+    "@simplewebauthn/server": "^11.0.0",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "date-fns": "^4.1.0",
