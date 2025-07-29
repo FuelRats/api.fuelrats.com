@@ -1,4 +1,4 @@
-import apn from 'apn'
+import apn from '@parse/node-apn'
 import workerpool from 'workerpool'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 import config from '../config'
