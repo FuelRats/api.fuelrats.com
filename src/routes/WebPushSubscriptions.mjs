@@ -1,8 +1,6 @@
-import apn from '@parse/node-apn'
 import workerpool from 'workerpool'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
-import config from '../config'
-import { ApplePushSubscription, WebPushSubscription } from '../db'
+import { WebPushSubscription } from '../db'
 import API, {
   POST,
   authenticated,
@@ -10,7 +8,6 @@ import API, {
 } from './API'
 
 export const webPushPool = workerpool.pool('./dist/workers/web-push.mjs')
-export const apnProvider = config.apn.key ? new apn.Provider(config.apn) : undefined
 
 /**
  * Class managing password reset endpoints
@@ -65,23 +62,6 @@ export default class WebPushSubscriptions extends API {
     return true
   }
 
-  /**
-   * @endpoint
-   */
-  @POST('/apn')
-  @authenticated
-  async subscribeAPN (ctx) {
-    const { deviceToken } = ctx.data
-    if (!deviceToken) {
-      throw new UnprocessableEntityAPIError({ pointer: 'deviceToken' })
-    }
-
-    await ApplePushSubscription.create({
-      deviceToken,
-      userId: ctx.state.user.id,
-    })
-    return true
-  }
 
   /**
    * @endpoint
@@ -90,21 +70,8 @@ export default class WebPushSubscriptions extends API {
   @authenticated
   @permissions('rescues.write')
   async alert (ctx) {
-    const subscriptions = WebPushSubscription.findAll({})
+    const subscriptions = await WebPushSubscription.findAll({})
     webPushPool.exec('webPushBroadcast', [subscriptions, ctx.data])
-    if (apnProvider) {
-      const apnSubscriptions = await ApplePushSubscription.findAll({})
-      const deviceTokens = apnSubscriptions.map((sub) => {
-        return sub.deviceToken
-      })
-
-      const notification = new apn.Notification({
-        'content-available': 1,
-        sound: 'Ping.aiff',
-        category: 'message',
-        payload: ctx.data,
-      })
-      await apnProvider.send(notification, deviceTokens)
-    }
+    return true
   }
 }

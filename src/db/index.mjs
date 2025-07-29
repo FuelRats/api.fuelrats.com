@@ -2,7 +2,6 @@ import Sequelize from 'sequelize'
 import config from '../config'
 import logger from '../logging'
 
-import ApplePushSubscription from './ApplePushSubscription'
 import Authenticator from './Authenticator'
 import Avatar from './Avatar'
 import Client from './Client'
@@ -26,7 +25,6 @@ import VerificationToken from './VerificationToken'
 import WebPushSubscription from './WebPushSubscription'
 
 const models = {
-  ApplePushSubscription,
   User,
   Authenticator,
   Avatar,
@@ -141,7 +139,6 @@ export {
   db as sequelize,
   Sequelize,
   Op,
-  ApplePushSubscription,
   Authenticator,
   Avatar,
   Client,

@@ -1,4 +1,3 @@
-import apn from '@parse/node-apn'
 import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
@@ -8,7 +7,7 @@ import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import {
-  Rescue, db, ApplePushSubscription, WebPushSubscription, Rat, User,
+  Rescue, db, WebPushSubscription, Rat, User,
 } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
@@ -27,7 +26,7 @@ import {
   WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { apnProvider, webPushPool } from './WebPushSubscriptions'
+import { webPushPool } from './WebPushSubscriptions'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -141,19 +140,6 @@ export default class Rescues extends APIResource {
 
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, result.id, document)
     ctx.response.status = StatusCode.created
-    if (apnProvider) {
-      const apnSubscriptions = await ApplePushSubscription.findAll({})
-      const deviceTokens = apnSubscriptions.map((sub) => {
-        return sub.deviceToken
-      })
-      const notification = new apn.Notification({
-        'content-available': 1,
-        sound: 'Ping.aiff',
-        category: 'rescue',
-        payload: result,
-      })
-      await apnProvider.send(notification, deviceTokens)
-    }
     return document
   }
 
@@ -406,19 +392,6 @@ export default class Rescues extends APIResource {
       where: query,
     })
     webPushPool.exec('webPushBroadcast', [subscriptions, rescue])
-    if (apnProvider) {
-      const apnSubscriptions = await ApplePushSubscription.findAll({})
-      const deviceTokens = apnSubscriptions.map((sub) => {
-        return sub.deviceToken
-      })
-      const notification = new apn.Notification({
-        'content-available': 1,
-        sound: 'Ping.aiff',
-        category: 'alert',
-        payload: rescue,
-      })
-      await apnProvider.send(notification, deviceTokens)
-    }
     return true
   }
 

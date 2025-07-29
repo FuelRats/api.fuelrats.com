@@ -97,13 +97,6 @@ const config = {
     privateKey: recommended('FRAPI_WEBPUSH_PRIVATE_KEY', [], undefined),
     publicKey: recommended('FRAPI_WEBPUSH_PUBLIC_KEY', [], undefined),
   },
-  apn: {
-    token: {
-      key: recommended('FRAPI_APN_PATH', [], undefined),
-      keyId: recommended('FRAPI_APN_ID', [], undefined),
-      teamId: recommended('FRAPI_APN_TEAM', [], undefined),
-    },
-  },
 }
 
 ensureValidConfig()
