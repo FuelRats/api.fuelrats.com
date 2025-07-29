@@ -243,6 +243,36 @@ export default class Users extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
+   /**
+   * Change a user's email
+   * @endpoint
+   */
+  @PUT('/users/:id/sync')
+  @websocket('users', 'sync')
+  @parameters('id')
+  @authenticated
+  async syncPermissions (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id,
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    await Anope.updatePermissions(user)
+
+    const result = await Anope.mapNickname(user)
+
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView })
+  }
+
   /**
    * Change a user's password
    * @param {Context} ctx request context
