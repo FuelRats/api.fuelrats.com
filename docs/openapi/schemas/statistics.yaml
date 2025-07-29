@@ -1,0 +1,68 @@
+# Statistics resource schemas
+
+Statistics:
+  type: object
+  properties:
+    rescues:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of rescues
+        open:
+          type: integer
+          description: Number of open rescues
+        successful:
+          type: integer
+          description: Number of successful rescues
+        failed:
+          type: integer
+          description: Number of failed rescues
+        codeRed:
+          type: integer
+          description: Number of emergency rescues
+    rats:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of registered commanders
+        active:
+          type: integer
+          description: Number of active commanders
+        byPlatform:
+          type: object
+          properties:
+            pc:
+              type: integer
+              description: PC commanders
+            xb:
+              type: integer
+              description: Xbox commanders
+            ps:
+              type: integer
+              description: PlayStation commanders
+    users:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total registered users
+        verified:
+          type: integer
+          description: Number of verified users
+    leaderboard:
+      type: array
+      items:
+        type: object
+        properties:
+          commander:
+            type: string
+            description: Commander name
+          rescues:
+            type: integer
+            description: Number of rescues completed
+          platform:
+            type: string
+            enum: [pc, xb, ps]
+            description: Gaming platform

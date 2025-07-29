@@ -1,0 +1,141 @@
+# Base JSONAPI schemas - reusable across all resources
+
+# Generic JSONAPI error response
+Error:
+  type: object
+  required: [errors]
+  properties:
+    errors:
+      type: array
+      items:
+        type: object
+        required: [status, title]
+        properties:
+          id:
+            type: string
+            description: Unique identifier for this error instance
+          status:
+            type: string
+            description: HTTP status code as string
+            example: '400'
+          code:
+            type: string
+            description: Application-specific error code
+          title:
+            type: string
+            description: Short, human-readable summary
+            example: 'Bad Request'
+          detail:
+            type: string
+            description: Human-readable explanation specific to this occurrence
+          source:
+            type: object
+            properties:
+              pointer:
+                type: string
+                description: JSON Pointer to the error location
+                example: '/data/attributes/email'
+              parameter:
+                type: string
+                description: Query parameter that caused the error
+                example: 'include'
+
+# Generic resource identifier
+ResourceIdentifier:
+  type: object
+  required: [type, id]
+  properties:
+    type:
+      type: string
+      description: Resource type
+    id:
+      type: string
+      description: Unique resource identifier
+
+# Generic JSONAPI links object
+Links:
+  type: object
+  properties:
+    self:
+      type: string
+      format: uri
+      description: Link to the resource itself
+    related:
+      type: string
+      format: uri
+      description: Link to related resource
+    first:
+      type: string
+      format: uri
+      description: First page of paginated results
+    last:
+      type: string
+      format: uri
+      description: Last page of paginated results
+    prev:
+      type: string
+      format: uri
+      description: Previous page of paginated results
+    next:
+      type: string
+      format: uri
+      description: Next page of paginated results
+
+# Generic JSONAPI meta object
+Meta:
+  type: object
+  properties:
+    page:
+      type: object
+      properties:
+        offset:
+          type: integer
+          minimum: 0
+          description: Number of resources skipped
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Maximum number of resources returned
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of available resources
+
+# Template for single resource response - to be extended by specific resources
+SingleResourceDocument:
+  type: object
+  required: [data]
+  properties:
+    data:
+      oneOf:
+        - $ref: '#/components/schemas/ResourceIdentifier'
+        - type: 'null'
+    included:
+      type: array
+      items:
+        $ref: '#/components/schemas/ResourceIdentifier'
+      description: Related resources included in the response
+    meta:
+      $ref: '#/components/schemas/Meta'
+    links:
+      $ref: '#/components/schemas/Links'
+
+# Template for collection response - to be extended by specific resources
+CollectionDocument:
+  type: object
+  required: [data]
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/components/schemas/ResourceIdentifier'
+    included:
+      type: array
+      items:
+        $ref: '#/components/schemas/ResourceIdentifier'
+      description: Related resources included in the response
+    meta:
+      $ref: '#/components/schemas/Meta'
+    links:
+      $ref: '#/components/schemas/Links'

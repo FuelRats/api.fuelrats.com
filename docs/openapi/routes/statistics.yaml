@@ -1,0 +1,14 @@
+# Statistics API endpoints
+
+statistics:
+  get:
+    tags: [statistics]
+    summary: Get API statistics
+    description: Retrieve various statistics about rescues, commanders, and users
+    responses:
+      '200':
+        description: API statistics
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/statistics.yaml#/Statistics'

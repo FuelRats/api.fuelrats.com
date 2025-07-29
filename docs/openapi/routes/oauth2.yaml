@@ -1,0 +1,119 @@
+# OAuth2 API endpoints
+
+oauth2_authorize:
+  get:
+    tags: [oauth2]
+    summary: OAuth2 authorization endpoint
+    description: Initiate OAuth2 authorization flow
+    parameters:
+      - name: response_type
+        in: query
+        required: true
+        description: OAuth2 response type
+        schema:
+          type: string
+          enum: [code]
+      - name: client_id
+        in: query
+        required: true
+        description: OAuth2 client identifier
+        schema:
+          type: string
+      - name: redirect_uri
+        in: query
+        required: true
+        description: Redirect URI after authorization
+        schema:
+          type: string
+          format: uri
+      - name: scope
+        in: query
+        description: Requested permissions scope
+        schema:
+          type: string
+      - name: state
+        in: query
+        description: Client state parameter
+        schema:
+          type: string
+    responses:
+      '302':
+        description: Redirect to authorization page or callback
+        headers:
+          Location:
+            description: Redirect URL
+            schema:
+              type: string
+              format: uri
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/oauth2.yaml#/ErrorResponse'
+
+  post:
+    tags: [oauth2]
+    summary: OAuth2 authorization decision
+    description: Handle user authorization decision
+    security:
+      - sessionAuth: []
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              allow:
+                type: string
+                enum: [yes, no]
+                description: User authorization decision
+    responses:
+      '302':
+        description: Redirect to client callback
+        headers:
+          Location:
+            description: Callback URL with authorization code or error
+            schema:
+              type: string
+              format: uri
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/oauth2.yaml#/ErrorResponse'
+
+oauth2_token:
+  post:
+    tags: [oauth2]
+    summary: OAuth2 token endpoint
+    description: Exchange authorization code for access token
+    security:
+      - basicAuth: []
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '../schemas/oauth2.yaml#/TokenRequest'
+    responses:
+      '200':
+        description: Token response
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/oauth2.yaml#/TokenResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/oauth2.yaml#/ErrorResponse'
+      '401':
+        description: Invalid client credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/oauth2.yaml#/ErrorResponse'

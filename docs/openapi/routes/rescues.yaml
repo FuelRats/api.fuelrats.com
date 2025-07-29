@@ -1,0 +1,214 @@
+# Rescues API endpoints
+
+rescues:
+  get:
+    tags: [rescues]
+    summary: List rescues
+    description: Search and list rescue cases with optional filtering and pagination
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of rescues
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueCollection'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+  post:
+    tags: [rescues]
+    summary: Create rescue
+    description: Create a new rescue case
+    security:
+      - bearerAuth: [rescues.write]
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [rescues]
+                  attributes:
+                    type: object
+                    required: [client, platform]
+                    properties:
+                      client:
+                        type: string
+                        description: Client commander name
+                      clientNick:
+                        type: string
+                        description: Client IRC nickname
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]
+                        description: Gaming platform
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                        description: Game expansion
+                      system:
+                        type: string
+                        description: Star system location
+                      codeRed:
+                        type: boolean
+                        description: Emergency status
+                      notes:
+                        type: string
+                        description: Rescue notes
+    responses:
+      '201':
+        description: Rescue created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+rescues_by_id:
+  get:
+    tags: [rescues]
+    summary: Get rescue by ID
+    description: Retrieve a specific rescue case by ID
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: Rescue details
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueDocument'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [rescues]
+    summary: Update rescue
+    description: Update an existing rescue case
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [rescues]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      client:
+                        type: string
+                      clientNick:
+                        type: string
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                      system:
+                        type: string
+                      status:
+                        type: string
+                        enum: [open, inactive, closed]
+                      outcome:
+                        type: string
+                        enum: [success, failure, invalid, other, purge]
+                      codeRed:
+                        type: boolean
+                      notes:
+                        type: string
+    responses:
+      '200':
+        description: Rescue updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [rescues]
+    summary: Delete rescue
+    description: Delete a rescue case
+    security:
+      - bearerAuth: [rescues.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Rescue deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'

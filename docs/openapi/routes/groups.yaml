@@ -1,0 +1,199 @@
+# Groups API endpoints
+
+groups:
+  get:
+    tags: [groups]
+    summary: List groups
+    description: Retrieve all user groups with optional filtering and pagination
+    security:
+      - bearerAuth: [groups.read]
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of groups
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupCollection'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+
+  post:
+    tags: [groups]
+    summary: Create group
+    description: Create a new user group
+    security:
+      - bearerAuth: [groups.write]
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [groups]
+                  attributes:
+                    type: object
+                    required: [name]
+                    properties:
+                      name:
+                        type: string
+                        description: Group name
+                      vhost:
+                        type: string
+                        description: Virtual host for the group
+                      permissions:
+                        type: array
+                        items:
+                          type: string
+                        description: List of permissions
+                      priority:
+                        type: integer
+                        description: Group priority level
+    responses:
+      '201':
+        description: Group created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+groups_by_id:
+  get:
+    tags: [groups]
+    summary: Get group by ID
+    description: Retrieve a specific group by ID
+    security:
+      - bearerAuth: [groups.read]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Group ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: Group details
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupDocument'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [groups]
+    summary: Update group
+    description: Update an existing group
+    security:
+      - bearerAuth: [groups.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Group ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [groups]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      vhost:
+                        type: string
+                      permissions:
+                        type: array
+                        items:
+                          type: string
+                      priority:
+                        type: integer
+    responses:
+      '200':
+        description: Group updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [groups]
+    summary: Delete group
+    description: Delete a group
+    security:
+      - bearerAuth: [groups.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Group ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Group deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
