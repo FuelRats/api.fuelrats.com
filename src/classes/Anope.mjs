@@ -488,7 +488,7 @@ class Anope {
 
     // Use NickServ SET DISPLAY command to change the display nickname
     const result = await this.runCommand('NickServ', displayNick, `SET DISPLAY ${displayNick}`)
-    
+
     return result
   }
 

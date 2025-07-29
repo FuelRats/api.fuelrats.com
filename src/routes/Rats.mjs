@@ -115,7 +115,7 @@ export default class Rats extends APIResource {
           return false
         }
 
-        return entity.ships.length === 0 && entity.rescues.length === 0 && entity.firstLimpet.length === 0
+        return entity.rescues.length === 0 && entity.firstLimpet.length === 0
       },
     })
 
