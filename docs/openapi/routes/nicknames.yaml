@@ -1,0 +1,190 @@
+# Nicknames API endpoints
+
+nicknames:
+  get:
+    tags: [nicknames]
+    summary: Search nicknames
+    description: Search for IRC nicknames
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: nick
+        in: query
+        required: true
+        description: Nickname to search for
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Nickname search results
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/nicknames.yaml#/NicknameCollection'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+  post:
+    tags: [nicknames]
+    summary: Register nickname
+    description: Register a new IRC nickname
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [nicknames]
+                  attributes:
+                    type: object
+                    required: [nick]
+                    properties:
+                      nick:
+                        type: string
+                        pattern: '^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$'
+                        description: IRC nickname to register
+                      ratId:
+                        type: string
+                        format: uuid
+                        description: Associated rat ID
+    responses:
+      '201':
+        description: Nickname registered successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/nicknames.yaml#/NicknameDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '409':
+        description: Nickname already exists
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+nicknames_by_id:
+  get:
+    tags: [nicknames]
+    summary: Get nickname by ID
+    description: Retrieve nickname information by ID
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Nickname ID
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Nickname details
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/nicknames.yaml#/NicknameDocument'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  delete:
+    tags: [nicknames]
+    summary: Drop nickname
+    description: Remove an IRC nickname (cannot delete display nickname)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Nickname ID
+        schema:
+          type: string
+    responses:
+      '204':
+        description: Nickname deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '409':
+        description: Cannot delete display nickname
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+nicknames_display:
+  put:
+    tags: [nicknames]
+    summary: Set display nickname
+    description: Change the main display nickname for an IRC account
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Nickname ID
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [nicknames]
+                  attributes:
+                    type: object
+                    required: [displayNick]
+                    properties:
+                      displayNick:
+                        type: string
+                        pattern: '^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$'
+                        description: Nickname to set as display name
+    responses:
+      '200':
+        description: Display nickname updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/nicknames.yaml#/NicknameDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

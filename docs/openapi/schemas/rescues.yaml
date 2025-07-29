@@ -1,0 +1,129 @@
+# Rescue resource schemas
+
+Rescue:
+  allOf:
+    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+    - type: object
+      properties:
+        type:
+          type: string
+          enum: [rescues]
+        attributes:
+          type: object
+          properties:
+            client:
+              type: string
+              description: Client commander name
+            clientNick:
+              type: string
+              description: Client IRC nickname
+            clientLanguage:
+              type: string
+              description: Client preferred language
+            commandIdentifier:
+              type: string
+              description: Rescue case number
+            codeRed:
+              type: boolean
+              description: Emergency status
+            data:
+              type: object
+              description: Additional rescue metadata
+            notes:
+              type: string
+              description: Rescue notes
+            platform:
+              type: string
+              enum: [pc, xb, ps]
+              description: Gaming platform
+            expansion:
+              type: string
+              enum: [horizons3, horizons4, odyssey]
+              description: Game expansion
+            system:
+              type: string
+              description: Star system location
+            title:
+              type: string
+              description: Rescue title/summary
+            unidentifiedRats:
+              type: string
+              description: Unidentified commanders involved
+            status:
+              type: string
+              enum: [open, inactive, closed]
+              description: Rescue status
+            outcome:
+              type: string
+              enum: [success, failure, invalid, other, purge]
+              description: Rescue outcome
+            quotes:
+              type: array
+              items:
+                type: object
+              description: Rescue chat quotes
+            createdAt:
+              type: string
+              format: date-time
+              description: Creation timestamp
+            updatedAt:
+              type: string
+              format: date-time
+              description: Last update timestamp
+        relationships:
+          type: object
+          properties:
+            rats:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [rats]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            firstLimpet:
+              type: object
+              properties:
+                data:
+                  nullable: true
+                  allOf:
+                    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                    - properties:
+                        type:
+                          enum: [rats]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            epics:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [epics]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+
+RescueDocument:
+  allOf:
+    - $ref: '../components/schemas.yaml#/SingleResourceDocument'
+    - properties:
+        data:
+          $ref: '#/Rescue'
+
+RescueCollection:
+  allOf:
+    - $ref: '../components/schemas.yaml#/CollectionDocument'
+    - properties:
+        data:
+          type: array
+          items:
+            $ref: '#/Rescue'

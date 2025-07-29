@@ -1,0 +1,65 @@
+# Common error responses used across multiple endpoints
+
+BadRequest:
+  description: Bad Request - Invalid request parameters or malformed request
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '400'
+            title: 'Bad Request'
+            detail: 'The request could not be understood by the server'
+            source:
+              parameter: 'include'
+
+Unauthorized:
+  description: Unauthorized - Authentication required
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '401'
+            title: 'Unauthorized'
+            detail: 'Authentication is required to access this resource'
+
+Forbidden:
+  description: Forbidden - Insufficient privileges
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '403'
+            title: 'Forbidden'
+            detail: 'You do not have permission to access this resource'
+
+NotFound:
+  description: Not Found - Resource does not exist
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '404'
+            title: 'Not Found'
+            detail: 'The requested resource could not be found'
+
+UnprocessableEntity:
+  description: Unprocessable Entity - Validation errors
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '422'
+            title: 'Validation Error'
+            detail: 'The email field is required'
+            source:
+              pointer: '/data/attributes/email'

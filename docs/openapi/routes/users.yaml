@@ -1,0 +1,179 @@
+# Users API endpoints
+
+users:
+  get:
+    tags: [users]
+    summary: List users
+    description: Search and list users with optional filtering and pagination
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of users
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserCollection'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+
+  post:
+    tags: [users]
+    summary: Create user
+    description: Create a new user account
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [users]
+                  attributes:
+                    type: object
+                    required: [email]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                      data:
+                        type: object
+    responses:
+      '201':
+        description: User created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_by_id:
+  get:
+    tags: [users]
+    summary: Get user by ID
+    description: Retrieve a specific user by their ID
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: User details
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [users]
+    summary: Update user
+    description: Update an existing user
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [users]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                      data:
+                        type: object
+    responses:
+      '200':
+        description: User updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [users]
+    summary: Delete user
+    description: Delete a user account
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: User deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'

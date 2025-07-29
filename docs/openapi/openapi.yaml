@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: FuelRats API
+  version: '3.1.0'
+  description: |
+    The official API for the FuelRats rescue coordination system.
+    
+    This API follows the [JSON:API specification](https://jsonapi.org/) for consistent resource handling.
+    
+    ## Authentication
+    
+    The API supports multiple authentication methods:
+    - **Bearer Token**: JWT tokens for user authentication
+    - **OAuth2**: For third-party applications
+    - **Basic Auth**: For legacy endpoints
+    
+  contact:
+    name: FuelRats Support
+    url: https://fuelrats.com
+    email: support@fuelrats.com
+  license:
+    name: BSD-3-Clause
+    url: https://github.com/FuelRats/api.fuelrats.com/blob/main/LICENSE
+
+servers:
+  - url: https://api.fuelrats.com
+    description: Production server
+  - url: https://beta-api.fuelrats.com
+    description: Beta server
+
+tags:
+  - name: users
+    description: User account management
+  - name: rats
+    description: Commander (Rat) management
+  - name: rescues
+    description: Rescue case management
+  - name: nicknames
+    description: IRC nickname registration
+  - name: groups
+    description: Permission group management
+  - name: oauth2
+    description: OAuth2 authentication
+  - name: statistics
+    description: Platform statistics and leaderboards
+  - name: version
+    description: API version information
+
+paths:
+  # Users
+  /users:
+    $ref: './routes/users.yaml#/users'
+  /users/{id}:
+    $ref: './routes/users.yaml#/users_by_id'
+  
+  # Rats
+  /rats:
+    $ref: './routes/rats.yaml#/rats'
+  /rats/{id}:
+    $ref: './routes/rats.yaml#/rats_by_id'
+  
+  # Rescues
+  /rescues:
+    $ref: './routes/rescues.yaml#/rescues'
+  /rescues/{id}:
+    $ref: './routes/rescues.yaml#/rescues_by_id'
+  
+  # Nicknames
+  /nicknames:
+    $ref: './routes/nicknames.yaml#/nicknames'
+  /nicknames/{id}:
+    $ref: './routes/nicknames.yaml#/nicknames_by_id'
+  /nicknames/{id}/display:
+    $ref: './routes/nicknames.yaml#/nicknames_display'
+  
+  # Groups
+  /groups:
+    $ref: './routes/groups.yaml#/groups'
+  /groups/{id}:
+    $ref: './routes/groups.yaml#/groups_by_id'
+  
+  # OAuth2
+  /oauth2/authorize:
+    $ref: './routes/oauth2.yaml#/oauth2_authorize'
+  /oauth2/token:
+    $ref: './routes/oauth2.yaml#/oauth2_token'
+  
+  # Statistics
+  /statistics:
+    $ref: './routes/statistics.yaml#/statistics'
+  
+  # Version
+  /version:
+    $ref: './routes/version.yaml#/version'
+
+components:
+  # Common security schemes
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+    
+    oauth2:
+      type: oauth2
+      description: OAuth2 authentication for third-party applications
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth2/authorize
+          tokenUrl: /oauth2/token
+          refreshUrl: /oauth2/token
+          scopes:
+            read: Read access to public data
+            write: Write access to authorized resources
+            users.read: Read user profiles
+            users.write: Modify user profiles
+            rescues.read: Read rescue data
+            rescues.write: Create and modify rescues
+            rats.read: Read commander data
+            rats.write: Modify commander data
+    
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic authentication for legacy endpoints
+    
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Session-based authentication for OAuth2 flow
+
+  # Common schemas
+  schemas:
+    $ref: './components/schemas.yaml'
+  
+  # Common parameters
+  parameters:
+    $ref: './components/parameters.yaml'
+  
+  # Common responses
+  responses:
+    $ref: './components/responses.yaml'

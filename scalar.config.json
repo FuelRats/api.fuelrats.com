@@ -1,0 +1,29 @@
+{
+  "references": [
+    {
+      "url": "docs/openapi/openapi.yaml",
+      "metaData": {
+        "title": "FuelRats API",
+        "description": "The official API for the FuelRats rescue coordination system"
+      }
+    }
+  ],
+  "theme": "purple",
+  "layout": "modern",
+  "showSidebar": true,
+  "hideDownloadButton": false,
+  "searchHotKey": "k",
+  "darkMode": false,
+  "customCss": "",
+  "favicon": "https://fuelrats.com/favicon.ico",
+  "authentication": {
+    "preferredSecurityScheme": "bearerAuth",
+    "apiKey": {
+      "token": ""
+    }
+  },
+  "server": {
+    "url": "https://api.fuelrats.com",
+    "description": "Production API"
+  }
+}

@@ -1,0 +1,78 @@
+# Group resource schemas
+
+Group:
+  allOf:
+    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+    - type: object
+      properties:
+        type:
+          type: string
+          enum: [groups]
+        attributes:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Group name
+            vhost:
+              type: string
+              description: Virtual host for the group
+            priority:
+              type: integer
+              description: Group priority level
+            permissions:
+              type: array
+              items:
+                type: string
+              description: List of permissions
+            withoutPrefix:
+              type: boolean
+              description: Whether group operates without command prefix
+            isAdministrator:
+              type: boolean
+              description: Administrator privileges
+            channels:
+              type: array
+              items:
+                type: string
+              description: IRC channels associated with group
+            createdAt:
+              type: string
+              format: date-time
+              description: Creation timestamp
+            updatedAt:
+              type: string
+              format: date-time
+              description: Last update timestamp
+        relationships:
+          type: object
+          properties:
+            users:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [users]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+
+GroupDocument:
+  allOf:
+    - $ref: '../components/schemas.yaml#/SingleResourceDocument'
+    - properties:
+        data:
+          $ref: '#/Group'
+
+GroupCollection:
+  allOf:
+    - $ref: '../components/schemas.yaml#/CollectionDocument'
+    - properties:
+        data:
+          type: array
+          items:
+            $ref: '#/Group'

@@ -1,0 +1,187 @@
+# Rats API endpoints
+
+rats:
+  get:
+    tags: [rats]
+    summary: List rats
+    description: Search and list commanders (rats) with optional filtering and pagination
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of rats
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rats.yaml#/RatCollection'
+
+  post:
+    tags: [rats]
+    summary: Create rat
+    description: Create a new commander (rat)
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [rats]
+                  attributes:
+                    type: object
+                    required: [name, platform]
+                    properties:
+                      name:
+                        type: string
+                        minLength: 3
+                        maxLength: 64
+                        description: Commander name
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]
+                        description: Gaming platform
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                        description: Game expansion
+                      data:
+                        type: object
+                        description: Additional metadata
+    responses:
+      '201':
+        description: Rat created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rats.yaml#/RatDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+rats_by_id:
+  get:
+    tags: [rats]
+    summary: Get rat by ID
+    description: Retrieve a specific rat by their ID
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rat ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: Rat details
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rats.yaml#/RatDocument'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [rats]
+    summary: Update rat
+    description: Update an existing rat
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rat ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [rats]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        minLength: 3
+                        maxLength: 64
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]  
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                      data:
+                        type: object
+    responses:
+      '200':
+        description: Rat updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rats.yaml#/RatDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [rats]
+    summary: Delete rat
+    description: Delete a rat (only if no associated rescues)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rat ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Rat deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
