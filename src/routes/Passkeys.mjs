@@ -30,7 +30,7 @@ import {
 import APIResource from './APIResource'
 
 const rpName = 'The Fuel Rats'
-const rpId = new URL(config.externalUrl).hostname
+const rpId = new URL(config.server.externalUrl).hostname
 
 /**
  * Passkeys/WebAuthn API endpoint

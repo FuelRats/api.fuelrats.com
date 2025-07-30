@@ -1,0 +1,193 @@
+# Registration API endpoint
+
+register:
+  post:
+    tags: [registration]
+    summary: Register new account
+    description: |
+      Register a new user account with an associated rat (commander) and IRC nickname.
+      
+      This endpoint:
+      - Creates a new user account
+      - Creates the first rat (commander) for the user
+      - Registers an IRC nickname
+      - Sends a verification email
+      - Creates a verified session
+      - Notifies moderators of the registration
+      
+      **Important requirements:**
+      - User-Agent header is required
+      - X-Fingerprint header is required (unique device identifier)
+      - The commander name cannot have an active rescue case
+      - Email and commander name must be unique
+    parameters:
+      - name: User-Agent
+        in: header
+        required: true
+        description: User agent string identifying the client application
+        schema:
+          type: string
+          example: "MyApp/1.0 (Platform)"
+      - name: X-Fingerprint
+        in: header
+        required: true
+        description: Unique device/client fingerprint for security
+        schema:
+          type: string
+          example: "abc123def456ghi789"
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [registrations]
+                  attributes:
+                    type: object
+                    required: [email, password, name, platform, nickname]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        description: User's email address (must be unique)
+                      password:
+                        type: string
+                        minLength: 8
+                        description: User's password (will be hashed)
+                      name:
+                        type: string
+                        minLength: 3
+                        maxLength: 64
+                        description: Commander (rat) name in Elite Dangerous (must be unique per platform)
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]
+                        description: Gaming platform
+                      nickname:
+                        type: string
+                        pattern: '^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$'
+                        description: IRC nickname to register
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                        default: horizons3
+                        description: Elite Dangerous expansion/version
+          example:
+            data:
+              type: registrations
+              attributes:
+                email: "newpilot@example.com"
+                password: "securepassword123"
+                name: "NewRescuePilot"
+                platform: "pc"
+                nickname: "NewRescuePilot[PC]"
+                expansion: "odyssey"
+    responses:
+      '201':
+        description: |
+          Registration successful. User account created with verified session.
+          A verification email has been sent and moderators have been notified.
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '400':
+        description: Bad Request - Missing required headers or invalid request format
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            examples:
+              missing_user_agent:
+                value:
+                  errors:
+                    - status: '400'
+                      title: 'Bad Request'
+                      detail: 'User-Agent header is required'
+                      source:
+                        parameter: 'User-Agent'
+              missing_fingerprint:
+                value:
+                  errors:
+                    - status: '400'
+                      title: 'Bad Request'
+                      detail: 'X-Fingerprint header is required'
+                      source:
+                        parameter: 'X-Fingerprint'
+      '403':
+        description: Forbidden - Commander has an active rescue case
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '403'
+                  title: 'Forbidden'
+                  detail: 'Registration rejected: commander has an active rescue case'
+                  source:
+                    pointer: '/data/attributes/name'
+      '409':
+        description: Conflict - Email or commander name already exists
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            examples:
+              email_exists:
+                value:
+                  errors:
+                    - status: '409'
+                      title: 'Conflict'
+                      detail: 'An account with this email already exists'
+                      source:
+                        pointer: '/data/attributes/email'
+              commander_exists:
+                value:
+                  errors:
+                    - status: '409'
+                      title: 'Conflict'
+                      detail: 'A commander with this name already exists on this platform'
+                      source:
+                        pointer: '/data/attributes/name'
+      '422':
+        description: Unprocessable Entity - Invalid data format or values
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            examples:
+              invalid_platform:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Invalid platform. Must be one of: pc, xb, ps'
+                      source:
+                        pointer: '/data/attributes/platform'
+              invalid_email:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Invalid email format'
+                      source:
+                        pointer: '/data/attributes/email'
+              invalid_nickname:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Invalid IRC nickname format'
+                      source:
+                        pointer: '/data/attributes/nickname'

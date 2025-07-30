@@ -50,6 +50,18 @@ NotFound:
             title: 'Not Found'
             detail: 'The requested resource could not be found'
 
+Conflict:
+  description: Conflict - Resource already exists or conflicting state
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '409'
+            title: 'Conflict'
+            detail: 'A resource with this identifier already exists'
+
 UnprocessableEntity:
   description: Unprocessable Entity - Validation errors
   content:

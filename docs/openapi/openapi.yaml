@@ -29,6 +29,12 @@ servers:
     description: Beta server
 
 tags:
+  - name: registration
+    description: New user account registration
+  - name: verifications
+    description: Email address verification
+  - name: resets
+    description: Password reset functionality
   - name: users
     description: User account management
   - name: rats
@@ -41,29 +47,95 @@ tags:
     description: Permission group management
   - name: oauth2
     description: OAuth2 authentication
+  - name: passkeys
+    description: WebAuthn/Passkey authentication
+  - name: decals
+    description: Decal award management
+  - name: events
+    description: Real-time events and notifications
+  - name: web-push
+    description: Web push notifications and subscriptions
   - name: statistics
     description: Platform statistics and leaderboards
   - name: version
     description: API version information
 
 paths:
+  # Registration
+  /register:
+    $ref: './routes/register.yaml#/register'
+  
+  # Email Verifications
+  /verifications:
+    $ref: './routes/verifications.yaml#/verifications_create'
+  /verifications/{token}:
+    $ref: './routes/verifications.yaml#/verifications_verify'
+  
+  # Password Resets
+  /resets:
+    $ref: './routes/resets.yaml#/resets_create'
+  /resets/{token}:
+    get:
+      $ref: './routes/resets.yaml#/resets_validate'
+    post:
+      $ref: './routes/resets.yaml#/resets_execute'
+  
   # Users
   /users:
     $ref: './routes/users.yaml#/users'
   /users/{id}:
     $ref: './routes/users.yaml#/users_by_id'
+  /profile:
+    $ref: './routes/users.yaml#/profile'
+  /users/{id}/certificate:
+    $ref: './routes/users.yaml#/users_certificate'
+  /users/{id}/decals:
+    $ref: './routes/users.yaml#/users_decals'
+  /users/{id}/relationships/rats:
+    $ref: './routes/users.yaml#/users_rats_relationship'
+  /users/{id}/relationships/groups:
+    $ref: './routes/users.yaml#/users_groups_relationship'
+  /users/{id}/image:
+    $ref: './routes/users.yaml#/users_image'
+  /users/{id}/statistics:
+    $ref: './routes/statistics.yaml#/users_statistics'
+  /users/{id}/authenticator:
+    $ref: './routes/users.yaml#/users_authenticator'
+  /users/{id}/passkeys:
+    get:
+      $ref: './routes/passkeys.yaml#/users_passkeys'
+    post:
+      $ref: './routes/passkeys.yaml#/users_passkeys_create'
+  /users/{id}/passkeys/register:
+    $ref: './routes/passkeys.yaml#/users_passkeys_register'
+  /users/{id}/passkeys/{passkeyId}:
+    $ref: './routes/passkeys.yaml#/users_passkeys_delete'
+  /passkeys/authenticate:
+    $ref: './routes/passkeys.yaml#/passkeys_authenticate'
+  /passkeys/verify:
+    $ref: './routes/passkeys.yaml#/passkeys_verify'
   
   # Rats
   /rats:
     $ref: './routes/rats.yaml#/rats'
   /rats/{id}:
     $ref: './routes/rats.yaml#/rats_by_id'
+  /rats/{id}/relationships/user:
+    $ref: './routes/rats.yaml#/rats_user_relationship'
   
   # Rescues
   /rescues:
     $ref: './routes/rescues.yaml#/rescues'
+  /rescues/me:
+    $ref: './routes/rescues.yaml#/rescues_me'
   /rescues/{id}:
     $ref: './routes/rescues.yaml#/rescues_by_id'
+  /rescues/{id}/relationships/rats:
+    $ref: './routes/rescues.yaml#/rescues_rats_relationship'
+  /rescues/{id}/relationships/firstLimpet:
+    $ref: './routes/rescues.yaml#/rescues_firstlimpet_relationship'
+  /rescues/{id}/alert:
+    $ref: './routes/rescues.yaml#/rescues_alert'
   
   # Nicknames
   /nicknames:
@@ -72,6 +144,10 @@ paths:
     $ref: './routes/nicknames.yaml#/nicknames_by_id'
   /nicknames/{id}/display:
     $ref: './routes/nicknames.yaml#/nicknames_display'
+  /nicknames/{id}/relationships/user:
+    $ref: './routes/nicknames.yaml#/nicknames_user_relationship'
+  /nicknames/{nick}/relationships/rat:
+    $ref: './routes/nicknames.yaml#/nicknames_rat_relationship'
   
   # Groups
   /groups:
@@ -84,10 +160,42 @@ paths:
     $ref: './routes/oauth2.yaml#/oauth2_authorize'
   /oauth2/token:
     $ref: './routes/oauth2.yaml#/oauth2_token'
+  /oauth2/revoke:
+    $ref: './routes/oauth2.yaml#/oauth2_revoke'
+  /oauth2/revokeall:
+    $ref: './routes/oauth2.yaml#/oauth2_revokeall'
   
-  # Statistics
-  /statistics:
-    $ref: './routes/statistics.yaml#/statistics'
+  # OAuth Clients
+  /clients:
+    $ref: './routes/clients.yaml#/clients'
+  /clients/{id}:
+    $ref: './routes/clients.yaml#/clients_by_id'
+  /clients/{id}/relationships/user:
+    $ref: './routes/clients.yaml#/clients_user_relationship'
+  
+  # Decals
+  /decals:
+    $ref: './routes/decals.yaml#/decals'
+  /decals/{id}:
+    $ref: './routes/decals.yaml#/decals_by_id'
+  /decals/{id}/relationships/rat:
+    $ref: './routes/decals.yaml#/decals_rat_relationship'
+  
+  # Events
+  /events:
+    $ref: './routes/events.yaml#/events'
+  /events/{event}:
+    $ref: './routes/events.yaml#/events_broadcast'
+  
+  # Web Push Notifications
+  /web-push:
+    $ref: './routes/web-push.yaml#/web_push_subscribe'
+  /alerts:
+    $ref: './routes/web-push.yaml#/alerts_broadcast'
+  
+  # Statistics and Leaderboard
+  /leaderboard:
+    $ref: './routes/statistics.yaml#/leaderboard'
   
   # Version
   /version:

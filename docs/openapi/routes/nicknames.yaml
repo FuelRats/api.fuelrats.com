@@ -4,7 +4,10 @@ nicknames:
   get:
     tags: [nicknames]
     summary: Search nicknames
-    description: Search for IRC nicknames
+    description: |
+      Search for IRC nicknames
+      
+      **Authentication Required:** Bearer token authentication
     security:
       - bearerAuth: []
     parameters:
@@ -21,6 +24,45 @@ nicknames:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/nicknames.yaml#/NicknameCollection'
+            examples:
+              successful_response:
+                summary: Nickname search results with relationships
+                description: Example response showing IRC nickname search results with associated user and rat information
+                value:
+                  data:
+                    - type: nicknames
+                      id: "nick123"
+                      attributes:
+                        nick: "SpacePilot42"
+                        email: "pilot@example.com"
+                        vhost: "pilot.rat.fuelrats.com"
+                        display: "SpacePilot42"
+                        createdAt: "2023-01-15T10:30:00.000Z"
+                        updatedAt: "2023-01-15T10:30:00.000Z"
+                      relationships:
+                        user:
+                          data:
+                            type: users
+                            id: "550e8400-e29b-41d4-a716-446655440000"
+                          links:
+                            self: "/nicknames/nick123/relationships/user"
+                            related: "/nicknames/nick123/user"
+                        rat:
+                          data:
+                            type: rats
+                            id: "660e8400-e29b-41d4-a716-446655440001"
+                          links:
+                            self: "/nicknames/nick123/relationships/rat"
+                            related: "/nicknames/nick123/rat"
+                  meta:
+                    page:
+                      offset: 0
+                      limit: 20
+                      total: 1
+                  links:
+                    self: "/nicknames?nick=SpacePilot42&page[offset]=0&page[limit]=20"
+                    first: "/nicknames?nick=SpacePilot42&page[offset]=0&page[limit]=20"
+                    last: "/nicknames?nick=SpacePilot42&page[offset]=0&page[limit]=20"
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -29,7 +71,10 @@ nicknames:
   post:
     tags: [nicknames]
     summary: Register nickname
-    description: Register a new IRC nickname
+    description: |
+      Register a new IRC nickname
+      
+      **Authentication Required:** Bearer token authentication (self-access only)
     security:
       - bearerAuth: []
     requestBody:
@@ -66,6 +111,32 @@ nicknames:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/nicknames.yaml#/NicknameDocument'
+            example:
+              data:
+                type: nicknames
+                id: "nick456"
+                attributes:
+                  nick: "NewRescuer"
+                  email: "newrescuer@example.com"
+                  vhost: "newrescuer.rat.fuelrats.com"
+                  display: "NewRescuer"
+                  createdAt: "2023-03-01T14:20:00.000Z"
+                  updatedAt: "2023-03-01T14:20:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/nicknames/nick456/relationships/user"
+                      related: "/nicknames/nick456/user"
+                  rat:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440002"
+                    links:
+                      self: "/nicknames/nick456/relationships/rat"
+                      related: "/nicknames/nick456/rat"
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -83,7 +154,10 @@ nicknames_by_id:
   get:
     tags: [nicknames]
     summary: Get nickname by ID
-    description: Retrieve nickname information by ID
+    description: |
+      Retrieve nickname information by ID
+      
+      **Authentication Required:** Bearer token authentication
     security:
       - bearerAuth: []
     parameters:
@@ -100,6 +174,32 @@ nicknames_by_id:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/nicknames.yaml#/NicknameDocument'
+            example:
+              data:
+                type: nicknames
+                id: "nick123"
+                attributes:
+                  nick: "SpacePilot42"
+                  email: "pilot@example.com"
+                  vhost: "pilot.rat.fuelrats.com"
+                  display: "SpacePilot42"
+                  createdAt: "2023-01-15T10:30:00.000Z"
+                  updatedAt: "2023-01-15T10:30:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/nicknames/nick123/relationships/user"
+                      related: "/nicknames/nick123/user"
+                  rat:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/nicknames/nick123/relationships/rat"
+                      related: "/nicknames/nick123/rat"
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '404':
@@ -108,7 +208,10 @@ nicknames_by_id:
   delete:
     tags: [nicknames]
     summary: Drop nickname
-    description: Remove an IRC nickname (cannot delete display nickname)
+    description: |
+      Remove an IRC nickname (cannot delete display nickname)
+      
+      **Authentication Required:** Bearer token authentication (self-access only)
     security:
       - bearerAuth: []
     parameters:
@@ -138,7 +241,10 @@ nicknames_display:
   put:
     tags: [nicknames]
     summary: Set display nickname
-    description: Change the main display nickname for an IRC account
+    description: |
+      Change the main display nickname for an IRC account
+      
+      **Authentication Required:** Bearer token authentication (self-access only)
     security:
       - bearerAuth: []
     parameters:
@@ -178,12 +284,201 @@ nicknames_display:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/nicknames.yaml#/NicknameDocument'
+            example:
+              data:
+                type: nicknames
+                id: "nick123"
+                attributes:
+                  nick: "SpacePilot42"
+                  email: "pilot@example.com"
+                  vhost: "pilot.rat.fuelrats.com"
+                  display: "SpacePilot42"
+                  createdAt: "2023-01-15T10:30:00.000Z"
+                  updatedAt: "2023-03-01T16:45:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/nicknames/nick123/relationships/user"
+                      related: "/nicknames/nick123/user"
+                  rat:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/nicknames/nick123/relationships/rat"
+                      related: "/nicknames/nick123/rat"
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '403':
         $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+nicknames_user_relationship:
+  get:
+    tags: [nicknames]
+    summary: Get nickname's user relationship
+    description: |
+      Retrieve the user associated with a nickname
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Nickname ID
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Nickname's user relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [users]
+                    id:
+                      type: string
+                      format: uuid
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+            example:
+              data:
+                type: users
+                id: "550e8400-e29b-41d4-a716-446655440000"
+              links:
+                self: "/nicknames/SpacePilot42/relationships/user"
+                related: "/nicknames/SpacePilot42/user"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+nicknames_rat_relationship:
+  get:
+    tags: [nicknames]
+    summary: Get nickname's rat relationship
+    description: |
+      Retrieve the rat (commander) associated with a nickname
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: nick
+        in: path
+        required: true
+        description: IRC nickname
+        schema:
+          type: string
+          pattern: '^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$'
+    responses:
+      '200':
+        description: Nickname's rat relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum: [rats]
+                        id:
+                          type: string
+                          format: uuid
+                    - type: 'null'
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+            example:
+              data:
+                type: rats
+                id: "660e8400-e29b-41d4-a716-446655440001"
+              links:
+                self: "/nicknames/SpacePilot42/relationships/rat"
+                related: "/nicknames/SpacePilot42/rat"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  patch:
+    tags: [nicknames]
+    summary: Update nickname's rat relationship
+    description: |
+      Set or update the rat (commander) associated with a nickname
+      
+      **Authentication Required:** Bearer token authentication (self-access only)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: nick
+        in: path
+        required: true
+        description: IRC nickname
+        schema:
+          type: string
+          pattern: '^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$'
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                oneOf:
+                  - type: object
+                    required: [type, id]
+                    properties:
+                      type:
+                        type: string
+                        enum: [rats]
+                      id:
+                        type: string
+                        format: uuid
+                  - type: 'null'
+                    description: Set to null to remove the relationship
+    responses:
+      '204':
+        description: Relationship updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
       '404':
         $ref: '../components/responses.yaml#/NotFound'
       '422':

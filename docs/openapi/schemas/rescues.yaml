@@ -13,63 +13,68 @@ Rescue:
           properties:
             client:
               type: string
-              description: Client commander name
+              description: Client commander name (**Write Permission:** `rescues.write` or assigned to rescue)
             clientNick:
               type: string
-              description: Client IRC nickname
+              description: Client IRC nickname (**Write Permission:** `rescues.write` or assigned to rescue)
             clientLanguage:
               type: string
-              description: Client preferred language
+              description: Client preferred language (**Write Permission:** `rescues.write` or assigned to rescue)
             commandIdentifier:
               type: string
-              description: Rescue case number
+              description: Rescue case number (**Write Permission:** Admin/sudo only)
             codeRed:
               type: boolean
-              description: Emergency status
+              description: Emergency status (**Write Permission:** `rescues.write` or assigned to rescue)
             data:
               type: object
-              description: Additional rescue metadata
+              description: Additional rescue metadata (**Write Permission:** `rescues.write` or assigned to rescue)
             notes:
               type: string
-              description: Rescue notes
+              description: Rescue notes (**Write Permission:** `rescues.write` or assigned to rescue)
             platform:
               type: string
               enum: [pc, xb, ps]
-              description: Gaming platform
+              description: Gaming platform (**Write Permission:** `rescues.write` or assigned to rescue)
             expansion:
               type: string
               enum: [horizons3, horizons4, odyssey]
-              description: Game expansion
+              description: Game expansion (**Write Permission:** `rescues.write` or assigned to rescue)
             system:
               type: string
-              description: Star system location
+              description: Star system location (**Write Permission:** `rescues.write` or assigned to rescue)
             title:
               type: string
-              description: Rescue title/summary
+              description: Rescue title/summary (**Write Permission:** Admin/sudo only)
             unidentifiedRats:
               type: string
-              description: Unidentified commanders involved
+              description: Unidentified commanders involved (**Write Permission:** `rescues.write` or assigned to rescue)
             status:
               type: string
               enum: [open, inactive, closed]
-              description: Rescue status
+              description: Rescue status (**Write Permission:** `rescues.write` or assigned to rescue)
             outcome:
               type: string
               enum: [success, failure, invalid, other, purge]
-              description: Rescue outcome
+              description: Rescue outcome (**Write Permission:** `rescues.write` or assigned to rescue)
             quotes:
               type: array
               items:
                 type: object
-              description: Rescue chat quotes
+              description: Rescue chat quotes (**Write Permission:** `rescues.write` or assigned to rescue)
             createdAt:
               type: string
               format: date-time
-              description: Creation timestamp
+              description: Creation timestamp (**Write Permission:** Internal system only)
             updatedAt:
               type: string
               format: date-time
-              description: Last update timestamp
+              description: Last update timestamp (**Write Permission:** Internal system only)
+            deletedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: Deletion timestamp (**Write Permission:** Internal system only)
         relationships:
           type: object
           properties:
