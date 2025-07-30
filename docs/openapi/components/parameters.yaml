@@ -49,6 +49,35 @@ Include:
     type: string
   example: "rats,groups"
 
+Filter:
+  name: filter
+  in: query
+  description: |
+    Advanced filtering using JSON query objects. URL encode the filter object.
+    
+    **Supported Operators:**
+    - **Comparison**: `gt`, `gte`, `lt`, `lte`, `eq`, `ne`
+    - **Text**: `like`, `iLike`, `substring`, `startsWith`, `regexp`
+    - **Logical**: `and`, `or`, `not`
+    - **Arrays**: `contains`, `overlap`, `contained`
+    
+    **Example**: `{"and":[{"name":{"startsWith":"Commander"}},{"rescueCount":{"gt":10}}]}`
+  schema:
+    type: string
+  examples:
+    name_filter:
+      summary: Filter by name starting with text
+      value: '{"name":{"startsWith":"Commander"}}'
+    numeric_comparison:
+      summary: Filter by numeric comparison
+      value: '{"rescueCount":{"gt":10}}'
+    complex_filter:
+      summary: Complex filter with multiple conditions
+      value: '{"and":[{"platform":"pc"},{"status":"active"}]}'
+    text_search:
+      summary: Case-insensitive text search
+      value: '{"name":{"iLike":"%rescue%"}}'
+
 Fields:
   name: fields
   in: query
