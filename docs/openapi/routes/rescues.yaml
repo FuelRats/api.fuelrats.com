@@ -90,6 +90,7 @@ rescues:
       - $ref: '../components/parameters.yaml#/Sort'
       - $ref: '../components/parameters.yaml#/Include'
       - $ref: '../components/parameters.yaml#/Fields'
+      - $ref: '../components/parameters.yaml#/Filter'
     responses:
       '200':
         description: List of rescues

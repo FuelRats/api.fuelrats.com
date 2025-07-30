@@ -9,10 +9,109 @@ info:
 
     ## Authentication
 
-    The API supports multiple authentication methods:
-    - **Bearer Token**: JWT tokens for user authentication
-    - **OAuth2**: For third-party applications
-    - **Basic Auth**: For legacy endpoints
+    The API supports multiple OAuth2 authentication flows:
+
+    ### Authorization Code Grant (Recommended)
+    The most secure method for server-side and native desktop applications:
+    1. Redirect user to `/oauth2/authorize` with client_id, redirect_uri, and state
+    2. User authorizes your application
+    3. Exchange authorization code for access token at `/oauth2/token`
+    4. Use access token in `Authorization: Bearer <token>` header
+
+    ### Implicit Grant 
+    For client-side web applications (less secure):
+    1. Redirect user to `/oauth2/authorize` with response_type=token
+    2. Access token returned directly in redirect URL fragment
+
+    ### Resource Owner Password Credentials
+    Only available to first-party FuelRats applications:
+    - Direct username/password authentication
+    - Requires client to be whitelisted
+
+    ### WebSocket Authentication
+    For real-time communication, append bearer token to WebSocket URL:
+    ```
+    wss://api.fuelrats.com/?bearer=<your_token_here>
+    ```
+
+    ## Permission Scopes
+
+    API permissions follow the format: `resource.read/write(.me)`
+
+    - **resource**: Plural resource type (users, rats, rescues, etc.)
+    - **read**: View records
+    - **write**: Create/update/delete records  
+    - **.me**: Restrict to user's own associated records only
+
+    **Examples:**
+    - `rescues.read.me` - View only your assigned rescues
+    - `rats.write` - Modify any commander record
+    - `users.read` - View any user information
+
+    ## Filtering & Query Parameters
+
+    Most list endpoints support advanced filtering using JSON query objects:
+
+    ### Filter Operators:
+    - **Comparison**: `gt`, `gte`, `lt`, `lte`, `eq`, `ne`
+    - **Text**: `like`, `iLike`, `substring`, `startsWith`, `regexp`
+    - **Logical**: `and`, `or`, `not`
+    - **Arrays**: `contains`, `overlap`, `contained`
+
+    ### Example Filter:
+    ```json
+    {
+      "and": [
+        { "name": { "startsWith": "Commander" } },
+        { "rescueCount": { "gt": 10 } }
+      ]
+    }
+    ```
+
+    URL encode the filter object and pass as `filter` query parameter.
+
+    ## WebSocket Real-time API
+
+    Connect to `wss://api.fuelrats.com/` with protocol `FR-JSONAPI-WS`:
+
+    ### Request Format:
+    ```javascript
+    [state, endpoint, query, body]
+    ```
+
+    ### Response Format:
+    ```javascript
+    [state, status, body]
+    ```
+
+    ### Event Subscription:
+    Subscribe to real-time events by sending:
+    ```javascript
+    ["subscribe", "events", "subscribe", {}]
+    ```
+
+    Events follow format: `[event, sender, resourceId, data]`
+
+    ## Error Handling
+
+    All errors follow JSON:API error object format with additional metadata:
+
+    ```json
+    {
+      "errors": [{
+        "id": "unique-error-id",
+        "code": "error_code", 
+        "status": "400",
+        "title": "Error Title",
+        "detail": "Detailed error description",
+        "source": {
+          "pointer": "/data/attributes/field"
+        }
+      }]
+    }
+    ```
+
+    Use the `id` field for error tracking and `code` field for programmatic error handling.
   contact:
     name: FuelRats Support
     url: 'https://fuelrats.com'
@@ -52,6 +151,8 @@ tags:
     description: Real-time events and notifications
   - name: web-push
     description: Web push notifications and subscriptions
+  - name: websockets
+    description: Real-time WebSocket API communication
   - name: statistics
     description: Platform statistics and leaderboards
   - name: version
@@ -2684,6 +2785,7 @@ paths:
         - $ref: '#/components/parameters/Sort'
         - $ref: '#/components/parameters/Include'
         - $ref: '#/components/parameters/Fields'
+        - $ref: '#/components/parameters/Filter'
       responses:
         '200':
           description: List of rescues
@@ -6023,6 +6125,125 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /:
+    get:
+      tags:
+        - websockets
+      summary: WebSocket Connection
+      description: |
+        Establish a WebSocket connection for real-time API communication.
+
+        **Connection Details:**
+        - URL: `wss://api.fuelrats.com/`
+        - Protocol: `FR-JSONAPI-WS`
+        - Authentication: Bearer token in query parameter
+
+        **Authentication:**
+        ```
+        wss://api.fuelrats.com/?bearer=<your_access_token>
+        ```
+
+        **Request Format:**
+        All WebSocket messages follow this array format:
+        ```javascript
+        [state, endpoint, query, body]
+        ```
+
+        - `state`: Unique identifier for tracking requests/responses
+        - `endpoint`: Target API endpoint (e.g., "rescues", "users")
+        - `query`: Query parameters object
+        - `body`: Request body data
+
+        **Response Format:**
+        All WebSocket responses follow this array format:
+        ```javascript
+        [state, status, body]
+        ```
+
+        - `state`: Original request state identifier
+        - `status`: HTTP status code
+        - `body`: Response data (same as REST API)
+
+        **Example Request:**
+        ```javascript
+        [
+          "req_001",
+          "rescues",
+          { "page": { "limit": 10 } },
+          {}
+        ]
+        ```
+
+        **Example Response:**
+        ```javascript
+        [
+          "req_001",
+          200,
+          {
+            "data": [...],
+            "meta": {...},
+            "links": {...}
+          }
+        ]
+        ```
+
+        **Event Subscription:**
+        Subscribe to real-time events:
+        ```javascript
+        ["subscribe", "events", "subscribe", {}]
+        ```
+
+        **Event Format:**
+        Events are broadcast in this format:
+        ```javascript
+        [event, sender, resourceId, data]
+        ```
+
+        - `event`: Event type (e.g., "fuelrats.rescuecreate")
+        - `sender`: User who triggered the event
+        - `resourceId`: ID of the affected resource
+        - `data`: Event data payload
+
+        **Event Broadcasting:**
+        Applications with assigned namespaces can broadcast custom events:
+        - Maximum message size: 512KiB
+        - Cannot use `fuelrats.*` namespaces (reserved)
+        - Requires appropriate permissions
+
+        **Error Handling:**
+        WebSocket errors follow the same JSON:API error format as REST endpoints:
+        ```javascript
+        [
+          "req_001",
+          400,
+          {
+            "errors": [{
+              "id": "ws_error_001",
+              "code": "invalid_request",
+              "status": "400",
+              "title": "Bad Request",
+              "detail": "Invalid WebSocket request format"
+            }]
+          }
+        ]
+        ```
+      parameters:
+        - name: bearer
+          in: query
+          required: true
+          description: OAuth2 bearer token for authentication
+          schema:
+            type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '101':
+          description: Switching Protocols - WebSocket connection established
+        '400':
+          description: Bad Request - Invalid WebSocket request
+        '401':
+          description: Unauthorized - Invalid or missing bearer token
+        '426':
+          description: Upgrade Required - WebSocket upgrade failed
   /leaderboard:
     get:
       tags:
@@ -6140,14 +6361,54 @@ components:
           tokenUrl: /oauth2/token
           refreshUrl: /oauth2/token
           scopes:
-            read: Read access to public data
-            write: Write access to authorized resources
-            users.read: Read user profiles
-            users.write: Modify user profiles
-            rescues.read: Read rescue data
-            rescues.write: Create and modify rescues
-            rats.read: Read commander data
-            rats.write: Modify commander data
+            users.read: Read any user profiles and information
+            users.write: Create and modify any user accounts (admin only)
+            users.read.me: Read your own user profile only
+            users.write.me: Modify your own user profile only
+            rats.read: Read any commander information
+            rats.write: Create and modify any commander records
+            rats.read.me: Read your own commanders only
+            rats.write.me: Create and modify your own commanders only
+            rescues.read: Read any rescue data
+            rescues.write: Create and modify any rescue cases
+            rescues.read.me: Read only rescues you're assigned to
+            rescues.write.me: Modify only rescues you're assigned to
+            groups.read: Read group information and memberships
+            groups.write: Create and modify groups (admin only)
+            clients.read: Read OAuth client information
+            clients.write: Create and modify OAuth clients
+            clients.read.me: Read your own OAuth clients only
+            clients.write.me: Modify your own OAuth clients only
+            decals.read: Read decal awards and information
+            decals.write: Create and award decals (admin only)
+            nicknames.read: Read IRC nickname registrations
+            nicknames.write: Register and modify IRC nicknames
+            nicknames.read.me: Read your own nicknames only
+            nicknames.write.me: Modify your own nicknames only
+        implicit:
+          authorizationUrl: /oauth2/authorize
+          scopes:
+            users.read.me: Read your own user profile only
+            users.write.me: Modify your own user profile only
+            rats.read.me: Read your own commanders only
+            rats.write.me: Create and modify your own commanders only
+            rescues.read.me: Read only rescues you're assigned to
+            rescues.write.me: Modify only rescues you're assigned to
+            nicknames.read.me: Read your own nicknames only
+            nicknames.write.me: Modify your own nicknames only
+        password:
+          tokenUrl: /oauth2/token
+          scopes:
+            users.read: Read any user profiles and information
+            users.write: Create and modify any user accounts
+            rats.read: Read any commander information
+            rats.write: Create and modify any commander records
+            rescues.read: Read any rescue data
+            rescues.write: Create and modify any rescue cases
+            groups.read: Read group information and memberships
+            groups.write: Create and modify groups
+            decals.read: Read decal awards and information
+            decals.write: Create and award decals
     basicAuth:
       type: http
       scheme: basic
@@ -7280,6 +7541,34 @@ components:
       schema:
         type: string
       example: 'rats,groups'
+    Filter:
+      name: filter
+      in: query
+      description: |
+        Advanced filtering using JSON query objects. URL encode the filter object.
+
+        **Supported Operators:**
+        - **Comparison**: `gt`, `gte`, `lt`, `lte`, `eq`, `ne`
+        - **Text**: `like`, `iLike`, `substring`, `startsWith`, `regexp`
+        - **Logical**: `and`, `or`, `not`
+        - **Arrays**: `contains`, `overlap`, `contained`
+
+        **Example**: `{"and":[{"name":{"startsWith":"Commander"}},{"rescueCount":{"gt":10}}]}`
+      schema:
+        type: string
+      examples:
+        name_filter:
+          summary: Filter by name starting with text
+          value: '{"name":{"startsWith":"Commander"}}'
+        numeric_comparison:
+          summary: Filter by numeric comparison
+          value: '{"rescueCount":{"gt":10}}'
+        complex_filter:
+          summary: Complex filter with multiple conditions
+          value: '{"and":[{"platform":"pc"},{"status":"active"}]}'
+        text_search:
+          summary: Case-insensitive text search
+          value: '{"name":{"iLike":"%rescue%"}}'
     Fields:
       name: fields
       in: query
@@ -7302,35 +7591,87 @@ components:
         application/vnd.api+json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            errors:
-              - status: '400'
-                title: Bad Request
-                detail: The request could not be understood by the server
-                source:
-                  parameter: include
+          examples:
+            validation_error:
+              summary: Validation Error
+              description: Request validation failed due to invalid parameters
+              value:
+                errors:
+                  - id: req_abc123def456
+                    code: validation_error
+                    status: '400'
+                    title: Validation Error
+                    detail: The request contains invalid parameters
+                    source:
+                      parameter: include
+            malformed_json:
+              summary: Malformed JSON
+              description: Request body contains invalid JSON
+              value:
+                errors:
+                  - id: req_def456ghi789
+                    code: malformed_json
+                    status: '400'
+                    title: Bad Request
+                    detail: The request body contains malformed JSON
+                    source:
+                      pointer: /data
     Unauthorized:
       description: Unauthorized - Authentication required
       content:
         application/vnd.api+json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            errors:
-              - status: '401'
-                title: Unauthorized
-                detail: Authentication is required to access this resource
+          examples:
+            missing_token:
+              summary: Missing Authentication
+              description: No authentication token provided
+              value:
+                errors:
+                  - id: auth_no_token_001
+                    code: missing_authentication
+                    status: '401'
+                    title: Unauthorized
+                    detail: Authentication is required to access this resource
+            invalid_token:
+              summary: Invalid Token
+              description: Authentication token is invalid or expired
+              value:
+                errors:
+                  - id: auth_invalid_002
+                    code: invalid_token
+                    status: '401'
+                    title: Unauthorized
+                    detail: The provided authentication token is invalid or has expired
     Forbidden:
       description: Forbidden - Insufficient privileges
       content:
         application/vnd.api+json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            errors:
-              - status: '403'
-                title: Forbidden
-                detail: You do not have permission to access this resource
+          examples:
+            insufficient_permissions:
+              summary: Insufficient Permissions
+              description: User lacks required permissions for this operation
+              value:
+                errors:
+                  - id: perm_insufficient_001
+                    code: insufficient_permission
+                    status: '403'
+                    title: Forbidden
+                    detail: You do not have the required permissions to access this resource
+                    source:
+                      parameter: user_permissions
+            resource_access_denied:
+              summary: Resource Access Denied
+              description: Access to specific resource is denied
+              value:
+                errors:
+                  - id: perm_denied_002
+                    code: access_denied
+                    status: '403'
+                    title: Forbidden
+                    detail: Access to this resource is restricted
     NotFound:
       description: Not Found - Resource does not exist
       content:

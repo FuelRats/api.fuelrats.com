@@ -9,10 +9,109 @@ info:
     
     ## Authentication
     
-    The API supports multiple authentication methods:
-    - **Bearer Token**: JWT tokens for user authentication
-    - **OAuth2**: For third-party applications
-    - **Basic Auth**: For legacy endpoints
+    The API supports multiple OAuth2 authentication flows:
+    
+    ### Authorization Code Grant (Recommended)
+    The most secure method for server-side and native desktop applications:
+    1. Redirect user to `/oauth2/authorize` with client_id, redirect_uri, and state
+    2. User authorizes your application
+    3. Exchange authorization code for access token at `/oauth2/token`
+    4. Use access token in `Authorization: Bearer <token>` header
+    
+    ### Implicit Grant 
+    For client-side web applications (less secure):
+    1. Redirect user to `/oauth2/authorize` with response_type=token
+    2. Access token returned directly in redirect URL fragment
+    
+    ### Resource Owner Password Credentials
+    Only available to first-party FuelRats applications:
+    - Direct username/password authentication
+    - Requires client to be whitelisted
+    
+    ### WebSocket Authentication
+    For real-time communication, append bearer token to WebSocket URL:
+    ```
+    wss://api.fuelrats.com/?bearer=<your_token_here>
+    ```
+    
+    ## Permission Scopes
+    
+    API permissions follow the format: `resource.read/write(.me)`
+    
+    - **resource**: Plural resource type (users, rats, rescues, etc.)
+    - **read**: View records
+    - **write**: Create/update/delete records  
+    - **.me**: Restrict to user's own associated records only
+    
+    **Examples:**
+    - `rescues.read.me` - View only your assigned rescues
+    - `rats.write` - Modify any commander record
+    - `users.read` - View any user information
+    
+    ## Filtering & Query Parameters
+    
+    Most list endpoints support advanced filtering using JSON query objects:
+    
+    ### Filter Operators:
+    - **Comparison**: `gt`, `gte`, `lt`, `lte`, `eq`, `ne`
+    - **Text**: `like`, `iLike`, `substring`, `startsWith`, `regexp`
+    - **Logical**: `and`, `or`, `not`
+    - **Arrays**: `contains`, `overlap`, `contained`
+    
+    ### Example Filter:
+    ```json
+    {
+      "and": [
+        { "name": { "startsWith": "Commander" } },
+        { "rescueCount": { "gt": 10 } }
+      ]
+    }
+    ```
+    
+    URL encode the filter object and pass as `filter` query parameter.
+    
+    ## WebSocket Real-time API
+    
+    Connect to `wss://api.fuelrats.com/` with protocol `FR-JSONAPI-WS`:
+    
+    ### Request Format:
+    ```javascript
+    [state, endpoint, query, body]
+    ```
+    
+    ### Response Format:
+    ```javascript
+    [state, status, body]
+    ```
+    
+    ### Event Subscription:
+    Subscribe to real-time events by sending:
+    ```javascript
+    ["subscribe", "events", "subscribe", {}]
+    ```
+    
+    Events follow format: `[event, sender, resourceId, data]`
+    
+    ## Error Handling
+    
+    All errors follow JSON:API error object format with additional metadata:
+    
+    ```json
+    {
+      "errors": [{
+        "id": "unique-error-id",
+        "code": "error_code", 
+        "status": "400",
+        "title": "Error Title",
+        "detail": "Detailed error description",
+        "source": {
+          "pointer": "/data/attributes/field"
+        }
+      }]
+    }
+    ```
+    
+    Use the `id` field for error tracking and `code` field for programmatic error handling.
     
   contact:
     name: FuelRats Support
@@ -55,6 +154,8 @@ tags:
     description: Real-time events and notifications
   - name: web-push
     description: Web push notifications and subscriptions
+  - name: websockets
+    description: Real-time WebSocket API communication
   - name: statistics
     description: Platform statistics and leaderboards
   - name: version
@@ -193,6 +294,10 @@ paths:
   /alerts:
     $ref: './routes/web-push.yaml#/alerts_broadcast'
   
+  # WebSocket Real-time API
+  /:
+    $ref: './routes/websockets.yaml#/websocket_connection'
+  
   # Statistics and Leaderboard
   /leaderboard:
     $ref: './routes/statistics.yaml#/leaderboard'
@@ -219,14 +324,71 @@ components:
           tokenUrl: /oauth2/token
           refreshUrl: /oauth2/token
           scopes:
-            read: Read access to public data
-            write: Write access to authorized resources
-            users.read: Read user profiles
-            users.write: Modify user profiles
-            rescues.read: Read rescue data
-            rescues.write: Create and modify rescues
-            rats.read: Read commander data
-            rats.write: Modify commander data
+            # User permissions
+            users.read: Read any user profiles and information
+            users.write: Create and modify any user accounts (admin only)
+            users.read.me: Read your own user profile only
+            users.write.me: Modify your own user profile only
+            
+            # Rat (Commander) permissions  
+            rats.read: Read any commander information
+            rats.write: Create and modify any commander records
+            rats.read.me: Read your own commanders only
+            rats.write.me: Create and modify your own commanders only
+            
+            # Rescue permissions
+            rescues.read: Read any rescue data
+            rescues.write: Create and modify any rescue cases
+            rescues.read.me: Read only rescues you're assigned to
+            rescues.write.me: Modify only rescues you're assigned to
+            
+            # Group permissions
+            groups.read: Read group information and memberships
+            groups.write: Create and modify groups (admin only)
+            
+            # OAuth client permissions
+            clients.read: Read OAuth client information
+            clients.write: Create and modify OAuth clients
+            clients.read.me: Read your own OAuth clients only
+            clients.write.me: Modify your own OAuth clients only
+            
+            # Decal permissions
+            decals.read: Read decal awards and information
+            decals.write: Create and award decals (admin only)
+            
+            # Nickname permissions
+            nicknames.read: Read IRC nickname registrations
+            nicknames.write: Register and modify IRC nicknames
+            nicknames.read.me: Read your own nicknames only
+            nicknames.write.me: Modify your own nicknames only
+        
+        implicit:
+          authorizationUrl: /oauth2/authorize
+          scopes:
+            # Same scopes as authorization code but for client-side apps
+            users.read.me: Read your own user profile only
+            users.write.me: Modify your own user profile only
+            rats.read.me: Read your own commanders only
+            rats.write.me: Create and modify your own commanders only
+            rescues.read.me: Read only rescues you're assigned to
+            rescues.write.me: Modify only rescues you're assigned to
+            nicknames.read.me: Read your own nicknames only
+            nicknames.write.me: Modify your own nicknames only
+        
+        password:
+          tokenUrl: /oauth2/token
+          scopes:
+            # Full access scopes for first-party applications only
+            users.read: Read any user profiles and information
+            users.write: Create and modify any user accounts
+            rats.read: Read any commander information
+            rats.write: Create and modify any commander records
+            rescues.read: Read any rescue data
+            rescues.write: Create and modify any rescue cases
+            groups.read: Read group information and memberships
+            groups.write: Create and modify groups
+            decals.read: Read decal awards and information
+            decals.write: Create and award decals
     
     basicAuth:
       type: http

@@ -1,0 +1,120 @@
+# WebSocket Real-time API Documentation
+
+websocket_connection:
+  get:
+    tags: [websockets]
+    summary: WebSocket Connection
+    description: |
+      Establish a WebSocket connection for real-time API communication.
+      
+      **Connection Details:**
+      - URL: `wss://api.fuelrats.com/`
+      - Protocol: `FR-JSONAPI-WS`
+      - Authentication: Bearer token in query parameter
+      
+      **Authentication:**
+      ```
+      wss://api.fuelrats.com/?bearer=<your_access_token>
+      ```
+      
+      **Request Format:**
+      All WebSocket messages follow this array format:
+      ```javascript
+      [state, endpoint, query, body]
+      ```
+      
+      - `state`: Unique identifier for tracking requests/responses
+      - `endpoint`: Target API endpoint (e.g., "rescues", "users")
+      - `query`: Query parameters object
+      - `body`: Request body data
+      
+      **Response Format:**
+      All WebSocket responses follow this array format:
+      ```javascript
+      [state, status, body]
+      ```
+      
+      - `state`: Original request state identifier
+      - `status`: HTTP status code
+      - `body`: Response data (same as REST API)
+      
+      **Example Request:**
+      ```javascript
+      [
+        "req_001",
+        "rescues",
+        { "page": { "limit": 10 } },
+        {}
+      ]
+      ```
+      
+      **Example Response:**
+      ```javascript
+      [
+        "req_001",
+        200,
+        {
+          "data": [...],
+          "meta": {...},
+          "links": {...}
+        }
+      ]
+      ```
+      
+      **Event Subscription:**
+      Subscribe to real-time events:
+      ```javascript
+      ["subscribe", "events", "subscribe", {}]
+      ```
+      
+      **Event Format:**
+      Events are broadcast in this format:
+      ```javascript
+      [event, sender, resourceId, data]
+      ```
+      
+      - `event`: Event type (e.g., "fuelrats.rescuecreate")
+      - `sender`: User who triggered the event
+      - `resourceId`: ID of the affected resource
+      - `data`: Event data payload
+      
+      **Event Broadcasting:**
+      Applications with assigned namespaces can broadcast custom events:
+      - Maximum message size: 512KiB
+      - Cannot use `fuelrats.*` namespaces (reserved)
+      - Requires appropriate permissions
+      
+      **Error Handling:**
+      WebSocket errors follow the same JSON:API error format as REST endpoints:
+      ```javascript
+      [
+        "req_001",
+        400,
+        {
+          "errors": [{
+            "id": "ws_error_001",
+            "code": "invalid_request",
+            "status": "400",
+            "title": "Bad Request",
+            "detail": "Invalid WebSocket request format"
+          }]
+        }
+      ]
+      ```
+    parameters:
+      - name: bearer
+        in: query
+        required: true
+        description: OAuth2 bearer token for authentication
+        schema:
+          type: string
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    responses:
+      '101':
+        description: Switching Protocols - WebSocket connection established
+      '400':
+        description: Bad Request - Invalid WebSocket request
+      '401':
+        description: Unauthorized - Invalid or missing bearer token
+      '426':
+        description: Upgrade Required - WebSocket upgrade failed
