@@ -1,0 +1,193 @@
+# Web Push Notification API endpoints
+
+web_push_subscribe:
+  post:
+    tags: [web-push]
+    summary: Subscribe to web push notifications
+    description: |
+      Subscribe to receive web push notifications for rescue alerts and system events.
+      
+      This endpoint:
+      - Registers a web push subscription with the browser's push service
+      - Configures platform and expansion filters for relevant notifications
+      - Stores encryption keys for secure message delivery
+      - Associates the subscription with the authenticated user
+      - Enables receiving rescue alerts based on platform preferences
+      
+      **Web Push Standard:** This follows the W3C Web Push Protocol specification.
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [endpoint, keys]
+            properties:
+              endpoint:
+                type: string
+                format: uri
+                description: Push service endpoint URL from the browser
+                example: "https://fcm.googleapis.com/fcm/send/abc123"
+              expirationTime:
+                type: integer
+                nullable: true
+                description: Optional expiration time for the subscription (Unix timestamp)
+                example: 1640995200000
+              keys:
+                type: object
+                required: [auth, p256dh]
+                description: Encryption keys for secure push message delivery
+                properties:
+                  auth:
+                    type: string
+                    description: Authentication secret (base64url encoded)
+                    example: "Aw4J4yyK1bOzO8g7vN_g_Q"
+                  p256dh:
+                    type: string
+                    description: P-256 ECDH public key (base64url encoded)
+                    example: "BKsw_uy5sG6Q9_bQ3cZ4v8Nf6Q7wX2sP9zM4kL8nO5tR3"
+              pc:
+                type: boolean
+                default: true
+                description: Receive notifications for PC platform rescues
+              xb:
+                type: boolean
+                default: true
+                description: Receive notifications for Xbox platform rescues
+              ps:
+                type: boolean
+                default: true
+                description: Receive notifications for PlayStation platform rescues
+              odyssey:
+                type: boolean
+                default: true
+                description: Receive notifications for Odyssey expansion rescues
+          example:
+            endpoint: "https://fcm.googleapis.com/fcm/send/abc123def456"
+            expirationTime: null
+            keys:
+              auth: "Aw4J4yyK1bOzO8g7vN_g_Q"
+              p256dh: "BKsw_uy5sG6Q9_bQ3cZ4v8Nf6Q7wX2sP9zM4kL8nO5tR3"
+            pc: true
+            xb: false
+            ps: false
+            odyssey: true
+    responses:
+      '200':
+        description: Web push subscription created successfully
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '422':
+        description: Invalid subscription data
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            examples:
+              missing_endpoint:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Push service endpoint is required'
+                      source:
+                        pointer: 'endpoint'
+              missing_auth:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Authentication key is required'
+                      source:
+                        pointer: 'keys/auth'
+              missing_p256dh:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'P256DH key is required'
+                      source:
+                        pointer: 'keys/p256dh'
+
+alerts_broadcast:
+  post:
+    tags: [web-push]
+    summary: Send web push alert broadcast
+    description: |
+      Send a web push notification alert to all subscribed users.
+      
+      This endpoint:
+      - Broadcasts notifications to all registered web push subscriptions
+      - Used for system-wide alerts and important announcements
+      - Requires rescue write permissions (typically dispatch/admin)
+      - Processes notifications asynchronously using worker pools
+      
+      **Required Permission:** `rescues.write`
+      
+      **Note:** This is typically used internally for rescue alerts, but can be used for custom broadcasts.
+    security:
+      - bearerAuth: [rescues.write]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Alert data to broadcast to all subscribed users
+            properties:
+              title:
+                type: string
+                description: Notification title
+                example: "Emergency Rescue Alert"
+              body:
+                type: string
+                description: Notification body text
+                example: "Code Red rescue in progress - all available commanders respond"
+              icon:
+                type: string
+                format: uri
+                description: Optional notification icon URL
+                example: "/images/rescue-alert-icon.png"
+              tag:
+                type: string
+                description: Optional notification tag for grouping
+                example: "rescue-alert"
+              data:
+                type: object
+                description: Custom data payload for the notification
+                additionalProperties: true
+                example:
+                  rescueId: "880e8400-e29b-41d4-a716-446655440001"
+                  platform: "pc"
+                  system: "Sol"
+          example:
+            title: "Emergency Rescue Alert"
+            body: "Code Red rescue in Sol system - PC commanders needed"
+            icon: "/images/emergency-icon.png"
+            tag: "rescue-alert"
+            data:
+              rescueId: "880e8400-e29b-41d4-a716-446655440001"
+              platform: "pc"
+              system: "Sol"
+              codeRed: true
+    responses:
+      '200':
+        description: Alert broadcast initiated successfully
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'

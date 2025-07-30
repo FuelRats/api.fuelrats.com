@@ -1,0 +1,181 @@
+# Events API endpoints
+
+events:
+  get:
+    tags: [events]
+    summary: Server-Sent Events stream
+    description: |
+      Subscribe to real-time events using Server-Sent Events (SSE).
+      This endpoint opens a persistent connection to receive real-time updates about API changes.
+      
+      **Authentication Required:** Bearer token authentication
+      
+      The events are sent in the following format:
+      ```
+      event: fuelrats.rescue.create
+      data: {"id": "...", "user": "...", "data": {...}}
+      ```
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: SSE stream established
+        content:
+          text/event-stream:
+            schema:
+              type: string
+              description: Server-Sent Events stream
+            example: |
+              event: fuelrats.rescue.create
+              data: {"id":"880e8400-e29b-41d4-a716-446655440001","user":"550e8400-e29b-41d4-a716-446655440000","data":{"type":"rescues","id":"880e8400-e29b-41d4-a716-446655440001","attributes":{"client":"StrandedPilot","platform":"pc","status":"open"}}}
+              
+              event: fuelrats.rescue.update
+              data: {"id":"880e8400-e29b-41d4-a716-446655440001","user":"550e8400-e29b-41d4-a716-446655440000","data":{"type":"rescues","id":"880e8400-e29b-41d4-a716-446655440001","attributes":{"status":"closed","outcome":"success"}}}
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+events_broadcast:
+  post:
+    tags: [events]
+    summary: Broadcast custom event
+    description: |
+      Broadcast a custom event to all subscribed clients.
+      
+      Event names must follow the format: `namespace.resource.action`
+      - The namespace must match one of the OAuth client's authorized namespaces
+      - The 'fuelrats' namespace is reserved and cannot be used
+      
+      Example: `myapp.notification.create`
+      
+      **Authentication Required:** Bearer token authentication (with namespace permissions)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: event
+        in: path
+        required: true
+        description: Event name in format namespace.resource.action
+        schema:
+          type: string
+          pattern: '^[a-z0-9]+\.[a-z0-9]+\.[a-z0-9]+$'
+          example: myapp.notification.create
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Custom event data to broadcast
+            additionalProperties: true
+          example:
+            message: "New notification"
+            priority: "high"
+            timestamp: "2023-01-15T10:30:00.000Z"
+    responses:
+      '204':
+        description: Event broadcast successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        description: Forbidden - Invalid namespace or insufficient permissions
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '403'
+                  title: 'Forbidden'
+                  detail: 'The fuelrats namespace is reserved'
+                  source:
+                    parameter: 'event'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+# WebSocket-specific endpoints (documented for completeness)
+events_subscribe:
+  post:
+    tags: [events]
+    summary: Subscribe to WebSocket events
+    description: |
+      Subscribe to specific events over WebSocket connection.
+      This endpoint is only available over WebSocket connections.
+      
+      Events follow the format: `namespace.resource.action`
+      Example: `fuelrats.rescue.create`, `fuelrats.user.update`
+      
+      **Authentication Required:** Bearer token authentication (WebSocket only)
+    security:
+      - bearerAuth: []
+    x-websocket-only: true
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [events]
+            properties:
+              events:
+                type: array
+                items:
+                  type: string
+                  pattern: '^[a-z0-9]+\.[a-z0-9]+\.[a-z0-9]+$'
+                description: List of event names to subscribe to
+                example: ["fuelrats.rescue.create", "fuelrats.rescue.update"]
+    responses:
+      '204':
+        description: Successfully subscribed to events
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '409':
+        description: Already subscribed to one or more of the specified events
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+events_unsubscribe:
+  post:
+    tags: [events]
+    summary: Unsubscribe from WebSocket events
+    description: |
+      Unsubscribe from specific events over WebSocket connection.
+      This endpoint is only available over WebSocket connections.
+      
+      **Authentication Required:** Bearer token authentication (WebSocket only)
+    security:
+      - bearerAuth: []
+    x-websocket-only: true
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [events]
+            properties:
+              events:
+                type: array
+                items:
+                  type: string
+                  pattern: '^[a-z0-9]+\.[a-z0-9]+\.[a-z0-9]+$'
+                description: List of event names to unsubscribe from
+                example: ["fuelrats.rescue.create", "fuelrats.rescue.update"]
+    responses:
+      '204':
+        description: Successfully unsubscribed from events
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        description: Not subscribed to one or more of the specified events
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

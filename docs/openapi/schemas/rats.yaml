@@ -15,30 +15,35 @@ Rat:
               type: string
               minLength: 3
               maxLength: 64
-              description: Commander name
+              description: Commander name (**Write Permission:** `rats.write` or self-access)
             data:
               type: object
-              description: Additional rat metadata
+              description: Additional rat metadata (**Write Permission:** `rats.write` or self-access)
             platform:
               type: string
               enum: [pc, xb, ps]
-              description: Gaming platform
+              description: Gaming platform (**Write Permission:** `rats.write` or self-access)
             expansion:
               type: string
               enum: [horizons3, horizons4, odyssey]
-              description: Game expansion
+              description: Game expansion (**Write Permission:** `rats.write` or self-access)
             frontierId:
               type: integer
               nullable: true
-              description: Frontier account ID (group permission required)
+              description: Frontier account ID (**Write Permission:** Internal system only)
             createdAt:
               type: string
               format: date-time
-              description: Creation timestamp
+              description: Creation timestamp (**Write Permission:** Internal system only)
             updatedAt:
               type: string
               format: date-time
-              description: Last update timestamp
+              description: Last update timestamp (**Write Permission:** Internal system only)
+            deletedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: Deletion timestamp (**Write Permission:** Internal system only)
         relationships:
           type: object
           properties:

@@ -1,0 +1,411 @@
+# OAuth Clients API endpoints
+
+clients:
+  get:
+    tags: [oauth2]
+    summary: List OAuth clients
+    description: |
+      List OAuth clients owned by the authenticated user
+      
+      **Authentication Required:** Bearer token authentication (only shows user's own clients)
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of OAuth clients
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../schemas/clients.yaml#/Client'
+                meta:
+                  $ref: '../components/schemas.yaml#/PaginationMeta'
+                links:
+                  $ref: '../components/schemas.yaml#/PaginationLinks'
+            example:
+              data:
+                - type: clients
+                  id: "110e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    name: "My Application"
+                    redirectUri: "https://myapp.example.com/oauth/callback"
+                    namespaces:
+                      - "users.read"
+                      - "rats.read"
+                    firstParty: false
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
+                  relationships:
+                    user:
+                      data:
+                        type: users
+                        id: "550e8400-e29b-41d4-a716-446655440000"
+                      links:
+                        self: "/clients/110e8400-e29b-41d4-a716-446655440001/relationships/user"
+                        related: "/clients/110e8400-e29b-41d4-a716-446655440001/user"
+              included:
+                - type: users
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  attributes:
+                    email: "developer@example.com"
+                    status: "active"
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
+              meta:
+                page:
+                  offset: 0
+                  limit: 20
+                  total: 5
+              links:
+                self: "/clients?page[offset]=0&page[limit]=20"
+                first: "/clients?page[offset]=0&page[limit]=20"
+                last: "/clients?page[offset]=0&page[limit]=20"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+  post:
+    tags: [oauth2]
+    summary: Create OAuth client
+    description: |
+      Create a new OAuth client
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [clients]
+                  attributes:
+                    type: object
+                    required: [name, redirectUri]
+                    properties:
+                      name:
+                        type: string
+                        description: Name of the OAuth client application
+                      redirectUri:
+                        type: string
+                        format: uri
+                        description: OAuth redirect URI
+                      namespaces:
+                        type: array
+                        items:
+                          type: string
+                        description: OAuth scopes/namespaces the client can request
+    responses:
+      '201':
+        description: OAuth client created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '../schemas/clients.yaml#/Client'
+                meta:
+                  type: object
+                  properties:
+                    secret:
+                      type: string
+                      description: Client secret (only shown once)
+            example:
+              data:
+                type: clients
+                id: "110e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  name: "My New Application"
+                  redirectUri: "https://myapp.example.com/oauth/callback"
+                  namespaces:
+                    - "users.read"
+                    - "rats.read"
+                  firstParty: false
+                  createdAt: "2023-01-15T10:30:00.000Z"
+                  updatedAt: "2023-01-15T10:30:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/clients/110e8400-e29b-41d4-a716-446655440001/relationships/user"
+                      related: "/clients/110e8400-e29b-41d4-a716-446655440001/user"
+              meta:
+                secret: "xoxb-1234567890-abcdef1234567890abcdef1234567890"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+clients_by_id:
+  get:
+    tags: [oauth2]
+    summary: Get OAuth client by ID
+    description: |
+      Retrieve a specific OAuth client by ID
+      
+      **Authentication Required:** Bearer token authentication (only accessible to client owner)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: OAuth client ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: OAuth client details
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '../schemas/clients.yaml#/Client'
+            example:
+              data:
+                type: clients
+                id: "110e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  name: "My Application"
+                  redirectUri: "https://myapp.example.com/oauth/callback"
+                  namespaces:
+                    - "users.read"
+                    - "rats.read"
+                  firstParty: false
+                  createdAt: "2023-01-01T00:00:00.000Z"
+                  updatedAt: "2023-01-01T00:00:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/clients/110e8400-e29b-41d4-a716-446655440001/relationships/user"
+                      related: "/clients/110e8400-e29b-41d4-a716-446655440001/user"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [oauth2]
+    summary: Update OAuth client
+    description: |
+      Update an existing OAuth client
+      
+      **Authentication Required:** Bearer token authentication (only accessible to client owner)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: OAuth client ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [clients]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Name of the OAuth client application
+                      redirectUri:
+                        type: string
+                        format: uri
+                        description: OAuth redirect URI
+                      namespaces:
+                        type: array
+                        items:
+                          type: string
+                        description: OAuth scopes/namespaces the client can request
+    responses:
+      '200':
+        description: OAuth client updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '../schemas/clients.yaml#/Client'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [oauth2]
+    summary: Delete OAuth client
+    description: |
+      Delete an OAuth client. Requires basic authentication with the client ID and secret.
+      The client ID in the authorization header must match the resource ID.
+      
+      **Required Permission:** `clients.write`
+    security:
+      - basicAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: OAuth client ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: OAuth client deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+clients_user_relationship:
+  get:
+    tags: [oauth2]
+    summary: Get client's user relationship
+    description: |
+      Retrieve the relationship data for a client's owner
+      
+      **Authentication Required:** Bearer token authentication (only accessible to client owner)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: OAuth client ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Client's user relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [users]
+                    id:
+                      type: string
+                      format: uuid
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  patch:
+    tags: [oauth2]
+    summary: Update client's user relationship
+    description: |
+      Update the relationship between a client and its owner
+      
+      **Required Permission:** `clients.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: OAuth client ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [users]
+                  id:
+                    type: string
+                    format: uuid
+    responses:
+      '204':
+        description: Relationship updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

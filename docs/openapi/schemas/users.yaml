@@ -13,28 +13,45 @@ User:
           properties:
             data:
               type: object
-              description: User metadata
+              description: User metadata (**Write Permission:** `users.write` or self-access)
             email:
               type: string
               format: email
-              description: User email address (group permission required)
+              description: User email address (**Write Permission:** Admin/sudo only)
+            password:
+              type: string
+              writeOnly: true
+              description: User password (**Write Permission:** Admin/sudo only)
             status:
               type: string
               enum: [active, inactive, legacy, deactivated]
-              description: User account status
+              description: User account status (**Write Permission:** Custom logic - admin can change any status, users can only deactivate their own account)
             suspended:
               type: string
               format: date-time
               nullable: true
-              description: Suspension date if user is suspended (group permission required)
+              description: Suspension date if user is suspended (**Write Permission:** Admin/sudo only)
+            stripeId:
+              type: string
+              nullable: true
+              description: Stripe customer ID (**Write Permission:** `users.write` or self-access)
+            frontierId:
+              type: string
+              nullable: true
+              description: Frontier account ID (**Write Permission:** Internal system only)
             createdAt:
               type: string
               format: date-time
-              description: Account creation timestamp
+              description: Account creation timestamp (**Write Permission:** Internal system only)
             updatedAt:
               type: string
               format: date-time
-              description: Last update timestamp
+              description: Last update timestamp (**Write Permission:** Internal system only)
+            deletedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: Account deletion timestamp (**Write Permission:** Internal system only)
         relationships:
           type: object
           properties:

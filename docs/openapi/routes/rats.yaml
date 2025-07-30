@@ -4,7 +4,10 @@ rats:
   get:
     tags: [rats]
     summary: List rats
-    description: Search and list commanders (rats) with optional filtering and pagination
+    description: |
+      Search and list commanders (rats) with optional filtering and pagination
+      
+      **Public Access:** No authentication required
     parameters:
       - $ref: '../components/parameters.yaml#/PageOffset'
       - $ref: '../components/parameters.yaml#/PageLimit'
@@ -18,11 +21,77 @@ rats:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/rats.yaml#/RatCollection'
+            examples:
+              successful_response:
+                summary: List of rats with associated users
+                description: Example response showing paginated list of commanders (rats) with their user relationships
+                value:
+                  data:
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                      attributes:
+                        name: "SpacePilot42"
+                        platform: "pc"
+                        expansion: "odyssey"
+                        createdAt: "2023-01-01T00:00:00.000Z"
+                        updatedAt: "2023-01-01T00:00:00.000Z"
+                      relationships:
+                        user:
+                          data:
+                            type: users
+                            id: "550e8400-e29b-41d4-a716-446655440000"
+                          links:
+                            self: "/rats/660e8400-e29b-41d4-a716-446655440001/relationships/user"
+                            related: "/rats/660e8400-e29b-41d4-a716-446655440001/user"
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440002"
+                      attributes:
+                        name: "RescueCommander"
+                        platform: "xb"
+                        expansion: "horizons4"
+                        createdAt: "2023-01-02T00:00:00.000Z"
+                        updatedAt: "2023-01-02T00:00:00.000Z"
+                      relationships:
+                        user:
+                          data:
+                            type: users
+                            id: "550e8400-e29b-41d4-a716-446655440003"
+                          links:
+                            self: "/rats/660e8400-e29b-41d4-a716-446655440002/relationships/user"
+                            related: "/rats/660e8400-e29b-41d4-a716-446655440002/user"
+                  included:
+                    - type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      attributes:
+                        email: "spacepilot@example.com"
+                        status: "active"
+                        createdAt: "2023-01-01T00:00:00.000Z"
+                        updatedAt: "2023-01-01T00:00:00.000Z"
+                    - type: users
+                      id: "550e8400-e29b-41d4-a716-446655440003"
+                      attributes:
+                        email: "rescuecommander@example.com" 
+                        status: "active"
+                        createdAt: "2023-01-02T00:00:00.000Z"
+                        updatedAt: "2023-01-02T00:00:00.000Z"
+                  meta:
+                    page:
+                      offset: 0
+                      limit: 20
+                      total: 156
+                  links:
+                    self: "/rats?page[offset]=0&page[limit]=20"
+                    first: "/rats?page[offset]=0&page[limit]=20"
+                    last: "/rats?page[offset]=140&page[limit]=20"
+                    next: "/rats?page[offset]=20&page[limit]=20"
 
   post:
     tags: [rats]
     summary: Create rat
-    description: Create a new commander (rat)
+    description: |
+      Create a new commander (rat)
+      
+      **Required Permission:** `rats.write` OR self-access via `rats.write.me` (if creating rat for own account)
     security:
       - bearerAuth: []
     requestBody:
@@ -67,6 +136,25 @@ rats:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/rats.yaml#/RatDocument'
+            example:
+              data:
+                type: rats
+                id: "660e8400-e29b-41d4-a716-446655440003"
+                attributes:
+                  name: "NewRescuePilot"
+                  platform: "xb"
+                  expansion: "horizons4"
+                  createdAt: "2023-03-01T12:00:00.000Z"
+                  updatedAt: "2023-03-01T12:00:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/rats/660e8400-e29b-41d4-a716-446655440003/relationships/user"
+                      related: "/rats/660e8400-e29b-41d4-a716-446655440003/user"
+              included: []
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -78,7 +166,10 @@ rats_by_id:
   get:
     tags: [rats]
     summary: Get rat by ID
-    description: Retrieve a specific rat by their ID
+    description: |
+      Retrieve a specific rat by their ID
+      
+      **Public Access:** No authentication required
     parameters:
       - name: id
         in: path
@@ -96,13 +187,42 @@ rats_by_id:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/rats.yaml#/RatDocument'
+            example:
+              data:
+                type: rats
+                id: "660e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  name: "SpacePilot42"
+                  platform: "pc"
+                  expansion: "odyssey"
+                  createdAt: "2023-01-01T00:00:00.000Z"
+                  updatedAt: "2023-01-01T00:00:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/rats/660e8400-e29b-41d4-a716-446655440001/relationships/user"
+                      related: "/rats/660e8400-e29b-41d4-a716-446655440001/user"
+              included:
+                - type: users
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  attributes:
+                    email: "spacepilot@example.com"
+                    status: "active"
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
       '404':
         $ref: '../components/responses.yaml#/NotFound'
 
   put:
     tags: [rats]
     summary: Update rat
-    description: Update an existing rat
+    description: |
+      Update an existing rat
+      
+      **Required Permission:** `rats.write` OR self-access via `rats.write.me` (if updating own rat)
     security:
       - bearerAuth: []
     parameters:
@@ -153,6 +273,25 @@ rats_by_id:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/rats.yaml#/RatDocument'
+            example:
+              data:
+                type: rats
+                id: "660e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  name: "UpdatedPilotName"
+                  platform: "pc"
+                  expansion: "odyssey"
+                  createdAt: "2023-01-01T00:00:00.000Z"
+                  updatedAt: "2023-03-01T15:30:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/rats/660e8400-e29b-41d4-a716-446655440001/relationships/user"
+                      related: "/rats/660e8400-e29b-41d4-a716-446655440001/user"
+              included: []
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -165,7 +304,10 @@ rats_by_id:
   delete:
     tags: [rats]
     summary: Delete rat
-    description: Delete a rat (only if no associated rescues)
+    description: |
+      Delete a rat (only if no associated rescues)
+      
+      **Required Permission:** `rats.write` OR self-access via `rats.write.me` (if deleting own rat)
     security:
       - bearerAuth: []
     parameters:
@@ -185,3 +327,106 @@ rats_by_id:
         $ref: '../components/responses.yaml#/Forbidden'
       '404':
         $ref: '../components/responses.yaml#/NotFound'
+
+rats_user_relationship:
+  get:
+    tags: [rats]
+    summary: Get rat's user relationship
+    description: |
+      Retrieve the user who owns this rat
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rat ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Rat's user relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [users]
+                    id:
+                      type: string
+                      format: uuid
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+            example:
+              data:
+                type: users
+                id: "550e8400-e29b-41d4-a716-446655440000"
+              links:
+                self: "/rats/660e8400-e29b-41d4-a716-446655440001/relationships/user"
+                related: "/rats/660e8400-e29b-41d4-a716-446655440001/user"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  patch:
+    tags: [rats]
+    summary: Update rat's user relationship
+    description: |
+      Change the owner of this rat
+      
+      **Required Permission:** `rats.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rat ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [users]
+                  id:
+                    type: string
+                    format: uuid
+    responses:
+      '204':
+        description: Relationship updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

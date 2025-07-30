@@ -4,7 +4,10 @@ users:
   get:
     tags: [users]
     summary: List users
-    description: Search and list users with optional filtering and pagination
+    description: |
+      Search and list users with optional filtering and pagination
+      
+      **Authentication Required:** Bearer token authentication
     security:
       - bearerAuth: []
     parameters:
@@ -20,6 +23,80 @@ users:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/users.yaml#/UserCollection'
+            examples:
+              successful_response:
+                summary: List of users with relationships
+                description: Example response showing paginated list of users with their associated rats and groups
+                value:
+                  data:
+                    - type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      attributes:
+                        email: "user1@example.com"
+                        status: "active"
+                        createdAt: "2023-01-01T00:00:00.000Z"
+                        updatedAt: "2023-01-01T00:00:00.000Z"
+                      relationships:
+                        rats:
+                          data:
+                            - type: rats
+                              id: "660e8400-e29b-41d4-a716-446655440001"
+                          links:
+                            self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/rats"
+                            related: "/users/550e8400-e29b-41d4-a716-446655440000/rats"
+                        groups:
+                          data:
+                            - type: groups
+                              id: "770e8400-e29b-41d4-a716-446655440002"
+                          links:
+                            self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/groups"
+                            related: "/users/550e8400-e29b-41d4-a716-446655440000/groups"
+                    - type: users
+                      id: "550e8400-e29b-41d4-a716-446655440003"
+                      attributes:
+                        email: "user2@example.com"
+                        status: "active"
+                        createdAt: "2023-01-02T00:00:00.000Z"
+                        updatedAt: "2023-01-02T00:00:00.000Z"
+                      relationships:
+                        rats:
+                          data: []
+                          links:
+                            self: "/users/550e8400-e29b-41d4-a716-446655440003/relationships/rats"
+                            related: "/users/550e8400-e29b-41d4-a716-446655440003/rats"
+                        groups:
+                          data: []
+                          links:
+                            self: "/users/550e8400-e29b-41d4-a716-446655440003/relationships/groups"
+                            related: "/users/550e8400-e29b-41d4-a716-446655440003/groups"
+                  included:
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                      attributes:
+                        name: "SpacePilot42"
+                        platform: "pc"
+                        expansion: "odyssey"
+                        createdAt: "2023-01-01T00:00:00.000Z"
+                        updatedAt: "2023-01-01T00:00:00.000Z"
+                    - type: groups
+                      id: "770e8400-e29b-41d4-a716-446655440002"
+                      attributes:
+                        name: "Standard Users"
+                        vhost: null
+                        isAdministrator: false
+                        priority: 0
+                        createdAt: "2023-01-01T00:00:00.000Z"
+                        updatedAt: "2023-01-01T00:00:00.000Z"
+                  meta:
+                    page:
+                      offset: 0
+                      limit: 20
+                      total: 42
+                  links:
+                    self: "/users?page[offset]=0&page[limit]=20"
+                    first: "/users?page[offset]=0&page[limit]=20"
+                    last: "/users?page[offset]=40&page[limit]=20"
+                    next: "/users?page[offset]=20&page[limit]=20"
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '403':
@@ -28,7 +105,10 @@ users:
   post:
     tags: [users]
     summary: Create user
-    description: Create a new user account
+    description: |
+      Create a new user account
+      
+      **Required Permission:** `users.write`
     security:
       - bearerAuth: []
     requestBody:
@@ -62,6 +142,27 @@ users:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/users.yaml#/UserDocument'
+            example:
+              data:
+                type: users
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                attributes:
+                  email: "newuser@example.com"
+                  status: "active"
+                  createdAt: "2023-01-15T10:30:00.000Z"
+                  updatedAt: "2023-01-15T10:30:00.000Z"
+                relationships:
+                  rats:
+                    data: []
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/rats"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/rats"
+                  groups:
+                    data: []
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/groups"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/groups"
+              included: []
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -73,7 +174,10 @@ users_by_id:
   get:
     tags: [users]
     summary: Get user by ID
-    description: Retrieve a specific user by their ID
+    description: |
+      Retrieve a specific user by their ID
+      
+      **Authentication Required:** Bearer token authentication
     security:
       - bearerAuth: []
     parameters:
@@ -93,6 +197,48 @@ users_by_id:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/users.yaml#/UserDocument'
+            example:
+              data:
+                type: users
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                attributes:
+                  email: "user@example.com"
+                  status: "active"
+                  createdAt: "2023-01-01T00:00:00.000Z"
+                  updatedAt: "2023-01-01T00:00:00.000Z"
+                relationships:
+                  rats:
+                    data:
+                      - type: rats
+                        id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/rats"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/rats"
+                  groups:
+                    data:
+                      - type: groups
+                        id: "770e8400-e29b-41d4-a716-446655440002"
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/groups"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/groups"
+              included:
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    name: "SpacePilot42"
+                    platform: "pc"
+                    expansion: "odyssey"
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
+                - type: groups
+                  id: "770e8400-e29b-41d4-a716-446655440002"
+                  attributes:
+                    name: "Standard Users"
+                    vhost: null
+                    isAdministrator: false
+                    priority: 0
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '404':
@@ -101,7 +247,10 @@ users_by_id:
   put:
     tags: [users]
     summary: Update user
-    description: Update an existing user
+    description: |
+      Update an existing user
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if updating own account)
     security:
       - bearerAuth: []
     parameters:
@@ -138,6 +287,37 @@ users_by_id:
                         format: email
                       data:
                         type: object
+                  relationships:
+                    type: object
+                    properties:
+                      rats:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [rats]
+                                id:
+                                  type: string
+                                  format: uuid
+                      groups:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [groups]
+                                id:
+                                  type: string
+                                  format: uuid
     responses:
       '200':
         description: User updated successfully
@@ -145,6 +325,34 @@ users_by_id:
           application/vnd.api+json:
             schema:
               $ref: '../schemas/users.yaml#/UserDocument'
+            example:
+              data:
+                type: users
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                attributes:
+                  email: "updated.user@example.com"
+                  status: "active"
+                  data:
+                    preferences:
+                      theme: "dark"
+                      notifications: true
+                  createdAt: "2023-01-01T00:00:00.000Z"
+                  updatedAt: "2023-03-01T16:30:00.000Z"
+                relationships:
+                  rats:
+                    data:
+                      - type: rats
+                        id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/rats"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/rats"
+                  groups:
+                    data:
+                      - type: groups
+                        id: "770e8400-e29b-41d4-a716-446655440002"
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/groups"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/groups"
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -157,7 +365,10 @@ users_by_id:
   delete:
     tags: [users]
     summary: Delete user
-    description: Delete a user account
+    description: |
+      Delete a user account
+      
+      **Required Permission:** `users.write`
     security:
       - bearerAuth: []
     parameters:
@@ -175,5 +386,882 @@ users_by_id:
         $ref: '../components/responses.yaml#/Unauthorized'
       '403':
         $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+profile:
+  get:
+    tags: [users]
+    summary: Get current user profile
+    description: |
+      Retrieve the profile of the currently authenticated user
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: Current user's profile
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+            example:
+              data:
+                type: users
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                attributes:
+                  email: "current.user@example.com"
+                  status: "active"
+                  createdAt: "2023-01-01T00:00:00.000Z"
+                  updatedAt: "2023-01-01T00:00:00.000Z"
+                relationships:
+                  rats:
+                    data:
+                      - type: rats
+                        id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/rats"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/rats"
+                  groups:
+                    data:
+                      - type: groups
+                        id: "770e8400-e29b-41d4-a716-446655440002"
+                    links:
+                      self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/groups"
+                      related: "/users/550e8400-e29b-41d4-a716-446655440000/groups"
+              included:
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    name: "SpacePilot42"
+                    platform: "pc"
+                    expansion: "odyssey"
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
+                - type: groups
+                  id: "770e8400-e29b-41d4-a716-446655440002"
+                  attributes:
+                    name: "Standard Users"
+                    vhost: null
+                    isAdministrator: false
+                    priority: 0
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+users_certificate:
+  get:
+    tags: [users]
+    summary: Get user certificate
+    description: |
+      Generate and retrieve an IRC client certificate for the user
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if accessing own certificate)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: IRC client certificate
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+        headers:
+          Content-Disposition:
+            description: Attachment filename
+            schema:
+              type: string
+              example: 'attachment; filename="FuelRats-IRC.p12"'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_decals:
+  post:
+    tags: [users]
+    summary: Award decal to user
+    description: |
+      Award a decal to a user
+      
+      **Required Permission:** `decals.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [decals]
+                  attributes:
+                    type: object
+                    required: [type]
+                    properties:
+                      type:
+                        type: string
+                        enum: [rescue, epic, thisisfine, anniversary]
+                        description: Type of decal to award
+                      notes:
+                        type: string
+                        description: Additional notes about the decal award
+    responses:
+      '201':
+        description: Decal awarded successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [decals]
+                    id:
+                      type: string
+                      format: uuid
+                    attributes:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        notes:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+            example:
+              data:
+                type: decals
+                id: "220e8400-e29b-41d4-a716-446655440005"
+                attributes:
+                  code: "RESCUE-2023-055"
+                  type: "rescue"
+                  notes: "Awarded for exceptional rescue performance"
+                  createdAt: "2023-03-01T18:00:00.000Z"
+                  updatedAt: "2023-03-01T18:00:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/decals/220e8400-e29b-41d4-a716-446655440005/relationships/user"
+                      related: "/decals/220e8400-e29b-41d4-a716-446655440005/user"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_rats_relationship:
+  get:
+    tags: [users]
+    summary: Get user's rats relationship
+    description: |
+      Retrieve the relationship data for a user's rats
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: User's rats relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [rats]
+                      id:
+                        type: string
+                        format: uuid
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+            example:
+              data:
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440001"
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440002"
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440003"
+              links:
+                self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/rats"
+                related: "/users/550e8400-e29b-41d4-a716-446655440000/rats"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  patch:
+    tags: [users]
+    summary: Update user's rats relationship
+    description: |
+      Update the relationship between a user and their rats
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if updating own rats)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Relationship updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  post:
+    tags: [users]
+    summary: Add rats to user relationship
+    description: |
+      Add rats to a user's rats relationship
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if updating own rats)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Rats added to relationship successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [users]
+    summary: Remove rats from user relationship
+    description: |
+      Remove rats from a user's rats relationship
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if updating own rats)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Rats removed from relationship successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_groups_relationship:
+  get:
+    tags: [users]
+    summary: Get user's groups relationship
+    description: |
+      Retrieve the relationship data for a user's groups
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: User's groups relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [groups]
+                      id:
+                        type: string
+                        format: uuid
+            example:
+              data:
+                - type: groups
+                  id: "770e8400-e29b-41d4-a716-446655440001"
+                - type: groups
+                  id: "770e8400-e29b-41d4-a716-446655440002"
+              links:
+                self: "/users/550e8400-e29b-41d4-a716-446655440000/relationships/groups"
+                related: "/users/550e8400-e29b-41d4-a716-446655440000/groups"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  patch:
+    tags: [users]
+    summary: Update user's groups relationship
+    description: |
+      Update the relationship between a user and their groups
+      
+      **Required Permission:** `users.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [groups]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Relationship updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  post:
+    tags: [users]
+    summary: Add groups to user relationship
+    description: |
+      Add groups to a user's groups relationship
+      
+      **Required Permission:** `users.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [groups]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Groups added to relationship successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [users]
+    summary: Remove groups from user relationship
+    description: |
+      Remove groups from a user's groups relationship
+      
+      **Required Permission:** `users.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [groups]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Groups removed from relationship successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_image:
+  get:
+    tags: [users]
+    summary: Get user image
+    description: Retrieve a user's profile image
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+      - name: format
+        in: query
+        description: Image format
+        schema:
+          type: string
+          enum: [webp, png, jpeg]
+          default: webp
+      - name: size
+        in: query
+        description: Image size in pixels
+        schema:
+          type: integer
+          minimum: 32
+          maximum: 256
+          default: 256
+    responses:
+      '200':
+        description: User profile image
+        content:
+          image/webp:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_statistics:
+  get:
+    tags: [users]
+    summary: Get user statistics
+    description: |
+      Retrieve statistics for a specific user
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: User statistics
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rescues:
+                  type: object
+                  properties:
+                    total:
+                      type: integer
+                    successful:
+                      type: integer
+                    failed:
+                      type: integer
+                rats:
+                  type: object
+                  properties:
+                    total:
+                      type: integer
+            example:
+              rescues:
+                total: 143
+                successful: 132
+                failed: 11
+              rats:
+                total: 3
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_authenticator:
+  get:
+    tags: [users]
+    summary: Generate TOTP authenticator secret
+    description: |
+      Generate a new TOTP authenticator secret for two-factor authentication
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if setting up own 2FA)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: TOTP authenticator secret generated
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [authenticators]
+                    id:
+                      type: string
+                      format: uuid
+                    attributes:
+                      type: object
+                      properties:
+                        secret:
+                          type: string
+                          description: TOTP secret key
+                        dataUri:
+                          type: string
+                          format: uri
+                          description: QR code data URI for authenticator apps
+                    relationships:
+                      type: object
+                      properties:
+                        user:
+                          type: object
+                          properties:
+                            data:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [users]
+                                id:
+                                  type: string
+                                  format: uuid
+            example:
+              data:
+                type: authenticators
+                id: "990e8400-e29b-41d4-a716-446655440099"
+                attributes:
+                  secret: "JBSWY3DPEHPK3PXP"
+                  dataUri: "otpauth://totp/Fuel%20Rats:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Fuel%20Rats"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses.yaml#/Conflict'
+
+  post:
+    tags: [users]
+    summary: Link TOTP authenticator
+    description: |
+      Link a TOTP authenticator to the user account by verifying the secret with a token
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if setting up own 2FA)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [authenticators]
+                  attributes:
+                    type: object
+                    required: [secret, token, description]
+                    properties:
+                      secret:
+                        type: string
+                        description: TOTP secret key from the generation step
+                      token:
+                        type: string
+                        pattern: '^[0-9]{6}$'
+                        description: Current 6-digit TOTP token
+                      description:
+                        type: string
+                        description: User-friendly description for this authenticator
+    responses:
+      '201':
+        description: Authenticator linked successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '409':
+        $ref: '../components/responses.yaml#/Conflict'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [users]
+    summary: Remove TOTP authenticator
+    description: |
+      Remove the TOTP authenticator from the user account
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if removing own 2FA)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+      - name: X-Verify
+        in: header
+        required: true
+        description: Current 6-digit TOTP token for verification
+        schema:
+          type: string
+          pattern: '^[0-9]{6}$'
+    responses:
+      '204':
+        description: Authenticator removed successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
       '404':
         $ref: '../components/responses.yaml#/NotFound'
