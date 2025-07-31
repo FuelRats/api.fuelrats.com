@@ -454,12 +454,211 @@ profile:
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
 
-users_certificate:
-  get:
+users_password:
+  put:
     tags: [users]
-    summary: Get user certificate
+    summary: Change user password
     description: |
-      Generate and retrieve an IRC client certificate for the user
+      Change a user's password. Can be authenticated either with the current password
+      or with a passkey response.
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [password-changes]
+                  attributes:
+                    type: object
+                    required: [newPassword]
+                    properties:
+                      password:
+                        type: string
+                        description: Current password (required if not using passkey)
+                      totpCode:
+                        type: string
+                        pattern: '^[0-9]{6}$'
+                        description: 6-digit TOTP code (required if 2FA is enabled)
+                      newPassword:
+                        type: string
+                        description: New password to set
+                        minLength: 8
+                      passkeyResponse:
+                        type: object
+                        description: WebAuthn authentication response (required if not using password)
+                        properties:
+                          id:
+                            type: string
+                            description: Base64url-encoded credential ID
+                          rawId:
+                            type: string
+                            format: byte
+                            description: Raw credential ID
+                          response:
+                            type: object
+                            properties:
+                              authenticatorData:
+                                type: string
+                                format: byte
+                              clientDataJSON:
+                                type: string
+                                format: byte
+                              signature:
+                                type: string
+                                format: byte
+                              userHandle:
+                                type: string
+                                format: byte
+                          type:
+                            type: string
+                            enum: [public-key]
+          examples:
+            password_auth:
+              summary: Change password using current password
+              value:
+                data:
+                  type: password-changes
+                  attributes:
+                    password: "currentPassword123"
+                    newPassword: "newSecurePassword456"
+            password_2fa_auth:
+              summary: Change password using password + 2FA
+              value:
+                data:
+                  type: password-changes
+                  attributes:
+                    password: "currentPassword123"
+                    totpCode: "123456"
+                    newPassword: "newSecurePassword456"
+            passkey_auth:
+              summary: Set password using passkey authentication
+              value:
+                data:
+                  type: password-changes
+                  attributes:
+                    newPassword: "newSecurePassword456"
+                    passkeyResponse:
+                      id: "ALhP1I4BZL3b..."
+                      rawId: "ALhP1I4BZL3b..."
+                      response:
+                        authenticatorData: "SZYN5YgO..."
+                        clientDataJSON: "eyJ0eXBlIj..."
+                        signature: "MEUCIQCx..."
+                      type: "public-key"
+    responses:
+      '200':
+        description: Password changed successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+      '400':
+        description: Bad Request - Neither password nor passkeyResponse provided
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '401':
+        description: Unauthorized - Invalid password or passkey authentication failed
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_email:
+  put:
+    tags: [users]
+    summary: Change user email
+    description: |
+      Change a user's email address. This will trigger a verification email to the new address
+      and remove the user from the verified group until the new email is verified.
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [email-changes]
+                  attributes:
+                    type: object
+                    required: [email]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        description: New email address
+          example:
+            data:
+              type: email-changes
+              attributes:
+                email: "newemail@example.com"
+    responses:
+      '200':
+        description: Email changed successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_certificate:
+  post:
+    tags: [users]
+    summary: Generate user certificate
+    description: |
+      Generate and retrieve an IRC client certificate for the user.
+      Requires additional authentication (password+TOTP or passkey) for security.
       
       **Required Permission:** `users.write` OR self-access via `users.write.me` (if accessing own certificate)
     security:
@@ -472,24 +671,120 @@ users_certificate:
         schema:
           type: string
           format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type]
+                properties:
+                  type:
+                    type: string
+                    enum: [certificate-requests]
+                  attributes:
+                    type: object
+                    properties:
+                      password:
+                        type: string
+                        description: Current password (required if not using passkey)
+                      totpCode:
+                        type: string
+                        pattern: '^[0-9]{6}$'
+                        description: 6-digit TOTP code (required if 2FA is enabled)
+                      passkeyResponse:
+                        type: object
+                        description: WebAuthn authentication response (required if not using password)
+                        properties:
+                          id:
+                            type: string
+                            description: Base64url-encoded credential ID
+                          rawId:
+                            type: string
+                            format: byte
+                            description: Raw credential ID
+                          response:
+                            type: object
+                            properties:
+                              authenticatorData:
+                                type: string
+                                format: byte
+                              clientDataJSON:
+                                type: string
+                                format: byte
+                              signature:
+                                type: string
+                                format: byte
+                              userHandle:
+                                type: string
+                                format: byte
+                          type:
+                            type: string
+                            enum: [public-key]
+          examples:
+            password_auth:
+              summary: Generate certificate using password
+              value:
+                data:
+                  type: certificate-requests
+                  attributes:
+                    password: "userPassword123"
+            password_2fa_auth:
+              summary: Generate certificate using password + 2FA
+              value:
+                data:
+                  type: certificate-requests
+                  attributes:
+                    password: "userPassword123"
+                    totpCode: "123456"
+            passkey_auth:
+              summary: Generate certificate using passkey
+              value:
+                data:
+                  type: certificate-requests
+                  attributes:
+                    passkeyResponse:
+                      id: "ALhP1I4BZL3b..."
+                      rawId: "ALhP1I4BZL3b..."
+                      response:
+                        authenticatorData: "SZYN5YgO..."
+                        clientDataJSON: "eyJ0eXBlIj..."
+                        signature: "MEUCIQCx..."
+                      type: "public-key"
     responses:
       '200':
-        description: IRC client certificate
+        description: IRC client certificate generated successfully
         content:
-          image/jpeg:
+          application/x-pem-file:
             schema:
               type: string
               format: binary
         headers:
           Content-Disposition:
-            description: Attachment filename
+            description: Certificate filename
             schema:
               type: string
-              example: 'attachment; filename="FuelRats-IRC.p12"'
+              example: 'attachment; filename="RatName.pem"'
+      '400':
+        description: Bad Request - Missing authentication or invalid request
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
       '401':
-        $ref: '../components/responses.yaml#/Unauthorized'
+        description: Unauthorized - Invalid password, TOTP, or passkey authentication failed
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
       '404':
         $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
 
 users_decals:
   post:

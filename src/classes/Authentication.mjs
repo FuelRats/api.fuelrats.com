@@ -3,10 +3,11 @@ import { authenticator as totp } from 'otplib'
 import UUID from 'pure-uuid'
 import * as constants from '../constants'
 import {
-  User, Token, Client, Reset, Authenticator, db,
+  User, Token, Client, Reset, Authenticator, Passkey, db,
 } from '../db'
 
 import Anope from './Anope'
+import config from '../config'
 import {
   AuthenticatorRequiredAPIError,
   GoneAPIError,
@@ -116,6 +117,77 @@ class Authentication {
         status: 'active',
       },
     })
+  }
+
+  /**
+   * Perform passkey authentication with WebAuthn response
+   * @param {object} arg function arguments object
+   * @param {string} arg.userId the ID of the user to authenticate
+   * @param {object} arg.passkeyResponse the WebAuthn authentication response
+   * @param {string} arg.expectedChallenge the challenge expected for this authentication
+   * @returns {Promise<User|undefined>} A promise returning the authenticated user object
+   */
+  static async passkeyAuthenticate ({ userId, passkeyResponse, expectedChallenge }) {
+    if (!userId || !passkeyResponse || !expectedChallenge) {
+      return undefined
+    }
+
+    const user = await User.findOne({
+      where: {
+        id: userId,
+        suspended: null,
+        status: 'active',
+      },
+    })
+
+    if (!user) {
+      return undefined
+    }
+
+    if (user.isSuspended() === true) {
+      throw new GoneAPIError({ detail: 'User account is suspended' })
+    }
+
+    const passkey = await Passkey.findOne({
+      where: {
+        credentialId: passkeyResponse.id,
+        userId: user.id,
+      },
+    })
+
+    if (!passkey) {
+      return undefined
+    }
+
+    // Verify the passkey response
+    const { verifyAuthenticationResponse } = await import('@simplewebauthn/server')
+    let verification = null
+    try {
+      verification = await verifyAuthenticationResponse({
+        response: passkeyResponse,
+        expectedChallenge,
+        expectedOrigin: config.server.externalUrl,
+        expectedRPID: new URL(config.server.externalUrl).hostname,
+        authenticator: {
+          credentialID: Buffer.from(passkey.credentialId, 'base64url'),
+          credentialPublicKey: Buffer.from(passkey.publicKey, 'base64url'),
+          counter: passkey.counter,
+        },
+      })
+    } catch (error) {
+      return undefined
+    }
+
+    if (!verification.verified) {
+      return undefined
+    }
+
+    // Update passkey counter
+    await passkey.update({
+      counter: verification.authenticationInfo.newCounter,
+    })
+
+    return user
   }
 
   /**

@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt'
 import { promises as fsp } from 'fs'
 import workerpool from 'workerpool'
 import {
@@ -27,6 +26,7 @@ import {
   InternalServerError,
   ImATeapotAPIError,
 } from '../classes/APIError'
+import Authentication from '../classes/Authentication'
 import { Context } from '../classes/Context'
 import Event from '../classes/Event'
 import Jira from '../classes/Jira'
@@ -38,6 +38,7 @@ import { User, Decal, Avatar, db } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import emailChangeEmail from '../emails/emailchange'
+import logger from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import {
   UserView, DecalView, RatView, ClientView, GroupView,
@@ -66,6 +67,62 @@ export default class Users extends APIResource {
   }
 
   /**
+   * Validate user authentication using either password+TOTP or passkey
+   * @param {object} options Authentication options
+   * @param {User} options.user The user to authenticate
+   * @param {string} [options.password] Password for traditional auth
+   * @param {string} [options.totpCode] TOTP code for 2FA
+   * @param {object} [options.passkeyResponse] Passkey response for WebAuthn auth
+   * @param {Context} options.ctx Request context for passkey session validation
+   * @returns {Promise<void>} Resolves if authentication succeeds, throws otherwise
+   */
+  static async validateUserAuthentication ({
+    user, password, totpCode, passkeyResponse, ctx,
+  }) {
+    if (passkeyResponse) {
+      // Verify passkey authentication
+      const expectedChallenge = ctx.session.passkeyChallenge
+      const sessionUserId = ctx.session.passkeyUserId
+
+      if (!expectedChallenge || !sessionUserId || sessionUserId !== user.id) {
+        throw new UnauthorizedAPIError({
+          detail: 'No valid passkey authentication session found',
+        })
+      }
+
+      const authenticatedUser = await Authentication.passkeyAuthenticate({
+        userId: user.id,
+        passkeyResponse,
+        expectedChallenge,
+      })
+
+      if (!authenticatedUser) {
+        throw new UnauthorizedAPIError({ detail: 'Passkey authentication failed' })
+      }
+
+      // Clear the passkey session
+      delete ctx.session.passkeyChallenge
+      delete ctx.session.passkeyUserId
+    } else if (password) {
+      // Use the existing Authentication.passwordAuthenticate method which handles TOTP
+      const authenticatedUser = await Authentication.passwordAuthenticate({
+        email: user.email,
+        password,
+        code: totpCode,
+      })
+
+      if (!authenticatedUser) {
+        throw new UnauthorizedAPIError({ detail: 'Invalid password or TOTP code' })
+      }
+    } else {
+      // Neither password nor passkey provided
+      throw new BadRequestAPIError({
+        detail: 'Either password (with TOTP if applicable) or passkeyResponse must be provided',
+      })
+    }
+  }
+
+  /**
    * Get a list of users according to a search query
    * @param {Context} ctx a request context
    * @returns {Promise<DatabaseDocument>} JSONAPI result document
@@ -76,7 +133,19 @@ export default class Users extends APIResource {
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const results = await User.findAndCountAll(query.searchObject)
-    const result = await Anope.mapNicknames(results)
+
+    let result = null
+    try {
+      result = await Anope.mapNicknames(results)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for user search', {
+        userCount: results.rows.length,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return results without nicknames
+      result = results
+    }
 
     return new DatabaseDocument({ query, result, type: UserView })
   }
@@ -93,7 +162,19 @@ export default class Users extends APIResource {
   async findById (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: User })
 
-    const user = await Anope.mapNickname(result)
+    let user = null
+    try {
+      user = await Anope.mapNickname(result)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for user findById', {
+        userId: result.id,
+        userEmail: result.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      user = result
+    }
     return new DatabaseDocument({ query, result: user, type: UserView })
   }
 
@@ -112,8 +193,19 @@ export default class Users extends APIResource {
       },
     })
 
-
-    const user = await Anope.mapNickname(result)
+    let user = null
+    try {
+      user = await Anope.mapNickname(result)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for user profile', {
+        userId: result.id,
+        userEmail: result.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      user = result
+    }
     user.redeemable = await Decals.getEligibleDecalCount({ user: ctx.state.user })
     return new DatabaseDocument({ query, result: user, type: UserView })
   }
@@ -166,20 +258,44 @@ export default class Users extends APIResource {
    * @param {Context} ctx request context
    * @returns {Promise<undefined>} resolves a promise upon completion
    */
-  @GET('/users/:id/certificate')
+  @POST('/users/:id/certificate')
   @parameters('id')
   @authenticated
+  @required()
   async certificate (ctx) {
-    const ratName = ctx.state.user.preferredRat().name
+    const { password, passkeyResponse, totpCode } = getJSONAPIData({ ctx, type: 'certificate-requests' })?.attributes ?? {}
+
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id,
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    // Validate authentication using the reusable method
+    await Users.validateUserAuthentication({
+      user,
+      password,
+      totpCode,
+      passkeyResponse,
+      ctx,
+    })
+
+    const ratName = user.preferredRat().name
     const { certificate, fingerprint } = await Users.sslGenerationPool.exec('generateSslCertificate',
       [ratName])
 
-    const anopeAccount = await Anope.getAccount(ctx.state.user.email)
+    const anopeAccount = await Anope.getAccount(user.email)
     if (!anopeAccount) {
       throw new BadRequestAPIError()
     }
 
-    await Anope.setFingerprint(ctx.state.user.email, fingerprint)
+    await Anope.setFingerprint(user.email, fingerprint)
     ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
     ctx.set('Content-type', 'application/x-pem-file')
     ctx.body = certificate
@@ -234,7 +350,20 @@ export default class Users extends APIResource {
     await Jira.setEmail(user.displayName(), newEmail)
     await Anope.setEmail(oldEmail, newEmail)
 
-    const result = await Anope.mapNickname(user)
+    let result = null
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames after email change', {
+        userId: user.id,
+        oldEmail,
+        newEmail,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
@@ -280,9 +409,9 @@ export default class Users extends APIResource {
   @websocket('users', 'password', 'update')
   @parameters('id')
   @authenticated
-  @required('password', 'newPassword')
+  @required('newPassword')
   async setPassword (ctx) {
-    const { password, newPassword } = getJSONAPIData({ ctx, type: 'password-changes' }).attributes
+    const { password, newPassword, passkeyResponse, totpCode } = getJSONAPIData({ ctx, type: 'password-changes' }).attributes
 
     const user = await User.findOne({
       where: {
@@ -296,11 +425,16 @@ export default class Users extends APIResource {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    const validatePassword = await bcrypt.compare(password, user.password)
-    if (!validatePassword) {
-      throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
-    }
+    // Validate authentication using the reusable method
+    await Users.validateUserAuthentication({
+      user,
+      password,
+      totpCode,
+      passkeyResponse,
+      ctx,
+    })
 
+    // Set the new password
     await db.transaction(async (transaction) => {
       user.password = newPassword
       await user.save({ transaction })
@@ -309,7 +443,19 @@ export default class Users extends APIResource {
       return user
     })
 
-    const result = await Anope.mapNickname(user)
+    let result = null
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames after password change', {
+        userId: user.id,
+        userEmail: user.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: UserView })
@@ -328,7 +474,19 @@ export default class Users extends APIResource {
     const user = await super.create({ ctx, databaseType: User })
 
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
+    let result = null
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for newly created user', {
+        userId: user.id,
+        userEmail: user.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
 
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: UserView })
@@ -347,7 +505,19 @@ export default class Users extends APIResource {
     const user = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
 
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
+    let result = null
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames after user update', {
+        userId: user.id,
+        userEmail: user.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     return new DatabaseDocument({ query, result, type: UserView })
   }

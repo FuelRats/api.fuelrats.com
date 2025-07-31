@@ -165,6 +165,8 @@ paths:
   # Registration
   /register:
     $ref: './routes/register.yaml#/register'
+  /register/passkey:
+    $ref: './routes/register.yaml#/register_passkey'
   
   # Email Verifications
   /verifications:
@@ -188,6 +190,10 @@ paths:
     $ref: './routes/users.yaml#/users_by_id'
   /profile:
     $ref: './routes/users.yaml#/profile'
+  /users/{id}/password:
+    $ref: './routes/users.yaml#/users_password'
+  /users/{id}/email:
+    $ref: './routes/users.yaml#/users_email'
   /users/{id}/certificate:
     $ref: './routes/users.yaml#/users_certificate'
   /users/{id}/decals:

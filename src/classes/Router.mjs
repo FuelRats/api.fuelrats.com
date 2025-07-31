@@ -13,8 +13,8 @@ router.get('/', (ctx) => {
     searchHotKey: 'k',
     darkMode: false,
     authentication: {
-      preferredSecurityScheme: 'bearerAuth'
-    }
+      preferredSecurityScheme: 'bearerAuth',
+    },
   }
 
   const html = `<!doctype html>
@@ -40,7 +40,7 @@ router.get('/', (ctx) => {
 router.get('/openapi/bundled.yaml', async (ctx) => {
   const fs = await import('fs/promises')
   const path = await import('path')
-  
+
   try {
     const bundledPath = path.resolve('docs/openapi/bundled.yaml')
     const bundled = await fs.readFile(bundledPath, 'utf8')
@@ -55,7 +55,7 @@ router.get('/openapi/bundled.yaml', async (ctx) => {
 router.get('/openapi/openapi.yaml', async (ctx) => {
   const fs = await import('fs/promises')
   const path = await import('path')
-  
+
   try {
     const specPath = path.resolve('docs/openapi/openapi.yaml')
     const spec = await fs.readFile(specPath, 'utf8')
