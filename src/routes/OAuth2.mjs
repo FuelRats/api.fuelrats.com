@@ -526,7 +526,7 @@ class OAuth extends API {
 
     if (user.groups && (!scope || scope.includes('*') || scope.includes('groups'))) {
       const jiraRoles = user.groups.flatMap((group) => {
-        return group.jiraRoles && group.jiraRoles.length > 0 ? group.jiraRoles : []
+        return group.jiraRoles
       })
       userinfo.groups = [...new Set(jiraRoles)]
     }
