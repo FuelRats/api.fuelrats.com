@@ -1,4 +1,5 @@
 // import { authenticator as totp } from 'otplib'
+import jwt from 'jsonwebtoken'
 import API, {
   authenticated,
   clientAuthenticated,
@@ -24,7 +25,7 @@ import {
 import Permission from '../classes/Permission'
 import { oAuthTokenGenerator, transactionGenerator } from '../classes/TokenGenerators'
 import config from '../config'
-import { Client, Code } from '../db'
+import { Client, Code, User } from '../db'
 import Token from '../db/Token'
 import { isValidRedirectUri } from '../helpers/Validators'
 
@@ -47,6 +48,126 @@ class OAuth extends API {
   }
 
   /**
+   * Get user with groups for ID token generation
+   * @param {string} userId User ID to look up
+   * @returns {Promise<object|null>} User object with groups or null
+   */
+  getUserForIdToken (userId) {
+    return User.findOne({
+      where: { id: userId },
+      include: ['groups'],
+    })
+  }
+
+  /**
+   * Extract Jira roles from user groups
+   * @param {object[]} groups User groups array
+   * @returns {string[]} Array of unique Jira roles
+   */
+  extractJiraRoles (groups) {
+    if (!groups || !Array.isArray(groups)) {
+      return []
+    }
+
+    const jiraRoles = groups.flatMap((group) => {
+      return group.jiraRoles && Array.isArray(group.jiraRoles) ? group.jiraRoles : []
+    })
+
+    return [...new Set(jiraRoles)]
+  }
+
+  /**
+   * Validate JWT secret configuration
+   * @throws {Error} If JWT secret is invalid or insecure
+   */
+  validateJwtSecret () {
+    if (!config.jwt.secret) {
+      throw new Error('JWT secret is required but not configured. Set FRAPI_JWT_SECRET environment variable.')
+    }
+
+    if (typeof config.jwt.secret !== 'string') {
+      throw new Error('JWT secret must be a string.')
+    }
+
+    const minimumSecretLength = 32
+    if (config.jwt.secret.length < minimumSecretLength) {
+      throw new Error(`JWT secret must be at least ${minimumSecretLength} characters long for security. Current length: ${config.jwt.secret.length}`)
+    }
+  }
+
+  /**
+   * Generate a JWT access token
+   * @param {object} params Parameters for access token generation
+   * @param {object} params.user User object
+   * @param {string[]} params.scopes Granted OAuth scopes
+   * @param {string} params.clientId OAuth client ID
+   * @returns {string} JWT access token
+   */
+  generateJwtAccessToken ({ user, scopes, clientId }) {
+    this.validateJwtSecret()
+
+    const accessTokenPayload = {
+      iss: config.server.externalUrl,
+      sub: user.id,
+      aud: clientId,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24), // 24 hours
+      iat: Math.floor(Date.now() / 1000),
+      scope: scopes.join(' '),
+      token_type: 'Bearer',
+    }
+
+    return jwt.sign(accessTokenPayload, config.jwt.secret, { algorithm: 'HS256' })
+  }
+
+  /**
+   * Generate an ID token for OpenID Connect
+   * @param {object} params Parameters for ID token generation
+   * @param {object} params.user User object with groups
+   * @param {string[]} params.scopes Requested OAuth scopes
+   * @param {string} params.clientId OAuth client ID
+   * @param {string} params.nonce Nonce for replay protection
+   * @returns {string|null} JWT ID token or null if openid scope not requested
+   */
+  generateIdToken ({ user, scopes, clientId, nonce }) {
+    if (!scopes.includes('openid')) {
+      return null
+    }
+
+    this.validateJwtSecret()
+
+    const idTokenPayload = {
+      iss: config.server.externalUrl,
+      sub: user.id,
+      aud: clientId,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour
+      iat: Math.floor(Date.now() / 1000),
+    }
+
+    if (nonce) {
+      idTokenPayload.nonce = nonce
+    }
+
+    if (scopes.includes('profile')) {
+      idTokenPayload.name = user.displayName()
+      idTokenPayload.preferred_username = user.displayName()
+      idTokenPayload.profile = `${config.server.externalUrl}/profile/overview`
+      idTokenPayload.updated_at = Math.floor(user.updatedAt.getTime() / 1000)
+    }
+
+    if (scopes.includes('email')) {
+      idTokenPayload.email = user.email
+      idTokenPayload.email_verified = user.verified
+    }
+
+    if (scopes.includes('groups')) {
+      idTokenPayload.groups = this.extractJiraRoles(user.groups)
+    }
+
+    // Using HMAC SHA-256 signing
+    return jwt.sign(idTokenPayload, config.jwt.secret, { algorithm: 'HS256' })
+  }
+
+  /**
    * Endpoint for OAuth authorize decision screen info requests
    * @endpoint
    */
@@ -60,6 +181,7 @@ class OAuth extends API {
       redirect_uri: redirectUri,
       scope,
       state,
+      nonce,
     } = ctx.query
 
     /* Check valid parameters */
@@ -124,6 +246,7 @@ class OAuth extends API {
           redirectUri,
           clientId,
           userId: ctx.state.user.id,
+          nonce,
         })
 
         return callbackResponse(redirectUri, {
@@ -134,19 +257,48 @@ class OAuth extends API {
 
       /* User has previously granted access, skip immediately to returning a token */
       if (existingToken && responseType === 'token') {
+        let tokenValue = null
+
+        // Use JWT access tokens only for OpenID Connect flows
+        if (scopes.includes('openid')) {
+          tokenValue = this.generateJwtAccessToken({
+            user: ctx.state.user,
+            scopes,
+            clientId,
+          })
+        } else {
+          // Use traditional opaque tokens for regular OAuth flows
+          tokenValue = await oAuthTokenGenerator()
+        }
+
         const token = await Token.create({
-          value: await oAuthTokenGenerator(),
+          value: tokenValue,
           scope: scopes,
           clientId,
           userId: ctx.state.user.id,
         })
 
-        return callbackResponse(redirectUri, {
+        const response = {
           access_token: token.value,
           token_type: 'bearer',
           scope: scopes.join(','),
           state,
-        })
+        }
+
+        // Generate ID token if openid scope is requested
+        if (scopes.includes('openid')) {
+          const idToken = this.generateIdToken({
+            user: ctx.state.user,
+            scopes,
+            clientId,
+            nonce,
+          })
+          if (idToken) {
+            response.id_token = idToken
+          }
+        }
+
+        return callbackResponse(redirectUri, response)
       }
 
       /* User has not previously granted access, return authorize decision information */
@@ -157,6 +309,7 @@ class OAuth extends API {
         scopes,
         clientId,
         state,
+        nonce,
         userId: ctx.state.user.id,
       })
 
@@ -209,6 +362,7 @@ class OAuth extends API {
       clientId,
       userId,
       state,
+      nonce,
     } = transaction
 
     /* As a security measure transaction ID is both stored as a session cookie and as a request parameter
@@ -236,6 +390,7 @@ class OAuth extends API {
         redirectUri,
         clientId,
         userId,
+        nonce,
       })
 
       return callbackResponse(redirectUri, {
@@ -246,19 +401,50 @@ class OAuth extends API {
 
     /* User allowed access, return bearer token */
     if (transaction.responseType === 'token') {
+      let tokenValue = null
+      let user = null
+
+      // Use JWT access tokens only for OpenID Connect flows
+      if (transaction.scopes.includes('openid')) {
+        user = await this.getUserForIdToken(transaction.userId)
+        tokenValue = this.generateJwtAccessToken({
+          user,
+          scopes: transaction.scopes,
+          clientId: transaction.clientId,
+        })
+      } else {
+        // Use traditional opaque tokens for regular OAuth flows
+        tokenValue = await oAuthTokenGenerator()
+      }
+
       const token = await Token.create({
-        value: await oAuthTokenGenerator(),
+        value: tokenValue,
         scope: transaction.scopes,
         clientId: transaction.clientId,
         userId: transaction.userId,
       })
 
-      return callbackResponse(redirectUri, {
+      const response = {
         access_token: token.value,
         token_type: 'bearer',
         scope: transaction.scopes.join(','),
         state: transaction.state,
-      })
+      }
+
+      // Generate ID token if openid scope is requested
+      if (transaction.scopes.includes('openid') && user) {
+        const idToken = this.generateIdToken({
+          user,
+          scopes: transaction.scopes,
+          clientId: transaction.clientId,
+          nonce: transaction.nonce,
+        })
+        if (idToken) {
+          response.id_token = idToken
+        }
+      }
+
+      return callbackResponse(redirectUri, response)
     }
     return undefined
   }
@@ -335,17 +521,48 @@ class OAuth extends API {
     }
 
     /* Exchange successful, return bearer token */
+    let tokenValue = null
+    let user = null
+
+    // Use JWT access tokens only for OpenID Connect flows
+    if (authCode.scope.includes('openid')) {
+      user = await this.getUserForIdToken(authCode.userId)
+      tokenValue = this.generateJwtAccessToken({
+        user,
+        scopes: authCode.scope,
+        clientId: authCode.clientId,
+      })
+    } else {
+      // Use traditional opaque tokens for regular OAuth flows
+      tokenValue = await oAuthTokenGenerator()
+    }
+
     const token = await Token.create({
-      value: await oAuthTokenGenerator(),
+      value: tokenValue,
       scope: authCode.scope,
       userId: authCode.userId,
       clientId: authCode.clientId,
     })
 
-    return {
+    const response = {
       access_token: token.value,
       token_type: 'bearer',
     }
+
+    // Generate ID token if openid scope is requested
+    if (authCode.scope.includes('openid') && user) {
+      const idToken = this.generateIdToken({
+        user,
+        scopes: authCode.scope,
+        clientId: authCode.clientId,
+        nonce: authCode.nonce,
+      })
+      if (idToken) {
+        response.id_token = idToken
+      }
+    }
+
+    return response
   }
 
 
@@ -525,10 +742,7 @@ class OAuth extends API {
     }
 
     if (user.groups && (!scope || scope.includes('*') || scope.includes('groups'))) {
-      const jiraRoles = user.groups.flatMap((group) => {
-        return group.jiraRoles
-      })
-      userinfo.groups = [...new Set(jiraRoles)]
+      userinfo.groups = this.extractJiraRoles(user.groups)
     }
 
     return userinfo
@@ -562,7 +776,7 @@ class OAuth extends API {
       grant_types_supported: ['authorization_code', 'password', 'implicit'],
       subject_types_supported: ['public'],
       // eslint-disable-next-line id-length
-      id_token_signing_alg_values_supported: ['none'],
+      id_token_signing_alg_values_supported: ['HS256'],
       scopes_supported: ['openid', 'profile', 'email', 'groups'],
       // eslint-disable-next-line id-length
       token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],
