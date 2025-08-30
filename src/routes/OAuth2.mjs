@@ -25,7 +25,7 @@ import {
 import Permission from '../classes/Permission'
 import { oAuthTokenGenerator, transactionGenerator } from '../classes/TokenGenerators'
 import config from '../config'
-import { Client, Code } from '../db'
+import { Client, Code, User } from '../db'
 import Token from '../db/Token'
 import { isValidRedirectUri } from '../helpers/Validators'
 
@@ -45,6 +45,18 @@ class OAuth extends API {
    */
   get type () {
     return 'oauth2'
+  }
+
+  /**
+   * Get user with groups for ID token generation
+   * @param {string} userId User ID to look up
+   * @returns {Promise<object|null>} User object with groups or null
+   */
+  getUserForIdToken (userId) {
+    return User.findOne({
+      where: { id: userId },
+      include: ['groups'],
+    })
   }
 
   /**
@@ -87,7 +99,7 @@ class OAuth extends API {
 
     if (scopes.includes('groups')) {
       const jiraRoles = user.groups.flatMap((group) => {
-        return group.jiraRoles
+        return group.jiraRoles && Array.isArray(group.jiraRoles) ? group.jiraRoles : []
       })
       idTokenPayload.groups = [...new Set(jiraRoles)]
     }
@@ -332,11 +344,7 @@ class OAuth extends API {
 
       // Generate ID token if openid scope is requested
       if (transaction.scopes.includes('openid')) {
-        const { User } = await import('../db')
-        const user = await User.findOne({
-          where: { id: transaction.userId },
-          include: ['groups'],
-        })
+        const user = await this.getUserForIdToken(transaction.userId)
 
         if (user) {
           const idToken = this.generateIdToken({
@@ -442,11 +450,7 @@ class OAuth extends API {
 
     // Generate ID token if openid scope is requested
     if (authCode.scope.includes('openid')) {
-      const { User } = await import('../db')
-      const user = await User.findOne({
-        where: { id: authCode.userId },
-        include: ['groups'],
-      })
+      const user = await this.getUserForIdToken(authCode.userId)
 
       if (user) {
         const idToken = this.generateIdToken({
@@ -642,7 +646,7 @@ class OAuth extends API {
 
     if (user.groups && (!scope || scope.includes('*') || scope.includes('groups'))) {
       const jiraRoles = user.groups.flatMap((group) => {
-        return group.jiraRoles
+        return group.jiraRoles && Array.isArray(group.jiraRoles) ? group.jiraRoles : []
       })
       userinfo.groups = [...new Set(jiraRoles)]
     }
