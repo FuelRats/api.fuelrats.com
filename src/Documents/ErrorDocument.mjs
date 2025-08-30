@@ -26,6 +26,8 @@ class ErrorDocument extends Document {
    * @param {[Error]|Error} arg.errors the errors to include in the document
    */
   constructor ({ query, errors }) {
+    // eslint-disable-next-line no-console
+    console.log(errors)
     let errorList = errors
     if (Array.isArray(errorList) === false) {
       errorList = [errorList]
