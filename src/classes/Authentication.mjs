@@ -19,6 +19,7 @@ import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
+const expectedJwtParts = 3
 
 /**
  * @classdesc Class for handling authentication mechanisms
@@ -95,9 +96,13 @@ class Authentication {
    */
   static validateJwtToken (bearer) {
     try {
-      const jwtParts = 3
-      // JWT tokens typically have 3 parts separated by dots
-      if (!bearer || bearer.split('.').length !== jwtParts) {
+      if (!bearer) {
+        return null
+      }
+      
+      // JWT tokens have 3 parts: header.payload.signature
+      const tokenParts = bearer.split('.')
+      if (tokenParts.length !== expectedJwtParts) {
         return null
       }
 
@@ -105,11 +110,6 @@ class Authentication {
 
       // Validate required JWT claims
       if (!decoded.sub || !decoded.aud || !decoded.exp || !decoded.iat) {
-        return null
-      }
-
-      // Check if token is expired
-      if (decoded.exp * 1000 < Date.now()) {
         return null
       }
 
