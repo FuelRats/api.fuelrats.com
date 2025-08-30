@@ -781,7 +781,7 @@ class OAuth extends API {
 
     return {
       issuer,
-      authorization_endpoint: `${issuer}/oauth2/authorize`,
+      authorization_endpoint: `${config.frontend.url}/authorize`,
       token_endpoint: `${issuer}/oauth2/token`,
       userinfo_endpoint: `${issuer}/oauth2/userinfo`,
       revocation_endpoint: `${issuer}/oauth2/revoke`,
