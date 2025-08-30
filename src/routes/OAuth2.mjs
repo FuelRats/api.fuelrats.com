@@ -68,11 +68,11 @@ class OAuth extends API {
     if (!groups || !Array.isArray(groups)) {
       return []
     }
-    
+
     const jiraRoles = groups.flatMap((group) => {
       return group.jiraRoles && Array.isArray(group.jiraRoles) ? group.jiraRoles : []
     })
-    
+
     return [...new Set(jiraRoles)]
   }
 
@@ -84,13 +84,14 @@ class OAuth extends API {
     if (!config.jwt.secret) {
       throw new Error('JWT secret is required but not configured. Set FRAPI_JWT_SECRET environment variable.')
     }
-    
+
     if (typeof config.jwt.secret !== 'string') {
       throw new Error('JWT secret must be a string.')
     }
-    
-    if (config.jwt.secret.length < 32) {
-      throw new Error('JWT secret must be at least 32 characters long for security. Current length: ' + config.jwt.secret.length)
+
+    const minimumSecretLength = 32
+    if (config.jwt.secret.length < minimumSecretLength) {
+      throw new Error(`JWT secret must be at least ${minimumSecretLength} characters long for security. Current length: ${config.jwt.secret.length}`)
     }
   }
 
@@ -104,7 +105,7 @@ class OAuth extends API {
    */
   generateJwtAccessToken ({ user, scopes, clientId }) {
     this.validateJwtSecret()
-    
+
     const accessTokenPayload = {
       iss: config.server.externalUrl,
       sub: user.id,
@@ -131,7 +132,7 @@ class OAuth extends API {
     if (!scopes.includes('openid')) {
       return null
     }
-    
+
     this.validateJwtSecret()
 
     const idTokenPayload = {
