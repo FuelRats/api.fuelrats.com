@@ -505,9 +505,9 @@ class OAuth extends API {
    */
   @GET('/oauth2/userinfo')
   @authenticated
-  async userinfo (ctx) {
+  userinfo (ctx) {
     const { user, scope } = ctx.state
-    
+
     const userinfo = {
       sub: user.id,
     }
@@ -525,7 +525,9 @@ class OAuth extends API {
     }
 
     if (user.groups && (!scope || scope.includes('*') || scope.includes('groups'))) {
-      userinfo.groups = user.groups.map((group) => group.jiraName || group.name).filter(Boolean)
+      userinfo.groups = user.groups.map((group) => {
+        return group.jiraName || group.name
+      }).filter(Boolean)
     }
 
     return userinfo
@@ -537,7 +539,7 @@ class OAuth extends API {
    */
   @POST('/oauth2/userinfo')
   @authenticated
-  async userinfoPost (ctx) {
+  userinfoPost (ctx) {
     return this.userinfo(ctx)
   }
 
@@ -546,9 +548,9 @@ class OAuth extends API {
    * @endpoint
    */
   @GET('/.well-known/openid-configuration')
-  async openidConfiguration (ctx) {
+  openidConfiguration () {
     const issuer = config.server.externalUrl
-    
+
     return {
       issuer,
       authorization_endpoint: `${issuer}/oauth2/authorize`,
@@ -558,8 +560,10 @@ class OAuth extends API {
       response_types_supported: ['code', 'token'],
       grant_types_supported: ['authorization_code', 'password', 'implicit'],
       subject_types_supported: ['public'],
+      // eslint-disable-next-line id-length
       id_token_signing_alg_values_supported: ['none'],
       scopes_supported: ['openid', 'profile', 'email', 'groups'],
+      // eslint-disable-next-line id-length
       token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],
       claims_supported: [
         'sub',

@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -6,10 +6,10 @@ module.exports = {
       type: Sequelize.STRING,
       allowNull: true,
       defaultValue: null,
-    });
+    })
   },
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('Groups', 'jiraName');
-  }
-};
+  down: async (queryInterface) => {
+    await queryInterface.removeColumn('Groups', 'jiraName')
+  },
+}
