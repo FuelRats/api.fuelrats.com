@@ -99,7 +99,7 @@ class Authentication {
       if (!bearer) {
         return null
       }
-      
+
       // JWT tokens have 3 parts: header.payload.signature
       const tokenParts = bearer.split('.')
       if (tokenParts.length !== expectedJwtParts) {
