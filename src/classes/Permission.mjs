@@ -55,7 +55,8 @@ export default class Permission {
    * @returns {boolean}
    */
   static isValidOAuthScope (scope) {
-    return scope === '*' || Permission.allPermissions.includes(scope)
+    const openidScopes = ['openid', 'profile', 'email', 'groups']
+    return scope === '*' || Permission.allPermissions.includes(scope) || openidScopes.includes(scope)
   }
 
   /**
