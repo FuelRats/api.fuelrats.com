@@ -1,4 +1,5 @@
 // import { authenticator as totp } from 'otplib'
+import jwt from 'jsonwebtoken'
 import API, {
   authenticated,
   clientAuthenticated,
@@ -47,6 +48,55 @@ class OAuth extends API {
   }
 
   /**
+   * Generate an ID token for OpenID Connect
+   * @param {object} params Parameters for ID token generation
+   * @param {object} params.user User object with groups
+   * @param {string[]} params.scopes Requested OAuth scopes
+   * @param {string} params.clientId OAuth client ID
+   * @param {string} params.nonce Nonce for replay protection
+   * @returns {string|null} JWT ID token or null if openid scope not requested
+   */
+  generateIdToken ({ user, scopes, clientId, nonce }) {
+    if (!scopes.includes('openid')) {
+      return null
+    }
+
+    const idTokenPayload = {
+      iss: config.server.externalUrl,
+      sub: user.id,
+      aud: clientId,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour
+      iat: Math.floor(Date.now() / 1000),
+    }
+
+    if (nonce) {
+      idTokenPayload.nonce = nonce
+    }
+
+    if (scopes.includes('profile')) {
+      idTokenPayload.name = user.displayName()
+      idTokenPayload.preferred_username = user.displayName()
+      idTokenPayload.profile = `${config.server.externalUrl}/profile/overview`
+      idTokenPayload.updated_at = Math.floor(user.updatedAt.getTime() / 1000)
+    }
+
+    if (scopes.includes('email')) {
+      idTokenPayload.email = user.email
+      idTokenPayload.email_verified = user.verified
+    }
+
+    if (scopes.includes('groups')) {
+      const jiraRoles = user.groups.flatMap((group) => {
+        return group.jiraRoles
+      })
+      idTokenPayload.groups = [...new Set(jiraRoles)]
+    }
+
+    // Using unsigned JWT (alg: none)
+    return jwt.sign(idTokenPayload, '', { algorithm: 'none' })
+  }
+
+  /**
    * Endpoint for OAuth authorize decision screen info requests
    * @endpoint
    */
@@ -60,6 +110,7 @@ class OAuth extends API {
       redirect_uri: redirectUri,
       scope,
       state,
+      nonce,
     } = ctx.query
 
     /* Check valid parameters */
@@ -124,6 +175,7 @@ class OAuth extends API {
           redirectUri,
           clientId,
           userId: ctx.state.user.id,
+          nonce,
         })
 
         return callbackResponse(redirectUri, {
@@ -141,12 +193,27 @@ class OAuth extends API {
           userId: ctx.state.user.id,
         })
 
-        return callbackResponse(redirectUri, {
+        const response = {
           access_token: token.value,
           token_type: 'bearer',
           scope: scopes.join(','),
           state,
-        })
+        }
+
+        // Generate ID token if openid scope is requested
+        if (scopes.includes('openid')) {
+          const idToken = this.generateIdToken({
+            user: ctx.state.user,
+            scopes,
+            clientId,
+            nonce,
+          })
+          if (idToken) {
+            response.id_token = idToken
+          }
+        }
+
+        return callbackResponse(redirectUri, response)
       }
 
       /* User has not previously granted access, return authorize decision information */
@@ -157,6 +224,7 @@ class OAuth extends API {
         scopes,
         clientId,
         state,
+        nonce,
         userId: ctx.state.user.id,
       })
 
@@ -209,6 +277,7 @@ class OAuth extends API {
       clientId,
       userId,
       state,
+      nonce,
     } = transaction
 
     /* As a security measure transaction ID is both stored as a session cookie and as a request parameter
@@ -236,6 +305,7 @@ class OAuth extends API {
         redirectUri,
         clientId,
         userId,
+        nonce,
       })
 
       return callbackResponse(redirectUri, {
@@ -253,12 +323,35 @@ class OAuth extends API {
         userId: transaction.userId,
       })
 
-      return callbackResponse(redirectUri, {
+      const response = {
         access_token: token.value,
         token_type: 'bearer',
         scope: transaction.scopes.join(','),
         state: transaction.state,
-      })
+      }
+
+      // Generate ID token if openid scope is requested
+      if (transaction.scopes.includes('openid')) {
+        const { User } = await import('../db')
+        const user = await User.findOne({
+          where: { id: transaction.userId },
+          include: ['groups'],
+        })
+
+        if (user) {
+          const idToken = this.generateIdToken({
+            user,
+            scopes: transaction.scopes,
+            clientId: transaction.clientId,
+            nonce: transaction.nonce,
+          })
+          if (idToken) {
+            response.id_token = idToken
+          }
+        }
+      }
+
+      return callbackResponse(redirectUri, response)
     }
     return undefined
   }
@@ -342,10 +435,33 @@ class OAuth extends API {
       clientId: authCode.clientId,
     })
 
-    return {
+    const response = {
       access_token: token.value,
       token_type: 'bearer',
     }
+
+    // Generate ID token if openid scope is requested
+    if (authCode.scope.includes('openid')) {
+      const { User } = await import('../db')
+      const user = await User.findOne({
+        where: { id: authCode.userId },
+        include: ['groups'],
+      })
+
+      if (user) {
+        const idToken = this.generateIdToken({
+          user,
+          scopes: authCode.scope,
+          clientId: authCode.clientId,
+          nonce: authCode.nonce,
+        })
+        if (idToken) {
+          response.id_token = idToken
+        }
+      }
+    }
+
+    return response
   }
 
 
