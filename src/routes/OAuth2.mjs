@@ -23,6 +23,7 @@ import {
 } from '../classes/OAuthError'
 import Permission from '../classes/Permission'
 import { oAuthTokenGenerator, transactionGenerator } from '../classes/TokenGenerators'
+import config from '../config'
 import { Client, Code } from '../db'
 import Token from '../db/Token'
 import { isValidRedirectUri } from '../helpers/Validators'
@@ -496,6 +497,87 @@ class OAuth extends API {
     })
 
     return {}
+  }
+
+  /**
+   * OpenID Connect UserInfo endpoint (GET)
+   * @endpoint
+   */
+  @GET('/oauth2/userinfo')
+  @authenticated
+  userinfo (ctx) {
+    const { user, scope } = ctx.state
+
+    const userinfo = {
+      sub: user.id,
+    }
+
+    if (!scope || scope.includes('*') || scope.includes('profile')) {
+      userinfo.name = user.displayName()
+      userinfo.preferred_username = user.displayName()
+      userinfo.profile = `${config.frontend.url}/profile/overview`
+      userinfo.updated_at = Math.floor(user.updatedAt.getTime() / 1000)
+    }
+
+    if (!scope || scope.includes('*') || scope.includes('email')) {
+      userinfo.email = user.email
+      userinfo.email_verified = user.verified
+    }
+
+    if (user.groups && (!scope || scope.includes('*') || scope.includes('groups'))) {
+      userinfo.groups = user.groups.map((group) => {
+        return group.jiraName || group.name
+      }).filter(Boolean)
+    }
+
+    return userinfo
+  }
+
+  /**
+   * OpenID Connect UserInfo endpoint (POST)
+   * @endpoint
+   */
+  @POST('/oauth2/userinfo')
+  @authenticated
+  userinfoPost (ctx) {
+    return this.userinfo(ctx)
+  }
+
+  /**
+   * OpenID Connect Discovery endpoint
+   * @endpoint
+   */
+  @GET('/.well-known/openid-configuration')
+  openidConfiguration () {
+    const issuer = config.server.externalUrl
+
+    return {
+      issuer,
+      authorization_endpoint: `${issuer}/oauth2/authorize`,
+      token_endpoint: `${issuer}/oauth2/token`,
+      userinfo_endpoint: `${issuer}/oauth2/userinfo`,
+      revocation_endpoint: `${issuer}/oauth2/revoke`,
+      response_types_supported: ['code', 'token'],
+      grant_types_supported: ['authorization_code', 'password', 'implicit'],
+      subject_types_supported: ['public'],
+      // eslint-disable-next-line id-length
+      id_token_signing_alg_values_supported: ['none'],
+      scopes_supported: ['openid', 'profile', 'email', 'groups'],
+      // eslint-disable-next-line id-length
+      token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],
+      claims_supported: [
+        'sub',
+        'name',
+        'preferred_username',
+        'email',
+        'email_verified',
+        'groups',
+        'profile',
+        'updated_at',
+      ],
+      code_challenge_methods_supported: [],
+      response_modes_supported: ['query', 'fragment'],
+    }
   }
 }
 

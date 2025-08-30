@@ -1,14 +1,15 @@
-import apn from 'apn'
+import apn from '@parse/node-apn'
 import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
-  UnsupportedMediaAPIError,
 } from '../classes/APIError'
 import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
-import { Rescue, db, ApplePushSubscription, WebPushSubscription } from '../db'
+import {
+  Rescue, db, ApplePushSubscription, WebPushSubscription, Rat, User,
+} from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -51,6 +52,44 @@ export default class Rescues extends APIResource {
     return 'rescues'
   }
 
+
+  /**
+   * Get all rescues assigned to the current user
+   * @endpoint
+   */
+  @GET('/rescues/me')
+  async ownRescues (ctx) {
+    const query = new DatabaseQuery({ connection: ctx })
+    const { searchObject } = query
+    searchObject.include = [
+      {
+        model: Rat,
+        as: 'rats',
+        where: {
+          userId: ctx.state.user.id,
+        },
+        required: true,
+        duplicating: false,
+        include: [
+          {
+            model: User,
+            as: 'user',
+          },
+        ],
+        through: {
+          attributes: [],
+        },
+      },
+      {
+        model: Rat,
+        as: 'firstLimpet',
+        required: false,
+      },
+    ]
+    const result = await Rescue.findAndCountAll(searchObject)
+    return new DatabaseDocument({ query, result, type: RescueView })
+  }
+
   /**
    * Search rescues
    * @endpoint
@@ -63,6 +102,7 @@ export default class Rescues extends APIResource {
     const result = await Rescue.findAndCountAll(query.searchObject)
     return new DatabaseDocument({ query, result, type: RescueView })
   }
+
 
   /**
    * Get a rescue by id
