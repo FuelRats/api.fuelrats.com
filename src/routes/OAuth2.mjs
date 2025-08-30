@@ -104,8 +104,8 @@ class OAuth extends API {
       idTokenPayload.groups = [...new Set(jiraRoles)]
     }
 
-    // Using unsigned JWT (alg: none)
-    return jwt.sign(idTokenPayload, '', { algorithm: 'none' })
+    // Using HMAC SHA-256 signing
+    return jwt.sign(idTokenPayload, config.jwt.secret, { algorithm: 'HS256' })
   }
 
   /**
@@ -682,7 +682,7 @@ class OAuth extends API {
       grant_types_supported: ['authorization_code', 'password', 'implicit'],
       subject_types_supported: ['public'],
       // eslint-disable-next-line id-length
-      id_token_signing_alg_values_supported: ['none'],
+      id_token_signing_alg_values_supported: ['HS256'],
       scopes_supported: ['openid', 'profile', 'email', 'groups'],
       // eslint-disable-next-line id-length
       token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],

@@ -87,6 +87,9 @@ const config = {
     username: recommended('FRAPI_JIRA_USERNAME', [], undefined),
     password: recommended('FRAPI_JIRA_PASSWORD', [], undefined),
   },
+  jwt: {
+    secret: required('FRAPI_JWT_SECRET', [], undefined),
+  },
   twitter: {
     consumerKey: optional('FRAPI_TWITTER_CONSUMER_KEY', [], undefined),
     consumerSecret: optional('FRAPI_TWITTER_CONSUMER_SECRET', [], undefined),
