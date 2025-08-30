@@ -107,7 +107,7 @@ class OAuth extends API {
     this.validateJwtSecret()
 
     const accessTokenPayload = {
-      iss: `${config.server.externalUrl}/oauth2/token`,
+      iss: `${config.server.externalUrl}`,
       sub: user.id,
       aud: clientId,
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24), // 24 hours
