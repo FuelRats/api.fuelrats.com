@@ -759,6 +759,19 @@ class OAuth extends API {
   }
 
   /**
+   * JSON Web Key Set (JWKS) endpoint
+   * @endpoint
+   */
+  @GET('/.well-known/jwks.json')
+  jwks () {
+    // For HMAC (HS256), we cannot expose the secret key in JWKS
+    // This endpoint returns an empty key set as HMAC keys are symmetric
+    return {
+      keys: [],
+    }
+  }
+
+  /**
    * OpenID Connect Discovery endpoint
    * @endpoint
    */
@@ -772,6 +785,7 @@ class OAuth extends API {
       token_endpoint: `${issuer}/oauth2/token`,
       userinfo_endpoint: `${issuer}/oauth2/userinfo`,
       revocation_endpoint: `${issuer}/oauth2/revoke`,
+      jwks_uri: `${issuer}/.well-known/jwks.json`,
       response_types_supported: ['code', 'token'],
       grant_types_supported: ['authorization_code', 'password', 'implicit'],
       subject_types_supported: ['public'],
