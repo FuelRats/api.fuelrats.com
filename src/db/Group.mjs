@@ -19,8 +19,8 @@ export default class Group extends Model {
   @column(type.STRING, { allowNull: true })
   static vhost = undefined
 
-  @column(type.STRING, { allowNull: true })
-  static jiraName = undefined
+  @column(type.ARRAY(type.STRING), { allowNull: false, defaultValue: [] })
+  static jiraRoles = []
 
   @column(type.BOOLEAN)
   static withoutPrefix = false
