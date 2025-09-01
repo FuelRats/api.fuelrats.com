@@ -2,8 +2,6 @@ import Model, { column, table, validate, type } from './Model'
 import Permission from '../classes/Permission'
 
 const oAuthScopeMaxLength = 128
-const oAuthTokenMinLength = 16
-const oAuthTokenMaxLength = 128
 
 
 /**
@@ -19,8 +17,8 @@ export default class Token extends Model {
   @column(type.ARRAY(type.STRING(oAuthScopeMaxLength)))
   static scope = []
 
-  @validate({ len: [oAuthTokenMinLength, oAuthTokenMaxLength], isAlphanumeric: true })
-  @column(type.STRING)
+  @validate({})
+  @column(type.TEXT)
   static value = undefined
 
   @validate({ isUUID: 4 })
