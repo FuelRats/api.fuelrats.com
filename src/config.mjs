@@ -66,15 +66,6 @@ const config = {
     sharedKey: recommended('FRAPI_FRONTIER_SHAREDKEY', [], undefined),
     redirectUri: recommended('FRAPI_FRONTIER_REDIRECTURI', [], undefined),
   },
-  graylog: {
-    host: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
-    port: recommended('FRAPI_GRAYLOG_PORT', [toNumber], 12201),
-    facility: recommended('FRAPI_GRAYLOG_FACILITY', [], 'fuelratsapi'),
-  },
-  slack: {
-    token: recommended('FRAPI_SLACK_TOKEN', [], undefined),
-    username: recommended('FRAPI_SLACK_USERNAME', [], undefined),
-  },
   smtp: {
     hostname: optional('FRAPI_SMTP_HOSTNAME', [], 'smtp-relay.gmail.com'),
     username: optional('FRAPI_SMTP_USERNAME', [], undefined),
@@ -89,12 +80,6 @@ const config = {
   },
   jwt: {
     secret: required('FRAPI_JWT_SECRET'),
-  },
-  twitter: {
-    consumerKey: optional('FRAPI_TWITTER_CONSUMER_KEY', [], undefined),
-    consumerSecret: optional('FRAPI_TWITTER_CONSUMER_SECRET', [], undefined),
-    token: optional('FRAPI_TWITTER_TOKEN', [], undefined),
-    tokenSecret: optional('FRAPI_TWITTER_TOKEN_SECRET', [], undefined),
   },
   webpush: {
     privateKey: recommended('FRAPI_WEBPUSH_PRIVATE_KEY', [], undefined),

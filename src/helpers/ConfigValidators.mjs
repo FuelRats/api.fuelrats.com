@@ -1,4 +1,5 @@
 import { IRCChannel, UUID } from './Validators'
+import { readDockerSecret } from './DockerSecrets'
 
 
 
@@ -22,7 +23,16 @@ class ValidatorContext {
    * @param {*} defaultValue default value to be provided for this, if any
    */
   constructor (property, validations = [], defaultValue) {
-    this.value = process.env[property] ?? defaultValue
+    // First try environment variable, then Docker secret, then default
+    this.value = process.env[property]
+    if (!this.value) {
+      const secretName = property.toLowerCase()
+      this.value = readDockerSecret(secretName)
+    }
+    if (!this.value) {
+      this.value = defaultValue
+    }
+    
     this.property = property
     this.defaultValue = defaultValue
 
