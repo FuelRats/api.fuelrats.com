@@ -100,7 +100,7 @@ export default class Rats extends APIResource {
     const result = await super.update({ ctx, databaseType: Rat, updateSearch: { id: ctx.params.id } })
 
     // Log rat update metrics
-    const updatedFields = Object.keys(ctx.data?.data?.attributes || {})
+    const updatedFields = Object.keys(ctx.data?.data?.attributes ?? {})
     logMetric('rat_updated', {
       _rat_id: result.id,
       _updated_by_user_id: ctx.state.user.id,
@@ -129,7 +129,7 @@ export default class Rats extends APIResource {
   async delete (ctx) {
     // Get the rat before deletion for metrics
     const rat = await Rat.scope('rescues').findByPk(ctx.params.id)
-    
+
     await super.delete({
       ctx,
       databaseType: Rat.scope('rescues'),
@@ -155,8 +155,8 @@ export default class Rats extends APIResource {
         _is_owner_deletion: rat.userId === ctx.state.user.id,
         _rat_name: rat.name,
         _platform: rat.platform,
-        _rescue_count: rat.rescues?.length || 0,
-        _first_limpet_count: rat.firstLimpet?.length || 0,
+        _rescue_count: rat.rescues?.length ?? 0,
+        _first_limpet_count: rat.firstLimpet?.length ?? 0,
       }, `Rat deleted: ${rat.name} (${rat.id}) by user ${ctx.state.user.id}`)
     }
 

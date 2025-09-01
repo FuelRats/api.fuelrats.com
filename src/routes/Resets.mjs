@@ -13,8 +13,8 @@ import { resetTokenGenerator } from '../classes/TokenGenerators'
 import { websocket } from '../classes/WebSocket'
 import config from '../config'
 import { User, Reset } from '../db'
-import { logMetric } from '../logging'
 import passwordResetEmail from '../emails/reset'
+import { logMetric } from '../logging'
 
 const mail = new Mail()
 const expirationLength = 86400000 // 24 Hours
@@ -82,13 +82,13 @@ export default class Resets extends API {
       })
 
       await mail.send(passwordResetEmail({ user, resetToken: reset.value }))
-      
+
       // Log password reset request metrics
       logMetric('password_reset_requested', {
         _user_id: user.id,
         _ip: ctx.ip,
         _was_required: requiredReset,
-        _had_existing_reset: !!existingReset,
+        _had_existing_reset: Boolean(existingReset),
       }, `Password reset requested for user ${user.id}`)
     } else {
       // Log invalid email attempt
@@ -150,14 +150,14 @@ export default class Resets extends API {
     await user.save()
     await reset.destroy()
     await Anope.setPassword(user.email, password)
-    
+
     // Log password reset completion metrics
     logMetric('password_reset_completed', {
       _user_id: user.id,
       _ip: ctx.ip,
       _was_required: reset.required,
     }, `Password reset completed for user ${user.id}`)
-    
+
     return true
   }
 

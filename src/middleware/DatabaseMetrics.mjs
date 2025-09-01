@@ -7,20 +7,28 @@ import { logMetric } from '../logging'
 export function addDatabaseMetrics (sequelize) {
   // Hook into all database queries
   sequelize.addHook('beforeQuery', (options) => {
+    // eslint-disable-next-line no-param-reassign
     options.startTime = Date.now()
   })
 
   sequelize.addHook('afterQuery', (options, result) => {
     const duration = Date.now() - options.startTime
-    const queryType = options.type || 'unknown'
-    const tableName = options.model?.tableName || 'unknown'
-    
+    const queryType = options.type ?? 'unknown'
+    const tableName = options.model?.tableName ?? 'unknown'
+
+    let resultCount = 0
+    if (Array.isArray(result)) {
+      resultCount = result.length
+    } else if (result) {
+      resultCount = 1
+    }
+
     logMetric('database_query', {
       _query_type: queryType,
       _table_name: tableName,
       _duration_ms: duration,
-      _sql_length: options.sql?.length || 0,
-      _result_count: Array.isArray(result) ? result.length : (result ? 1 : 0),
+      _sql_length: options.sql?.length ?? 0,
+      _result_count: resultCount,
     }, `DB Query: ${queryType} on ${tableName} (${duration}ms)`)
   })
 

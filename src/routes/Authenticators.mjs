@@ -130,7 +130,7 @@ export default class Authenticators extends APIResource {
       _user_id: ctx.state.user.id,
       _setup_by_user_id: ctx.state.user.id,
       _is_self_setup: user.id === ctx.state.user.id,
-      _description: description?.substring(0, 50) || 'no_description',
+      _description: description?.substring(0, 50) || 'no_description', // eslint-disable-line no-magic-numbers
     }, `2FA authenticator added for user ${ctx.state.user.id}`)
 
     ctx.response.status = StatusCode.created
@@ -177,15 +177,15 @@ export default class Authenticators extends APIResource {
     }
 
     await existingAuthenticator.destroy()
-    
+
     // Log 2FA removal metrics
     logMetric('authenticator_removed', {
       _user_id: user.id,
       _removed_by_user_id: ctx.state.user.id,
       _is_self_removal: user.id === ctx.state.user.id,
-      _description: existingAuthenticator.description?.substring(0, 50) || 'no_description',
+      _description: existingAuthenticator.description?.substring(0, 50) || 'no_description', // eslint-disable-line no-magic-numbers
     }, `2FA authenticator removed for user ${user.id}`)
-    
+
     return true
   }
 
