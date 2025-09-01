@@ -24,6 +24,7 @@ import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 
 const platforms = ['pc', 'xb', 'ps']
+const rpId = new URL(config.server.externalUrl).hostname
 
 /**
  * @classdesc Endpoint handling user registration
@@ -108,7 +109,7 @@ export default class Register extends API {
           response: passkeyResponse,
           expectedChallenge,
           expectedOrigin: config.server.externalUrl,
-          expectedRPID: new URL(config.server.externalUrl).hostname,
+          expectedRPID: rpId,
         })
       } catch (error) {
         throw new BadRequestAPIError({
@@ -229,7 +230,6 @@ export default class Register extends API {
     // Generate registration options
     const { generateRegistrationOptions } = await import('@simplewebauthn/server')
     const rpName = 'The Fuel Rats'
-    const rpId = new URL(config.server.externalUrl).hostname
 
     const options = await generateRegistrationOptions({
       rpName,
