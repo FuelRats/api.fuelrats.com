@@ -732,7 +732,7 @@ class OAuth extends API {
     if (!scope || scope.includes('*') || scope.includes('profile')) {
       userinfo.name = user.displayName()
       userinfo.preferred_username = user.displayName()
-      userinfo.profile = `${config.frontend.url}/profile/overview`
+      userinfo.profile = `${config.server.externalUrl}/profile/overview`
       userinfo.updated_at = Math.floor(user.updatedAt.getTime() / 1000)
     }
 
