@@ -36,6 +36,9 @@ export default class Code extends Model {
   @column(type.UUID)
   static clientId = undefined
 
+  @column(type.STRING, { allowNull: true })
+  static nonce = undefined
+
   /**
    * @inheritdoc
    */

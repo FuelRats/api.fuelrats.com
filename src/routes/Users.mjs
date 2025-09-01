@@ -243,7 +243,7 @@ export default class Users extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView })
   }
 
-   /**
+  /**
    * Change a user's email
    * @endpoint
    */

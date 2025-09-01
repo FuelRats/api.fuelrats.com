@@ -1,5 +1,7 @@
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 import UUID from 'pure-uuid'
+import config from '../config'
 import * as constants from '../constants'
 import {
   User, Token, Client, Reset, db,
@@ -17,6 +19,7 @@ import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
 const basicAuthHeaderOffset = 6
+const expectedJwtParts = 3
 
 /**
  * @classdesc Class for handling authentication mechanisms
@@ -87,12 +90,74 @@ class Authentication {
   }
 
   /**
-   * Perform Bearer authentication with an access token
+   * Try to validate a JWT access token
+   * @param {string} bearer JWT token to validate
+   * @returns {object|null} Decoded token payload or null if invalid
+   */
+  static validateJwtToken (bearer) {
+    try {
+      if (!bearer) {
+        return null
+      }
+
+      // JWT tokens have 3 parts: header.payload.signature
+      const tokenParts = bearer.split('.')
+      if (tokenParts.length !== expectedJwtParts) {
+        return null
+      }
+
+      const decoded = jwt.verify(bearer, config.jwt.secret, { algorithm: 'HS256' })
+
+      // Validate required JWT claims
+      if (!decoded.sub || !decoded.aud || !decoded.exp || !decoded.iat) {
+        return null
+      }
+
+      return decoded
+    } catch (error) {
+      // JWT validation failed
+      return null
+    }
+  }
+
+  /**
+   * Perform Bearer authentication with an access token (supports both opaque tokens and JWTs)
    * @param {object} arg function arguments object
    * @param {string} arg.bearer the bearer access token to authenticate
    * @returns {Promise<boolean|{scope: *, user: db.Model}>} A promise returning the authenticated user object
    */
   static async bearerAuthenticate ({ bearer }) {
+    // First try JWT validation
+    const jwtPayload = Authentication.validateJwtToken(bearer)
+    if (jwtPayload) {
+      // This is a valid JWT token
+      const user = await User.findOne({
+        where: {
+          id: jwtPayload.sub,
+          suspended: null,
+          status: 'active',
+        },
+      })
+
+      if (!user) {
+        return false
+      }
+
+      if (user.isSuspended()) {
+        throw new GoneAPIError({})
+      }
+
+      // Extract scopes from JWT (if present) or use default scope
+      const scope = jwtPayload.scope ? jwtPayload.scope.split(' ') : ['*']
+
+      return {
+        user,
+        scope,
+        clientId: jwtPayload.aud,
+      }
+    }
+
+    // Fallback to database token lookup (existing functionality)
     const token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
       return false
