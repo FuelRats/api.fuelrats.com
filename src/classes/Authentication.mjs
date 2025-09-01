@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
-import { authenticator as totp } from 'otplib'
 import jwt from 'jsonwebtoken'
+import { authenticator as totp } from 'otplib'
 import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
@@ -9,7 +9,6 @@ import {
 } from '../db'
 
 import Anope from './Anope'
-import config from '../config'
 import {
   AuthenticatorRequiredAPIError,
   GoneAPIError,
