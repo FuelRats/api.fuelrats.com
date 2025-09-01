@@ -1,0 +1,50 @@
+# Nickname resource schemas
+
+Nickname:
+  allOf:
+    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+    - type: object
+      properties:
+        type:
+          type: string
+          enum: [nicknames]
+        attributes:
+          type: object
+          properties:
+            nick:
+              type: string
+              description: IRC nickname
+            email:
+              type: string
+              format: email
+              description: Associated email address
+            vhost:
+              type: string
+              description: IRC virtual host
+            display:
+              type: string
+              description: Display nickname
+            createdAt:
+              type: string
+              format: date-time
+              description: Registration timestamp
+            updatedAt:
+              type: string
+              format: date-time
+              description: Last update timestamp
+
+NicknameDocument:
+  allOf:
+    - $ref: '../components/schemas.yaml#/SingleResourceDocument'
+    - properties:
+        data:
+          $ref: '#/Nickname'
+
+NicknameCollection:
+  allOf:
+    - $ref: '../components/schemas.yaml#/CollectionDocument'
+    - properties:
+        data:
+          type: array
+          items:
+            $ref: '#/Nickname'

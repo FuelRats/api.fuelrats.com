@@ -1,0 +1,129 @@
+# Common error responses used across multiple endpoints
+
+BadRequest:
+  description: Bad Request - Invalid request parameters or malformed request
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      examples:
+        validation_error:
+          summary: Validation Error
+          description: Request validation failed due to invalid parameters
+          value:
+            errors:
+              - id: 'req_abc123def456'
+                code: 'validation_error'
+                status: '400'
+                title: 'Validation Error' 
+                detail: 'The request contains invalid parameters'
+                source:
+                  parameter: 'include'
+        malformed_json:
+          summary: Malformed JSON
+          description: Request body contains invalid JSON
+          value:
+            errors:
+              - id: 'req_def456ghi789'
+                code: 'malformed_json'
+                status: '400'
+                title: 'Bad Request'
+                detail: 'The request body contains malformed JSON'
+                source:
+                  pointer: '/data'
+
+Unauthorized:
+  description: Unauthorized - Authentication required
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      examples:
+        missing_token:
+          summary: Missing Authentication
+          description: No authentication token provided
+          value:
+            errors:
+              - id: 'auth_no_token_001'
+                code: 'missing_authentication'
+                status: '401'
+                title: 'Unauthorized'
+                detail: 'Authentication is required to access this resource'
+        invalid_token:
+          summary: Invalid Token
+          description: Authentication token is invalid or expired
+          value:
+            errors:
+              - id: 'auth_invalid_002'
+                code: 'invalid_token'
+                status: '401'
+                title: 'Unauthorized'
+                detail: 'The provided authentication token is invalid or has expired'
+
+Forbidden:
+  description: Forbidden - Insufficient privileges
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      examples:
+        insufficient_permissions:
+          summary: Insufficient Permissions
+          description: User lacks required permissions for this operation
+          value:
+            errors:
+              - id: 'perm_insufficient_001'
+                code: 'insufficient_permission'
+                status: '403'
+                title: 'Forbidden'
+                detail: 'You do not have the required permissions to access this resource'
+                source:
+                  parameter: 'user_permissions'
+        resource_access_denied:
+          summary: Resource Access Denied
+          description: Access to specific resource is denied
+          value:
+            errors:
+              - id: 'perm_denied_002'
+                code: 'access_denied'
+                status: '403'
+                title: 'Forbidden'
+                detail: 'Access to this resource is restricted'
+
+NotFound:
+  description: Not Found - Resource does not exist
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '404'
+            title: 'Not Found'
+            detail: 'The requested resource could not be found'
+
+Conflict:
+  description: Conflict - Resource already exists or conflicting state
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '409'
+            title: 'Conflict'
+            detail: 'A resource with this identifier already exists'
+
+UnprocessableEntity:
+  description: Unprocessable Entity - Validation errors
+  content:
+    application/vnd.api+json:
+      schema:
+        $ref: './schemas.yaml#/Error'
+      example:
+        errors:
+          - status: '422'
+            title: 'Validation Error'
+            detail: 'The email field is required'
+            source:
+              pointer: '/data/attributes/email'

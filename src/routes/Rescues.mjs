@@ -1,4 +1,3 @@
-import apn from '@parse/node-apn'
 import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
@@ -8,7 +7,7 @@ import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import {
-  Rescue, db, ApplePushSubscription, WebPushSubscription, Rat, User,
+  Rescue, db, WebPushSubscription, Rat, User,
 } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
@@ -27,7 +26,8 @@ import {
   WritePermission,
 } from './API'
 import APIResource from './APIResource'
-import { apnProvider, webPushPool } from './WebPushSubscriptions'
+import { webPushPool } from './WebPushSubscriptions'
+import { logMetric } from '../logging'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -136,24 +136,20 @@ export default class Rescues extends APIResource {
       },
     })
 
+    // Log rescue creation metrics
+    logMetric('rescue_created', {
+      _rescue_id: result.id,
+      _user_id: ctx.state.user.id,
+      _client_id: ctx.state.clientId,
+      _system: ctx.data.system,
+      _platform: ctx.data.platform,
+    }, `New rescue created: ${result.id} by user ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     const document = new DatabaseDocument({ query, result, type: RescueView })
 
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, result.id, document)
     ctx.response.status = StatusCode.created
-    if (apnProvider) {
-      const apnSubscriptions = await ApplePushSubscription.findAll({})
-      const deviceTokens = apnSubscriptions.map((sub) => {
-        return sub.deviceToken
-      })
-      const notification = new apn.Notification({
-        'content-available': 1,
-        sound: 'Ping.aiff',
-        category: 'rescue',
-        payload: result,
-      })
-      await apnProvider.send(notification, deviceTokens)
-    }
     return document
   }
 
@@ -176,7 +172,18 @@ export default class Rescues extends APIResource {
       },
     })
 
-    const { outcome } = ctx.data.data.attributes
+    // Log rescue update metrics
+    const { outcome, status } = ctx.data.data.attributes
+    logMetric('rescue_updated', {
+      _rescue_id: result.id,
+      _user_id: ctx.state.user.id,
+      _client_id: ctx.state.clientId,
+      _status: status || result.status,
+      _outcome: outcome || result.outcome,
+      _status_changed: Boolean(status),
+      _outcome_changed: Boolean(outcome),
+    }, `Rescue updated: ${result.id} by user ${ctx.state.user.id}`)
+
     if (outcome && outcome !== 'purge') {
       const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
@@ -185,8 +192,23 @@ export default class Rescues extends APIResource {
 
       const [[{ count }]] = await db.query(rescueCountQuery)
       const rescueCount = Number(count)
+
+      // Log rescue completion metrics
+      logMetric('rescue_completed', {
+        _rescue_id: result.id,
+        _total_rescues: rescueCount,
+        _outcome: outcome,
+        _is_milestone: rescueCount % 1000 === 0,
+      }, `Rescue completed: ${result.id} (total: ${rescueCount})`)
+
       if (rescueCount % 1000 === 0) {
         await Announcer.sendRescueMessage({ message: `This was rescue #${rescueCount}!` })
+
+        // Log milestone achievement
+        logMetric('rescue_milestone', {
+          _milestone_count: rescueCount,
+          _rescue_id: result.id,
+        }, `Rescue milestone reached: ${rescueCount} rescues!`)
       }
     }
 
@@ -406,19 +428,6 @@ export default class Rescues extends APIResource {
       where: query,
     })
     webPushPool.exec('webPushBroadcast', [subscriptions, rescue])
-    if (apnProvider) {
-      const apnSubscriptions = await ApplePushSubscription.findAll({})
-      const deviceTokens = apnSubscriptions.map((sub) => {
-        return sub.deviceToken
-      })
-      const notification = new apn.Notification({
-        'content-available': 1,
-        sound: 'Ping.aiff',
-        category: 'alert',
-        payload: rescue,
-      })
-      await apnProvider.send(notification, deviceTokens)
-    }
     return true
   }
 
@@ -471,7 +480,7 @@ export default class Rescues extends APIResource {
     }
 
 
-    if ((Date.now() - entity.createdAt) < rescueAccessTime) {
+    if (entity.status === 'closed' && (Date.now() - entity.createdAt.getTime()) < rescueAccessTime) {
       return Permission.granted({ permissions: ['dispatch.write'], connection: ctx })
     }
     return false

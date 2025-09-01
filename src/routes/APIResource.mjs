@@ -361,7 +361,11 @@ export default class APIResource extends API {
     }
     if (validOneRelationship && changeRelationship.many === false) {
       if (!data) {
-        return undefined
+        // For null data, we still need to check permissions and clear the relationship
+        if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, null])) {
+          throw new ForbiddenAPIError({ pointer: '/data' })
+        }
+        return changeRelationship.patch({ entity, id: null, ctx, transaction })
       }
 
       if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, data.id])) {

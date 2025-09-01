@@ -1,0 +1,305 @@
+# Groups API endpoints
+
+groups:
+  get:
+    tags: [groups]
+    summary: List groups
+    description: |
+      Retrieve all user groups with optional filtering and pagination
+      
+      **Required Permission:** `groups.read`
+    security:
+      - bearerAuth: [groups.read]
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of groups
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupCollection'
+            examples:
+              successful_response:
+                summary: List of user groups with permissions
+                description: Example response showing different user groups with their permissions and IRC settings
+                value:
+                  data:
+                    - type: groups
+                      id: "110e8400-e29b-41d4-a716-446655440001"
+                      attributes:
+                        name: "verified"
+                        vhost: "rat.fuelrats.com"
+                        priority: 10
+                        permissions: ["read", "write"]
+                        withoutPrefix: false
+                        isAdministrator: false
+                        channels: ["#fuelrats", "#ratchat"]
+                        createdAt: "2020-01-01T00:00:00.000Z"
+                        updatedAt: "2020-01-01T00:00:00.000Z"
+                    - type: groups
+                      id: "110e8400-e29b-41d4-a716-446655440002"
+                      attributes:
+                        name: "dispatch"
+                        vhost: "dispatch.fuelrats.com"
+                        priority: 50
+                        permissions: ["read", "write", "rescues.write", "dispatch"]
+                        withoutPrefix: true
+                        isAdministrator: true
+                        channels: ["#fuelrats", "#ratchat", "#dispatch"]
+                        createdAt: "2020-01-01T00:00:00.000Z"
+                        updatedAt: "2020-01-01T00:00:00.000Z"
+                  meta:
+                    page:
+                      offset: 0
+                      limit: 20
+                      total: 12
+                  links:
+                    self: "/groups?page[offset]=0&page[limit]=20"
+                    first: "/groups?page[offset]=0&page[limit]=20"
+                    last: "/groups?page[offset]=0&page[limit]=20"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+
+  post:
+    tags: [groups]
+    summary: Create group
+    description: |
+      Create a new user group
+      
+      **Required Permission:** `groups.write`
+    security:
+      - bearerAuth: [groups.write]
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [groups]
+                  attributes:
+                    type: object
+                    required: [name]
+                    properties:
+                      name:
+                        type: string
+                        description: Group name
+                      vhost:
+                        type: string
+                        description: Virtual host for the group
+                      permissions:
+                        type: array
+                        items:
+                          type: string
+                        description: List of permissions
+                      priority:
+                        type: integer
+                        description: Group priority level
+    responses:
+      '201':
+        description: Group created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupDocument'
+            example:
+              data:
+                type: groups
+                id: "110e8400-e29b-41d4-a716-446655440003"
+                attributes:
+                  name: "moderators"
+                  vhost: "mod.fuelrats.com"
+                  priority: 30
+                  permissions: ["read", "write", "moderate"]
+                  withoutPrefix: false
+                  isAdministrator: false
+                  channels: ["#fuelrats", "#ratchat"]
+                  createdAt: "2023-01-15T14:30:00.000Z"
+                  updatedAt: "2023-01-15T14:30:00.000Z"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+groups_by_id:
+  get:
+    tags: [groups]
+    summary: Get group by ID
+    description: |
+      Retrieve a specific group by ID
+      
+      **Required Permission:** `groups.read`
+    security:
+      - bearerAuth: [groups.read]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Group ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: Group details
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupDocument'
+            example:
+              data:
+                type: groups
+                id: "110e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  name: "verified"
+                  vhost: "rat.fuelrats.com"
+                  priority: 10
+                  permissions: ["read", "write"]
+                  withoutPrefix: false
+                  isAdministrator: false
+                  channels: ["#fuelrats", "#ratchat"]
+                  createdAt: "2020-01-01T00:00:00.000Z"
+                  updatedAt: "2020-01-01T00:00:00.000Z"
+                relationships:
+                  users:
+                    data:
+                      - type: users
+                        id: "550e8400-e29b-41d4-a716-446655440001"
+                      - type: users
+                        id: "550e8400-e29b-41d4-a716-446655440002"
+                    links:
+                      self: "/groups/110e8400-e29b-41d4-a716-446655440001/relationships/users"
+                      related: "/groups/110e8400-e29b-41d4-a716-446655440001/users"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [groups]
+    summary: Update group
+    description: |
+      Update an existing group
+      
+      **Required Permission:** `groups.write`
+    security:
+      - bearerAuth: [groups.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Group ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [groups]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      vhost:
+                        type: string
+                      permissions:
+                        type: array
+                        items:
+                          type: string
+                      priority:
+                        type: integer
+    responses:
+      '200':
+        description: Group updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/groups.yaml#/GroupDocument'
+            example:
+              data:
+                type: groups
+                id: "110e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  name: "verified"
+                  vhost: "verified.fuelrats.com"
+                  priority: 15
+                  permissions: ["read", "write", "verified"]
+                  withoutPrefix: false
+                  isAdministrator: false
+                  channels: ["#fuelrats", "#ratchat", "#verified"]
+                  createdAt: "2020-01-01T00:00:00.000Z"
+                  updatedAt: "2023-01-15T14:30:00.000Z"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [groups]
+    summary: Delete group
+    description: |
+      Delete a group
+      
+      **Required Permission:** `groups.write`
+    security:
+      - bearerAuth: [groups.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Group ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Group deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'

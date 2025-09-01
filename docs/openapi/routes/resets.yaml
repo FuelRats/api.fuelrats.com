@@ -1,0 +1,179 @@
+# Password Reset API endpoints
+
+resets_create:
+  post:
+    tags: [resets]
+    summary: Request password reset
+    description: |
+      Request a password reset link to be sent via email.
+      
+      This endpoint:
+      - Validates the email address
+      - Generates a secure reset token
+      - Sends a password reset email if the account exists
+      - Always returns success to prevent email enumeration
+      - Logs the request for security monitoring
+      - Destroys any existing reset tokens for the user
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [resets]
+                  attributes:
+                    type: object
+                    required: [email]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        description: Email address of the account to reset
+          example:
+            data:
+              type: resets
+              attributes:
+                email: "user@example.com"
+    responses:
+      '200':
+        description: |
+          Reset request processed successfully. 
+          Note: Always returns success regardless of whether the email exists to prevent enumeration attacks.
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+resets_validate:
+  get:
+    tags: [resets]
+    summary: Validate reset token
+    description: |
+      Validate that a password reset token is valid and has not expired.
+      
+      This endpoint:
+      - Checks if the token exists in the database
+      - Validates that the token has not expired (24 hours)
+      - Does not consume the token (can be called multiple times)
+    parameters:
+      - name: token
+        in: path
+        required: true
+        description: Password reset token from the email
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9]{32}$'
+          example: "abcd1234efgh5678ijkl9012mnop3456"
+    responses:
+      '200':
+        description: Reset token is valid and can be used
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '404':
+        description: Reset token not found or has expired
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '404'
+                  title: 'Not Found'
+                  detail: 'Reset token not found or has expired'
+                  source:
+                    parameter: 'token'
+
+resets_execute:
+  post:
+    tags: [resets]
+    summary: Execute password reset
+    description: |
+      Use a valid reset token to change the user's password.
+      
+      This endpoint:
+      - Validates the reset token
+      - Updates the user's password (hashed)
+      - Updates the IRC password if applicable
+      - Destroys the reset token after use
+      - Logs the password change for security
+    parameters:
+      - name: token
+        in: path
+        required: true
+        description: Password reset token from the email
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9]{32}$'
+          example: "abcd1234efgh5678ijkl9012mnop3456"
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [resets]
+                  attributes:
+                    type: object
+                    required: [password]
+                    properties:
+                      password:
+                        type: string
+                        minLength: 8
+                        description: New password for the account
+          example:
+            data:
+              type: resets
+              attributes:
+                password: "newSecurePassword123"
+    responses:
+      '200':
+        description: Password reset completed successfully
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '404':
+        description: Reset token not found or has expired
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '404'
+                  title: 'Not Found'
+                  detail: 'Reset token not found or has expired'
+                  source:
+                    parameter: 'token'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

@@ -1,0 +1,83 @@
+# Group resource schemas
+
+Group:
+  allOf:
+    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+    - type: object
+      properties:
+        type:
+          type: string
+          enum: [groups]
+        attributes:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Group name
+            vhost:
+              type: string
+              description: Virtual host for the group (**Write Permission:** Admin/sudo only)
+            priority:
+              type: integer
+              description: Group priority level (**Write Permission:** Admin/sudo only)
+            permissions:
+              type: array
+              items:
+                type: string
+              description: List of permissions (**Write Permission:** Admin/sudo only)
+            withoutPrefix:
+              type: boolean
+              description: Whether group operates without command prefix (**Write Permission:** Admin/sudo only)
+            isAdministrator:
+              type: boolean
+              description: Administrator privileges
+            channels:
+              type: array
+              items:
+                type: string
+              description: IRC channels associated with group (**Write Permission:** Admin/sudo only)
+            createdAt:
+              type: string
+              format: date-time
+              description: Creation timestamp (**Write Permission:** Internal system only)
+            updatedAt:
+              type: string
+              format: date-time
+              description: Last update timestamp (**Write Permission:** Internal system only)
+            deletedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: Deletion timestamp (**Write Permission:** Internal system only)
+        relationships:
+          type: object
+          properties:
+            users:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [users]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+
+GroupDocument:
+  allOf:
+    - $ref: '../components/schemas.yaml#/SingleResourceDocument'
+    - properties:
+        data:
+          $ref: '#/Group'
+
+GroupCollection:
+  allOf:
+    - $ref: '../components/schemas.yaml#/CollectionDocument'
+    - properties:
+        data:
+          type: array
+          items:
+            $ref: '#/Group'

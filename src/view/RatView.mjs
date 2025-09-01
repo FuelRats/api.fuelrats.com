@@ -1,6 +1,5 @@
 import DatabaseView from './DatabaseView'
 import RescueView from './RescueView'
-import ShipView from './ShipView'
 import UserView from './UserView'
 import { ReadPermission } from './View'
 
@@ -68,7 +67,6 @@ export default class RatView extends DatabaseView {
   get relationships () {
     return {
       user: UserView,
-      ships: ShipView,
     }
   }
 
@@ -76,13 +74,13 @@ export default class RatView extends DatabaseView {
    * @inheritdoc
    */
   get related () {
-    return [RescueView, ShipView]
+    return [RescueView]
   }
 
   /**
    * @inheritdoc
    */
   get includes () {
-    return ['user', 'ships']
+    return ['user']
   }
 }

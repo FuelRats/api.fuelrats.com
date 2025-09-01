@@ -1,0 +1,31 @@
+# Version API endpoints
+
+version:
+  get:
+    tags: [version]
+    summary: Get API version
+    description: Retrieve the current API version information
+    responses:
+      '200':
+        description: API version information
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+                  description: API version number
+                  example: "2.10.0"
+                commit:
+                  type: string
+                  description: Git commit hash
+                  example: "a1b2c3d4"
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: Build timestamp
+            example:
+              version: "2.11.5"
+              commit: "b4cbacb3"
+              timestamp: "2023-03-01T12:00:00.000Z"

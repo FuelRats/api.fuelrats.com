@@ -1,4 +1,4 @@
-// import { authenticator as totp } from 'otplib'
+// 2FA is handled in Authentication.passwordAuthenticate
 import jwt from 'jsonwebtoken'
 import API, {
   authenticated,
@@ -28,6 +28,7 @@ import config from '../config'
 import { Client, Code, User } from '../db'
 import Token from '../db/Token'
 import { isValidRedirectUri } from '../helpers/Validators'
+import { logMetric } from '../logging'
 
 const transactionTimeoutMinutes = 10
 const transactionTimeout = transactionTimeoutMinutes * 60 * 1000
@@ -562,6 +563,16 @@ class OAuth extends API {
       }
     }
 
+    // Log OAuth token exchange metrics
+    logMetric('oauth_token_issued', {
+      _user_id: authCode.userId,
+      _client_id: authCode.clientId,
+      _grant_type: 'authorization_code',
+      _scopes: authCode.scope.join(','),
+      _is_openid: authCode.scope.includes('openid'),
+      _has_id_token: Boolean(response.id_token),
+    }, `OAuth token issued via authorization code for user ${authCode.userId}`)
+
     return response
   }
 
@@ -571,7 +582,7 @@ class OAuth extends API {
    * @endpoint
    */
   async resourceOwnerPasswordCredentials (ctx) {
-    let { username, password, scope } = ctx.request.body
+    let { username, password, code, scope } = ctx.request.body
 
     /* Validate parameters */
     if (!username) {
@@ -618,7 +629,7 @@ class OAuth extends API {
     }
 
     /* Validate username and password */
-    const user = await Authentication.passwordAuthenticate({ email: username, password })
+    const user = await Authentication.passwordAuthenticate({ email: username, password, code })
     if (!user) {
       throw new UnauthorizedAPIError({})
     }
@@ -666,6 +677,16 @@ class OAuth extends API {
       userId: user.id,
       scope: ['*'],
     })
+
+    // Log OAuth ROPC token metrics
+    logMetric('oauth_token_issued', {
+      _user_id: user.id,
+      _client_id: client.id,
+      _grant_type: 'password',
+      _scopes: '*',
+      _is_openid: false,
+      _has_id_token: false,
+    }, `OAuth token issued via ROPC for user ${user.id}`)
 
     return {
       access_token: token.value,

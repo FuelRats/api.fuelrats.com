@@ -13,6 +13,7 @@ module.exports = {
     'no-restricted-syntax': styleRules.rules['no-restricted-syntax'].concat([
       'VariableDeclarator LogicalExpression[operator="||"]',
     ]),
+    'max-lines': ['error', { max: 2000 }],
   },
   overrides: [
     {

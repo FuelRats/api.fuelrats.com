@@ -21,7 +21,6 @@ const config = {
     proxyEnabled: required('FRAPI_PROXY_ENABLED', [toStrictBoolean], false),
     whitelist: optional('FRAPI_WHITELIST', [toArray], []),
   },
-  documentationUrl: required('FRAPI_DOCUMENTATION', [], 'https://github.com/FuelRats/FuelRats-API-Docs/blob/master/beta.md'),
   frontend: {
     clientId: recommended('FRAPI_FRONTEND_CLIENTID', [isUUID], undefined),
     url: required('FRAPI_FRONTEND_URL', [isBaseUrl], 'https://fuelrats.com'),
@@ -66,15 +65,6 @@ const config = {
     sharedKey: recommended('FRAPI_FRONTIER_SHAREDKEY', [], undefined),
     redirectUri: recommended('FRAPI_FRONTIER_REDIRECTURI', [], undefined),
   },
-  graylog: {
-    host: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
-    port: recommended('FRAPI_GRAYLOG_PORT', [toNumber], 12201),
-    facility: recommended('FRAPI_GRAYLOG_FACILITY', [], 'fuelratsapi'),
-  },
-  slack: {
-    token: recommended('FRAPI_SLACK_TOKEN', [], undefined),
-    username: recommended('FRAPI_SLACK_USERNAME', [], undefined),
-  },
   smtp: {
     hostname: optional('FRAPI_SMTP_HOSTNAME', [], 'smtp-relay.gmail.com'),
     username: optional('FRAPI_SMTP_USERNAME', [], undefined),
@@ -87,25 +77,17 @@ const config = {
     username: recommended('FRAPI_JIRA_USERNAME', [], undefined),
     password: recommended('FRAPI_JIRA_PASSWORD', [], undefined),
   },
+  graylog: {
+    host: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
+    port: recommended('FRAPI_GRAYLOG_PORT', [toNumber], 12201),
+    facility: recommended('FRAPI_GRAYLOG_FACILITY', [], 'fuelratsapi'),
+  },
   jwt: {
     secret: required('FRAPI_JWT_SECRET'),
-  },
-  twitter: {
-    consumerKey: optional('FRAPI_TWITTER_CONSUMER_KEY', [], undefined),
-    consumerSecret: optional('FRAPI_TWITTER_CONSUMER_SECRET', [], undefined),
-    token: optional('FRAPI_TWITTER_TOKEN', [], undefined),
-    tokenSecret: optional('FRAPI_TWITTER_TOKEN_SECRET', [], undefined),
   },
   webpush: {
     privateKey: recommended('FRAPI_WEBPUSH_PRIVATE_KEY', [], undefined),
     publicKey: recommended('FRAPI_WEBPUSH_PUBLIC_KEY', [], undefined),
-  },
-  apn: {
-    token: {
-      key: recommended('FRAPI_APN_PATH', [], undefined),
-      keyId: recommended('FRAPI_APN_ID', [], undefined),
-      teamId: recommended('FRAPI_APN_TEAM', [], undefined),
-    },
   },
 }
 

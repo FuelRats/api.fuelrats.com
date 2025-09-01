@@ -62,12 +62,7 @@ export default class Rat extends Model {
           through: {
             attributes: [],
           },
-        }, {
-          model: models.Ship.scope(undefined),
-          as: 'ships',
-          required: false,
-        },
-        ],
+        }],
       }],
     }
   }
@@ -92,10 +87,5 @@ export default class Rat extends Model {
     })
 
     models.Rat.hasMany(models.Rescue, { foreignKey: 'firstLimpetId', as: 'firstLimpet' })
-
-    models.Rat.hasMany(models.Ship, {
-      foreignKey: 'ratId',
-      as: 'ships',
-    })
   }
 }

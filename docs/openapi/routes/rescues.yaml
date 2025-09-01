@@ -1,0 +1,851 @@
+# Rescues API endpoints
+
+rescues_me:
+  get:
+    tags: [rescues]
+    summary: Get current user's rescues
+    description: |
+      Retrieve rescues where the current user's rats are assigned
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of user's assigned rescues
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueCollection'
+            example:
+              data:
+                - type: rescues
+                  id: "880e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    client: "StrandedPilot"
+                    clientNick: "StrandedPilot[PC]"
+                    platform: "pc"
+                    expansion: "odyssey"
+                    system: "Sol"
+                    codeRed: false
+                    status: "open"
+                    commandIdentifier: "42"
+                    createdAt: "2023-01-15T14:30:00.000Z"
+                    updatedAt: "2023-01-15T14:35:00.000Z"
+                  relationships:
+                    rats:
+                      data:
+                        - type: rats
+                          id: "660e8400-e29b-41d4-a716-446655440001"
+                      links:
+                        self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/rats"
+                        related: "/rescues/880e8400-e29b-41d4-a716-446655440001/rats"
+                    firstLimpet:
+                      data:
+                        type: rats
+                        id: "660e8400-e29b-41d4-a716-446655440001"
+                      links:
+                        self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/firstLimpet"
+                        related: "/rescues/880e8400-e29b-41d4-a716-446655440001/firstLimpet"
+              included:
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    name: "MyRescueRat"
+                    platform: "pc"
+                    expansion: "odyssey"
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
+              meta:
+                page:
+                  offset: 0
+                  limit: 20
+                  total: 5
+              links:
+                self: "/rescues/me?page[offset]=0&page[limit]=20"
+                first: "/rescues/me?page[offset]=0&page[limit]=20"
+                last: "/rescues/me?page[offset]=0&page[limit]=20"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+rescues:
+  get:
+    tags: [rescues]
+    summary: List rescues
+    description: |
+      Search and list rescue cases with optional filtering and pagination
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+      - $ref: '../components/parameters.yaml#/Filter'
+    responses:
+      '200':
+        description: List of rescues
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueCollection'
+            examples:
+              successful_response:
+                summary: Successful rescue list response
+                description: Example response showing multiple rescue cases with relationships and included data
+                value:
+                  data:
+                    - type: rescues
+                      id: "880e8400-e29b-41d4-a716-446655440001"
+                      attributes:
+                        client: "StrandedPilot"
+                        clientNick: "StrandedPilot[PC]"
+                        platform: "pc"
+                        expansion: "odyssey"
+                        system: "Col 285 Sector AA-E b28-0"
+                        codeRed: false
+                        status: "open"
+                        commandIdentifier: "42"
+                        createdAt: "2023-01-15T14:30:00.000Z"
+                        updatedAt: "2023-01-15T14:35:00.000Z"
+                      relationships:
+                        rats:
+                          data:
+                            - type: rats
+                              id: "660e8400-e29b-41d4-a716-446655440001"
+                          links:
+                            self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/rats"
+                            related: "/rescues/880e8400-e29b-41d4-a716-446655440001/rats"
+                        firstLimpet:
+                          data:
+                            type: rats
+                            id: "660e8400-e29b-41d4-a716-446655440001"
+                          links:
+                            self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/firstLimpet"
+                            related: "/rescues/880e8400-e29b-41d4-a716-446655440001/firstLimpet"
+                    - type: rescues
+                      id: "880e8400-e29b-41d4-a716-446655440002"
+                      attributes:
+                        client: "EmergencyCase"
+                        clientNick: "EmergencyCase[XB]"
+                        platform: "xb"
+                        expansion: "horizons4"
+                        system: "Sagittarius A*"
+                        codeRed: true
+                        status: "closed"
+                        outcome: "success"
+                        commandIdentifier: "43"
+                        createdAt: "2023-01-15T16:00:00.000Z"
+                        updatedAt: "2023-01-15T16:45:00.000Z"
+                      relationships:
+                        rats:
+                          data:
+                            - type: rats
+                              id: "660e8400-e29b-41d4-a716-446655440002"
+                            - type: rats
+                              id: "660e8400-e29b-41d4-a716-446655440003"
+                          links:
+                            self: "/rescues/880e8400-e29b-41d4-a716-446655440002/relationships/rats"
+                            related: "/rescues/880e8400-e29b-41d4-a716-446655440002/rats"
+                        firstLimpet:
+                          data:
+                            type: rats
+                            id: "660e8400-e29b-41d4-a716-446655440002"
+                          links:
+                            self: "/rescues/880e8400-e29b-41d4-a716-446655440002/relationships/firstLimpet"
+                            related: "/rescues/880e8400-e29b-41d4-a716-446655440002/firstLimpet"
+                  included:
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                      attributes:
+                        name: "RescueRat1"
+                        platform: "pc"
+                        expansion: "odyssey"
+                        createdAt: "2023-01-01T00:00:00.000Z"
+                        updatedAt: "2023-01-01T00:00:00.000Z"
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440002"
+                      attributes:
+                        name: "RescueRat2"
+                        platform: "xb"
+                        expansion: "horizons4"
+                        createdAt: "2023-01-02T00:00:00.000Z"
+                        updatedAt: "2023-01-02T00:00:00.000Z"
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440003"
+                      attributes:
+                        name: "RescueRat3"
+                        platform: "xb"
+                        expansion: "horizons4"
+                        createdAt: "2023-01-03T00:00:00.000Z"
+                        updatedAt: "2023-01-03T00:00:00.000Z"
+                  meta:
+                    page:
+                      offset: 0
+                      limit: 20
+                      total: 3247
+                  links:
+                    self: "/rescues?page[offset]=0&page[limit]=20"
+                    first: "/rescues?page[offset]=0&page[limit]=20"
+                    last: "/rescues?page[offset]=3240&page[limit]=20"
+                    next: "/rescues?page[offset]=20&page[limit]=20"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+  post:
+    tags: [rescues]
+    summary: Create rescue
+    description: |
+      Create a new rescue case
+      
+      **Required Permission:** `rescues.write`
+    security:
+      - bearerAuth: [rescues.write]
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [rescues]
+                  attributes:
+                    type: object
+                    required: [client, platform]
+                    properties:
+                      client:
+                        type: string
+                        description: Client commander name
+                      clientNick:
+                        type: string
+                        description: Client IRC nickname
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]
+                        description: Gaming platform
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                        description: Game expansion
+                      system:
+                        type: string
+                        description: Star system location
+                      codeRed:
+                        type: boolean
+                        description: Emergency status
+                      notes:
+                        type: string
+                        description: Rescue notes
+    responses:
+      '201':
+        description: Rescue created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueDocument'
+            example:
+              data:
+                type: rescues
+                id: "880e8400-e29b-41d4-a716-446655440002"
+                attributes:
+                  client: "NewStrandedPilot"
+                  clientNick: "NewStrandedPilot[XB]"
+                  platform: "xb"
+                  expansion: "horizons4"
+                  system: "Sagittarius A*"
+                  codeRed: true
+                  status: "open"
+                  commandIdentifier: "43"
+                  createdAt: "2023-01-15T16:00:00.000Z"
+                  updatedAt: "2023-01-15T16:00:00.000Z"
+                relationships:
+                  rats:
+                    data: []
+                    links:
+                      self: "/rescues/880e8400-e29b-41d4-a716-446655440002/relationships/rats"
+                      related: "/rescues/880e8400-e29b-41d4-a716-446655440002/rats"
+                  firstLimpet:
+                    data: null
+                    links:
+                      self: "/rescues/880e8400-e29b-41d4-a716-446655440002/relationships/firstLimpet"
+                      related: "/rescues/880e8400-e29b-41d4-a716-446655440002/firstLimpet"
+              included: []
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+rescues_by_id:
+  get:
+    tags: [rescues]
+    summary: Get rescue by ID
+    description: |
+      Retrieve a specific rescue case by ID
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: Rescue details
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueDocument'
+            example:
+              data:
+                type: rescues
+                id: "880e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  client: "StrandedPilot"
+                  clientNick: "StrandedPilot[PC]"
+                  platform: "pc"
+                  expansion: "odyssey"
+                  system: "Col 285 Sector AA-E b28-0"
+                  codeRed: false
+                  status: "open"
+                  commandIdentifier: "42"
+                  createdAt: "2023-01-15T14:30:00.000Z"
+                  updatedAt: "2023-01-15T14:35:00.000Z"
+                relationships:
+                  rats:
+                    data:
+                      - type: rats
+                        id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/rats"
+                      related: "/rescues/880e8400-e29b-41d4-a716-446655440001/rats"
+                  firstLimpet:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/firstLimpet"
+                      related: "/rescues/880e8400-e29b-41d4-a716-446655440001/firstLimpet"
+              included:
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    name: "RescueRat1"
+                    platform: "pc"
+                    expansion: "odyssey"
+                    createdAt: "2023-01-01T00:00:00.000Z"
+                    updatedAt: "2023-01-01T00:00:00.000Z"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [rescues]
+    summary: Update rescue
+    description: |
+      Update an existing rescue case
+      
+      **Required Permission:** `rescues.write` OR assigned to rescue (self-access via `rescues.write.me`)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [rescues]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      client:
+                        type: string
+                      clientNick:
+                        type: string
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                      system:
+                        type: string
+                      status:
+                        type: string
+                        enum: [open, inactive, closed]
+                      outcome:
+                        type: string
+                        enum: [success, failure, invalid, other, purge]
+                      codeRed:
+                        type: boolean
+                      notes:
+                        type: string
+    responses:
+      '200':
+        description: Rescue updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/rescues.yaml#/RescueDocument'
+            example:
+              data:
+                type: rescues
+                id: "880e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  client: "UpdatedStrandedPilot"
+                  clientNick: "UpdatedStrandedPilot[PC]"
+                  platform: "pc"
+                  expansion: "odyssey"
+                  system: "Updated System"
+                  codeRed: false
+                  status: "closed"
+                  outcome: "success"
+                  commandIdentifier: "42"
+                  createdAt: "2023-01-15T14:30:00.000Z"
+                  updatedAt: "2023-01-15T16:45:00.000Z"
+                relationships:
+                  rats:
+                    data:
+                      - type: rats
+                        id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/rats"
+                      related: "/rescues/880e8400-e29b-41d4-a716-446655440001/rats"
+                  firstLimpet:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/firstLimpet"
+                      related: "/rescues/880e8400-e29b-41d4-a716-446655440001/firstLimpet"
+              included: []
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [rescues]
+    summary: Delete rescue
+    description: |
+      Delete a rescue case
+      
+      **Required Permission:** `rescues.write`
+    security:
+      - bearerAuth: [rescues.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Rescue deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+rescues_rats_relationship:
+  get:
+    tags: [rescues]
+    summary: Get rescue's rats relationship
+    description: |
+      Retrieve the rats assigned to a rescue
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Rescue's rats relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [rats]
+                      id:
+                        type: string
+                        format: uuid
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+            example:
+              data:
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440001"
+                - type: rats
+                  id: "660e8400-e29b-41d4-a716-446655440002"
+              links:
+                self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/rats"
+                related: "/rescues/880e8400-e29b-41d4-a716-446655440001/rats"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  post:
+    tags: [rescues]
+    summary: Assign rats to rescue
+    description: |
+      Add rats to a rescue's assigned rats list
+      
+      **Required Permission:** `rescues.write` OR assigned to rescue (self-access via `rescues.write.me`)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Rats assigned to rescue successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  patch:
+    tags: [rescues]
+    summary: Update rescue's rats relationship
+    description: |
+      Replace the entire list of rats assigned to a rescue
+      
+      **Required Permission:** `rescues.write` OR assigned to rescue (self-access via `rescues.write.me`)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Rescue's rats relationship updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [rescues]
+    summary: Unassign rats from rescue
+    description: |
+      Remove rats from a rescue's assigned rats list
+      
+      **Required Permission:** `rescues.write` OR assigned to rescue (self-access via `rescues.write.me`)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Rats unassigned from rescue successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+rescues_firstlimpet_relationship:
+  get:
+    tags: [rescues]
+    summary: Get rescue's first limpet relationship
+    description: |
+      Retrieve the rat designated as the first limpet for a rescue
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Rescue's first limpet relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum: [rats]
+                        id:
+                          type: string
+                          format: uuid
+                    - type: 'null'
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+            example:
+              data:
+                type: rats
+                id: "660e8400-e29b-41d4-a716-446655440001"
+              links:
+                self: "/rescues/880e8400-e29b-41d4-a716-446655440001/relationships/firstLimpet"
+                related: "/rescues/880e8400-e29b-41d4-a716-446655440001/firstLimpet"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  patch:
+    tags: [rescues]
+    summary: Set rescue's first limpet
+    description: |
+      Set which rat is designated as the first limpet for a rescue.
+      The rat must already be assigned to the rescue.
+      
+      **Required Permission:** `rescues.write` OR assigned to rescue (self-access via `rescues.write.me`)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                oneOf:
+                  - type: object
+                    required: [type, id]
+                    properties:
+                      type:
+                        type: string
+                        enum: [rats]
+                      id:
+                        type: string
+                        format: uuid
+                  - type: 'null'
+                    description: Set to null to remove first limpet designation
+    responses:
+      '204':
+        description: First limpet updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        description: Rat is not assigned to this rescue
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+rescues_alert:
+  post:
+    tags: [rescues]
+    summary: Send rescue alert
+    description: |
+      Send an alert to notify available rats about a rescue case.
+      The alert is sent based on the rescue's platform and expansion requirements.
+      
+      **Required Permission:** `rescues.write`
+    security:
+      - bearerAuth: [rescues.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Rescue alert sent successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'

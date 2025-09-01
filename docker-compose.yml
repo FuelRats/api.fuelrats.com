@@ -1,12 +1,37 @@
 version: '3.8'
+
+secrets:
+  frapi_postgres_password:
+    external: true
+  frapi_cookie:
+    external: true
+  frapi_jwt_secret:
+    external: true
+  frapi_jira_password:
+    external: true
+  frapi_anope_password:
+    external: true
+  frapi_smtp_password:
+    external: true
+  frapi_announcer_secret:
+    external: true
+  frapi_frontier_sharedkey:
+    external: true
+  frapi_webpush_private_key:
+    external: true
+  frapi_irc_password:
+    external: true
+
 services:
   db:
     image: postgres:15
     restart: always
     environment:
       POSTGRES_USER: fuelrats
-      POSTGRES_PASSWORD: squeak
+      POSTGRES_PASSWORD_FILE: /run/secrets/frapi_postgres_password
       POSTGRES_DB: fuelrats
+    secrets:
+      - frapi_postgres_password
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -22,24 +47,38 @@ services:
       FRAPI_HOSTNAME: 0.0.0.0
       FRAPI_PORT: 8080
       FRAPI_URL: http://localhost:8080
-      FRAPI_COOKIE: ${FRAPI_COOKIE}
       FRAPI_FRONTEND_CLIENTID: ${FRAPI_FRONTEND_CLIENTID}
       FRAPI_FRONTEND_URL: ${FRAPI_FRONTEND_URL}
       FRAPI_POSTGRES_DATABASE: fuelrats
       FRAPI_POSTGRES_USERNAME: fuelrats
       FRAPI_POSTGRES_HOSTNAME: db
-      FRAPI_POSTGRES_PASSWORD: squeak
 
       FRAPI_JIRA_URL: ${FRAPI_JIRA_URL}
       FRAPI_JIRA_USERNAME: ${FRAPI_JIRA_USERNAME}
-      FRAPI_JIRA_PASSWORD: ${FRAPI_JIRA_PASSWORD}
 
       FRAPI_ANOPE_DATABASE: ${FRAPI_ANOPE_DATABASE}
       FRAPI_ANOPE_HOSTNAME: ${FRAPI_ANOPE_HOSTNAME}
       FRAPI_ANOPE_PORT: ${FRAPI_ANOPE_PORT}
       FRAPI_ANOPE_USERNAME: ${FRAPI_ANOPE_USERNAME}
-      FRAPI_ANOPE_PASSWORD: ${FRAPI_ANOPE_PASSWORD}
       FRAPI_ANOPE_XMLRPC: ${FRAPI_ANOPE_XMLRPC}
+
+      FRAPI_SMTP_HOSTNAME: ${FRAPI_SMTP_HOSTNAME}
+      FRAPI_SMTP_USERNAME: ${FRAPI_SMTP_USERNAME}
+      FRAPI_SMTP_PORT: ${FRAPI_SMTP_PORT}
+      FRAPI_SMTP_SENDER: ${FRAPI_SMTP_SENDER}
+
+      FRAPI_WEBPUSH_PUBLIC_KEY: ${FRAPI_WEBPUSH_PUBLIC_KEY}
+
+    secrets:
+      - frapi_cookie
+      - frapi_jwt_secret
+      - frapi_jira_password
+      - frapi_anope_password
+      - frapi_smtp_password
+      - frapi_announcer_secret
+      - frapi_frontier_sharedkey
+      - frapi_webpush_private_key
+      - frapi_irc_password
 
     ports:
       - "8080:8080"

@@ -20,6 +20,7 @@ import { NicknameView, UserView } from '../view'
 import {
   GET,
   POST,
+  PUT,
   DELETE,
   authenticated,
   getJSONAPIData,
@@ -110,6 +111,39 @@ export default class Nickname extends APIResource {
     const query = new AnopeQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new ObjectDocument({ query, result: createdNick, type: NicknameView, view: DocumentViewType.individual })
+  }
+
+  /**
+   * Set display nickname
+   * @endpoint
+   */
+  @PUT('/nicknames/:id/display')
+  @websocket('nicknames', 'display', 'update')
+  @parameters('id')
+  @authenticated
+  async setDisplay (ctx) {
+    const { id } = ctx.params
+    const nickname = await Anope.findId(id)
+    if (!nickname) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: nickname })
+
+    const { displayNick } = getJSONAPIData({ ctx, type: this.type }).attributes
+    if (!displayNick || IRCNickname.test(displayNick) === false) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/attributes/displayNick',
+      })
+    }
+
+    // Set the display nickname using Anope
+    await Anope.setDisplayNickname(nickname.email, displayNick)
+
+    // Fetch the updated nickname info using the new display nick since the ID changes
+    const updatedNickname = await Anope.findNickname(displayNick)
+    const query = new AnopeQuery({ connection: ctx })
+    return new ObjectDocument({ query, result: updatedNickname, type: NicknameView, view: DocumentViewType.individual })
   }
 
   /**

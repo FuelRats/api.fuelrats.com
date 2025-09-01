@@ -2,7 +2,6 @@ import Sequelize from 'sequelize'
 import config from '../config'
 import logger from '../logging'
 
-import ApplePushSubscription from './ApplePushSubscription'
 import Authenticator from './Authenticator'
 import Avatar from './Avatar'
 import Client from './Client'
@@ -11,6 +10,7 @@ import Decal from './Decal'
 import Epic from './Epic'
 import EpicUsers from './EpicUsers'
 import Group from './Group'
+import Passkey from './Passkey'
 import Rat from './Rat'
 import Rescue from './Rescue'
 import RescueHistory from './RescueHistory'
@@ -18,7 +18,6 @@ import RescueRats from './RescueRats'
 import RescueRatsHistory from './RescueRatsHistory'
 import Reset from './Reset'
 import Session from './Session'
-import Ship from './Ship'
 import Token from './Token'
 import User from './User'
 import UserGroups from './UserGroups'
@@ -26,7 +25,6 @@ import VerificationToken from './VerificationToken'
 import WebPushSubscription from './WebPushSubscription'
 
 const models = {
-  ApplePushSubscription,
   User,
   Authenticator,
   Avatar,
@@ -39,7 +37,6 @@ const models = {
   Reset,
   Epic,
   EpicUsers,
-  Ship,
   Decal,
   Group,
   UserGroups,
@@ -141,7 +138,6 @@ export {
   db as sequelize,
   Sequelize,
   Op,
-  ApplePushSubscription,
   Authenticator,
   Avatar,
   Client,
@@ -150,6 +146,7 @@ export {
   Epic,
   EpicUsers,
   Group,
+  Passkey,
   Rat,
   Rescue,
   RescueHistory,
@@ -157,7 +154,6 @@ export {
   RescueRatsHistory,
   Reset,
   Session,
-  Ship,
   Token,
   User,
   UserGroups,

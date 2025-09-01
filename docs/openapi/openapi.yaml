@@ -1,0 +1,420 @@
+openapi: 3.0.3
+info:
+  title: FuelRats API
+  version: '3.1.0'
+  description: |
+    The official API for the FuelRats rescue coordination system.
+    
+    This API follows the [JSON:API specification](https://jsonapi.org/) for consistent resource handling.
+    
+    ## Authentication
+    
+    The API supports multiple OAuth2 authentication flows:
+    
+    ### Authorization Code Grant (Recommended)
+    The most secure method for server-side and native desktop applications:
+    1. Redirect user to `/oauth2/authorize` with client_id, redirect_uri, and state
+    2. User authorizes your application
+    3. Exchange authorization code for access token at `/oauth2/token`
+    4. Use access token in `Authorization: Bearer <token>` header
+    
+    ### Implicit Grant 
+    For client-side web applications (less secure):
+    1. Redirect user to `/oauth2/authorize` with response_type=token
+    2. Access token returned directly in redirect URL fragment
+    
+    ### Resource Owner Password Credentials
+    Only available to first-party FuelRats applications:
+    - Direct username/password authentication
+    - Requires client to be whitelisted
+    
+    ### WebSocket Authentication
+    For real-time communication, append bearer token to WebSocket URL:
+    ```
+    wss://api.fuelrats.com/?bearer=<your_token_here>
+    ```
+    
+    ## Permission Scopes
+    
+    API permissions follow the format: `resource.read/write(.me)`
+    
+    - **resource**: Plural resource type (users, rats, rescues, etc.)
+    - **read**: View records
+    - **write**: Create/update/delete records  
+    - **.me**: Restrict to user's own associated records only
+    
+    **Examples:**
+    - `rescues.read.me` - View only your assigned rescues
+    - `rats.write` - Modify any commander record
+    - `users.read` - View any user information
+    
+    ## Filtering & Query Parameters
+    
+    Most list endpoints support advanced filtering using JSON query objects:
+    
+    ### Filter Operators:
+    - **Comparison**: `gt`, `gte`, `lt`, `lte`, `eq`, `ne`
+    - **Text**: `like`, `iLike`, `substring`, `startsWith`, `regexp`
+    - **Logical**: `and`, `or`, `not`
+    - **Arrays**: `contains`, `overlap`, `contained`
+    
+    ### Example Filter:
+    ```json
+    {
+      "and": [
+        { "name": { "startsWith": "Commander" } },
+        { "rescueCount": { "gt": 10 } }
+      ]
+    }
+    ```
+    
+    URL encode the filter object and pass as `filter` query parameter.
+    
+    ## WebSocket Real-time API
+    
+    Connect to `wss://api.fuelrats.com/` with protocol `FR-JSONAPI-WS`:
+    
+    ### Request Format:
+    ```javascript
+    [state, endpoint, query, body]
+    ```
+    
+    ### Response Format:
+    ```javascript
+    [state, status, body]
+    ```
+    
+    ### Event Subscription:
+    Subscribe to real-time events by sending:
+    ```javascript
+    ["subscribe", "events", "subscribe", {}]
+    ```
+    
+    Events follow format: `[event, sender, resourceId, data]`
+    
+    ## Error Handling
+    
+    All errors follow JSON:API error object format with additional metadata:
+    
+    ```json
+    {
+      "errors": [{
+        "id": "unique-error-id",
+        "code": "error_code", 
+        "status": "400",
+        "title": "Error Title",
+        "detail": "Detailed error description",
+        "source": {
+          "pointer": "/data/attributes/field"
+        }
+      }]
+    }
+    ```
+    
+    Use the `id` field for error tracking and `code` field for programmatic error handling.
+    
+  contact:
+    name: FuelRats Support
+    url: https://fuelrats.com
+    email: support@fuelrats.com
+  license:
+    name: BSD-3-Clause
+    url: https://github.com/FuelRats/api.fuelrats.com/blob/main/LICENSE
+
+servers:
+  - url: https://api.fuelrats.com
+    description: Production server
+  - url: https://beta-api.fuelrats.com
+    description: Beta server
+
+tags:
+  - name: registration
+    description: New user account registration
+  - name: verifications
+    description: Email address verification
+  - name: resets
+    description: Password reset functionality
+  - name: users
+    description: User account management
+  - name: rats
+    description: Commander (Rat) management
+  - name: rescues
+    description: Rescue case management
+  - name: nicknames
+    description: IRC nickname registration
+  - name: groups
+    description: Permission group management
+  - name: oauth2
+    description: OAuth2 authentication
+  - name: passkeys
+    description: WebAuthn/Passkey authentication
+  - name: decals
+    description: Decal award management
+  - name: events
+    description: Real-time events and notifications
+  - name: web-push
+    description: Web push notifications and subscriptions
+  - name: websockets
+    description: Real-time WebSocket API communication
+  - name: statistics
+    description: Platform statistics and leaderboards
+  - name: version
+    description: API version information
+
+paths:
+  # Registration
+  /register:
+    $ref: './routes/register.yaml#/register'
+  /register/passkey:
+    $ref: './routes/register.yaml#/register_passkey'
+  
+  # Email Verifications
+  /verifications:
+    $ref: './routes/verifications.yaml#/verifications_create'
+  /verifications/{token}:
+    $ref: './routes/verifications.yaml#/verifications_verify'
+  
+  # Password Resets
+  /resets:
+    $ref: './routes/resets.yaml#/resets_create'
+  /resets/{token}:
+    get:
+      $ref: './routes/resets.yaml#/resets_validate'
+    post:
+      $ref: './routes/resets.yaml#/resets_execute'
+  
+  # Users
+  /users:
+    $ref: './routes/users.yaml#/users'
+  /users/{id}:
+    $ref: './routes/users.yaml#/users_by_id'
+  /profile:
+    $ref: './routes/users.yaml#/profile'
+  /users/{id}/password:
+    $ref: './routes/users.yaml#/users_password'
+  /users/{id}/email:
+    $ref: './routes/users.yaml#/users_email'
+  /users/{id}/certificate:
+    $ref: './routes/users.yaml#/users_certificate'
+  /users/{id}/decals:
+    $ref: './routes/users.yaml#/users_decals'
+  /users/{id}/relationships/rats:
+    $ref: './routes/users.yaml#/users_rats_relationship'
+  /users/{id}/relationships/groups:
+    $ref: './routes/users.yaml#/users_groups_relationship'
+  /users/{id}/image:
+    $ref: './routes/users.yaml#/users_image'
+  /users/{id}/statistics:
+    $ref: './routes/statistics.yaml#/users_statistics'
+  /users/{id}/authenticator:
+    $ref: './routes/users.yaml#/users_authenticator'
+  /users/{id}/passkeys:
+    get:
+      $ref: './routes/passkeys.yaml#/users_passkeys'
+    post:
+      $ref: './routes/passkeys.yaml#/users_passkeys_create'
+  /users/{id}/passkeys/register:
+    $ref: './routes/passkeys.yaml#/users_passkeys_register'
+  /users/{id}/passkeys/{passkeyId}:
+    $ref: './routes/passkeys.yaml#/users_passkeys_delete'
+  /passkeys/authenticate:
+    $ref: './routes/passkeys.yaml#/passkeys_authenticate'
+  /passkeys/verify:
+    $ref: './routes/passkeys.yaml#/passkeys_verify'
+  
+  # Rats
+  /rats:
+    $ref: './routes/rats.yaml#/rats'
+  /rats/{id}:
+    $ref: './routes/rats.yaml#/rats_by_id'
+  /rats/{id}/relationships/user:
+    $ref: './routes/rats.yaml#/rats_user_relationship'
+  
+  # Rescues
+  /rescues:
+    $ref: './routes/rescues.yaml#/rescues'
+  /rescues/me:
+    $ref: './routes/rescues.yaml#/rescues_me'
+  /rescues/{id}:
+    $ref: './routes/rescues.yaml#/rescues_by_id'
+  /rescues/{id}/relationships/rats:
+    $ref: './routes/rescues.yaml#/rescues_rats_relationship'
+  /rescues/{id}/relationships/firstLimpet:
+    $ref: './routes/rescues.yaml#/rescues_firstlimpet_relationship'
+  /rescues/{id}/alert:
+    $ref: './routes/rescues.yaml#/rescues_alert'
+  
+  # Nicknames
+  /nicknames:
+    $ref: './routes/nicknames.yaml#/nicknames'
+  /nicknames/{id}:
+    $ref: './routes/nicknames.yaml#/nicknames_by_id'
+  /nicknames/{id}/display:
+    $ref: './routes/nicknames.yaml#/nicknames_display'
+  /nicknames/{id}/relationships/user:
+    $ref: './routes/nicknames.yaml#/nicknames_user_relationship'
+  /nicknames/{nick}/relationships/rat:
+    $ref: './routes/nicknames.yaml#/nicknames_rat_relationship'
+  
+  # Groups
+  /groups:
+    $ref: './routes/groups.yaml#/groups'
+  /groups/{id}:
+    $ref: './routes/groups.yaml#/groups_by_id'
+  
+  # OAuth2
+  /oauth2/authorize:
+    $ref: './routes/oauth2.yaml#/oauth2_authorize'
+  /oauth2/token:
+    $ref: './routes/oauth2.yaml#/oauth2_token'
+  /oauth2/revoke:
+    $ref: './routes/oauth2.yaml#/oauth2_revoke'
+  /oauth2/revokeall:
+    $ref: './routes/oauth2.yaml#/oauth2_revokeall'
+  
+  # OAuth Clients
+  /clients:
+    $ref: './routes/clients.yaml#/clients'
+  /clients/{id}:
+    $ref: './routes/clients.yaml#/clients_by_id'
+  /clients/{id}/relationships/user:
+    $ref: './routes/clients.yaml#/clients_user_relationship'
+  
+  # Decals
+  /decals:
+    $ref: './routes/decals.yaml#/decals'
+  /decals/{id}:
+    $ref: './routes/decals.yaml#/decals_by_id'
+  /decals/{id}/relationships/rat:
+    $ref: './routes/decals.yaml#/decals_rat_relationship'
+  
+  # Events
+  /events:
+    $ref: './routes/events.yaml#/events'
+  /events/{event}:
+    $ref: './routes/events.yaml#/events_broadcast'
+  
+  # Web Push Notifications
+  /web-push:
+    $ref: './routes/web-push.yaml#/web_push_subscribe'
+  /alerts:
+    $ref: './routes/web-push.yaml#/alerts_broadcast'
+  
+  # WebSocket Real-time API
+  /:
+    $ref: './routes/websockets.yaml#/websocket_connection'
+  
+  # Statistics and Leaderboard
+  /leaderboard:
+    $ref: './routes/statistics.yaml#/leaderboard'
+  
+  # Version
+  /version:
+    $ref: './routes/version.yaml#/version'
+
+components:
+  # Common security schemes
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+    
+    oauth2:
+      type: oauth2
+      description: OAuth2 authentication for third-party applications
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth2/authorize
+          tokenUrl: /oauth2/token
+          refreshUrl: /oauth2/token
+          scopes:
+            # User permissions
+            users.read: Read any user profiles and information
+            users.write: Create and modify any user accounts (admin only)
+            users.read.me: Read your own user profile only
+            users.write.me: Modify your own user profile only
+            
+            # Rat (Commander) permissions  
+            rats.read: Read any commander information
+            rats.write: Create and modify any commander records
+            rats.read.me: Read your own commanders only
+            rats.write.me: Create and modify your own commanders only
+            
+            # Rescue permissions
+            rescues.read: Read any rescue data
+            rescues.write: Create and modify any rescue cases
+            rescues.read.me: Read only rescues you're assigned to
+            rescues.write.me: Modify only rescues you're assigned to
+            
+            # Group permissions
+            groups.read: Read group information and memberships
+            groups.write: Create and modify groups (admin only)
+            
+            # OAuth client permissions
+            clients.read: Read OAuth client information
+            clients.write: Create and modify OAuth clients
+            clients.read.me: Read your own OAuth clients only
+            clients.write.me: Modify your own OAuth clients only
+            
+            # Decal permissions
+            decals.read: Read decal awards and information
+            decals.write: Create and award decals (admin only)
+            
+            # Nickname permissions
+            nicknames.read: Read IRC nickname registrations
+            nicknames.write: Register and modify IRC nicknames
+            nicknames.read.me: Read your own nicknames only
+            nicknames.write.me: Modify your own nicknames only
+        
+        implicit:
+          authorizationUrl: /oauth2/authorize
+          scopes:
+            # Same scopes as authorization code but for client-side apps
+            users.read.me: Read your own user profile only
+            users.write.me: Modify your own user profile only
+            rats.read.me: Read your own commanders only
+            rats.write.me: Create and modify your own commanders only
+            rescues.read.me: Read only rescues you're assigned to
+            rescues.write.me: Modify only rescues you're assigned to
+            nicknames.read.me: Read your own nicknames only
+            nicknames.write.me: Modify your own nicknames only
+        
+        password:
+          tokenUrl: /oauth2/token
+          scopes:
+            # Full access scopes for first-party applications only
+            users.read: Read any user profiles and information
+            users.write: Create and modify any user accounts
+            rats.read: Read any commander information
+            rats.write: Create and modify any commander records
+            rescues.read: Read any rescue data
+            rescues.write: Create and modify any rescue cases
+            groups.read: Read group information and memberships
+            groups.write: Create and modify groups
+            decals.read: Read decal awards and information
+            decals.write: Create and award decals
+    
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic authentication for legacy endpoints
+    
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Session-based authentication for OAuth2 flow
+
+  # Common schemas
+  schemas:
+    $ref: './components/schemas.yaml'
+  
+  # Common parameters
+  parameters:
+    $ref: './components/parameters.yaml'
+  
+  # Common responses
+  responses:
+    $ref: './components/responses.yaml'
