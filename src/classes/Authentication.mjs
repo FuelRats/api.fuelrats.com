@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { authenticator as totp } from 'otplib'
 import UUID from 'pure-uuid'
 import config from '../config'
+import { logMetric } from '../logging'
 import * as constants from '../constants'
 import {
   User, Token, Client, Reset, Authenticator, Passkey, db,
@@ -69,6 +70,11 @@ class Authentication {
 
     const result = await bcrypt.compare(password, user.password)
     if (result === false) {
+      logMetric('authentication_failure', {
+        _auth_method: 'password',
+        _failure_reason: 'invalid_password',
+        _user_email_hash: user.email ? Buffer.from(user.email).toString('base64').slice(0, 8) : 'unknown',
+      }, 'Password authentication failed')
       return undefined
     }
     if (user.isSuspended() === true) {
@@ -106,11 +112,23 @@ class Authentication {
       }
 
       if (!isValidCode) {
+        logMetric('authentication_failure', {
+          _auth_method: 'password_2fa',
+          _failure_reason: 'invalid_2fa_code',
+          _user_id: user.id,
+        }, '2FA authentication failed')
         throw new AuthenticatorRequiredAPIError({
           pointer: '/data/attributes/code',
         })
       }
     }
+
+    // Log successful password authentication
+    logMetric('authentication_success', {
+      _auth_method: authenticator ? 'password_2fa' : 'password',
+      _user_id: user.id,
+      _has_2fa: !!authenticator,
+    }, 'Password authentication successful')
 
     return User.findOne({
       where: {
@@ -181,6 +199,11 @@ class Authentication {
     }
 
     if (!verification.verified) {
+      logMetric('authentication_failure', {
+        _auth_method: 'passkey',
+        _failure_reason: 'verification_failed',
+        _user_id: userId,
+      }, 'Passkey verification failed')
       return undefined
     }
 
@@ -188,6 +211,12 @@ class Authentication {
     await passkey.update({
       counter: verification.authenticationInfo.newCounter,
     })
+
+    logMetric('authentication_success', {
+      _auth_method: 'passkey',
+      _user_id: userId,
+      _passkey_name: passkey.name,
+    }, 'Passkey authentication successful')
 
     return user
   }
@@ -253,6 +282,13 @@ class Authentication {
       // Extract scopes from JWT (if present) or use default scope
       const scope = jwtPayload.scope ? jwtPayload.scope.split(' ') : ['*']
 
+      logMetric('authentication_success', {
+        _auth_method: 'jwt_bearer',
+        _user_id: user.id,
+        _client_id: jwtPayload.aud,
+        _scopes: scope.join(','),
+      }, 'JWT bearer authentication successful')
+
       return {
         user,
         scope,
@@ -263,6 +299,10 @@ class Authentication {
     // Fallback to database token lookup (existing functionality)
     const token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
+      logMetric('authentication_failure', {
+        _auth_method: 'bearer_token',
+        _failure_reason: 'token_not_found',
+      }, 'Bearer token authentication failed - token not found')
       return false
     }
     const userInstance = await User.findOne({
@@ -280,6 +320,16 @@ class Authentication {
         status: 'active',
       },
     })
+
+    if (user) {
+      logMetric('authentication_success', {
+        _auth_method: 'bearer_token',
+        _user_id: user.id,
+        _client_id: token.clientId,
+        _scopes: token.scope.join(','),
+      }, 'Bearer token authentication successful')
+    }
+
     return {
       user,
       scope: token.scope,

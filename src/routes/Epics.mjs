@@ -5,6 +5,7 @@ import { websocket } from '../classes/WebSocket'
 import { Epic } from '../db'
 import { DocumentViewType } from '../Documents'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { EpicView, UserView, RescueView } from '../view'
 import {
@@ -71,6 +72,13 @@ export default class Epics extends APIResource {
       overrideFields: { nominatedById: ctx.state.user.id },
     })
 
+    // Log epic nomination metrics
+    logMetric('epic_nominated', {
+      _epic_id: result.id,
+      _nominated_by_user_id: ctx.state.user.id,
+      _rescue_id: result.rescueId || null,
+    }, `Epic nomination created: ${result.id} by user ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: EpicView })
@@ -85,7 +93,17 @@ export default class Epics extends APIResource {
   @parameters('id')
   @authenticated
   async update (ctx) {
+    const oldEpic = await Epic.findByPk(ctx.params.id)
     const result = await super.update({ ctx, databaseType: Epic, updateSearch: { id: ctx.params.id } })
+
+    // Log epic update metrics
+    const wasApproved = !oldEpic?.approvedById && result.approvedById
+    logMetric('epic_updated', {
+      _epic_id: result.id,
+      _updated_by_user_id: ctx.state.user.id,
+      _was_approved: wasApproved,
+      _approved_by_user_id: wasApproved ? result.approvedById : null,
+    }, `Epic nomination updated: ${result.id}${wasApproved ? ' (APPROVED)' : ''}`)
 
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: EpicView })

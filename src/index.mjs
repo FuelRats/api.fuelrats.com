@@ -27,7 +27,8 @@ import { db } from './db'
 import Document from './Documents/Document'
 import ErrorDocument from './Documents/ErrorDocument'
 import packageInfo from './files/package'
-import logger from './logging'
+import logger, { logError, logMetric } from './logging'
+import { addDatabaseMetrics } from './middleware/DatabaseMetrics'
 import Query from './query'
 import * as routes from './routes'
 
@@ -106,6 +107,8 @@ app.use((ctx, next) => {
 const traffic = new TrafficControl()
 
 app.use(async (ctx, next) => {
+  const startTime = Date.now()
+  
   try {
     if (ctx.request.type === 'application/coffee-pot-command') {
       throw new ImATeapotAPIError({})
@@ -119,16 +122,6 @@ app.use(async (ctx, next) => {
     ctx.set('X-Rate-Limit-Limit', rateLimit.total)
     ctx.set('X-Rate-Limit-Remaining', rateLimit.remaining)
     ctx.set('X-Rate-Limit-Reset', rateLimit.reset)
-
-    logger.info({
-      GELF: true,
-      _event: 'request',
-      _ip: ctx.request.ip,
-      _headers: ctx.request.headers,
-      _path: ctx.request.path,
-      _query: ctx.query,
-      _method: ctx.request.req.method,
-    }, `Request by ${ctx.request.ip} to ${ctx.request.path}`)
 
 
     if (rateLimit.exceeded) {
@@ -175,31 +168,80 @@ app.use(async (ctx, next) => {
     } else if (typeof result === 'undefined' && !ctx.response.body) {
       throw new NotFoundAPIError({})
     } else if (!ctx.response.body) {
-      logger.error({
-        GELF: true,
-        _event: 'request',
+      logError(new Error('Unprocessable request'), {
         _ip: ctx.request.ip,
-        _headers: ctx.request.headers,
         _path: ctx.request.path,
-        _query: ctx.query,
         _method: ctx.request.req.method,
       }, 'Router received a request that could not be processed')
 
       throw new InternalServerError({})
     }
+
+    // Log successful request metrics
+    const responseTime = Date.now() - startTime
+    logMetric('http_response', {
+      _ip: ctx.request.ip,
+      _path: ctx.request.path,
+      _method: ctx.request.req.method,
+      _status_code: ctx.status,
+      _response_time_ms: responseTime,
+      _response_size: ctx.response.length || 0,
+      _user_id: ctx.state.user?.id,
+      _client_id: ctx.state.client?.id,
+      _rate_limit_remaining: ctx.state.traffic?.remaining,
+      _authenticated: !!ctx.state.user,
+    }, `${ctx.request.method} ${ctx.request.path} ${ctx.status} ${responseTime}ms`)
   } catch (errors) {
+    // Log non-API errors for debugging while keeping API errors clean
+    if (!(errors.constructor.name.includes('APIError')) && !(errors instanceof OAuthError)) {
+      const errorId = logError(errors, {
+        _ip: ctx.request.ip,
+        _path: ctx.request.path,
+        _method: ctx.request.req.method,
+        _user_id: ctx.state.user?.id,
+      }, 'Unhandled error in request processing')
+      
+      // Add error ID to response for debugging
+      ctx.set('X-Error-ID', errorId)
+    }
+    
+    const responseTime = Date.now() - startTime
+    
     if (errors instanceof OAuthError) {
       ctx.status = StatusCode.badRequest
       ctx.type = 'application/json'
       ctx.body = errors.toString()
+      
+      // Log OAuth error metrics
+      logMetric('oauth_error', {
+        _ip: ctx.request.ip,
+        _path: ctx.request.path,
+        _method: ctx.request.req.method,
+        _error_type: 'oauth_error',
+        _response_time_ms: responseTime,
+      }, `OAuth error: ${errors.message}`)
       return
     }
+    
     const query = new Query({ connection: ctx, validate: false })
     const errorDocument = new ErrorDocument({ query, errors })
 
     ctx.status = errorDocument.httpStatus
     ctx.type = 'application/vnd.api+json'
     ctx.body = errorDocument.toString()
+    
+    // Log error response metrics
+    logMetric('http_error', {
+      _ip: ctx.request.ip,
+      _path: ctx.request.path,
+      _method: ctx.request.req.method,
+      _status_code: ctx.status,
+      _response_time_ms: responseTime,
+      _error_type: errors.constructor.name,
+      _user_id: ctx.state.user?.id,
+      _client_id: ctx.state.client?.id,
+      _authenticated: !!ctx.state.user,
+    }, `Error response: ${ctx.request.method} ${ctx.request.path} ${ctx.status} ${responseTime}ms`)
   }
 })
 
@@ -229,6 +271,9 @@ logger.info({
 
 ; (async function startServer () {
   try {
+    // Add database metrics before sync
+    addDatabaseMetrics(db)
+    
     await db.sync()
     const listen = promisify(server.listen.bind(server))
     await listen(config.server.port, config.server.hostname)
@@ -237,12 +282,8 @@ logger.info({
       _event: 'startup',
     }, `HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
   } catch (error) {
-    logger.fatal({
-      GELF: true,
-      _event: 'error',
-      _message: error.message,
-      _stack: error.stack,
-    })
+    logError(error, { _event: 'startup' }, 'Failed to start server')
+    process.exit(1)
   }
 }())
 

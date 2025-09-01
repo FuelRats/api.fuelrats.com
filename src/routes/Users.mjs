@@ -38,7 +38,7 @@ import { User, Decal, Avatar, db } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import emailChangeEmail from '../emails/emailchange'
-import logger from '../logging'
+import logger, { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import {
   UserView, DecalView, RatView, ClientView, GroupView,
@@ -296,6 +296,16 @@ export default class Users extends APIResource {
     }
 
     await Anope.setFingerprint(user.email, fingerprint)
+    
+    // Log certificate generation metrics
+    logMetric('user_certificate_generated', {
+      _user_id: user.id,
+      _requested_by_user_id: ctx.state.user.id,
+      _is_self_request: user.id === ctx.state.user.id,
+      _rat_name: ratName,
+      _auth_method: passkeyResponse ? 'passkey' : (totpCode ? 'password_2fa' : 'password'),
+    }, `IRC certificate generated for user ${user.id} (rat: ${ratName})`)
+    
     ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
     ctx.set('Content-type', 'application/x-pem-file')
     ctx.body = certificate
@@ -349,6 +359,14 @@ export default class Users extends APIResource {
 
     await Jira.setEmail(user.displayName(), newEmail)
     await Anope.setEmail(oldEmail, newEmail)
+
+    // Log email change metrics
+    logMetric('user_email_changed', {
+      _user_id: user.id,
+      _changed_by_user_id: ctx.state.user.id,
+      _was_verified: !!user.groups.find(g => g.name === 'verified'),
+      _is_self_change: user.id === ctx.state.user.id,
+    }, `User email changed: ${user.id}`)
 
     let result = null
     try {
@@ -443,6 +461,14 @@ export default class Users extends APIResource {
       return user
     })
 
+    // Log password change metrics
+    logMetric('user_password_changed', {
+      _user_id: user.id,
+      _changed_by_user_id: ctx.state.user.id,
+      _is_self_change: user.id === ctx.state.user.id,
+      _auth_method: passkeyResponse ? 'passkey' : (totpCode ? 'password_2fa' : 'password'),
+    }, `User password changed: ${user.id} by ${ctx.state.user.id}`)
+
     let result = null
     try {
       result = await Anope.mapNickname(user)
@@ -472,6 +498,13 @@ export default class Users extends APIResource {
   @permissions('users.write')
   async create (ctx) {
     const user = await super.create({ ctx, databaseType: User })
+
+    // Log user creation metrics
+    logMetric('user_created', {
+      _user_id: user.id,
+      _created_by_user_id: ctx.state.user.id,
+      _initial_status: user.status || 'active',
+    }, `User created: ${user.id} by admin ${ctx.state.user.id}`)
 
     const query = new DatabaseQuery({ connection: ctx })
     let result = null
@@ -503,6 +536,17 @@ export default class Users extends APIResource {
   @authenticated
   async update (ctx) {
     const user = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
+
+    // Log user update metrics
+    const updatedFields = Object.keys(ctx.data?.data?.attributes || {})
+    logMetric('user_updated', {
+      _user_id: user.id,
+      _updated_by_user_id: ctx.state.user.id,
+      _is_self_update: user.id === ctx.state.user.id,
+      _updated_fields: updatedFields.join(','),
+      _status_changed: updatedFields.includes('status'),
+      _new_status: ctx.data?.data?.attributes?.status || user.status,
+    }, `User updated: ${user.id} by ${ctx.state.user.id} (fields: ${updatedFields.join(', ')})`)
 
     const query = new DatabaseQuery({ connection: ctx })
     let result = null
@@ -583,6 +627,14 @@ export default class Users extends APIResource {
       userId: ctx.params.id,
     })
 
+    // Log avatar update metrics
+    logMetric('user_avatar_updated', {
+      _user_id: user.id,
+      _updated_by_user_id: ctx.state.user.id,
+      _is_self_update: user.id === ctx.state.user.id,
+      _image_size_bytes: formattedImageData.length,
+    }, `User avatar updated: ${user.id} by ${ctx.state.user.id}`)
+
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     const result = await User.findOne({
@@ -631,6 +683,16 @@ export default class Users extends APIResource {
       userId: user.id,
       claimedAt: Date.now(),
     })
+
+    // Log decal redemption metrics
+    logMetric('user_decal_redeemed', {
+      _user_id: user.id,
+      _decal_id: result.id,
+      _decal_type: result.type,
+      _redeemable_count: redeemable,
+      _requested_by_user_id: ctx.state.user.id,
+      _is_self_redemption: user.id === ctx.state.user.id,
+    }, `Decal redeemed: ${result.id} by user ${user.id}`)
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })

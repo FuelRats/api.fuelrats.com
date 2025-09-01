@@ -15,6 +15,7 @@ import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'
 import { User, VerificationToken, Group, db } from '../db'
+import { logMetric } from '../logging'
 import verificationEmail from '../emails/verification'
 
 const mail = new Mail()
@@ -63,6 +64,18 @@ export default class Verifications extends API {
 
     if (user) {
       await Verifications.createVerification(user)
+      
+      // Log verification request metrics
+      logMetric('email_verification_requested', {
+        _user_id: user.id,
+        _ip: ctx.ip,
+        _already_verified: verified,
+      }, `Email verification requested for user ${user.id}`)
+    } else {
+      // Log request for non-existent user
+      logMetric('email_verification_invalid_email', {
+        _ip: ctx.ip,
+      }, 'Email verification requested for non-existent email')
     }
 
     return true
@@ -109,6 +122,13 @@ export default class Verifications extends API {
     })
     await Anope.updatePermissions(updatedUser)
     await verification.destroy()
+    
+    // Log verification completion metrics
+    logMetric('email_verification_completed', {
+      _user_id: user.id,
+      _ip: ctx.ip,
+    }, `Email verification completed for user ${user.id}`)
+    
     return true
   }
 

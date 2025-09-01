@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
+import logger from '../logging'
 
 const DOCKER_SECRETS_PATH = '/run/secrets'
 
@@ -18,7 +19,12 @@ export function readDockerSecret (secretName) {
   try {
     return readFileSync(secretPath, 'utf8').trim()
   } catch (error) {
-    console.warn(`Failed to read Docker secret "${secretName}": ${error.message}`)
+    logger.warn({
+      GELF: true,
+      _event: 'docker_secret_read_failed',
+      _secret_name: secretName,
+      _error_message: error.message,
+    }, `Failed to read Docker secret "${secretName}": ${error.message}`)
     return undefined
   }
 }

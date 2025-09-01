@@ -10,6 +10,7 @@ import StatusCode from '../classes/StatusCode'
 import { Authenticator, User } from '../db'
 import { DocumentViewType } from '../Documents/Document'
 import ObjectDocument from '../Documents/ObjectDocument'
+import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { GeneratedAuthenticatorView } from '../view'
 import {
@@ -124,6 +125,14 @@ export default class Authenticators extends APIResource {
       userId: ctx.state.user.id,
     })
 
+    // Log 2FA setup metrics
+    logMetric('authenticator_added', {
+      _user_id: ctx.state.user.id,
+      _setup_by_user_id: ctx.state.user.id,
+      _is_self_setup: user.id === ctx.state.user.id,
+      _description: description?.substring(0, 50) || 'no_description',
+    }, `2FA authenticator added for user ${ctx.state.user.id}`)
+
     ctx.response.status = StatusCode.created
     return true
   }
@@ -168,6 +177,15 @@ export default class Authenticators extends APIResource {
     }
 
     await existingAuthenticator.destroy()
+    
+    // Log 2FA removal metrics
+    logMetric('authenticator_removed', {
+      _user_id: user.id,
+      _removed_by_user_id: ctx.state.user.id,
+      _is_self_removal: user.id === ctx.state.user.id,
+      _description: existingAuthenticator.description?.substring(0, 50) || 'no_description',
+    }, `2FA authenticator removed for user ${user.id}`)
+    
     return true
   }
 
