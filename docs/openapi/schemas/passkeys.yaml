@@ -21,7 +21,7 @@ Passkey:
           description: Base64URL encoded credential ID (**Write Permission:** Internal system only)
         publicKey:
           type: string
-          writeOnly: true
+          readOnly: true
           description: Base64URL encoded public key (**Write Permission:** Internal system only)
         counter:
           type: integer
