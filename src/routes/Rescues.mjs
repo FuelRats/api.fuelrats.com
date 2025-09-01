@@ -480,7 +480,7 @@ export default class Rescues extends APIResource {
     }
 
 
-    if (entity.status === 'closed' && (Date.now() - entity.createdAt) < rescueAccessTime) {
+    if (entity.status === 'closed' && (Date.now() - new Date(entity.createdAt).getTime()) < rescueAccessTime) {
       return Permission.granted({ permissions: ['dispatch.write'], connection: ctx })
     }
     return false
