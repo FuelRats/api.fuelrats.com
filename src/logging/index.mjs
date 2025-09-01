@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import log4js from 'log4js'
 import config from '../config'
 
@@ -99,7 +100,7 @@ export function logMetric (event, data, message = '') {
  * @returns {string} - Unique error ID for tracking
  */
 export function logError (error, context = {}, message = 'An error occurred') {
-  const errorId = `${new Date().toISOString()}-${Math.random().toString(36).substr(2, 9)}` // eslint-disable-line no-magic-numbers
+  const errorId = crypto.randomUUID()
 
   errorLogger.error({
     GELF: true,

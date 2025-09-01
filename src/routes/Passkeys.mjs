@@ -32,6 +32,7 @@ import APIResource from './APIResource'
 
 const rpName = 'The Fuel Rats'
 const rpId = new URL(config.server.externalUrl).hostname
+const expectedOrigin = config.server.externalUrl
 
 /**
  * Passkeys/WebAuthn API endpoint
@@ -157,7 +158,7 @@ export default class Passkeys extends APIResource {
       verification = await verifyRegistrationResponse({
         response,
         expectedChallenge,
-        expectedOrigin: config.externalUrl,
+        expectedOrigin,
         expectedRPID: rpId,
       })
     } catch (error) {
@@ -323,7 +324,7 @@ export default class Passkeys extends APIResource {
       verification = await verifyAuthenticationResponse({
         response,
         expectedChallenge,
-        expectedOrigin: config.externalUrl,
+        expectedOrigin,
         expectedRPID: rpId,
         authenticator: {
           credentialID: Buffer.from(passkey.credentialId, 'base64url'),

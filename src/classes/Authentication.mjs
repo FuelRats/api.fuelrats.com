@@ -73,7 +73,6 @@ class Authentication {
       logMetric('authentication_failure', {
         _auth_method: 'password',
         _failure_reason: 'invalid_password',
-        _user_email_hash: user.email ? Buffer.from(user.email).toString('base64').slice(0, 8) : 'unknown', // eslint-disable-line no-magic-numbers
       }, 'Password authentication failed')
       return undefined
     }
