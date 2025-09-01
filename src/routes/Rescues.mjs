@@ -2,6 +2,7 @@ import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
 } from '../classes/APIError'
+import { logMetric } from '../logging'
 import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
@@ -135,6 +136,15 @@ export default class Rescues extends APIResource {
       },
     })
 
+    // Log rescue creation metrics
+    logMetric('rescue_created', {
+      _rescue_id: result.id,
+      _user_id: ctx.state.user.id,
+      _client_id: ctx.state.clientId,
+      _system: ctx.data.system,
+      _platform: ctx.data.platform,
+    }, `New rescue created: ${result.id} by user ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     const document = new DatabaseDocument({ query, result, type: RescueView })
 
@@ -162,7 +172,18 @@ export default class Rescues extends APIResource {
       },
     })
 
-    const { outcome } = ctx.data.data.attributes
+    // Log rescue update metrics
+    const { outcome, status } = ctx.data.data.attributes
+    logMetric('rescue_updated', {
+      _rescue_id: result.id,
+      _user_id: ctx.state.user.id,
+      _client_id: ctx.state.clientId,
+      _status: status || result.status,
+      _outcome: outcome || result.outcome,
+      _status_changed: !!status,
+      _outcome_changed: !!outcome,
+    }, `Rescue updated: ${result.id} by user ${ctx.state.user.id}`)
+
     if (outcome && outcome !== 'purge') {
       const caseId = result.commandIdentifier ?? result.id
       await Announcer.sendRescueMessage({
@@ -171,8 +192,23 @@ export default class Rescues extends APIResource {
 
       const [[{ count }]] = await db.query(rescueCountQuery)
       const rescueCount = Number(count)
+      
+      // Log rescue completion metrics
+      logMetric('rescue_completed', {
+        _rescue_id: result.id,
+        _total_rescues: rescueCount,
+        _outcome: outcome,
+        _is_milestone: rescueCount % 1000 === 0,
+      }, `Rescue completed: ${result.id} (total: ${rescueCount})`)
+      
       if (rescueCount % 1000 === 0) {
         await Announcer.sendRescueMessage({ message: `This was rescue #${rescueCount}!` })
+        
+        // Log milestone achievement
+        logMetric('rescue_milestone', {
+          _milestone_count: rescueCount,
+          _rescue_id: result.id,
+        }, `Rescue milestone reached: ${rescueCount} rescues!`)
       }
     }
 

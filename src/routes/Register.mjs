@@ -20,6 +20,7 @@ import {
 } from '../db'
 import { DocumentViewType } from '../Documents/Document'
 import ObjectDocument from '../Documents/ObjectDocument'
+import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 
 const platforms = ['pc', 'xb', 'ps']
@@ -188,6 +189,19 @@ export default class Register extends API {
 
       return Sessions.createVerifiedSession(ctx, user, transaction)
     })
+
+    // Log registration metrics
+    logMetric('user_registration', {
+      _user_id: user.id,
+      _registration_method: password ? 'password' : 'passkey',
+      _platform: platform,
+      _expansion: expansion,
+      _rat_name: name,
+      _nickname: nickname,
+      _ip: ctx.ip,
+      _user_agent: ctx.state.userAgent?.substring(0, 100) || 'unknown',
+      _has_open_rescue: !!rescue,
+    }, `User registered: ${user.id} (${password ? 'password' : 'passkey'}) - rat: ${name} on ${platform}`)
 
     ctx.response.status = StatusCode.created
     return true

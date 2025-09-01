@@ -21,7 +21,6 @@ const config = {
     proxyEnabled: required('FRAPI_PROXY_ENABLED', [toStrictBoolean], false),
     whitelist: optional('FRAPI_WHITELIST', [toArray], []),
   },
-  documentationUrl: required('FRAPI_DOCUMENTATION', [], 'https://github.com/FuelRats/FuelRats-API-Docs/blob/master/beta.md'),
   frontend: {
     clientId: recommended('FRAPI_FRONTEND_CLIENTID', [isUUID], undefined),
     url: required('FRAPI_FRONTEND_URL', [isBaseUrl], 'https://fuelrats.com'),
@@ -77,6 +76,11 @@ const config = {
     url: recommended('FRAPI_JIRA_URL', [isBaseUrl], undefined),
     username: recommended('FRAPI_JIRA_USERNAME', [], undefined),
     password: recommended('FRAPI_JIRA_PASSWORD', [], undefined),
+  },
+  graylog: {
+    host: recommended('FRAPI_GRAYLOG_HOST', [], undefined),
+    port: recommended('FRAPI_GRAYLOG_PORT', [toNumber], 12201),
+    facility: recommended('FRAPI_GRAYLOG_FACILITY', [], 'fuelratsapi'),
   },
   jwt: {
     secret: required('FRAPI_JWT_SECRET'),

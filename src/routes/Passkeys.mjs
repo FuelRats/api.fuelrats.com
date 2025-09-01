@@ -17,6 +17,7 @@ import { Passkey, User } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import ObjectDocument from '../Documents/ObjectDocument'
+import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { PasskeyView } from '../view'
 import {
@@ -199,6 +200,16 @@ export default class Passkeys extends APIResource {
     // Clear the challenge from the session
     delete ctx.session.passkeyChallenge
 
+    // Log passkey registration metrics
+    logMetric('passkey_registered', {
+      _user_id: user.id,
+      _passkey_id: passkey.id,
+      _passkey_name: name,
+      _is_backed_up: credentialBackedUp,
+      _registered_by_user_id: ctx.state.user.id,
+      _is_self_registration: user.id === ctx.state.user.id,
+    }, `Passkey registered: ${name} for user ${user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({
@@ -340,6 +351,14 @@ export default class Passkeys extends APIResource {
     delete ctx.session.passkeyChallenge
     delete ctx.session.passkeyUserId
 
+    // Log passkey authentication metrics
+    logMetric('passkey_authentication', {
+      _user_id: userId,
+      _passkey_id: passkey.id,
+      _passkey_name: passkey.name,
+      _counter_updated: verification.authenticationInfo.newCounter !== passkey.counter,
+    }, `Passkey authentication successful: ${passkey.name} for user ${userId}`)
+
     // Return the authenticated user
     const user = await User.findOne({ where: { id: userId } })
     const query = new DatabaseQuery({ connection: ctx })
@@ -376,6 +395,15 @@ export default class Passkeys extends APIResource {
     if (!passkey) {
       throw new NotFoundAPIError({ parameter: 'passkeyId' })
     }
+
+    // Log passkey deletion metrics
+    logMetric('passkey_deleted', {
+      _user_id: user.id,
+      _passkey_id: passkey.id,
+      _passkey_name: passkey.name,
+      _deleted_by_user_id: ctx.state.user.id,
+      _is_self_deletion: user.id === ctx.state.user.id,
+    }, `Passkey deleted: ${passkey.name} for user ${user.id}`)
 
     await passkey.destroy()
     ctx.response.status = StatusCode.noContent

@@ -4,6 +4,7 @@ import { websocket } from '../classes/WebSocket'
 import { Decal, db, User } from '../db'
 import { DocumentViewType } from '../Documents'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { DecalView } from '../view'
 import {
@@ -108,6 +109,15 @@ export default class Decals extends APIResource {
   async create (ctx) {
     const result = await super.create({ ctx, databaseType: Decal })
 
+    // Log decal creation metrics
+    logMetric('decal_created', {
+      _decal_id: result.id,
+      _created_by_user_id: ctx.state.user.id,
+      _decal_type: result.type,
+      _decal_code: result.code,
+      _assigned_user_id: result.userId || null,
+    }, `Decal created: ${result.id} (type: ${result.type}) by admin ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: DecalView })
@@ -124,6 +134,17 @@ export default class Decals extends APIResource {
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Decal, updateSearch: { id: ctx.params.id } })
 
+    // Log decal update metrics
+    const updatedFields = Object.keys(ctx.data?.data?.attributes || {})
+    logMetric('decal_updated', {
+      _decal_id: result.id,
+      _updated_by_user_id: ctx.state.user.id,
+      _updated_fields: updatedFields.join(','),
+      _user_assigned: updatedFields.includes('userId'),
+      _new_user_id: ctx.data?.data?.attributes?.userId || result.userId,
+      _decal_type: result.type,
+    }, `Decal updated: ${result.id} by admin ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: DecalView })
   }
@@ -137,7 +158,22 @@ export default class Decals extends APIResource {
   @parameters('id')
   @authenticated
   async delete (ctx) {
+    // Get the decal before deletion for metrics
+    const decal = await Decal.findByPk(ctx.params.id)
+    
     await super.delete({ ctx, databaseType: Decal })
+
+    // Log decal deletion metrics
+    if (decal) {
+      logMetric('decal_deleted', {
+        _decal_id: decal.id,
+        _deleted_by_user_id: ctx.state.user.id,
+        _decal_type: decal.type,
+        _decal_code: decal.code,
+        _was_claimed: !!decal.userId,
+        _claimed_by_user_id: decal.userId || null,
+      }, `Decal deleted: ${decal.id} (type: ${decal.type}) by admin ${ctx.state.user.id}`)
+    }
 
     ctx.response.status = StatusCode.noContent
     return true
