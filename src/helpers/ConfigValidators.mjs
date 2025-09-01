@@ -1,5 +1,5 @@
-import { IRCChannel, UUID } from './Validators'
 import { readDockerSecret } from './DockerSecrets'
+import { IRCChannel, UUID } from './Validators'
 
 
 
@@ -32,7 +32,7 @@ class ValidatorContext {
     if (!this.value) {
       this.value = defaultValue
     }
-    
+
     this.property = property
     this.defaultValue = defaultValue
 

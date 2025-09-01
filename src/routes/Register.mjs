@@ -200,7 +200,7 @@ export default class Register extends API {
       _nickname: nickname,
       _ip: ctx.ip,
       _user_agent: ctx.state.userAgent?.substring(0, 100) || 'unknown',
-      _has_open_rescue: !!rescue,
+      _has_open_rescue: Boolean(rescue),
     }, `User registered: ${user.id} (${password ? 'password' : 'passkey'}) - rat: ${name} on ${platform}`)
 
     ctx.response.status = StatusCode.created

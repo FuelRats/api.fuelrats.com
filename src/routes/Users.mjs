@@ -296,16 +296,23 @@ export default class Users extends APIResource {
     }
 
     await Anope.setFingerprint(user.email, fingerprint)
-    
+
     // Log certificate generation metrics
+    let authMethod = 'password'
+    if (passkeyResponse) {
+      authMethod = 'passkey'
+    } else if (totpCode) {
+      authMethod = 'password_2fa'
+    }
+
     logMetric('user_certificate_generated', {
       _user_id: user.id,
       _requested_by_user_id: ctx.state.user.id,
       _is_self_request: user.id === ctx.state.user.id,
       _rat_name: ratName,
-      _auth_method: passkeyResponse ? 'passkey' : (totpCode ? 'password_2fa' : 'password'),
+      _auth_method: authMethod,
     }, `IRC certificate generated for user ${user.id} (rat: ${ratName})`)
-    
+
     ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
     ctx.set('Content-type', 'application/x-pem-file')
     ctx.body = certificate
@@ -364,7 +371,9 @@ export default class Users extends APIResource {
     logMetric('user_email_changed', {
       _user_id: user.id,
       _changed_by_user_id: ctx.state.user.id,
-      _was_verified: !!user.groups.find(g => g.name === 'verified'),
+      _was_verified: Boolean(user.groups.find((group) => {
+        return group.name === 'verified'
+      })),
       _is_self_change: user.id === ctx.state.user.id,
     }, `User email changed: ${user.id}`)
 
@@ -462,11 +471,18 @@ export default class Users extends APIResource {
     })
 
     // Log password change metrics
+    let passwordChangeAuthMethod = 'password'
+    if (passkeyResponse) {
+      passwordChangeAuthMethod = 'passkey'
+    } else if (totpCode) {
+      passwordChangeAuthMethod = 'password_2fa'
+    }
+
     logMetric('user_password_changed', {
       _user_id: user.id,
       _changed_by_user_id: ctx.state.user.id,
       _is_self_change: user.id === ctx.state.user.id,
-      _auth_method: passkeyResponse ? 'passkey' : (totpCode ? 'password_2fa' : 'password'),
+      _auth_method: passwordChangeAuthMethod,
     }, `User password changed: ${user.id} by ${ctx.state.user.id}`)
 
     let result = null
@@ -538,14 +554,14 @@ export default class Users extends APIResource {
     const user = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
 
     // Log user update metrics
-    const updatedFields = Object.keys(ctx.data?.data?.attributes || {})
+    const updatedFields = Object.keys(ctx.data?.data?.attributes ?? {})
     logMetric('user_updated', {
       _user_id: user.id,
       _updated_by_user_id: ctx.state.user.id,
       _is_self_update: user.id === ctx.state.user.id,
       _updated_fields: updatedFields.join(','),
       _status_changed: updatedFields.includes('status'),
-      _new_status: ctx.data?.data?.attributes?.status || user.status,
+      _new_status: ctx.data?.data?.attributes?.status ?? user.status,
     }, `User updated: ${user.id} by ${ctx.state.user.id} (fields: ${updatedFields.join(', ')})`)
 
     const query = new DatabaseQuery({ connection: ctx })

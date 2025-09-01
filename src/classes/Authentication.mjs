@@ -3,11 +3,11 @@ import jwt from 'jsonwebtoken'
 import { authenticator as totp } from 'otplib'
 import UUID from 'pure-uuid'
 import config from '../config'
-import { logMetric } from '../logging'
 import * as constants from '../constants'
 import {
   User, Token, Client, Reset, Authenticator, Passkey, db,
 } from '../db'
+import { logMetric } from '../logging'
 
 import Anope from './Anope'
 import {
@@ -73,7 +73,7 @@ class Authentication {
       logMetric('authentication_failure', {
         _auth_method: 'password',
         _failure_reason: 'invalid_password',
-        _user_email_hash: user.email ? Buffer.from(user.email).toString('base64').slice(0, 8) : 'unknown',
+        _user_email_hash: user.email ? Buffer.from(user.email).toString('base64').slice(0, 8) : 'unknown', // eslint-disable-line no-magic-numbers
       }, 'Password authentication failed')
       return undefined
     }
@@ -127,7 +127,7 @@ class Authentication {
     logMetric('authentication_success', {
       _auth_method: authenticator ? 'password_2fa' : 'password',
       _user_id: user.id,
-      _has_2fa: !!authenticator,
+      _has_2fa: Boolean(authenticator),
     }, 'Password authentication successful')
 
     return User.findOne({

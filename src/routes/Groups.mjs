@@ -74,7 +74,7 @@ export default class Groups extends APIResource {
       _created_by_user_id: ctx.state.user.id,
       _group_name: result.id,
       _permissions_count: result.permissions?.length || 0,
-      _has_vhost: !!result.vhost,
+      _has_vhost: Boolean(result.vhost),
       _priority: result.priority || 0,
     }, `Permission group created: ${result.id} by admin ${ctx.state.user.id}`)
 
@@ -118,7 +118,7 @@ export default class Groups extends APIResource {
   async delete (ctx) {
     // Get the group before deletion for metrics
     const group = await Group.findByPk(ctx.params.id)
-    
+
     await super.delete({ ctx, databaseType: Group })
 
     // Log group deletion metrics

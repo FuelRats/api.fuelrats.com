@@ -570,7 +570,7 @@ class OAuth extends API {
       _grant_type: 'authorization_code',
       _scopes: authCode.scope.join(','),
       _is_openid: authCode.scope.includes('openid'),
-      _has_id_token: !!response.id_token,
+      _has_id_token: Boolean(response.id_token),
     }, `OAuth token issued via authorization code for user ${authCode.userId}`)
 
     return response

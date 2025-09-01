@@ -2,7 +2,6 @@ import Announcer from '../classes/Announcer'
 import {
   NotFoundAPIError, UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import { logMetric } from '../logging'
 import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
@@ -28,6 +27,7 @@ import {
 } from './API'
 import APIResource from './APIResource'
 import { webPushPool } from './WebPushSubscriptions'
+import { logMetric } from '../logging'
 
 const rescueAccessHours = 3
 const rescueAccessTime = rescueAccessHours * 60 * 60 * 1000
@@ -180,8 +180,8 @@ export default class Rescues extends APIResource {
       _client_id: ctx.state.clientId,
       _status: status || result.status,
       _outcome: outcome || result.outcome,
-      _status_changed: !!status,
-      _outcome_changed: !!outcome,
+      _status_changed: Boolean(status),
+      _outcome_changed: Boolean(outcome),
     }, `Rescue updated: ${result.id} by user ${ctx.state.user.id}`)
 
     if (outcome && outcome !== 'purge') {
@@ -192,7 +192,7 @@ export default class Rescues extends APIResource {
 
       const [[{ count }]] = await db.query(rescueCountQuery)
       const rescueCount = Number(count)
-      
+
       // Log rescue completion metrics
       logMetric('rescue_completed', {
         _rescue_id: result.id,
@@ -200,10 +200,10 @@ export default class Rescues extends APIResource {
         _outcome: outcome,
         _is_milestone: rescueCount % 1000 === 0,
       }, `Rescue completed: ${result.id} (total: ${rescueCount})`)
-      
+
       if (rescueCount % 1000 === 0) {
         await Announcer.sendRescueMessage({ message: `This was rescue #${rescueCount}!` })
-        
+
         // Log milestone achievement
         logMetric('rescue_milestone', {
           _milestone_count: rescueCount,

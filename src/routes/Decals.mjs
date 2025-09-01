@@ -135,13 +135,13 @@ export default class Decals extends APIResource {
     const result = await super.update({ ctx, databaseType: Decal, updateSearch: { id: ctx.params.id } })
 
     // Log decal update metrics
-    const updatedFields = Object.keys(ctx.data?.data?.attributes || {})
+    const updatedFields = Object.keys(ctx.data?.data?.attributes ?? {})
     logMetric('decal_updated', {
       _decal_id: result.id,
       _updated_by_user_id: ctx.state.user.id,
       _updated_fields: updatedFields.join(','),
       _user_assigned: updatedFields.includes('userId'),
-      _new_user_id: ctx.data?.data?.attributes?.userId || result.userId,
+      _new_user_id: ctx.data?.data?.attributes?.userId ?? result.userId,
       _decal_type: result.type,
     }, `Decal updated: ${result.id} by admin ${ctx.state.user.id}`)
 
@@ -160,7 +160,7 @@ export default class Decals extends APIResource {
   async delete (ctx) {
     // Get the decal before deletion for metrics
     const decal = await Decal.findByPk(ctx.params.id)
-    
+
     await super.delete({ ctx, databaseType: Decal })
 
     // Log decal deletion metrics
@@ -170,8 +170,8 @@ export default class Decals extends APIResource {
         _deleted_by_user_id: ctx.state.user.id,
         _decal_type: decal.type,
         _decal_code: decal.code,
-        _was_claimed: !!decal.userId,
-        _claimed_by_user_id: decal.userId || null,
+        _was_claimed: Boolean(decal.userId),
+        _claimed_by_user_id: decal.userId ?? null,
       }, `Decal deleted: ${decal.id} (type: ${decal.type}) by admin ${ctx.state.user.id}`)
     }
 
@@ -247,7 +247,7 @@ export default class Decals extends APIResource {
     })
 
     const { canRedeem } = result ?? {}
-    return canRedeem || 0
+    return canRedeem ?? 0
   }
 
   /**

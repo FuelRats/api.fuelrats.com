@@ -3,24 +3,24 @@ import config from '../config'
 
 const logConfig = {
   appenders: {
-    console: { 
+    console: {
       type: 'console',
-      layout: { type: 'pattern', pattern: '%d{ISO8601} [%p] %c - %m' }
+      layout: { type: 'pattern', pattern: '%d{ISO8601} [%p] %c - %m' },
     },
-    stderr: { 
+    stderr: {
       type: 'stderr',
-      layout: { type: 'pattern', pattern: '%d{ISO8601} [%p] %c - %m' }
+      layout: { type: 'pattern', pattern: '%d{ISO8601} [%p] %c - %m' },
     },
     consoleFilter: {
       type: 'logLevelFilter',
       appender: 'console',
       level: 'debug',
-      maxLevel: 'warn'
+      maxLevel: 'warn',
     },
     errorFilter: {
       type: 'logLevelFilter',
       appender: 'stderr',
-      level: 'error'
+      level: 'error',
     },
     email: {
       type: '@log4js-node/smtp',
@@ -43,7 +43,7 @@ const logConfig = {
     metrics: {
       appenders: ['consoleFilter'],
       level: 'info',
-    }
+    },
   },
 }
 
@@ -55,7 +55,7 @@ if (config.graylog.host) {
     port: config.graylog.port,
     facility: config.graylog.facility,
   }
-  
+
   // In production, send logs to Graylog instead of/in addition to console
   if (process.env.NODE_ENV === 'production') {
     logConfig.categories.default.appenders = ['graylog', 'errorFilter']
@@ -96,10 +96,11 @@ export function logMetric (event, data, message = '') {
  * @param {Error} error - The error to log
  * @param {object} context - Additional context
  * @param {string} message - Custom error message
+ * @returns {string} - Unique error ID for tracking
  */
 export function logError (error, context = {}, message = 'An error occurred') {
-  const errorId = new Date().toISOString() + '-' + Math.random().toString(36).substr(2, 9)
-  
+  const errorId = `${new Date().toISOString()}-${Math.random().toString(36).substr(2, 9)}` // eslint-disable-line no-magic-numbers
+
   errorLogger.error({
     GELF: true,
     _event: 'error',
@@ -109,7 +110,7 @@ export function logError (error, context = {}, message = 'An error occurred') {
     _error_stack: error.stack,
     ...context,
   }, `${message} [ID: ${errorId}]`)
-  
+
   return errorId
 }
 
