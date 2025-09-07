@@ -38,7 +38,7 @@ export default class Passkey extends Model {
           {
             model: models.User.scope('norelations'),
             as: 'user',
-            required: false,
+            required: true,
           },
         ],
       }, {
