@@ -30,6 +30,7 @@ jobs:
             dist \
             migrations \
             static \
+            docs \
             tools \
             views \
             .nvmrc \
