@@ -1,0 +1,400 @@
+# Registration API endpoint
+
+register:
+  post:
+    tags: [registration]
+    summary: Register new account
+    description: |
+      Register a new user account with an associated rat (commander) and IRC nickname.
+      
+      **Registration Methods:**
+      - **Password Registration**: Provide email, password, and other required fields
+      - **Passkey Registration**: Provide email, passkeyResponse (from `/register/passkey` endpoint), and other required fields
+      
+      This endpoint:
+      - Creates a new user account (with or without password)
+      - Creates the first rat (commander) for the user  
+      - Registers an IRC nickname
+      - Creates a passkey if provided
+      - Sends a verification email
+      - Creates a verified session
+      - Notifies moderators of the registration
+      
+      **Important requirements:**
+      - User-Agent header is required
+      - X-Fingerprint header is required (unique device identifier)
+      - Either password OR passkeyResponse must be provided
+      - The commander name cannot have an active rescue case
+      - Email and commander name must be unique
+    parameters:
+      - name: User-Agent
+        in: header
+        required: true
+        description: User agent string identifying the client application
+        schema:
+          type: string
+          example: "MyApp/1.0 (Platform)"
+      - name: X-Fingerprint
+        in: header
+        required: true
+        description: Unique device/client fingerprint for security
+        schema:
+          type: string
+          example: "abc123def456ghi789"
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [registrations]
+                  attributes:
+                    type: object
+                    required: [email, name, platform, nickname]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        description: User's email address (must be unique)
+                      password:
+                        type: string
+                        minLength: 8
+                        description: User's password (required if not using passkey registration)
+                      passkeyResponse:
+                        type: object
+                        description: WebAuthn registration response (required if not using password registration)
+                        properties:
+                          id:
+                            type: string
+                            description: Base64url-encoded credential ID
+                          rawId:
+                            type: string
+                            format: byte
+                            description: Raw credential ID
+                          response:
+                            type: object
+                            properties:
+                              attestationObject:
+                                type: string
+                                format: byte
+                              clientDataJSON:
+                                type: string
+                                format: byte
+                          clientExtensionResults:
+                            type: object
+                          type:
+                            type: string
+                            enum: [public-key]
+                      name:
+                        type: string
+                        minLength: 3
+                        maxLength: 64
+                        description: Commander (rat) name in Elite Dangerous (must be unique per platform)
+                      platform:
+                        type: string
+                        enum: [pc, xb, ps]
+                        description: Gaming platform
+                      nickname:
+                        type: string
+                        pattern: '^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$'
+                        description: IRC nickname to register
+                      expansion:
+                        type: string
+                        enum: [horizons3, horizons4, odyssey]
+                        default: horizons3
+                        description: Elite Dangerous expansion/version
+          examples:
+            password_registration:
+              summary: Register with password
+              value:
+                data:
+                  type: registrations
+                  attributes:
+                    email: "newpilot@example.com"
+                    password: "securepassword123"
+                    name: "NewRescuePilot"
+                    platform: "pc"
+                    nickname: "NewRescuePilot[PC]"
+                    expansion: "odyssey"
+            passkey_registration:
+              summary: Register with passkey
+              value:
+                data:
+                  type: registrations
+                  attributes:
+                    email: "newpilot@example.com"
+                    passkeyResponse:
+                      id: "ALhP1I4BZL3b..."
+                      rawId: "ALhP1I4BZL3b..."
+                      response:
+                        attestationObject: "o2NmbXRkbm9uZW..."
+                        clientDataJSON: "eyJ0eXBlIjoicm..."
+                      type: "public-key"
+                    name: "NewRescuePilot"
+                    platform: "pc"
+                    nickname: "NewRescuePilot[PC]"
+                    expansion: "odyssey"
+    responses:
+      '201':
+        description: |
+          Registration successful. User account created with verified session.
+          A verification email has been sent and moderators have been notified.
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '400':
+        description: Bad Request - Missing required headers or invalid request format
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            examples:
+              missing_user_agent:
+                value:
+                  errors:
+                    - status: '400'
+                      title: 'Bad Request'
+                      detail: 'User-Agent header is required'
+                      source:
+                        parameter: 'User-Agent'
+              missing_fingerprint:
+                value:
+                  errors:
+                    - status: '400'
+                      title: 'Bad Request'
+                      detail: 'X-Fingerprint header is required'
+                      source:
+                        parameter: 'X-Fingerprint'
+              missing_auth:
+                value:
+                  errors:
+                    - status: '400'
+                      title: 'Bad Request'
+                      detail: 'Either password or passkeyResponse must be provided for registration'
+      '403':
+        description: Forbidden - Commander has an active rescue case
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '403'
+                  title: 'Forbidden'
+                  detail: 'Registration rejected: commander has an active rescue case'
+                  source:
+                    pointer: '/data/attributes/name'
+      '409':
+        description: Conflict - Email or commander name already exists
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            examples:
+              email_exists:
+                value:
+                  errors:
+                    - status: '409'
+                      title: 'Conflict'
+                      detail: 'An account with this email already exists'
+                      source:
+                        pointer: '/data/attributes/email'
+              commander_exists:
+                value:
+                  errors:
+                    - status: '409'
+                      title: 'Conflict'
+                      detail: 'A commander with this name already exists on this platform'
+                      source:
+                        pointer: '/data/attributes/name'
+      '422':
+        description: Unprocessable Entity - Invalid data format or values
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            examples:
+              invalid_platform:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Invalid platform. Must be one of: pc, xb, ps'
+                      source:
+                        pointer: '/data/attributes/platform'
+              invalid_email:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Invalid email format'
+                      source:
+                        pointer: '/data/attributes/email'
+              invalid_nickname:
+                value:
+                  errors:
+                    - status: '422'
+                      title: 'Validation Error'
+                      detail: 'Invalid IRC nickname format'
+                      source:
+                        pointer: '/data/attributes/nickname'
+
+register_passkey:
+  post:
+    tags: [registration]
+    summary: Generate passkey registration options
+    description: |
+      Generate WebAuthn registration options for passkey-based account registration.
+      
+      This endpoint must be called before registering with a passkey to obtain the
+      challenge and other registration options needed for WebAuthn.
+      
+      **Process:**
+      1. Call this endpoint with the email address
+      2. Use the returned options to create a WebAuthn credential
+      3. Call `/register` with the passkeyResponse and other required fields
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [passkey-registrations]
+                  attributes:
+                    type: object
+                    required: [email]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        description: Email address for the new account
+          example:
+            data:
+              type: passkey-registrations
+              attributes:
+                email: "newpilot@example.com"
+    responses:
+      '200':
+        description: Passkey registration options generated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [passkey-registrations]
+                    attributes:
+                      type: object
+                      properties:
+                        challenge:
+                          type: string
+                          format: byte
+                          description: Base64url-encoded challenge
+                        rp:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: "The Fuel Rats"
+                            id:
+                              type: string
+                              example: "api.fuelrats.com"
+                        user:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: byte
+                              description: User identifier (email)
+                            name:
+                              type: string
+                              description: Username (email)  
+                            displayName:
+                              type: string
+                              description: Display name (email)
+                        pubKeyCredParams:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                enum: [public-key]
+                              alg:
+                                type: integer
+                                description: COSE algorithm identifier
+                        timeout:
+                          type: integer
+                          description: Timeout in milliseconds
+                        attestation:
+                          type: string
+                          enum: [none, indirect, direct]
+                        authenticatorSelection:
+                          type: object
+                          properties:
+                            residentKey:
+                              type: string
+                              enum: [discouraged, preferred, required]
+                            userVerification:
+                              type: string
+                              enum: [discouraged, preferred, required]
+            example:
+              data:
+                type: passkey-registrations
+                attributes:
+                  challenge: "dGVzdC1jaGFsbGVuZ2U"
+                  rp:
+                    name: "The Fuel Rats"
+                    id: "api.fuelrats.com"
+                  user:
+                    id: "newpilot@example.com"
+                    name: "newpilot@example.com"
+                    displayName: "newpilot@example.com"
+                  pubKeyCredParams:
+                    - type: "public-key"
+                      alg: -7
+                    - type: "public-key"
+                      alg: -257
+                  timeout: 60000
+                  attestation: "none"
+                  authenticatorSelection:
+                    residentKey: "preferred"
+                    userVerification: "preferred"
+      '409':
+        description: Conflict - Email already exists
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '409'
+                  title: 'Conflict'
+                  detail: 'An account with this email already exists'
+                  source:
+                    pointer: '/data/attributes/email'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

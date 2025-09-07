@@ -1,0 +1,359 @@
+# OAuth2 API endpoints
+
+oauth2_authorize:
+  get:
+    tags: [oauth2]
+    summary: OAuth2 authorization endpoint
+    description: |
+      Initiate OAuth2 authorization flow. Supports both Authorization Code and Implicit Grant flows.
+      
+      If the user has previously granted the requested permissions to the client, they will be 
+      immediately redirected back with the authorization code or token without seeing the consent screen.
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: response_type
+        in: query
+        required: true
+        description: OAuth2 response type
+        schema:
+          type: string
+          enum: [code, token]
+          description: |
+            - `code`: Authorization Code flow (recommended)
+            - `token`: Implicit Grant flow (for client-side apps)
+      - name: client_id
+        in: query
+        required: true
+        description: OAuth2 client identifier
+        schema:
+          type: string
+          format: uuid
+      - name: redirect_uri
+        in: query
+        required: true
+        description: |
+          Redirect URI after authorization. For Implicit Grant (token), this must match exactly
+          the redirectUri stored in the OAuth client configuration.
+        schema:
+          type: string
+          format: uri
+      - name: scope
+        in: query
+        required: true
+        description: |
+          Space-separated list of requested permissions.
+          Available scopes: `users.read`, `users.write`, `users.write.me`, `rats.read`, `rats.write`,
+          `rescues.read`, `rescues.write`, and namespace-specific scopes.
+        schema:
+          type: string
+          example: "users.read rats.read"
+      - name: state
+        in: query
+        required: true
+        description: |
+          Client state parameter for CSRF protection. This value will be returned unchanged
+          in the callback to verify the response matches the request.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Authorization consent screen data (when user consent is needed)
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactionId:
+                  type: string
+                  description: Transaction ID for the authorization decision
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                  description: List of requested permission scopes
+                clientId:
+                  type: string
+                  format: uuid
+                  description: OAuth client ID
+                clientName:
+                  type: string
+                  description: Human-readable name of the OAuth client
+                firstParty:
+                  type: boolean
+                  description: Whether this is a first-party Fuel Rats client
+                state:
+                  type: string
+                  description: State parameter from the request
+            example:
+              transactionId: "abc123def456"
+              scopes: ["users.read", "rats.read"]
+              clientId: "110e8400-e29b-41d4-a716-446655440001"
+              clientName: "My Rescue Tool"
+              firstParty: false
+              state: "xyz789"
+      '302':
+        description: |
+          Redirect to callback with authorization code or token (when user has previously consented)
+        headers:
+          Location:
+            description: Redirect URL with code/token or error
+            schema:
+              type: string
+              format: uri
+              example: "https://example.com/callback?code=abc123&state=xyz789"
+      '400':
+        description: Invalid request parameters
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirect:
+                  type: string
+                  format: uri
+                  description: Redirect URL with error parameters
+              example:
+                redirect: "https://example.com/callback?error=invalid_request&error_description=Missing+state+parameter"
+
+  post:
+    tags: [oauth2]
+    summary: OAuth2 authorization decision
+    description: |
+      Handle user's authorization decision (allow or deny access).
+      This endpoint is called after the user views the consent screen.
+      
+      **Authentication Required:** Bearer token or session authentication
+    security:
+      - bearerAuth: []
+      - sessionAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [transactionId, allow]
+            properties:
+              transactionId:
+                type: string
+                description: Transaction ID from the authorization request
+              allow:
+                type: boolean
+                description: Whether the user allows access (true) or denies it (false)
+          example:
+            transactionId: "abc123def456"
+            allow: true
+    responses:
+      '200':
+        description: Authorization decision processed
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirect:
+                  type: string
+                  format: uri
+                  description: Redirect URL with authorization code/token or error
+            example:
+              redirect: "https://example.com/callback?code=AUTH_CODE_HERE&state=xyz789"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '403':
+        description: Invalid transaction or user mismatch
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+
+oauth2_token:
+  post:
+    tags: [oauth2]
+    summary: OAuth2 token endpoint
+    description: |
+      Exchange authorization code for access token or use Resource Owner Password Credentials (ROPC).
+      
+      Supports grant types:
+      - `authorization_code`: Exchange code for token (standard OAuth2 flow)
+      - `password`: Resource Owner Password Credentials (first-party clients only)
+      
+      **Authentication Required:** Basic authentication with client credentials
+    security:
+      - basicAuth: []
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            oneOf:
+              - type: object
+                required: [grant_type, code, redirect_uri]
+                properties:
+                  grant_type:
+                    type: string
+                    enum: [authorization_code]
+                  code:
+                    type: string
+                    description: Authorization code from the authorize endpoint
+                  redirect_uri:
+                    type: string
+                    format: uri
+                    description: Must match the redirect_uri used in the authorization request
+              - type: object
+                required: [grant_type, username, password]
+                properties:
+                  grant_type:
+                    type: string
+                    enum: [password]
+                  username:
+                    type: string
+                    description: User's email address
+                  password:
+                    type: string
+                    description: User's password
+                  code:
+                    type: string
+                    description: 2FA code if user has 2FA enabled
+                  scope:
+                    type: string
+                    description: Space-separated scopes (defaults to "*" for full access)
+          examples:
+            authorization_code:
+              value:
+                grant_type: authorization_code
+                code: "AUTH_CODE_HERE"
+                redirect_uri: "https://example.com/callback"
+            password:
+              value:
+                grant_type: password
+                username: "user@example.com"
+                password: "secret123"
+                code: "123456"
+                scope: "users.read rats.read"
+    responses:
+      '200':
+        description: Access token response
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [access_token, token_type]
+              properties:
+                access_token:
+                  type: string
+                  description: Bearer access token
+                token_type:
+                  type: string
+                  enum: [bearer]
+                  description: Token type (always "bearer")
+                scope:
+                  type: string
+                  description: Granted scopes (only for implicit grant)
+            example:
+              access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              token_type: "bearer"
+      '400':
+        description: Invalid request or grant
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  enum: [invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope]
+                error_description:
+                  type: string
+              example:
+                error: "invalid_grant"
+                error_description: "Invalid authorization code"
+      '401':
+        description: Invalid client credentials
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  enum: [invalid_client]
+                error_description:
+                  type: string
+              example:
+                error: "invalid_client"
+                error_description: "Client authentication failed"
+
+oauth2_revoke:
+  post:
+    tags: [oauth2]
+    summary: Revoke access token
+    description: |
+      Revoke a specific access token. The token will immediately become invalid.
+      Only tokens issued to the authenticated client can be revoked.
+      
+      **Authentication Required:** Basic authentication with client credentials
+    security:
+      - basicAuth: []
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            required: [token]
+            properties:
+              token:
+                type: string
+                description: The access token to revoke
+          example:
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    responses:
+      '200':
+        description: Token revoked successfully (returns empty object even if token didn't exist)
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  enum: [invalid_request]
+                error_description:
+                  type: string
+              example:
+                error: "invalid_request"
+                error_description: "Missing token parameter"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+oauth2_revokeall:
+  post:
+    tags: [oauth2]
+    summary: Revoke all client tokens
+    description: |
+      Revoke all access tokens issued to the authenticated client.
+      This is useful when a client's credentials may have been compromised.
+      
+      **Authentication Required:** Basic authentication with client credentials
+    security:
+      - basicAuth: []
+    responses:
+      '200':
+        description: All tokens revoked successfully
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'

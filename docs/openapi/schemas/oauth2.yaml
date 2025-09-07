@@ -1,0 +1,82 @@
+# OAuth2 resource schemas
+
+AuthorizationRequest:
+  type: object
+  properties:
+    response_type:
+      type: string
+      enum: [code]
+      description: OAuth2 response type
+    client_id:
+      type: string
+      description: OAuth2 client identifier
+    redirect_uri:
+      type: string
+      format: uri
+      description: Redirect URI after authorization
+    scope:
+      type: string
+      description: Requested permissions scope
+    state:
+      type: string
+      description: Client state parameter
+
+TokenRequest:
+  type: object
+  required: [grant_type]
+  properties:
+    grant_type:
+      type: string
+      enum: [authorization_code, refresh_token, client_credentials]
+      description: OAuth2 grant type
+    code:
+      type: string
+      description: Authorization code (for authorization_code grant)
+    redirect_uri:
+      type: string
+      format: uri
+      description: Redirect URI (for authorization_code grant)
+    refresh_token:
+      type: string
+      description: Refresh token (for refresh_token grant)
+    client_id:
+      type: string
+      description: OAuth2 client identifier
+    client_secret:
+      type: string
+      description: OAuth2 client secret
+
+TokenResponse:
+  type: object
+  properties:
+    access_token:
+      type: string
+      description: Bearer access token
+    token_type:
+      type: string
+      enum: [Bearer]
+      description: Token type
+    expires_in:
+      type: integer
+      description: Token expiration time in seconds
+    refresh_token:
+      type: string
+      description: Refresh token for obtaining new access tokens
+    scope:
+      type: string
+      description: Granted permissions scope
+
+ErrorResponse:
+  type: object
+  properties:
+    error:
+      type: string
+      enum: [invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope]
+      description: OAuth2 error code
+    error_description:
+      type: string
+      description: Human-readable error description
+    error_uri:
+      type: string
+      format: uri
+      description: URI with additional error information

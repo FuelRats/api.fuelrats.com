@@ -1,0 +1,141 @@
+# Statistics and Leaderboard API endpoints
+
+leaderboard:
+  get:
+    tags: [statistics]
+    summary: Get rescue leaderboard
+    description: |
+      Retrieve the rescue leaderboard showing commanders ranked by their rescue statistics.
+      
+      **Public Access:** No authentication required
+      
+      The leaderboard includes:
+      - Successful rescue counts (first limpet only)
+      - Code red rescue counts
+      - Commander names and platform information
+      - Epic and dispatch status
+      - Join dates and activity metrics
+      
+      Results can be filtered by commander name and support pagination and sorting.
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - name: filter[name]
+        in: query
+        description: Filter leaderboard by commander name (case-insensitive partial match)
+        schema:
+          type: string
+        example: "MyCommander"
+    responses:
+      '200':
+        description: Leaderboard data with rescue statistics
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/statistics.yaml#/LeaderboardCollection'
+            example:
+              data:
+                - type: leaderboard
+                  id: "550e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    preferredName: "TopRescuer"
+                    ratNames: ["TopRescuer", "TopRescuer[PC]"]
+                    joinedAt: "2020-01-15T10:00:00.000Z"
+                    rescueCount: 1247
+                    codeRedCount: 89
+                    isDispatch: true
+                    isEpic: true
+                - type: leaderboard
+                  id: "550e8400-e29b-41d4-a716-446655440002"
+                  attributes:
+                    preferredName: "EliteRescuer"
+                    ratNames: ["EliteRescuer", "EliteRescuer[XB]"]
+                    joinedAt: "2020-03-22T14:30:00.000Z"
+                    rescueCount: 856
+                    codeRedCount: 67
+                    isDispatch: false
+                    isEpic: true
+              meta:
+                page:
+                  offset: 0
+                  limit: 20
+                  total: 1847
+              links:
+                self: "/leaderboard?page[offset]=0&page[limit]=20"
+                first: "/leaderboard?page[offset]=0&page[limit]=20"
+                last: "/leaderboard?page[offset]=1840&page[limit]=20"
+                next: "/leaderboard?page[offset]=20&page[limit]=20"
+
+users_statistics:
+  get:
+    tags: [statistics]
+    summary: Get user statistics
+    description: |
+      Retrieve detailed rescue statistics for all of a user's commanders (rats).
+      
+      **Authentication Required:** Bearer token authentication
+      
+      Statistics include per-commander breakdowns of:
+      - First limpet rescues (successful)
+      - Code red first limpet rescues
+      - Assist rescues (successful, non-first-limpet)
+      - Failed rescues
+      - Invalid rescues
+      - Other outcome rescues
+      
+      This endpoint requires authentication and shows statistics for the specified user ID.
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID to get statistics for
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: User's rescue statistics by commander
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/statistics.yaml#/UserStatisticsCollection'
+            example:
+              data:
+                - type: user-statistics
+                  id: "660e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    name: "MyCommander"
+                    codeRed: 12
+                    firstLimpet: 89
+                    assists: 156
+                    failure: 3
+                    other: 1
+                    invalid: 0
+                - type: user-statistics
+                  id: "660e8400-e29b-41d4-a716-446655440002"
+                  attributes:
+                    name: "MyAltCommander"
+                    codeRed: 5
+                    firstLimpet: 34
+                    assists: 67
+                    failure: 1
+                    other: 0
+                    invalid: 0
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        description: User not found or has no statistics
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '404'
+                  title: 'Not Found'
+                  detail: 'User not found or has no rescue statistics'
+                  source:
+                    parameter: 'id'

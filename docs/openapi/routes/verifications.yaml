@@ -1,0 +1,137 @@
+# Account Verification API endpoints
+
+verifications_create:
+  post:
+    tags: [verifications]
+    summary: Request email verification
+    description: |
+      Request a new email verification link to be sent to verify an account.
+      
+      This endpoint:
+      - Validates that the email exists in the system
+      - Checks that the account is not already verified
+      - Generates a secure verification token (24-hour expiration)
+      - Sends a verification email with the token
+      - Destroys any existing verification tokens for the user
+      - Always returns success to prevent email enumeration
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [verifications]
+                  attributes:
+                    type: object
+                    required: [email]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        description: Email address of the account to verify
+          example:
+            data:
+              type: verifications
+              attributes:
+                email: "user@example.com"
+    responses:
+      '200':
+        description: |
+          Verification request processed successfully.
+          Note: Always returns success regardless of whether the email exists to prevent enumeration attacks.
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '409':
+        description: Account is already verified
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '409'
+                  title: 'Conflict'
+                  detail: 'Account is already verified'
+                  source:
+                    pointer: '/data/attributes/email'
+      '422':
+        description: Invalid email address format
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '422'
+                  title: 'Validation Error'
+                  detail: 'Invalid email address format'
+                  source:
+                    pointer: '/data/attributes/email'
+
+verifications_verify:
+  get:
+    tags: [verifications]
+    summary: Verify account with token
+    description: |
+      Use a verification token to verify a user's email address and activate their account.
+      
+      This endpoint:
+      - Validates the verification token
+      - Adds the user to the 'verified' group
+      - Updates IRC permissions for the user
+      - Destroys the verification token after use
+      - Enables full access to the FuelRats system
+    parameters:
+      - name: token
+        in: path
+        required: true
+        description: Email verification token from the verification email
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9]{32}$'
+          example: "abcd1234efgh5678ijkl9012mnop3456"
+    responses:
+      '200':
+        description: Account verified successfully
+        content:
+          application/json:
+            schema:
+              type: boolean
+              enum: [true]
+            example: true
+      '404':
+        description: Verification token not found or has expired
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '404'
+                  title: 'Not Found'
+                  detail: 'Verification token not found or has expired'
+                  source:
+                    parameter: 'token'
+      '500':
+        description: Internal server error - verification group not found
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+            example:
+              errors:
+                - status: '500'
+                  title: 'Internal Server Error'
+                  detail: 'System configuration error: verification group not found'

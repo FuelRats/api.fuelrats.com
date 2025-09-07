@@ -1,0 +1,106 @@
+# Statistics and Leaderboard resource schemas
+
+LeaderboardDocument:
+  allOf:
+    - $ref: './common.yaml#/Document'
+    - type: object
+      properties:
+        data:
+          $ref: '#/LeaderboardResource'
+
+LeaderboardCollection:
+  allOf:
+    - $ref: './common.yaml#/Collection'
+    - type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/LeaderboardResource'
+
+LeaderboardResource:
+  allOf:
+    - $ref: './common.yaml#/Resource'
+    - type: object
+      properties:
+        type:
+          type: string
+          enum: [leaderboard]
+        attributes:
+          type: object
+          properties:
+            preferredName:
+              type: string
+              description: Commander's preferred display name
+            ratNames:
+              type: array
+              items:
+                type: string
+              description: All commander names for this user
+            joinedAt:
+              type: string
+              format: date-time
+              description: Date when the user first registered
+            rescueCount:
+              type: integer
+              description: Total successful rescues as first limpet
+            codeRedCount:
+              type: integer
+              description: Total code red rescues as first limpet
+            isDispatch:
+              type: boolean
+              description: Whether the user has dispatch privileges
+            isEpic:
+              type: boolean
+              description: Whether the user has completed an epic rescue
+
+UserStatisticsDocument:
+  allOf:
+    - $ref: './common.yaml#/Document'
+    - type: object
+      properties:
+        data:
+          $ref: '#/UserStatisticsResource'
+
+UserStatisticsCollection:
+  allOf:
+    - $ref: './common.yaml#/Collection'
+    - type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/UserStatisticsResource'
+
+UserStatisticsResource:
+  allOf:
+    - $ref: './common.yaml#/Resource'
+    - type: object
+      properties:
+        type:
+          type: string
+          enum: [user-statistics]
+        attributes:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Commander (rat) name
+            codeRed:
+              type: integer
+              description: Code red rescues completed as first limpet
+            firstLimpet:
+              type: integer
+              description: Total successful rescues as first limpet
+            assists:
+              type: integer
+              description: Successful rescues as assisting rat (not first limpet)
+            failure:
+              type: integer
+              description: Failed rescues participated in
+            other:
+              type: integer
+              description: Rescues with 'other' outcome
+            invalid:
+              type: integer
+              description: Invalid rescues participated in

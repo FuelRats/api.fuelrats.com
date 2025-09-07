@@ -1,4 +1,5 @@
-import { UnsupportedMediaAPIError } from '../classes/APIError'
+import { UnsupportedMediaAPIError, UnauthorizedAPIError } from '../classes/APIError'
+import Authentication, { getBasicAuth } from '../classes/Authentication'
 import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
@@ -110,6 +111,27 @@ export default class Clients extends APIResource {
   @permissions('clients.write')
   @parameters('id')
   async delete (ctx) {
+    // Get basic auth credentials
+    const [clientId, clientSecret] = getBasicAuth(ctx)
+
+    // Verify the client ID from basic auth matches the ID in the URL
+    if (!clientId || clientId !== ctx.params.id) {
+      throw new UnauthorizedAPIError({
+        detail: 'Client ID in authorization header must match the resource ID',
+      })
+    }
+
+    // Authenticate the client using the provided credentials
+    const authenticatedClient = await Authentication.clientAuthenticate({
+      clientId,
+      secret: clientSecret,
+    })
+
+    if (!authenticatedClient) {
+      throw new UnauthorizedAPIError({ detail: 'Invalid client credentials' })
+    }
+
+    // Proceed with deletion
     await super.delete({ ctx, databaseType: Client.scope('user') })
     await Code.destroy({
       where: {

@@ -1,0 +1,95 @@
+# Common parameters used across multiple endpoints
+
+PageOffset:
+  name: page[offset]
+  in: query
+  description: Number of resources to skip for pagination
+  schema:
+    type: integer
+    minimum: 0
+    default: 0
+  example: 20
+
+PageLimit:
+  name: page[limit]
+  in: query
+  description: Maximum number of resources to return
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 100
+    default: 20
+  example: 20
+
+Sort:
+  name: sort
+  in: query
+  description: |
+    Sort resources by field(s). Use comma-separated values for multiple fields.
+    Prefix with `-` for descending order.
+  schema:
+    type: string
+  examples:
+    ascending:
+      value: "createdAt"
+      summary: Sort by creation date (ascending)
+    descending:
+      value: "-createdAt"
+      summary: Sort by creation date (descending)
+    multiple:
+      value: "name,-createdAt"
+      summary: Sort by name ascending, then creation date descending
+
+Include:
+  name: include
+  in: query
+  description: |
+    Include related resources in the response. Use comma-separated values for multiple includes.
+  schema:
+    type: string
+  example: "rats,groups"
+
+Filter:
+  name: filter
+  in: query
+  description: |
+    Advanced filtering using JSON query objects. URL encode the filter object.
+    
+    **Supported Operators:**
+    - **Comparison**: `gt`, `gte`, `lt`, `lte`, `eq`, `ne`
+    - **Text**: `like`, `iLike`, `substring`, `startsWith`, `regexp`
+    - **Logical**: `and`, `or`, `not`
+    - **Arrays**: `contains`, `overlap`, `contained`
+    
+    **Example**: `{"and":[{"name":{"startsWith":"Commander"}},{"rescueCount":{"gt":10}}]}`
+  schema:
+    type: string
+  examples:
+    name_filter:
+      summary: Filter by name starting with text
+      value: '{"name":{"startsWith":"Commander"}}'
+    numeric_comparison:
+      summary: Filter by numeric comparison
+      value: '{"rescueCount":{"gt":10}}'
+    complex_filter:
+      summary: Complex filter with multiple conditions
+      value: '{"and":[{"platform":"pc"},{"status":"active"}]}'
+    text_search:
+      summary: Case-insensitive text search
+      value: '{"name":{"iLike":"%rescue%"}}'
+
+Fields:
+  name: fields
+  in: query
+  description: |
+    Sparse fieldsets - limit the fields returned for each resource type.
+    Format: fields[TYPE]=field1,field2
+  schema:
+    type: object
+    additionalProperties:
+      type: string
+  style: deepObject
+  explode: true
+  example:
+    users: "email,status,createdAt"
+    rats: "name,platform"
