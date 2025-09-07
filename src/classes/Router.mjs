@@ -25,11 +25,14 @@ router.get('/', (ctx) => {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    <script
-      id="api-reference"
-      data-url="./openapi/bundled.yaml"
-      data-configuration='${JSON.stringify(configuration)}'></script>
+    <div id="api-reference"></div>
     <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <script>
+      Scalar.createApiReference('#api-reference', {
+        url: './openapi/bundled.yaml',
+        ...${JSON.stringify(configuration)}
+      })
+    </script>
   </body>
 </html>`
 
