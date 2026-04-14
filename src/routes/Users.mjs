@@ -261,10 +261,7 @@ export default class Users extends APIResource {
   @POST('/users/:id/certificate')
   @parameters('id')
   @authenticated
-  @required()
   async certificate (ctx) {
-    const { password, passkeyResponse, totpCode } = getJSONAPIData({ ctx, type: 'certificate-requests' })?.attributes ?? {}
-
     const user = await User.findOne({
       where: {
         id: ctx.params.id,
@@ -277,15 +274,6 @@ export default class Users extends APIResource {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    // Validate authentication using the reusable method
-    await Users.validateUserAuthentication({
-      user,
-      password,
-      totpCode,
-      passkeyResponse,
-      ctx,
-    })
-
     const ratName = user.preferredRat().name
     const { certificate, fingerprint } = await Users.sslGenerationPool.exec({ ratName })
 
@@ -296,20 +284,11 @@ export default class Users extends APIResource {
 
     await Anope.setFingerprint(user.email, fingerprint)
 
-    // Log certificate generation metrics
-    let authMethod = 'password'
-    if (passkeyResponse) {
-      authMethod = 'passkey'
-    } else if (totpCode) {
-      authMethod = 'password_2fa'
-    }
-
     logMetric('user_certificate_generated', {
       _user_id: user.id,
       _requested_by_user_id: ctx.state.user.id,
       _is_self_request: user.id === ctx.state.user.id,
       _rat_name: ratName,
-      _auth_method: authMethod,
     }, `IRC certificate generated for user ${user.id} (rat: ${ratName})`)
 
     ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
