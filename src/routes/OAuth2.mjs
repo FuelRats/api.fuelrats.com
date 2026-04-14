@@ -208,7 +208,7 @@ class OAuth extends API {
       return Permission.isValidOAuthScope(scopeEntry) === false
     })
     if (invalidScopes.length > 0) {
-      return callbackError(redirectUri, throw new InvalidScopeOAuthError(invalidScopes.join(',')))
+      return callbackError(redirectUri, new InvalidScopeOAuthError(invalidScopes.join(',')))
     }
 
     /* Check if OAuth client exists */
