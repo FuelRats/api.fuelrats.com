@@ -40,6 +40,9 @@ export default class Rescue extends Model {
   @column(type.BOOLEAN)
   static codeRed = false
 
+  @column(type.BOOLEAN)
+  static carrier = false
+
   @validate({ JSONObject })
   @column(type.JSONB)
   static data = {}

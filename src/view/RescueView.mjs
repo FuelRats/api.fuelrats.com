@@ -25,6 +25,7 @@ export default class RescueView extends DatabaseView {
       static clientLanguage
       static commandIdentifier
       static codeRed
+      static carrier
       static data
       static notes
       static platform
