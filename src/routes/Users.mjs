@@ -661,6 +661,42 @@ export default class Users extends APIResource {
   }
 
   /**
+   * Delete a user's avatar
+   * @endpoint
+   */
+  @DELETE('/users/:id/image')
+  @parameters('id')
+  @authenticated
+  async deleteimage (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id,
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    await Avatar.destroy({
+      where: {
+        userId: ctx.params.id,
+      },
+    })
+
+    logMetric('user_avatar_deleted', {
+      _user_id: user.id,
+      _deleted_by_user_id: ctx.state.user.id,
+      _is_self_update: user.id === ctx.state.user.id,
+    }, `User avatar deleted: ${user.id} by ${ctx.state.user.id}`)
+
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
+    return true
+  }
+
+  /**
    * Redeem a decal
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} a decal

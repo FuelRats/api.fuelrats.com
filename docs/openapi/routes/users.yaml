@@ -1338,6 +1338,76 @@ users_image:
       '404':
         $ref: '../components/responses.yaml#/NotFound'
 
+  post:
+    tags: [users]
+    summary: Upload user image
+    description: |
+      Upload or replace a user's profile image
+
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [image]
+            properties:
+              image:
+                type: string
+                format: binary
+                description: Image file (PNG, JPEG, or WebP)
+    responses:
+      '200':
+        description: User updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  delete:
+    tags: [users]
+    summary: Delete user image
+    description: |
+      Delete a user's profile image
+
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Image deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
 users_statistics:
   get:
     tags: [users]
