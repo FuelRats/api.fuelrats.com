@@ -1,6 +1,6 @@
-import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { authenticator as totp } from 'otplib'
+import { hashPassword, verifyPassword, getHashRounds } from '../helpers/password'
 import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
@@ -68,7 +68,7 @@ class Authentication {
       })
     }
 
-    const result = await bcrypt.compare(password, user.password)
+    const result = await verifyPassword(password, user.password)
     if (result === false) {
       logMetric('authentication_failure', {
         _auth_method: 'password',
@@ -80,8 +80,8 @@ class Authentication {
       throw new GoneAPIError({ pointer: '/data/attributes/email' })
     }
 
-    if (bcrypt.getRounds(user.password) > constants.bcryptRoundsCount) {
-      const newRoundPassword = await bcrypt.hash(password, constants.bcryptRoundsCount)
+    if (getHashRounds(user.password) > constants.bcryptRoundsCount) {
+      const newRoundPassword = await hashPassword(password, constants.bcryptRoundsCount)
       User.update({
         password: newRoundPassword,
       }, {
@@ -381,14 +381,14 @@ class Authentication {
       return undefined
     }
 
-    const authorised = await bcrypt.compare(secret, client.secret)
+    const authorised = await verifyPassword(secret, client.secret)
     if (authorised) {
       if (client.user.isSuspended()) {
         throw new GoneAPIError({})
       }
 
-      if (bcrypt.getRounds(client.secret) > constants.bcryptRoundsCount) {
-        const newRoundSecret = await bcrypt.hash(secret, constants.bcryptRoundsCount)
+      if (getHashRounds(client.secret) > constants.bcryptRoundsCount) {
+        const newRoundSecret = await hashPassword(secret, constants.bcryptRoundsCount)
         Client.update({
           secret: newRoundSecret,
         }, {

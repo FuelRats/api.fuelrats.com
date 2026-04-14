@@ -1,5 +1,5 @@
-import bcrypt from 'bcrypt'
 import * as constants from '../constants'
+import { hashPassword } from '../helpers/password'
 import Model, { column, table, validate, type } from './Model'
 import { JSONObject } from '../helpers/Validators'
 
@@ -78,7 +78,7 @@ export default class User extends Model {
     if (!instance.changed('password')) {
       return
     }
-    const hash = await bcrypt.hash(instance.get('password'), constants.bcryptRoundsCount)
+    const hash = await hashPassword(instance.get('password'), constants.bcryptRoundsCount)
     instance.set('password', hash)
   }
 
