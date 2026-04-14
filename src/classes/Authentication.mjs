@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { authenticator as totp } from 'otplib'
+import { verifySync as otpVerify } from 'otplib'
 import { hashPassword, verifyPassword, getHashRounds } from '../helpers/password'
 import UUID from 'pure-uuid'
 import config from '../config'
@@ -105,7 +105,7 @@ class Authentication {
 
       let isValidCode = false
       try {
-        isValidCode = totp.check(code, authenticator.secret)
+        isValidCode = otpVerify({ token: code, secret: authenticator.secret }).valid
       } catch {
         isValidCode = false
       }

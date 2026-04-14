@@ -1,4 +1,4 @@
-import { authenticator as totp } from 'otplib'
+import { generateSecret, generateURI, verifySync } from 'otplib'
 import UUID from 'pure-uuid'
 import {
   ConflictAPIError,
@@ -65,8 +65,8 @@ export default class Authenticators extends APIResource {
       })
     }
 
-    const secret = totp.generateSecret()
-    const dataUri = totp.keyuri(ctx.state.user.email, 'Fuel Rats', secret)
+    const secret = generateSecret()
+    const dataUri = generateURI({ type: 'totp', accountName: ctx.state.user.email, issuer: 'Fuel Rats', secret })
     const result = {
       id: new UUID(UUID_VERSION),
       secret,
@@ -110,7 +110,7 @@ export default class Authenticators extends APIResource {
 
     let isValid = false
     try {
-      isValid = totp.check(token, secret)
+      isValid = verifySync({ token, secret }).valid
     } catch (ex) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/secret' })
     }
@@ -167,7 +167,7 @@ export default class Authenticators extends APIResource {
     const verifyHeader = ctx.req.headers['x-verify']
     let verified = undefined
     try {
-      verified = totp.check(verifyHeader, existingAuthenticator.secret)
+      verified = verifySync({ token: verifyHeader, secret: existingAuthenticator.secret }).valid
     } catch {
       verified = false
     }
