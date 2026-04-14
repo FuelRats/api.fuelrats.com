@@ -62,6 +62,15 @@ function createRouteHandler (method, instance) {
         ctx.data = {}
         ctx.request.body = {}
       }
+    } else if (contentType.includes('x-www-form-urlencoded')) {
+      try {
+        const text = await c.req.text()
+        ctx.data = Object.fromEntries(new URLSearchParams(text))
+        ctx.request.body = ctx.data
+      } catch {
+        ctx.data = {}
+        ctx.request.body = {}
+      }
     } else if (contentType.includes('json') || c.req.method !== 'GET') {
       try {
         ctx.data = await c.req.json()
