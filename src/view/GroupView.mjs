@@ -19,6 +19,7 @@ export default class GroupView extends DatabaseView {
   get attributes () {
     return {
       name: ReadPermission.group,
+      displayName: ReadPermission.group,
       vhost: ReadPermission.group,
       withoutPrefix: ReadPermission.group,
       priority: ReadPermission.group,

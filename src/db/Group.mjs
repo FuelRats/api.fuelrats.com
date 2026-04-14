@@ -15,6 +15,9 @@ export default class Group extends Model {
   @column(type.STRING, { allowNull: false, unique: true, name: 'name' })
   static groupName = undefined
 
+  @column(type.STRING, { allowNull: true })
+  static displayName = undefined
+
   @validate({ is: IRCVirtualHost })
   @column(type.STRING, { allowNull: true })
   static vhost = undefined
