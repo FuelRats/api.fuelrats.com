@@ -1,6 +1,8 @@
+import { Hono } from 'hono'
 import {
   BadRequestAPIError,
   ForbiddenAPIError,
+  NotFoundAPIError,
   UnauthorizedAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
@@ -8,9 +10,101 @@ import Authentication from '../classes/Authentication'
 import { Context } from '../classes/Context'
 import { InvalidClientOAuthError } from '../classes/OAuthError'
 import Permission from '../classes/Permission'
-import router from '../classes/Router'
+import { RequestContext } from '../classes/RequestContext'
+import StatusCode from '../classes/StatusCode'
 import config from '../config'
+import Document from '../Documents/Document'
 import enumerable from '../helpers/Enum'
+
+/**
+ * Shared Hono app instance for all API routes (replaces koa-router)
+ */
+export const app = new Hono()
+
+/**
+ * Create a Hono route handler that adapts between Hono context and the
+ * Koa-like ctx interface that all route handlers expect.
+ * @param {Function} method the decorated (and possibly wrapped) route method
+ * @param {object} instance the route class instance
+ * @returns {Function} Hono-compatible async route handler
+ */
+function createRouteHandler (method, instance) {
+  return async (c) => {
+    const ctx = new RequestContext({
+      c,
+      state: c.get('state') || {},
+      session: c.get('session') || {},
+    })
+
+    // Parse request body
+    const contentType = c.req.header('content-type') || ''
+    if (contentType.includes('json') || c.req.method !== 'GET') {
+      try {
+        ctx.data = await c.req.json()
+        ctx.request.body = ctx.data
+      } catch {
+        ctx.data = {}
+        ctx.request.body = {}
+      }
+    }
+
+    // Clean timestamp fields from request data
+    if (ctx.data && typeof ctx.data === 'object') {
+      for (const field of ['createdAt', 'updatedAt', 'deletedAt', 'revision']) {
+        delete ctx.data[field]
+      }
+    }
+
+    ctx.endpoint = instance
+    const result = await method.call(instance, ctx)
+
+    // Build response headers
+    const headers = new Headers()
+    for (const [key, value] of Object.entries(ctx._headers)) {
+      headers.set(key, String(value))
+    }
+
+    // Write session back if middleware is tracking it
+    if (c.get('writeSession')) {
+      c.get('writeSession')(ctx.session)
+    }
+
+    // Handle redirects
+    if (ctx._redirect) {
+      return c.redirect(ctx._redirect, ctx._status || 302)
+    }
+
+    // Handle response based on return type
+    if (result === true) {
+      return new Response(null, { status: StatusCode.noContent, headers })
+    }
+
+    if (result instanceof Document) {
+      headers.set('Content-Type', 'application/vnd.api+json')
+      return new Response(result.toString(), { status: ctx._status, headers })
+    }
+
+    if (result) {
+      if (ctx._type) {
+        headers.set('Content-Type', ctx._type)
+      }
+      if (typeof result === 'string' || result instanceof Buffer || result instanceof Uint8Array) {
+        return new Response(result, { status: ctx._status, headers })
+      }
+      headers.set('Content-Type', 'application/json')
+      return new Response(JSON.stringify(result), { status: ctx._status, headers })
+    }
+
+    if (typeof result === 'undefined' && !ctx._body) {
+      throw new NotFoundAPIError({})
+    }
+
+    if (ctx._type) {
+      headers.set('Content-Type', ctx._type)
+    }
+    return new Response(ctx._body, { status: ctx._status, headers })
+  }
+}
 
 /**
  * @class
@@ -31,176 +125,144 @@ export default class API {
 }
 
 // region Decorators
+
 /**
- * ESNext Decorator for routing this method through a koa router GET endpoint
+ * TC39 Decorator for routing this method through a Hono GET endpoint
  * @param {string} route the http path to route
- * @returns {Function} An ESNExt decorator function
+ * @returns {Function} A TC39 decorator function
  */
 export function GET (route) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
-      const [ctx] = args
-      ctx.endpoint = this
-      return endpoint.apply(target, args)
-    }
-    router.get(route, descriptor.value)
+  return (method, context) => {
+    context.addInitializer(function () {
+      app.get(route, createRouteHandler(method, this))
+    })
+    return method
   }
 }
 
 /**
- * ESNext Decorator for routing this method through a koa router post endpoint
+ * TC39 Decorator for routing this method through a Hono POST endpoint
  * @param {string} route the http path to route
  * @returns {Function}
  */
 export function POST (route) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
-      const [ctx] = args
-      ctx.endpoint = this
-      return endpoint.apply(target, args)
-    }
-    router.post(route, descriptor.value)
+  return (method, context) => {
+    context.addInitializer(function () {
+      app.post(route, createRouteHandler(method, this))
+    })
+    return method
   }
 }
 
 /**
- * ESNext Decorator for routing this method through a koa router PUT endpoint
+ * TC39 Decorator for routing this method through a Hono PUT endpoint
  * @param {string} route the http path to route
  * @returns {Function}
  */
 export function PUT (route) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
-      const [ctx] = args
-      ctx.endpoint = this
-      return endpoint.apply(target, args)
-    }
-    router.put(route, descriptor.value)
-    router.patch(route, descriptor.value)
+  return (method, context) => {
+    context.addInitializer(function () {
+      const handler = createRouteHandler(method, this)
+      app.put(route, handler)
+      app.patch(route, handler)
+    })
+    return method
   }
 }
 
 /**
- * ESNext Decorator for routing this method through a koa router PATCH endpoint
+ * TC39 Decorator for routing this method through a Hono PATCH endpoint
  * @param {string} route the http path to route
  * @returns {Function}
  */
 export function PATCH (route) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
-      const [ctx] = args
-      ctx.endpoint = this
-      return endpoint.apply(target, args)
-    }
-    router.patch(route, descriptor.value)
+  return (method, context) => {
+    context.addInitializer(function () {
+      app.patch(route, createRouteHandler(method, this))
+    })
+    return method
   }
 }
 
 /**
- * ESNext Decorator for routing this method through a koa router DELETE endpoint
- * @param {Function} route the http path to route
+ * TC39 Decorator for routing this method through a Hono DELETE endpoint
+ * @param {string} route the http path to route
  * @returns {Function}
  */
 export function DELETE (route) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
-      const [ctx] = args
-      ctx.endpoint = this
-      return endpoint.apply(this, args)
-    }
-    router.del(route, descriptor.value)
+  return (method, context) => {
+    context.addInitializer(function () {
+      app.delete(route, createRouteHandler(method, this))
+    })
+    return method
   }
 }
 
-// eslint-disable-next-line jsdoc/require-param
 /**
- * ESNext Decorator for requiring authentication on an endpoint
+ * TC39 Decorator for requiring authentication on an endpoint
  */
-export function authenticated (target, name, descriptor) {
-  const endpoint = descriptor.value
-
-  descriptor.value = function value (...args) {
+export function authenticated (method, context) {
+  return function (...args) {
     const [ctx] = args
     if (ctx.state.user) {
-      return endpoint.apply(target, args)
+      return method.call(this, ...args)
     }
     throw new UnauthorizedAPIError({})
   }
 }
 
-// eslint-disable-next-line jsdoc/require-param
 /**
- * ESNext Decorator for requiring client authentication on an endpoint
+ * TC39 Decorator for requiring client authentication on an endpoint
  */
-export function clientAuthenticated (target, name, descriptor) {
-  const endpoint = descriptor.value
-
-  descriptor.value = async function value (...args) {
+export function clientAuthenticated (method, context) {
+  return async function (...args) {
     const [ctx] = args
     const client = await Authentication.requireClientAuthentication({ connection: ctx })
     if (!client) {
       throw new InvalidClientOAuthError()
     }
     ctx.state.client = client
-    return endpoint.apply(target, args)
+    return method.call(this, ...args)
   }
 }
 
-// eslint-disable-next-line jsdoc/require-param
 /**
- * ESNext decorator for requiring basic user authentication on an endpoint
+ * TC39 Decorator for requiring basic user authentication on an endpoint
  */
-export function basicAuthenticated (target, name, descriptor) {
-  const endpoint = descriptor.value
-
-  descriptor.value = function value (...args) {
+export function basicAuthenticated (method, context) {
+  return function (...args) {
     const [ctx] = args
     if (ctx.state.basicAuth === true) {
-      return endpoint.apply(target, args)
+      return method.call(this, ...args)
     }
     throw new UnauthorizedAPIError({})
   }
 }
 
-// eslint-disable-next-line jsdoc/require-param
 /**
- * ESNext Decorator for requiring IP address authentication on an endpoint
+ * TC39 Decorator for requiring IP address authentication on an endpoint
  */
-export function IPAuthenticated (target, name, descriptor) {
-  const endpoint = descriptor.value
-
-  descriptor.value = function value (...args) {
+export function IPAuthenticated (method, context) {
+  return function (...args) {
     const [ctx] = args
     if (config.server.whitelist.includes(ctx.request.ip)) {
-      return endpoint.apply(target, args)
+      return method.call(this, ...args)
     }
     throw new UnauthorizedAPIError({})
   }
 }
 
 /**
- * ESNext Decorator requiring a set of permissions for an API endpoint
+ * TC39 Decorator requiring a set of permissions for an API endpoint
  * @param {...string} perms the permissions to require
  * @returns {Function} A decorator function
  */
 export function permissions (...perms) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
+  return (method, context) => {
+    return function (...args) {
       const [ctx] = args
       if (Permission.granted({ permissions: perms, connection: ctx })) {
-        return endpoint.apply(target, args)
+        return method.call(this, ...args)
       }
       throw new ForbiddenAPIError({})
     }
@@ -208,15 +270,13 @@ export function permissions (...perms) {
 }
 
 /**
- * ESNext Decorator for requiring query parameters in an endpoint
+ * TC39 Decorator for requiring query parameters in an endpoint
  * @param {...string} fields The query parameters to require
  * @returns {Function} A decorator function
  */
 export function parameters (...fields) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
+  return (method, context) => {
+    return function (...args) {
       const [ctx] = args
       const missingFields = fields.filter((requiredField) => {
         return (Reflect.has(ctx.params, requiredField) === false && Reflect.has(ctx.query, requiredField) === false)
@@ -226,22 +286,19 @@ export function parameters (...fields) {
           return new BadRequestAPIError({ parameter: field })
         })
       }
-      return endpoint.apply(target, args)
+      return method.call(this, ...args)
     }
   }
 }
 
 /**
- * ESNext Decorator for requiring data fields in an endpoint
+ * TC39 Decorator for requiring data fields in an endpoint
  * @param {...string} fields The data fields to require
  * @returns {Function} A decorator function
- *
  */
 export function required (...fields) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
+  return (method, context) => {
+    return function (...args) {
       const [ctx] = args
       const missingFields = fields.filter((requiredField) => {
         if (!ctx.data.data?.attributes) {
@@ -254,21 +311,19 @@ export function required (...fields) {
           return new BadRequestAPIError({ pointer: `/data/attributes/${field}` })
         })
       }
-      return endpoint.apply(target, args)
+      return method.call(this, ...args)
     }
   }
 }
 
 /**
- * ESNext Decorator for disallowing a set of data fields in an endpoint
+ * TC39 Decorator for disallowing a set of data fields in an endpoint
  * @param {...string} fields The data fields to disallow
  * @returns {Function} A decorator function
  */
 export function disallow (...fields) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
+  return (method, context) => {
+    return function (...args) {
       const [ctx] = args
       if (Array.isArray(ctx.data) || typeof ctx.data === 'object') {
         fields.map((cleanField) => {
@@ -276,7 +331,7 @@ export function disallow (...fields) {
           return cleanField
         })
       }
-      return endpoint.apply(target, args)
+      return method.call(this, ...args)
     }
   }
 }
@@ -288,10 +343,8 @@ export function disallow (...fields) {
  * @returns {Function} A decorator function
  */
 export function protect (permission, ...fields) {
-  return (target, name, descriptor) => {
-    const endpoint = descriptor.value
-
-    descriptor.value = function value (...args) {
+  return (method, context) => {
+    return function (...args) {
       const [ctx] = args
       if (ctx.data) {
         fields.map((field) => {
@@ -305,7 +358,7 @@ export function protect (permission, ...fields) {
           return true
         })
       }
-      return endpoint.apply(target, args)
+      return method.call(this, ...args)
     }
   }
 }
@@ -358,4 +411,3 @@ export class WritePermission {
   static sudo
   static all
 }
-

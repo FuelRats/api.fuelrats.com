@@ -365,7 +365,8 @@ export default class WebSocket {
  * @returns {Function} An ESNext decorator function
  */
 export function websocket (...route) {
-  return (target, name, descriptor) => {
-    WebSocket.addRoute({ route, method: descriptor.value })
+  return (method, context) => {
+    WebSocket.addRoute({ route, method })
+    return method
   }
 }
