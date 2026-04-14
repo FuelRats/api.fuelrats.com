@@ -27,6 +27,7 @@ import {
 } from './API'
 import APIResource from './APIResource'
 import { webPushPool } from './WebPushSubscriptions'
+import config from '../config'
 import { logMetric } from '../logging'
 
 const rescueAccessHours = 3
@@ -427,7 +428,7 @@ export default class Rescues extends APIResource {
     const subscriptions = WebPushSubscription.findAll({
       where: query,
     })
-    webPushPool.exec('webPushBroadcast', [subscriptions, rescue])
+    webPushPool.exec({ subscribers: subscriptions, payload: rescue, vapidConfig: config.webpush })
     return true
   }
 

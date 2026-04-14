@@ -1,5 +1,5 @@
 import { promises as fsp } from 'fs'
-import workerpool from 'workerpool'
+import { createWorkerPool } from '../helpers/workerPool'
 import {
   WritePermission,
   permissions,
@@ -56,8 +56,8 @@ const avatarMaxSize = 256
  * Class for the /users endpoint
  */
 export default class Users extends APIResource {
-  static imageFormatPool = workerpool.pool('./dist/workers/image.mjs')
-  static sslGenerationPool = workerpool.pool('./dist/workers/certificate.mjs')
+  static imageFormatPool = createWorkerPool('../workers/image.mjs', import.meta.url)
+  static sslGenerationPool = createWorkerPool('../workers/certificate.mjs', import.meta.url)
 
   /**
    * @inheritdoc
@@ -287,8 +287,7 @@ export default class Users extends APIResource {
     })
 
     const ratName = user.preferredRat().name
-    const { certificate, fingerprint } = await Users.sslGenerationPool.exec('generateSslCertificate',
-      [ratName])
+    const { certificate, fingerprint } = await Users.sslGenerationPool.exec({ ratName })
 
     const anopeAccount = await Anope.getAccount(user.email)
     if (!anopeAccount) {
@@ -1180,10 +1179,13 @@ export default class Users extends APIResource {
    */
   static async convertImageData (originalImageData, options = {}) {
     try {
-      return Buffer.from(await Users.imageFormatPool.exec('avatarImageFormat', [originalImageData, {
-        size: options.size ?? avatarMaxSize,
-        format: options.format ?? defaultAvatarFormat,
-      }]))
+      return Buffer.from(await Users.imageFormatPool.exec({
+        imageData: originalImageData,
+        options: {
+          size: options.size ?? avatarMaxSize,
+          format: options.format ?? defaultAvatarFormat,
+        },
+      }))
     } catch (error) {
       if (error.message.includes('unsupported image format')) {
         // Thrown when input format is unsupported

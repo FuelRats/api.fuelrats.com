@@ -1,6 +1,5 @@
 import { spawn } from 'child_process'
 import crypto from 'crypto'
-import workerpool from 'workerpool'
 
 const MAX_RAT_NAME_LENGTH = 64
 
@@ -14,7 +13,6 @@ function validateRatName (ratName) {
     throw new Error('Rat name must be a non-empty string')
   }
 
-  // Remove any dangerous characters and limit length
   const sanitized = ratName.replace(/[^a-zA-Z0-9_-]/gu, '').slice(0, MAX_RAT_NAME_LENGTH)
 
   if (sanitized.length === 0) {
@@ -25,7 +23,7 @@ function validateRatName (ratName) {
 }
 
 /**
- * Generate SSL certificate for a rat using Node.js crypto APIs (secure, no shell commands)
+ * Generate SSL certificate for a rat
  * @param {string} ratName name of the rat
  * @returns {Promise<{certificate: string, fingerprint: string}>}
  */
@@ -34,10 +32,6 @@ function generateSslCertificate (ratName) {
     try {
       const sanitizedRatName = validateRatName(ratName)
 
-      // Since Node.js doesn't have built-in certificate creation, we'll use a secure approach
-      // by spawning openssl with properly sanitized arguments (no shell injection)
-
-      // Create certificate using spawn with array arguments (prevents shell injection)
       const opensslArgs = [
         'req', '-new', '-newkey', 'rsa:4096', '-days', '3650',
         '-nodes', '-x509', '-subj',
@@ -46,7 +40,7 @@ function generateSslCertificate (ratName) {
 
       const opensslProcess = spawn('openssl', opensslArgs, {
         stdio: ['pipe', 'pipe', 'pipe'],
-        shell: false, // Explicitly disable shell to prevent injection
+        shell: false,
       })
 
       let certOutput = ''
@@ -67,7 +61,6 @@ function generateSslCertificate (ratName) {
         }
 
         try {
-          // Extract certificate and private key
           const certBeginIndex = certOutput.indexOf('-----BEGIN PRIVATE KEY-----')
           if (certBeginIndex === -1) {
             reject(new Error('No private key found in certificate output'))
@@ -76,7 +69,6 @@ function generateSslCertificate (ratName) {
 
           const certificate = certOutput.substring(certBeginIndex)
 
-          // Extract just the certificate part for fingerprint calculation
           const x509BeginIndex = certOutput.indexOf('-----BEGIN CERTIFICATE-----')
           const x509EndIndex = certOutput.indexOf('-----END CERTIFICATE-----')
 
@@ -87,7 +79,6 @@ function generateSslCertificate (ratName) {
 
           const certPem = certOutput.substring(x509BeginIndex, x509EndIndex + '-----END CERTIFICATE-----'.length)
 
-          // Parse certificate and generate fingerprint using Node.js crypto
           const cert = new crypto.X509Certificate(certPem)
           const fingerprint = crypto
             .createHash('sha256')
@@ -95,10 +86,7 @@ function generateSslCertificate (ratName) {
             .digest('hex')
             .toLowerCase()
 
-          resolve({
-            certificate,
-            fingerprint,
-          })
+          resolve({ certificate, fingerprint })
         } catch (error) {
           reject(error)
         }
@@ -113,7 +101,12 @@ function generateSslCertificate (ratName) {
   })
 }
 
-workerpool.worker({
-  generateSslCertificate,
-})
-
+self.onmessage = async (event) => {
+  const { id, ratName } = event.data
+  try {
+    const result = await generateSslCertificate(ratName)
+    postMessage({ id, result })
+  } catch (error) {
+    postMessage({ id, error: error.message })
+  }
+}

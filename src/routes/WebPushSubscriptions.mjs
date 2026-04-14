@@ -1,13 +1,14 @@
-import workerpool from 'workerpool'
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 import { WebPushSubscription } from '../db'
+import config from '../config'
+import { createWorkerPool } from '../helpers/workerPool'
 import API, {
   POST,
   authenticated,
   permissions,
 } from './API'
 
-export const webPushPool = workerpool.pool('./dist/workers/web-push.mjs')
+export const webPushPool = createWorkerPool('../workers/web-push.mjs', import.meta.url)
 
 /**
  * Class managing password reset endpoints
@@ -71,7 +72,7 @@ export default class WebPushSubscriptions extends API {
   @permissions('rescues.write')
   async alert (ctx) {
     const subscriptions = await WebPushSubscription.findAll({})
-    webPushPool.exec('webPushBroadcast', [subscriptions, ctx.data])
+    webPushPool.exec({ subscribers: subscriptions, payload: ctx.data, vapidConfig: config.webpush })
     return true
   }
 }

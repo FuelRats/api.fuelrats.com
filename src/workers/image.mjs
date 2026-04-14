@@ -1,5 +1,4 @@
 import sharp from 'sharp'
-import workerpool from 'workerpool'
 
 const formatOptions = {
   webp: {
@@ -11,25 +10,16 @@ const formatOptions = {
   },
 }
 
-/**
- * Web worker that formats converts an image to an appropriate format and resolution for avatars
- * @param {Uint8Array} imageDataPackage Data buffer package containing image data
- * @param {object} options Output options for the transformed image data
- * @param {number} options.size Output size of the image
- * @param {string} options.format Output format of the image
- * @returns {Promise<Buffer>} A transformed data buffer or an error
- * @throws {Error} Unsupported format or options
- */
-function avatarImageFormat (imageDataPackage, options) {
-  const { format, size } = options
-
-  return sharp(Buffer.from(imageDataPackage))
-    .resize(size, size)
-    .toFormat(format, formatOptions[format])
-    .toBuffer()
+self.onmessage = async (event) => {
+  const { id, imageData, options } = event.data
+  try {
+    const { format, size } = options
+    const result = await sharp(Buffer.from(imageData))
+      .resize(size, size)
+      .toFormat(format, formatOptions[format])
+      .toBuffer()
+    postMessage({ id, result })
+  } catch (error) {
+    postMessage({ id, error: error.message })
+  }
 }
-
-workerpool.worker({
-  avatarImageFormat,
-})
-
