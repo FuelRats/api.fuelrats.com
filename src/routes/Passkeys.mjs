@@ -174,11 +174,11 @@ export default class Passkeys extends APIResource {
       })
     }
 
-    const { credentialPublicKey, credentialID, counter, credentialBackedUp } = verification.registrationInfo
+    const { credential, credentialBackedUp } = verification.registrationInfo
 
     // Check if this credential is already registered
     const existingPasskey = await Passkey.findOne({
-      where: { credentialId: Buffer.from(credentialID).toString('base64url') },
+      where: { credentialId: credential.id },
     })
 
     if (existingPasskey) {
@@ -189,9 +189,9 @@ export default class Passkeys extends APIResource {
     }
 
     const passkey = await Passkey.create({
-      credentialId: Buffer.from(credentialID).toString('base64url'),
-      publicKey: Buffer.from(credentialPublicKey).toString('base64url'),
-      counter,
+      credentialId: credential.id,
+      publicKey: Buffer.from(credential.publicKey).toString('base64url'),
+      counter: credential.counter,
       name,
       backedUp: credentialBackedUp,
       userId: user.id,
