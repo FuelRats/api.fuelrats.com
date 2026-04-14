@@ -782,13 +782,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsCreate (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -804,15 +805,15 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
-    // I'm sorry Clapton, JSONAPI made me do it
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -827,13 +828,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsDelete (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -871,13 +873,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipDisplayRatPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'displayRat',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
