@@ -38,7 +38,31 @@ function createRouteHandler (method, instance) {
 
     // Parse request body
     const contentType = c.req.header('content-type') || ''
-    if (contentType.includes('json') || c.req.method !== 'GET') {
+    if (contentType.includes('multipart/form-data')) {
+      try {
+        const formData = await c.req.formData()
+        ctx.request.files = {}
+        ctx.data = {}
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            const buffer = await value.arrayBuffer()
+            ctx.request.files[key] = {
+              path: null,
+              name: value.name,
+              type: value.type,
+              size: value.size,
+              buffer: Buffer.from(buffer),
+            }
+          } else {
+            ctx.data[key] = value
+          }
+        }
+        ctx.request.body = ctx.data
+      } catch {
+        ctx.data = {}
+        ctx.request.body = {}
+      }
+    } else if (contentType.includes('json') || c.req.method !== 'GET') {
       try {
         ctx.data = await c.req.json()
         ctx.request.body = ctx.data

@@ -627,7 +627,7 @@ export default class Users extends APIResource {
       throw new ImATeapotAPIError()
     }
 
-    const imageData = await fsp.readFile(ctx.request.files.image.path)
+    const imageData = ctx.request.files.image.buffer ?? await fsp.readFile(ctx.request.files.image.path)
 
     const formattedImageData = await Users.convertImageData(imageData)
 
