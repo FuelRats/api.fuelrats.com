@@ -32,52 +32,38 @@ function generateSslCertificate (ratName) {
     try {
       const sanitizedRatName = validateRatName(ratName)
 
+      // Use openssl with separate key output to avoid stdout conflicts
       const opensslArgs = [
         'req', '-new', '-newkey', 'rsa:4096', '-days', '3650',
-        '-nodes', '-x509', '-subj',
+        '-nodes', '-x509',
+        '-keyout', '/tmp/key.pem',
+        '-subj',
         `/C=US/ST=Generic/L=Generic/O=FuelRats/CN=${sanitizedRatName}@fuelrats.com`,
       ]
 
       const opensslProcess = spawn('openssl', opensslArgs, {
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: ['pipe', 'pipe', 'ignore'],
         shell: false,
       })
 
-      let certOutput = ''
-      let certError = ''
+      let certPem = ''
 
       opensslProcess.stdout.on('data', (data) => {
-        certOutput += data.toString()
-      })
-
-      opensslProcess.stderr.on('data', (data) => {
-        certError += data.toString()
+        certPem += data.toString()
       })
 
       opensslProcess.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`OpenSSL failed: ${certError}`))
+          reject(new Error(`OpenSSL exited with code ${code}`))
           return
         }
 
         try {
-          const certBeginIndex = certOutput.indexOf('-----BEGIN PRIVATE KEY-----')
-          if (certBeginIndex === -1) {
-            reject(new Error('No private key found in certificate output'))
-            return
-          }
+          const fs = require('fs')
+          const keyPem = fs.readFileSync('/tmp/key.pem', 'utf8')
+          fs.unlinkSync('/tmp/key.pem')
 
-          const certificate = certOutput.substring(certBeginIndex)
-
-          const x509BeginIndex = certOutput.indexOf('-----BEGIN CERTIFICATE-----')
-          const x509EndIndex = certOutput.indexOf('-----END CERTIFICATE-----')
-
-          if (x509BeginIndex === -1 || x509EndIndex === -1) {
-            reject(new Error('No X.509 certificate found in output'))
-            return
-          }
-
-          const certPem = certOutput.substring(x509BeginIndex, x509EndIndex + '-----END CERTIFICATE-----'.length)
+          const certificate = keyPem + certPem
 
           const cert = new crypto.X509Certificate(certPem)
           const fingerprint = crypto
