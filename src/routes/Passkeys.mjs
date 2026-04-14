@@ -101,7 +101,7 @@ export default class Passkeys extends APIResource {
     const options = await generateRegistrationOptions({
       rpName,
       rpID: rpId,
-      userID: user.id,
+      userID: new TextEncoder().encode(user.id),
       userName: user.email,
       userDisplayName: user.displayName(),
       excludeCredentials,
@@ -114,13 +114,7 @@ export default class Passkeys extends APIResource {
     // Store the challenge in the session for verification
     ctx.session.passkeyChallenge = options.challenge
 
-    const query = new DatabaseQuery({ connection: ctx })
-    return new ObjectDocument({
-      query,
-      result: options,
-      type: PasskeyView,
-      view: DocumentViewType.individual,
-    })
+    return options
   }
 
   /**
@@ -277,13 +271,7 @@ export default class Passkeys extends APIResource {
     ctx.session.passkeyChallenge = options.challenge
     ctx.session.passkeyUserId = user.id
 
-    const query = new DatabaseQuery({ connection: ctx })
-    return new ObjectDocument({
-      query,
-      result: options,
-      type: PasskeyView,
-      view: DocumentViewType.individual,
-    })
+    return options
   }
 
   /**
