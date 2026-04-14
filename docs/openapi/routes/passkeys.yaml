@@ -304,7 +304,11 @@ passkeys_authenticate:
     description: |
       Generate WebAuthn authentication options for signing in with a passkey.
       This is the first step in the passkey authentication flow.
-      
+
+      If `email` is provided, the response will include `allowCredentials`
+      restricted to that user's passkeys. If omitted, the browser will prompt
+      for a discoverable credential (resident key).
+
       **Public Access:** No authentication required (for login flow)
     requestBody:
       required: true
@@ -316,19 +320,18 @@ passkeys_authenticate:
             properties:
               data:
                 type: object
-                required: [type, attributes]
+                required: [type]
                 properties:
                   type:
                     type: string
                     enum: [passkey-authentication]
                   attributes:
                     type: object
-                    required: [email]
                     properties:
                       email:
                         type: string
                         format: email
-                        description: User's email address
+                        description: User's email address (optional — omit for discoverable credentials)
     responses:
       '200':
         description: WebAuthn authentication options

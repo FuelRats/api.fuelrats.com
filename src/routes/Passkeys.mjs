@@ -226,43 +226,40 @@ export default class Passkeys extends APIResource {
    */
   @POST('/passkeys/authenticate')
   async generateAuthenticationOptions (ctx) {
-    const attributes = ctx.data?.data?.attributes
-    if (!attributes) {
-      throw new UnprocessableEntityAPIError({
-        pointer: '/data/attributes',
-      })
-    }
+    const attributes = ctx.data?.data?.attributes ?? {}
     const { email } = attributes
 
-    if (!email) {
-      throw new UnprocessableEntityAPIError({
-        pointer: '/data/attributes/email',
+    let allowCredentials = undefined
+    let userId = undefined
+
+    if (email) {
+      // Email provided — restrict to that user's passkeys
+      const user = await User.findOne({
+        where: { email: { ilike: email } },
       })
-    }
 
-    const user = await User.findOne({
-      where: { email: { ilike: email } },
-    })
-
-    if (!user) {
-      // Don't reveal if user exists or not
-      throw new UnauthorizedAPIError({})
-    }
-
-    const userPasskeys = await Passkey.findAll({
-      where: { userId: user.id },
-    })
-
-    if (userPasskeys.length === 0) {
-      throw new UnauthorizedAPIError({})
-    }
-
-    const allowCredentials = userPasskeys.map((passkey) => {
-      return {
-        id: passkey.credentialId,
-        type: 'public-key',
+      if (!user) {
+        throw new UnauthorizedAPIError({})
       }
-    })
+
+      const userPasskeys = await Passkey.findAll({
+        where: { userId: user.id },
+      })
+
+      if (userPasskeys.length === 0) {
+        throw new UnauthorizedAPIError({})
+      }
+
+      allowCredentials = userPasskeys.map((passkey) => {
+        return {
+          id: passkey.credentialId,
+          type: 'public-key',
+        }
+      })
+
+      userId = user.id
+    }
+    // No email — discoverable credential flow, allowCredentials left empty
 
     const options = await generateAuthenticationOptions({
       rpID: rpId,
@@ -270,9 +267,11 @@ export default class Passkeys extends APIResource {
       userVerification: 'preferred',
     })
 
-    // Store the challenge and user ID in the session for verification
+    // Store the challenge in the session (userId may be null for discoverable)
     ctx.session.passkeyChallenge = options.challenge
-    ctx.session.passkeyUserId = user.id
+    if (userId) {
+      ctx.session.passkeyUserId = userId
+    }
 
     return options
   }
@@ -292,9 +291,9 @@ export default class Passkeys extends APIResource {
     }
     const { response, clientId } = attributes
     const expectedChallenge = ctx.session.passkeyChallenge
-    const userId = ctx.session.passkeyUserId
+    const sessionUserId = ctx.session.passkeyUserId
 
-    if (!expectedChallenge || !userId) {
+    if (!expectedChallenge) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/response',
         detail: 'No challenge found in session',
@@ -310,16 +309,19 @@ export default class Passkeys extends APIResource {
       })
     }
 
-    const passkey = await Passkey.findOne({
-      where: {
-        credentialId: response.id,
-        userId,
-      },
-    })
+    // Look up the passkey — by credential ID + userId if known, or just credential ID for discoverable
+    const passkeyQuery = { credentialId: response.id }
+    if (sessionUserId) {
+      passkeyQuery.userId = sessionUserId
+    }
+
+    const passkey = await Passkey.findOne({ where: passkeyQuery })
 
     if (!passkey) {
       throw new UnauthorizedAPIError({})
     }
+
+    const userId = passkey.userId
 
     let verification = null
     try {
@@ -328,16 +330,16 @@ export default class Passkeys extends APIResource {
         expectedChallenge,
         expectedOrigin: expectedOrigins,
         expectedRPID: rpId,
-        authenticator: {
-          credentialID: Buffer.from(passkey.credentialId, 'base64url'),
-          credentialPublicKey: Buffer.from(passkey.publicKey, 'base64url'),
+        credential: {
+          id: passkey.credentialId,
+          publicKey: Buffer.from(passkey.publicKey, 'base64url'),
           counter: passkey.counter,
         },
       })
     } catch (error) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/response',
-        detail: error.message,
+        detail: error.message || String(error),
       })
     }
 
