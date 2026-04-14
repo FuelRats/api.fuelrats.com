@@ -12,8 +12,9 @@ import {
   UnsupportedMediaAPIError,
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
+import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import config from '../config'
-import { Passkey, User } from '../db'
+import { Client, Passkey, Token, User } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import ObjectDocument from '../Documents/ObjectDocument'
@@ -285,11 +286,11 @@ export default class Passkeys extends APIResource {
   }
 
   /**
-   * Verify passkey authentication
+   * Verify passkey authentication and issue a bearer token
    * @endpoint
    */
   @POST('/passkeys/verify')
-  @required('response')
+  @required('response', 'clientId')
   async verifyPasskey (ctx) {
     const attributes = ctx.data?.data?.attributes
     if (!attributes) {
@@ -297,7 +298,7 @@ export default class Passkeys extends APIResource {
         pointer: '/data/attributes',
       })
     }
-    const { response } = attributes
+    const { response, clientId } = attributes
     const expectedChallenge = ctx.session.passkeyChallenge
     const userId = ctx.session.passkeyUserId
 
@@ -305,6 +306,15 @@ export default class Passkeys extends APIResource {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/response',
         detail: 'No challenge found in session',
+      })
+    }
+
+    // Validate the client exists
+    const client = await Client.findOne({ where: { id: clientId } })
+    if (!client) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/attributes/clientId',
+        detail: 'Invalid client ID',
       })
     }
 
@@ -352,23 +362,26 @@ export default class Passkeys extends APIResource {
     delete ctx.session.passkeyChallenge
     delete ctx.session.passkeyUserId
 
+    // Issue a bearer token
+    const token = await Token.create({
+      value: await oAuthTokenGenerator(),
+      clientId: client.id,
+      userId,
+      scope: ['*'],
+    })
+
     // Log passkey authentication metrics
     logMetric('passkey_authentication', {
       _user_id: userId,
       _passkey_id: passkey.id,
       _passkey_name: passkey.name,
-      _counter_updated: verification.authenticationInfo.newCounter !== passkey.counter,
+      _client_id: client.id,
     }, `Passkey authentication successful: ${passkey.name} for user ${userId}`)
 
-    // Return the authenticated user
-    const user = await User.findOne({ where: { id: userId } })
-    const query = new DatabaseQuery({ connection: ctx })
-    return new ObjectDocument({
-      query,
-      result: { user, verified: true },
-      type: PasskeyView,
-      view: DocumentViewType.individual,
-    })
+    return {
+      access_token: token.value,
+      token_type: 'bearer',
+    }
   }
 
   /**

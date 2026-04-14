@@ -394,11 +394,17 @@ passkeys_authenticate:
 passkeys_verify:
   post:
     tags: [passkeys]
-    summary: Verify passkey authentication
+    summary: Verify passkey and get bearer token
     description: |
       Complete the passkey authentication by verifying the credential response from the authenticator.
+      On success, issues a bearer token bound to the specified OAuth client.
       This is the second step in the passkey authentication flow.
-      
+
+      **Flow:**
+      1. `POST /passkeys/authenticate` with email → get challenge
+      2. Browser performs `navigator.credentials.get()` with the challenge
+      3. `POST /passkeys/verify` with the response + client ID → get bearer token
+
       **Public Access:** No authentication required (for login flow)
     requestBody:
       required: true
@@ -417,7 +423,7 @@ passkeys_verify:
                     enum: [passkey-verification]
                   attributes:
                     type: object
-                    required: [response]
+                    required: [response, clientId]
                     properties:
                       response:
                         type: object
@@ -447,47 +453,28 @@ passkeys_verify:
                           type:
                             type: string
                             enum: [public-key]
+                      clientId:
+                        type: string
+                        format: uuid
+                        description: OAuth client ID to bind the issued token to
     responses:
       '200':
-        description: Authentication successful
+        description: Authentication successful, bearer token issued
         content:
-          application/vnd.api+json:
+          application/json:
             schema:
               type: object
+              required: [access_token, token_type]
               properties:
-                data:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      enum: [authentication-result]
-                    attributes:
-                      type: object
-                      properties:
-                        verified:
-                          type: boolean
-                          description: Whether authentication was successful
-                        user:
-                          type: object
-                          description: Authenticated user details
-                          properties:
-                            id:
-                              type: string
-                              format: uuid
-                            email:
-                              type: string
-                              format: email
-                            status:
-                              type: string
+                access_token:
+                  type: string
+                  description: Bearer token for authenticated API access
+                token_type:
+                  type: string
+                  enum: [bearer]
             example:
-              data:
-                type: authentication-result
-                attributes:
-                  verified: true
-                  user:
-                    id: "550e8400-e29b-41d4-a716-446655440000"
-                    email: "user@example.com"
-                    status: "active"
+              access_token: "Xe5qI31OO0014POnVoQpfkLdkWwsYirh"
+              token_type: "bearer"
       '401':
         description: Authentication failed
         content:
