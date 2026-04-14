@@ -219,7 +219,7 @@ export default class Users extends APIResource {
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
   @parameters('id')
-  async image (ctx, next) {
+  async image (ctx) {
     const avatar = await Avatar.scope('imageData').findOne({
       where: {
         userId: ctx.params.id,
@@ -232,25 +232,25 @@ export default class Users extends APIResource {
     const { format = defaultAvatarFormat } = ctx.query
     const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
 
+    let imageData
     if (format !== defaultAvatarFormat || size !== avatarMaxSize) {
       if (!validAvatarFormats.includes(format)) {
         throw new BadRequestAPIError({ parameter: 'format' })
       }
 
-
       if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
         throw new BadRequestAPIError({ parameter: 'size' })
       }
 
-      ctx.body = await Users.convertImageData(avatar.image, { format, size })
+      imageData = await Users.convertImageData(avatar.image, { format, size })
     } else {
-      ctx.body = avatar.image
+      imageData = avatar.image
     }
 
     ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
     ctx.type = `image/${format}`
-
-    next()
+    ctx.body = imageData
+    return imageData
   }
 
   /**
