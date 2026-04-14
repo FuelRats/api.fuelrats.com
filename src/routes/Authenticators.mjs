@@ -45,7 +45,7 @@ export default class Authenticators extends APIResource {
   @authenticated
   async generateAuthenticator (ctx) {
     const user = await User.findOne({
-      id: ctx.params.id,
+      where: { id: ctx.params.id },
     })
     if (!user) {
       throw new NotFoundAPIError({ parameter: 'id' })
@@ -87,7 +87,7 @@ export default class Authenticators extends APIResource {
   @required('secret', 'token', 'description')
   async addAuthenticator (ctx) {
     const user = await User.findOne({
-      id: ctx.params.id,
+      where: { id: ctx.params.id },
     })
     if (!user) {
       throw new NotFoundAPIError({ parameter: 'id' })
@@ -145,7 +145,7 @@ export default class Authenticators extends APIResource {
   @authenticated
   async removeAuthenticator (ctx) {
     const user = await User.findOne({
-      id: ctx.params.id,
+      where: { id: ctx.params.id },
     })
     if (!user) {
       throw new NotFoundAPIError({ parameter: 'id' })
@@ -164,7 +164,7 @@ export default class Authenticators extends APIResource {
       })
     }
 
-    const verifyHeader = ctx.req.headers['x-verify']
+    const verifyHeader = ctx.get('x-verify')
     let verified = undefined
     try {
       verified = verifySync({ token: verifyHeader, secret: existingAuthenticator.secret }).valid
