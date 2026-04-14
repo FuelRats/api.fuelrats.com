@@ -88,7 +88,15 @@ export default class Rescues extends APIResource {
       },
     ]
     const result = await Rescue.findAndCountAll(searchObject)
-    result.count = result.rows.length
+    // findAndCountAll miscounts with required joins — count via subquery
+    const [{ count: totalCount }] = await db.query(
+      `SELECT COUNT(DISTINCT "Rescue"."id") AS count FROM "Rescues" AS "Rescue"
+       INNER JOIN "RescueRats" ON "Rescue"."id" = "RescueRats"."rescueId"
+       INNER JOIN "Rats" ON "RescueRats"."ratId" = "Rats"."id"
+       WHERE "Rats"."userId" = :userId AND "Rescue"."deletedAt" IS NULL`,
+      { replacements: { userId: ctx.state.user.id }, type: db.QueryTypes.SELECT },
+    )
+    result.count = totalCount
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
