@@ -404,11 +404,11 @@ passkeys_verify:
       This is the second step in the passkey authentication flow.
 
       **Flow:**
-      1. `POST /passkeys/authenticate` with email → get challenge
+      1. `POST /passkeys/authenticate` with email (optional) → get challenge
       2. Browser performs `navigator.credentials.get()` with the challenge
-      3. `POST /passkeys/verify` with the response + client ID → get bearer token
+      3. `POST /passkeys/verify` with the response + client credentials (Basic auth) → get bearer token
 
-      **Public Access:** No authentication required (for login flow)
+      **Authentication:** OAuth client authentication required (Basic auth with client_id:client_secret)
     requestBody:
       required: true
       content:
@@ -426,7 +426,7 @@ passkeys_verify:
                     enum: [passkey-verification]
                   attributes:
                     type: object
-                    required: [response, clientId]
+                    required: [response]
                     properties:
                       response:
                         type: object
@@ -456,10 +456,8 @@ passkeys_verify:
                           type:
                             type: string
                             enum: [public-key]
-                      clientId:
-                        type: string
-                        format: uuid
-                        description: OAuth client ID to bind the issued token to
+    security:
+      - basicAuth: []
     responses:
       '200':
         description: Authentication successful, bearer token issued

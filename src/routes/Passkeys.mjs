@@ -15,7 +15,7 @@ import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import config from '../config'
-import { Client, Passkey, Token, User } from '../db'
+import { Passkey, Token, User } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import ObjectDocument from '../Documents/ObjectDocument'
@@ -27,6 +27,7 @@ import {
   POST,
   DELETE,
   authenticated,
+  clientAuthenticated,
   required,
   WritePermission,
 } from './API'
@@ -281,7 +282,8 @@ export default class Passkeys extends APIResource {
    * @endpoint
    */
   @POST('/passkeys/verify')
-  @required('response', 'clientId')
+  @clientAuthenticated
+  @required('response')
   async verifyPasskey (ctx) {
     const attributes = ctx.data?.data?.attributes
     if (!attributes) {
@@ -289,7 +291,7 @@ export default class Passkeys extends APIResource {
         pointer: '/data/attributes',
       })
     }
-    const { response, clientId } = attributes
+    const { response } = attributes
     const expectedChallenge = ctx.session.passkeyChallenge
     const sessionUserId = ctx.session.passkeyUserId
 
@@ -300,14 +302,7 @@ export default class Passkeys extends APIResource {
       })
     }
 
-    // Validate the client exists
-    const client = await Client.findOne({ where: { id: clientId } })
-    if (!client) {
-      throw new UnprocessableEntityAPIError({
-        pointer: '/data/attributes/clientId',
-        detail: 'Invalid client ID',
-      })
-    }
+    const { client } = ctx.state
 
     // Look up the passkey — by credential ID + userId if known, or just credential ID for discoverable
     const passkeyQuery = { credentialId: response.id }
