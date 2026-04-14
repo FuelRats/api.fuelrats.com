@@ -11,6 +11,7 @@ import {
   UnprocessableEntityAPIError,
   UnsupportedMediaAPIError,
 } from '../classes/APIError'
+import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import config from '../config'
@@ -429,6 +430,28 @@ export default class Passkeys extends APIResource {
    */
   isSelf ({ ctx, entity }) {
     return entity.userId === ctx.state.user.id
+  }
+
+  /**
+   * Passkeys use user-level permissions since they are a user sub-resource
+   * @inheritdoc
+   */
+  hasReadPermission ({ connection, entity }) {
+    if (this.isSelf({ ctx: connection, entity })) {
+      return Permission.granted({ permissions: ['users.read.me', 'users.read'], connection })
+    }
+    return Permission.granted({ permissions: ['users.read'], connection })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  hasWritePermission ({ connection, entity }) {
+    if (this.isSelf({ ctx: connection, entity })) {
+      return Permission.granted({ permissions: ['users.write.me'], connection })
+        || Permission.granted({ permissions: ['users.write'], connection })
+    }
+    return Permission.granted({ permissions: ['users.write'], connection })
   }
 
   /**

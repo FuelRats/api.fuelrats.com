@@ -39,6 +39,7 @@ const models = {
   EpicUsers,
   Decal,
   Group,
+  Passkey,
   UserGroups,
   VerificationToken,
   Session,
