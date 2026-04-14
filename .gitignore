@@ -132,3 +132,7 @@ static/fonts/
 !.yarn/versions
 .pnp.*
 node_modules
+bun.lockb
+
+# Docker dev secrets
+.docker/secrets/
