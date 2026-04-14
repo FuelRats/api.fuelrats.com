@@ -88,6 +88,7 @@ export default class Rescues extends APIResource {
       },
     ]
     const result = await Rescue.findAndCountAll(searchObject)
+    result.count = result.rows.length
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
