@@ -485,12 +485,18 @@ export default class Rescues extends APIResource {
       isFirstLimpet = entity.firstLimpet.userId === user.id
     }
 
-    if (isAssigned || isFirstLimpet || entity.status !== 'closed') {
+    // Assigned rats and first limpets can always edit their own rescues
+    if (isAssigned || isFirstLimpet) {
       return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
     }
 
+    // Open rescues can be edited by anyone with rescues.write.me
+    if (entity.status !== 'closed') {
+      return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
+    }
 
-    if (entity.status === 'closed' && (Date.now() - entity.createdAt.getTime()) < rescueAccessTime) {
+    // Closed rescues can be edited by dispatchers within the access window (from last update)
+    if (entity.status === 'closed' && (Date.now() - entity.updatedAt.getTime()) < rescueAccessTime) {
       return Permission.granted({ permissions: ['dispatch.write'], connection: ctx })
     }
     return false
