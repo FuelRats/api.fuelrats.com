@@ -104,7 +104,7 @@ export default class Events extends API {
   @parameters('events')
   @authenticated
   unsubscribe (ctx) {
-    const { events } = ctx.query()
+    const { events } = ctx.query
 
     if (!Array.isArray(events)) {
       throw new UnprocessableEntityAPIError({

@@ -655,8 +655,8 @@ export default class APIResource extends API {
    * @returns {Promise<db.User>}
    */
   static async getAuthor (ctx) {
-    if (ctx.req && Reflect.has(ctx.req.headers, 'x-command-by')) {
-      const ratId = ctx.req.headers['x-command-by']
+    if (ctx.request.headers && Reflect.has(ctx.request.headers, 'x-command-by')) {
+      const ratId = ctx.request.headers['x-command-by']
       if (UUID.test(ratId) === false) {
         return undefined
       }
