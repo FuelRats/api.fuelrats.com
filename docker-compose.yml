@@ -26,11 +26,27 @@ services:
       timeout: 5s
       retries: 10
 
+  anope-tunnel:
+    image: alpine:latest
+    restart: unless-stopped
+    entrypoint: ["sh", "-c", "apk add --no-cache openssh-client && cp /ssh/key /tmp/key && chmod 600 /tmp/key && ssh -N -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -L 0.0.0.0:3306:localhost:3306 -i /tmp/key fuelrats@services.fuelrats.dev"]
+    volumes:
+      - ~/.ssh/id_rsa:/ssh/key:ro
+      - .docker/known_hosts:/root/.ssh/known_hosts:ro
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -tln | grep -q ':3306'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
   api:
     build: .
     restart: unless-stopped
     depends_on:
       db:
+        condition: service_healthy
+      anope-tunnel:
         condition: service_healthy
     environment:
       FRAPI_HOSTNAME: "0.0.0.0"
@@ -42,7 +58,13 @@ services:
       FRAPI_POSTGRES_USERNAME: fuelrats
       FRAPI_POSTGRES_PASSWORD_FILE: /run/secrets/frapi_postgres_password
       FRAPI_FRONTEND_URL: "http://localhost:3000"
+      FRAPI_FRONTEND_CLIENTID: "e5545c1c-0918-4bd8-97c8-d7b50e954d8e"
       FRAPI_GEOIP_DIRECTORY: /app/geoip
+      FRAPI_ANOPE_HOSTNAME: anope-tunnel
+      FRAPI_ANOPE_PORT: "3306"
+      FRAPI_ANOPE_DATABASE: anope
+      FRAPI_ANOPE_USERNAME: anope2
+      FRAPI_ANOPE_XMLRPC: "http://services.fuelrats.dev:6080/xmlrpc"
     secrets:
       - frapi_cookie
       - frapi_jwt_secret
