@@ -33,7 +33,6 @@
         "sharp": "^0.34.5",
         "ua-parser-js": "^2.0.9",
         "web-push": "^3.6.7",
-        "ws": "^8.20.0",
       },
       "devDependencies": {
         "@fuelrats/eslint-config": "^2.3.0",
@@ -1406,8 +1405,6 @@
     "wrappy": ["wrappy@1.0.2", "", {}, "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ=="],
 
     "write-file-atomic": ["write-file-atomic@5.0.1", "", { "dependencies": { "imurmurhash": "^0.1.4", "signal-exit": "^4.0.1" } }, "sha512-+QU2zd6OTD8XWIJCbffaiQeH9U73qIqafo1x6V1snCWYGJf6cVE0cDR4D8xRzcEnfI21IFrUPzPGtcPf8AC+Rw=="],
-
-    "ws": ["ws@8.20.0", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA=="],
 
     "xmlbuilder": ["xmlbuilder@https://github.com/hobbyquaker/xmlbuilder-js/tarball/29fe5030dc6852007dc8d1bfd5109d75f8da58d5", {}, "sha512-xM2HEU2Wk/PP8bGMGJ6t2Dy6FQ9nS/GS3vzAPeJ86qHYUGZG8XVv5FP40nK+QrBxqdfwvOu9WpE0Vu0sMYOytg=="],
 

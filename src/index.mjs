@@ -280,24 +280,34 @@ logger.info({
   _event: 'startup',
 }, 'Starting HTTP Server...')
 
+// Initialise WebSocket manager
+const wsManager = new WebSocket({ trafficManager: traffic })
+
 ;(async function startServer () {
   try {
     addDatabaseMetrics(db)
     await db.sync()
 
-    const server = Bun.serve({
+    Bun.serve({
       port: config.server.port,
       hostname: config.server.hostname,
-      fetch: honoApp.fetch,
+      fetch (req, server) {
+        // Try WebSocket upgrade first
+        if (req.headers.get('upgrade')?.toLowerCase() === 'websocket') {
+          if (WebSocket.handleUpgrade(req, server)) {
+            return undefined
+          }
+          return new Response('WebSocket upgrade failed', { status: 400 })
+        }
+        // Otherwise handle as normal HTTP via Hono
+        return honoApp.fetch(req, server)
+      },
+      websocket: {
+        open (ws) { wsManager.onOpen(ws) },
+        message (ws, message) { wsManager.onMessage(ws, message) },
+        close (ws) { wsManager.onClose(ws) },
+      },
     })
-
-    // Attach WebSocket server
-    const http = await import('http')
-    const wsServer = http.createServer()
-    wsServer.on('upgrade', (req, socket, head) => {
-      // Forward upgrade requests from Bun to ws
-    })
-    server.wss = new WebSocket({ server: wsServer, trafficManager: traffic })
 
     logger.info({
       GELF: true,

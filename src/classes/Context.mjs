@@ -1,29 +1,28 @@
 import { URL } from 'url'
-import ws from 'ws'
 import config from '../config'
 
 /**
- * Request object
+ * Request object for WebSocket connections
  * @class
  */
 export class Request {
   /**
    * Create a request object
    * @param {object} arg function arguments object
-   * @param {ws.Client} arg.client websocket client
+   * @param {object} arg.client websocket client data
    * @param {object} arg.query request query
    * @param {object} arg.body request body
    * @param {object} arg.message the message
    */
   constructor ({ client, query = {}, body = {}, message = {} }) {
-    const url = new URL(`${config.server.externalUrl}${client.req.url}`)
+    const url = new URL(`${config.server.externalUrl}${client.url || '/'}`)
 
-    this.header = client.req.headers
-    this.headers = client.req.headers
-    this.method = client.req.method
+    this.header = client.headers || {}
+    this.headers = this.header
+    this.method = 'WEBSOCKET'
     this.length = message.length
-    this.url = client.req.url
-    this.originalUrl = client.req.url
+    this.url = client.url || '/'
+    this.originalUrl = this.url
     this.origin = url.origin
     this.href = url.href
     this.path = url.pathname
@@ -40,31 +39,31 @@ export class Request {
     this.state = false
     this.protocol = 'https'
     this.secure = true
-    this.ip = client.req.headers['x-forwarded-for'] || client.req.connection.remoteAddress
-    this.ips = [client.req.headers['x-forwarded-for'], client.req.connection.remoteAddress]
+    this.ip = client.ip || '127.0.0.1'
+    this.ips = [this.ip]
     this.subdomains = url.hostname.split('.')
     this.is = () => {
       return false
     }
-    this.socket = client.req.socket
+    this.socket = null
     this.get = (header) => {
-      return client.req.headers[header.toLowerCase()]
+      return (this.headers[header.toLowerCase()] ?? '') || ''
     }
+    this.req = { method: 'WEBSOCKET', headers: this.headers }
   }
 }
 
 /**
- * Response object
+ * Response object for WebSocket connections
  */
 export class Response {
   /**
    * Create a response object
-   * @param {ws.Client} client websocket client
    */
-  constructor ({ client }) {
+  constructor () {
     this.header = {}
     this.headers = this.header
-    this.socket = client.req.socket
+    this.socket = null
     this.status = 200
     this.message = undefined
     this.length = 0
@@ -93,25 +92,25 @@ export class Response {
 
 /**
  * @typedef {object} Context
- * @type {object} Request context
+ * @type {object} Request context for WebSocket connections
  */
 export class Context {
   /**
    * Create a request context
    * @param {object} arg function arguments object
-   * @param {ws.Client} arg.client websocket client
+   * @param {object} arg.client websocket client data
    * @param {object} arg.query request query
    * @param {object} arg.body the request body
    * @param {object} arg.message the request message
    */
   constructor ({ client, query, body, message }) {
     const request = new Request({ client, query, body, message })
-    const response = new Response({ client })
+    const response = new Response()
     this.client = client
     this.isWebsocket = true
 
-    this.req = client.req
-    this.res = client.req
+    this.req = request.req
+    this.res = {}
     this.request = request
     this.response = response
 
@@ -120,7 +119,7 @@ export class Context {
     this.state.user = client.user
     this.state.clientId = client.clientId
     this.state.permissions = client.permissions
-    this.state.userAgent = client.req.headers['user-agent']
+    this.state.userAgent = (client.headers || {})['user-agent']
 
     this.app = {}
     this.cookies = {
@@ -131,6 +130,7 @@ export class Context {
         return undefined
       },
     }
+    this.session = {}
 
     this.header = request.header
     this.headers = request.headers
@@ -154,6 +154,7 @@ export class Context {
     this.subdomains = request.subdomains
     this.is = request.is
     this.get = request.get
+    this.set = (header, value) => { response.set(header, value) }
     this.data = request.body
 
     this.body = response.body

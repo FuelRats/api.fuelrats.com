@@ -1,6 +1,4 @@
 import UUID from 'pure-uuid'
-import { URL } from 'url'
-import { WebSocketServer } from 'ws'
 import config from '../config'
 import * as constants from '../constants'
 import { User } from '../db'
@@ -28,131 +26,165 @@ const acceptedProtocols = ['FR-JSONAPI-WS']
 
 const routes = {}
 
-
 /**
- * Class for managing WebSocket connections
+ * Class for managing WebSocket connections using Bun native WebSocket
  */
 export default class WebSocket {
   static instance = undefined
+  static clients = new Set()
+
   /**
-   * Initialise a new websocket server
+   * Initialise the WebSocket manager
    * @param {object} arg function arguments object
-   * @param {any} arg.server WebSocket server connection object
    * @param {TrafficControl} arg.trafficManager
    */
-  constructor ({ server, trafficManager }) {
+  constructor ({ trafficManager }) {
     WebSocket.instance = this
-    WebSocket.wss = new WebSocketServer({
-      server,
-      clientTracking: true,
-      handleProtocols: () => {
-        return acceptedProtocols
+    this.traffic = trafficManager
+
+    process.on('apiBroadcast', (id, ctx, result) => {
+      this.onBroadcast({ id, ctx, result })
+    })
+  }
+
+  /**
+   * Handle WebSocket upgrade request. Called from Bun.serve() fetch handler.
+   * @param {Request} req the HTTP request
+   * @param {object} server the Bun server instance
+   * @returns {boolean} true if upgraded, false if not a WebSocket request
+   */
+  static handleUpgrade (req, server) {
+    const protocol = req.headers.get('sec-websocket-protocol')
+    if (!protocol || !acceptedProtocols.includes(protocol)) {
+      return false
+    }
+
+    const url = new URL(req.url)
+    const bearer = url.searchParams.get('bearer') || req.headers.get('x-bearer')
+    const headers = {}
+    for (const [key, value] of req.headers) {
+      headers[key] = value
+    }
+
+    const success = server.upgrade(req, {
+      data: {
+        url: url.pathname + url.search,
+        bearer,
+        headers,
+        ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+          || server.requestIP(req)?.address
+          || '127.0.0.1',
+        clientId: new UUID(constants.uuidVersion),
+        subscriptions: [],
+        user: undefined,
+        scope: undefined,
+        permissions: undefined,
+      },
+      headers: {
+        'Sec-WebSocket-Protocol': 'FR-JSONAPI-WS',
       },
     })
 
-    WebSocket.wss.shouldHandle = (request) => {
-      const requestedProtocol = request.headers['sec-websocket-protocol']
-      if (!requestedProtocol) {
-        return false
+    return success
+  }
+
+  /**
+   * Bun WebSocket open handler
+   * @param {object} ws Bun WebSocket instance
+   */
+  async onOpen (ws) {
+    WebSocket.clients.add(ws)
+
+    // Authenticate via bearer token
+    if (ws.data.bearer) {
+      try {
+        const result = await Authentication.bearerAuthenticate({ bearer: ws.data.bearer })
+        if (result && result.user) {
+          ws.data.user = result.user
+          ws.data.scope = result.scope
+          ws.data.clientId = result.clientId
+        }
+      } catch {
+        // Authentication failed, continue as unauthenticated
       }
-      return acceptedProtocols.includes(requestedProtocol)
     }
-    this.traffic = trafficManager
 
-    WebSocket.wss.on('connection', async (client, req) => {
-      client.req = req
-      client.clientId = new UUID(constants.uuidVersion)
-      client.subscriptions = []
+    const context = new Context({ client: ws.data, request: {} })
+    ws.data.permissions = Permission.getConnectionPermissions({ connection: context })
 
+    // Send connection message with version info
+    try {
+      const route = WebSocket.getRoute('version', 'read')
+      const result = await route(context)
 
-      const url = new URL(`${config.server.externalUrl}${req.url}`)
-      let bearer = url.searchParams.get('bearer')
-      if (!bearer) {
-        bearer = req.headers['x-bearer']
-      }
-      if (bearer) {
-        const { user, scope, clientId } = await Authentication.bearerAuthenticate({ bearer })
-        if (user) {
-          client.user = user
-          client.scope = scope
-          client.clientId = clientId
-        }
-      }
+      context.state.traffic = this.traffic.validateRateLimit({ connection: context, increase: false })
 
-      // noinspection JSClosureCompilerSyntax
-      const context = new Context({ client, request: {} })
-      client.permissions = Permission.getConnectionPermissions({ connection: context })
-
-      await this.onConnection({ ctx: context, client })
-
-      client.on('message', (message) => {
-        try {
-          if (message.length > maximumMessageLength) {
-            client.terminate()
-          }
-
-          const data = JSON.parse(String(message))
-          return this.onMessage({ client, data, message })
-        } catch (ex) {
-          logger.debug({
-            GELF: true,
-            _event: 'request',
-            _message: message,
-          }, 'Failed to parse incoming websocket message')
-          return undefined
-        }
+      WebSocket.send({
+        client: ws,
+        message: [
+          'connection',
+          context.status,
+          result.render(),
+          {},
+        ],
       })
-
-      process.on('apiBroadcast', (id, ctx, result) => {
-        this.onBroadcast({ id, ctx, result })
-      })
-    })
+    } catch (error) {
+      logger.error({
+        GELF: true,
+        _event: 'websocket',
+      }, `WebSocket connection error: ${error.message}`)
+    }
   }
 
   /**
-   * On websocket connection event
-   * @param {object} arg function arguments object
-   * @param {Context} arg.ctx request context
-   * @param {WebSocketServer.Client} arg.client websocket client
-   * @returns {Promise<void>} resolves promise when completed
+   * Bun WebSocket message handler
+   * @param {object} ws Bun WebSocket instance
+   * @param {string|Buffer} message raw message
    */
-  async onConnection ({ ctx, client }) {
-    const route = await WebSocket.getRoute('version', 'read')
-    const result = await route(ctx)
+  async onMessage (ws, message) {
+    try {
+      const messageStr = String(message)
+      if (messageStr.length > maximumMessageLength) {
+        ws.close()
+        return
+      }
 
-    ctx.state.traffic = this.traffic.validateRateLimit({ connection: ctx, increase: false })
-
-    WebSocket.send({
-      client,
-      message: [
-        'connection',
-        ctx.status,
-        result.render(),
-        {},
-      ],
-    })
+      const data = JSON.parse(messageStr)
+      await this.handleMessage({ ws, data, message: messageStr })
+    } catch (ex) {
+      logger.debug({
+        GELF: true,
+        _event: 'request',
+      }, 'Failed to parse incoming websocket message')
+    }
   }
 
   /**
-   * On WebSocket message event
-   * @param {object} arg function arguments object
-   * @param {WebSocketServer.Client} arg.client
-   * @param {object} arg.data
-   * @param {object} arg.message
-   * @returns {Promise<void>}
+   * Bun WebSocket close handler
+   * @param {object} ws Bun WebSocket instance
    */
-  async onMessage ({ client, data, message }) {
+  onClose (ws) {
+    WebSocket.clients.delete(ws)
+  }
+
+  /**
+   * Handle a parsed WebSocket message
+   * @param {object} arg function arguments object
+   * @param {object} arg.ws Bun WebSocket instance
+   * @param {Array} arg.data parsed message data
+   * @param {string} arg.message raw message string
+   */
+  async handleMessage ({ ws, data, message }) {
     let [state, endpoint, query, body] = data
     if (!state || !endpoint || typeof state !== 'string') {
-      client.terminate()
+      ws.close()
       return
     }
     query = query || {}
     body = body || {}
 
-    // noinspection JSClosureCompilerSyntax
-    const ctx = new Context({ client, query, body, message })
-    ctx.state.user = client.user
+    const ctx = new Context({ client: ws.data, query, body, message })
+    ctx.state.user = ws.data.user
 
     logger.info({
       GELF: true,
@@ -220,7 +252,7 @@ export default class WebSocket {
       ctx.body = errorDocument.render()
     } finally {
       WebSocket.send({
-        client,
+        client: ws,
         message: [
           state,
           ctx.status,
@@ -250,26 +282,26 @@ export default class WebSocket {
 
   /**
    * Event listener for fuelrats api change events that should be broadcasted to websocket
-   * @param {User} user the user that caused the vent
+   * @param {User} user the user that caused the event
    * @param {string} id the id of the resource this event relates to
    * @param {object} data event data
    */
   @listen('fuelrats.*')
   onEvent (user, id, data) {
-    const clients = [...WebSocket.wss.clients].filter((client) => {
-      return typeof client.user !== 'undefined'
+    const clients = [...WebSocket.clients].filter((ws) => {
+      return typeof ws.data.user !== 'undefined'
     })
 
-    for (const client of clients) {
+    for (const ws of clients) {
       let document = data ?? {}
       if (document instanceof Document) {
-        const context = new Context({ client, request: {} })
+        const context = new Context({ client: ws.data, request: {} })
         document.query = new Query({ connection: context })
         document = document.render()
       }
 
       WebSocket.send({
-        client,
+        client: ws,
         message: [
           this.event,
           user.id,
@@ -288,8 +320,8 @@ export default class WebSocket {
    * @param {object} arg.data event data
    */
   onBroadcast ({ event, sender, data }) {
-    const clients = [...WebSocket.wss.clients].filter((client) => {
-      return client.subscriptions.includes(event)
+    const clients = [...WebSocket.clients].filter((ws) => {
+      return ws.data.subscriptions.includes(event)
     })
     WebSocket.broadcast({
       clients,
@@ -304,7 +336,7 @@ export default class WebSocket {
   /**
    * Send a message to a WebSocket client
    * @param {object} arg function arguments object
-   * @param {WebSocketServer.Client} arg.client websocket client
+   * @param {object} arg.client Bun WebSocket instance
    * @param {object} arg.message message data
    */
   static send ({ client, message }) {
@@ -322,7 +354,7 @@ export default class WebSocket {
   /**
    * Send a message to multiple WebSocket clients
    * @param {object} arg function arguments object
-   * @param {[WebSocketServer.Client]} arg.clients websocket client list
+   * @param {object[]} arg.clients Bun WebSocket instances
    * @param {object} arg.message message data
    */
   static broadcast ({ clients, message }) {
@@ -340,7 +372,6 @@ export default class WebSocket {
    */
   static addRoute ({ route, method }) {
     const routeIdentifier = route.join(':')
-
     routes[routeIdentifier] = method
   }
 
@@ -360,9 +391,9 @@ export default class WebSocket {
 
 
 /**
- * ESNext Decorator for routing this method for websocket requests
+ * TC39 Decorator for routing this method for websocket requests
  * @param {string} route The endpoint name to route websocket requests for
- * @returns {Function} An ESNext decorator function
+ * @returns {Function} A decorator function
  */
 export function websocket (...route) {
   return (method, context) => {
