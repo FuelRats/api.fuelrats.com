@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { verifySync as otpVerify } from 'otplib'
 import { hashPassword, verifyPassword, getHashRounds } from '../helpers/password'
+import { verifyRecoveryCode } from '../helpers/recoveryCodes'
 import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
@@ -104,10 +105,23 @@ class Authentication {
       }
 
       let isValidCode = false
+      let usedRecoveryCode = false
       try {
         isValidCode = otpVerify({ token: code, secret: authenticator.secret }).valid
       } catch {
         isValidCode = false
+      }
+
+      if (!isValidCode) {
+        const matchIndex = await verifyRecoveryCode(code, authenticator.recoveryCodes)
+        if (matchIndex !== -1) {
+          isValidCode = true
+          usedRecoveryCode = true
+          const remaining = authenticator.recoveryCodes.filter((_, i) => {
+            return i !== matchIndex
+          })
+          await authenticator.update({ recoveryCodes: remaining })
+        }
       }
 
       if (!isValidCode) {
@@ -119,6 +133,13 @@ class Authentication {
         throw new AuthenticatorRequiredAPIError({
           pointer: '/data/attributes/code',
         })
+      }
+
+      if (usedRecoveryCode) {
+        logMetric('authentication_recovery_code_used', {
+          _user_id: user.id,
+          _remaining_codes: authenticator.recoveryCodes.length,
+        }, `Recovery code used for user ${user.id}`)
       }
     }
 

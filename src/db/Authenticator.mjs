@@ -15,6 +15,9 @@ export default class Authenticator extends Model {
   @column(type.STRING)
   static secret = undefined
 
+  @column(type.ARRAY(type.STRING), { defaultValue: [] })
+  static recoveryCodes = []
+
   @validate({ isUUID: 4 })
   @column(type.UUID)
   static userId = undefined
