@@ -69,7 +69,7 @@ export default class WebPushSubscriptions extends API {
    */
   @POST('/alerts')
   @authenticated
-  @permissions('rescues.write')
+  @permissions('twitter.write')
   async alert (ctx) {
     const subscriptions = await WebPushSubscription.findAll({})
     webPushPool.exec({ subscribers: subscriptions, payload: ctx.data, vapidConfig: config.webpush })

@@ -413,7 +413,7 @@ export default class Rescues extends APIResource {
   @POST('/rescues/:id/alert')
   @authenticated
   @parameters('id')
-  @permissions('rescues.write')
+  @permissions('twitter.write')
   async postRescueAlert (ctx) {
     const rescue = await Rescue.findOne({ where: { id: ctx.params.id } })
     if (!rescue) {
@@ -434,7 +434,7 @@ export default class Rescues extends APIResource {
       query.odyssey = true
     }
 
-    const subscriptions = WebPushSubscription.findAll({
+    const subscriptions = await WebPushSubscription.findAll({
       where: query,
     })
     webPushPool.exec({ subscribers: subscriptions, payload: rescue, vapidConfig: config.webpush })
