@@ -28,6 +28,7 @@ import {
 import APIResource from './APIResource'
 import { webPushPool } from './WebPushSubscriptions'
 import config from '../config'
+import { buildRescuePayload } from '../helpers/pushPayload'
 import { logMetric } from '../logging'
 
 const rescueAccessHours = 3
@@ -439,7 +440,7 @@ export default class Rescues extends APIResource {
     })
     webPushPool.exec({
       subscribers: subscriptions,
-      payload: rescue,
+      payload: buildRescuePayload(rescue),
       vapidConfig: config.webpush,
       options: {
         TTL: 300, // 5 minutes — rescue alerts are time-sensitive

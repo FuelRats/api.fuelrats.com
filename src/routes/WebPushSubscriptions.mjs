@@ -1,6 +1,7 @@
 import { UnprocessableEntityAPIError } from '../classes/APIError'
 import { WebPushSubscription } from '../db'
 import config from '../config'
+import { buildBroadcastPayload } from '../helpers/pushPayload'
 import { createWorkerPool } from '../helpers/workerPool'
 import API, {
   POST,
@@ -71,11 +72,22 @@ export default class WebPushSubscriptions extends API {
   @authenticated
   @permissions('twitter.write')
   async alert (ctx) {
-    const { payload, TTL, urgency, topic } = ctx.data ?? {}
+    const {
+      title, body, icon, tag, data, type,
+      TTL, urgency, topic,
+    } = ctx.data ?? {}
+
+    if (!title || !body) {
+      throw new UnprocessableEntityAPIError({
+        pointer: title ? '/body' : '/title',
+        detail: 'title and body are required',
+      })
+    }
+
     const subscriptions = await WebPushSubscription.findAll({})
     webPushPool.exec({
       subscribers: subscriptions,
-      payload: payload ?? ctx.data,
+      payload: buildBroadcastPayload({ title, body, icon, tag, data, type }),
       vapidConfig: config.webpush,
       options: {
         TTL: TTL ?? 86400, // 24h default for broadcasts
