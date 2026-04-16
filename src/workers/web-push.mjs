@@ -1,7 +1,7 @@
 import webpush from 'web-push'
 
 self.onmessage = async (event) => {
-  const { id, subscribers, payload, vapidConfig } = event.data
+  const { id, subscribers, payload, vapidConfig, options = {} } = event.data
   try {
     if (!vapidConfig?.privateKey || !vapidConfig?.publicKey) {
       postMessage({ id, result: null })
@@ -16,6 +16,12 @@ self.onmessage = async (event) => {
 
     const payloadString = JSON.stringify(payload)
 
+    const sendOptions = {
+      TTL: options.TTL ?? 60,
+      urgency: options.urgency ?? 'normal',
+      topic: options.topic,
+    }
+
     for (const subscription of subscribers) {
       webpush.sendNotification({
         endpoint: subscription.endpoint,
@@ -23,7 +29,7 @@ self.onmessage = async (event) => {
           auth: subscription.auth,
           p256dh: subscription.p256dh,
         },
-      }, payloadString)
+      }, payloadString, sendOptions)
     }
 
     postMessage({ id, result: true })

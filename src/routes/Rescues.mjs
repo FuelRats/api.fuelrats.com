@@ -437,7 +437,16 @@ export default class Rescues extends APIResource {
     const subscriptions = await WebPushSubscription.findAll({
       where: query,
     })
-    webPushPool.exec({ subscribers: subscriptions, payload: rescue, vapidConfig: config.webpush })
+    webPushPool.exec({
+      subscribers: subscriptions,
+      payload: rescue,
+      vapidConfig: config.webpush,
+      options: {
+        TTL: 300, // 5 minutes — rescue alerts are time-sensitive
+        urgency: 'high',
+        topic: `rescue-${rescue.id.slice(0, 20)}`, // dedupe notifications for the same rescue
+      },
+    })
     return true
   }
 

@@ -71,8 +71,18 @@ export default class WebPushSubscriptions extends API {
   @authenticated
   @permissions('twitter.write')
   async alert (ctx) {
+    const { payload, TTL, urgency, topic } = ctx.data ?? {}
     const subscriptions = await WebPushSubscription.findAll({})
-    webPushPool.exec({ subscribers: subscriptions, payload: ctx.data, vapidConfig: config.webpush })
+    webPushPool.exec({
+      subscribers: subscriptions,
+      payload: payload ?? ctx.data,
+      vapidConfig: config.webpush,
+      options: {
+        TTL: TTL ?? 86400, // 24h default for broadcasts
+        urgency: urgency ?? 'normal',
+        topic,
+      },
+    })
     return true
   }
 }
