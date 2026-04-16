@@ -1,5 +1,6 @@
-import { UnprocessableEntityAPIError } from '../classes/APIError'
-import { WebPushSubscription } from '../db'
+import { NotFoundAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
+import Permission from '../classes/Permission'
+import { User, WebPushSubscription } from '../db'
 import config from '../config'
 import { buildBroadcastPayload } from '../helpers/pushPayload'
 import { createWorkerPool } from '../helpers/workerPool'
@@ -93,6 +94,53 @@ export default class WebPushSubscriptions extends API {
       vapidConfig: config.webpush,
       options: {
         TTL: TTL ?? 86400, // 24h default for broadcasts
+        urgency: urgency ?? 'normal',
+        topic,
+      },
+    })
+    return true
+  }
+
+  /**
+   * Send an alert to a specific user's devices. Users can send to themselves;
+   * otherwise requires `twitter.write` permission.
+   * @endpoint
+   */
+  @POST('/users/:id/alerts')
+  @authenticated
+  async userAlert (ctx) {
+    const user = await User.findOne({ where: { id: ctx.params.id } })
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    const isSelf = ctx.state.user.id === user.id
+    if (!isSelf && !Permission.granted({ connection: ctx, permissions: ['twitter.write'] })) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    const {
+      title, body, icon, tag, data, type,
+      TTL, urgency, topic,
+    } = ctx.data ?? {}
+
+    if (!title || !body) {
+      throw new UnprocessableEntityAPIError({
+        pointer: title ? '/body' : '/title',
+        detail: 'title and body are required',
+      })
+    }
+
+    const subscriptions = await WebPushSubscription.findAll({
+      where: { userId: user.id },
+    })
+
+    webPushPool.exec({
+      subscribers: subscriptions,
+      payload: buildBroadcastPayload({ title, body, icon, tag, data, type }),
+      vapidConfig: config.webpush,
+      options: {
+        TTL: TTL ?? 3600, // 1h default for user alerts
         urgency: urgency ?? 'normal',
         topic,
       },
