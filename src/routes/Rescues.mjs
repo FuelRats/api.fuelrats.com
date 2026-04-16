@@ -476,7 +476,7 @@ export default class Rescues extends APIResource {
       return false
     }
 
-    const isAssigned = entity.rats.some((rat) => {
+    const isAssigned = (entity.rats ?? []).some((rat) => {
       return rat.userId === user.id
     })
 
