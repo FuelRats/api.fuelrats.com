@@ -50,7 +50,7 @@ export default class WebPushSubscriptions extends API {
       throw new UnprocessableEntityAPIError({ pointer: 'keys/p256dh' })
     }
 
-    await WebPushSubscription.create({
+    await WebPushSubscription.upsert({
       endpoint,
       expirationTime,
       auth,
@@ -60,6 +60,8 @@ export default class WebPushSubscriptions extends API {
       ps,
       odyssey,
       userId: ctx.state.user.id,
+    }, {
+      conflictFields: ['endpoint'],
     })
     return true
   }
