@@ -451,6 +451,7 @@ export default class Rescues extends APIResource {
       clientLanguage: WritePermission.group,
       commandIdentifier: WritePermission.sudo,
       codeRed: WritePermission.group,
+      carrier: WritePermission.group,
       data: WritePermission.group,
       notes: WritePermission.group,
       platform: WritePermission.group,
