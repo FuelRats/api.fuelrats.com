@@ -6,15 +6,10 @@ web_push_subscribe:
     summary: Subscribe to web push notifications
     description: |
       Subscribe to receive web push notifications for rescue alerts and system events.
-      
-      This endpoint:
-      - Registers a web push subscription with the browser's push service
-      - Configures platform and expansion filters for relevant notifications
-      - Stores encryption keys for secure message delivery
-      - Associates the subscription with the authenticated user
-      - Enables receiving rescue alerts based on platform preferences
-      
-      **Web Push Standard:** This follows the W3C Web Push Protocol specification.
+
+      Behaviour is **upsert by endpoint** — re-subscribing from the same browser
+      (e.g. after the service worker rotates keys) updates the existing row
+      rather than creating duplicates.
     security:
       - bearerAuth: []
     requestBody:
@@ -29,165 +24,271 @@ web_push_subscribe:
                 type: string
                 format: uri
                 description: Push service endpoint URL from the browser
-                example: "https://fcm.googleapis.com/fcm/send/abc123"
               expirationTime:
                 type: integer
                 nullable: true
-                description: Optional expiration time for the subscription (Unix timestamp)
-                example: 1640995200000
+                description: Optional expiration time (Unix timestamp, ms)
               keys:
                 type: object
                 required: [auth, p256dh]
-                description: Encryption keys for secure push message delivery
                 properties:
                   auth:
                     type: string
-                    description: Authentication secret (base64url encoded)
-                    example: "Aw4J4yyK1bOzO8g7vN_g_Q"
                   p256dh:
                     type: string
-                    description: P-256 ECDH public key (base64url encoded)
-                    example: "BKsw_uy5sG6Q9_bQ3cZ4v8Nf6Q7wX2sP9zM4kL8nO5tR3"
               pc:
                 type: boolean
                 default: true
-                description: Receive notifications for PC platform rescues
+                description: Receive PC platform alerts
               xb:
                 type: boolean
                 default: true
-                description: Receive notifications for Xbox platform rescues
+                description: Receive Xbox platform alerts
               ps:
                 type: boolean
                 default: true
-                description: Receive notifications for PlayStation platform rescues
+                description: Receive PlayStation platform alerts
               odyssey:
                 type: boolean
                 default: true
-                description: Receive notifications for Odyssey expansion rescues
-          example:
-            endpoint: "https://fcm.googleapis.com/fcm/send/abc123def456"
-            expirationTime: null
-            keys:
-              auth: "Aw4J4yyK1bOzO8g7vN_g_Q"
-              p256dh: "BKsw_uy5sG6Q9_bQ3cZ4v8Nf6Q7wX2sP9zM4kL8nO5tR3"
-            pc: true
-            xb: false
-            ps: false
-            odyssey: true
+                description: Receive Odyssey expansion alerts
     responses:
-      '200':
-        description: Web push subscription created successfully
-        content:
-          application/json:
-            schema:
-              type: boolean
-              enum: [true]
-            example: true
+      '204':
+        description: Subscription created or updated
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '422':
-        description: Invalid subscription data
-        content:
-          application/vnd.api+json:
-            schema:
-              $ref: '../components/schemas.yaml#/Error'
-            examples:
-              missing_endpoint:
-                value:
-                  errors:
-                    - status: '422'
-                      title: 'Validation Error'
-                      detail: 'Push service endpoint is required'
-                      source:
-                        pointer: 'endpoint'
-              missing_auth:
-                value:
-                  errors:
-                    - status: '422'
-                      title: 'Validation Error'
-                      detail: 'Authentication key is required'
-                      source:
-                        pointer: 'keys/auth'
-              missing_p256dh:
-                value:
-                  errors:
-                    - status: '422'
-                      title: 'Validation Error'
-                      detail: 'P256DH key is required'
-                      source:
-                        pointer: 'keys/p256dh'
-
-alerts_broadcast:
-  post:
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+  delete:
     tags: [web-push]
-    summary: Send web push alert broadcast
+    summary: Unsubscribe the current device by endpoint
     description: |
-      Send a web push notification alert to all subscribed users.
-      
-      This endpoint:
-      - Broadcasts notifications to all registered web push subscriptions
-      - Used for system-wide alerts and important announcements
-      - Requires rescue write permissions (typically dispatch/admin)
-      - Processes notifications asynchronously using worker pools
-      
-      **Required Permission:** `rescues.write`
-      
-      **Note:** This is typically used internally for rescue alerts, but can be used for custom broadcasts.
+      Delete the subscription for the given endpoint belonging to the
+      authenticated user. Typically called by the service worker when it
+      learns its subscription is no longer valid.
     security:
-      - bearerAuth: [rescues.write]
+      - bearerAuth: []
     requestBody:
       required: true
       content:
         application/json:
           schema:
             type: object
-            description: Alert data to broadcast to all subscribed users
+            required: [endpoint]
+            properties:
+              endpoint:
+                type: string
+                format: uri
+    responses:
+      '204':
+        description: Subscription removed (or did not exist)
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_web_push_subscriptions:
+  get:
+    tags: [web-push]
+    summary: List a user's web push subscriptions
+    description: |
+      Returns the authenticated user's subscriptions. Cryptographic keys
+      (auth, p256dh) are not exposed in the response.
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: List of subscriptions
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_web_push_subscription:
+  patch:
+    tags: [web-push]
+    summary: Update a subscription's platform/expansion filters
+    description: |
+      Toggle which kinds of rescue alerts this subscription receives.
+      Only `pc`, `xb`, `ps`, and `odyssey` can be changed.
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: subscriptionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              pc: { type: boolean }
+              xb: { type: boolean }
+              ps: { type: boolean }
+              odyssey: { type: boolean }
+    responses:
+      '200':
+        description: Subscription updated
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+  delete:
+    tags: [web-push]
+    summary: Delete a subscription by id
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: subscriptionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Subscription removed
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+alerts_broadcast:
+  post:
+    tags: [web-push]
+    summary: Broadcast a push notification to all subscribers
+    description: |
+      Sends a structured push notification to every subscribed device.
+
+      **Required Permission:** `twitter.write` (held by dispatch/admin roles)
+    security:
+      - bearerAuth: [twitter.write]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title, body]
             properties:
               title:
                 type: string
                 description: Notification title
-                example: "Emergency Rescue Alert"
               body:
                 type: string
                 description: Notification body text
-                example: "Code Red rescue in progress - all available commanders respond"
               icon:
                 type: string
                 format: uri
                 description: Optional notification icon URL
-                example: "/images/rescue-alert-icon.png"
               tag:
                 type: string
-                description: Optional notification tag for grouping
-                example: "rescue-alert"
+                description: Optional tag — replaces existing notifications with the same tag
+              type:
+                type: string
+                description: Optional discriminator for the service worker (default "broadcast")
               data:
                 type: object
-                description: Custom data payload for the notification
                 additionalProperties: true
-                example:
-                  rescueId: "880e8400-e29b-41d4-a716-446655440001"
-                  platform: "pc"
-                  system: "Sol"
-          example:
-            title: "Emergency Rescue Alert"
-            body: "Code Red rescue in Sol system - PC commanders needed"
-            icon: "/images/emergency-icon.png"
-            tag: "rescue-alert"
-            data:
-              rescueId: "880e8400-e29b-41d4-a716-446655440001"
-              platform: "pc"
-              system: "Sol"
-              codeRed: true
+                description: Optional extra data passed to the service worker
+              TTL:
+                type: integer
+                default: 86400
+                description: Push service TTL in seconds (default 24h)
+              urgency:
+                type: string
+                enum: [very-low, low, normal, high]
+                default: normal
+              topic:
+                type: string
+                description: Optional collapse key on the push service
     responses:
-      '200':
-        description: Alert broadcast initiated successfully
-        content:
-          application/json:
-            schema:
-              type: boolean
-              enum: [true]
-            example: true
+      '204':
+        description: Broadcast queued for delivery
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '403':
         $ref: '../components/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_alerts:
+  post:
+    tags: [web-push]
+    summary: Send a push notification to one user's devices
+    description: |
+      Users may send to themselves without extra permission. Sending to a
+      different user requires `twitter.write`.
+
+      Default TTL is 1h (shorter than the broadcast endpoint since per-user
+      notifications are typically more time-sensitive).
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title, body]
+            properties:
+              title: { type: string }
+              body: { type: string }
+              icon: { type: string, format: uri }
+              tag: { type: string }
+              type: { type: string }
+              data:
+                type: object
+                additionalProperties: true
+              TTL:
+                type: integer
+                default: 3600
+              urgency:
+                type: string
+                enum: [very-low, low, normal, high]
+                default: normal
+              topic: { type: string }
+    responses:
+      '204':
+        description: Alert queued for delivery
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

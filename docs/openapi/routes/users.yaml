@@ -1502,7 +1502,25 @@ users_authenticator:
                         description: User-friendly description for this authenticator
     responses:
       '201':
-        description: Authenticator linked successfully
+        description: Authenticator linked successfully. Response includes one-time recovery codes that the user should save.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recoveryCodes]
+              properties:
+                recoveryCodes:
+                  type: array
+                  items:
+                    type: string
+                  description: |
+                    10 single-use recovery codes (format `xxxx-xxxx`). Shown
+                    only once — the user must save them. Each code may be
+                    used in place of a TOTP token during login or for
+                    removing the authenticator.
+                  example:
+                    - "a1b2-c3d4"
+                    - "e5f6-7890"
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -1534,10 +1552,9 @@ users_authenticator:
       - name: X-Verify
         in: header
         required: true
-        description: Current 6-digit TOTP token for verification
+        description: Current 6-digit TOTP token OR a recovery code (`xxxx-xxxx`)
         schema:
           type: string
-          pattern: '^[0-9]{6}$'
     responses:
       '204':
         description: Authenticator removed successfully
@@ -1545,6 +1562,51 @@ users_authenticator:
         $ref: '../components/responses.yaml#/Unauthorized'
       '404':
         $ref: '../components/responses.yaml#/NotFound'
+
+users_authenticator_recovery_codes:
+  post:
+    tags: [users]
+    summary: Regenerate TOTP recovery codes
+    description: |
+      Regenerate the set of single-use recovery codes for the user's
+      authenticator. Invalidates all existing codes and returns a new set.
+
+      Requires verification via the `X-Verify` header, which accepts either
+      a current 6-digit TOTP token or one of the existing recovery codes
+      (the code used will be consumed).
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Verify
+        in: header
+        required: true
+        description: Current TOTP token or recovery code
+        schema:
+          type: string
+    responses:
+      '200':
+        description: New recovery codes issued (shown once)
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recoveryCodes]
+              properties:
+                recoveryCodes:
+                  type: array
+                  items:
+                    type: string
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
 users_displayrat_relationship:
   get:
     tags: [users]

@@ -287,6 +287,8 @@ tags:
     description: OAuth2 authentication
   - name: passkeys
     description: WebAuthn/Passkey authentication
+  - name: sessions
+    description: Active login session management
   - name: decals
     description: Decal award management
   - name: events
@@ -347,6 +349,12 @@ paths:
     $ref: './routes/statistics.yaml#/users_statistics'
   /users/{id}/authenticator:
     $ref: './routes/users.yaml#/users_authenticator'
+  /users/{id}/authenticator/recovery-codes:
+    $ref: './routes/users.yaml#/users_authenticator_recovery_codes'
+  /users/{id}/sessions:
+    $ref: './routes/sessions.yaml#/users_sessions'
+  /users/{id}/sessions/{sessionId}:
+    $ref: './routes/sessions.yaml#/users_session'
   /users/{id}/passkeys:
     get:
       $ref: './routes/passkeys.yaml#/users_passkeys'
@@ -481,8 +489,14 @@ paths:
   # Web Push Notifications
   /web-push:
     $ref: './routes/web-push.yaml#/web_push_subscribe'
+  /users/{id}/web-push-subscriptions:
+    $ref: './routes/web-push.yaml#/users_web_push_subscriptions'
+  /users/{id}/web-push-subscriptions/{subscriptionId}:
+    $ref: './routes/web-push.yaml#/users_web_push_subscription'
   /alerts:
     $ref: './routes/web-push.yaml#/alerts_broadcast'
+  /users/{id}/alerts:
+    $ref: './routes/web-push.yaml#/users_alerts'
   
   # WebSocket Real-time API
   /:

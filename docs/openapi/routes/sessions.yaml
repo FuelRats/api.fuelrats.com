@@ -1,0 +1,103 @@
+# User session management endpoints
+
+users_sessions:
+  get:
+    tags: [sessions]
+    summary: List active sessions
+    description: |
+      Returns the authenticated user's active login sessions. Each session
+      represents a single login event with associated device metadata (IP,
+      user agent, last access time).
+
+      The session tied to the bearer token used for this request has
+      `current: true`.
+
+      **Required Permission:** `users.read.me` (self) or `users.read` (other users)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: List of sessions
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [sessions]
+                      id:
+                        type: string
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          ip:
+                            type: string
+                            description: IP address the session was created from
+                          userAgent:
+                            type: string
+                            description: User agent at session creation time
+                          lastAccess:
+                            type: string
+                            format: date-time
+                            description: Last time a token from this session was used
+                          verified:
+                            type: boolean
+                          current:
+                            type: boolean
+                            description: True if this session owns the bearer token making this request
+                          createdAt:
+                            type: string
+                            format: date-time
+                          updatedAt:
+                            type: string
+                            format: date-time
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_session:
+  delete:
+    tags: [sessions]
+    summary: Revoke a session
+    description: |
+      Destroys the session and all bearer tokens tied to it. Useful for
+      signing out a specific device remotely.
+
+      **Required Permission:** `users.write.me` (self) or `users.write` (other users)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Session revoked
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
