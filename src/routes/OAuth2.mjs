@@ -27,6 +27,7 @@ import { oAuthTokenGenerator, transactionGenerator } from '../classes/TokenGener
 import config from '../config'
 import { Client, Code, User } from '../db'
 import Token from '../db/Token'
+import issueSession from '../helpers/issueSession'
 import { isValidRedirectUri } from '../helpers/Validators'
 import { logMetric } from '../logging'
 
@@ -272,11 +273,13 @@ class OAuth extends API {
           tokenValue = await oAuthTokenGenerator()
         }
 
+        const sessionId = await issueSession({ ctx, userId: ctx.state.user.id })
         const token = await Token.create({
           value: tokenValue,
           scope: scopes,
           clientId,
           userId: ctx.state.user.id,
+          sessionId,
         })
 
         const response = {
@@ -418,11 +421,13 @@ class OAuth extends API {
         tokenValue = await oAuthTokenGenerator()
       }
 
+      const sessionId = await issueSession({ ctx, userId: transaction.userId })
       const token = await Token.create({
         value: tokenValue,
         scope: transaction.scopes,
         clientId: transaction.clientId,
         userId: transaction.userId,
+        sessionId,
       })
 
       const response = {
@@ -538,11 +543,13 @@ class OAuth extends API {
       tokenValue = await oAuthTokenGenerator()
     }
 
+    const sessionId = await issueSession({ ctx, userId: authCode.userId })
     const token = await Token.create({
       value: tokenValue,
       scope: authCode.scope,
       userId: authCode.userId,
       clientId: authCode.clientId,
+      sessionId,
     })
 
     const response = {
@@ -671,11 +678,13 @@ class OAuth extends API {
     //       lastAccess: Date.now(),
     //     })
 
+    const sessionId = await issueSession({ ctx, userId: user.id })
     const token = await Token.create({
       value: await oAuthTokenGenerator(),
       clientId: client.id,
       userId: user.id,
       scope: ['*'],
+      sessionId,
     })
 
     // Log OAuth ROPC token metrics

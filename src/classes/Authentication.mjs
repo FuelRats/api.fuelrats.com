@@ -6,7 +6,7 @@ import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
 import {
-  User, Token, Client, Reset, Authenticator, Passkey, db,
+  User, Token, Client, Reset, Authenticator, Passkey, Session, db,
 } from '../db'
 import { logMetric } from '../logging'
 
@@ -342,6 +342,21 @@ class Authentication {
     })
 
     if (user) {
+      // Throttle session lastAccess updates to once per minute
+      const sessionAccessIntervalMs = 60 * 1000
+      if (token.sessionId) {
+        try {
+          const session = await Session.findOne({ where: { id: token.sessionId } })
+          if (session) {
+            const shouldUpdate = !session.lastAccess
+              || (Date.now() - new Date(session.lastAccess).getTime()) > sessionAccessIntervalMs
+            if (shouldUpdate) {
+              session.update({ lastAccess: new Date() }).catch(() => {})
+            }
+          }
+        } catch { /* non-critical */ }
+      }
+
       logMetric('authentication_success', {
         _auth_method: 'bearer_token',
         _user_id: user.id,
@@ -354,6 +369,7 @@ class Authentication {
       user,
       scope: token.scope,
       clientId: token.clientId,
+      tokenValue: token.value,
     }
   }
 
@@ -450,6 +466,7 @@ class Authentication {
         connection.state.user = bearerCheck.user
         connection.state.scope = bearerCheck.scope
         connection.state.clientId = bearerCheck.clientId
+        connection.state.currentTokenValue = bearerCheck.tokenValue
         return true
       }
     }

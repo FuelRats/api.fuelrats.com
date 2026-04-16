@@ -29,6 +29,10 @@ export default class Token extends Model {
   @column(type.UUID)
   static clientId = undefined
 
+  @validate({ isUUID: 4 })
+  @column(type.UUID, { allowNull: true })
+  static sessionId = undefined
+
   /**
    * @inheritdoc
    */
@@ -54,6 +58,7 @@ export default class Token extends Model {
   static associate (models) {
     super.associate(models)
     models.Token.belongsTo(models.User, { as: 'user' })
+    models.Token.belongsTo(models.Session, { as: 'session' })
   }
 }
 
