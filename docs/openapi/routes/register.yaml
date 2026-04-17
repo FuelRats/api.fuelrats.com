@@ -26,6 +26,7 @@ register:
       - Either password OR passkeyResponse must be provided
       - The commander name cannot have an active rescue case
       - Email and commander name must be unique
+      - Commander name and nickname are validated against a blocked-names list
     parameters:
       - name: User-Agent
         in: header

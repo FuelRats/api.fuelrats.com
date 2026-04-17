@@ -1,4 +1,5 @@
 # User session management endpoints
+# Sessions are represented by OAuth Tokens with associated device metadata.
 
 users_sessions:
   get:
@@ -6,11 +7,10 @@ users_sessions:
     summary: List active sessions
     description: |
       Returns the authenticated user's active login sessions. Each session
-      represents a single login event with associated device metadata (IP,
-      user agent, last access time).
+      is an OAuth token with associated device metadata (IP, user agent,
+      auth method, last access time).
 
-      The session tied to the bearer token used for this request has
-      `current: true`.
+      The session used for this request has `meta.current: true`.
 
       **Required Permission:** `users.read.me` (self) or `users.read` (other users)
     security:
@@ -22,6 +22,8 @@ users_sessions:
         schema:
           type: string
           format: uuid
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
     responses:
       '200':
         description: List of sessions
@@ -44,27 +46,41 @@ users_sessions:
                       attributes:
                         type: object
                         properties:
-                          ip:
+                          scope:
+                            type: array
+                            items:
+                              type: string
+                            description: OAuth scopes granted to this session
+                          ipAddress:
                             type: string
-                            description: IP address the session was created from
+                            nullable: true
+                            description: IP address at login time
                           userAgent:
                             type: string
-                            description: User agent at session creation time
+                            nullable: true
+                            description: User agent at login time
+                          authMethod:
+                            type: string
+                            nullable: true
+                            enum: [password, passkey, authorization_code, implicit]
+                            description: How this session was created
                           lastAccess:
                             type: string
                             format: date-time
-                            description: Last time a token from this session was used
-                          verified:
-                            type: boolean
-                          current:
-                            type: boolean
-                            description: True if this session owns the bearer token making this request
+                            nullable: true
+                            description: Last time this session was used (updated every ~60s)
                           createdAt:
                             type: string
                             format: date-time
                           updatedAt:
                             type: string
                             format: date-time
+                      meta:
+                        type: object
+                        properties:
+                          current:
+                            type: boolean
+                            description: True if this is the session making the request
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '404':
@@ -75,8 +91,7 @@ users_session:
     tags: [sessions]
     summary: Revoke a session
     description: |
-      Destroys the session and all bearer tokens tied to it. Useful for
-      signing out a specific device remotely.
+      Destroys the session (token), logging the user out of that device.
 
       **Required Permission:** `users.write.me` (self) or `users.write` (other users)
     security:

@@ -72,8 +72,9 @@ nicknames:
     tags: [nicknames]
     summary: Register nickname
     description: |
-      Register a new IRC nickname
-      
+      Register a new IRC nickname. Nicknames are validated against a
+      blocked-names list and rejected with 422 if prohibited.
+
       **Authentication Required:** Bearer token authentication (self-access only)
     security:
       - bearerAuth: []

@@ -89,8 +89,9 @@ rats:
     tags: [rats]
     summary: Create rat
     description: |
-      Create a new commander (rat)
-      
+      Create a new commander (rat). Names are validated against a
+      blocked-names list and rejected with 422 if prohibited.
+
       **Required Permission:** `rats.write` OR self-access via `rats.write.me` (if creating rat for own account)
     security:
       - bearerAuth: []
