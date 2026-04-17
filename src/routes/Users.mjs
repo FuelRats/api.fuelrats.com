@@ -1,4 +1,5 @@
 import { promises as fsp } from 'fs'
+import { getCached, setCached, invalidateCache } from '../helpers/avatarCache'
 import { createWorkerPool } from '../helpers/workerPool'
 import {
   WritePermission,
@@ -220,6 +221,28 @@ export default class Users extends APIResource {
   @websocket('users', 'image', 'read')
   @parameters('id')
   async image (ctx) {
+    const { format = defaultAvatarFormat } = ctx.query
+    const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
+
+    if (!validAvatarFormats.includes(format)) {
+      throw new BadRequestAPIError({ parameter: 'format' })
+    }
+
+    if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
+      throw new BadRequestAPIError({ parameter: 'size' })
+    }
+
+    // Try disk cache first
+    const cached = await getCached(ctx.params.id, size, format)
+    if (cached) {
+      ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
+      ctx.set('X-Cache', 'HIT')
+      ctx.type = `image/${format}`
+      ctx.body = cached
+      return cached
+    }
+
+    // Cache miss — load from database
     const avatar = await Avatar.scope('imageData').findOne({
       where: {
         userId: ctx.params.id,
@@ -229,25 +252,18 @@ export default class Users extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    const { format = defaultAvatarFormat } = ctx.query
-    const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
-
     let imageData
     if (format !== defaultAvatarFormat || size !== avatarMaxSize) {
-      if (!validAvatarFormats.includes(format)) {
-        throw new BadRequestAPIError({ parameter: 'format' })
-      }
-
-      if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
-        throw new BadRequestAPIError({ parameter: 'size' })
-      }
-
       imageData = await Users.convertImageData(avatar.image, { format, size })
     } else {
       imageData = avatar.image
     }
 
+    // Store in disk cache (async, don't block response)
+    setCached(ctx.params.id, size, format, imageData).catch(() => {})
+
     ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
+    ctx.set('X-Cache', 'MISS')
     ctx.type = `image/${format}`
     ctx.body = imageData
     return imageData
@@ -621,6 +637,8 @@ export default class Users extends APIResource {
       userId: ctx.params.id,
     })
 
+    invalidateCache(ctx.params.id)
+
     // Log avatar update metrics
     logMetric('user_avatar_updated', {
       _user_id: user.id,
@@ -664,6 +682,8 @@ export default class Users extends APIResource {
         userId: ctx.params.id,
       },
     })
+
+    invalidateCache(ctx.params.id)
 
     logMetric('user_avatar_deleted', {
       _user_id: user.id,

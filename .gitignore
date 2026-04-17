@@ -2,6 +2,7 @@
 .vagrant/
 data/
 !data/blocked-names.yaml
+data/avatar-cache/
 test/bundle.js
 /config.json
 npm-debug.log.*
