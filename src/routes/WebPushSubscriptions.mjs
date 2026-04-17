@@ -6,6 +6,7 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import config from '../config'
 import { detectPlatform, detectExpansion } from '../helpers/platformDetect'
+import serializeSubscriptions from '../helpers/serializeSubscriptions'
 import { buildBroadcastPayload } from '../helpers/pushPayload'
 import { createWorkerPool } from '../helpers/workerPool'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -231,7 +232,7 @@ export default class WebPushSubscriptions extends APIResource {
 
     const subscriptions = await WebPushSubscription.findAll({ where: filterQuery })
     webPushPool.exec({
-      subscribers: subscriptions,
+      subscribers: serializeSubscriptions(subscriptions),
       payload: buildBroadcastPayload({ title, body, icon, tag, data, type }),
       vapidConfig: config.webpush,
       options: {
@@ -278,7 +279,7 @@ export default class WebPushSubscriptions extends APIResource {
     })
 
     webPushPool.exec({
-      subscribers: subscriptions,
+      subscribers: serializeSubscriptions(subscriptions),
       payload: buildBroadcastPayload({ title, body, icon, tag, data, type }),
       vapidConfig: config.webpush,
       options: {

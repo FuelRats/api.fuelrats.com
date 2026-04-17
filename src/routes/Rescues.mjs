@@ -29,6 +29,7 @@ import APIResource from './APIResource'
 import { webPushPool } from './WebPushSubscriptions'
 import config from '../config'
 import { buildRescuePayload } from '../helpers/pushPayload'
+import serializeSubscriptions from '../helpers/serializeSubscriptions'
 import { logMetric } from '../logging'
 
 const rescueAccessHours = 3
@@ -168,7 +169,7 @@ export default class Rescues extends APIResource {
     const autoSubs = await WebPushSubscription.findAll({ where: pushQuery })
     if (autoSubs.length > 0) {
       webPushPool.exec({
-        subscribers: autoSubs,
+        subscribers: serializeSubscriptions(autoSubs),
         payload: buildRescuePayload(result),
         vapidConfig: config.webpush,
         options: { TTL: 300, urgency: 'normal', topic: `rescue-${result.id.slice(0, 20)}` },
@@ -454,7 +455,7 @@ export default class Rescues extends APIResource {
       where: query,
     })
     webPushPool.exec({
-      subscribers: subscriptions,
+      subscribers: serializeSubscriptions(subscriptions),
       payload: buildRescuePayload(rescue),
       vapidConfig: config.webpush,
       options: {
