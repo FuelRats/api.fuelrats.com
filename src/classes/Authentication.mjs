@@ -445,7 +445,9 @@ class Authentication {
     }
 
     if (connection.session.userId) {
-      const user = await User.findOne({ where: { id: connection.session.userId } })
+      const user = await User.findOne({
+        where: { id: connection.session.userId, suspended: null, status: 'active' },
+      })
       if (user) {
         connection.state.user = user
         return true
@@ -524,6 +526,10 @@ class Authentication {
 
     if (!representedUser) {
       return false
+    }
+
+    if (representedUser.isSuspended()) {
+      throw new GoneAPIError({ parameter: 'representing' })
     }
 
     ctx.state.user = representedUser
