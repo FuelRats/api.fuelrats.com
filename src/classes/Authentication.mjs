@@ -1,11 +1,12 @@
-import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { authenticator as totp } from 'otplib'
+import { verifySync as otpVerify } from 'otplib'
+import { hashPassword, verifyPassword, getHashRounds } from '../helpers/password'
+import { verifyRecoveryCode } from '../helpers/recoveryCodes'
 import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
 import {
-  User, Token, Client, Reset, Authenticator, Passkey, db,
+  User, Token, Client, Reset, Authenticator, Passkey,
 } from '../db'
 import { logMetric } from '../logging'
 
@@ -17,7 +18,6 @@ import {
   ResetRequiredAPIError,
   ForbiddenAPIError,
 } from './APIError'
-import { Context } from './Context'
 import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
@@ -68,7 +68,7 @@ class Authentication {
       })
     }
 
-    const result = await bcrypt.compare(password, user.password)
+    const result = await verifyPassword(password, user.password)
     if (result === false) {
       logMetric('authentication_failure', {
         _auth_method: 'password',
@@ -80,8 +80,8 @@ class Authentication {
       throw new GoneAPIError({ pointer: '/data/attributes/email' })
     }
 
-    if (bcrypt.getRounds(user.password) > constants.bcryptRoundsCount) {
-      const newRoundPassword = await bcrypt.hash(password, constants.bcryptRoundsCount)
+    if (getHashRounds(user.password) > constants.bcryptRoundsCount) {
+      const newRoundPassword = await hashPassword(password, constants.bcryptRoundsCount)
       User.update({
         password: newRoundPassword,
       }, {
@@ -103,11 +103,24 @@ class Authentication {
         })
       }
 
-      let isValidCode = false
+      let isValidCode
+      let usedRecoveryCode = false
       try {
-        isValidCode = totp.check(code, authenticator.secret)
+        isValidCode = otpVerify({ token: code, secret: authenticator.secret }).valid
       } catch {
         isValidCode = false
+      }
+
+      if (!isValidCode) {
+        const matchIndex = await verifyRecoveryCode(code, authenticator.recoveryCodes)
+        if (matchIndex !== -1) {
+          isValidCode = true
+          usedRecoveryCode = true
+          const remaining = authenticator.recoveryCodes.filter((_, i) => {
+            return i !== matchIndex
+          })
+          await authenticator.update({ recoveryCodes: remaining })
+        }
       }
 
       if (!isValidCode) {
@@ -119,6 +132,13 @@ class Authentication {
         throw new AuthenticatorRequiredAPIError({
           pointer: '/data/attributes/code',
         })
+      }
+
+      if (usedRecoveryCode) {
+        logMetric('authentication_recovery_code_used', {
+          _user_id: user.id,
+          _remaining_codes: authenticator.recoveryCodes.length,
+        }, `Recovery code used for user ${user.id}`)
       }
     }
 
@@ -180,7 +200,7 @@ class Authentication {
 
     // Verify the passkey response
     const { verifyAuthenticationResponse } = await import('@simplewebauthn/server')
-    let verification = null
+    let verification
     try {
       verification = await verifyAuthenticationResponse({
         response: passkeyResponse,
@@ -193,7 +213,7 @@ class Authentication {
           counter: passkey.counter,
         },
       })
-    } catch (error) {
+    } catch {
       return undefined
     }
 
@@ -245,7 +265,7 @@ class Authentication {
       }
 
       return decoded
-    } catch (error) {
+    } catch {
       // JWT validation failed
       return null
     }
@@ -321,6 +341,14 @@ class Authentication {
     })
 
     if (user) {
+      // Throttle lastAccess updates to once per minute
+      const accessIntervalMs = 60 * 1000
+      const shouldUpdate = !token.lastAccess
+        || (Date.now() - new Date(token.lastAccess).getTime()) > accessIntervalMs
+      if (shouldUpdate) {
+        token.update({ lastAccess: new Date() }).catch(() => {})
+      }
+
       logMetric('authentication_success', {
         _auth_method: 'bearer_token',
         _user_id: user.id,
@@ -333,6 +361,7 @@ class Authentication {
       user,
       scope: token.scope,
       clientId: token.clientId,
+      tokenValue: token.value,
     }
   }
 
@@ -381,14 +410,14 @@ class Authentication {
       return undefined
     }
 
-    const authorised = await bcrypt.compare(secret, client.secret)
+    const authorised = await verifyPassword(secret, client.secret)
     if (authorised) {
       if (client.user.isSuspended()) {
         throw new GoneAPIError({})
       }
 
-      if (bcrypt.getRounds(client.secret) > constants.bcryptRoundsCount) {
-        const newRoundSecret = await bcrypt.hash(secret, constants.bcryptRoundsCount)
+      if (getHashRounds(client.secret) > constants.bcryptRoundsCount) {
+        const newRoundSecret = await hashPassword(secret, constants.bcryptRoundsCount)
         Client.update({
           secret: newRoundSecret,
         }, {
@@ -415,7 +444,9 @@ class Authentication {
     }
 
     if (connection.session.userId) {
-      const user = await User.findOne({ where: { id: connection.session.userId } })
+      const user = await User.findOne({
+        where: { id: connection.session.userId, suspended: null, status: 'active' },
+      })
       if (user) {
         connection.state.user = user
         return true
@@ -429,6 +460,7 @@ class Authentication {
         connection.state.user = bearerCheck.user
         connection.state.scope = bearerCheck.scope
         connection.state.clientId = bearerCheck.clientId
+        connection.state.currentTokenValue = bearerCheck.tokenValue
         return true
       }
     }
@@ -474,7 +506,7 @@ class Authentication {
       throw new ForbiddenAPIError({ parameter: 'representing' })
     }
 
-    let representedUser = undefined
+    let representedUser
     if (new UUID(constants.uuidVersion).parse(representing)) {
       representedUser = await User.findOne({
         where: {
@@ -493,6 +525,10 @@ class Authentication {
 
     if (!representedUser) {
       return false
+    }
+
+    if (representedUser.isSuspended()) {
+      throw new GoneAPIError({ parameter: 'representing' })
     }
 
     ctx.state.user = representedUser

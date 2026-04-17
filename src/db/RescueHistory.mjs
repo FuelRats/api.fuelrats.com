@@ -80,7 +80,7 @@ export default class RescueHistory extends Model {
   /**
    * @inheritdoc
    */
-  // eslint-disable-next-line no-empty-function
+   
   static associate () {
 
   }

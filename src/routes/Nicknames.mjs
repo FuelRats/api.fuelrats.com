@@ -1,11 +1,11 @@
 import Anope from '../classes/Anope'
+import { isBlockedUsername } from '../helpers/usernameFilter'
 import {
   BadRequestAPIError,
   ConflictAPIError,
   NotFoundAPIError,
   UnprocessableEntityAPIError, UnsupportedMediaAPIError,
 } from '../classes/APIError'
-import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
@@ -89,6 +89,13 @@ export default class Nickname extends APIResource {
     if (!nick || IRCNickname.test(nick) === false) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/nick',
+      })
+    }
+
+    if (isBlockedUsername(nick)) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/attributes/nick',
+        detail: 'This nickname is not allowed',
       })
     }
 

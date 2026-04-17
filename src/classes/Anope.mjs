@@ -1,5 +1,5 @@
-import bcrypt from 'bcrypt'
 import xmlrpc from 'homematic-xmlrpc'
+import { hashPassword } from '../helpers/password'
 import { encode } from 'html-entities'
 import knex from 'knex'
 import config from '../config'
@@ -128,7 +128,7 @@ class Anope {
       return new Nickname(result, user)
     })
 
-    /* eslint-disable no-await-in-loop */
+     
     for (const nick of nicks) {
       await Anope.runCommand('NickServ', nick.nick, 'UPDATE')
     }
@@ -456,7 +456,7 @@ class Anope {
       return
     }
 
-    const encryptedPassword = await bcrypt.hash(newPassword, anopeBcryptRounds)
+    const encryptedPassword = await hashPassword(newPassword, anopeBcryptRounds)
 
     await mysql('anope_db_NickCore')
       .whereRaw('lower(email) = lower(?)', [email])

@@ -658,8 +658,7 @@ users_certificate:
     summary: Generate user certificate
     description: |
       Generate and retrieve an IRC client certificate for the user.
-      Requires additional authentication (password+TOTP or passkey) for security.
-      
+
       **Required Permission:** `users.write` OR self-access via `users.write.me` (if accessing own certificate)
     security:
       - bearerAuth: []
@@ -671,90 +670,6 @@ users_certificate:
         schema:
           type: string
           format: uuid
-    requestBody:
-      required: true
-      content:
-        application/vnd.api+json:
-          schema:
-            type: object
-            required: [data]
-            properties:
-              data:
-                type: object
-                required: [type]
-                properties:
-                  type:
-                    type: string
-                    enum: [certificate-requests]
-                  attributes:
-                    type: object
-                    properties:
-                      password:
-                        type: string
-                        description: Current password (required if not using passkey)
-                      totpCode:
-                        type: string
-                        pattern: '^[0-9]{6}$'
-                        description: 6-digit TOTP code (required if 2FA is enabled)
-                      passkeyResponse:
-                        type: object
-                        description: WebAuthn authentication response (required if not using password)
-                        properties:
-                          id:
-                            type: string
-                            description: Base64url-encoded credential ID
-                          rawId:
-                            type: string
-                            format: byte
-                            description: Raw credential ID
-                          response:
-                            type: object
-                            properties:
-                              authenticatorData:
-                                type: string
-                                format: byte
-                              clientDataJSON:
-                                type: string
-                                format: byte
-                              signature:
-                                type: string
-                                format: byte
-                              userHandle:
-                                type: string
-                                format: byte
-                          type:
-                            type: string
-                            enum: [public-key]
-          examples:
-            password_auth:
-              summary: Generate certificate using password
-              value:
-                data:
-                  type: certificate-requests
-                  attributes:
-                    password: "userPassword123"
-            password_2fa_auth:
-              summary: Generate certificate using password + 2FA
-              value:
-                data:
-                  type: certificate-requests
-                  attributes:
-                    password: "userPassword123"
-                    totpCode: "123456"
-            passkey_auth:
-              summary: Generate certificate using passkey
-              value:
-                data:
-                  type: certificate-requests
-                  attributes:
-                    passkeyResponse:
-                      id: "ALhP1I4BZL3b..."
-                      rawId: "ALhP1I4BZL3b..."
-                      response:
-                        authenticatorData: "SZYN5YgO..."
-                        clientDataJSON: "eyJ0eXBlIj..."
-                        signature: "MEUCIQCx..."
-                      type: "public-key"
     responses:
       '200':
         description: IRC client certificate generated successfully
@@ -1295,7 +1210,16 @@ users_image:
   get:
     tags: [users]
     summary: Get user image
-    description: Retrieve a user's profile image
+    description: |
+      Retrieve a user's profile image in the requested size and format.
+
+      Images are disk-cached per size+format variant. The first request
+      for a given variant generates it from the original upload; subsequent
+      requests serve from cache. The `X-Cache` response header indicates
+      `HIT` or `MISS`.
+
+      Cache is invalidated automatically when the user uploads or deletes
+      their avatar.
     parameters:
       - name: id
         in: path
@@ -1335,6 +1259,77 @@ users_image:
             schema:
               type: string
               format: binary
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  post:
+    tags: [users]
+    summary: Upload user image
+    description: |
+      Upload or replace a user's profile image. Invalidates all cached
+      size/format variants.
+
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [image]
+            properties:
+              image:
+                type: string
+                format: binary
+                description: Image file (PNG, JPEG, or WebP)
+    responses:
+      '200':
+        description: User updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../schemas/users.yaml#/UserDocument'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  delete:
+    tags: [users]
+    summary: Delete user image
+    description: |
+      Delete a user's profile image. Invalidates all cached variants.
+
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Image deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
       '404':
         $ref: '../components/responses.yaml#/NotFound'
 
@@ -1517,7 +1512,25 @@ users_authenticator:
                         description: User-friendly description for this authenticator
     responses:
       '201':
-        description: Authenticator linked successfully
+        description: Authenticator linked successfully. Response includes one-time recovery codes that the user should save.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recoveryCodes]
+              properties:
+                recoveryCodes:
+                  type: array
+                  items:
+                    type: string
+                  description: |
+                    10 single-use recovery codes (format `xxxx-xxxx`). Shown
+                    only once — the user must save them. Each code may be
+                    used in place of a TOTP token during login or for
+                    removing the authenticator.
+                  example:
+                    - "a1b2-c3d4"
+                    - "e5f6-7890"
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '401':
@@ -1549,13 +1562,148 @@ users_authenticator:
       - name: X-Verify
         in: header
         required: true
-        description: Current 6-digit TOTP token for verification
+        description: Current 6-digit TOTP token OR a recovery code (`xxxx-xxxx`)
         schema:
           type: string
-          pattern: '^[0-9]{6}$'
     responses:
       '204':
         description: Authenticator removed successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_authenticator_recovery_codes:
+  post:
+    tags: [users]
+    summary: Regenerate TOTP recovery codes
+    description: |
+      Regenerate the set of single-use recovery codes for the user's
+      authenticator. Invalidates all existing codes and returns a new set.
+
+      Requires verification via the `X-Verify` header, which accepts either
+      a current 6-digit TOTP token or one of the existing recovery codes
+      (the code used will be consumed).
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Verify
+        in: header
+        required: true
+        description: Current TOTP token or recovery code
+        schema:
+          type: string
+    responses:
+      '200':
+        description: New recovery codes issued (shown once)
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recoveryCodes]
+              properties:
+                recoveryCodes:
+                  type: array
+                  items:
+                    type: string
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_displayrat_relationship:
+  get:
+    tags: [users]
+    summary: Get display rat relationship
+    description: Get the user's display rat relationship
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Display rat relationship
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+  patch:
+    tags: [users]
+    summary: Update display rat
+    description: |
+      Set or change the user's display rat
+
+      **Required Permission:** `users.write` OR self-access via `users.write.me`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [rats]
+                  id:
+                    type: string
+                    format: uuid
+    responses:
+      '204':
+        description: Display rat updated
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+
+users_clients_relationship:
+  get:
+    tags: [users]
+    summary: Get user's OAuth clients
+    description: Get the user's OAuth client relationships
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Client relationships
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '404':

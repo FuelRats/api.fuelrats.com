@@ -27,6 +27,9 @@ import {
 } from './API'
 import APIResource from './APIResource'
 import { webPushPool } from './WebPushSubscriptions'
+import config from '../config'
+import { buildRescuePayload } from '../helpers/pushPayload'
+import serializeSubscriptions from '../helpers/serializeSubscriptions'
 import { logMetric } from '../logging'
 
 const rescueAccessHours = 3
@@ -87,6 +90,15 @@ export default class Rescues extends APIResource {
       },
     ]
     const result = await Rescue.findAndCountAll(searchObject)
+    // findAndCountAll miscounts with required joins — count via subquery
+    const [{ count: totalCount }] = await db.query(
+      `SELECT COUNT(DISTINCT "Rescue"."id") AS count FROM "Rescues" AS "Rescue"
+       INNER JOIN "RescueRats" ON "Rescue"."id" = "RescueRats"."rescueId"
+       INNER JOIN "Rats" ON "RescueRats"."ratId" = "Rats"."id"
+       WHERE "Rats"."userId" = :userId AND "Rescue"."deletedAt" IS NULL`,
+      { replacements: { userId: ctx.state.user.id }, type: db.QueryTypes.SELECT },
+    )
+    result.count = totalCount
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
@@ -149,6 +161,21 @@ export default class Rescues extends APIResource {
     const document = new DatabaseDocument({ query, result, type: RescueView })
 
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, result.id, document)
+
+    // Auto-notify subscribers who opted in to all rescues (alertsOnly: false)
+    const pushQuery = { alertsOnly: false }
+    if (result.platform) { pushQuery[result.platform] = true }
+    if (result.expansion) { pushQuery[result.expansion] = true }
+    const autoSubs = await WebPushSubscription.findAll({ where: pushQuery })
+    if (autoSubs.length > 0) {
+      webPushPool.exec({
+        subscribers: serializeSubscriptions(autoSubs),
+        payload: await buildRescuePayload(result),
+        vapidConfig: config.webpush,
+        options: { TTL: 300, urgency: 'normal', topic: `rescue-${result.id.slice(0, 20)}` },
+      })
+    }
+
     ctx.response.status = StatusCode.created
     return document
   }
@@ -403,7 +430,7 @@ export default class Rescues extends APIResource {
   @POST('/rescues/:id/alert')
   @authenticated
   @parameters('id')
-  @permissions('rescues.write')
+  @permissions('twitter.write')
   async postRescueAlert (ctx) {
     const rescue = await Rescue.findOne({ where: { id: ctx.params.id } })
     if (!rescue) {
@@ -420,14 +447,23 @@ export default class Rescues extends APIResource {
     if (rescue.platform === 'ps') {
       query.ps = true
     }
-    if (rescue.expansion === 'odyssey') {
-      query.odyssey = true
+    if (rescue.expansion) {
+      query[rescue.expansion] = true
     }
 
-    const subscriptions = WebPushSubscription.findAll({
+    const subscriptions = await WebPushSubscription.findAll({
       where: query,
     })
-    webPushPool.exec('webPushBroadcast', [subscriptions, rescue])
+    webPushPool.exec({
+      subscribers: serializeSubscriptions(subscriptions),
+      payload: await buildRescuePayload(rescue),
+      vapidConfig: config.webpush,
+      options: {
+        TTL: 300, // 5 minutes — rescue alerts are time-sensitive
+        urgency: 'high',
+        topic: `rescue-${rescue.id.slice(0, 20)}`, // dedupe notifications for the same rescue
+      },
+    })
     return true
   }
 
@@ -441,6 +477,7 @@ export default class Rescues extends APIResource {
       clientLanguage: WritePermission.group,
       commandIdentifier: WritePermission.sudo,
       codeRed: WritePermission.group,
+      carrier: WritePermission.group,
       data: WritePermission.group,
       notes: WritePermission.group,
       platform: WritePermission.group,
@@ -466,7 +503,7 @@ export default class Rescues extends APIResource {
       return false
     }
 
-    const isAssigned = entity.rats.some((rat) => {
+    const isAssigned = (entity.rats ?? []).some((rat) => {
       return rat.userId === user.id
     })
 
@@ -475,12 +512,18 @@ export default class Rescues extends APIResource {
       isFirstLimpet = entity.firstLimpet.userId === user.id
     }
 
-    if (isAssigned || isFirstLimpet || entity.status !== 'closed') {
+    // Assigned rats and first limpets can always edit their own rescues
+    if (isAssigned || isFirstLimpet) {
       return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
     }
 
+    // Open rescues can be edited by anyone with rescues.write.me
+    if (entity.status !== 'closed') {
+      return Permission.granted({ permissions: ['rescues.write.me'], connection: ctx })
+    }
 
-    if (entity.status === 'closed' && (Date.now() - entity.createdAt.getTime()) < rescueAccessTime) {
+    // Closed rescues can be edited by dispatchers within the access window (from last update)
+    if (entity.status === 'closed' && (Date.now() - entity.updatedAt.getTime()) < rescueAccessTime) {
       return Permission.granted({ permissions: ['dispatch.write'], connection: ctx })
     }
     return false

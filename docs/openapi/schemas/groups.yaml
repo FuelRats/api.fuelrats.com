@@ -14,6 +14,10 @@ Group:
             name:
               type: string
               description: Group name
+            displayName:
+              type: string
+              nullable: true
+              description: Human-friendly display name for the group
             vhost:
               type: string
               description: Virtual host for the group (**Write Permission:** Admin/sudo only)

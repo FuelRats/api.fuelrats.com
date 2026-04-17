@@ -3,14 +3,14 @@ import UserView from './UserView'
 import { ReadPermission } from './View'
 
 /**
- * Get JSONAPI view for an oauth token
+ * Get JSONAPI view for an oauth token (used as session representation)
  */
 export default class TokenView extends DatabaseView {
   /**
    * @inheritdoc
    */
   static get type () {
-    return 'tokens'
+    return 'sessions'
   }
 
   /**
@@ -18,10 +18,13 @@ export default class TokenView extends DatabaseView {
    */
   get attributes () {
     return {
-      value: ReadPermission.self,
-      scope: ReadPermission.group,
-      createdAt: ReadPermission.all,
-      updatedAt: ReadPermission.all,
+      scope: ReadPermission.self,
+      ipAddress: ReadPermission.self,
+      userAgent: ReadPermission.self,
+      authMethod: ReadPermission.self,
+      lastAccess: ReadPermission.self,
+      createdAt: ReadPermission.self,
+      updatedAt: ReadPermission.self,
       deletedAt: ReadPermission.internal,
     }
   }
@@ -31,6 +34,15 @@ export default class TokenView extends DatabaseView {
    */
   get defaultReadPermission () {
     return ReadPermission.self
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get meta () {
+    return {
+      current: this.object.dataValues.current ?? false,
+    }
   }
 
   /**

@@ -1,5 +1,4 @@
 import { UnprocessableEntityAPIError } from './APIError'
-import { Context } from './Context'
 import permissionList from '../files/permissions'
 
 const defaultPermissions = ['users.read.me', 'rats.read.me']

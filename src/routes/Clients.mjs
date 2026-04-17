@@ -1,6 +1,5 @@
 import { UnsupportedMediaAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import Authentication, { getBasicAuth } from '../classes/Authentication'
-import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { clientSecretGenerator } from '../classes/TokenGenerators'

@@ -1,3 +1,4 @@
+/* global describe, it, expect */
 'use strict'
 
 const Ajv = require('ajv')

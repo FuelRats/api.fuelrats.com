@@ -1,0 +1,97 @@
+# Blocked usernames list for the FuelRats API
+#
+# Two categories:
+#   blocked:               Substring match — caught anywhere in the name
+#   blocked_word_boundary: Word-boundary match only — avoids false positives
+#                          (e.g. "nazi" blocks "nazi" but not "ashkenazi")
+#
+# The filter also catches l33tspeak (h1tl3r), Unicode confusables,
+# and case variations automatically.
+#
+# To test changes: bun -e "import { isBlockedUsername } from './src/helpers/usernameFilter.mjs'; console.log(isBlockedUsername('test'))"
+
+blocked:
+  # --- Nazi leadership & symbols ---
+  - hitler
+  - himmler
+  - goebbels
+  - goering
+  - eichmann
+  - mengele
+  - heydrich
+  - nsdap
+  - gestapo
+  - schutzstaffel
+  - waffen ss
+  - sieg heil
+  - heil hitler
+  - auschwitz
+  - zyklon
+
+  # --- Hate group names ---
+  - ku klux
+  - kkk
+  - atomwaffen        # neo-nazi terror group
+  - "combat 18"       # neo-nazi group (18 = AH)
+  - "combat18"
+  - proud boys        # designated hate group
+  - proudboys
+
+  # --- White supremacist slogans & codes ---
+  - white power
+  - whitepower
+  - white pride
+  - whitepride
+  - rahowa            # "racial holy war"
+  - "1488"            # 14 words + 88 (HH)
+  - "14words"
+  - "14 words"
+  - "6mwe"            # "6 million wasn't enough" — holocaust denial
+
+  # --- Holocaust denial ---
+  - holohoax
+  - gasthejews
+
+  # --- Racial slurs ---
+  - nigger
+  - nigga
+  - spic
+  - wetback
+  - beaner
+  - kike
+  - gook
+  - chink
+  - zipperhead
+  - raghead
+  - towelhead
+  - sandnigger
+  - camel jockey
+
+  # --- Homophobic/transphobic slurs ---
+  - faggot
+  - tranny
+  - shemale
+
+blocked_word_boundary:
+  # These are only blocked as standalone words to avoid false positives:
+  #   nazi      — but not "ashkenazi"
+  #   negro     — but not "montenegro"
+  #   coon      — but not "raccoon"
+  #   fag       — but not "fagin"
+  #   dyke      — but not "van dyke"
+  #   aryan     — but not "aryana"
+  #   wog       — but not "woggle"
+  #   abo       — but not "aboriginal"
+  #   paki      — but not "pakistan" (though this is debatable)
+  #   redskin   — standalone racial slur
+  - nazi
+  - negro
+  - coon
+  - darkie
+  - paki
+  - wog
+  - abo
+  - fag
+  - dyke
+  - aryan
+  - redskin

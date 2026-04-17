@@ -5,7 +5,7 @@
  * @returns {Function} enumerable class decorator
  */
 export default function enumerable ({ symbols = true } = {}) {
-  return (target) => {
+  return (target, context) => {
     const properties = Reflect.ownKeys(target)
     const keys = []
 
@@ -27,6 +27,9 @@ export default function enumerable ({ symbols = true } = {}) {
       static: true,
     })
 
-    Object.freeze(target)
+    // Defer freeze to after Bun finishes setting up decorator metadata
+    queueMicrotask(() => {
+      Object.freeze(target)
+    })
   }
 }

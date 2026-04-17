@@ -1,4 +1,5 @@
-import { UnsupportedMediaAPIError } from '../classes/APIError'
+import { UnprocessableEntityAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
+import { isBlockedUsername } from '../helpers/usernameFilter'
 import Event from '../classes/Event'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
@@ -65,6 +66,11 @@ export default class Rats extends APIResource {
   @websocket('rats', 'create')
   @authenticated
   async create (ctx) {
+    const ratName = ctx.data?.data?.attributes?.name
+    if (ratName && isBlockedUsername(ratName)) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name', detail: 'This name is not allowed' })
+    }
+
     const result = await super.create({
       ctx,
       databaseType: Rat,
@@ -97,6 +103,11 @@ export default class Rats extends APIResource {
   @authenticated
   @parameters('id')
   async update (ctx) {
+    const ratName = ctx.data?.data?.attributes?.name
+    if (ratName && isBlockedUsername(ratName)) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name', detail: 'This name is not allowed' })
+    }
+
     const result = await super.update({ ctx, databaseType: Rat, updateSearch: { id: ctx.params.id } })
 
     // Log rat update metrics

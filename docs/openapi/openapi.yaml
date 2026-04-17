@@ -1,37 +1,176 @@
 openapi: 3.0.3
 info:
   title: FuelRats API
-  version: '3.1.0'
+  version: '4.0.0'
   description: |
     The official API for the FuelRats rescue coordination system.
     
     This API follows the [JSON:API specification](https://jsonapi.org/) for consistent resource handling.
     
     ## Authentication
-    
-    The API supports multiple OAuth2 authentication flows:
-    
-    ### Authorization Code Grant (Recommended)
-    The most secure method for server-side and native desktop applications:
-    1. Redirect user to `/oauth2/authorize` with client_id, redirect_uri, and state
-    2. User authorizes your application
-    3. Exchange authorization code for access token at `/oauth2/token`
-    4. Use access token in `Authorization: Bearer <token>` header
-    
-    ### Implicit Grant 
-    For client-side web applications (less secure):
-    1. Redirect user to `/oauth2/authorize` with response_type=token
-    2. Access token returned directly in redirect URL fragment
-    
-    ### Resource Owner Password Credentials
-    Only available to first-party FuelRats applications:
-    - Direct username/password authentication
-    - Requires client to be whitelisted
-    
-    ### WebSocket Authentication
-    For real-time communication, append bearer token to WebSocket URL:
+
+    The API supports user authentication via OAuth tokens only. The token
+    is provided in REST requests via the HTTP Authorization header:
+
     ```
-    wss://api.fuelrats.com/?bearer=<your_token_here>
+    Authorization: Bearer yourtokenhere
+    ```
+
+    For WebSocket connections, provide the token as a query parameter:
+
+    ```
+    wss://api.fuelrats.com/?bearer=yourtokenhere
+    ```
+
+    If you cannot set HTTP headers, you may also provide a `bearer` query
+    parameter on REST requests.
+
+    ## Creating an OAuth Client
+
+    To create an OAuth client you must have the `clients.write` permission
+    on your Fuel Rats account (automatically granted to tech rats and
+    administrators). Navigate to the
+    [developer area](https://fuelrats.com/profile/developer), provide the
+    name of your client and your redirect URI.
+
+    When you create your client you will receive a **client ID** and a
+    **client secret**. You **must** store these safely — they cannot be
+    recovered if lost. If you lose your credentials and request a reset,
+    all existing copies of your application will stop working.
+
+    ## Supported Grant Types
+
+    ### Authorization Code (Recommended)
+
+    The most secure method. Use when you can hide the client secret (native
+    apps, server-side code). **Do not** use in client-side web applications
+    where the secret would be visible in source code.
+
+    **Flow:**
+
+    1. Open the fuelrats.com authorisation page in the user's browser
+    2. User approves or rejects the request
+    3. Your application receives an **authorisation code** via redirect
+    4. Exchange the code for an **access token** using your client credentials
+
+    #### Authorisation URL
+
+    ```
+    https://fuelrats.com/authorize?response_type=code&client_id=YOUR_ID&scope=SCOPES&redirect_uri=YOUR_URI&state=YOUR_STATE
+    ```
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | `response_type` | Must be `code` |
+    | `client_id` | Your OAuth client ID |
+    | `scope` | Space-separated list of permissions |
+    | `redirect_uri` | Where to redirect after approval. Set to `DISPLAY` to show the code on-screen instead |
+    | `state` | An opaque value returned in the callback to prevent CSRF |
+
+    **Redirect options for different application types:**
+    - **Website:** Redirect to your web page
+    - **Native app with URL scheme:** `myapp://authorization`
+    - **Native app without URL scheme:** Temporary local server `http://localhost:8080/authorization`
+    - **GUI app:** Hosted web view, intercept the redirect
+    - **No redirect possible:** Set `redirect_uri=DISPLAY` and have the user copy the code
+
+    #### Authorisation Callback
+
+    **Success:** `https://yourapp.com/callback?code=AUTH_CODE&state=YOUR_STATE`
+
+    **Failure:** `https://yourapp.com/callback?error=ERROR_CODE&error_description=MESSAGE&state=YOUR_STATE`
+
+    #### Token Exchange
+
+    `POST https://api.fuelrats.com/oauth2/token` with Basic auth (client_id:client_secret).
+
+    Body (`application/x-www-form-urlencoded`):
+
+    | Key | Value |
+    |-----|-------|
+    | `grant_type` | `authorization_code` |
+    | `code` | The authorisation code from the callback |
+    | `redirect_uri` | Must match the URI used in the authorisation step |
+
+    **Success response (200):**
+
+    ```json
+    { "access_token": "...", "token_type": "bearer" }
+    ```
+
+    **Error response (400):**
+
+    ```json
+    { "error": "error_code", "error_description": "Human readable message" }
+    ```
+
+    ### Implicit Grant
+
+    For client-side web applications where the secret cannot be hidden.
+    Less secure than Authorization Code — use that instead if possible.
+
+    Same authorisation step as Authorization Code with these differences:
+    - `response_type` must be `token` (not `code`)
+    - `redirect_uri` **must** match the one registered with your client
+    - Only works with HTTP/HTTPS redirects to valid web domains
+
+    **Success callback:**
+    `https://yourapp.com/callback?access_token=TOKEN&token_type=bearer&scope=SCOPES&state=YOUR_STATE`
+
+    ### Resource Owner Password Credentials (ROPC)
+
+    **Only available to first-party Fuel Rats applications.** Non-whitelisted
+    clients will receive a 403.
+
+    `POST https://api.fuelrats.com/oauth2/token` with Basic auth (client_id:client_secret).
+
+    Required headers:
+
+    | Header | Description |
+    |--------|-------------|
+    | `User-Agent` | Description of the user agent |
+    | `X-Fingerprint` | Unique device fingerprint |
+
+    Body (`application/x-www-form-urlencoded`):
+
+    | Key | Value |
+    |-----|-------|
+    | `grant_type` | `password` |
+    | `username` | User's email address |
+    | `password` | User's password |
+
+    **Success response (200):**
+
+    ```json
+    { "access_token": "...", "token_type": "bearer" }
+    ```
+
+    ### Passkey/WebAuthn Authentication
+
+    Passwordless authentication using FIDO2/WebAuthn credentials.
+
+    **Flow:**
+
+    1. `POST /passkeys/authenticate` with optional `email` → receive WebAuthn challenge
+    2. Browser performs `navigator.credentials.get()` with the challenge
+    3. `POST /passkeys/verify` with the WebAuthn response, authenticated with
+       client credentials (Basic auth) → receive bearer token
+
+    If `email` is omitted in step 1, the browser will prompt for a
+    discoverable credential (resident key).
+
+    ### Token Revocation
+
+    `POST /oauth2/revoke` with Basic auth (client_id:client_secret).
+
+    Body: `token=THE_TOKEN_TO_REVOKE`
+
+    ### WebSocket Authentication
+
+    Connect to `wss://api.fuelrats.com/` with protocol `FR-JSONAPI-WS`:
+
+    ```
+    wss://api.fuelrats.com/?bearer=YOUR_TOKEN
     ```
     
     ## Permission Scopes
@@ -148,6 +287,8 @@ tags:
     description: OAuth2 authentication
   - name: passkeys
     description: WebAuthn/Passkey authentication
+  - name: sessions
+    description: Active login session management
   - name: decals
     description: Decal award management
   - name: events
@@ -208,6 +349,12 @@ paths:
     $ref: './routes/statistics.yaml#/users_statistics'
   /users/{id}/authenticator:
     $ref: './routes/users.yaml#/users_authenticator'
+  /users/{id}/authenticator/recovery-codes:
+    $ref: './routes/users.yaml#/users_authenticator_recovery_codes'
+  /users/{id}/sessions:
+    $ref: './routes/sessions.yaml#/users_sessions'
+  /users/{id}/sessions/{sessionId}:
+    $ref: './routes/sessions.yaml#/users_session'
   /users/{id}/passkeys:
     get:
       $ref: './routes/passkeys.yaml#/users_passkeys'
@@ -222,6 +369,51 @@ paths:
   /passkeys/verify:
     $ref: './routes/passkeys.yaml#/passkeys_verify'
   
+  /users/{id}/relationships/displayRat:
+    $ref: './routes/users.yaml#/users_displayrat_relationship'
+  /users/{id}/relationships/clients:
+    $ref: './routes/users.yaml#/users_clients_relationship'
+
+  # OpenID Connect
+  /.well-known/openid-configuration:
+    get:
+      tags: [oauth2]
+      summary: OpenID Connect Discovery
+      description: Returns the OpenID Provider configuration
+      responses:
+        '200':
+          description: OpenID Provider configuration
+          content:
+            application/json:
+              schema:
+                type: object
+  /.well-known/jwks.json:
+    get:
+      tags: [oauth2]
+      summary: JSON Web Key Set
+      description: Returns the public keys used to verify JWT tokens
+      responses:
+        '200':
+          description: JWKS document
+          content:
+            application/json:
+              schema:
+                type: object
+  /oauth2/userinfo:
+    get:
+      tags: [oauth2]
+      summary: Get user info
+      description: OpenID Connect UserInfo endpoint
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information claims
+          content:
+            application/json:
+              schema:
+                type: object
+
   # Rats
   /rats:
     $ref: './routes/rats.yaml#/rats'
@@ -297,8 +489,14 @@ paths:
   # Web Push Notifications
   /web-push:
     $ref: './routes/web-push.yaml#/web_push_subscribe'
+  /users/{id}/web-push-subscriptions:
+    $ref: './routes/web-push.yaml#/users_web_push_subscriptions'
+  /users/{id}/web-push-subscriptions/{subscriptionId}:
+    $ref: './routes/web-push.yaml#/users_web_push_subscription'
   /alerts:
     $ref: './routes/web-push.yaml#/alerts_broadcast'
+  /users/{id}/alerts:
+    $ref: './routes/web-push.yaml#/users_alerts'
   
   # WebSocket Real-time API
   /:

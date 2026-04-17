@@ -1,17 +1,20 @@
-FROM node:23
+FROM oven/bun:latest
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     libvips \
     git \
+    openssl \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+COPY package.json bun.lockb* ./
+RUN bun install --production
 
 COPY . .
 
-RUN npm ci
-
-RUN npm rebuild && npm run build
+RUN bun run build:info
 
 RUN mkdir -p /app/geoip \
     && curl -L -o /app/geoip/GeoLite2-City.mmdb "https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-City.mmdb" \
@@ -22,4 +25,4 @@ ENV FRAPI_GEOIP_DIRECTORY=/app/geoip
 
 EXPOSE 8080
 
-CMD ["node", "--enable-source-maps", "dist/index.mjs"]
+CMD ["bun", "src/index.mjs"]

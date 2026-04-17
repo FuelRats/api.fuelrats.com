@@ -91,107 +91,80 @@ users_passkeys_register:
           format: uuid
     responses:
       '200':
-        description: WebAuthn registration options
+        description: Raw WebAuthn registration options (passed directly to navigator.credentials.create())
         content:
-          application/vnd.api+json:
+          application/json:
             schema:
               type: object
               properties:
-                data:
+                challenge:
+                  type: string
+                  description: Base64URL encoded challenge
+                rp:
                   type: object
                   properties:
-                    type:
+                    name:
                       type: string
-                      enum: [passkey-registration]
-                    attributes:
-                      type: object
-                      properties:
-                        challenge:
-                          type: string
-                          description: Base64URL encoded challenge
-                        rp:
-                          type: object
-                          properties:
-                            name:
-                              type: string
-                              example: "The Fuel Rats"
-                            id:
-                              type: string
-                              example: "fuelrats.com"
-                        user:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                              description: User ID
-                            name:
-                              type: string
-                              description: User email
-                            displayName:
-                              type: string
-                              description: User display name
-                        pubKeyCredParams:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              type:
-                                type: string
-                                enum: [public-key]
-                              alg:
-                                type: number
-                                description: COSE algorithm identifier
-                        timeout:
-                          type: number
-                          description: Timeout in milliseconds
-                        excludeCredentials:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              id:
-                                type: string
-                                description: Credential ID to exclude
-                              type:
-                                type: string
-                                enum: [public-key]
-                        authenticatorSelection:
-                          type: object
-                          properties:
-                            residentKey:
-                              type: string
-                              enum: [preferred]
-                            userVerification:
-                              type: string
-                              enum: [preferred]
-                        attestation:
-                          type: string
-                          enum: [none]
+                    id:
+                      type: string
+                user:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Base64URL encoded user ID
+                    name:
+                      type: string
+                      description: User email
+                    displayName:
+                      type: string
+                pubKeyCredParams:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [public-key]
+                      alg:
+                        type: number
+                timeout:
+                  type: number
+                excludeCredentials:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                        enum: [public-key]
+                authenticatorSelection:
+                  type: object
+                  properties:
+                    residentKey:
+                      type: string
+                    userVerification:
+                      type: string
             example:
-              data:
-                type: passkey-registration
-                attributes:
-                  challenge: "Y2hhbGxlbmdlU3RyaW5nRXhhbXBsZQ"
-                  rp:
-                    name: "The Fuel Rats"
-                    id: "fuelrats.com"
-                  user:
-                    id: "550e8400-e29b-41d4-a716-446655440000"
-                    name: "user@example.com"
-                    displayName: "Rescue Pilot"
-                  pubKeyCredParams:
-                    - type: "public-key"
-                      alg: -7
-                    - type: "public-key"
-                      alg: -257
-                  timeout: 60000
-                  excludeCredentials:
-                    - id: "QWJDMTIzLi4u"
-                      type: "public-key"
-                  authenticatorSelection:
-                    residentKey: "preferred"
-                    userVerification: "preferred"
-                  attestation: "none"
+              challenge: "Y2hhbGxlbmdlU3RyaW5nRXhhbXBsZQ"
+              rp:
+                name: "The Fuel Rats"
+                id: "fuelrats.com"
+              user:
+                id: "MWJhZjA0ZmUtYTFhZS00NjAw..."
+                name: "user@example.com"
+                displayName: "Rescue Pilot"
+              pubKeyCredParams:
+                - type: "public-key"
+                  alg: -7
+                - type: "public-key"
+                  alg: -257
+              timeout: 60000
+              authenticatorSelection:
+                residentKey: "preferred"
+                userVerification: "preferred"
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'
       '404':
@@ -304,7 +277,11 @@ passkeys_authenticate:
     description: |
       Generate WebAuthn authentication options for signing in with a passkey.
       This is the first step in the passkey authentication flow.
-      
+
+      If `email` is provided, the response will include `allowCredentials`
+      restricted to that user's passkeys. If omitted, the browser will prompt
+      for a discoverable credential (resident key).
+
       **Public Access:** No authentication required (for login flow)
     requestBody:
       required: true
@@ -316,72 +293,54 @@ passkeys_authenticate:
             properties:
               data:
                 type: object
-                required: [type, attributes]
+                required: [type]
                 properties:
                   type:
                     type: string
                     enum: [passkey-authentication]
                   attributes:
                     type: object
-                    required: [email]
                     properties:
                       email:
                         type: string
                         format: email
-                        description: User's email address
+                        description: User's email address (optional — omit for discoverable credentials)
     responses:
       '200':
-        description: WebAuthn authentication options
+        description: Raw WebAuthn authentication options (passed directly to navigator.credentials.get())
         content:
-          application/vnd.api+json:
+          application/json:
             schema:
               type: object
               properties:
-                data:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      enum: [passkey-authentication]
-                    attributes:
-                      type: object
-                      properties:
-                        challenge:
-                          type: string
-                          description: Base64URL encoded challenge
-                        timeout:
-                          type: number
-                          description: Timeout in milliseconds
-                        rpId:
-                          type: string
-                          example: "fuelrats.com"
-                        allowCredentials:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              id:
-                                type: string
-                                description: Allowed credential ID
-                              type:
-                                type: string
-                                enum: [public-key]
-                        userVerification:
-                          type: string
-                          enum: [preferred]
+                challenge:
+                  type: string
+                  description: Base64URL encoded challenge
+                timeout:
+                  type: number
+                rpId:
+                  type: string
+                allowCredentials:
+                  type: array
+                  description: Present when email was provided, absent for discoverable credentials
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                        enum: [public-key]
+                userVerification:
+                  type: string
             example:
-              data:
-                type: passkey-authentication
-                attributes:
-                  challenge: "YXV0aENoYWxsZW5nZUV4YW1wbGU"
-                  timeout: 60000
-                  rpId: "fuelrats.com"
-                  allowCredentials:
-                    - id: "QWJDMTIzLi4u"
-                      type: "public-key"
-                    - id: "WXlaODkwLi4u"
-                      type: "public-key"
-                  userVerification: "preferred"
+              challenge: "YXV0aENoYWxsZW5nZUV4YW1wbGU"
+              timeout: 60000
+              rpId: "fuelrats.com"
+              allowCredentials:
+                - id: "QWJDMTIzLi4u"
+                  type: "public-key"
+              userVerification: "preferred"
       '401':
         description: No passkeys found for user or user doesn't exist
         content:
@@ -394,12 +353,18 @@ passkeys_authenticate:
 passkeys_verify:
   post:
     tags: [passkeys]
-    summary: Verify passkey authentication
+    summary: Verify passkey and get bearer token
     description: |
       Complete the passkey authentication by verifying the credential response from the authenticator.
+      On success, issues a bearer token bound to the specified OAuth client.
       This is the second step in the passkey authentication flow.
-      
-      **Public Access:** No authentication required (for login flow)
+
+      **Flow:**
+      1. `POST /passkeys/authenticate` with email (optional) → get challenge
+      2. Browser performs `navigator.credentials.get()` with the challenge
+      3. `POST /passkeys/verify` with the response + client credentials (Basic auth) → get bearer token
+
+      **Authentication:** OAuth client authentication required (Basic auth with client_id:client_secret)
     requestBody:
       required: true
       content:
@@ -447,47 +412,26 @@ passkeys_verify:
                           type:
                             type: string
                             enum: [public-key]
+    security:
+      - basicAuth: []
     responses:
       '200':
-        description: Authentication successful
+        description: Authentication successful, bearer token issued
         content:
-          application/vnd.api+json:
+          application/json:
             schema:
               type: object
+              required: [access_token, token_type]
               properties:
-                data:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      enum: [authentication-result]
-                    attributes:
-                      type: object
-                      properties:
-                        verified:
-                          type: boolean
-                          description: Whether authentication was successful
-                        user:
-                          type: object
-                          description: Authenticated user details
-                          properties:
-                            id:
-                              type: string
-                              format: uuid
-                            email:
-                              type: string
-                              format: email
-                            status:
-                              type: string
+                access_token:
+                  type: string
+                  description: Bearer token for authenticated API access
+                token_type:
+                  type: string
+                  enum: [bearer]
             example:
-              data:
-                type: authentication-result
-                attributes:
-                  verified: true
-                  user:
-                    id: "550e8400-e29b-41d4-a716-446655440000"
-                    email: "user@example.com"
-                    status: "active"
+              access_token: "Xe5qI31OO0014POnVoQpfkLdkWwsYirh"
+              token_type: "bearer"
       '401':
         description: Authentication failed
         content:

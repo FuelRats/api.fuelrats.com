@@ -2,8 +2,6 @@ import { URL } from 'url'
 import config from '../config'
 import packageInfo from '../files/package'
 import enumerable from '../helpers/Enum'
-import Query from '../query'
-import View from '../view'
 
 const jsonApiVersion = '1.0'
 

@@ -33,6 +33,7 @@ groups:
                       id: "110e8400-e29b-41d4-a716-446655440001"
                       attributes:
                         name: "verified"
+                        displayName: "Verified"
                         vhost: "rat.fuelrats.com"
                         priority: 10
                         permissions: ["read", "write"]
@@ -45,6 +46,7 @@ groups:
                       id: "110e8400-e29b-41d4-a716-446655440002"
                       attributes:
                         name: "dispatch"
+                        displayName: "Drilled Dispatch"
                         vhost: "dispatch.fuelrats.com"
                         priority: 50
                         permissions: ["read", "write", "rescues.write", "dispatch"]
@@ -98,6 +100,9 @@ groups:
                       name:
                         type: string
                         description: Group name
+                      displayName:
+                        type: string
+                        description: Human-friendly display name
                       vhost:
                         type: string
                         description: Virtual host for the group
@@ -122,6 +127,7 @@ groups:
                 id: "110e8400-e29b-41d4-a716-446655440003"
                 attributes:
                   name: "moderators"
+                  displayName: "Moderator"
                   vhost: "mod.fuelrats.com"
                   priority: 30
                   permissions: ["read", "write", "moderate"]
@@ -237,6 +243,8 @@ groups_by_id:
                     properties:
                       name:
                         type: string
+                      displayName:
+                        type: string
                       vhost:
                         type: string
                       permissions:
@@ -258,6 +266,7 @@ groups_by_id:
                 id: "110e8400-e29b-41d4-a716-446655440001"
                 attributes:
                   name: "verified"
+                  displayName: "Verified"
                   vhost: "verified.fuelrats.com"
                   priority: 15
                   permissions: ["read", "write", "verified"]

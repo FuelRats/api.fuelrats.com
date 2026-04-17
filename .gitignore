@@ -1,6 +1,8 @@
 ### Project ###
 .vagrant/
 data/
+!data/blocked-names.yaml
+data/avatar-cache/
 test/bundle.js
 /config.json
 npm-debug.log.*
@@ -132,3 +134,8 @@ static/fonts/
 !.yarn/versions
 .pnp.*
 node_modules
+bun.lockb
+
+# Docker dev secrets
+.docker/secrets/
+fuelratsdev.dump

@@ -1,0 +1,118 @@
+# User session management endpoints
+# Sessions are represented by OAuth Tokens with associated device metadata.
+
+users_sessions:
+  get:
+    tags: [sessions]
+    summary: List active sessions
+    description: |
+      Returns the authenticated user's active login sessions. Each session
+      is an OAuth token with associated device metadata (IP, user agent,
+      auth method, last access time).
+
+      The session used for this request has `meta.current: true`.
+
+      **Required Permission:** `users.read.me` (self) or `users.read` (other users)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+    responses:
+      '200':
+        description: List of sessions
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [sessions]
+                      id:
+                        type: string
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          scope:
+                            type: array
+                            items:
+                              type: string
+                            description: OAuth scopes granted to this session
+                          ipAddress:
+                            type: string
+                            nullable: true
+                            description: IP address at login time
+                          userAgent:
+                            type: string
+                            nullable: true
+                            description: User agent at login time
+                          authMethod:
+                            type: string
+                            nullable: true
+                            enum: [password, passkey, authorization_code, implicit]
+                            description: How this session was created
+                          lastAccess:
+                            type: string
+                            format: date-time
+                            nullable: true
+                            description: Last time this session was used (updated every ~60s)
+                          createdAt:
+                            type: string
+                            format: date-time
+                          updatedAt:
+                            type: string
+                            format: date-time
+                      meta:
+                        type: object
+                        properties:
+                          current:
+                            type: boolean
+                            description: True if this is the session making the request
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_session:
+  delete:
+    tags: [sessions]
+    summary: Revoke a session
+    description: |
+      Destroys the session (token), logging the user out of that device.
+
+      **Required Permission:** `users.write.me` (self) or `users.write` (other users)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Session revoked
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'

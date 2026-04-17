@@ -37,7 +37,7 @@ export default class DatabaseView extends View {
           })).relationshipView
         })
       } else if (Reflect.has(this.object, key)) {
-        // eslint-disable-next-line no-restricted-syntax
+         
         if (this.object[key] === null) {
           data = null
         } else if (this.object[key]) {

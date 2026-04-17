@@ -1,5 +1,4 @@
 import Model, { column, validate, type, table } from './Model'
-import { Context } from '../classes/Context'
 import { JSONObject, RescueQuote } from '../helpers/Validators'
 
 const rescueNotesMaxLength = 2048
@@ -39,6 +38,9 @@ export default class Rescue extends Model {
 
   @column(type.BOOLEAN)
   static codeRed = false
+
+  @column(type.BOOLEAN)
+  static carrier = false
 
   @validate({ JSONObject })
   @column(type.JSONB)

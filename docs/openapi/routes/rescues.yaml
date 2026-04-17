@@ -826,12 +826,20 @@ rescues_alert:
     tags: [rescues]
     summary: Send rescue alert
     description: |
-      Send an alert to notify available rats about a rescue case.
-      The alert is sent based on the rescue's platform and expansion requirements.
-      
-      **Required Permission:** `rescues.write`
+      Broadcast a web push notification for this rescue to all subscribed
+      devices whose platform/expansion filters match the rescue.
+
+      The notification payload is generated automatically from the rescue
+      (title reflects code-red status and platform, body includes client,
+      system, and expansion).
+
+      Notifications use TTL=300s, urgency=high, and a rescue-specific
+      topic so duplicate alerts for the same rescue replace rather than
+      stack.
+
+      **Required Permission:** `twitter.write`
     security:
-      - bearerAuth: [rescues.write]
+      - bearerAuth: [twitter.write]
     parameters:
       - name: id
         in: path

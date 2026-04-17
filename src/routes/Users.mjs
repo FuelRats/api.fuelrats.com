@@ -1,5 +1,6 @@
 import { promises as fsp } from 'fs'
-import workerpool from 'workerpool'
+import { getCached, setCached, invalidateCache } from '../helpers/avatarCache'
+import { createWorkerPool } from '../helpers/workerPool'
 import {
   WritePermission,
   permissions,
@@ -27,7 +28,6 @@ import {
   ImATeapotAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
-import { Context } from '../classes/Context'
 import Event from '../classes/Event'
 import Jira from '../classes/Jira'
 import Mail from '../classes/Mail'
@@ -56,8 +56,8 @@ const avatarMaxSize = 256
  * Class for the /users endpoint
  */
 export default class Users extends APIResource {
-  static imageFormatPool = workerpool.pool('./dist/workers/image.mjs')
-  static sslGenerationPool = workerpool.pool('./dist/workers/certificate.mjs')
+  static imageFormatPool = createWorkerPool('../workers/image.mjs', import.meta.url)
+  static sslGenerationPool = createWorkerPool('../workers/certificate.mjs', import.meta.url)
 
   /**
    * @inheritdoc
@@ -134,7 +134,7 @@ export default class Users extends APIResource {
     const query = new DatabaseQuery({ connection: ctx })
     const results = await User.findAndCountAll(query.searchObject)
 
-    let result = null
+    let result
     try {
       result = await Anope.mapNicknames(results)
     } catch (error) {
@@ -162,7 +162,7 @@ export default class Users extends APIResource {
   async findById (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: User })
 
-    let user = null
+    let user
     try {
       user = await Anope.mapNickname(result)
     } catch (error) {
@@ -193,7 +193,7 @@ export default class Users extends APIResource {
       },
     })
 
-    let user = null
+    let user
     try {
       user = await Anope.mapNickname(result)
     } catch (error) {
@@ -219,7 +219,29 @@ export default class Users extends APIResource {
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
   @parameters('id')
-  async image (ctx, next) {
+  async image (ctx) {
+    const { format = defaultAvatarFormat } = ctx.query
+    const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
+
+    if (!validAvatarFormats.includes(format)) {
+      throw new BadRequestAPIError({ parameter: 'format' })
+    }
+
+    if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
+      throw new BadRequestAPIError({ parameter: 'size' })
+    }
+
+    // Try disk cache first
+    const cached = await getCached(ctx.params.id, size, format)
+    if (cached) {
+      ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
+      ctx.set('X-Cache', 'HIT')
+      ctx.type = `image/${format}`
+      ctx.body = cached
+      return cached
+    }
+
+    // Cache miss — load from database
     const avatar = await Avatar.scope('imageData').findOne({
       where: {
         userId: ctx.params.id,
@@ -229,28 +251,21 @@ export default class Users extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    const { format = defaultAvatarFormat } = ctx.query
-    const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
-
+    let imageData
     if (format !== defaultAvatarFormat || size !== avatarMaxSize) {
-      if (!validAvatarFormats.includes(format)) {
-        throw new BadRequestAPIError({ parameter: 'format' })
-      }
-
-
-      if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
-        throw new BadRequestAPIError({ parameter: 'size' })
-      }
-
-      ctx.body = await Users.convertImageData(avatar.image, { format, size })
+      imageData = await Users.convertImageData(avatar.image, { format, size })
     } else {
-      ctx.body = avatar.image
+      imageData = avatar.image
     }
 
-    ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
-    ctx.type = `image/${format}`
+    // Store in disk cache (async, don't block response)
+    setCached(ctx.params.id, size, format, imageData).catch(() => {})
 
-    next()
+    ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
+    ctx.set('X-Cache', 'MISS')
+    ctx.type = `image/${format}`
+    ctx.body = imageData
+    return imageData
   }
 
   /**
@@ -261,10 +276,7 @@ export default class Users extends APIResource {
   @POST('/users/:id/certificate')
   @parameters('id')
   @authenticated
-  @required()
   async certificate (ctx) {
-    const { password, passkeyResponse, totpCode } = getJSONAPIData({ ctx, type: 'certificate-requests' })?.attributes ?? {}
-
     const user = await User.findOne({
       where: {
         id: ctx.params.id,
@@ -277,18 +289,8 @@ export default class Users extends APIResource {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    // Validate authentication using the reusable method
-    await Users.validateUserAuthentication({
-      user,
-      password,
-      totpCode,
-      passkeyResponse,
-      ctx,
-    })
-
     const ratName = user.preferredRat().name
-    const { certificate, fingerprint } = await Users.sslGenerationPool.exec('generateSslCertificate',
-      [ratName])
+    const { certificate, fingerprint } = await Users.sslGenerationPool.exec({ ratName })
 
     const anopeAccount = await Anope.getAccount(user.email)
     if (!anopeAccount) {
@@ -297,20 +299,11 @@ export default class Users extends APIResource {
 
     await Anope.setFingerprint(user.email, fingerprint)
 
-    // Log certificate generation metrics
-    let authMethod = 'password'
-    if (passkeyResponse) {
-      authMethod = 'passkey'
-    } else if (totpCode) {
-      authMethod = 'password_2fa'
-    }
-
     logMetric('user_certificate_generated', {
       _user_id: user.id,
       _requested_by_user_id: ctx.state.user.id,
       _is_self_request: user.id === ctx.state.user.id,
       _rat_name: ratName,
-      _auth_method: authMethod,
     }, `IRC certificate generated for user ${user.id} (rat: ${ratName})`)
 
     ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
@@ -377,7 +370,7 @@ export default class Users extends APIResource {
       _is_self_change: user.id === ctx.state.user.id,
     }, `User email changed: ${user.id}`)
 
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {
@@ -485,7 +478,7 @@ export default class Users extends APIResource {
       _auth_method: passwordChangeAuthMethod,
     }, `User password changed: ${user.id} by ${ctx.state.user.id}`)
 
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {
@@ -523,7 +516,7 @@ export default class Users extends APIResource {
     }, `User created: ${user.id} by admin ${ctx.state.user.id}`)
 
     const query = new DatabaseQuery({ connection: ctx })
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {
@@ -565,7 +558,7 @@ export default class Users extends APIResource {
     }, `User updated: ${user.id} by ${ctx.state.user.id} (fields: ${updatedFields.join(', ')})`)
 
     const query = new DatabaseQuery({ connection: ctx })
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {
@@ -628,7 +621,7 @@ export default class Users extends APIResource {
       throw new ImATeapotAPIError()
     }
 
-    const imageData = await fsp.readFile(ctx.request.files.image.path)
+    const imageData = ctx.request.files.image.buffer ?? await fsp.readFile(ctx.request.files.image.path)
 
     const formattedImageData = await Users.convertImageData(imageData)
 
@@ -642,6 +635,8 @@ export default class Users extends APIResource {
       image: formattedImageData,
       userId: ctx.params.id,
     })
+
+    invalidateCache(ctx.params.id)
 
     // Log avatar update metrics
     logMetric('user_avatar_updated', {
@@ -659,6 +654,44 @@ export default class Users extends APIResource {
       },
     })
     return new DatabaseDocument({ query, result, type: UserView })
+  }
+
+  /**
+   * Delete a user's avatar
+   * @endpoint
+   */
+  @DELETE('/users/:id/image')
+  @parameters('id')
+  @authenticated
+  async deleteimage (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id,
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    await Avatar.destroy({
+      where: {
+        userId: ctx.params.id,
+      },
+    })
+
+    invalidateCache(ctx.params.id)
+
+    logMetric('user_avatar_deleted', {
+      _user_id: user.id,
+      _deleted_by_user_id: ctx.state.user.id,
+      _is_self_update: user.id === ctx.state.user.id,
+    }, `User avatar deleted: ${user.id} by ${ctx.state.user.id}`)
+
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
+    return true
   }
 
   /**
@@ -747,13 +780,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsCreate (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -769,15 +803,15 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
-    // I'm sorry Clapton, JSONAPI made me do it
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -792,13 +826,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsDelete (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -836,13 +871,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipDisplayRatPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'displayRat',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -1180,10 +1216,13 @@ export default class Users extends APIResource {
    */
   static async convertImageData (originalImageData, options = {}) {
     try {
-      return Buffer.from(await Users.imageFormatPool.exec('avatarImageFormat', [originalImageData, {
-        size: options.size ?? avatarMaxSize,
-        format: options.format ?? defaultAvatarFormat,
-      }]))
+      return Buffer.from(await Users.imageFormatPool.exec({
+        imageData: originalImageData,
+        options: {
+          size: options.size ?? avatarMaxSize,
+          format: options.format ?? defaultAvatarFormat,
+        },
+      }))
     } catch (error) {
       if (error.message.includes('unsupported image format')) {
         // Thrown when input format is unsupported

@@ -1,39 +1,48 @@
-/* eslint-disable */
-import workerpool from 'workerpool'
 import webpush from 'web-push'
-import config from '../config'
 
-/**
- * Send a web push broadcast
- * @param subscribers {object} list of subscribers
- * @param {object} payload the web push payload
- * @returns {Promise<{}>}
- */
-function webPushBroadcast (subscribers, payload) {
-  let { privateKey, publicKey } = config.webpush
-  if (!privateKey || !publicKey) {
-    return
-  }
+self.onmessage = async (event) => {
+  const {
+    id, subscribers, payload, vapidConfig, options = {},
+  } = event.data
+  try {
+    if (!vapidConfig?.privateKey || !vapidConfig?.publicKey) {
+      postMessage({ id, result: null })
+      return
+    }
 
-  webpush.setVapidDetails(
-    'mailto:support@fuelrats.com',
-    publicKey,
-    privateKey
-  );
+    webpush.setVapidDetails(
+      'mailto:support@fuelrats.com',
+      vapidConfig.publicKey,
+      vapidConfig.privateKey,
+    )
 
-  const payloadString = JSON.stringify(payload)
+    const payloadString = JSON.stringify(payload)
 
-  for (let subscription of subscribers) {
-    webpush.sendNotification({
-      endpoint: subscription.endpoint,
-      keys: {
-        auth: subscription.auth,
-        p256dh: subscription.p256dh,
-      },
-    }, payloadString);
+    const sendOptions = {
+      TTL: options.TTL ?? 60,
+      urgency: options.urgency ?? 'normal',
+      topic: options.topic,
+    }
+
+    const results = await Promise.allSettled(subscribers.map((subscription) => {
+      return webpush.sendNotification({
+        endpoint: subscription.endpoint,
+        keys: {
+          auth: subscription.auth,
+          p256dh: subscription.p256dh,
+        },
+      }, payloadString, sendOptions)
+    }))
+
+    const sent = results.filter((result) => {
+      return result.status === 'fulfilled'
+    }).length
+    const failed = results.filter((result) => {
+      return result.status === 'rejected'
+    }).length
+
+    postMessage({ id, result: { sent, failed } })
+  } catch (error) {
+    postMessage({ id, error: error.message })
   }
 }
-
-workerpool.worker({
-  webPushBroadcast
-})

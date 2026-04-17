@@ -1,4 +1,4 @@
-/* eslint-disable no-console,max-statements,no-magic-numbers */
+/* eslint-disable no-console */
 'use strict'
 
 module.exports = {

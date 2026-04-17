@@ -18,8 +18,8 @@ export default class Passkey extends Model {
   @column(type.INTEGER)
   static counter = 0
 
-  @column(type.STRING)
-  static name = undefined
+  @column(type.STRING, { name: 'name' })
+  static passkeyName = undefined
 
   @column(type.BOOLEAN)
   static backedUp = false

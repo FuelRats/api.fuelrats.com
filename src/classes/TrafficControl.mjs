@@ -1,5 +1,3 @@
-import { User } from '../db'
-import { Context } from './Context'
 
 const hourTimer = 60 * 60 * 1000
 
@@ -12,7 +10,6 @@ const allowedAuthenticatedRequestCount = 3600
  * @class
  */
 class TrafficControl {
-  #resetTimer = 0
 
   /**
    * Create a new instance of a Traffic Controller with fresh hash tables and reset clock
@@ -30,7 +27,7 @@ class TrafficControl {
    * and the total requests
    */
   validateRateLimit ({ connection, increase = true }) {
-    let entity = undefined
+    let entity
     if (connection.state.user) {
       entity = this.retrieveAuthenticatedEntity({ user: connection.state.user })
     } else {
@@ -101,7 +98,7 @@ class TrafficControl {
   reset () {
     this.authenticatedRequests = {}
     this.unauthenticatedRequests = {}
-    this.#resetTimer = setTimeout(this.reset.bind(this), this.remainingTimeToNextResetDate)
+    this._resetTimer = setTimeout(this.reset.bind(this), this.remainingTimeToNextResetDate)
   }
 }
 
@@ -185,17 +182,14 @@ class AuthenticatedUserEntity extends TrafficEntity {
  * Class representing an unauthenticated remote address containing their requests the last clock hour
  */
 class RemoteAddressEntity extends TrafficEntity {
-  #remoteAddress = undefined
-
   /**
    * Create an entity representing the traffic made by a specific unauthenticated remote address
    * @param {object} arg function arguments object
    * @param {string} arg.remoteAddress The remote address this traffic belongs to
    * @param {number} [arg.initialCount] Optional parameter containing the number of requests this entity should start
    */
-  constructor ({ remoteAddress, initialCount = 0 }) {
+  constructor ({ initialCount = 0 } = {}) {
     super()
-    this.#remoteAddress = remoteAddress
     this.requestCount = initialCount
   }
 

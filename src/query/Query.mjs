@@ -1,5 +1,4 @@
 import { BadRequestAPIError, UnprocessableEntityAPIError } from '../classes/APIError'
-import { Context } from '../classes/Context'
 import enumerable from '../helpers/Enum'
 
 const defaultOffset = 0
@@ -196,7 +195,7 @@ export default class Query {
     if (typeof filter === 'string') {
       try {
         return JSON.parse(filter)
-      } catch (ex) {
+      } catch {
         throw new UnprocessableEntityAPIError({
           parameter: 'filter',
         })

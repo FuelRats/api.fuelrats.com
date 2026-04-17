@@ -42,48 +42,58 @@ export default class Model extends Sequelize.Model {
 }
 
 /**
- * Decorator for defining the settings of a database table
+ * TC39 class decorator for defining the settings of a database table
  * @param {object} options table options
  * @returns {Function} decorator
  */
 export function table (options) {
-  return (target) => {
-    target.options = options
+  return (target, context) => {
+    Object.defineProperty(target, 'options', {
+      value: options,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    })
   }
 }
 
 /**
- * Decorator for defining a database table column
+ * TC39 field decorator for defining a database table column
  * @param {Sequelize.DataTypes} columnType the data type of the column
- * @param {boolean} [allowNull] allow this column to have null values
+ * @param {object} [options] column options
+ * @param {boolean} [options.allowNull] allow this column to have null values
  * @returns {Function} decorator
  */
 export function column (columnType, { allowNull = false, ...options } = {}) {
-  return (target, name) => {
-    const columnName = options.name ?? name
-    target.columns = target.columns ?? {}
-    target.columns[columnName] = {
-      type: columnType,
-      allowNull,
-      ...options,
-      defaultValue: target[columnName],
-    }
+  return (value, context) => {
+    context.addInitializer(function () {
+      const columnName = options.name ?? context.name
+      this.columns = this.columns ?? {}
+      this.columns[columnName] = {
+        type: columnType,
+        allowNull,
+        ...options,
+        defaultValue: this[context.name],
+      }
+    })
   }
 }
 
 /**
- * Decorator for defining validators on a database table column
- * @param {[object]} validations column value validations
- * @param {object} options validation options
+ * TC39 field decorator for defining validators on a database table column
+ * @param {object} validations column value validations
+ * @param {object} [options] validation options
  * @returns {Function} decorator
  */
 export function validate (validations, options = {}) {
-  return (target, name) => {
-    const columnName = options.name ?? name
-    if (Reflect.has(target.columns, columnName) === false) {
-      throw new TypeError('Attempted to validate a field that has not been declared as a column')
-    }
+  return (value, context) => {
+    context.addInitializer(function () {
+      const columnName = options.name ?? context.name
+      if (!this.columns || Reflect.has(this.columns, columnName) === false) {
+        throw new TypeError('Attempted to validate a field that has not been declared as a column')
+      }
 
-    target.columns[columnName].validate = validations
+      this.columns[columnName].validate = validations
+    })
   }
 }

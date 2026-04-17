@@ -1,5 +1,3 @@
-import Query from '../query'
-import View from '../view'
 import Document, { DocumentViewType } from './Document'
 
 /**
@@ -9,8 +7,6 @@ import Document, { DocumentViewType } from './Document'
  */
 export default // noinspection JSClosureCompilerSyntax
 class ObjectDocument extends Document {
-  #result = undefined
-  #query = undefined
 
   /**
    * Create a JSONAPI document from a database result
@@ -29,8 +25,6 @@ class ObjectDocument extends Document {
       view,
     })
 
-    this.#result = result
-    this.#query = query
   }
 
   /**

@@ -11,12 +11,14 @@ import {
   UnprocessableEntityAPIError,
   UnsupportedMediaAPIError,
 } from '../classes/APIError'
+import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
+import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import config from '../config'
-import { Passkey, User } from '../db'
+import { Passkey, Token, User } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
-import ObjectDocument from '../Documents/ObjectDocument'
+import tokenMetadata from '../helpers/issueSession'
 import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { PasskeyView } from '../view'
@@ -25,6 +27,7 @@ import {
   POST,
   DELETE,
   authenticated,
+  clientAuthenticated,
   required,
   WritePermission,
 } from './API'
@@ -32,7 +35,10 @@ import APIResource from './APIResource'
 
 const rpName = 'The Fuel Rats'
 const rpId = new URL(config.server.externalUrl).hostname
-const expectedOrigin = config.server.externalUrl
+const expectedOrigins = [
+  config.server.externalUrl,
+  config.frontend.url,
+].filter(Boolean)
 
 /**
  * Passkeys/WebAuthn API endpoint
@@ -99,7 +105,7 @@ export default class Passkeys extends APIResource {
     const options = await generateRegistrationOptions({
       rpName,
       rpID: rpId,
-      userID: user.id,
+      userID: new TextEncoder().encode(user.id),
       userName: user.email,
       userDisplayName: user.displayName(),
       excludeCredentials,
@@ -112,13 +118,7 @@ export default class Passkeys extends APIResource {
     // Store the challenge in the session for verification
     ctx.session.passkeyChallenge = options.challenge
 
-    const query = new DatabaseQuery({ connection: ctx })
-    return new ObjectDocument({
-      query,
-      result: options,
-      type: PasskeyView,
-      view: DocumentViewType.individual,
-    })
+    return options
   }
 
   /**
@@ -153,18 +153,18 @@ export default class Passkeys extends APIResource {
       })
     }
 
-    let verification = null
+    let verification
     try {
       verification = await verifyRegistrationResponse({
         response,
         expectedChallenge,
-        expectedOrigin,
+        expectedOrigin: expectedOrigins,
         expectedRPID: rpId,
       })
     } catch (error) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/response',
-        detail: error.message,
+        detail: error.message || String(error),
       })
     }
 
@@ -175,11 +175,11 @@ export default class Passkeys extends APIResource {
       })
     }
 
-    const { credentialPublicKey, credentialID, counter, credentialBackedUp } = verification.registrationInfo
+    const { credential, credentialBackedUp } = verification.registrationInfo
 
     // Check if this credential is already registered
     const existingPasskey = await Passkey.findOne({
-      where: { credentialId: Buffer.from(credentialID).toString('base64url') },
+      where: { credentialId: credential.id },
     })
 
     if (existingPasskey) {
@@ -190,9 +190,9 @@ export default class Passkeys extends APIResource {
     }
 
     const passkey = await Passkey.create({
-      credentialId: Buffer.from(credentialID).toString('base64url'),
-      publicKey: Buffer.from(credentialPublicKey).toString('base64url'),
-      counter,
+      credentialId: credential.id,
+      publicKey: Buffer.from(credential.publicKey).toString('base64url'),
+      counter: credential.counter,
       name,
       backedUp: credentialBackedUp,
       userId: user.id,
@@ -227,43 +227,40 @@ export default class Passkeys extends APIResource {
    */
   @POST('/passkeys/authenticate')
   async generateAuthenticationOptions (ctx) {
-    const attributes = ctx.data?.data?.attributes
-    if (!attributes) {
-      throw new UnprocessableEntityAPIError({
-        pointer: '/data/attributes',
-      })
-    }
+    const attributes = ctx.data?.data?.attributes ?? {}
     const { email } = attributes
 
-    if (!email) {
-      throw new UnprocessableEntityAPIError({
-        pointer: '/data/attributes/email',
+    let allowCredentials = undefined
+    let userId = undefined
+
+    if (email) {
+      // Email provided — restrict to that user's passkeys
+      const user = await User.findOne({
+        where: { email: { ilike: email } },
       })
-    }
 
-    const user = await User.findOne({
-      where: { email: { ilike: email } },
-    })
-
-    if (!user) {
-      // Don't reveal if user exists or not
-      throw new UnauthorizedAPIError({})
-    }
-
-    const userPasskeys = await Passkey.findAll({
-      where: { userId: user.id },
-    })
-
-    if (userPasskeys.length === 0) {
-      throw new UnauthorizedAPIError({})
-    }
-
-    const allowCredentials = userPasskeys.map((passkey) => {
-      return {
-        id: passkey.credentialId,
-        type: 'public-key',
+      if (!user) {
+        throw new UnauthorizedAPIError({})
       }
-    })
+
+      const userPasskeys = await Passkey.findAll({
+        where: { userId: user.id },
+      })
+
+      if (userPasskeys.length === 0) {
+        throw new UnauthorizedAPIError({})
+      }
+
+      allowCredentials = userPasskeys.map((passkey) => {
+        return {
+          id: passkey.credentialId,
+          type: 'public-key',
+        }
+      })
+
+      userId = user.id
+    }
+    // No email — discoverable credential flow, allowCredentials left empty
 
     const options = await generateAuthenticationOptions({
       rpID: rpId,
@@ -271,24 +268,21 @@ export default class Passkeys extends APIResource {
       userVerification: 'preferred',
     })
 
-    // Store the challenge and user ID in the session for verification
+    // Store the challenge in the session (userId may be null for discoverable)
     ctx.session.passkeyChallenge = options.challenge
-    ctx.session.passkeyUserId = user.id
+    if (userId) {
+      ctx.session.passkeyUserId = userId
+    }
 
-    const query = new DatabaseQuery({ connection: ctx })
-    return new ObjectDocument({
-      query,
-      result: options,
-      type: PasskeyView,
-      view: DocumentViewType.individual,
-    })
+    return options
   }
 
   /**
-   * Verify passkey authentication
+   * Verify passkey authentication and issue a bearer token
    * @endpoint
    */
   @POST('/passkeys/verify')
+  @clientAuthenticated
   @required('response')
   async verifyPasskey (ctx) {
     const attributes = ctx.data?.data?.attributes
@@ -299,43 +293,48 @@ export default class Passkeys extends APIResource {
     }
     const { response } = attributes
     const expectedChallenge = ctx.session.passkeyChallenge
-    const userId = ctx.session.passkeyUserId
+    const sessionUserId = ctx.session.passkeyUserId
 
-    if (!expectedChallenge || !userId) {
+    if (!expectedChallenge) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/response',
         detail: 'No challenge found in session',
       })
     }
 
-    const passkey = await Passkey.findOne({
-      where: {
-        credentialId: response.id,
-        userId,
-      },
-    })
+    const { client } = ctx.state
+
+    // Look up the passkey — by credential ID + userId if known, or just credential ID for discoverable
+    const passkeyQuery = { credentialId: response.id }
+    if (sessionUserId) {
+      passkeyQuery.userId = sessionUserId
+    }
+
+    const passkey = await Passkey.findOne({ where: passkeyQuery })
 
     if (!passkey) {
       throw new UnauthorizedAPIError({})
     }
 
-    let verification = null
+    const userId = passkey.userId
+
+    let verification
     try {
       verification = await verifyAuthenticationResponse({
         response,
         expectedChallenge,
-        expectedOrigin,
+        expectedOrigin: expectedOrigins,
         expectedRPID: rpId,
-        authenticator: {
-          credentialID: Buffer.from(passkey.credentialId, 'base64url'),
-          credentialPublicKey: Buffer.from(passkey.publicKey, 'base64url'),
+        credential: {
+          id: passkey.credentialId,
+          publicKey: Buffer.from(passkey.publicKey, 'base64url'),
           counter: passkey.counter,
         },
       })
     } catch (error) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/response',
-        detail: error.message,
+        detail: error.message || String(error),
       })
     }
 
@@ -352,23 +351,27 @@ export default class Passkeys extends APIResource {
     delete ctx.session.passkeyChallenge
     delete ctx.session.passkeyUserId
 
+    // Issue a bearer token
+    const token = await Token.create({
+      value: await oAuthTokenGenerator(),
+      clientId: client.id,
+      userId,
+      scope: ['*'],
+      ...tokenMetadata(ctx, 'passkey'),
+    })
+
     // Log passkey authentication metrics
     logMetric('passkey_authentication', {
       _user_id: userId,
       _passkey_id: passkey.id,
       _passkey_name: passkey.name,
-      _counter_updated: verification.authenticationInfo.newCounter !== passkey.counter,
+      _client_id: client.id,
     }, `Passkey authentication successful: ${passkey.name} for user ${userId}`)
 
-    // Return the authenticated user
-    const user = await User.findOne({ where: { id: userId } })
-    const query = new DatabaseQuery({ connection: ctx })
-    return new ObjectDocument({
-      query,
-      result: { user, verified: true },
-      type: PasskeyView,
-      view: DocumentViewType.individual,
-    })
+    return {
+      access_token: token.value,
+      token_type: 'bearer',
+    }
   }
 
   /**
@@ -416,6 +419,28 @@ export default class Passkeys extends APIResource {
    */
   isSelf ({ ctx, entity }) {
     return entity.userId === ctx.state.user.id
+  }
+
+  /**
+   * Passkeys use user-level permissions since they are a user sub-resource
+   * @inheritdoc
+   */
+  hasReadPermission ({ connection, entity }) {
+    if (this.isSelf({ ctx: connection, entity })) {
+      return Permission.granted({ permissions: ['users.read.me', 'users.read'], connection })
+    }
+    return Permission.granted({ permissions: ['users.read'], connection })
+  }
+
+  /**
+   * @inheritdoc
+   */
+  hasWritePermission ({ connection, entity }) {
+    if (this.isSelf({ ctx: connection, entity })) {
+      return Permission.granted({ permissions: ['users.write.me'], connection })
+        || Permission.granted({ permissions: ['users.write'], connection })
+    }
+    return Permission.granted({ permissions: ['users.write'], connection })
   }
 
   /**

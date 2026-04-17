@@ -57,7 +57,7 @@ export default class Frontier extends API {
         _login_type: 'existing_link',
       }, `Frontier SSO login: ${profile.commander.name} (existing link)`)
 
-      ctx.status.code = StatusCode.created
+      ctx.response.status = StatusCode.created
 
       const query = new DatabaseQuery({ connection: ctx })
       return new DatabaseDocument({ query, newToken, type: TokenView })
@@ -138,7 +138,7 @@ export default class Frontier extends API {
       _login_type: 'linked_account',
     }, `Frontier SSO login: ${profile.commander.name} (linked account)`)
 
-    ctx.status.code = StatusCode.created
+    ctx.response.status = StatusCode.created
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }
@@ -220,7 +220,7 @@ export default class Frontier extends API {
       _nickname: nickname,
     }, `Frontier SSO account created: ${profile.commander.name} on ${platform}`)
 
-    ctx.status.code = StatusCode.created
+    ctx.response.status = StatusCode.created
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }

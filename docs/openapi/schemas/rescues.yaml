@@ -26,6 +26,9 @@ Rescue:
             codeRed:
               type: boolean
               description: Emergency status (**Write Permission:** `rescues.write` or assigned to rescue)
+            carrier:
+              type: boolean
+              description: Client was rescued by fleet carrier (**Write Permission:** `rescues.write` or assigned to rescue)
             data:
               type: object
               description: Additional rescue metadata (**Write Permission:** `rescues.write` or assigned to rescue)

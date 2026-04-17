@@ -14,7 +14,6 @@ import {
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import {
-  OAuthError,
   AccessDeniedOAuthError,
   InvalidClientOAuthError,
   InvalidRequestOAuthError,
@@ -27,6 +26,7 @@ import { oAuthTokenGenerator, transactionGenerator } from '../classes/TokenGener
 import config from '../config'
 import { Client, Code, User } from '../db'
 import Token from '../db/Token'
+import tokenMetadata from '../helpers/issueSession'
 import { isValidRedirectUri } from '../helpers/Validators'
 import { logMetric } from '../logging'
 
@@ -208,7 +208,7 @@ class OAuth extends API {
       return Permission.isValidOAuthScope(scopeEntry) === false
     })
     if (invalidScopes.length > 0) {
-      return callbackError(redirectUri, throw new InvalidScopeOAuthError(invalidScopes.join(',')))
+      return callbackError(redirectUri, new InvalidScopeOAuthError(invalidScopes.join(',')))
     }
 
     /* Check if OAuth client exists */
@@ -258,7 +258,7 @@ class OAuth extends API {
 
       /* User has previously granted access, skip immediately to returning a token */
       if (existingToken && responseType === 'token') {
-        let tokenValue = null
+        let tokenValue
 
         // Use JWT access tokens only for OpenID Connect flows
         if (scopes.includes('openid')) {
@@ -277,6 +277,7 @@ class OAuth extends API {
           scope: scopes,
           clientId,
           userId: ctx.state.user.id,
+          ...tokenMetadata(ctx, 'implicit'),
         })
 
         const response = {
@@ -402,8 +403,8 @@ class OAuth extends API {
 
     /* User allowed access, return bearer token */
     if (transaction.responseType === 'token') {
-      let tokenValue = null
-      let user = null
+      let tokenValue
+      let user
 
       // Use JWT access tokens only for OpenID Connect flows
       if (transaction.scopes.includes('openid')) {
@@ -423,6 +424,7 @@ class OAuth extends API {
         scope: transaction.scopes,
         clientId: transaction.clientId,
         userId: transaction.userId,
+        ...tokenMetadata(ctx, 'implicit'),
       })
 
       const response = {
@@ -522,8 +524,8 @@ class OAuth extends API {
     }
 
     /* Exchange successful, return bearer token */
-    let tokenValue = null
-    let user = null
+    let tokenValue
+    let user
 
     // Use JWT access tokens only for OpenID Connect flows
     if (authCode.scope.includes('openid')) {
@@ -543,6 +545,7 @@ class OAuth extends API {
       scope: authCode.scope,
       userId: authCode.userId,
       clientId: authCode.clientId,
+      ...tokenMetadata(ctx, 'authorization_code'),
     })
 
     const response = {
@@ -676,6 +679,7 @@ class OAuth extends API {
       clientId: client.id,
       userId: user.id,
       scope: ['*'],
+      ...tokenMetadata(ctx, 'password'),
     })
 
     // Log OAuth ROPC token metrics
@@ -810,10 +814,10 @@ class OAuth extends API {
       response_types_supported: ['code', 'token'],
       grant_types_supported: ['authorization_code', 'password', 'implicit'],
       subject_types_supported: ['public'],
-      // eslint-disable-next-line id-length
+       
       id_token_signing_alg_values_supported: ['HS256'],
       scopes_supported: ['openid', 'profile', 'email', 'groups'],
-      // eslint-disable-next-line id-length
+       
       token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],
       claims_supported: [
         'sub',
