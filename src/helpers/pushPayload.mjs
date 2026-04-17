@@ -60,7 +60,7 @@ export async function buildRescuePayload (rescue) {
     title,
     body,
     tag: `rescue-${rescue.id}`,
-    icon: rescue.codeRed ? '/static/icons/codered.png' : '/static/icons/rescue.png',
+    icon: 'https://mastodon.localecho.net/system/accounts/avatars/109/322/074/516/482/860/original/6c1166876589a26a.png',
     data: {
       rescueId: rescue.id,
       shortId: rescue.id.slice(-10),
