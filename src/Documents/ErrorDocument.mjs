@@ -38,6 +38,11 @@ class ErrorDocument extends Document {
           break
 
         case (error.name === 'SequelizeValidationError'):
+          logger.error({
+            GELF: true,
+            _event: 'sequelize_validation_error',
+            _errors: error.errors.map((e) => { return `${e.path}: ${e.message}` }).join(', '),
+          }, `Sequelize validation error: ${error.errors.map((e) => { return e.message }).join(', ')}`)
           errorAcc.push(...error.errors.map((validationError) => {
             return new UnprocessableEntityAPIError({
               pointer: `/data/attributes/${validationError.path}`,
@@ -46,6 +51,12 @@ class ErrorDocument extends Document {
           break
 
         case (error.name === 'SequelizeDatabaseError'):
+          logger.error({
+            GELF: true,
+            _event: 'sequelize_error',
+            _error_message: error.message,
+            _sql: error.sql,
+          }, `Sequelize database error: ${error.message}`)
           errorAcc.push(new UnprocessableEntityAPIError({
             parameter: 'filter',
           }))
