@@ -47,7 +47,8 @@
     "sequelize": "^6.37.8",
     "sharp": "^0.34.5",
     "ua-parser-js": "^2.0.9",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@fuelrats/eslint-config": "^2.3.0",

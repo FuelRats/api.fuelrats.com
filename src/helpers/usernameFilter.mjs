@@ -8,8 +8,9 @@ import {
 } from 'obscenity'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import { parse as parseYaml } from 'yaml'
 
-const blockedNamesPath = resolve('data/blocked-names.json')
+const blockedNamesPath = resolve('data/blocked-names.yaml')
 
 /**
  * Load the blocked names list from disk and build matchers.
@@ -19,7 +20,7 @@ const blockedNamesPath = resolve('data/blocked-names.json')
 function buildMatchers () {
   let data = { blocked: [], blocked_word_boundary: [] }
   try {
-    data = JSON.parse(readFileSync(blockedNamesPath, 'utf8'))
+    data = parseYaml(readFileSync(blockedNamesPath, 'utf8'))
   } catch {
     console.warn('blocked-names.json not found or invalid — username filtering disabled')
   }
@@ -28,9 +29,10 @@ function buildMatchers () {
   const literalDataset = new DataSet()
 
   // Substring matches — blocked anywhere in the name
-  for (const term of (data.blocked ?? [])) {
-    // Purely numeric terms break with leet speak transformer, use literal matcher
-    if (/^\d+$/u.test(term)) {
+  for (const rawTerm of (data.blocked ?? [])) {
+    const term = String(rawTerm)
+    // Terms containing digits break with leet speak transformer, use literal matcher
+    if (/\d/u.test(term)) {
       literalDataset.addPhrase((phrase) => {
         return phrase.addPattern(parseRawPattern(term))
       })
@@ -42,7 +44,8 @@ function buildMatchers () {
   }
 
   // Word-boundary matches — only blocked as a standalone word
-  for (const term of (data.blocked_word_boundary ?? [])) {
+  for (const rawTerm of (data.blocked_word_boundary ?? [])) {
+    const term = String(rawTerm)
     const raw = parseRawPattern(term)
     raw.requireWordBoundaryAtStart = true
     raw.requireWordBoundaryAtEnd = true
