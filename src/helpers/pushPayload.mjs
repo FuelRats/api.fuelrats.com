@@ -14,50 +14,46 @@ const expansionLabels = {
 
 /**
  * Build a structured push notification payload for a rescue alert.
- * Format matches SwiftSqueak's social media post style:
- *   "PC (Odyssey) rats needed near Sol! Case #5"
- *   "Xbox rats needed for a CODE RED rescue, location unknown!"
+ *
+ * Title:  "CODE RED — PC (Odyssey)" or "Rescue — Xbox"
+ * Body:   "NLTT 48288 · ~90LY from Sol" or "Location unknown"
+ *
  * @param {object} rescue the Rescue model instance
- * @returns {object} notification payload ready for JSON.stringify + showNotification
+ * @returns {Promise<object>} notification payload ready for showNotification
  */
 export async function buildRescuePayload (rescue) {
   const platformLabel = platformLabels[rescue.platform] || 'Unknown'
   const expansionLabel = expansionLabels[rescue.expansion] || ''
 
-  // Build platform string: "PC (Odyssey)" or just "Xbox"
+  // Title: "CODE RED — PC (Odyssey) · Fleet Carrier"
+  const titleParts = []
+  titleParts.push(rescue.codeRed ? 'CODE RED' : 'Rescue')
+
   let platformStr = platformLabel
   if (rescue.platform === 'pc' && expansionLabel) {
     platformStr = `${platformLabel} (${expansionLabel})`
   }
+  titleParts.push(platformStr)
 
-  // Build body in Mecha's style
-  let body = `${platformStr} rats needed`
-  if (rescue.codeRed) {
-    body += ' for a CODE RED rescue'
-  }
   if (rescue.carrier) {
-    body += rescue.codeRed ? ' (Fleet Carrier)' : ' for a Fleet Carrier rescue'
+    titleParts.push('Fleet Carrier')
   }
+
+  const title = titleParts.join(' — ')
+
+  // Body: "NLTT 48288 · ~90LY from Sol"
+  const bodyParts = []
   if (rescue.system) {
-    // Try to get a landmark-relative description like "near Sol" or "~500LY from Colonia"
+    bodyParts.push(rescue.system)
     const systemDesc = await getSystemDescription(rescue.system).catch(() => { return null })
     if (systemDesc) {
-      body += ` ${systemDesc}`
-    } else {
-      body += ` in ${rescue.system}`
+      bodyParts.push(systemDesc)
     }
   } else {
-    body += ', location unknown'
-  }
-  body += '!'
-
-  // Title is short — just the alert type
-  let title = 'Fuel Rats Rescue'
-  if (rescue.codeRed) {
-    title = 'CODE RED'
+    bodyParts.push('Location unknown')
   }
 
-  const shortId = rescue.id.slice(-10)
+  const body = bodyParts.join(' · ')
 
   return {
     type: 'rescue.alert',
@@ -67,7 +63,7 @@ export async function buildRescuePayload (rescue) {
     icon: rescue.codeRed ? '/static/icons/codered.png' : '/static/icons/rescue.png',
     data: {
       rescueId: rescue.id,
-      shortId,
+      shortId: rescue.id.slice(-10),
       platform: rescue.platform,
       expansion: rescue.expansion,
       codeRed: rescue.codeRed,
