@@ -1,0 +1,81 @@
+version: "3.8"
+
+secrets:
+  frapi_cookie:
+    external: true
+  frapi_jwt_secret:
+    external: true
+  frapi_jira_password:
+    external: true
+  frapi_announcer_secret:
+    external: true
+  frapi_frontier_sharedkey:
+    external: true
+
+services:
+  api:
+    image: ghcr.io/fuelrats/api.fuelrats.com:develop
+    ports:
+      - "8502:8080"
+    environment:
+      FRAPI_HOSTNAME: "0.0.0.0"
+      FRAPI_PORT: "8080"
+      FRAPI_URL: "https://dev.api.fuelrats.com"
+      FRAPI_PROXY_ENABLED: "true"
+      FRAPI_FRONTEND_URL: "https://fuelrats.dev"
+      FRAPI_FRONTEND_CLIENTID: "a505dd0e-6f7d-4e0f-b917-35cfcd88865f"
+
+      # Postgres
+      FRAPI_POSTGRES_HOSTNAME: "192.168.100.10"
+      FRAPI_POSTGRES_DATABASE: "fuelratsapi_dev"
+
+      # Anope
+      FRAPI_ANOPE_DATABASE: "anope"
+      FRAPI_ANOPE_USERNAME: "anope2"
+      FRAPI_ANOPE_HOSTNAME: "192.168.100.30"
+
+      # Frontier SSO
+      FRAPI_FRONTIER_CLIENTID: "b9acea4f-68a2-4a21-9a6b-c8bc4aa7bbb4"
+      FRAPI_FRONTIER_REDIRECTURI: "https://dev.fuelrats.com/frontier"
+
+      # Graylog
+      FRAPI_GRAYLOG_HOST: "192.168.100.30"
+
+      # Jira
+      FRAPI_JIRA_USERNAME: "ratmama"
+
+      # GeoIP (built into the Docker image at /app/geoip)
+      FRAPI_GEOIP_DIRECTORY: "/app/geoip"
+
+      # Announcer
+      FRAPI_ANNOUNCER_DESTINATION_RESCUE: "#rattech"
+      FRAPI_ANNOUNCER_DESTINATION_MODERATION: "#rattech"
+      FRAPI_ANNOUNCER_DESTINATION_NETWORK: "#rattech"
+      FRAPI_ANNOUNCER_DESTINATION_DRILL: "#rattech"
+
+    secrets:
+      - frapi_cookie
+      - frapi_jwt_secret
+      - frapi_jira_password
+      - frapi_announcer_secret
+      - frapi_frontier_sharedkey
+    networks:
+      - default
+      - host_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == emmental
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+networks:
+  host_network:
+    external: true
+    name: host
