@@ -40,15 +40,18 @@ export default class WebPushSubscriptions extends APIResource {
   @POST('/web-push')
   @authenticated
   async subscribeWeb (ctx) {
+    const body = ctx.data?.data?.attributes ?? ctx.data ?? {}
     const {
       endpoint,
       expirationTime,
-      keys: { auth, p256dh },
+      keys,
       pc = true,
       xb = true,
       ps = true,
       odyssey = true,
-    } = ctx.data
+    } = body
+    const auth = keys?.auth
+    const p256dh = keys?.p256dh
     if (!endpoint) {
       throw new UnprocessableEntityAPIError({ pointer: 'endpoint' })
     }
@@ -85,7 +88,8 @@ export default class WebPushSubscriptions extends APIResource {
   @DELETE('/web-push')
   @authenticated
   async unsubscribeWeb (ctx) {
-    const { endpoint } = ctx.data ?? {}
+    const body = ctx.data?.data?.attributes ?? ctx.data ?? {}
+    const { endpoint } = body
     if (!endpoint) {
       throw new UnprocessableEntityAPIError({ pointer: 'endpoint' })
     }
