@@ -5,6 +5,7 @@ import { User, WebPushSubscription } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import config from '../config'
+import { detectPlatform, detectExpansion } from '../helpers/platformDetect'
 import { buildBroadcastPayload } from '../helpers/pushPayload'
 import { createWorkerPool } from '../helpers/workerPool'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -220,7 +221,15 @@ export default class WebPushSubscriptions extends APIResource {
       })
     }
 
-    const subscriptions = await WebPushSubscription.findAll({})
+    // Auto-detect platform/expansion from title+body to filter subscriptions
+    const searchText = `${title} ${body}`
+    const filterQuery = {}
+    const platform = detectPlatform(searchText)
+    if (platform) { filterQuery[platform] = true }
+    const expansion = detectExpansion(searchText)
+    if (expansion) { filterQuery[expansion] = true }
+
+    const subscriptions = await WebPushSubscription.findAll({ where: filterQuery })
     webPushPool.exec({
       subscribers: subscriptions,
       payload: buildBroadcastPayload({ title, body, icon, tag, data, type }),
