@@ -12,42 +12,61 @@ const expansionLabels = {
 
 /**
  * Build a structured push notification payload for a rescue alert.
+ * Format matches SwiftSqueak's social media post style:
+ *   "PC (Odyssey) rats needed near Sol! Case #5"
+ *   "Xbox rats needed for a CODE RED rescue, location unknown!"
  * @param {object} rescue the Rescue model instance
  * @returns {object} notification payload ready for JSON.stringify + showNotification
  */
 export function buildRescuePayload (rescue) {
-  const platformLabel = platformLabels[rescue.platform] || 'Unknown platform'
+  const platformLabel = platformLabels[rescue.platform] || 'Unknown'
   const expansionLabel = expansionLabels[rescue.expansion] || ''
 
-  const lines = [
-    `Client: ${rescue.client || 'Unknown'}`,
-    rescue.system ? `System: ${rescue.system}` : null,
-    expansionLabel ? `Expansion: ${expansionLabel}` : null,
-  ].filter(Boolean)
+  // Build platform string: "PC (Odyssey)" or just "Xbox"
+  let platformStr = platformLabel
+  if (rescue.platform === 'pc' && expansionLabel) {
+    platformStr = `${platformLabel} (${expansionLabel})`
+  }
 
-  let title = 'Rescue alert'
+  // Build body in Mecha's style
+  let body = `${platformStr} rats needed`
   if (rescue.codeRed) {
-    title = `CODE RED — ${platformLabel}`
-  } else {
-    title = `Rescue — ${platformLabel}`
+    body += ' for a CODE RED rescue'
   }
   if (rescue.carrier) {
-    title += ' (Fleet Carrier)'
+    body += rescue.codeRed ? ' (Fleet Carrier)' : ' for a Fleet Carrier rescue'
   }
+  if (rescue.system) {
+    body += ` in ${rescue.system}`
+  } else {
+    body += ', location unknown'
+  }
+  body += '!'
+
+  // Title is short — just the alert type
+  let title = 'Fuel Rats Rescue'
+  if (rescue.codeRed) {
+    title = 'CODE RED'
+  }
+
+  const shortId = rescue.id.slice(-10)
 
   return {
     type: 'rescue.alert',
     title,
-    body: lines.join('\n'),
+    body,
     tag: `rescue-${rescue.id}`,
     icon: rescue.codeRed ? '/static/icons/codered.png' : '/static/icons/rescue.png',
     data: {
       rescueId: rescue.id,
+      shortId,
       platform: rescue.platform,
       expansion: rescue.expansion,
       codeRed: rescue.codeRed,
       carrier: rescue.carrier,
-      url: `/rescue/${rescue.id}`,
+      system: rescue.system,
+      client: rescue.client,
+      url: `/paperwork/${rescue.id}`,
     },
   }
 }
