@@ -6,7 +6,7 @@ import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
 import {
-  User, Token, Client, Reset, Authenticator, Passkey, db,
+  User, Token, Client, Reset, Authenticator, Passkey,
 } from '../db'
 import { logMetric } from '../logging'
 
@@ -18,7 +18,6 @@ import {
   ResetRequiredAPIError,
   ForbiddenAPIError,
 } from './APIError'
-import { Context } from './Context'
 import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
@@ -104,7 +103,7 @@ class Authentication {
         })
       }
 
-      let isValidCode = false
+      let isValidCode
       let usedRecoveryCode = false
       try {
         isValidCode = otpVerify({ token: code, secret: authenticator.secret }).valid
@@ -201,7 +200,7 @@ class Authentication {
 
     // Verify the passkey response
     const { verifyAuthenticationResponse } = await import('@simplewebauthn/server')
-    let verification = null
+    let verification
     try {
       verification = await verifyAuthenticationResponse({
         response: passkeyResponse,
@@ -214,7 +213,7 @@ class Authentication {
           counter: passkey.counter,
         },
       })
-    } catch (error) {
+    } catch {
       return undefined
     }
 
@@ -266,7 +265,7 @@ class Authentication {
       }
 
       return decoded
-    } catch (error) {
+    } catch {
       // JWT validation failed
       return null
     }
@@ -507,7 +506,7 @@ class Authentication {
       throw new ForbiddenAPIError({ parameter: 'representing' })
     }
 
-    let representedUser = undefined
+    let representedUser
     if (new UUID(constants.uuidVersion).parse(representing)) {
       representedUser = await User.findOne({
         where: {

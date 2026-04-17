@@ -14,7 +14,7 @@ const requiredQuoteFields = [
 ]
 
 export const IRCVirtualHost = /^[a-z][a-z0-9.]{3,64}$/u
-export const IRCNickname = /^[A-Za-z_\\`\[\]{}]([A-Za-z0-9_\\`\[\]{}\-|]{1,29})?$/u
+export const IRCNickname = /^[A-Za-z_\\`[\]{}]([A-Za-z0-9_\\`[\]{}\-|]{1,29})?$/u
 // eslint-disable-next-line no-control-regex -- RFC1459 compliant channel names must not contain \x07 (BELL)
 export const IRCChannel = /^[&#][^\x07,\s]{1,200}$/u
 export const languageCode = /^[a-z]{2}-[A-Z]{2}$/u
@@ -95,10 +95,10 @@ export function isValidRedirectUri (urlString) {
     return false
   }
 
-  let url = undefined
+  let url
   try {
     url = new URL(urlString)
-  } catch (ex) {
+  } catch {
     return false
   }
 
@@ -130,7 +130,7 @@ export function RescueQuote (quotes) {
         }
       })
     })
-  } catch (ex) {
+  } catch {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/quotes' })
   }
 }
@@ -158,7 +158,7 @@ export function IRCNicknames (value) {
 export function isURL (value) {
   try {
     return new URL(value)
-  } catch (ex) {
+  } catch {
     throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/redirectUri' })
   }
 }

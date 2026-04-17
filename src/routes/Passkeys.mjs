@@ -18,7 +18,6 @@ import config from '../config'
 import { Passkey, Token, User } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
-import ObjectDocument from '../Documents/ObjectDocument'
 import tokenMetadata from '../helpers/issueSession'
 import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
@@ -154,7 +153,7 @@ export default class Passkeys extends APIResource {
       })
     }
 
-    let verification = null
+    let verification
     try {
       verification = await verifyRegistrationResponse({
         response,
@@ -319,7 +318,7 @@ export default class Passkeys extends APIResource {
 
     const userId = passkey.userId
 
-    let verification = null
+    let verification
     try {
       verification = await verifyAuthenticationResponse({
         response,

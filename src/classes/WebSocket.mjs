@@ -1,7 +1,5 @@
 import UUID from 'pure-uuid'
-import config from '../config'
 import * as constants from '../constants'
-import { User } from '../db'
 import logger from '../logging'
 import {
   ForbiddenAPIError,
@@ -15,7 +13,6 @@ import { Context } from './Context'
 import { listen } from './Event'
 import Permission from './Permission'
 import StatusCode from './StatusCode'
-import TrafficControl from './TrafficControl'
 import Document from '../Documents/Document'
 import ErrorDocument from '../Documents/ErrorDocument'
 import Query from '../query/Query'
@@ -151,7 +148,7 @@ export default class WebSocket {
 
       const data = JSON.parse(messageStr)
       await this.handleMessage({ ws, data, message: messageStr })
-    } catch (ex) {
+    } catch {
       logger.debug({
         GELF: true,
         _event: 'request',
@@ -342,7 +339,7 @@ export default class WebSocket {
   static send ({ client, message }) {
     try {
       client.send(JSON.stringify(message))
-    } catch (ex) {
+    } catch {
       logger.error({
         GELF: true,
         _event: 'error',

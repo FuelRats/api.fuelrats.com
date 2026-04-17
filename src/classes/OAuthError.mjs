@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 
 /**
  * Base class for OAuth Errors

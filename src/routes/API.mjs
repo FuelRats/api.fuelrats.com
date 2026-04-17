@@ -7,7 +7,6 @@ import {
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
-import { Context } from '../classes/Context'
 import { InvalidClientOAuthError } from '../classes/OAuthError'
 import Permission from '../classes/Permission'
 import { RequestContext } from '../classes/RequestContext'

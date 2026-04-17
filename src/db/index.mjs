@@ -111,7 +111,7 @@ const db = new Sequelize(database, username, password, {
   operatorsAliases,
 })
 
-/* eslint-disable */
+ 
 db.addHook('beforeCount', function (options) {
   if (this._scope.include && this._scope.include.length > 0) {
     options.distinct = true
@@ -122,7 +122,7 @@ db.addHook('beforeCount', function (options) {
     options.include = undefined
   }
 })
-/* eslint-enable */
+ 
 
 Object.values(models).forEach((model) => {
   model.init(db, Sequelize)

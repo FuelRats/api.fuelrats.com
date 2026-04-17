@@ -128,7 +128,7 @@ class Anope {
       return new Nickname(result, user)
     })
 
-    /* eslint-disable no-await-in-loop */
+     
     for (const nick of nicks) {
       await Anope.runCommand('NickServ', nick.nick, 'UPDATE')
     }

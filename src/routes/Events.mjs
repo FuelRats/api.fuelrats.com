@@ -11,7 +11,6 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import { Context } from '../classes/Context'
 import { listen } from '../classes/Event'
 import EventStream from '../classes/EventStream'
 import StatusCode from '../classes/StatusCode'

@@ -1,7 +1,7 @@
 import { UnsupportedMediaAPIError } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
-import { Decal, db, User } from '../db'
+import { Decal, db } from '../db'
 import { DocumentViewType } from '../Documents'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { logMetric } from '../logging'

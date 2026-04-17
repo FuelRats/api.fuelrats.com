@@ -1,5 +1,4 @@
 import Model, { column, validate, type, table } from './Model'
-import { Context } from '../classes/Context'
 import { JSONObject, RescueQuote } from '../helpers/Validators'
 
 const rescueNotesMaxLength = 2048

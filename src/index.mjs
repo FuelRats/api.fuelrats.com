@@ -1,13 +1,10 @@
 import { Hono } from 'hono'
 import { etag } from 'hono/etag'
-import { serveStatic } from 'hono/bun'
 import npid from 'npid'
 
 import {
   TooManyRequestsAPIError,
   ImATeapotAPIError,
-  InternalServerError,
-  NotFoundAPIError,
   ForbiddenAPIError,
   UnauthorizedAPIError,
 } from './classes/APIError'
@@ -20,7 +17,6 @@ import TrafficControl from './classes/TrafficControl'
 import WebSocket from './classes/WebSocket'
 import config from './config'
 import { db } from './db'
-import Document from './Documents/Document'
 import ErrorDocument from './Documents/ErrorDocument'
 import packageInfo from './files/package'
 import logger, { logError, logMetric } from './logging'
@@ -35,7 +31,7 @@ try {
   npid.remove('api.pid')
   const pid = npid.create('api.pid')
   pid.removeOnExit()
-} catch (err) {
+} catch {
   process.exit(1)
 }
 

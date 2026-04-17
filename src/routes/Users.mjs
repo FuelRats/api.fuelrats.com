@@ -28,7 +28,6 @@ import {
   ImATeapotAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
-import { Context } from '../classes/Context'
 import Event from '../classes/Event'
 import Jira from '../classes/Jira'
 import Mail from '../classes/Mail'
@@ -135,7 +134,7 @@ export default class Users extends APIResource {
     const query = new DatabaseQuery({ connection: ctx })
     const results = await User.findAndCountAll(query.searchObject)
 
-    let result = null
+    let result
     try {
       result = await Anope.mapNicknames(results)
     } catch (error) {
@@ -163,7 +162,7 @@ export default class Users extends APIResource {
   async findById (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: User })
 
-    let user = null
+    let user
     try {
       user = await Anope.mapNickname(result)
     } catch (error) {
@@ -194,7 +193,7 @@ export default class Users extends APIResource {
       },
     })
 
-    let user = null
+    let user
     try {
       user = await Anope.mapNickname(result)
     } catch (error) {
@@ -371,7 +370,7 @@ export default class Users extends APIResource {
       _is_self_change: user.id === ctx.state.user.id,
     }, `User email changed: ${user.id}`)
 
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {
@@ -479,7 +478,7 @@ export default class Users extends APIResource {
       _auth_method: passwordChangeAuthMethod,
     }, `User password changed: ${user.id} by ${ctx.state.user.id}`)
 
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {
@@ -517,7 +516,7 @@ export default class Users extends APIResource {
     }, `User created: ${user.id} by admin ${ctx.state.user.id}`)
 
     const query = new DatabaseQuery({ connection: ctx })
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {
@@ -559,7 +558,7 @@ export default class Users extends APIResource {
     }, `User updated: ${user.id} by ${ctx.state.user.id} (fields: ${updatedFields.join(', ')})`)
 
     const query = new DatabaseQuery({ connection: ctx })
-    let result = null
+    let result
     try {
       result = await Anope.mapNickname(user)
     } catch (error) {

@@ -11,10 +11,9 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import { Context } from '../classes/Context'
 import Mail from '../classes/Mail'
 import { verificationTokenGenerator } from '../classes/TokenGenerators'
-import { User, VerificationToken, Group, db } from '../db'
+import { User, VerificationToken, Group } from '../db'
 import verificationEmail from '../emails/verification'
 import { logMetric } from '../logging'
 

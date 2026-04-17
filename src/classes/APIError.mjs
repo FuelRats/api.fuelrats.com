@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import UUID from 'pure-uuid'
 import * as constants from '../constants'
 

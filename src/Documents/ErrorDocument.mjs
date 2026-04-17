@@ -6,7 +6,6 @@ import {
 } from '../classes/APIError'
 import StatusCode from '../classes/StatusCode'
 import logger from '../logging'
-import Query from '../query'
 import Document from './Document'
 
 /**
@@ -16,7 +15,6 @@ import Document from './Document'
  */
 export default // noinspection JSClosureCompilerSyntax
 class ErrorDocument extends Document {
-  #query = undefined
   #errors = undefined
 
   /**
@@ -124,7 +122,6 @@ class ErrorDocument extends Document {
       meta: query.meta,
       query,
     })
-    this.#query = query
     this.#errors = errorList
   }
 

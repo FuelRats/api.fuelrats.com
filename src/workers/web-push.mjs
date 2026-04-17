@@ -1,7 +1,9 @@
 import webpush from 'web-push'
 
 self.onmessage = async (event) => {
-  const { id, subscribers, payload, vapidConfig, options = {} } = event.data
+  const {
+    id, subscribers, payload, vapidConfig, options = {},
+  } = event.data
   try {
     if (!vapidConfig?.privateKey || !vapidConfig?.publicKey) {
       postMessage({ id, result: null })
@@ -32,8 +34,12 @@ self.onmessage = async (event) => {
       }, payloadString, sendOptions)
     }))
 
-    const sent = results.filter((r) => r.status === 'fulfilled').length
-    const failed = results.filter((r) => r.status === 'rejected').length
+    const sent = results.filter((result) => {
+      return result.status === 'fulfilled'
+    }).length
+    const failed = results.filter((result) => {
+      return result.status === 'rejected'
+    }).length
 
     postMessage({ id, result: { sent, failed } })
   } catch (error) {

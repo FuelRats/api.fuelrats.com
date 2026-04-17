@@ -107,12 +107,12 @@ export default class Authenticators extends APIResource {
       })
     }
 
-    const { token, secret, description } = getJSONAPIData({ ctx, type: 'authenticators' })?.attributes
+    const { token, secret, description } = getJSONAPIData({ ctx, type: 'authenticators' })?.attributes ?? {}
 
-    let isValid = false
+    let isValid
     try {
       isValid = verifySync({ token, secret }).valid
-    } catch (ex) {
+    } catch {
       throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/secret' })
     }
 
@@ -134,7 +134,7 @@ export default class Authenticators extends APIResource {
       _user_id: ctx.state.user.id,
       _setup_by_user_id: ctx.state.user.id,
       _is_self_setup: user.id === ctx.state.user.id,
-      _description: description?.substring(0, 50) || 'no_description', // eslint-disable-line no-magic-numbers
+      _description: description?.substring(0, 50) || 'no_description',  
     }, `2FA authenticator added for user ${ctx.state.user.id}`)
 
     ctx.response.status = StatusCode.created
@@ -165,7 +165,7 @@ export default class Authenticators extends APIResource {
     }
 
     const verifyHeader = ctx.get('x-verify')
-    let verified = false
+    let verified
     try {
       verified = verifySync({ token: verifyHeader, secret: existingAuthenticator.secret }).valid
     } catch {
@@ -226,7 +226,7 @@ export default class Authenticators extends APIResource {
     }
 
     const verifyHeader = ctx.get('x-verify')
-    let verified = false
+    let verified
     try {
       verified = verifySync({ token: verifyHeader, secret: existingAuthenticator.secret }).valid
     } catch {
@@ -251,7 +251,7 @@ export default class Authenticators extends APIResource {
       _user_id: user.id,
       _removed_by_user_id: ctx.state.user.id,
       _is_self_removal: user.id === ctx.state.user.id,
-      _description: existingAuthenticator.description?.substring(0, 50) || 'no_description', // eslint-disable-line no-magic-numbers
+      _description: existingAuthenticator.description?.substring(0, 50) || 'no_description',  
     }, `2FA authenticator removed for user ${user.id}`)
 
     return true

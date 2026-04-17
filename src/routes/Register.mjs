@@ -111,7 +111,7 @@ export default class Register extends API {
 
       // Import WebAuthn verification
       const { verifyRegistrationResponse } = await import('@simplewebauthn/server')
-      let verification = null
+      let verification
       try {
         verification = await verifyRegistrationResponse({
           response: passkeyResponse,

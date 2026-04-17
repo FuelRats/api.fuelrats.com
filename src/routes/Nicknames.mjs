@@ -6,7 +6,6 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError, UnsupportedMediaAPIError,
 } from '../classes/APIError'
-import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'

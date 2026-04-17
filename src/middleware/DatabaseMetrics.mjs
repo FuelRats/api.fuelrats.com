@@ -7,7 +7,7 @@ import { logMetric } from '../logging'
 export function addDatabaseMetrics (sequelize) {
   // Hook into all database queries
   sequelize.addHook('beforeQuery', (options) => {
-    // eslint-disable-next-line no-param-reassign
+     
     options.startTime = Date.now()
   })
 

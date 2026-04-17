@@ -1,5 +1,4 @@
 import config from '../config'
-import { User } from '../db'
 
 /**
  * Generate a verification link from a verification token
