@@ -1210,7 +1210,16 @@ users_image:
   get:
     tags: [users]
     summary: Get user image
-    description: Retrieve a user's profile image
+    description: |
+      Retrieve a user's profile image in the requested size and format.
+
+      Images are disk-cached per size+format variant. The first request
+      for a given variant generates it from the original upload; subsequent
+      requests serve from cache. The `X-Cache` response header indicates
+      `HIT` or `MISS`.
+
+      Cache is invalidated automatically when the user uploads or deletes
+      their avatar.
     parameters:
       - name: id
         in: path
@@ -1257,7 +1266,8 @@ users_image:
     tags: [users]
     summary: Upload user image
     description: |
-      Upload or replace a user's profile image
+      Upload or replace a user's profile image. Invalidates all cached
+      size/format variants.
 
       **Authentication Required:** Bearer token authentication
     security:
@@ -1300,7 +1310,7 @@ users_image:
     tags: [users]
     summary: Delete user image
     description: |
-      Delete a user's profile image
+      Delete a user's profile image. Invalidates all cached variants.
 
       **Authentication Required:** Bearer token authentication
     security:
