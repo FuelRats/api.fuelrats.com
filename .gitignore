@@ -1,6 +1,7 @@
 ### Project ###
 .vagrant/
 data/
+!data/blocked-names.json
 test/bundle.js
 /config.json
 npm-debug.log.*

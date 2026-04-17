@@ -13,6 +13,7 @@ import {
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
 import Sessions from '../classes/Sessions'
+import { isBlockedUsername } from '../helpers/usernameFilter'
 import StatusCode from '../classes/StatusCode'
 import config from '../config'
 import {
@@ -61,6 +62,13 @@ export default class Register extends API {
     const {
       email, name, nickname, password, passkeyResponse, platform, expansion = 'horizons3',
     } = formData.attributes
+
+    if (isBlockedUsername(name)) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/name', detail: 'This name is not allowed' })
+    }
+    if (isBlockedUsername(nickname)) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/nickname', detail: 'This nickname is not allowed' })
+    }
 
     // Validate that either password or passkey is provided
     if (!password && !passkeyResponse) {

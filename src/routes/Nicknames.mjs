@@ -1,4 +1,5 @@
 import Anope from '../classes/Anope'
+import { isBlockedUsername } from '../helpers/usernameFilter'
 import {
   BadRequestAPIError,
   ConflictAPIError,
@@ -89,6 +90,13 @@ export default class Nickname extends APIResource {
     if (!nick || IRCNickname.test(nick) === false) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/nick',
+      })
+    }
+
+    if (isBlockedUsername(nick)) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/attributes/nick',
+        detail: 'This nickname is not allowed',
       })
     }
 
