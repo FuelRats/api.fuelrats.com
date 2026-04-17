@@ -160,6 +160,21 @@ export default class Rescues extends APIResource {
     const document = new DatabaseDocument({ query, result, type: RescueView })
 
     Event.broadcast('fuelrats.rescuecreate', ctx.state.user, result.id, document)
+
+    // Auto-notify subscribers who opted in to all rescues (alertsOnly: false)
+    const pushQuery = { alertsOnly: false }
+    if (result.platform) { pushQuery[result.platform] = true }
+    if (result.expansion) { pushQuery[result.expansion] = true }
+    const autoSubs = await WebPushSubscription.findAll({ where: pushQuery })
+    if (autoSubs.length > 0) {
+      webPushPool.exec({
+        subscribers: autoSubs,
+        payload: buildRescuePayload(result),
+        vapidConfig: config.webpush,
+        options: { TTL: 300, urgency: 'normal', topic: `rescue-${result.id.slice(0, 20)}` },
+      })
+    }
+
     ctx.response.status = StatusCode.created
     return document
   }

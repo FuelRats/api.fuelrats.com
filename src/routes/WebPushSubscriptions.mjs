@@ -51,6 +51,7 @@ export default class WebPushSubscriptions extends APIResource {
       horizons3 = true,
       horizons4 = true,
       odyssey = true,
+      alertsOnly = true,
     } = body
     const auth = keys?.auth
     const p256dh = keys?.p256dh
@@ -77,6 +78,7 @@ export default class WebPushSubscriptions extends APIResource {
       horizons3,
       horizons4,
       odyssey,
+      alertsOnly,
       userId: ctx.state.user.id,
     }, {
       conflictFields: ['endpoint'],
@@ -152,7 +154,7 @@ export default class WebPushSubscriptions extends APIResource {
     }
 
     const attributes = ctx.data?.data?.attributes ?? ctx.data ?? {}
-    const { pc, xb, ps, horizons3, horizons4, odyssey } = attributes
+    const { pc, xb, ps, horizons3, horizons4, odyssey, alertsOnly } = attributes
     const updates = {}
     if (typeof pc === 'boolean') { updates.pc = pc }
     if (typeof xb === 'boolean') { updates.xb = xb }
@@ -160,6 +162,7 @@ export default class WebPushSubscriptions extends APIResource {
     if (typeof horizons3 === 'boolean') { updates.horizons3 = horizons3 }
     if (typeof horizons4 === 'boolean') { updates.horizons4 = horizons4 }
     if (typeof odyssey === 'boolean') { updates.odyssey = odyssey }
+    if (typeof alertsOnly === 'boolean') { updates.alertsOnly = alertsOnly }
 
     await subscription.update(updates)
 
@@ -319,6 +322,7 @@ export default class WebPushSubscriptions extends APIResource {
       horizons3: WritePermission.self,
       horizons4: WritePermission.self,
       odyssey: WritePermission.self,
+      alertsOnly: WritePermission.self,
     }
   }
 
