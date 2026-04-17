@@ -2,27 +2,22 @@ import {
   NotFoundAPIError,
   UnsupportedMediaAPIError,
 } from './APIError'
-import Mail from './Mail'
 import Permission from './Permission'
 import StatusCode from './StatusCode'
-import { sessionTokenGenerator } from './TokenGenerators'
-import { Session, Token, User } from '../db'
+import { Token, User, db } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
-import sessionEmail from '../emails/session'
 import DatabaseQuery from '../query/DatabaseQuery'
-import { SessionView } from '../view'
+import { TokenView } from '../view'
 import {
   GET,
   DELETE,
   authenticated,
-  WritePermission,
 } from '../routes/API'
 import APIResource from '../routes/APIResource'
 
-const mail = new Mail()
-
 /**
- * Endpoint + helper class for managing user sessions
+ * Session management endpoints — sessions are represented by Tokens
+ * with associated device metadata (IP, user agent, last access, auth method).
  */
 export default class Sessions extends APIResource {
   /**
@@ -46,27 +41,35 @@ export default class Sessions extends APIResource {
     this.requireReadPermission({ connection: ctx, entity: user })
 
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Session.findAndCountAll({
-      where: { userId: user.id },
-      ...query.searchObject,
-    })
+    const searchObject = query.searchObject
+    searchObject.where = { ...searchObject.where, userId: user.id }
+    const rows = await db.query(
+      `SELECT * FROM "Tokens" WHERE "userId" = :userId ORDER BY "createdAt" DESC LIMIT :limit OFFSET :offset`,
+      {
+        replacements: { userId: user.id, limit: searchObject.limit, offset: searchObject.offset },
+        type: db.QueryTypes.SELECT,
+        model: Token,
+        mapToModel: true,
+      },
+    )
+    const [{ count }] = await db.query(
+      'SELECT COUNT(*) AS count FROM "Tokens" WHERE "userId" = :userId',
+      { replacements: { userId: user.id }, type: db.QueryTypes.SELECT },
+    )
+    const result = { rows, count: parseInt(count, 10) }
 
-    // Mark the session tied to the token making this request
+    // Mark the token making this request
     const currentTokenValue = ctx.state.currentTokenValue
-    if (currentTokenValue) {
-      const currentToken = await Token.findOne({ where: { value: currentTokenValue } })
-      if (currentToken?.sessionId) {
-        for (const session of result.rows) {
-          session.setDataValue('current', session.id === currentToken.sessionId)
-        }
-      }
+    for (const token of result.rows) {
+      const isCurrent = Boolean(currentTokenValue && token.value === currentTokenValue)
+      token.dataValues.current = isCurrent
     }
 
-    return new DatabaseDocument({ query, result, type: SessionView })
+    return new DatabaseDocument({ query, result, type: TokenView })
   }
 
   /**
-   * Revoke a session. Destroys the session and all tokens tied to it.
+   * Revoke a session (destroy the token)
    * @endpoint
    */
   @DELETE('/users/:id/sessions/:sessionId')
@@ -78,23 +81,19 @@ export default class Sessions extends APIResource {
     }
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    const session = await Session.findOne({
+    const token = await Token.findOne({
       where: { id: ctx.params.sessionId, userId: user.id },
     })
-    if (!session) {
+    if (!token) {
       throw new NotFoundAPIError({ parameter: 'sessionId' })
     }
 
-    // Revoke all tokens tied to this session, then the session itself
-    await Token.destroy({ where: { sessionId: session.id } })
-    await session.destroy()
-
+    await token.destroy()
     ctx.response.status = StatusCode.noContent
     return true
   }
 
   /**
-   * Sessions use user-level permissions since they are a user sub-resource
    * @inheritdoc
    */
   hasReadPermission ({ connection, entity }) {
@@ -142,72 +141,5 @@ export default class Sessions extends APIResource {
    */
   get relationTypes () {
     return {}
-  }
-
-  /**
-   * Create a session tied to a login event. Used during token issuance.
-   * @param {object} arg function arguments object
-   * @param {object} arg.ctx request context
-   * @param {User} arg.user the user being authenticated
-   * @returns {Promise<Session>} the created session
-   */
-  static async createForLogin ({ ctx, user }) {
-    return Session.create({
-      ip: ctx.request.ip,
-      userAgent: ctx.state.userAgent || ctx.request.headers?.['user-agent'],
-      fingerprint: ctx.state.fingerprint,
-      userId: user.id,
-      verified: true,
-    })
-  }
-
-  /**
-   * Create a user session verification (for device verification flow)
-   * @param {object} ctx request context
-   * @param {User} user the user the session belongs to
-   * @returns {Promise<void>} completes when email is sent
-   */
-  static async createSession (ctx, user) {
-    if (user.authenticator) {
-      await Session.create({
-        ip: ctx.request.ip,
-        userAgent: ctx.state.userAgent,
-        fingerprint: ctx.state.fingerprint,
-        userId: user.id,
-      })
-
-      return undefined
-    }
-
-    const code = await sessionTokenGenerator()
-    const session = await Session.create({
-      ip: ctx.request.ip,
-      userAgent: ctx.state.userAgent,
-      fingerprint: ctx.state.fingerprint,
-      code,
-      userId: user.id,
-    })
-
-    return mail.send(sessionEmail({ ctx, user, sessionToken: session.code }))
-  }
-
-  /**
-   * Create a verified user session (used by SSO/Frontier flows)
-   * @param {object} ctx request context
-   * @param {User} user the user the session belongs to
-   * @param {object} transaction Sequelize transaction
-   * @returns {Promise<Session>} user session
-   */
-  static async createVerifiedSession (ctx, user, transaction = undefined) {
-    const code = await sessionTokenGenerator()
-
-    return Session.create({
-      ip: ctx.request.ip,
-      userAgent: ctx.state.userAgent,
-      fingerprint: ctx.state.fingerprint,
-      code,
-      userId: user.id,
-      verified: true,
-    }, { transaction })
   }
 }

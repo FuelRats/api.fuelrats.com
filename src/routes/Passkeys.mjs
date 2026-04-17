@@ -19,7 +19,7 @@ import { Passkey, Token, User } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import ObjectDocument from '../Documents/ObjectDocument'
-import issueSession from '../helpers/issueSession'
+import tokenMetadata from '../helpers/issueSession'
 import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { PasskeyView } from '../view'
@@ -352,14 +352,13 @@ export default class Passkeys extends APIResource {
     delete ctx.session.passkeyChallenge
     delete ctx.session.passkeyUserId
 
-    // Issue a session + bearer token
-    const sessionId = await issueSession({ ctx, userId })
+    // Issue a bearer token
     const token = await Token.create({
       value: await oAuthTokenGenerator(),
       clientId: client.id,
       userId,
       scope: ['*'],
-      sessionId,
+      ...tokenMetadata(ctx, 'passkey'),
     })
 
     // Log passkey authentication metrics

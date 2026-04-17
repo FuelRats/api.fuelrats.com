@@ -63,6 +63,5 @@ export default class Session extends Model {
   static associate (models) {
     super.associate(models)
     models.Session.belongsTo(models.User, { as: 'user' })
-    models.Session.hasMany(models.Token, { as: 'tokens', foreignKey: 'sessionId' })
   }
 }

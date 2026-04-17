@@ -6,7 +6,7 @@ import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
 import {
-  User, Token, Client, Reset, Authenticator, Passkey, Session, db,
+  User, Token, Client, Reset, Authenticator, Passkey, db,
 } from '../db'
 import { logMetric } from '../logging'
 
@@ -342,19 +342,12 @@ class Authentication {
     })
 
     if (user) {
-      // Throttle session lastAccess updates to once per minute
-      const sessionAccessIntervalMs = 60 * 1000
-      if (token.sessionId) {
-        try {
-          const session = await Session.findOne({ where: { id: token.sessionId } })
-          if (session) {
-            const shouldUpdate = !session.lastAccess
-              || (Date.now() - new Date(session.lastAccess).getTime()) > sessionAccessIntervalMs
-            if (shouldUpdate) {
-              session.update({ lastAccess: new Date() }).catch(() => {})
-            }
-          }
-        } catch { /* non-critical */ }
+      // Throttle lastAccess updates to once per minute
+      const accessIntervalMs = 60 * 1000
+      const shouldUpdate = !token.lastAccess
+        || (Date.now() - new Date(token.lastAccess).getTime()) > accessIntervalMs
+      if (shouldUpdate) {
+        token.update({ lastAccess: new Date() }).catch(() => {})
       }
 
       logMetric('authentication_success', {

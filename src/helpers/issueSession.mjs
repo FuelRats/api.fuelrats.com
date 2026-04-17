@@ -1,20 +1,14 @@
-import { Session } from '../db'
-
 /**
- * Create a new Session row for a login event. Returns the session ID to link
- * onto the Token.
- * @param {object} arg function arguments object
- * @param {object} arg.ctx request context
- * @param {string} arg.userId id of the user logging in
- * @returns {Promise<string>} the new session's id
+ * Extract session metadata from a request context for token creation.
+ * @param {object} ctx request context
+ * @param {string} authMethod how this token was issued (password, passkey, authorization_code, implicit)
+ * @returns {object} metadata fields to spread into Token.create()
  */
-export default async function issueSession ({ ctx, userId }) {
-  const session = await Session.create({
-    ip: ctx.request?.ip,
-    userAgent: ctx.state?.userAgent || ctx.request?.headers?.['user-agent'],
-    fingerprint: ctx.state?.fingerprint,
-    userId,
-    verified: true,
-  })
-  return session.id
+export default function tokenMetadata (ctx, authMethod) {
+  return {
+    ipAddress: ctx.request?.ip || null,
+    userAgent: ctx.state?.userAgent || ctx.request?.headers?.['user-agent'] || null,
+    authMethod,
+    lastAccess: new Date(),
+  }
 }

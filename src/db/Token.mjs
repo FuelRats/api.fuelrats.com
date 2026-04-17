@@ -29,9 +29,17 @@ export default class Token extends Model {
   @column(type.UUID)
   static clientId = undefined
 
-  @validate({ isUUID: 4 })
-  @column(type.UUID, { allowNull: true })
-  static sessionId = undefined
+  @column(type.STRING, { allowNull: true })
+  static ipAddress = undefined
+
+  @column(type.TEXT, { allowNull: true })
+  static userAgent = undefined
+
+  @column(type.STRING, { allowNull: true })
+  static authMethod = undefined
+
+  @column(type.DATE, { allowNull: true })
+  static lastAccess = undefined
 
   /**
    * @inheritdoc
@@ -58,7 +66,6 @@ export default class Token extends Model {
   static associate (models) {
     super.associate(models)
     models.Token.belongsTo(models.User, { as: 'user' })
-    models.Token.belongsTo(models.Session, { as: 'session' })
   }
 }
 
