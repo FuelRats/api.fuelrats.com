@@ -431,8 +431,8 @@ export default class Rescues extends APIResource {
     if (rescue.platform === 'ps') {
       query.ps = true
     }
-    if (rescue.expansion === 'odyssey') {
-      query.odyssey = true
+    if (rescue.expansion) {
+      query[rescue.expansion] = true
     }
 
     const subscriptions = await WebPushSubscription.findAll({

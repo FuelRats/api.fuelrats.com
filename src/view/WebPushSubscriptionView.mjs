@@ -23,6 +23,8 @@ export default class WebPushSubscriptionView extends DatabaseView {
       pc: ReadPermission.self,
       xb: ReadPermission.self,
       ps: ReadPermission.self,
+      horizons3: ReadPermission.self,
+      horizons4: ReadPermission.self,
       odyssey: ReadPermission.self,
       createdAt: ReadPermission.self,
       updatedAt: ReadPermission.self,
