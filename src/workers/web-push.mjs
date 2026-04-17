@@ -22,17 +22,20 @@ self.onmessage = async (event) => {
       topic: options.topic,
     }
 
-    for (const subscription of subscribers) {
-      webpush.sendNotification({
+    const results = await Promise.allSettled(subscribers.map((subscription) => {
+      return webpush.sendNotification({
         endpoint: subscription.endpoint,
         keys: {
           auth: subscription.auth,
           p256dh: subscription.p256dh,
         },
       }, payloadString, sendOptions)
-    }
+    }))
 
-    postMessage({ id, result: true })
+    const sent = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.filter((r) => r.status === 'rejected').length
+
+    postMessage({ id, result: { sent, failed } })
   } catch (error) {
     postMessage({ id, error: error.message })
   }
