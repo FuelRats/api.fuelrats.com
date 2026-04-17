@@ -1,3 +1,5 @@
+import getSystemDescription from './systemDescription'
+
 const platformLabels = {
   pc: 'PC',
   xb: 'Xbox',
@@ -18,7 +20,7 @@ const expansionLabels = {
  * @param {object} rescue the Rescue model instance
  * @returns {object} notification payload ready for JSON.stringify + showNotification
  */
-export function buildRescuePayload (rescue) {
+export async function buildRescuePayload (rescue) {
   const platformLabel = platformLabels[rescue.platform] || 'Unknown'
   const expansionLabel = expansionLabels[rescue.expansion] || ''
 
@@ -37,7 +39,13 @@ export function buildRescuePayload (rescue) {
     body += rescue.codeRed ? ' (Fleet Carrier)' : ' for a Fleet Carrier rescue'
   }
   if (rescue.system) {
-    body += ` in ${rescue.system}`
+    // Try to get a landmark-relative description like "near Sol" or "~500LY from Colonia"
+    const systemDesc = await getSystemDescription(rescue.system).catch(() => { return null })
+    if (systemDesc) {
+      body += ` ${systemDesc}`
+    } else {
+      body += ` in ${rescue.system}`
+    }
   } else {
     body += ', location unknown'
   }

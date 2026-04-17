@@ -170,7 +170,7 @@ export default class Rescues extends APIResource {
     if (autoSubs.length > 0) {
       webPushPool.exec({
         subscribers: serializeSubscriptions(autoSubs),
-        payload: buildRescuePayload(result),
+        payload: await buildRescuePayload(result),
         vapidConfig: config.webpush,
         options: { TTL: 300, urgency: 'normal', topic: `rescue-${result.id.slice(0, 20)}` },
       })
@@ -456,7 +456,7 @@ export default class Rescues extends APIResource {
     })
     webPushPool.exec({
       subscribers: serializeSubscriptions(subscriptions),
-      payload: buildRescuePayload(rescue),
+      payload: await buildRescuePayload(rescue),
       vapidConfig: config.webpush,
       options: {
         TTL: 300, // 5 minutes — rescue alerts are time-sensitive
