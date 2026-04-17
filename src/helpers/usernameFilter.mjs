@@ -1,9 +1,7 @@
 import {
   RegExpMatcher,
-  pattern,
+  DataSet,
   parseRawPattern,
-  assignIncrementingIds,
-  collapseDuplicatesTransformer,
   resolveLeetSpeakTransformer,
   resolveConfusablesTransformer,
   toAsciiLowerCaseTransformer,
@@ -14,44 +12,65 @@ import { resolve } from 'path'
 const blockedNamesPath = resolve('data/blocked-names.json')
 
 /**
- * Load the blocked names list from disk and build a matcher.
- * Called once at startup — the matcher is reusable.
- * @returns {RegExpMatcher} configured matcher
+ * Load the blocked names list from disk and build matchers.
+ * Called once at startup — the matchers are reusable.
+ * @returns {{ main: RegExpMatcher, literal: RegExpMatcher }} configured matchers
  */
-function buildMatcher () {
-  let data = { phrases: [], whitelists: {} }
+function buildMatchers () {
+  let data = { blocked: [], blocked_word_boundary: [] }
   try {
     data = JSON.parse(readFileSync(blockedNamesPath, 'utf8'))
   } catch {
     console.warn('blocked-names.json not found or invalid — username filtering disabled')
   }
 
-  const phrases = data.phrases.map((entry) => {
-    const term = typeof entry === 'string' ? entry : entry.term
-    const phraseWhitelists = (data.whitelists[term] ?? []).map((word) => {
-      return { pattern: parseRawPattern(word) }
-    })
+  const mainDataset = new DataSet()
+  const literalDataset = new DataSet()
 
-    return {
-      pattern: pattern`${parseRawPattern(term)}`,
-      whitelistedTerms: phraseWhitelists,
+  // Substring matches — blocked anywhere in the name
+  for (const term of (data.blocked ?? [])) {
+    // Purely numeric terms break with leet speak transformer, use literal matcher
+    if (/^\d+$/u.test(term)) {
+      literalDataset.addPhrase((phrase) => {
+        return phrase.addPattern(parseRawPattern(term))
+      })
+    } else {
+      mainDataset.addPhrase((phrase) => {
+        return phrase.addPattern(parseRawPattern(term))
+      })
     }
-  })
+  }
 
-  assignIncrementingIds(phrases)
+  // Word-boundary matches — only blocked as a standalone word
+  for (const term of (data.blocked_word_boundary ?? [])) {
+    const raw = parseRawPattern(term)
+    raw.requireWordBoundaryAtStart = true
+    raw.requireWordBoundaryAtEnd = true
+    mainDataset.addPhrase((phrase) => {
+      return phrase.addPattern(raw)
+    })
+  }
 
-  return new RegExpMatcher({
-    blacklistedTerms: phrases,
+  const main = new RegExpMatcher({
+    ...mainDataset.build(),
     blacklistMatcherTransformers: [
       toAsciiLowerCaseTransformer(),
       resolveLeetSpeakTransformer(),
       resolveConfusablesTransformer(),
-      collapseDuplicatesTransformer(),
     ],
   })
+
+  const literal = new RegExpMatcher({
+    ...literalDataset.build(),
+    blacklistMatcherTransformers: [
+      toAsciiLowerCaseTransformer(),
+    ],
+  })
+
+  return { main, literal }
 }
 
-const matcher = buildMatcher()
+const { main: mainMatcher, literal: literalMatcher } = buildMatchers()
 
 /**
  * Check if a username contains blocked content.
@@ -62,5 +81,5 @@ export function isBlockedUsername (username) {
   if (!username || typeof username !== 'string') {
     return false
   }
-  return matcher.hasMatch(username)
+  return mainMatcher.hasMatch(username) || literalMatcher.hasMatch(username)
 }
