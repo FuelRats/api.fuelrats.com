@@ -621,16 +621,6 @@ class OAuth extends API {
       throw new UnauthorisedClientOAuthError()
     }
 
-    /* ROPC clients are required to provide a user agent */
-    if (!ctx.state.userAgent) {
-      throw new InvalidRequestOAuthError('userAgent')
-    }
-
-    /* ROPC clients are required to provide a 'fingerprint' that uniquely identifies the current device */
-    if (!ctx.state.fingerprint) {
-      throw new InvalidRequestOAuthError('X-Fingerprint')
-    }
-
     /* Validate username and password */
     const user = await Authentication.passwordAuthenticate({ email: username, password, code })
     if (!user) {

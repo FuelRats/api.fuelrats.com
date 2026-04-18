@@ -67,12 +67,12 @@ export default class Authenticators extends APIResource {
     }
 
     const secret = generateSecret()
-    const dataUri = generateURI({ type: 'totp', accountName: ctx.state.user.email, issuer: 'Fuel Rats', secret })
+    const dataUri = generateURI({ strategy: 'totp', label: user.email, issuer: 'Fuel Rats', secret })
     const result = {
       id: new UUID(UUID_VERSION),
       secret,
       dataUri,
-      user: ctx.state.user,
+      user,
     }
 
     const query = new DatabaseQuery({ connection: ctx })
