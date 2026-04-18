@@ -1,7 +1,6 @@
 import Anope from '../classes/Anope'
 import { ConflictAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import FrontierAPI from '../classes/FrontierAPI'
-import Sessions from '../classes/Sessions'
 import StatusCode from '../classes/StatusCode'
 import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import config from '../config'
@@ -119,7 +118,6 @@ export default class Frontier extends API {
       }
 
       await user.addGroup('verified', { transaction })
-      return Sessions.createVerifiedSession(ctx, user, transaction)
     })
 
     const newToken = await Token.create({
@@ -200,7 +198,6 @@ export default class Frontier extends API {
       await user.addGroup('verified', {
         transaction,
       })
-      await Sessions.createVerifiedSession(ctx, user, transaction)
       return user
     })
 
