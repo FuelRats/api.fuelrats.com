@@ -3,6 +3,7 @@ import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { Group } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { GroupView } from '../view'
 import {
@@ -67,6 +68,16 @@ export default class Groups extends APIResource {
   async create (ctx) {
     const result = await super.create({ ctx, databaseType: Group, allowId: true })
 
+    // Log group creation metrics
+    logMetric('group_created', {
+      _group_id: result.id,
+      _created_by_user_id: ctx.state.user.id,
+      _group_name: result.id,
+      _permissions_count: result.permissions?.length || 0,
+      _has_vhost: Boolean(result.vhost),
+      _priority: result.priority || 0,
+    }, `Permission group created: ${result.id} by admin ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: GroupView })
@@ -84,6 +95,13 @@ export default class Groups extends APIResource {
   async update (ctx) {
     const result = await super.update({ ctx, databaseType: Group, updateSearch: { id: ctx.params.id } })
 
+    // Log group update metrics
+    logMetric('group_updated', {
+      _group_id: result.id,
+      _updated_by_user_id: ctx.state.user.id,
+      _permissions_count: result.permissions?.length || 0,
+    }, `Permission group updated: ${result.id} by admin ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: GroupView })
   }
@@ -98,7 +116,19 @@ export default class Groups extends APIResource {
   @authenticated
   @permissions('groups.write')
   async delete (ctx) {
+    // Get the group before deletion for metrics
+    const group = await Group.findByPk(ctx.params.id)
+
     await super.delete({ ctx, databaseType: Group })
+
+    // Log group deletion metrics
+    if (group) {
+      logMetric('group_deleted', {
+        _group_id: group.id,
+        _deleted_by_user_id: ctx.state.user.id,
+        _permissions_count: group.permissions?.length || 0,
+      }, `Permission group deleted: ${group.id} by admin ${ctx.state.user.id}`)
+    }
 
     ctx.response.status = StatusCode.noContent
     return true

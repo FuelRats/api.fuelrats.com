@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  api:
+    image: ghcr.io/fuelrats/api.fuelrats.com:develop
+    ports:
+      - "8502:8080"
+    environment:
+      FRAPI_HOSTNAME: "0.0.0.0"
+      FRAPI_PORT: "8080"
+      FRAPI_URL: "https://dev.api.fuelrats.com"
+      FRAPI_PROXY_ENABLED: "true"
+      FRAPI_COOKIE: "${FRAPI_COOKIE}"
+      FRAPI_JWT_SECRET: "${FRAPI_JWT_SECRET}"
+
+      FRAPI_FRONTEND_URL: "https://fuelrats.dev"
+      FRAPI_FRONTEND_CLIENTID: "a505dd0e-6f7d-4e0f-b917-35cfcd88865f"
+
+      FRAPI_POSTGRES_HOSTNAME: "192.168.100.10"
+      FRAPI_POSTGRES_DATABASE: "fuelratsapi_dev"
+
+      FRAPI_ANOPE_DATABASE: "anope"
+      FRAPI_ANOPE_USERNAME: "anope2"
+      FRAPI_ANOPE_HOSTNAME: "192.168.100.30"
+
+      FRAPI_FRONTIER_CLIENTID: "b9acea4f-68a2-4a21-9a6b-c8bc4aa7bbb4"
+      FRAPI_FRONTIER_SHAREDKEY: "${FRAPI_FRONTIER_SHAREDKEY}"
+      FRAPI_FRONTIER_REDIRECTURI: "https://dev.fuelrats.com/frontier"
+
+      FRAPI_GRAYLOG_HOST: "192.168.100.30"
+
+      FRAPI_JIRA_USERNAME: "ratmama"
+      FRAPI_JIRA_PASSWORD: "${FRAPI_JIRA_PASSWORD}"
+
+      FRAPI_GEOIP_DIRECTORY: "/app/geoip"
+
+      FRAPI_WEBPUSH_PUBLIC_KEY: "${FRAPI_WEBPUSH_PUBLIC_KEY}"
+      FRAPI_WEBPUSH_PRIVATE_KEY: "${FRAPI_WEBPUSH_PRIVATE_KEY}"
+
+      FRAPI_ANNOUNCER_SECRET: "${FRAPI_ANNOUNCER_SECRET}"
+      FRAPI_ANNOUNCER_DESTINATION_RESCUE: "#rattech"
+      FRAPI_ANNOUNCER_DESTINATION_MODERATION: "#rattech"
+      FRAPI_ANNOUNCER_DESTINATION_NETWORK: "#rattech"
+      FRAPI_ANNOUNCER_DESTINATION_DRILL: "#rattech"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == emmental
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first

@@ -1,0 +1,475 @@
+# Passkeys/WebAuthn API endpoints
+
+users_passkeys:
+  get:
+    tags: [passkeys]
+    summary: List user's passkeys
+    description: |
+      Get all passkeys registered for a specific user
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if accessing own passkeys)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of user's passkeys
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../schemas/passkeys.yaml#/Passkey'
+                meta:
+                  $ref: '../components/schemas.yaml#/PaginationMeta'
+                links:
+                  $ref: '../components/schemas.yaml#/PaginationLinks'
+            example:
+              data:
+                - type: passkeys
+                  id: "330e8400-e29b-41d4-a716-446655440001"
+                  attributes:
+                    name: "My Security Key"
+                    credentialId: "AbC123..."
+                    counter: 42
+                    backedUp: true
+                    createdAt: "2023-01-15T10:30:00.000Z"
+                    updatedAt: "2023-01-15T10:30:00.000Z"
+                - type: passkeys
+                  id: "330e8400-e29b-41d4-a716-446655440002"
+                  attributes:
+                    name: "Phone Passkey"
+                    credentialId: "XyZ789..."
+                    counter: 5
+                    backedUp: false
+                    createdAt: "2023-02-01T14:00:00.000Z"
+                    updatedAt: "2023-02-01T14:00:00.000Z"
+              meta:
+                page:
+                  offset: 0
+                  limit: 20
+                  total: 2
+              links:
+                self: "/users/550e8400-e29b-41d4-a716-446655440000/passkeys?page[offset]=0&page[limit]=20"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_passkeys_register:
+  get:
+    tags: [passkeys]
+    summary: Generate passkey registration options
+    description: |
+      Generate WebAuthn registration options for adding a new passkey to the user's account.
+      This returns the challenge and options needed to create a new credential.
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if setting up own passkey)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Raw WebAuthn registration options (passed directly to navigator.credentials.create())
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                challenge:
+                  type: string
+                  description: Base64URL encoded challenge
+                rp:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    id:
+                      type: string
+                user:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Base64URL encoded user ID
+                    name:
+                      type: string
+                      description: User email
+                    displayName:
+                      type: string
+                pubKeyCredParams:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [public-key]
+                      alg:
+                        type: number
+                timeout:
+                  type: number
+                excludeCredentials:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                        enum: [public-key]
+                authenticatorSelection:
+                  type: object
+                  properties:
+                    residentKey:
+                      type: string
+                    userVerification:
+                      type: string
+            example:
+              challenge: "Y2hhbGxlbmdlU3RyaW5nRXhhbXBsZQ"
+              rp:
+                name: "The Fuel Rats"
+                id: "fuelrats.com"
+              user:
+                id: "MWJhZjA0ZmUtYTFhZS00NjAw..."
+                name: "user@example.com"
+                displayName: "Rescue Pilot"
+              pubKeyCredParams:
+                - type: "public-key"
+                  alg: -7
+                - type: "public-key"
+                  alg: -257
+              timeout: 60000
+              authenticatorSelection:
+                residentKey: "preferred"
+                userVerification: "preferred"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+users_passkeys_create:
+  post:
+    tags: [passkeys]
+    summary: Register new passkey
+    description: |
+      Complete the passkey registration by verifying the credential response from the authenticator.
+      Requires a prior call to the registration options endpoint.
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if setting up own passkey)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [passkeys]
+                  attributes:
+                    type: object
+                    required: [response, name]
+                    properties:
+                      response:
+                        type: object
+                        description: WebAuthn credential response from navigator.credentials.create()
+                        properties:
+                          id:
+                            type: string
+                            description: Credential ID
+                          rawId:
+                            type: string
+                            description: Base64URL encoded raw credential ID
+                          response:
+                            type: object
+                            properties:
+                              clientDataJSON:
+                                type: string
+                                description: Base64URL encoded client data
+                              attestationObject:
+                                type: string
+                                description: Base64URL encoded attestation object
+                          type:
+                            type: string
+                            enum: [public-key]
+                      name:
+                        type: string
+                        description: User-friendly name for this passkey
+                        example: "My Security Key"
+    responses:
+      '201':
+        description: Passkey registered successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '../schemas/passkeys.yaml#/Passkey'
+            example:
+              data:
+                type: passkeys
+                id: "330e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  name: "My Security Key"
+                  credentialId: "AbC123..."
+                  counter: 0
+                  backedUp: true
+                  createdAt: "2023-01-15T10:30:00.000Z"
+                  updatedAt: "2023-01-15T10:30:00.000Z"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '409':
+        description: Passkey already registered
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+passkeys_authenticate:
+  post:
+    tags: [passkeys]
+    summary: Generate authentication options
+    description: |
+      Generate WebAuthn authentication options for signing in with a passkey.
+      This is the first step in the passkey authentication flow.
+
+      If `email` is provided, the response will include `allowCredentials`
+      restricted to that user's passkeys. If omitted, the browser will prompt
+      for a discoverable credential (resident key).
+
+      **Public Access:** No authentication required (for login flow)
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type]
+                properties:
+                  type:
+                    type: string
+                    enum: [passkey-authentication]
+                  attributes:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        description: User's email address (optional — omit for discoverable credentials)
+    responses:
+      '200':
+        description: Raw WebAuthn authentication options (passed directly to navigator.credentials.get())
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                challenge:
+                  type: string
+                  description: Base64URL encoded challenge
+                timeout:
+                  type: number
+                rpId:
+                  type: string
+                allowCredentials:
+                  type: array
+                  description: Present when email was provided, absent for discoverable credentials
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                        enum: [public-key]
+                userVerification:
+                  type: string
+            example:
+              challenge: "YXV0aENoYWxsZW5nZUV4YW1wbGU"
+              timeout: 60000
+              rpId: "fuelrats.com"
+              allowCredentials:
+                - id: "QWJDMTIzLi4u"
+                  type: "public-key"
+              userVerification: "preferred"
+      '401':
+        description: No passkeys found for user or user doesn't exist
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+passkeys_verify:
+  post:
+    tags: [passkeys]
+    summary: Verify passkey and get bearer token
+    description: |
+      Complete the passkey authentication by verifying the credential response from the authenticator.
+      On success, issues a bearer token bound to the specified OAuth client.
+      This is the second step in the passkey authentication flow.
+
+      **Flow:**
+      1. `POST /passkeys/authenticate` with email (optional) → get challenge
+      2. Browser performs `navigator.credentials.get()` with the challenge
+      3. `POST /passkeys/verify` with the response + client credentials (Basic auth) → get bearer token
+
+      **Authentication:** OAuth client authentication required (Basic auth with client_id:client_secret)
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [passkey-verification]
+                  attributes:
+                    type: object
+                    required: [response]
+                    properties:
+                      response:
+                        type: object
+                        description: WebAuthn credential response from navigator.credentials.get()
+                        properties:
+                          id:
+                            type: string
+                            description: Credential ID
+                          rawId:
+                            type: string
+                            description: Base64URL encoded raw credential ID
+                          response:
+                            type: object
+                            properties:
+                              clientDataJSON:
+                                type: string
+                                description: Base64URL encoded client data
+                              authenticatorData:
+                                type: string
+                                description: Base64URL encoded authenticator data
+                              signature:
+                                type: string
+                                description: Base64URL encoded signature
+                              userHandle:
+                                type: string
+                                description: Base64URL encoded user handle
+                          type:
+                            type: string
+                            enum: [public-key]
+    security:
+      - basicAuth: []
+    responses:
+      '200':
+        description: Authentication successful, bearer token issued
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [access_token, token_type]
+              properties:
+                access_token:
+                  type: string
+                  description: Bearer token for authenticated API access
+                token_type:
+                  type: string
+                  enum: [bearer]
+            example:
+              access_token: "Xe5qI31OO0014POnVoQpfkLdkWwsYirh"
+              token_type: "bearer"
+      '401':
+        description: Authentication failed
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+users_passkeys_delete:
+  delete:
+    tags: [passkeys]
+    summary: Delete passkey
+    description: |
+      Remove a passkey from the user's account
+      
+      **Required Permission:** `users.write` OR self-access via `users.write.me` (if removing own passkey)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: string
+          format: uuid
+      - name: passkeyId
+        in: path
+        required: true
+        description: Passkey ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Passkey deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'

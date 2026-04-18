@@ -1,6 +1,4 @@
 import { NotFoundAPIError, NotImplementedAPIError } from '../classes/APIError'
-
-import { Context } from '../classes/Context'
 import { websocket } from '../classes/WebSocket'
 import {
   Rescue,

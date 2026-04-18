@@ -7,6 +7,7 @@ import { oAuthTokenGenerator } from '../classes/TokenGenerators'
 import config from '../config'
 import { db, Rat, Token, User } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { TokenView } from '../view'
 import API, { POST, getJSONAPIData } from './API'
@@ -47,7 +48,16 @@ export default class Frontier extends API {
         scope: ['*'],
       })
 
-      ctx.status.code = StatusCode.created
+      // Log Frontier SSO login metrics
+      logMetric('frontier_login', {
+        _user_id: existingLink.id,
+        _frontier_id: profile.customer_id,
+        _commander_name: profile.commander.name,
+        _platform: Frontier.convertPlatform(profile.platform),
+        _login_type: 'existing_link',
+      }, `Frontier SSO login: ${profile.commander.name} (existing link)`)
+
+      ctx.response.status = StatusCode.created
 
       const query = new DatabaseQuery({ connection: ctx })
       return new DatabaseDocument({ query, newToken, type: TokenView })
@@ -119,7 +129,16 @@ export default class Frontier extends API {
       scope: ['*'],
     })
 
-    ctx.status.code = StatusCode.created
+    // Log Frontier SSO login metrics
+    logMetric('frontier_login', {
+      _user_id: user.id,
+      _frontier_id: profile.customer_id,
+      _commander_name: profile.commander.name,
+      _platform: platform,
+      _login_type: 'linked_account',
+    }, `Frontier SSO login: ${profile.commander.name} (linked account)`)
+
+    ctx.response.status = StatusCode.created
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }
@@ -192,7 +211,16 @@ export default class Frontier extends API {
       scope: ['*'],
     })
 
-    ctx.status.code = StatusCode.created
+    // Log Frontier SSO account creation metrics
+    logMetric('frontier_account_created', {
+      _user_id: newUser.id,
+      _frontier_id: profile.customer_id,
+      _commander_name: profile.commander.name,
+      _platform: platform,
+      _nickname: nickname,
+    }, `Frontier SSO account created: ${profile.commander.name} on ${platform}`)
+
+    ctx.response.status = StatusCode.created
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }

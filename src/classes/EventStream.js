@@ -1,4 +1,3 @@
-import { Context } from './Context'
 import StatusCode from './StatusCode'
 import buildFile from '../files/build'
 

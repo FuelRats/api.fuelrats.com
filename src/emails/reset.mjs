@@ -1,5 +1,4 @@
 import config from '../config'
-import { User } from '../db'
 
 /**
  * Get a password reset link

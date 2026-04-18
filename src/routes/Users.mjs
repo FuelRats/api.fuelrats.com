@@ -1,6 +1,6 @@
-import bcrypt from 'bcrypt'
 import { promises as fsp } from 'fs'
-import workerpool from 'workerpool'
+import { getCached, setCached, invalidateCache } from '../helpers/avatarCache'
+import { createWorkerPool } from '../helpers/workerPool'
 import {
   WritePermission,
   permissions,
@@ -27,7 +27,7 @@ import {
   InternalServerError,
   ImATeapotAPIError,
 } from '../classes/APIError'
-import { Context } from '../classes/Context'
+import Authentication from '../classes/Authentication'
 import Event from '../classes/Event'
 import Jira from '../classes/Jira'
 import Mail from '../classes/Mail'
@@ -38,6 +38,7 @@ import { User, Decal, Avatar, db } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import emailChangeEmail from '../emails/emailchange'
+import logger, { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import {
   UserView, DecalView, RatView, ClientView, GroupView,
@@ -55,14 +56,70 @@ const avatarMaxSize = 256
  * Class for the /users endpoint
  */
 export default class Users extends APIResource {
-  static imageFormatPool = workerpool.pool('./dist/workers/image.mjs')
-  static sslGenerationPool = workerpool.pool('./dist/workers/certificate.mjs')
+  static imageFormatPool = createWorkerPool('../workers/image.mjs', import.meta.url)
+  static sslGenerationPool = createWorkerPool('../workers/certificate.mjs', import.meta.url)
 
   /**
    * @inheritdoc
    */
   get type () {
     return 'users'
+  }
+
+  /**
+   * Validate user authentication using either password+TOTP or passkey
+   * @param {object} options Authentication options
+   * @param {User} options.user The user to authenticate
+   * @param {string} [options.password] Password for traditional auth
+   * @param {string} [options.totpCode] TOTP code for 2FA
+   * @param {object} [options.passkeyResponse] Passkey response for WebAuthn auth
+   * @param {Context} options.ctx Request context for passkey session validation
+   * @returns {Promise<void>} Resolves if authentication succeeds, throws otherwise
+   */
+  static async validateUserAuthentication ({
+    user, password, totpCode, passkeyResponse, ctx,
+  }) {
+    if (passkeyResponse) {
+      // Verify passkey authentication
+      const expectedChallenge = ctx.session.passkeyChallenge
+      const sessionUserId = ctx.session.passkeyUserId
+
+      if (!expectedChallenge || !sessionUserId || sessionUserId !== user.id) {
+        throw new UnauthorizedAPIError({
+          detail: 'No valid passkey authentication session found',
+        })
+      }
+
+      const authenticatedUser = await Authentication.passkeyAuthenticate({
+        userId: user.id,
+        passkeyResponse,
+        expectedChallenge,
+      })
+
+      if (!authenticatedUser) {
+        throw new UnauthorizedAPIError({ detail: 'Passkey authentication failed' })
+      }
+
+      // Clear the passkey session
+      delete ctx.session.passkeyChallenge
+      delete ctx.session.passkeyUserId
+    } else if (password) {
+      // Use the existing Authentication.passwordAuthenticate method which handles TOTP
+      const authenticatedUser = await Authentication.passwordAuthenticate({
+        email: user.email,
+        password,
+        code: totpCode,
+      })
+
+      if (!authenticatedUser) {
+        throw new UnauthorizedAPIError({ detail: 'Invalid password or TOTP code' })
+      }
+    } else {
+      // Neither password nor passkey provided
+      throw new BadRequestAPIError({
+        detail: 'Either password (with TOTP if applicable) or passkeyResponse must be provided',
+      })
+    }
   }
 
   /**
@@ -76,7 +133,19 @@ export default class Users extends APIResource {
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const results = await User.findAndCountAll(query.searchObject)
-    const result = await Anope.mapNicknames(results)
+
+    let result
+    try {
+      result = await Anope.mapNicknames(results)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for user search', {
+        userCount: results.rows.length,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return results without nicknames
+      result = results
+    }
 
     return new DatabaseDocument({ query, result, type: UserView })
   }
@@ -93,7 +162,19 @@ export default class Users extends APIResource {
   async findById (ctx) {
     const { query, result } = await super.findById({ ctx, databaseType: User })
 
-    const user = await Anope.mapNickname(result)
+    let user
+    try {
+      user = await Anope.mapNickname(result)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for user findById', {
+        userId: result.id,
+        userEmail: result.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      user = result
+    }
     return new DatabaseDocument({ query, result: user, type: UserView })
   }
 
@@ -112,8 +193,19 @@ export default class Users extends APIResource {
       },
     })
 
-
-    const user = await Anope.mapNickname(result)
+    let user
+    try {
+      user = await Anope.mapNickname(result)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for user profile', {
+        userId: result.id,
+        userEmail: result.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      user = result
+    }
     user.redeemable = await Decals.getEligibleDecalCount({ user: ctx.state.user })
     return new DatabaseDocument({ query, result: user, type: UserView })
   }
@@ -127,7 +219,29 @@ export default class Users extends APIResource {
   @GET('/users/:id/image')
   @websocket('users', 'image', 'read')
   @parameters('id')
-  async image (ctx, next) {
+  async image (ctx) {
+    const { format = defaultAvatarFormat } = ctx.query
+    const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
+
+    if (!validAvatarFormats.includes(format)) {
+      throw new BadRequestAPIError({ parameter: 'format' })
+    }
+
+    if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
+      throw new BadRequestAPIError({ parameter: 'size' })
+    }
+
+    // Try disk cache first
+    const cached = await getCached(ctx.params.id, size, format)
+    if (cached) {
+      ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
+      ctx.set('X-Cache', 'HIT')
+      ctx.type = `image/${format}`
+      ctx.body = cached
+      return cached
+    }
+
+    // Cache miss — load from database
     const avatar = await Avatar.scope('imageData').findOne({
       where: {
         userId: ctx.params.id,
@@ -137,55 +251,65 @@ export default class Users extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    const { format = defaultAvatarFormat } = ctx.query
-    const size = parseInt(ctx.query.size ?? avatarMaxSize, 10)
-
+    let imageData
     if (format !== defaultAvatarFormat || size !== avatarMaxSize) {
-      if (!validAvatarFormats.includes(format)) {
-        throw new BadRequestAPIError({ parameter: 'format' })
-      }
-
-
-      if (Number.isNaN(size) || size < avatarMinSize || size > avatarMaxSize) {
-        throw new BadRequestAPIError({ parameter: 'size' })
-      }
-
-      ctx.body = await Users.convertImageData(avatar.image, { format, size })
+      imageData = await Users.convertImageData(avatar.image, { format, size })
     } else {
-      ctx.body = avatar.image
+      imageData = avatar.image
     }
 
-    ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
-    ctx.type = `image/${format}`
+    // Store in disk cache (async, don't block response)
+    setCached(ctx.params.id, size, format, imageData).catch(() => {})
 
-    next()
+    ctx.set('Expires', new Date(Date.now() + avatarCacheTime).toUTCString())
+    ctx.set('X-Cache', 'MISS')
+    ctx.type = `image/${format}`
+    ctx.body = imageData
+    return imageData
   }
 
   /**
    * Generate and set a certificate for use with IRC identification
    * @param {Context} ctx request context
    * @returns {Promise<undefined>} resolves a promise upon completion
-   *
-   * Disabled due to FRVE-2. Pending re-implementation when frontend is ready.
    */
-  // @GET('/users/:id/certificate')
-  // @parameters('id')
-  // @authenticated
-  // async certificate (ctx) {
-  //   const ratName = ctx.state.user.preferredRat().name
-  //   const { certificate, fingerprint } = await Users.sslGenerationPool.exec('generateSslCertificate',
-  //     [ratName])
+  @POST('/users/:id/certificate')
+  @parameters('id')
+  @authenticated
+  async certificate (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id,
+      },
+    })
 
-  //   const anopeAccount = await Anope.getAccount(ctx.state.user.email)
-  //   if (!anopeAccount) {
-  //     throw new BadRequestAPIError()
-  //   }
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
 
-  //   await Anope.setFingerprint(ctx.state.user.email, fingerprint)
-  //   ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
-  //   ctx.set('Content-type', 'application/x-pem-file')
-  //   ctx.body = certificate
-  // }
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    const ratName = user.preferredRat().name
+    const { certificate, fingerprint } = await Users.sslGenerationPool.exec({ ratName })
+
+    const anopeAccount = await Anope.getAccount(user.email)
+    if (!anopeAccount) {
+      throw new BadRequestAPIError()
+    }
+
+    await Anope.setFingerprint(user.email, fingerprint)
+
+    logMetric('user_certificate_generated', {
+      _user_id: user.id,
+      _requested_by_user_id: ctx.state.user.id,
+      _is_self_request: user.id === ctx.state.user.id,
+      _rat_name: ratName,
+    }, `IRC certificate generated for user ${user.id} (rat: ${ratName})`)
+
+    ctx.set('Content-disposition', `attachment; filename=${ratName}.pem`)
+    ctx.set('Content-type', 'application/x-pem-file')
+    ctx.body = certificate
+  }
 
   /**
    * Change a user's email
@@ -236,7 +360,30 @@ export default class Users extends APIResource {
     await Jira.setEmail(user.displayName(), newEmail)
     await Anope.setEmail(oldEmail, newEmail)
 
-    const result = await Anope.mapNickname(user)
+    // Log email change metrics
+    logMetric('user_email_changed', {
+      _user_id: user.id,
+      _changed_by_user_id: ctx.state.user.id,
+      _was_verified: Boolean(user.groups.find((group) => {
+        return group.name === 'verified'
+      })),
+      _is_self_change: user.id === ctx.state.user.id,
+    }, `User email changed: ${user.id}`)
+
+    let result
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames after email change', {
+        userId: user.id,
+        oldEmail,
+        newEmail,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
@@ -282,9 +429,9 @@ export default class Users extends APIResource {
   @websocket('users', 'password', 'update')
   @parameters('id')
   @authenticated
-  @required('password', 'newPassword')
+  @required('newPassword')
   async setPassword (ctx) {
-    const { password, newPassword } = getJSONAPIData({ ctx, type: 'password-changes' }).attributes
+    const { password, newPassword, passkeyResponse, totpCode } = getJSONAPIData({ ctx, type: 'password-changes' }).attributes
 
     const user = await User.findOne({
       where: {
@@ -298,11 +445,16 @@ export default class Users extends APIResource {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    const validatePassword = await bcrypt.compare(password, user.password)
-    if (!validatePassword) {
-      throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
-    }
+    // Validate authentication using the reusable method
+    await Users.validateUserAuthentication({
+      user,
+      password,
+      totpCode,
+      passkeyResponse,
+      ctx,
+    })
 
+    // Set the new password
     await db.transaction(async (transaction) => {
       user.password = newPassword
       await user.save({ transaction })
@@ -311,7 +463,34 @@ export default class Users extends APIResource {
       return user
     })
 
-    const result = await Anope.mapNickname(user)
+    // Log password change metrics
+    let passwordChangeAuthMethod = 'password'
+    if (passkeyResponse) {
+      passwordChangeAuthMethod = 'passkey'
+    } else if (totpCode) {
+      passwordChangeAuthMethod = 'password_2fa'
+    }
+
+    logMetric('user_password_changed', {
+      _user_id: user.id,
+      _changed_by_user_id: ctx.state.user.id,
+      _is_self_change: user.id === ctx.state.user.id,
+      _auth_method: passwordChangeAuthMethod,
+    }, `User password changed: ${user.id} by ${ctx.state.user.id}`)
+
+    let result
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames after password change', {
+        userId: user.id,
+        userEmail: user.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: UserView })
@@ -329,8 +508,27 @@ export default class Users extends APIResource {
   async create (ctx) {
     const user = await super.create({ ctx, databaseType: User })
 
+    // Log user creation metrics
+    logMetric('user_created', {
+      _user_id: user.id,
+      _created_by_user_id: ctx.state.user.id,
+      _initial_status: user.status || 'active',
+    }, `User created: ${user.id} by admin ${ctx.state.user.id}`)
+
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
+    let result
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames for newly created user', {
+        userId: user.id,
+        userEmail: user.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
 
     ctx.response.status = StatusCode.created
     return new DatabaseDocument({ query, result, type: UserView })
@@ -348,8 +546,31 @@ export default class Users extends APIResource {
   async update (ctx) {
     const user = await super.update({ ctx, databaseType: User, updateSearch: { id: ctx.params.id } })
 
+    // Log user update metrics
+    const updatedFields = Object.keys(ctx.data?.data?.attributes ?? {})
+    logMetric('user_updated', {
+      _user_id: user.id,
+      _updated_by_user_id: ctx.state.user.id,
+      _is_self_update: user.id === ctx.state.user.id,
+      _updated_fields: updatedFields.join(','),
+      _status_changed: updatedFields.includes('status'),
+      _new_status: ctx.data?.data?.attributes?.status ?? user.status,
+    }, `User updated: ${user.id} by ${ctx.state.user.id} (fields: ${updatedFields.join(', ')})`)
+
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Anope.mapNickname(user)
+    let result
+    try {
+      result = await Anope.mapNickname(user)
+    } catch (error) {
+      logger.error('Failed to retrieve IRC nicknames after user update', {
+        userId: user.id,
+        userEmail: user.email,
+        error: error.message,
+        stack: error.stack,
+      })
+      // Return user without nicknames
+      result = user
+    }
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     return new DatabaseDocument({ query, result, type: UserView })
   }
@@ -400,7 +621,7 @@ export default class Users extends APIResource {
       throw new ImATeapotAPIError()
     }
 
-    const imageData = await fsp.readFile(ctx.request.files.image.path)
+    const imageData = ctx.request.files.image.buffer ?? await fsp.readFile(ctx.request.files.image.path)
 
     const formattedImageData = await Users.convertImageData(imageData)
 
@@ -415,6 +636,16 @@ export default class Users extends APIResource {
       userId: ctx.params.id,
     })
 
+    invalidateCache(ctx.params.id)
+
+    // Log avatar update metrics
+    logMetric('user_avatar_updated', {
+      _user_id: user.id,
+      _updated_by_user_id: ctx.state.user.id,
+      _is_self_update: user.id === ctx.state.user.id,
+      _image_size_bytes: formattedImageData.length,
+    }, `User avatar updated: ${user.id} by ${ctx.state.user.id}`)
+
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     const result = await User.findOne({
@@ -423,6 +654,44 @@ export default class Users extends APIResource {
       },
     })
     return new DatabaseDocument({ query, result, type: UserView })
+  }
+
+  /**
+   * Delete a user's avatar
+   * @endpoint
+   */
+  @DELETE('/users/:id/image')
+  @parameters('id')
+  @authenticated
+  async deleteimage (ctx) {
+    const user = await User.findOne({
+      where: {
+        id: ctx.params.id,
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    await Avatar.destroy({
+      where: {
+        userId: ctx.params.id,
+      },
+    })
+
+    invalidateCache(ctx.params.id)
+
+    logMetric('user_avatar_deleted', {
+      _user_id: user.id,
+      _deleted_by_user_id: ctx.state.user.id,
+      _is_self_update: user.id === ctx.state.user.id,
+    }, `User avatar deleted: ${user.id} by ${ctx.state.user.id}`)
+
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
+    return true
   }
 
   /**
@@ -464,6 +733,16 @@ export default class Users extends APIResource {
       claimedAt: Date.now(),
     })
 
+    // Log decal redemption metrics
+    logMetric('user_decal_redeemed', {
+      _user_id: user.id,
+      _decal_id: result.id,
+      _decal_type: result.type,
+      _redeemable_count: redeemable,
+      _requested_by_user_id: ctx.state.user.id,
+      _is_self_redemption: user.id === ctx.state.user.id,
+    }, `Decal redeemed: ${result.id} by user ${user.id}`)
+
     Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: DecalView })
@@ -501,13 +780,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsCreate (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'add',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -523,15 +803,15 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
-    // I'm sorry Clapton, JSONAPI made me do it
     ctx.response.status = StatusCode.noContent
     return true
   }
@@ -546,13 +826,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipRatsDelete (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'remove',
       relationship: 'rats',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -590,13 +871,14 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async relationshipDisplayRatPatch (ctx) {
-    await this.relationshipChange({
+    const { updatedEntity } = await this.relationshipChange({
       ctx,
       databaseType: User,
       change: 'patch',
       relationship: 'displayRat',
     })
 
+    await Anope.updatePermissions(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -934,10 +1216,13 @@ export default class Users extends APIResource {
    */
   static async convertImageData (originalImageData, options = {}) {
     try {
-      return Buffer.from(await Users.imageFormatPool.exec('avatarImageFormat', [originalImageData, {
-        size: options.size ?? avatarMaxSize,
-        format: options.format ?? defaultAvatarFormat,
-      }]))
+      return Buffer.from(await Users.imageFormatPool.exec({
+        imageData: originalImageData,
+        options: {
+          size: options.size ?? avatarMaxSize,
+          format: options.format ?? defaultAvatarFormat,
+        },
+      }))
     } catch (error) {
       if (error.message.includes('unsupported image format')) {
         // Thrown when input format is unsupported

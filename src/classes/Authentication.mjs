@@ -1,20 +1,23 @@
-import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { verifySync as otpVerify } from 'otplib'
+import { hashPassword, verifyPassword, getHashRounds } from '../helpers/password'
+import { verifyRecoveryCode } from '../helpers/recoveryCodes'
 import UUID from 'pure-uuid'
 import config from '../config'
 import * as constants from '../constants'
 import {
-  User, Token, Client, Reset, db,
+  User, Token, Client, Reset, Authenticator, Passkey,
 } from '../db'
+import { logMetric } from '../logging'
 
 import Anope from './Anope'
 import {
+  AuthenticatorRequiredAPIError,
   GoneAPIError,
   UnauthorizedAPIError,
   ResetRequiredAPIError,
   ForbiddenAPIError,
 } from './APIError'
-import { Context } from './Context'
 import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
@@ -31,9 +34,10 @@ class Authentication {
    * @param {object} arg function arguments object
    * @param {string} arg.email the email of the user to authenticate
    * @param {string} arg.password the password of the user to authenticate
+   * @param {string} [arg.code] optional 2FA code
    * @returns {Promise<undefined|Promise<db.Model>>} A promise returning the authenticated user object
    */
-  static async passwordAuthenticate ({ email, password }) {
+  static async passwordAuthenticate ({ email, password, code }) {
     if (!email || !password) {
       return undefined
     }
@@ -64,22 +68,87 @@ class Authentication {
       })
     }
 
-    const result = await bcrypt.compare(password, user.password)
+    const result = await verifyPassword(password, user.password)
     if (result === false) {
+      logMetric('authentication_failure', {
+        _auth_method: 'password',
+        _failure_reason: 'invalid_password',
+      }, 'Password authentication failed')
       return undefined
     }
     if (user.isSuspended() === true) {
       throw new GoneAPIError({ pointer: '/data/attributes/email' })
     }
 
-    if (bcrypt.getRounds(user.password) > constants.bcryptRoundsCount) {
-      const newRoundPassword = await bcrypt.hash(password, constants.bcryptRoundsCount)
+    if (getHashRounds(user.password) > constants.bcryptRoundsCount) {
+      const newRoundPassword = await hashPassword(password, constants.bcryptRoundsCount)
       User.update({
         password: newRoundPassword,
       }, {
         where: { id: user.id },
       })
     }
+
+    // Check for 2FA requirement
+    const authenticator = await Authenticator.findOne({
+      where: {
+        userId: user.id,
+      },
+    })
+
+    if (authenticator) {
+      if (!code) {
+        throw new AuthenticatorRequiredAPIError({
+          pointer: '/data/attributes/code',
+        })
+      }
+
+      let isValidCode
+      let usedRecoveryCode = false
+      try {
+        isValidCode = otpVerify({ token: code, secret: authenticator.secret }).valid
+      } catch {
+        isValidCode = false
+      }
+
+      if (!isValidCode) {
+        const matchIndex = await verifyRecoveryCode(code, authenticator.recoveryCodes)
+        if (matchIndex !== -1) {
+          isValidCode = true
+          usedRecoveryCode = true
+          const remaining = authenticator.recoveryCodes.filter((_, i) => {
+            return i !== matchIndex
+          })
+          await authenticator.update({ recoveryCodes: remaining })
+        }
+      }
+
+      if (!isValidCode) {
+        logMetric('authentication_failure', {
+          _auth_method: 'password_2fa',
+          _failure_reason: 'invalid_2fa_code',
+          _user_id: user.id,
+        }, '2FA authentication failed')
+        throw new AuthenticatorRequiredAPIError({
+          pointer: '/data/attributes/code',
+        })
+      }
+
+      if (usedRecoveryCode) {
+        logMetric('authentication_recovery_code_used', {
+          _user_id: user.id,
+          _remaining_codes: authenticator.recoveryCodes.length,
+        }, `Recovery code used for user ${user.id}`)
+      }
+    }
+
+    // Log successful password authentication
+    logMetric('authentication_success', {
+      _auth_method: authenticator ? 'password_2fa' : 'password',
+      _user_id: user.id,
+      _has_2fa: Boolean(authenticator),
+    }, 'Password authentication successful')
+
     return User.findOne({
       where: {
         email: { ilike: email },
@@ -87,6 +156,88 @@ class Authentication {
         status: 'active',
       },
     })
+  }
+
+  /**
+   * Perform passkey authentication with WebAuthn response
+   * @param {object} arg function arguments object
+   * @param {string} arg.userId the ID of the user to authenticate
+   * @param {object} arg.passkeyResponse the WebAuthn authentication response
+   * @param {string} arg.expectedChallenge the challenge expected for this authentication
+   * @returns {Promise<User|undefined>} A promise returning the authenticated user object
+   */
+  static async passkeyAuthenticate ({ userId, passkeyResponse, expectedChallenge }) {
+    if (!userId || !passkeyResponse || !expectedChallenge) {
+      return undefined
+    }
+
+    const user = await User.findOne({
+      where: {
+        id: userId,
+        suspended: null,
+        status: 'active',
+      },
+    })
+
+    if (!user) {
+      return undefined
+    }
+
+    if (user.isSuspended() === true) {
+      throw new GoneAPIError({ detail: 'User account is suspended' })
+    }
+
+    const passkey = await Passkey.findOne({
+      where: {
+        credentialId: passkeyResponse.id,
+        userId: user.id,
+      },
+    })
+
+    if (!passkey) {
+      return undefined
+    }
+
+    // Verify the passkey response
+    const { verifyAuthenticationResponse } = await import('@simplewebauthn/server')
+    let verification
+    try {
+      verification = await verifyAuthenticationResponse({
+        response: passkeyResponse,
+        expectedChallenge,
+        expectedOrigin: config.server.externalUrl,
+        expectedRPID: new URL(config.server.externalUrl).hostname,
+        authenticator: {
+          credentialID: Buffer.from(passkey.credentialId, 'base64url'),
+          credentialPublicKey: Buffer.from(passkey.publicKey, 'base64url'),
+          counter: passkey.counter,
+        },
+      })
+    } catch {
+      return undefined
+    }
+
+    if (!verification.verified) {
+      logMetric('authentication_failure', {
+        _auth_method: 'passkey',
+        _failure_reason: 'verification_failed',
+        _user_id: userId,
+      }, 'Passkey verification failed')
+      return undefined
+    }
+
+    // Update passkey counter
+    await passkey.update({
+      counter: verification.authenticationInfo.newCounter,
+    })
+
+    logMetric('authentication_success', {
+      _auth_method: 'passkey',
+      _user_id: userId,
+      _passkey_name: passkey.name,
+    }, 'Passkey authentication successful')
+
+    return user
   }
 
   /**
@@ -114,7 +265,7 @@ class Authentication {
       }
 
       return decoded
-    } catch (error) {
+    } catch {
       // JWT validation failed
       return null
     }
@@ -150,6 +301,13 @@ class Authentication {
       // Extract scopes from JWT (if present) or use default scope
       const scope = jwtPayload.scope ? jwtPayload.scope.split(' ') : ['*']
 
+      logMetric('authentication_success', {
+        _auth_method: 'jwt_bearer',
+        _user_id: user.id,
+        _client_id: jwtPayload.aud,
+        _scopes: scope.join(','),
+      }, 'JWT bearer authentication successful')
+
       return {
         user,
         scope,
@@ -160,6 +318,10 @@ class Authentication {
     // Fallback to database token lookup (existing functionality)
     const token = await Token.findOne({ where: { value: bearer } })
     if (!token) {
+      logMetric('authentication_failure', {
+        _auth_method: 'bearer_token',
+        _failure_reason: 'token_not_found',
+      }, 'Bearer token authentication failed - token not found')
       return false
     }
     const userInstance = await User.findOne({
@@ -177,10 +339,29 @@ class Authentication {
         status: 'active',
       },
     })
+
+    if (user) {
+      // Throttle lastAccess updates to once per minute
+      const accessIntervalMs = 60 * 1000
+      const shouldUpdate = !token.lastAccess
+        || (Date.now() - new Date(token.lastAccess).getTime()) > accessIntervalMs
+      if (shouldUpdate) {
+        token.update({ lastAccess: new Date() }).catch(() => {})
+      }
+
+      logMetric('authentication_success', {
+        _auth_method: 'bearer_token',
+        _user_id: user.id,
+        _client_id: token.clientId,
+        _scopes: token.scope.join(','),
+      }, 'Bearer token authentication successful')
+    }
+
     return {
       user,
       scope: token.scope,
       clientId: token.clientId,
+      tokenValue: token.value,
     }
   }
 
@@ -209,9 +390,9 @@ class Authentication {
    * @returns {Promise<db.User|undefined>} authenticated user
    */
   static basicUserAuthentication ({ connection }) {
-    const [email, password] = getBasicAuth(connection)
+    const [email, password, code] = getBasicAuth(connection)
     if (email && password) {
-      return Authentication.passwordAuthenticate({ email, password })
+      return Authentication.passwordAuthenticate({ email, password, code })
     }
     return undefined
   }
@@ -229,14 +410,14 @@ class Authentication {
       return undefined
     }
 
-    const authorised = await bcrypt.compare(secret, client.secret)
+    const authorised = await verifyPassword(secret, client.secret)
     if (authorised) {
       if (client.user.isSuspended()) {
         throw new GoneAPIError({})
       }
 
-      if (bcrypt.getRounds(client.secret) > constants.bcryptRoundsCount) {
-        const newRoundSecret = await bcrypt.hash(secret, constants.bcryptRoundsCount)
+      if (getHashRounds(client.secret) > constants.bcryptRoundsCount) {
+        const newRoundSecret = await hashPassword(secret, constants.bcryptRoundsCount)
         Client.update({
           secret: newRoundSecret,
         }, {
@@ -263,7 +444,9 @@ class Authentication {
     }
 
     if (connection.session.userId) {
-      const user = await User.findOne({ where: { id: connection.session.userId } })
+      const user = await User.findOne({
+        where: { id: connection.session.userId, suspended: null, status: 'active' },
+      })
       if (user) {
         connection.state.user = user
         return true
@@ -277,6 +460,7 @@ class Authentication {
         connection.state.user = bearerCheck.user
         connection.state.scope = bearerCheck.scope
         connection.state.clientId = bearerCheck.clientId
+        connection.state.currentTokenValue = bearerCheck.tokenValue
         return true
       }
     }
@@ -322,7 +506,7 @@ class Authentication {
       throw new ForbiddenAPIError({ parameter: 'representing' })
     }
 
-    let representedUser = undefined
+    let representedUser
     if (new UUID(constants.uuidVersion).parse(representing)) {
       representedUser = await User.findOne({
         where: {
@@ -341,6 +525,10 @@ class Authentication {
 
     if (!representedUser) {
       return false
+    }
+
+    if (representedUser.isSuspended()) {
+      throw new GoneAPIError({ parameter: 'representing' })
     }
 
     ctx.state.user = representedUser
@@ -371,7 +559,7 @@ function getBearerToken (ctx) {
 /**
  * Get basic auth credentials from a request object
  * @param {Context} ctx the request object to retrieve basic auth credentials from
- * @returns {Array} An array containing the username and password, or an empty array if none was found.
+ * @returns {Array} An array containing the username, password, and optional 2FA code, or an empty array if none was found.
  */
 export function getBasicAuth (ctx) {
   const authorizationHeader = ctx.get('Authorization')

@@ -1,7 +1,5 @@
 import { UAParser } from 'ua-parser-js'
-import { Context } from '../classes/Context'
 import GeoIP from '../classes/GeoIP'
-import { User } from '../db'
 
 /**
  * Generate a short device description based on a user agent

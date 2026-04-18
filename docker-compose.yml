@@ -1,46 +1,76 @@
-version: '3.8'
+secrets:
+  frapi_postgres_password:
+    file: .docker/secrets/frapi_postgres_password
+  frapi_cookie:
+    file: .docker/secrets/frapi_cookie
+  frapi_jwt_secret:
+    file: .docker/secrets/frapi_jwt_secret
+
 services:
   db:
-    image: postgres:15
-    restart: always
+    image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: fuelrats
-      POSTGRES_PASSWORD: squeak
+      POSTGRES_PASSWORD_FILE: /run/secrets/frapi_postgres_password
       POSTGRES_DB: fuelrats
+    secrets:
+      - frapi_postgres_password
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fuelrats"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
 
-  app:
+  anope-tunnel:
+    image: alpine:latest
+    restart: unless-stopped
+    entrypoint: ["sh", "-c", "apk add --no-cache openssh-client && cp /ssh/key /tmp/key && chmod 600 /tmp/key && ssh -N -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -L 0.0.0.0:3306:localhost:3306 -i /tmp/key fuelrats@services.fuelrats.dev"]
+    volumes:
+      - ~/.ssh/id_rsa:/ssh/key:ro
+      - .docker/known_hosts:/root/.ssh/known_hosts:ro
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -tln | grep -q ':3306'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
+  api:
     build: .
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      anope-tunnel:
+        condition: service_healthy
     environment:
-      NODE_ENV: development
-      FRAPI_HOSTNAME: 0.0.0.0
-      FRAPI_PORT: 8080
-      FRAPI_URL: http://localhost:8080
-      FRAPI_COOKIE: ${FRAPI_COOKIE}
-      FRAPI_FRONTEND_CLIENTID: ${FRAPI_FRONTEND_CLIENTID}
-      FRAPI_FRONTEND_URL: ${FRAPI_FRONTEND_URL}
+      FRAPI_HOSTNAME: "0.0.0.0"
+      FRAPI_PORT: "8080"
+      FRAPI_URL: "http://localhost:8080"
+      FRAPI_POSTGRES_HOSTNAME: db
+      FRAPI_POSTGRES_PORT: "5432"
       FRAPI_POSTGRES_DATABASE: fuelrats
       FRAPI_POSTGRES_USERNAME: fuelrats
-      FRAPI_POSTGRES_HOSTNAME: db
-      FRAPI_POSTGRES_PASSWORD: squeak
-
-      FRAPI_JIRA_URL: ${FRAPI_JIRA_URL}
-      FRAPI_JIRA_USERNAME: ${FRAPI_JIRA_USERNAME}
-      FRAPI_JIRA_PASSWORD: ${FRAPI_JIRA_PASSWORD}
-
-      FRAPI_ANOPE_DATABASE: ${FRAPI_ANOPE_DATABASE}
-      FRAPI_ANOPE_HOSTNAME: ${FRAPI_ANOPE_HOSTNAME}
-      FRAPI_ANOPE_PORT: ${FRAPI_ANOPE_PORT}
-      FRAPI_ANOPE_USERNAME: ${FRAPI_ANOPE_USERNAME}
-      FRAPI_ANOPE_PASSWORD: ${FRAPI_ANOPE_PASSWORD}
-      FRAPI_ANOPE_XMLRPC: ${FRAPI_ANOPE_XMLRPC}
-
+      FRAPI_POSTGRES_PASSWORD_FILE: /run/secrets/frapi_postgres_password
+      FRAPI_FRONTEND_URL: "http://localhost:3000"
+      FRAPI_FRONTEND_CLIENTID: "e5545c1c-0918-4bd8-97c8-d7b50e954d8e"
+      FRAPI_GEOIP_DIRECTORY: /app/geoip
+      FRAPI_ANOPE_HOSTNAME: anope-tunnel
+      FRAPI_ANOPE_PORT: "3306"
+      FRAPI_ANOPE_DATABASE: anope
+      FRAPI_ANOPE_USERNAME: anope2
+      FRAPI_ANOPE_XMLRPC: "http://services.fuelrats.dev:6080/xmlrpc"
+      FRAPI_WEBPUSH_PUBLIC_KEY: "BPLSb1TQ3Mj_AO_dkwuIiMZub4Jn5ena5wgjL-c8OuMXguK2fiHWuZh0sxYluEcmGpMR4dWN8ORDWArTNt6le30"
+      FRAPI_WEBPUSH_PRIVATE_KEY: "ComQb6oVfGGbQGGQ3kSv8h2mVPzzB-8uOklnkdmAnN8"
+    secrets:
+      - frapi_cookie
+      - frapi_jwt_secret
+      - frapi_postgres_password
     ports:
       - "8080:8080"
 

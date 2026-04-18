@@ -8,7 +8,6 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import { Context } from '../classes/Context'
 import Permission from '../classes/Permission'
 import { Rat, db } from '../db'
 import API, { getJSONAPIData, WritePermission } from './API'
@@ -361,7 +360,11 @@ export default class APIResource extends API {
     }
     if (validOneRelationship && changeRelationship.many === false) {
       if (!data) {
-        return undefined
+        // For null data, we still need to check permissions and clear the relationship
+        if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, null])) {
+          throw new ForbiddenAPIError({ pointer: '/data' })
+        }
+        return changeRelationship.patch({ entity, id: null, ctx, transaction })
       }
 
       if (!Reflect.apply(changeRelationship.hasPermission, this, [ctx, entity, data.id])) {
@@ -503,7 +506,7 @@ export default class APIResource extends API {
           return isGroup
 
         case WritePermission.group:
-          // eslint-disable-next-line no-restricted-syntax -- intentional logical OR expression
+           
           return isGroup || isSelf
 
         case WritePermission.self:
@@ -529,7 +532,7 @@ export default class APIResource extends API {
    * @param {object} arg.entity the entity to validate
    */
   async validateUpdateAccess ({ ctx, attributes, entity }) {
-    // eslint-disable-next-line no-restricted-syntax -- intentional logical or expression
+     
     const isGroup = Permission.granted({ permissions: [`${this.type}.write`], connection: ctx })
       || Permission.granted({ permissions: [`${this.type}.write.me`], connection: ctx })
     const isSelf = this.isSelf({ ctx, entity }) && Permission.granted({
@@ -651,8 +654,8 @@ export default class APIResource extends API {
    * @returns {Promise<db.User>}
    */
   static async getAuthor (ctx) {
-    if (ctx.req && Reflect.has(ctx.req.headers, 'x-command-by')) {
-      const ratId = ctx.req.headers['x-command-by']
+    if (ctx.request.headers && Reflect.has(ctx.request.headers, 'x-command-by')) {
+      const ratId = ctx.request.headers['x-command-by']
       if (UUID.test(ratId) === false) {
         return undefined
       }

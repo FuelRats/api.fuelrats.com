@@ -39,7 +39,7 @@ export default class RescueRatsHistory extends Model {
   /**
    * @inheritdoc
    */
-  // eslint-disable-next-line no-empty-function
+   
   static associate () {
 
   }

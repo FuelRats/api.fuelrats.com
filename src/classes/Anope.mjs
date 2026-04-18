@@ -1,5 +1,5 @@
-import bcrypt from 'bcrypt'
 import xmlrpc from 'homematic-xmlrpc'
+import { hashPassword } from '../helpers/password'
 import { encode } from 'html-entities'
 import knex from 'knex'
 import config from '../config'
@@ -128,7 +128,7 @@ class Anope {
       return new Nickname(result, user)
     })
 
-    /* eslint-disable no-await-in-loop */
+     
     for (const nick of nicks) {
       await Anope.runCommand('NickServ', nick.nick, 'UPDATE')
     }
@@ -456,13 +456,40 @@ class Anope {
       return
     }
 
-    const encryptedPassword = await bcrypt.hash(newPassword, anopeBcryptRounds)
+    const encryptedPassword = await hashPassword(newPassword, anopeBcryptRounds)
 
     await mysql('anope_db_NickCore')
       .whereRaw('lower(email) = lower(?)', [email])
       .update({
         pass: `bcrypt:${encryptedPassword}`,
       })
+  }
+
+  /**
+   * Set the display nickname for an Anope account
+   * @param {string} email the email of the account
+   * @param {string} displayNick the nickname to set as display
+   * @returns {Promise<object>} resolves with the result from NickServ
+   */
+  static async setDisplayNickname (email, displayNick) {
+    if (!config.anope.database) {
+      throw new Error('Anope database not configured')
+    }
+
+    // First verify the nickname exists and belongs to the user
+    const nickname = await this.findNickname(displayNick)
+    if (!nickname) {
+      throw new NotFoundAPIError({ parameter: 'displayNick' })
+    }
+
+    if (nickname.email.toLowerCase() !== email.toLowerCase()) {
+      throw new ForbiddenAPIError({ parameter: 'displayNick' })
+    }
+
+    // Use NickServ SET DISPLAY command to change the display nickname
+    const result = await this.runCommand('NickServ', displayNick, `SET DISPLAY ${displayNick}`)
+
+    return result
   }
 
   /**

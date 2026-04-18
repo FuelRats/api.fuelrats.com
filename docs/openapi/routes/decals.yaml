@@ -1,0 +1,486 @@
+# Decals API endpoints
+
+decals:
+  get:
+    tags: [decals]
+    summary: List decals
+    description: |
+      List all decals in the system
+      
+      **Required Permission:** `decals.read`
+    security:
+      - bearerAuth: [decals.read]
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+      - $ref: '../components/parameters.yaml#/Sort'
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: List of decals
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '../schemas/decals.yaml#/Decal'
+                meta:
+                  $ref: '../components/schemas.yaml#/PaginationMeta'
+                links:
+                  $ref: '../components/schemas.yaml#/PaginationLinks'
+            examples:
+              successful_response:
+                summary: List of decals with user and rat relationships
+                description: Example response showing various types of awarded decals with their associated users and commanders
+                value:
+                  data:
+                    - type: decals
+                      id: "220e8400-e29b-41d4-a716-446655440001"
+                      attributes:
+                        code: "RESCUE-2023-001"
+                        type: "rescue"
+                        notes: "Awarded for 10 successful rescues"
+                        createdAt: "2023-01-15T10:30:00.000Z"
+                        updatedAt: "2023-01-15T10:30:00.000Z"
+                      relationships:
+                        user:
+                          data:
+                            type: users
+                            id: "550e8400-e29b-41d4-a716-446655440000"
+                          links:
+                            self: "/decals/220e8400-e29b-41d4-a716-446655440001/relationships/user"
+                            related: "/decals/220e8400-e29b-41d4-a716-446655440001/user"
+                        rat:
+                          data:
+                            type: rats
+                            id: "660e8400-e29b-41d4-a716-446655440001"
+                          links:
+                            self: "/decals/220e8400-e29b-41d4-a716-446655440001/relationships/rat"
+                            related: "/decals/220e8400-e29b-41d4-a716-446655440001/rat"
+                    - type: decals
+                      id: "220e8400-e29b-41d4-a716-446655440002"
+                      attributes:
+                        code: "EPIC-2023-042"
+                        type: "epic"
+                        notes: "Epic rescue award"
+                        createdAt: "2023-02-01T08:00:00.000Z"
+                        updatedAt: "2023-02-01T08:00:00.000Z"
+                      relationships:
+                        user:
+                          data:
+                            type: users
+                            id: "550e8400-e29b-41d4-a716-446655440003"
+                          links:
+                            self: "/decals/220e8400-e29b-41d4-a716-446655440002/relationships/user"
+                            related: "/decals/220e8400-e29b-41d4-a716-446655440002/user"
+                        rat:
+                          data:
+                            type: rats
+                            id: "660e8400-e29b-41d4-a716-446655440002"
+                          links:
+                            self: "/decals/220e8400-e29b-41d4-a716-446655440002/relationships/rat"
+                            related: "/decals/220e8400-e29b-41d4-a716-446655440002/rat"
+                  included:
+                    - type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      attributes:
+                        email: "rescuer@example.com"
+                        status: "active"
+                    - type: users
+                      id: "550e8400-e29b-41d4-a716-446655440003"
+                      attributes:
+                        email: "epicrescuer@example.com"
+                        status: "active"
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                      attributes:
+                        name: "RescuePilot"
+                        platform: "pc"
+                    - type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440002"
+                      attributes:
+                        name: "EpicRescuer"
+                        platform: "pc"
+                  meta:
+                    page:
+                      offset: 0
+                      limit: 20
+                      total: 42
+                  links:
+                    self: "/decals?page[offset]=0&page[limit]=20"
+                    first: "/decals?page[offset]=0&page[limit]=20"
+                    last: "/decals?page[offset]=40&page[limit]=20"
+                    next: "/decals?page[offset]=20&page[limit]=20"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+
+  post:
+    tags: [decals]
+    summary: Create decal
+    description: |
+      Create a new decal
+      
+      **Required Permission:** `decals.write`
+    security:
+      - bearerAuth: [decals.write]
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [decals]
+                  attributes:
+                    type: object
+                    required: [type, userId]
+                    properties:
+                      code:
+                        type: string
+                        description: Unique decal code
+                      type:
+                        type: string
+                        enum: [rescue, epic, thisisfine, anniversary]
+                        description: Type of decal
+                      notes:
+                        type: string
+                        description: Additional notes about the decal
+                      userId:
+                        type: string
+                        format: uuid
+                        description: User ID to award the decal to
+                      ratId:
+                        type: string
+                        format: uuid
+                        description: Optional Rat ID associated with the decal
+    responses:
+      '201':
+        description: Decal created successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '../schemas/decals.yaml#/Decal'
+            example:
+              data:
+                type: decals
+                id: "220e8400-e29b-41d4-a716-446655440003"
+                attributes:
+                  code: "RESCUE-2023-042"
+                  type: "rescue"
+                  notes: "Monthly rescue milestone"
+                  createdAt: "2023-03-01T10:00:00.000Z"
+                  updatedAt: "2023-03-01T10:00:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/decals/220e8400-e29b-41d4-a716-446655440003/relationships/user"
+                      related: "/decals/220e8400-e29b-41d4-a716-446655440003/user"
+                  rat:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/decals/220e8400-e29b-41d4-a716-446655440003/relationships/rat"
+                      related: "/decals/220e8400-e29b-41d4-a716-446655440003/rat"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+decals_by_id:
+  get:
+    tags: [decals]
+    summary: Get decal by ID
+    description: |
+      Retrieve a specific decal by ID
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Decal ID
+        schema:
+          type: string
+          format: uuid
+      - $ref: '../components/parameters.yaml#/Include'
+      - $ref: '../components/parameters.yaml#/Fields'
+    responses:
+      '200':
+        description: Decal details
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '../schemas/decals.yaml#/Decal'
+            example:
+              data:
+                type: decals
+                id: "220e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  code: "RESCUE-2023-001"
+                  type: "rescue"
+                  notes: "Awarded for 10 successful rescues"
+                  createdAt: "2023-01-15T10:30:00.000Z"
+                  updatedAt: "2023-01-15T10:30:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/decals/220e8400-e29b-41d4-a716-446655440001/relationships/user"
+                      related: "/decals/220e8400-e29b-41d4-a716-446655440001/user"
+                  rat:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/decals/220e8400-e29b-41d4-a716-446655440001/relationships/rat"
+                      related: "/decals/220e8400-e29b-41d4-a716-446655440001/rat"
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  put:
+    tags: [decals]
+    summary: Update decal
+    description: |
+      Update an existing decal
+      
+      **Required Permission:** `decals.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Decal ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [decals]
+                  id:
+                    type: string
+                    format: uuid
+                  attributes:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Unique decal code
+                      type:
+                        type: string
+                        enum: [rescue, epic, thisisfine, anniversary]
+                        description: Type of decal
+                      notes:
+                        type: string
+                        description: Additional notes about the decal
+    responses:
+      '200':
+        description: Decal updated successfully
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '../schemas/decals.yaml#/Decal'
+            example:
+              data:
+                type: decals
+                id: "220e8400-e29b-41d4-a716-446655440001"
+                attributes:
+                  code: "RESCUE-2023-001-UPDATED"
+                  type: "rescue"
+                  notes: "Updated rescue award with corrected details"
+                  createdAt: "2023-01-15T10:30:00.000Z"
+                  updatedAt: "2023-03-01T15:00:00.000Z"
+                relationships:
+                  user:
+                    data:
+                      type: users
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                    links:
+                      self: "/decals/220e8400-e29b-41d4-a716-446655440001/relationships/user"
+                      related: "/decals/220e8400-e29b-41d4-a716-446655440001/user"
+                  rat:
+                    data:
+                      type: rats
+                      id: "660e8400-e29b-41d4-a716-446655440001"
+                    links:
+                      self: "/decals/220e8400-e29b-41d4-a716-446655440001/relationships/rat"
+                      related: "/decals/220e8400-e29b-41d4-a716-446655440001/rat"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
+  delete:
+    tags: [decals]
+    summary: Delete decal
+    description: |
+      Delete a decal
+      
+      **Required Permission:** `decals.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Decal ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Decal deleted successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+decals_rat_relationship:
+  get:
+    tags: [decals]
+    summary: Get decal's rat relationship
+    description: |
+      Retrieve the relationship data for a decal's associated rat
+      
+      **Authentication Required:** Bearer token authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Decal ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Decal's rat relationship data
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
+                links:
+                  type: object
+                  properties:
+                    self:
+                      type: string
+                      format: uri
+                    related:
+                      type: string
+                      format: uri
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+  patch:
+    tags: [decals]
+    summary: Update decal's rat relationship
+    description: |
+      Update the relationship between a decal and its associated rat
+      
+      **Required Permission:** `decals.write`
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Decal ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [rats]
+                  id:
+                    type: string
+                    format: uuid
+    responses:
+      '204':
+        description: Relationship updated successfully
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'

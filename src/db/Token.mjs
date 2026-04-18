@@ -29,6 +29,18 @@ export default class Token extends Model {
   @column(type.UUID)
   static clientId = undefined
 
+  @column(type.STRING, { allowNull: true })
+  static ipAddress = undefined
+
+  @column(type.TEXT, { allowNull: true })
+  static userAgent = undefined
+
+  @column(type.STRING, { allowNull: true })
+  static authMethod = undefined
+
+  @column(type.DATE, { allowNull: true })
+  static lastAccess = undefined
+
   /**
    * @inheritdoc
    */

@@ -11,7 +11,6 @@ import {
   NotFoundAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import { Context } from '../classes/Context'
 import { listen } from '../classes/Event'
 import EventStream from '../classes/EventStream'
 import StatusCode from '../classes/StatusCode'
@@ -104,7 +103,7 @@ export default class Events extends API {
   @parameters('events')
   @authenticated
   unsubscribe (ctx) {
-    const { events } = ctx.query()
+    const { events } = ctx.query
 
     if (!Array.isArray(events)) {
       throw new UnprocessableEntityAPIError({

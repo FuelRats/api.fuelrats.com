@@ -26,7 +26,8 @@ export default class Event {
  * @returns {function(...[*]=)}
  */
 export function listen (event) {
-  return (target, name, descriptor) => {
-    server.on(event, descriptor.value)
+  return (method, context) => {
+    server.on(event, method)
+    return method
   }
 }
