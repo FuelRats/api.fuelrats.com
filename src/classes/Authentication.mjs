@@ -206,7 +206,7 @@ class Authentication {
         response: passkeyResponse,
         expectedChallenge,
         expectedOrigin: config.server.externalUrl,
-        expectedRPID: new URL(config.server.externalUrl).hostname,
+        expectedRPID: new URL(config.frontend.url).hostname,
         authenticator: {
           credentialID: Buffer.from(passkey.credentialId, 'base64url'),
           credentialPublicKey: Buffer.from(passkey.publicKey, 'base64url'),
