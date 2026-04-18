@@ -63,10 +63,10 @@ jobs:
         run: |
           case "${{ github.ref }}" in
             refs/heads/develop)
-              echo "name=fr-api_dev" >> "$GITHUB_OUTPUT"
+              echo "name=fr-api-dev_api" >> "$GITHUB_OUTPUT"
               ;;
             refs/heads/main)
-              echo "name=fr-api" >> "$GITHUB_OUTPUT"
+              echo "name=fr-api_api" >> "$GITHUB_OUTPUT"
               ;;
           esac
 
