@@ -418,7 +418,7 @@ export default class Passkeys extends APIResource {
    * @inheritdoc
    */
   isSelf ({ ctx, entity }) {
-    return entity.userId === ctx.state.user.id
+    return (entity.userId ?? entity.id) === ctx.state.user.id
   }
 
   /**
