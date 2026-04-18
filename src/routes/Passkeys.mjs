@@ -34,7 +34,7 @@ import {
 import APIResource from './APIResource'
 
 const rpName = 'The Fuel Rats'
-const rpId = new URL(config.server.externalUrl).hostname
+const rpId = new URL(config.frontend.url).hostname
 const expectedOrigins = [
   config.server.externalUrl,
   config.frontend.url,
