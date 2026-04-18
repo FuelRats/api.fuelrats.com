@@ -7,7 +7,7 @@ import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import {
-  Rescue, db, WebPushSubscription, Rat, User,
+  Rescue, db, WebPushSubscription, Rat, User, Epic,
 } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
@@ -88,8 +88,15 @@ export default class Rescues extends APIResource {
         as: 'firstLimpet',
         required: false,
       },
+      {
+        model: Epic,
+        as: 'epics',
+        required: false,
+      },
     ]
-    const result = await Rescue.findAndCountAll(searchObject)
+    // Use unscoped to avoid default scope loading lastEditUser with 3 nested includes
+    const result = await Rescue.unscoped().findAll(searchObject)
+    const resultObj = { rows: result }
     // findAndCountAll miscounts with required joins — count via subquery
     const [{ count: totalCount }] = await db.query(
       `SELECT COUNT(DISTINCT "Rescue"."id") AS count FROM "Rescues" AS "Rescue"
@@ -98,8 +105,8 @@ export default class Rescues extends APIResource {
        WHERE "Rats"."userId" = :userId AND "Rescue"."deletedAt" IS NULL`,
       { replacements: { userId: ctx.state.user.id }, type: db.QueryTypes.SELECT },
     )
-    result.count = totalCount
-    return new DatabaseDocument({ query, result, type: RescueView })
+    resultObj.count = totalCount
+    return new DatabaseDocument({ query, result: resultObj, type: RescueView })
   }
 
   /**
