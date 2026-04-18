@@ -127,10 +127,9 @@ export default class WebPushSubscriptions extends APIResource {
     this.requireReadPermission({ connection: ctx, entity: user })
 
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await WebPushSubscription.findAndCountAll({
-      where: { userId: user.id },
-      ...query.searchObject,
-    })
+    const searchObject = query.searchObject
+    searchObject.where = { ...searchObject.where, userId: user.id }
+    const result = await WebPushSubscription.findAndCountAll(searchObject)
 
     return new DatabaseDocument({ query, result, type: WebPushSubscriptionView })
   }
