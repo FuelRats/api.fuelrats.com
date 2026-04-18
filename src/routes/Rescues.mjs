@@ -75,7 +75,7 @@ export default class Rescues extends APIResource {
         duplicating: false,
         include: [
           {
-            model: User,
+            model: User.scope('norelations'),
             as: 'user',
           },
         ],
