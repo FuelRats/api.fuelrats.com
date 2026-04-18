@@ -406,6 +406,7 @@ class Authentication {
    * @returns {Promise<Client>} A promise returning the authenticated OAuth client object
    */
   static async clientAuthenticate ({ clientId, secret }) {
+    UUIDPattern.lastIndex = 0
     if (!clientId || !UUIDPattern.test(clientId)) {
       return undefined
     }
