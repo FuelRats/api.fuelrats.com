@@ -8,6 +8,7 @@ import * as constants from '../constants'
 import {
   User, Token, Client, Reset, Authenticator, Passkey,
 } from '../db'
+import { UUID as UUIDPattern } from '../helpers/Validators'
 import { logMetric } from '../logging'
 
 import Anope from './Anope'
@@ -405,6 +406,9 @@ class Authentication {
    * @returns {Promise<Client>} A promise returning the authenticated OAuth client object
    */
   static async clientAuthenticate ({ clientId, secret }) {
+    if (!clientId || !UUIDPattern.test(clientId)) {
+      return undefined
+    }
     const client = await Client.scope('user').findByPk(clientId)
     if (!client) {
       return undefined

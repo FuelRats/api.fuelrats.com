@@ -39,6 +39,9 @@ const honoApp = new Hono()
 
 // Global error handler — catches any unhandled errors and returns JSONAPI error
 honoApp.onError((err, c) => {
+  if (err instanceof OAuthError) {
+    return c.json(err.toString(), StatusCode.badRequest)
+  }
   const ctx = new RequestContext({ c, state: {}, session: {} })
   try {
     const query = new Query({ connection: ctx, validate: false })
