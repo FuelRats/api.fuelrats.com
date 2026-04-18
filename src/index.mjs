@@ -170,7 +170,7 @@ honoApp.use('*', async (c, next) => {
         _response_time_ms: responseTime,
       }, `OAuth error: ${errors.message}`)
 
-      return c.json(JSON.parse(errors.toString()), StatusCode.badRequest)
+      return c.json(errors.toString(), StatusCode.badRequest)
     }
 
     const query = new Query({ connection: ctx, validate: false })
