@@ -100,7 +100,11 @@ const db = new Sequelize(database, username, password, {
   port,
   dialect: 'postgres',
   logging: (message) => {
-    logger.info(message)
+    const maxLogLength = 2000
+    const truncated = message.length > maxLogLength
+      ? `${message.slice(0, maxLogLength)}... (truncated, ${message.length} chars total)`
+      : message
+    logger.info(truncated)
   },
 
   pool: {
