@@ -124,11 +124,12 @@ class Document {
       objects = [objects]
     }
 
+    const includeTypes = this.#query.include ?? undefined
     const includes = objects.reduce((acc, object) => {
       return acc.concat((new Type({
         object,
         query: this.#query,
-      })).generateIncludes({ rootType: this.#type.type }))
+      })).generateIncludes({ rootType: this.#type.type, includeTypes }))
     }, [])
 
     return Object.values(includes.reduce((acc, include) => {
