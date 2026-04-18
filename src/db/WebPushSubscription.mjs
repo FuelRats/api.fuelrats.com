@@ -58,7 +58,7 @@ export default class WebPushSubscription extends Model {
       defaultScope: [{
         include: [
           {
-            model: models.User,
+            model: models.User.scope('norelations'),
             as: 'user',
             required: true,
           },

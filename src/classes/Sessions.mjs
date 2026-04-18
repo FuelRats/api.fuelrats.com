@@ -69,6 +69,31 @@ export default class Sessions extends APIResource {
   }
 
   /**
+   * Revoke all sessions except the current one
+   * @endpoint
+   */
+  @DELETE('/users/:id/sessions')
+  @authenticated
+  async revokeAll (ctx) {
+    const user = await User.findOne({ where: { id: ctx.params.id } })
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    const currentTokenValue = ctx.state.currentTokenValue
+    const where = { userId: user.id }
+    if (currentTokenValue) {
+      const { Op } = await import('sequelize')
+      where.value = { [Op.ne]: currentTokenValue }
+    }
+
+    await Token.destroy({ where })
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
+
+  /**
    * Revoke a session (destroy the token)
    * @endpoint
    */
