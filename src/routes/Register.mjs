@@ -12,7 +12,6 @@ import {
   ForbiddenAPIError,
   UnprocessableEntityAPIError,
 } from '../classes/APIError'
-import Sessions from '../classes/Sessions'
 import { isBlockedUsername } from '../helpers/usernameFilter'
 import StatusCode from '../classes/StatusCode'
 import config from '../config'
@@ -196,7 +195,6 @@ export default class Register extends API {
         CMDR name: ${name} (IP: ${ctx.ip})`,
       })
 
-      return Sessions.createVerifiedSession(ctx, user, transaction)
     })
 
     // Log registration metrics
