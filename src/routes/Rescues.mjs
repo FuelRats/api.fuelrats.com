@@ -64,24 +64,35 @@ export default class Rescues extends APIResource {
   async ownRescues (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const { searchObject } = query
+
+    // ?_firstLimpet=me — filter to rescues where user was first limpet
+    if (ctx.query._firstLimpet === 'me') {
+      const userRats = await Rat.findAll({
+        where: { userId: ctx.state.user.id },
+        attributes: ['id'],
+      })
+      const { Op } = await import('sequelize')
+      searchObject.where.firstLimpetId = { [Op.in]: userRats.map((r) => r.id) }
+    }
+
+    const ratJoin = {
+      model: Rat,
+      as: 'rats',
+      where: { userId: ctx.state.user.id },
+      required: true,
+      duplicating: false,
+      through: { attributes: [] },
+    }
+
     searchObject.include = [
       {
-        model: Rat,
-        as: 'rats',
-        where: {
-          userId: ctx.state.user.id,
-        },
-        required: true,
-        duplicating: false,
+        ...ratJoin,
         include: [
           {
             model: User.scope('norelations'),
             as: 'user',
           },
         ],
-        through: {
-          attributes: [],
-        },
       },
       {
         model: Rat,
@@ -96,17 +107,16 @@ export default class Rescues extends APIResource {
     ]
     // Use unscoped to avoid default scope loading lastEditUser with 3 nested includes
     const result = await Rescue.unscoped().findAll(searchObject)
-    const resultObj = { rows: result }
-    // findAndCountAll miscounts with required joins — count via subquery
-    const [{ count: totalCount }] = await db.query(
-      `SELECT COUNT(DISTINCT "Rescue"."id") AS count FROM "Rescues" AS "Rescue"
-       INNER JOIN "RescueRats" ON "Rescue"."id" = "RescueRats"."rescueId"
-       INNER JOIN "Rats" ON "RescueRats"."ratId" = "Rats"."id"
-       WHERE "Rats"."userId" = :userId AND "Rescue"."deletedAt" IS NULL`,
-      { replacements: { userId: ctx.state.user.id }, type: db.QueryTypes.SELECT },
-    )
-    resultObj.count = totalCount
-    return new DatabaseDocument({ query, result: resultObj, type: RescueView })
+
+    // Count with same filters but minimal joins
+    const count = await Rescue.unscoped().count({
+      where: searchObject.where,
+      distinct: true,
+      col: 'id',
+      include: [ratJoin],
+    })
+
+    return new DatabaseDocument({ query, result: { rows: result, count }, type: RescueView })
   }
 
   /**

@@ -40,6 +40,13 @@ services:
       retries: 10
       start_period: 15s
 
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
   api:
     build: .
     restart: unless-stopped
@@ -48,6 +55,8 @@ services:
         condition: service_healthy
       anope-tunnel:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       FRAPI_HOSTNAME: "0.0.0.0"
       FRAPI_PORT: "8080"
@@ -65,6 +74,8 @@ services:
       FRAPI_ANOPE_DATABASE: anope
       FRAPI_ANOPE_USERNAME: anope2
       FRAPI_ANOPE_XMLRPC: "http://services.fuelrats.dev:6080/xmlrpc"
+      FRAPI_SMTP_HOSTNAME: mailpit
+      FRAPI_SMTP_PORT: "1025"
       FRAPI_WEBPUSH_PUBLIC_KEY: "BPLSb1TQ3Mj_AO_dkwuIiMZub4Jn5ena5wgjL-c8OuMXguK2fiHWuZh0sxYluEcmGpMR4dWN8ORDWArTNt6le30"
       FRAPI_WEBPUSH_PRIVATE_KEY: "ComQb6oVfGGbQGGQ3kSv8h2mVPzzB-8uOklnkdmAnN8"
     secrets:

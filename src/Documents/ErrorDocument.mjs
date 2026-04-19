@@ -53,10 +53,11 @@ class ErrorDocument extends Document {
             GELF: true,
             _event: 'sequelize_error',
             _error_message: error.message,
-            _sql: error.sql,
           }, `Sequelize database error: ${error.message}`)
+          logger.error(`Failing SQL: ${error.sql}`)
           errorAcc.push(new UnprocessableEntityAPIError({
             parameter: 'filter',
+            detail: error.message,
           }))
           break
 
@@ -86,7 +87,12 @@ class ErrorDocument extends Document {
           break
 
         case (error.message.includes('Invalid value')):
-          errorAcc.push(new BadRequestAPIError({ parameter: 'filter' }))
+          logger.error({
+            GELF: true,
+            _event: 'invalid_value_error',
+            _error_message: error.message,
+          }, `Invalid value error: ${error.message}`)
+          errorAcc.push(new BadRequestAPIError({ parameter: 'filter', detail: error.message }))
           break
 
         default: {
