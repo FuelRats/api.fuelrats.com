@@ -1,4 +1,4 @@
-import { UnsupportedMediaAPIError, UnauthorizedAPIError } from '../classes/APIError'
+import { NotFoundAPIError, UnsupportedMediaAPIError, UnauthorizedAPIError } from '../classes/APIError'
 import Authentication, { getBasicAuth } from '../classes/Authentication'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
@@ -143,6 +143,51 @@ export default class Clients extends APIResource {
         clientId: ctx.params.id,
       },
     })
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
+
+  /**
+   * Regenerate a client's secret and revoke all tokens
+   * @param {Context} ctx request context
+   * @returns {Promise<object>} new client secret
+   */
+  @POST('/clients/:id/secret')
+  @authenticated
+  @parameters('id')
+  async regenerateSecret (ctx) {
+    const client = await Client.scope('user').findByPk(ctx.params.id)
+    if (!client) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    this.requireWritePermission({ connection: ctx, entity: client })
+
+    const secret = await clientSecretGenerator()
+    await client.update({ secret })
+
+    await Token.destroy({ where: { clientId: client.id } })
+    await Code.destroy({ where: { clientId: client.id } })
+
+    return { secret }
+  }
+
+  /**
+   * Revoke all tokens issued by this client
+   * @param {Context} ctx request context
+   * @returns {Promise<boolean>} 204 no content
+   */
+  @DELETE('/clients/:id/tokens')
+  @authenticated
+  @parameters('id')
+  async revokeTokens (ctx) {
+    const client = await Client.scope('user').findByPk(ctx.params.id)
+    if (!client) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    this.requireWritePermission({ connection: ctx, entity: client })
+
+    await Token.destroy({ where: { clientId: client.id } })
 
     ctx.response.status = StatusCode.noContent
     return true

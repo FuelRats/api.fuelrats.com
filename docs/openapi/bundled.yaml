@@ -5238,6 +5238,75 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  '/clients/{id}/secret':
+    post:
+      tags:
+        - oauth2
+      summary: Regenerate client secret
+      description: |
+        Generate a new client secret, revoking all existing tokens and
+        authorization codes issued by this client.
+
+        The new secret is returned in the response and is only shown once.
+
+        **Authentication Required:** Client owner or `clients.write` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: OAuth client ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: New client secret
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                    description: New client secret (only shown once)
+              example:
+                secret: dNIuUltee2xKlPq9...
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  '/clients/{id}/tokens':
+    delete:
+      tags:
+        - oauth2
+      summary: Revoke all client tokens
+      description: |
+        Revoke all bearer tokens issued by this client.
+
+        **Authentication Required:** Client owner or `clients.write` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: OAuth client ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: All tokens revoked
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   '/clients/{id}/relationships/user':
     get:
       tags:

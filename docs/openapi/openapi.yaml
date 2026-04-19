@@ -124,13 +124,6 @@ info:
 
     `POST https://api.fuelrats.com/oauth2/token` with Basic auth (client_id:client_secret).
 
-    Required headers:
-
-    | Header | Description |
-    |--------|-------------|
-    | `User-Agent` | Description of the user agent |
-    | `X-Fingerprint` | Unique device fingerprint |
-
     Body (`application/x-www-form-urlencoded`):
 
     | Key | Value |
@@ -469,6 +462,10 @@ paths:
     $ref: './routes/clients.yaml#/clients'
   /clients/{id}:
     $ref: './routes/clients.yaml#/clients_by_id'
+  /clients/{id}/secret:
+    $ref: './routes/clients.yaml#/clients_regenerate_secret'
+  /clients/{id}/tokens:
+    $ref: './routes/clients.yaml#/clients_revoke_tokens'
   /clients/{id}/relationships/user:
     $ref: './routes/clients.yaml#/clients_user_relationship'
   
