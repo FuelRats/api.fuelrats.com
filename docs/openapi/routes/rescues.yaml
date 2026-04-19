@@ -5,9 +5,18 @@ rescues_me:
     tags: [rescues]
     summary: Get current user's rescues
     description: |
-      Retrieve rescues where the current user's rats are assigned
-      
+      Retrieve rescues where the current user's rats are assigned.
+      Supports filtering, sorting, and pagination.
+
       **Authentication Required:** Bearer token authentication
+
+      **Filter examples:**
+      - `filter[status]=closed` — only closed rescues
+      - `filter[outcome]=success` — only successful rescues
+      - `filter[platform]=pc` — only PC rescues
+      - `filter[system][iLike]=%sol%` — system name search (case-insensitive)
+      - `filter[codeRed]=true` — only code red rescues
+      - `_firstLimpet=me` — only rescues where you were first limpet
     security:
       - bearerAuth: []
     parameters:
@@ -16,6 +25,16 @@ rescues_me:
       - $ref: '../components/parameters.yaml#/Sort'
       - $ref: '../components/parameters.yaml#/Include'
       - $ref: '../components/parameters.yaml#/Fields'
+      - $ref: '../components/parameters.yaml#/Filter'
+      - name: _firstLimpet
+        in: query
+        required: false
+        description: |
+          Filter to rescues where the current user was the first limpet.
+          Only `me` is supported.
+        schema:
+          type: string
+          enum: [me]
     responses:
       '200':
         description: List of user's assigned rescues
