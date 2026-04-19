@@ -134,6 +134,14 @@ export default class Rescues extends APIResource {
           countReplacements[key] = ilike
           countConditions.push(`"Rescue"."${key}" ILIKE :${key}`)
         }
+        const ops = { gt: '>', gte: '>=', lt: '<', lte: '<=' }
+        for (const [op, sql] of Object.entries(ops)) {
+          if (value[op] !== undefined) {
+            const param = `${key}_${op}`
+            countReplacements[param] = value[op]
+            countConditions.push(`"Rescue"."${key}" ${sql} :${param}`)
+          }
+        }
       }
     }
     const [{ count }] = await db.query(
