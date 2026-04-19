@@ -29,9 +29,12 @@ info:
 
     To create an OAuth client you must have the `clients.write` permission
     on your Fuel Rats account (automatically granted to tech rats and
-    administrators). Navigate to the
-    [developer area](https://fuelrats.com/profile/developer), provide the
-    name of your client and your redirect URI.
+    administrators). If you do not have this permission, you may request
+    it via a [Fuel Rats Help Desk ticket](https://t.fuelr.at/help).
+
+    Navigate to the
+    [developer area on your Fuel Rats profile](https://fuelrats.com/profile/developer),
+    provide the name of your client and your redirect URI.
 
     When you create your client you will receive a **client ID** and a
     **client secret**. You **must** store these safely — they cannot be
@@ -117,6 +120,9 @@ info:
     **Success callback:**
     `https://yourapp.com/callback?access_token=TOKEN&token_type=bearer&scope=SCOPES&state=YOUR_STATE`
 
+    **Error callback:**
+    `https://yourapp.com/callback?error=ERROR_CODE&error_description=MESSAGE&state=YOUR_STATE`
+
     ### Resource Owner Password Credentials (ROPC)
 
     **Only available to first-party Fuel Rats applications.** Non-whitelisted
@@ -137,6 +143,15 @@ info:
     ```json
     { "access_token": "...", "token_type": "bearer" }
     ```
+
+    **Error response (400):**
+
+    ```json
+    { "error": "error_code", "error_description": "Human readable message" }
+    ```
+
+    > **Note:** Client Credentials grant is not supported. There are no
+    > API endpoints that require client authentication without a user context.
 
     ### Passkey/WebAuthn Authentication
 

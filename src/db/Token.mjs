@@ -66,6 +66,7 @@ export default class Token extends Model {
   static associate (models) {
     super.associate(models)
     models.Token.belongsTo(models.User, { as: 'user' })
+    models.Token.belongsTo(models.Client, { as: 'client', foreignKey: 'clientId' })
   }
 }
 

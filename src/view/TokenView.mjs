@@ -1,3 +1,4 @@
+import ClientView from './ClientView'
 import DatabaseView from './DatabaseView'
 import UserView from './UserView'
 import { ReadPermission } from './View'
@@ -75,6 +76,7 @@ export default class TokenView extends DatabaseView {
   get relationships () {
     return {
       user: UserView,
+      client: ClientView,
     }
   }
 
@@ -82,6 +84,6 @@ export default class TokenView extends DatabaseView {
    * @inheritdoc
    */
   get includes () {
-    return []
+    return ['client']
   }
 }

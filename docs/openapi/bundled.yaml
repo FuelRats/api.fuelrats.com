@@ -9,29 +9,177 @@ info:
 
     ## Authentication
 
-    The API supports multiple OAuth2 authentication flows:
+    The API supports user authentication via OAuth tokens only. The token
+    is provided in REST requests via the HTTP Authorization header:
 
-    ### Authorization Code Grant (Recommended)
-    The most secure method for server-side and native desktop applications:
-    1. Redirect user to `/oauth2/authorize` with client_id, redirect_uri, and state
-    2. User authorizes your application
-    3. Exchange authorization code for access token at `/oauth2/token`
-    4. Use access token in `Authorization: Bearer <token>` header
+    ```
+    Authorization: Bearer yourtokenhere
+    ```
 
-    ### Implicit Grant 
-    For client-side web applications (less secure):
-    1. Redirect user to `/oauth2/authorize` with response_type=token
-    2. Access token returned directly in redirect URL fragment
+    For WebSocket connections, provide the token as a query parameter:
 
-    ### Resource Owner Password Credentials
-    Only available to first-party FuelRats applications:
-    - Direct username/password authentication
-    - Requires client to be whitelisted
+    ```
+    wss://api.fuelrats.com/?bearer=yourtokenhere
+    ```
+
+    If you cannot set HTTP headers, you may also provide a `bearer` query
+    parameter on REST requests.
+
+    ## Creating an OAuth Client
+
+    To create an OAuth client you must have the `clients.write` permission
+    on your Fuel Rats account (automatically granted to tech rats and
+    administrators). If you do not have this permission, you may request
+    it via a [Fuel Rats Help Desk ticket](https://t.fuelr.at/help).
+
+    Navigate to the
+    [developer area on your Fuel Rats profile](https://fuelrats.com/profile/developer),
+    provide the name of your client and your redirect URI.
+
+    When you create your client you will receive a **client ID** and a
+    **client secret**. You **must** store these safely — they cannot be
+    recovered if lost. If you lose your credentials and request a reset,
+    all existing copies of your application will stop working.
+
+    ## Supported Grant Types
+
+    The API supports 3 OAuth grant types: Authorization Code, Implicit Grant,
+    and Resource Owner Password Credentials (ROPC). Client Credentials grant
+    is not supported as there are no endpoints requiring client-only auth.
+
+    ### Authorization Code (Recommended)
+
+    The most secure method. Use when you can hide the client secret (native
+    apps, server-side code). **Do not** use in client-side web applications
+    where the secret would be visible in source code.
+
+    **Flow:**
+
+    1. Open the fuelrats.com authorisation page in the user's browser
+    2. User approves or rejects the request
+    3. Your application receives an **authorisation code** via redirect
+    4. Exchange the code for an **access token** using your client credentials
+
+    #### Authorisation URL
+
+    ```
+    https://fuelrats.com/authorize?response_type=code&client_id=YOUR_ID&scope=SCOPES&redirect_uri=YOUR_URI&state=YOUR_STATE
+    ```
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | `response_type` | Must be `code` |
+    | `client_id` | Your OAuth client ID |
+    | `scope` | Space-separated list of permissions |
+    | `redirect_uri` | Where to redirect after approval. Set to `DISPLAY` to show the code on-screen instead |
+    | `state` | An opaque value returned in the callback to prevent CSRF |
+
+    **Redirect options for different application types:**
+    - **Website:** Redirect to your web page
+    - **Native app with URL scheme:** `myapp://authorization`
+    - **Native app without URL scheme:** Temporary local server `http://localhost:8080/authorization`
+    - **GUI app:** Hosted web view, intercept the redirect
+    - **No redirect possible:** Set `redirect_uri=DISPLAY` and have the user copy the code
+
+    #### Authorisation Callback
+
+    **Success:** `https://yourapp.com/callback?code=AUTH_CODE&state=YOUR_STATE`
+
+    **Failure:** `https://yourapp.com/callback?error=ERROR_CODE&error_description=MESSAGE&state=YOUR_STATE`
+
+    #### Token Exchange
+
+    `POST https://api.fuelrats.com/oauth2/token` with Basic auth (client_id:client_secret).
+
+    Body (`application/x-www-form-urlencoded`):
+
+    | Key | Value |
+    |-----|-------|
+    | `grant_type` | `authorization_code` |
+    | `code` | The authorisation code from the callback |
+    | `redirect_uri` | Must match the URI used in the authorisation step |
+
+    **Success response (200):**
+
+    ```json
+    { "access_token": "...", "token_type": "bearer" }
+    ```
+
+    **Error response (400):**
+
+    ```json
+    { "error": "error_code", "error_description": "Human readable message" }
+    ```
+
+    ### Implicit Grant
+
+    For client-side web applications where the secret cannot be hidden.
+    Less secure than Authorization Code — use that instead if possible.
+
+    Same authorisation step as Authorization Code with these differences:
+    - `response_type` must be `token` (not `code`)
+    - `redirect_uri` **must** match the one registered with your client
+    - Only works with HTTP/HTTPS redirects to valid web domains
+
+    **Success callback:**
+    `https://yourapp.com/callback?access_token=TOKEN&token_type=bearer&scope=SCOPES&state=YOUR_STATE`
+
+    **Error callback:**
+    `https://yourapp.com/callback?error=ERROR_CODE&error_description=MESSAGE&state=YOUR_STATE`
+
+    ### Resource Owner Password Credentials (ROPC)
+
+    **Only available to first-party Fuel Rats applications.** Non-whitelisted
+    clients will receive a 403.
+
+    `POST https://api.fuelrats.com/oauth2/token` with Basic auth (client_id:client_secret).
+
+    Body (`application/x-www-form-urlencoded`):
+
+    | Key | Value |
+    |-----|-------|
+    | `grant_type` | `password` |
+    | `username` | User's email address |
+    | `password` | User's password |
+
+    **Success response (200):**
+
+    ```json
+    { "access_token": "...", "token_type": "bearer" }
+    ```
+
+    **Error response (400):**
+
+    ```json
+    { "error": "error_code", "error_description": "Human readable message" }
+    ```
+
+    ### Passkey/WebAuthn Authentication
+
+    Passwordless authentication using FIDO2/WebAuthn credentials.
+
+    **Flow:**
+
+    1. `POST /passkeys/authenticate` with optional `email` → receive WebAuthn challenge
+    2. Browser performs `navigator.credentials.get()` with the challenge
+    3. `POST /passkeys/verify` with the WebAuthn response, authenticated with
+       client credentials (Basic auth) → receive bearer token
+
+    If `email` is omitted in step 1, the browser will prompt for a
+    discoverable credential (resident key).
+
+    ### Token Revocation
+
+    `POST /oauth2/revoke` with Basic auth (client_id:client_secret).
+
+    Body: `token=THE_TOKEN_TO_REVOKE`
 
     ### WebSocket Authentication
-    For real-time communication, append bearer token to WebSocket URL:
+
+    Connect to `wss://api.fuelrats.com/` with protocol `FR-JSONAPI-WS`:
+
     ```
-    wss://api.fuelrats.com/?bearer=<your_token_here>
+    wss://api.fuelrats.com/?bearer=YOUR_TOKEN
     ```
 
     ## Permission Scopes
@@ -2774,9 +2922,12 @@ paths:
         - rescues
       summary: List rescues
       description: |
-        Search and list rescue cases with optional filtering and pagination
+        Search and list rescue cases with optional filtering and pagination.
 
         **Authentication Required:** Bearer token authentication
+
+        **Special filters:**
+        - `_rats=id1,id2` — filter to rescues with any of the specified rats assigned
       security:
         - bearerAuth: []
       parameters:
@@ -2786,6 +2937,15 @@ paths:
         - $ref: '#/components/parameters/Include'
         - $ref: '#/components/parameters/Fields'
         - $ref: '#/components/parameters/Filter'
+        - name: _rats
+          in: query
+          required: false
+          description: |
+            Comma-separated list of rat UUIDs. Returns rescues where any of
+            the specified rats are assigned.
+          schema:
+            type: string
+            example: "590054ae-0c1f-4c0f-88aa-e054c973e11a,cccd6b6a-5ba6-4f2b-afaf-65f3ae6c7b9d"
       responses:
         '200':
           description: List of rescues
