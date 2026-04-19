@@ -5,8 +5,8 @@
 
 const platformPatterns = [
   { platform: 'pc', words: ['pc'] },
-  { platform: 'xb', words: ['xbox', 'xb', 'xb1', 'xbox one'] },
-  { platform: 'ps', words: ['ps', 'ps4', 'ps5', 'playstation', 'playstation 4', 'playstation 5'] },
+  { platform: 'xb', words: ['xbox', 'xb', 'xb1', 'xbox one', 'xrats'] },
+  { platform: 'ps', words: ['ps', 'ps4', 'ps5', 'playstation', 'playstation 4', 'playstation 5', 'psrats'] },
 ]
 
 const expansionPatterns = [
