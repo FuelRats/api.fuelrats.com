@@ -164,7 +164,25 @@ export default class Rescues extends APIResource {
   @authenticated
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
-    const result = await Rescue.findAndCountAll(query.searchObject)
+    const { searchObject } = query
+
+    // ?_rats=id1,id2 — filter to rescues with any of the specified rats assigned
+    const ratsParam = ctx.query._rats
+    if (ratsParam) {
+      const ratIds = ratsParam.split(',').filter(Boolean)
+      if (ratIds.length > 0) {
+        const { Op } = await import('sequelize')
+        searchObject.where.id = {
+          ...searchObject.where.id,
+          [Op.in]: db.Sequelize.literal(
+            '(SELECT DISTINCT "rescueId" FROM "RescueRats" WHERE "ratId" = ANY($ratIds::uuid[]))'
+          ),
+        }
+        searchObject.bind = { ...(searchObject.bind ?? {}), ratIds }
+      }
+    }
+
+    const result = await Rescue.findAndCountAll(searchObject)
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 

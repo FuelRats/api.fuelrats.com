@@ -2922,9 +2922,12 @@ paths:
         - rescues
       summary: List rescues
       description: |
-        Search and list rescue cases with optional filtering and pagination
+        Search and list rescue cases with optional filtering and pagination.
 
         **Authentication Required:** Bearer token authentication
+
+        **Special filters:**
+        - `_rats=id1,id2` — filter to rescues with any of the specified rats assigned
       security:
         - bearerAuth: []
       parameters:
@@ -2934,6 +2937,15 @@ paths:
         - $ref: '#/components/parameters/Include'
         - $ref: '#/components/parameters/Fields'
         - $ref: '#/components/parameters/Filter'
+        - name: _rats
+          in: query
+          required: false
+          description: |
+            Comma-separated list of rat UUIDs. Returns rescues where any of
+            the specified rats are assigned.
+          schema:
+            type: string
+            example: "590054ae-0c1f-4c0f-88aa-e054c973e11a,cccd6b6a-5ba6-4f2b-afaf-65f3ae6c7b9d"
       responses:
         '200':
           description: List of rescues
