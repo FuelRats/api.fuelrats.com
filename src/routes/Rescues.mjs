@@ -75,10 +75,17 @@ export default class Rescues extends APIResource {
       searchObject.where.firstLimpetId = { [Op.in]: userRats.map((r) => r.id) }
     }
 
+    const ratWhere = { userId: ctx.state.user.id }
+
+    // ?_rat=<uuid> — filter to rescues where a specific rat is assigned
+    if (ctx.query._rat) {
+      ratWhere.id = ctx.query._rat
+    }
+
     const ratJoin = {
       model: Rat,
       as: 'rats',
-      where: { userId: ctx.state.user.id },
+      where: ratWhere,
       required: true,
       duplicating: false,
       through: { attributes: [] },
@@ -108,13 +115,34 @@ export default class Rescues extends APIResource {
     // Use unscoped to avoid default scope loading lastEditUser with 3 nested includes
     const result = await Rescue.unscoped().findAll(searchObject)
 
-    // Count with same filters but minimal joins
-    const count = await Rescue.unscoped().count({
-      where: searchObject.where,
-      distinct: true,
-      col: 'id',
-      include: [ratJoin],
-    })
+    // Count via raw SQL — Sequelize count miscounts with many-to-many joins
+    const countReplacements = { userId: ctx.state.user.id }
+    const countConditions = ['"Rats"."userId" = :userId', '"Rescue"."deletedAt" IS NULL']
+    const { Op } = await import('sequelize')
+    for (const [key, value] of Object.entries(searchObject.where)) {
+      if (typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
+        countReplacements[key] = value
+        countConditions.push(`"Rescue"."${key}" = :${key}`)
+      } else if (value && typeof value === 'object') {
+        const opIn = value[Op.in]
+        if (opIn) {
+          countReplacements[`${key}List`] = opIn
+          countConditions.push(`"Rescue"."${key}" IN (:${key}List)`)
+        }
+        const ilike = value.iLike ?? value.ilike
+        if (ilike) {
+          countReplacements[key] = ilike
+          countConditions.push(`"Rescue"."${key}" ILIKE :${key}`)
+        }
+      }
+    }
+    const [{ count }] = await db.query(
+      `SELECT COUNT(DISTINCT "Rescue"."id") AS count FROM "Rescues" AS "Rescue"
+       INNER JOIN "RescueRats" ON "Rescue"."id" = "RescueRats"."rescueId"
+       INNER JOIN "Rats" ON "RescueRats"."ratId" = "Rats"."id"
+       WHERE ${countConditions.join(' AND ')}`,
+      { replacements: countReplacements, type: db.QueryTypes.SELECT },
+    )
 
     return new DatabaseDocument({ query, result: { rows: result, count }, type: RescueView })
   }
