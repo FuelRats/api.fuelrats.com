@@ -4,7 +4,7 @@ import {
 } from './APIError'
 import Permission from './Permission'
 import StatusCode from './StatusCode'
-import { Token, User, db } from '../db'
+import { Client, Token, User, db } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { TokenView } from '../view'
@@ -52,6 +52,15 @@ export default class Sessions extends APIResource {
         mapToModel: true,
       },
     )
+    // Load associated clients for each token
+    const clientIds = [...new Set(rows.map((t) => t.clientId).filter(Boolean))]
+    const clients = clientIds.length > 0
+      ? await Client.findAll({ where: { id: clientIds } })
+      : []
+    const clientMap = Object.fromEntries(clients.map((c) => [c.id, c]))
+    for (const token of rows) {
+      token.client = clientMap[token.clientId] ?? null
+    }
     const [{ count }] = await db.query(
       'SELECT COUNT(*) AS count FROM "Tokens" WHERE "userId" = :userId',
       { replacements: { userId: user.id }, type: db.QueryTypes.SELECT },
