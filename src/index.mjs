@@ -224,11 +224,24 @@ honoApp.get('/', (c) => {
       id="api-reference"
       data-url="./openapi/bundled.yaml"
       data-configuration='${JSON.stringify(configuration)}'></script>
-    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <script src="./static/scalar.js"></script>
   </body>
 </html>`
 
   return c.html(html)
+})
+
+honoApp.get('/static/scalar.js', async (c) => {
+  const fs = await import('fs/promises')
+  const path = await import('path')
+  const filePath = path.resolve('static/scalar.js')
+  const content = await fs.readFile(filePath, 'utf8')
+  return new Response(content, {
+    headers: {
+      'Content-Type': 'application/javascript',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  })
 })
 
 honoApp.get('/openapi/bundled.yaml', async (c) => {
