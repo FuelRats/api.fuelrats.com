@@ -312,6 +312,75 @@ clients_by_id:
       '404':
         $ref: '../components/responses.yaml#/NotFound'
 
+clients_regenerate_secret:
+  post:
+    tags: [oauth2]
+    summary: Regenerate client secret
+    description: |
+      Generate a new client secret, revoking all existing tokens and
+      authorization codes issued by this client.
+
+      The new secret is returned in the response and is only shown once.
+
+      **Authentication Required:** Client owner or `clients.write` permission
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: OAuth client ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: New client secret
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secret:
+                  type: string
+                  description: New client secret (only shown once)
+            example:
+              secret: "dNIuUltee2xKlPq9..."
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
+clients_revoke_tokens:
+  delete:
+    tags: [oauth2]
+    summary: Revoke all client tokens
+    description: |
+      Revoke all bearer tokens issued by this client.
+
+      **Authentication Required:** Client owner or `clients.write` permission
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: OAuth client ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: All tokens revoked
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
 clients_user_relationship:
   get:
     tags: [oauth2]
