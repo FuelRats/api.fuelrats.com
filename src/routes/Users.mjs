@@ -132,7 +132,41 @@ export default class Users extends APIResource {
   @authenticated
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
-    const results = await User.findAndCountAll(query.searchObject)
+    const { searchObject } = query
+
+    // ?_groups=name1,name2 — filter users by group membership
+    const groupsParam = ctx.query._groups
+    if (groupsParam) {
+      const groupNames = groupsParam.split(',').filter(Boolean)
+      if (groupNames.length > 0) {
+        const { Op } = await import('sequelize')
+        searchObject.where.id = {
+          ...searchObject.where.id,
+          [Op.in]: db.Sequelize.literal(
+            '(SELECT DISTINCT "userId" FROM "UserGroups" INNER JOIN "Groups" ON "UserGroups"."groupId" = "Groups"."id" WHERE "Groups"."name" = ANY($groupNames::text[]))'
+          ),
+        }
+        searchObject.bind = { ...(searchObject.bind ?? {}), groupNames }
+      }
+    }
+
+    // ?_rats=id1,id2 — filter users who own any of the specified rats
+    const ratsParam = ctx.query._rats
+    if (ratsParam) {
+      const ratIds = ratsParam.split(',').filter(Boolean)
+      if (ratIds.length > 0) {
+        const { Op } = await import('sequelize')
+        searchObject.where.id = {
+          ...searchObject.where.id,
+          [Op.in]: db.Sequelize.literal(
+            '(SELECT DISTINCT "userId" FROM "Rats" WHERE "id" = ANY($ratIds::uuid[]) AND "deletedAt" IS NULL)'
+          ),
+        }
+        searchObject.bind = { ...(searchObject.bind ?? {}), ratIds }
+      }
+    }
+
+    const results = await User.findAndCountAll(searchObject)
 
     let result
     try {
@@ -445,14 +479,19 @@ export default class Users extends APIResource {
 
     this.requireWritePermission({ connection: ctx, entity: user })
 
-    // Validate authentication using the reusable method
-    await Users.validateUserAuthentication({
-      user,
-      password,
-      totpCode,
-      passkeyResponse,
-      ctx,
-    })
+    // Admin with users.write can set password without old password verification
+    const isAdmin = Permission.granted({ permissions: ['users.write'], connection: ctx })
+      && ctx.state.user.id !== user.id
+    if (!isAdmin) {
+      // Validate authentication using the reusable method
+      await Users.validateUserAuthentication({
+        user,
+        password,
+        totpCode,
+        passkeyResponse,
+        ctx,
+      })
+    }
 
     // Set the new password
     await db.transaction(async (transaction) => {
