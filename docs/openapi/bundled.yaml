@@ -732,9 +732,13 @@ paths:
         - users
       summary: List users
       description: |
-        Search and list users with optional filtering and pagination
+        Search and list users with optional filtering and pagination.
 
         **Authentication Required:** Bearer token authentication
+
+        **Special filters:**
+        - `_groups=admin,rat` — filter users by group membership
+        - `_rats=id1,id2` — filter users who own any of the specified rats
       security:
         - bearerAuth: []
       parameters:
@@ -743,6 +747,23 @@ paths:
         - $ref: '#/components/parameters/Sort'
         - $ref: '#/components/parameters/Include'
         - $ref: '#/components/parameters/Fields'
+        - name: _groups
+          in: query
+          required: false
+          description: |
+            Comma-separated list of group names. Returns users who belong
+            to any of the specified groups.
+          schema:
+            type: string
+            example: "admin,techrat"
+        - name: _rats
+          in: query
+          required: false
+          description: |
+            Comma-separated list of rat UUIDs. Returns users who own any
+            of the specified rats.
+          schema:
+            type: string
       responses:
         '200':
           description: List of users
@@ -2045,9 +2066,13 @@ paths:
         - users
       summary: Remove TOTP authenticator
       description: |
-        Remove the TOTP authenticator from the user account
+        Remove the TOTP authenticator from the user account.
 
-        **Required Permission:** `users.write` OR self-access via `users.write.me` (if removing own 2FA)
+        **Required Permission:** `users.write` OR self-access via `users.write.me`
+
+        Admins with `users.write` can remove another user's authenticator
+        without providing the X-Verify header (for locked-out user recovery).
+        Users removing their own authenticator must always provide verification.
       security:
         - bearerAuth: []
       parameters:
@@ -2060,11 +2085,12 @@ paths:
             format: uuid
         - name: X-Verify
           in: header
-          required: true
-          description: Current 6-digit TOTP token for verification
+          required: false
+          description: |
+            Current 6-digit TOTP token or recovery code. Required when removing
+            your own authenticator. Not required for admins removing another user's.
           schema:
             type: string
-            pattern: '^[0-9]{6}$'
       responses:
         '204':
           description: Authenticator removed successfully
@@ -2808,6 +2834,81 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  '/rats/{id}/transfer':
+    post:
+      tags:
+        - rats
+      summary: Transfer rescue assignments between rats
+      description: |
+        Transfer all rescue assignments and first limpet designations from
+        one rat to another. If the target rat is already assigned to a rescue,
+        the duplicate source assignment is removed.
+
+        All changes are performed in a single transaction.
+
+        **Required Permission:** `rats.write`
+      security:
+        - bearerAuth: [rats.write]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Source rat ID (transfer from)
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  required: [type, attributes]
+                  properties:
+                    type:
+                      type: string
+                      enum: [rat-transfers]
+                    attributes:
+                      type: object
+                      required: [targetRatId]
+                      properties:
+                        targetRatId:
+                          type: string
+                          format: uuid
+                          description: Destination rat ID (transfer to)
+      responses:
+        '200':
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transferredAssignments:
+                    type: integer
+                    description: Number of rescue assignments moved
+                  removedDuplicates:
+                    type: integer
+                    description: Number of duplicate assignments removed (target already assigned)
+                  transferredFirstLimpets:
+                    type: integer
+                    description: Number of first limpet designations moved
+              example:
+                transferredAssignments: 19
+                removedDuplicates: 0
+                transferredFirstLimpets: 4
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   '/rats/{id}/relationships/user':
     get:
       tags:
@@ -3117,6 +3218,9 @@ paths:
                         codeRed:
                           type: boolean
                           description: Emergency status
+                        carrier:
+                          type: boolean
+                          description: Client was rescued by fleet carrier
                         notes:
                           type: string
                           description: Rescue notes
@@ -3402,6 +3506,8 @@ paths:
                             - other
                             - purge
                         codeRed:
+                          type: boolean
+                        carrier:
                           type: boolean
                         notes:
                           type: string
@@ -3854,18 +3960,24 @@ paths:
         - nicknames
       summary: Search nicknames
       description: |
-        Search for IRC nicknames
+        Search for IRC nicknames. Supports exact match via `nick` parameter
+        or case-insensitive pattern match via `filter[nick][iLike]`.
 
         **Authentication Required:** Bearer token authentication
+
+        **Examples:**
+        - `?nick=SomeUser` — exact match
+        - `?filter[nick][iLike]=%partial%` — case-insensitive LIKE search
       security:
         - bearerAuth: []
       parameters:
         - name: nick
           in: query
-          required: true
-          description: Nickname to search for
+          required: false
+          description: Exact nickname to search for. Required if filter[nick][iLike] is not provided.
           schema:
             type: string
+        - $ref: '#/components/parameters/Filter'
       responses:
         '200':
           description: Nickname search results
@@ -3921,9 +4033,12 @@ paths:
         - nicknames
       summary: Register nickname
       description: |
-        Register a new IRC nickname
+        Register a new IRC nickname for the authenticated user.
 
-        **Authentication Required:** Bearer token authentication (self-access only)
+        Admins with `nicknames.write` can provide a `userId` to register
+        a nickname for another user.
+
+        **Authentication Required:** Bearer token authentication
       security:
         - bearerAuth: []
       requestBody:
@@ -3958,6 +4073,10 @@ paths:
                           type: string
                           format: uuid
                           description: Associated rat ID
+                        userId:
+                          type: string
+                          format: uuid
+                          description: Target user ID (admin only — registers nick for another user)
       responses:
         '201':
           description: Nickname registered successfully
@@ -7419,6 +7538,9 @@ components:
                 codeRed:
                   type: boolean
                   description: 'Emergency status (**Write Permission:** `rescues.write` or assigned to rescue)'
+                carrier:
+                  type: boolean
+                  description: 'Client was rescued by fleet carrier (**Write Permission:** `rescues.write` or assigned to rescue)'
                 data:
                   type: object
                   description: 'Additional rescue metadata (**Write Permission:** `rescues.write` or assigned to rescue)'
