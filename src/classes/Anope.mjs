@@ -154,11 +154,11 @@ class Anope {
   }
 
   /**
-   * Get a list of accounts by completing a fuzzy match search on a nickname
+   * Get a list of accounts matching an exact nickname
    * @param {string} nickname the nickname to search by
    * @returns {Promise<[Nickname]>} a list of nick search results
    */
-  static async findAccountFuzzyMatch (nickname) {
+  static async findAccountsByNickname (nickname) {
     if (!config.anope.database) {
       return []
     }
@@ -172,6 +172,51 @@ class Anope {
         WHERE anope_db_NickAlias.nick = :nickname
         LIMIT 10
     `, { nickname })
+
+    const emails = results.map((result) => {
+      return result.email
+    })
+
+    let users = []
+
+    if (results.length > 0) {
+      users = await User.findAll({
+        where: {
+          email: {
+            like: { any: emails },
+          },
+        },
+      })
+    }
+
+    return results.map((result) => {
+      const entry = new Nickname(result)
+      entry.user = users.find((user) => {
+        return user.email.toLowerCase() === entry.email.toLowerCase()
+      })
+      return entry
+    })
+  }
+
+  /**
+   * Search accounts with a case-insensitive LIKE match on nickname
+   * @param {string} pattern the LIKE pattern to search by (e.g. "%partial%")
+   * @returns {Promise<[Nickname]>} a list of nick search results
+   */
+  static async searchAccountsByNickname (pattern) {
+    if (!config.anope.database) {
+      return []
+    }
+    const [results] = await mysql.raw(`
+        SELECT
+               *,
+               anope_db_NickAlias.id AS id,
+               anope_db_NickCore.id AS accountId
+        FROM anope_db_NickAlias
+                 LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        WHERE LOWER(anope_db_NickAlias.nick) LIKE LOWER(:pattern)
+        LIMIT 10
+    `, { pattern })
 
     const emails = results.map((result) => {
       return result.email
