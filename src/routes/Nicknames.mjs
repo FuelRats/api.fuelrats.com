@@ -47,14 +47,17 @@ export default class Nickname extends APIResource {
   @websocket('nicknames', 'search')
   @authenticated
   async search (ctx) {
-    const { nick } = ctx.query
-    if (!nick) {
+    const { nick, filter } = ctx.query
+    const iLikePattern = filter?.nick?.iLike ?? filter?.nick?.ilike
+    if (!nick && !iLikePattern) {
       throw new BadRequestAPIError({
         parameter: 'nick',
       })
     }
 
-    const result = await Anope.findAccountFuzzyMatch(nick)
+    const result = iLikePattern
+      ? await Anope.searchAccountsByNickname(iLikePattern)
+      : await Anope.findAccountsByNickname(nick)
     const query = new AnopeQuery({ connection: ctx })
     return new ObjectDocument({ query, result, type: NicknameView })
   }
@@ -85,7 +88,7 @@ export default class Nickname extends APIResource {
   @websocket('nicknames', 'create')
   @authenticated
   async create (ctx) {
-    const { nick, ratId } = getJSONAPIData({ ctx, type: this.type }).attributes
+    const { nick, ratId, userId } = getJSONAPIData({ ctx, type: this.type }).attributes
     if (!nick || IRCNickname.test(nick) === false) {
       throw new UnprocessableEntityAPIError({
         pointer: '/data/attributes/nick',
@@ -99,18 +102,30 @@ export default class Nickname extends APIResource {
       })
     }
 
+    // Determine target user — admin can specify userId to add nick to another user
+    let targetUser = ctx.state.user
+    if (userId && userId !== ctx.state.user.id) {
+      if (!Permission.granted({ permissions: ['nicknames.write'], connection: ctx })) {
+        throw new NotFoundAPIError({ parameter: 'userId' })
+      }
+      targetUser = await User.findByPk(userId)
+      if (!targetUser) {
+        throw new NotFoundAPIError({ pointer: '/data/attributes/userId' })
+      }
+    }
+
     const existingNick = await Anope.findNickname(nick)
     if (existingNick) {
       throw new ConflictAPIError({ pointer: '/data/attributes/nick' })
     }
 
-    const encryptedPassword = `bcrypt:${ctx.state.user.password}`
+    const encryptedPassword = `bcrypt:${targetUser.password}`
 
     await Anope.addNewUser({
-      email: ctx.state.user.email,
+      email: targetUser.email,
       nick,
       encryptedPassword,
-      vhost: ctx.state.user.vhost(),
+      vhost: targetUser.vhost(),
       ratId,
     })
 

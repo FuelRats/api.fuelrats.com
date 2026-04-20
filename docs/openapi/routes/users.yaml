@@ -5,9 +5,13 @@ users:
     tags: [users]
     summary: List users
     description: |
-      Search and list users with optional filtering and pagination
-      
+      Search and list users with optional filtering and pagination.
+
       **Authentication Required:** Bearer token authentication
+
+      **Special filters:**
+      - `_groups=admin,rat` — filter users by group membership
+      - `_rats=id1,id2` — filter users who own any of the specified rats
     security:
       - bearerAuth: []
     parameters:
@@ -16,6 +20,22 @@ users:
       - $ref: '../components/parameters.yaml#/Sort'
       - $ref: '../components/parameters.yaml#/Include'
       - $ref: '../components/parameters.yaml#/Fields'
+      - name: _groups
+        in: query
+        required: false
+        description: |
+          Comma-separated list of group names. Returns users who belong
+          to any of the specified groups.
+        schema:
+          type: string
+      - name: _rats
+        in: query
+        required: false
+        description: |
+          Comma-separated list of rat UUIDs. Returns users who own any
+          of the specified rats.
+        schema:
+          type: string
     responses:
       '200':
         description: List of users
@@ -461,7 +481,11 @@ users_password:
     description: |
       Change a user's password. Can be authenticated either with the current password
       or with a passkey response.
-      
+
+      Admins with `users.write` can set another user's password without providing
+      the current password (for account recovery). When changing your own password,
+      authentication via current password or passkey is always required.
+
       **Required Permission:** `users.write` OR self-access via `users.write.me`
     security:
       - bearerAuth: []

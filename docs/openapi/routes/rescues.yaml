@@ -279,6 +279,9 @@ rescues:
                       codeRed:
                         type: boolean
                         description: Emergency status
+                      carrier:
+                        type: boolean
+                        description: Client was rescued by fleet carrier
                       notes:
                         type: string
                         description: Rescue notes
@@ -453,6 +456,8 @@ rescues_by_id:
                         type: string
                         enum: [success, failure, invalid, other, purge]
                       codeRed:
+                        type: boolean
+                      carrier:
                         type: boolean
                       notes:
                         type: string

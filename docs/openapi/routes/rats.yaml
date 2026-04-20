@@ -329,6 +329,78 @@ rats_by_id:
       '404':
         $ref: '../components/responses.yaml#/NotFound'
 
+rats_transfer:
+  post:
+    tags: [rats]
+    summary: Transfer rescue assignments between rats
+    description: |
+      Transfer all rescue assignments and first limpet designations from
+      one rat to another. If the target rat is already assigned to a rescue,
+      the duplicate source assignment is removed.
+
+      All changes are performed in a single transaction.
+
+      **Required Permission:** `rats.write`
+    security:
+      - bearerAuth: [rats.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Source rat ID (transfer from)
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [type, attributes]
+                properties:
+                  type:
+                    type: string
+                    enum: [rat-transfers]
+                  attributes:
+                    type: object
+                    required: [targetRatId]
+                    properties:
+                      targetRatId:
+                        type: string
+                        format: uuid
+                        description: Destination rat ID (transfer to)
+    responses:
+      '200':
+        description: Transfer completed
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transferredAssignments:
+                  type: integer
+                removedDuplicates:
+                  type: integer
+                transferredFirstLimpets:
+                  type: integer
+            example:
+              transferredAssignments: 19
+              removedDuplicates: 0
+              transferredFirstLimpets: 4
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+      '422':
+        $ref: '../components/responses.yaml#/UnprocessableEntity'
+
 rats_user_relationship:
   get:
     tags: [rats]

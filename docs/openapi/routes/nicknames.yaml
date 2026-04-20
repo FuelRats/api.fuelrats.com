@@ -5,18 +5,24 @@ nicknames:
     tags: [nicknames]
     summary: Search nicknames
     description: |
-      Search for IRC nicknames
-      
+      Search for IRC nicknames. Supports exact match via `nick` parameter
+      or case-insensitive pattern match via `filter[nick][iLike]`.
+
       **Authentication Required:** Bearer token authentication
+
+      **Examples:**
+      - `?nick=SomeUser` — exact match
+      - `?filter[nick][iLike]=%partial%` — case-insensitive LIKE search
     security:
       - bearerAuth: []
     parameters:
       - name: nick
         in: query
-        required: true
-        description: Nickname to search for
+        required: false
+        description: Exact nickname to search for. Required if filter[nick][iLike] is not provided.
         schema:
           type: string
+      - $ref: '../components/parameters.yaml#/Filter'
     responses:
       '200':
         description: Nickname search results
@@ -72,10 +78,14 @@ nicknames:
     tags: [nicknames]
     summary: Register nickname
     description: |
-      Register a new IRC nickname. Nicknames are validated against a
-      blocked-names list and rejected with 422 if prohibited.
+      Register a new IRC nickname for the authenticated user. Nicknames
+      are validated against a blocked-names list and rejected with 422
+      if prohibited.
 
-      **Authentication Required:** Bearer token authentication (self-access only)
+      Admins with `nicknames.write` can provide a `userId` to register
+      a nickname for another user.
+
+      **Authentication Required:** Bearer token authentication
     security:
       - bearerAuth: []
     requestBody:
@@ -105,6 +115,10 @@ nicknames:
                         type: string
                         format: uuid
                         description: Associated rat ID
+                      userId:
+                        type: string
+                        format: uuid
+                        description: Target user ID (admin only — registers nick for another user)
     responses:
       '201':
         description: Nickname registered successfully

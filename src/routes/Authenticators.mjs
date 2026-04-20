@@ -6,6 +6,7 @@ import {
   UnprocessableEntityAPIError,
   UnsupportedMediaAPIError,
 } from '../classes/APIError'
+import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { Authenticator, User } from '../db'
 import { DocumentViewType } from '../Documents/Document'
@@ -225,23 +226,28 @@ export default class Authenticators extends APIResource {
       })
     }
 
-    const verifyHeader = ctx.get('x-verify')
-    let verified
-    try {
-      verified = verifySync({ token: verifyHeader, secret: existingAuthenticator.secret }).valid
-    } catch {
-      verified = false
-    }
-
-    if (!verified) {
-      const matchIndex = await verifyRecoveryCode(verifyHeader, existingAuthenticator.recoveryCodes)
-      if (matchIndex !== -1) {
-        verified = true
+    // Admin with users.write can bypass TOTP verification for other users
+    const isAdmin = Permission.granted({ permissions: ['users.write'], connection: ctx })
+      && ctx.state.user.id !== user.id
+    if (!isAdmin) {
+      const verifyHeader = ctx.get('x-verify')
+      let verified
+      try {
+        verified = verifySync({ token: verifyHeader, secret: existingAuthenticator.secret }).valid
+      } catch {
+        verified = false
       }
-    }
 
-    if (!verified) {
-      throw new UnauthorizedAPIError({ pointer: 'x-verify' })
+      if (!verified) {
+        const matchIndex = await verifyRecoveryCode(verifyHeader, existingAuthenticator.recoveryCodes)
+        if (matchIndex !== -1) {
+          verified = true
+        }
+      }
+
+      if (!verified) {
+        throw new UnauthorizedAPIError({ pointer: 'x-verify' })
+      }
     }
 
     await existingAuthenticator.destroy()
