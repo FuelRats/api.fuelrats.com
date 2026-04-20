@@ -427,6 +427,8 @@ paths:
     $ref: './routes/rats.yaml#/rats'
   /rats/{id}:
     $ref: './routes/rats.yaml#/rats_by_id'
+  /rats/{id}/transfer:
+    $ref: './routes/rats.yaml#/rats_transfer'
   /rats/{id}/relationships/user:
     $ref: './routes/rats.yaml#/rats_user_relationship'
   
