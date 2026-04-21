@@ -34,10 +34,7 @@ export default class Resets extends API {
     return 'resets'
   }
 
-  /**
-   * Request a password reset
-   * @endpoint
-   */
+  /** @summary Request password reset */
   @POST('/resets')
   @websocket('resets', 'create')
   @required('email')
@@ -100,10 +97,7 @@ export default class Resets extends API {
     return true
   }
 
-  /**
-   * Validate a password reset token
-   * @endpoint
-   */
+  /** @summary Validate reset token */
   @GET('/resets/:token')
   @parameters('token')
   async validate (ctx) {
@@ -120,10 +114,7 @@ export default class Resets extends API {
     return true
   }
 
-  /**
-   * Use a token to reset a password
-   * @endpoint
-   */
+  /** @summary Reset password */
   @POST('/resets/:token')
   @parameters('token')
   async reset (ctx) {

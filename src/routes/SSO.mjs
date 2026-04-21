@@ -14,10 +14,7 @@ export default class SSO extends API {
     return 'jira'
   }
 
-  /**
-   * User profile information for Jira SSO
-   * @endpoint
-   */
+  /** @summary Get Jira SSO profile */
   @GET('/sso/jira')
   @authenticated
   async jiraProfile (ctx) {
@@ -47,10 +44,7 @@ export default class SSO extends API {
     }
   }
 
-  /**
-   * User profile information for Grafana SSO
-   * @endpoint
-   */
+  /** @summary Get Grafana SSO profile */
   @GET('/sso/grafana')
   @authenticated
   async grafanaProfile (ctx) {
@@ -74,10 +68,7 @@ export default class SSO extends API {
     }
   }
 
-  /**
-   * User profile information for NextCloud SSO
-   * @endpoint
-   */
+  /** @summary Get NextCloud SSO profile */
   @GET('/sso/nextcloud')
   @authenticated
   async nextcloudProfile (ctx) {

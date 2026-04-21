@@ -35,10 +35,7 @@ export default class WebPushSubscriptions extends APIResource {
     return 'web-push-subscriptions'
   }
 
-  /**
-   * Subscribe to web push
-   * @endpoint
-   */
+  /** @summary Subscribe to web push */
   @POST('/web-push')
   @authenticated
   async subscribeWeb (ctx) {
@@ -88,11 +85,7 @@ export default class WebPushSubscriptions extends APIResource {
     return true
   }
 
-  /**
-   * Unsubscribe the current device by endpoint. Used by the service worker
-   * when the subscription is being removed or replaced.
-   * @endpoint
-   */
+  /** @summary Unsubscribe from web push */
   @DELETE('/web-push')
   @authenticated
   async unsubscribeWeb (ctx) {
@@ -113,10 +106,7 @@ export default class WebPushSubscriptions extends APIResource {
     return true
   }
 
-  /**
-   * List a user's web push subscriptions
-   * @endpoint
-   */
+  /** @summary List user web push subscriptions */
   @GET('/users/:id/web-push-subscriptions')
   @authenticated
   async list (ctx) {
@@ -134,10 +124,7 @@ export default class WebPushSubscriptions extends APIResource {
     return new DatabaseDocument({ query, result, type: WebPushSubscriptionView })
   }
 
-  /**
-   * Update platform/expansion filters on a subscription
-   * @endpoint
-   */
+  /** @summary Update web push subscription */
   @PATCH('/users/:id/web-push-subscriptions/:subscriptionId')
   @authenticated
   async update (ctx) {
@@ -176,10 +163,7 @@ export default class WebPushSubscriptions extends APIResource {
     })
   }
 
-  /**
-   * Delete a specific subscription by id
-   * @endpoint
-   */
+  /** @summary Delete web push subscription */
   @DELETE('/users/:id/web-push-subscriptions/:subscriptionId')
   @authenticated
   async delete (ctx) {
@@ -201,10 +185,7 @@ export default class WebPushSubscriptions extends APIResource {
     return true
   }
 
-  /**
-   * Broadcast alert to all subscribers
-   * @endpoint
-   */
+  /** @summary Broadcast alert to all subscribers */
   @POST('/alerts')
   @authenticated
   @permissions('twitter.write')
@@ -243,11 +224,7 @@ export default class WebPushSubscriptions extends APIResource {
     return true
   }
 
-  /**
-   * Send an alert to a specific user's devices. Users can send to themselves;
-   * otherwise requires `twitter.write` permission.
-   * @endpoint
-   */
+  /** @summary Send alert to user */
   @POST('/users/:id/alerts')
   @authenticated
   async userAlert (ctx) {

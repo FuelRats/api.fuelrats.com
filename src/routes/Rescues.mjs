@@ -57,8 +57,10 @@ export default class Rescues extends APIResource {
 
 
   /**
-   * Get all rescues assigned to the current user
-   * @endpoint
+   * @summary Get current user's rescues
+   * @description Retrieve rescues where the current user's rats are assigned.
+   * Supports filtering, sorting, and pagination.
+   * @queryparam {string} _firstLimpet - Set to `me` to filter to rescues where you were first limpet
    */
   @GET('/rescues/me')
   async ownRescues (ctx) {
@@ -156,8 +158,9 @@ export default class Rescues extends APIResource {
   }
 
   /**
-   * Search rescues
-   * @endpoint
+   * @summary List rescues
+   * @description Search and list rescue cases with optional filtering and pagination.
+   * @queryparam {string} _rats - Comma-separated rat UUIDs. Filter to rescues with any of the specified rats assigned.
    */
   @GET('/rescues')
   @websocket('rescues', 'search')
@@ -187,10 +190,7 @@ export default class Rescues extends APIResource {
   }
 
 
-  /**
-   * Get a rescue by id
-   * @endpoint
-   */
+  /** @summary Get rescue by ID */
   @GET('/rescues/:id')
   @websocket('rescues', 'read')
   @parameters('id')
@@ -200,10 +200,7 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RescueView })
   }
 
-  /**
-   * Create a rescue
-   * @endpoint
-   */
+  /** @summary Create rescue */
   @POST('/rescues')
   @websocket('rescues', 'create')
   @authenticated
@@ -251,10 +248,7 @@ export default class Rescues extends APIResource {
     return document
   }
 
-  /**
-   * Update a rescue
-   * @endpoint
-   */
+  /** @summary Update rescue */
   @PUT('/rescues/:id')
   @websocket('rescues', 'update')
   @authenticated
@@ -316,10 +310,7 @@ export default class Rescues extends APIResource {
     return document
   }
 
-  /**
-   * Delete a rescue by id
-   * @endpoint
-   */
+  /** @summary Delete rescue */
   @DELETE('/rescues/:id')
   @websocket('rescues', 'delete')
   @parameters('id')
@@ -352,10 +343,7 @@ export default class Rescues extends APIResource {
 
   // relationships
 
-  /**
-   * Get a rescue's assigned rats
-   * @endpoint
-   */
+  /** @summary Get rescue's assigned rats */
   @GET('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'read')
   @parameters('id')
@@ -371,10 +359,7 @@ export default class Rescues extends APIResource {
     return new DatabaseDocument({ query, result, type: RatView, view: DocumentViewType.relationship })
   }
 
-  /**
-   * Assign rats to a rescue
-   * @endpoint
-   */
+  /** @summary Assign rats to rescue */
   @POST('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'create')
   @parameters('id')
@@ -394,10 +379,7 @@ export default class Rescues extends APIResource {
     return true
   }
 
-  /**
-   * Set the assigned rats of a rescue
-   * @endpoint
-   */
+  /** @summary Update rescue's assigned rats */
   @PATCH('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'patch')
   @parameters('id')
@@ -418,10 +400,7 @@ export default class Rescues extends APIResource {
     return true
   }
 
-  /**
-   * Unassign rats from a rescue
-   * @endpoint
-   */
+  /** @summary Unassign rats from rescue */
   @DELETE('/rescues/:id/relationships/rats')
   @websocket('rescues', 'rats', 'delete')
   @parameters('id')
@@ -442,10 +421,7 @@ export default class Rescues extends APIResource {
     return true
   }
 
-  /**
-   * Get a rescue's first limpet
-   * @endpoint
-   */
+  /** @summary Get rescue's first limpet */
   @GET('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'read')
   @parameters('id')
@@ -462,8 +438,8 @@ export default class Rescues extends APIResource {
   }
 
   /**
-   * Set a rescue's first limpet
-   * @endpoint
+   * @summary Set rescue's first limpet
+   * @description Set which rat is designated as the first limpet. The rat must already be assigned to the rescue.
    */
   @PATCH('/rescues/:id/relationships/firstLimpet')
   @websocket('rescues', 'firstLimpet', 'patch')
@@ -496,7 +472,8 @@ export default class Rescues extends APIResource {
   }
 
   /**
-   * @endpoint
+   * @summary Send rescue alert
+   * @description Broadcast a web push notification for this rescue to all subscribed devices whose platform/expansion filters match.
    */
   @POST('/rescues/:id/alert')
   @authenticated

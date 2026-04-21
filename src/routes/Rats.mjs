@@ -36,8 +36,7 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Search rats
-   * @endpoint
+   * @summary List rats
    */
   @GET('/rats')
   @websocket('rats', 'search')
@@ -48,8 +47,7 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Get a rat by id
-   * @endpoint
+   * @summary Get rat by ID
    */
   @GET('/rats/:id')
   @websocket('rats', 'read')
@@ -61,8 +59,7 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Create a rat
-   * @endpoint
+   * @summary Create rat
    */
   @POST('/rats')
   @websocket('rats', 'create')
@@ -97,8 +94,7 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Update a rat by id
-   * @endpoint
+   * @summary Update rat
    */
   @PUT('/rats/:id')
   @websocket('rats', 'update')
@@ -132,8 +128,7 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Delete a rat by id
-   * @endpoint
+   * @summary Delete rat
    */
   @DELETE('/rats/:id')
   @websocket('rats', 'delete')
@@ -178,8 +173,8 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Transfer all rescue assignments and first limpets from one rat to another
-   * @endpoint
+   * @summary Transfer rescue assignments
+   * @description Transfer all rescue assignments and first limpet designations from this rat to another.
    */
   @POST('/rats/:id/transfer')
   @authenticated
@@ -250,8 +245,7 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Get a rat's user
-   * @endpoint
+   * @summary Get rat's user
    */
   @GET('/rats/:id/relationships/user')
   @websocket('rats', 'user', 'read')
@@ -268,8 +262,7 @@ export default class Rats extends APIResource {
   }
 
   /**
-   * Set a rat's user
-   * @endpoint
+   * @summary Set rat's user
    */
   @PATCH('/rats/:id/relationships/user')
   @websocket('rats', 'user', 'patch')

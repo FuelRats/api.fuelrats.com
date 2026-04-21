@@ -30,10 +30,7 @@ export default class Epics extends APIResource {
     return 'epics'
   }
 
-  /**
-   * Search among all epic nominations
-   * @endpoint
-   */
+  /** @summary Search epics */
   @GET('/epics')
   @websocket('epics', 'search')
   @authenticated
@@ -43,10 +40,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: EpicView })
   }
 
-  /**
-   * Get an Epic nomination by id
-   * @endpoint
-   */
+  /** @summary Get epic by ID */
   @GET('/epics/:id')
   @websocket('epics', 'read')
   @parameters('id')
@@ -56,10 +50,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: EpicView })
   }
 
-  /**
-   * Create an epic nomination
-   * @endpoint
-   */
+  /** @summary Create epic */
   @POST('/epics')
   @websocket('epics', 'create')
   @authenticated
@@ -84,10 +75,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: EpicView })
   }
 
-  /**
-   * Update an epic nomination
-   * @endpoint
-   */
+  /** @summary Update epic */
   @PUT('/epics/:id')
   @websocket('epics', 'update')
   @parameters('id')
@@ -109,10 +97,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: EpicView })
   }
 
-  /**
-   * Delete an epic nomination
-   * @endpoint
-   */
+  /** @summary Delete epic */
   @DELETE('/epics/:id')
   @websocket('epics', 'delete')
   @parameters('id')
@@ -124,10 +109,7 @@ export default class Epics extends APIResource {
     return true
   }
 
-  /**
-   * Get the nominated users in an epic nomination
-   * @endpoint
-   */
+  /** @summary Get epic nominees */
   @GET('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'read')
   @parameters('id')
@@ -143,10 +125,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
-  /**
-   * Add nominated rats in an epic nomination
-   * @endpoint
-   */
+  /** @summary Add epic nominees */
   @POST('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'create')
   @parameters('id')
@@ -163,10 +142,7 @@ export default class Epics extends APIResource {
     return true
   }
 
-  /**
-   * Update the nominated rats in an epic nomination
-   * @endpoint
-   */
+  /** @summary Set epic nominees */
   @PATCH('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'patch')
   @parameters('id')
@@ -183,10 +159,7 @@ export default class Epics extends APIResource {
     return true
   }
 
-  /**
-   * Delete the nominated rats in an epic nomination
-   * @endpoint
-   */
+  /** @summary Remove epic nominees */
   @DELETE('/epics/:id/relationships/nominees')
   @websocket('epics', 'nominees', 'delete')
   @parameters('id')
@@ -203,10 +176,7 @@ export default class Epics extends APIResource {
     return true
   }
 
-  /**
-   * Get the user who nominated this epic
-   * @endpoint
-   */
+  /** @summary Get epic nominator */
   @GET('/epics/:id/relationships/nominatedBy')
   @websocket('epics', 'nominatedBy', 'read')
   @parameters('id')
@@ -222,10 +192,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
-  /**
-   * Set the user who nominated this epic
-   * @endpoint
-   */
+  /** @summary Set epic nominator */
   @PATCH('/epics/:id/relationships/nominatedBy')
   @websocket('epics', 'nominatedBy', 'patch')
   @parameters('id')
@@ -242,10 +209,7 @@ export default class Epics extends APIResource {
     return true
   }
 
-  /**
-   * Get the user who approved this epic
-   * @endpoint
-   */
+  /** @summary Get epic approver */
   @GET('/epics/:id/relationships/approvedBy')
   @websocket('epics', 'approvedBy', 'read')
   @parameters('id')
@@ -261,10 +225,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
   }
 
-  /**
-   * Set the user who approved this epic
-   * @endpoint
-   */
+  /** @summary Set epic approver */
   @PATCH('/epics/:id/relationships/approvedBy')
   @websocket('epics', 'approvedBy', 'patch')
   @parameters('id')
@@ -281,10 +242,7 @@ export default class Epics extends APIResource {
     return true
   }
 
-  /**
-   * Get the rescue associated with this epic
-   * @endpoint
-   */
+  /** @summary Get epic rescue */
   @GET('/epics/:id/relationships/rescue')
   @websocket('epics', 'rescue', 'read')
   @parameters('id')
@@ -300,10 +258,7 @@ export default class Epics extends APIResource {
     return new DatabaseDocument({ query, result, type: RescueView, view: DocumentViewType.relationship })
   }
 
-  /**
-   * Set the rescue associated with this epic
-   * @endpoint
-   */
+  /** @summary Set epic rescue */
   @PATCH('/epics/:id/relationships/rescue')
   @websocket('epics', 'rescue', 'patch')
   @parameters('id')

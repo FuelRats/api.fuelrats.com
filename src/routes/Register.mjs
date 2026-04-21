@@ -38,10 +38,7 @@ export default class Register extends API {
     return 'registrations'
   }
 
-  /**
-   * Register a new account
-   * @endpoint
-   */
+  /** @summary Register new account */
   @POST('/register')
   @required(
     'email', 'name', 'platform', 'nickname',
@@ -214,10 +211,7 @@ export default class Register extends API {
     return true
   }
 
-  /**
-   * Generate passkey registration options for new account registration
-   * @endpoint
-   */
+  /** @summary Generate passkey registration options */
   @POST('/register/passkey')
   @required('email')
   async generatePasskeyRegistration (ctx) {

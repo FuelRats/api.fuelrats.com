@@ -168,10 +168,7 @@ class OAuth extends API {
     return jwt.sign(idTokenPayload, config.jwt.secret, { algorithm: 'HS256' })
   }
 
-  /**
-   * Endpoint for OAuth authorize decision screen info requests
-   * @endpoint
-   */
+  /** @summary OAuth2 authorize */
   @GET('/oauth2/authorize')
   @authenticated
   @parameters('client_id')
@@ -333,10 +330,7 @@ class OAuth extends API {
     return callbackError(redirectUri, new UnsupportedResponseTypeOAuthError())
   }
 
-  /**
-   * Endpoint for OAuth2 authorize decision request
-   * @endpoint
-   */
+  /** @summary OAuth2 authorize decision */
   @POST('/oauth2/authorize')
   @authenticated
   async decision (ctx) {
@@ -453,10 +447,7 @@ class OAuth extends API {
   }
 
 
-  /**
-   * Endpoint for OAuth2 Token exchange and ROPC request
-   * @endpoint
-   */
+  /** @summary OAuth2 token exchange */
   @POST('/oauth2/token')
   @clientAuthenticated
   token (ctx) {
@@ -688,10 +679,7 @@ class OAuth extends API {
     }
   }
 
-  /**
-   * Endpoint for OAuth 2 token revocation requests
-   * @endpoint
-   */
+  /** @summary Revoke OAuth2 token */
   @POST('/oauth2/revoke')
   @clientAuthenticated
   async revoke (ctx) {
@@ -715,10 +703,7 @@ class OAuth extends API {
     return {}
   }
 
-  /**
-   * Endpoint for OAuth2 revoke all client tokens requests
-   * @endpoint
-   */
+  /** @summary Revoke all OAuth2 client tokens */
   @POST('/oauth2/revokeall')
   @clientAuthenticated
   async revokeAll (ctx) {
@@ -731,10 +716,7 @@ class OAuth extends API {
     return {}
   }
 
-  /**
-   * OpenID Connect UserInfo endpoint (GET)
-   * @endpoint
-   */
+  /** @summary Get OpenID Connect user info */
   @GET('/oauth2/userinfo')
   @authenticated
   userinfo (ctx) {
@@ -763,20 +745,14 @@ class OAuth extends API {
     return userinfo
   }
 
-  /**
-   * OpenID Connect UserInfo endpoint (POST)
-   * @endpoint
-   */
+  /** @summary Get OpenID Connect user info */
   @POST('/oauth2/userinfo')
   @authenticated
   userinfoPost (ctx) {
     return this.userinfo(ctx)
   }
 
-  /**
-   * JSON Web Key Set (JWKS) endpoint
-   * @endpoint
-   */
+  /** @summary Get JSON Web Key Set */
   @GET('/.well-known/jwks.json')
   jwks () {
     // For HMAC (HS256), we cannot expose the secret key in JWKS
@@ -786,10 +762,7 @@ class OAuth extends API {
     }
   }
 
-  /**
-   * OpenID Connect Discovery endpoint
-   * @endpoint
-   */
+  /** @summary OpenID Connect discovery */
   @GET('/.well-known/openid-configuration')
   openidConfiguration () {
     const issuer = config.server.externalUrl

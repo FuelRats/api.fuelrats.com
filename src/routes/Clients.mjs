@@ -34,7 +34,7 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Search oauth clients
+   * @summary List OAuth clients
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} list of oauth client results
    */
@@ -48,7 +48,7 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Find an Oauth client by id
+   * @summary Get OAuth client by ID
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} an oauth client result
    */
@@ -63,7 +63,7 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Create an oauth client
+   * @summary Create OAuth client
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} created oauth client
    */
@@ -84,7 +84,7 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Update a client by ID
+   * @summary Update OAuth client
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} updated oauth client
    */
@@ -100,7 +100,7 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Delete an oauth client by ID
+   * @summary Delete OAuth client
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -149,7 +149,8 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Regenerate a client's secret and revoke all tokens
+   * @summary Regenerate client secret
+   * @description Generates a new secret, revoking all tokens and authorization codes.
    * @param {Context} ctx request context
    * @returns {Promise<object>} new client secret
    */
@@ -173,7 +174,7 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Revoke all tokens issued by this client
+   * @summary Revoke all client tokens
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -194,9 +195,9 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Get a client's user relationship
+   * @summary Get client's user relationship
    * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} a user's display rat relationship
+   * @returns {Promise<DatabaseDocument>} a client's user relationship
    */
   @GET('/clients/:id/relationships/user')
   @websocket('clients', 'user', 'read')
@@ -214,7 +215,7 @@ export default class Clients extends APIResource {
   }
 
   /**
-   * Set a client's user relationship
+   * @summary Update client's user relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */

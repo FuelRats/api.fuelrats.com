@@ -43,10 +43,7 @@ export default class Anniversaries extends API {
     return 'anniversaries'
   }
 
-  /**
-   * List anniversaries for today
-   * @endpoint
-   */
+  /** @summary List user anniversaries */
   @GET('/anniversaries')
   @websocket('anniversaries', 'list')
   @authenticated

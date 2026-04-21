@@ -32,11 +32,7 @@ export default class Verifications extends API {
     return 'verifications'
   }
 
-  /**
-   * Request a new account verification
-   * @param {Context} ctx request context
-   * @returns {Promise<boolean>} a 204 is returned when successful
-   */
+  /** @summary Request email verification */
   @POST('/verifications')
   async create (ctx) {
     const { email } = getJSONAPIData({ ctx, type: 'verifications' }).attributes
@@ -80,11 +76,7 @@ export default class Verifications extends API {
     return true
   }
 
-  /**
-   * Verify an account using a token
-   * @param {Context} ctx request token
-   * @returns {Promise<boolean>} a 204 is returned when successful
-   */
+  /** @summary Verify account */
   @GET('/verifications/:token')
   @parameters('token')
   async verify (ctx) {

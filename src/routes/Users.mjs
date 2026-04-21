@@ -123,7 +123,9 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Get a list of users according to a search query
+   * @summary List users
+   * @queryparam {string} _groups - Comma-separated group names to filter by
+   * @queryparam {string} _rats - Comma-separated rat UUIDs to filter by
    * @param {Context} ctx a request context
    * @returns {Promise<DatabaseDocument>} JSONAPI result document
    */
@@ -185,7 +187,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Get a specific user by ID
+   * @summary Get user by ID
    * @param {Context} ctx a request context
    * @returns {Promise<DatabaseDocument>} JSONAPI result document
    */
@@ -213,8 +215,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Get a user's profile
-   * @endpoint
+   * @summary Get current user's profile
    */
   @GET('/profile')
   @websocket('profiles', 'read')
@@ -245,7 +246,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Get a user's avatar
+   * @summary Get user avatar
    * @param {Context} ctx a request context
    * @param {Function} next Koa routing function
    * @returns {Promise<undefined>} resolves a promise upon completion
@@ -303,7 +304,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Generate and set a certificate for use with IRC identification
+   * @summary Generate client certificate
    * @param {Context} ctx request context
    * @returns {Promise<undefined>} resolves a promise upon completion
    */
@@ -346,8 +347,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Change a user's email
-   * @endpoint
+   * @summary Change user email
    */
   @PUT('/users/:id/email')
   @websocket('users', 'email', 'update')
@@ -425,8 +425,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Change a user's email
-   * @endpoint
+   * @summary Sync user permissions to IRC
    */
   @PUT('/users/:id/sync')
   @websocket('users', 'sync')
@@ -455,7 +454,8 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Change a user's password
+   * @summary Change user password
+   * @description Admins with users.write can set another user's password without the current password.
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} an updated user if the password change is successful
    */
@@ -536,7 +536,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Endpoint for admins to create new users. For self-creating a user, see /register
+   * @summary Create user
    * @param {Context} ctx a request context
    * @returns {Promise<DatabaseDocument>} a created user if the request is successful
    */
@@ -574,7 +574,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Update a user
+   * @summary Update user
    * @param {Context} ctx a request context
    * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
    */
@@ -615,7 +615,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Delete a user
+   * @summary Delete user
    * @param {Context} ctx a request context
    * @returns {Promise<boolean>} returns a 204 if the request is successful
    */
@@ -636,7 +636,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Update a user's avatar image
+   * @summary Upload user avatar
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} an updated user if the request is successful
    */
@@ -696,8 +696,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Delete a user's avatar
-   * @endpoint
+   * @summary Delete user avatar
    */
   @DELETE('/users/:id/image')
   @parameters('id')
@@ -733,11 +732,7 @@ export default class Users extends APIResource {
     return true
   }
 
-  /**
-   * Redeem a decal
-   * @param {Context} ctx request context
-   * @returns {Promise<DatabaseDocument>} a decal
-   */
+  /** @summary Redeem decal */
   @POST('/users/:id/decals')
   @parameters('id')
   @authenticated
@@ -790,7 +785,7 @@ export default class Users extends APIResource {
   // Relationships
 
   /**
-   * Get a user's rat relationships
+   * @summary Get user's rats relationship
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} a list of a user's rat relationships
    */
@@ -810,7 +805,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Create new rat relationship(s) on a user
+   * @summary Add user's rats relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -833,7 +828,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Override a user's rat relationships with a new set
+   * @summary Update user's rats relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -856,7 +851,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Delete one or more rat relationships of a user
+   * @summary Remove user's rats relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -879,7 +874,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Get a user's display rat relationship
+   * @summary Get user's displayRat relationship
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} a user's display rat relationship
    */
@@ -901,7 +896,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Set a user's display rat relationship
+   * @summary Update user's displayRat relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -924,7 +919,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Get a user's group relationships
+   * @summary Get user's groups relationship
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} a list of a user's group relationships
    */
@@ -944,7 +939,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Create new group relationship(s) on a user
+   * @summary Add user's groups relationship
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument|boolean>} 204 no content
    */
@@ -967,7 +962,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Override a user's group relationships with a new set
+   * @summary Update user's groups relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -991,7 +986,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Delete one or more group relationships of a user
+   * @summary Remove user's groups relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -1022,7 +1017,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Get a user's client relationships
+   * @summary Get user's clients relationship
    * @param {Context} ctx request context
    * @returns {Promise<DatabaseDocument>} a list of a user's client relationships
    */
@@ -1042,7 +1037,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Create new client relationship(s) on a user
+   * @summary Add user's clients relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -1064,7 +1059,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Override a user's client relationships with a new set
+   * @summary Update user's clients relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */
@@ -1086,7 +1081,7 @@ export default class Users extends APIResource {
   }
 
   /**
-   * Delete one or more client relationships of a user
+   * @summary Remove user's clients relationship
    * @param {Context} ctx request context
    * @returns {Promise<boolean>} 204 no content
    */

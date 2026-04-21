@@ -30,11 +30,7 @@ export default class Events extends API {
     return 'events'
   }
 
-  /**
-   * Endpoint for SSE
-   * @param {Context} ctx Connection context
-   * @returns {Promise<undefined>} Returns an indefinite promise to keep the connection alive
-   */
+  /** @summary Subscribe to server-sent events */
   @GET('/events')
   @authenticated
   events (ctx) {
@@ -126,10 +122,7 @@ export default class Events extends API {
     return true
   }
 
-  /**
-   * Broadcast a WebSocket event
-   * @endpoint
-   */
+  /** @summary Broadcast event */
   @POST('/events/:event')
   @websocket('events', 'broadcast')
   @parameters('event')
