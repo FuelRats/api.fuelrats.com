@@ -66,6 +66,8 @@ leaderboard:
                 first: "/leaderboard?page[offset]=0&page[limit]=20"
                 last: "/leaderboard?page[offset]=1840&page[limit]=20"
                 next: "/leaderboard?page[offset]=20&page[limit]=20"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
 
 users_statistics:
   get:

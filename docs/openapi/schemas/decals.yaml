@@ -1,109 +1,72 @@
-# Decal schemas
+# Auto-generated from Decal model + DecalView
+# Regenerate with: bun run openapi:generate
 
 Decal:
-  type: object
-  required: [type, id]
-  properties:
-    type:
-      type: string
-      enum: [decals]
-    id:
-      type: string
-      format: uuid
-    attributes:
-      type: object
+  allOf:
+    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+    - type: object
       properties:
-        code:
-          type: string
-          description: Unique decal code (**Write Permission:** Admin/sudo only)
         type:
           type: string
-          enum: [rescue, epic, thisisfine, anniversary]
-          description: Type of decal award (**Write Permission:** Admin/sudo only)
-        notes:
-          type: string
-          description: Additional notes about why the decal was awarded (**Write Permission:** Admin/sudo only)
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation timestamp (**Write Permission:** Internal system only)
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update timestamp (**Write Permission:** Internal system only)
-        deletedAt:
-          type: string
-          format: date-time
-          nullable: true
-          description: Deletion timestamp (**Write Permission:** Internal system only)
-    relationships:
-      type: object
-      properties:
-        user:
+          enum: [decals]
+        attributes:
           type: object
-          description: The user who received this decal
           properties:
-            data:
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum: [users]
-                id:
-                  type: string
-                  format: uuid
-            links:
-              type: object
-              properties:
-                self:
-                  type: string
-                  format: uri
-                related:
-                  type: string
-                  format: uri
-        rat:
+            code:
+              type: string
+              description: "Frontier store redemption code (writable by: admin only)"
+            type:
+              type: string
+              enum: [Rescues, Promotional, Special]
+              description: "Decal award category (writable by: admin only)"
+            notes:
+              type: string
+              description: "Administrative notes about this decal (writable by: admin only)"
+            claimedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: Date the decal was claimed by a user
+            createdAt:
+              type: string
+              format: date-time
+              description: "Writable by: system only"
+            updatedAt:
+              type: string
+              format: date-time
+              description: "Writable by: system only"
+            deletedAt:
+              type: string
+              format: date-time
+              description: "Writable by: system only"
+        relationships:
           type: object
-          description: The rat (commander) associated with this decal
           properties:
-            data:
+            user:
               type: object
               properties:
-                type:
-                  type: string
-                  enum: [rats]
-                id:
-                  type: string
-                  format: uuid
-            links:
-              type: object
-              properties:
-                self:
-                  type: string
-                  format: uri
-                related:
-                  type: string
-                  format: uri
-    links:
-      type: object
-      properties:
-        self:
-          type: string
-          format: uri
-
-DecalCollection:
-  type: object
-  properties:
-    data:
-      type: array
-      items:
-        $ref: '#/Decal'
-    meta:
-      $ref: '../components/schemas.yaml#/PaginationMeta'
-    links:
-      $ref: '../components/schemas.yaml#/PaginationLinks'
+                data:
+                  nullable: true
+                  allOf:
+                    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                    - properties:
+                        type:
+                          enum: [user]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
 
 DecalDocument:
-  type: object
-  properties:
-    data:
-      $ref: '#/Decal'
+  allOf:
+    - $ref: '../components/schemas.yaml#/SingleResourceDocument'
+    - properties:
+        data:
+          $ref: '#/Decal'
+
+DecalCollection:
+  allOf:
+    - $ref: '../components/schemas.yaml#/CollectionDocument'
+    - properties:
+        data:
+          type: array
+          items:
+            $ref: '#/Decal'

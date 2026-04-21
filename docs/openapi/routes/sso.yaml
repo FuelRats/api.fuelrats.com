@@ -1,0 +1,46 @@
+# SSO endpoints
+
+sso_jira:
+  get:
+    tags: [sso]
+    summary: Jira SSO login
+    description: Single sign-on endpoint for Jira integration.
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: SSO credentials generated
+      '302':
+        description: Redirect to Jira with SSO credentials
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+sso_grafana:
+  get:
+    tags: [sso]
+    summary: Grafana SSO login
+    description: Single sign-on endpoint for Grafana integration.
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: SSO credentials generated
+      '302':
+        description: Redirect to Grafana with SSO credentials
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+sso_nextcloud:
+  get:
+    tags: [sso]
+    summary: Nextcloud SSO login
+    description: Single sign-on endpoint for Nextcloud integration.
+    security:
+      - bearerAuth: []
+    responses:
+      '200':
+        description: SSO credentials generated
+      '302':
+        description: Redirect to Nextcloud with SSO credentials
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'

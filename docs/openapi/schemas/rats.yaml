@@ -1,4 +1,5 @@
-# Rat resource schemas
+# Auto-generated from Rat model + RatView
+# Regenerate with: bun run openapi:generate
 
 Rat:
   allOf:
@@ -13,37 +14,34 @@ Rat:
           properties:
             name:
               type: string
-              minLength: 3
-              maxLength: 64
-              description: Commander name (**Write Permission:** `rats.write` or self-access)
+              description: "Commander name (writable by: owner or admin)"
             data:
               type: object
-              description: Additional rat metadata (**Write Permission:** `rats.write` or self-access)
+              description: "Arbitrary rat metadata (writable by: owner or admin)"
             platform:
               type: string
               enum: [pc, xb, ps]
-              description: Gaming platform (**Write Permission:** `rats.write` or self-access)
+              description: "Gaming platform (writable by: owner or admin)"
             expansion:
               type: string
               enum: [horizons3, horizons4, odyssey]
-              description: Game expansion (**Write Permission:** `rats.write` or self-access)
+              description: "Game expansion version (writable by: owner or admin)"
             frontierId:
               type: integer
               nullable: true
-              description: Frontier account ID (**Write Permission:** Internal system only)
+              description: "Frontier Developments commander identifier (writable by: system only)"
             createdAt:
               type: string
               format: date-time
-              description: Creation timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
             updatedAt:
               type: string
               format: date-time
-              description: Last update timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
             deletedAt:
               type: string
               format: date-time
-              nullable: true
-              description: Deletion timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
         relationships:
           type: object
           properties:
@@ -51,11 +49,12 @@ Rat:
               type: object
               properties:
                 data:
+                  nullable: true
                   allOf:
                     - $ref: '../components/schemas.yaml#/ResourceIdentifier'
                     - properties:
                         type:
-                          enum: [users]
+                          enum: [user]
                 links:
                   $ref: '../components/schemas.yaml#/Links'
 

@@ -1,88 +1,65 @@
-# Passkey schemas
+# Auto-generated from Passkey model + PasskeyView
+# Regenerate with: bun run openapi:generate
 
 Passkey:
-  type: object
-  required: [type, id]
-  properties:
-    type:
-      type: string
-      enum: [passkeys]
-    id:
-      type: string
-      format: uuid
-    attributes:
-      type: object
+  allOf:
+    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+    - type: object
       properties:
-        name:
+        type:
           type: string
-          description: User-friendly name for the passkey (**Write Permission:** `users.write` or self-access)
-        credentialId:
-          type: string
-          description: Base64URL encoded credential ID (**Write Permission:** Internal system only)
-        publicKey:
-          type: string
-          readOnly: true
-          description: Base64URL encoded public key (**Write Permission:** Internal system only)
-        counter:
-          type: integer
-          description: Signature counter for replay attack prevention (**Write Permission:** Internal system only)
-        backedUp:
-          type: boolean
-          description: Whether the passkey is backed up (e.g., synced via iCloud/Google) (**Write Permission:** Internal system only)
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation timestamp (**Write Permission:** Internal system only)
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update timestamp (**Write Permission:** Internal system only)
-    relationships:
-      type: object
-      properties:
-        user:
+          enum: [passkeys]
+        attributes:
           type: object
-          description: The user who owns this passkey
           properties:
-            data:
+            credentialId:
+              type: string
+              description: WebAuthn credential identifier
+            publicKey:
+              type: string
+              description: WebAuthn credential public key
+            counter:
+              type: integer
+              description: WebAuthn signature counter for replay detection
+            name:
+              type: string
+              description: User-assigned passkey label
+            backedUp:
+              type: boolean
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+        relationships:
+          type: object
+          properties:
+            user:
               type: object
               properties:
-                type:
-                  type: string
-                  enum: [users]
-                id:
-                  type: string
-                  format: uuid
-            links:
-              type: object
-              properties:
-                self:
-                  type: string
-                  format: uri
-                related:
-                  type: string
-                  format: uri
-    links:
-      type: object
-      properties:
-        self:
-          type: string
-          format: uri
-
-PasskeyCollection:
-  type: object
-  properties:
-    data:
-      type: array
-      items:
-        $ref: '#/Passkey'
-    meta:
-      $ref: '../components/schemas.yaml#/PaginationMeta'
-    links:
-      $ref: '../components/schemas.yaml#/PaginationLinks'
+                data:
+                  nullable: true
+                  allOf:
+                    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                    - properties:
+                        type:
+                          enum: [user]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
 
 PasskeyDocument:
-  type: object
-  properties:
-    data:
-      $ref: '#/Passkey'
+  allOf:
+    - $ref: '../components/schemas.yaml#/SingleResourceDocument'
+    - properties:
+        data:
+          $ref: '#/Passkey'
+
+PasskeyCollection:
+  allOf:
+    - $ref: '../components/schemas.yaml#/CollectionDocument'
+    - properties:
+        data:
+          type: array
+          items:
+            $ref: '#/Passkey'

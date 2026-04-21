@@ -1,0 +1,14 @@
+# Webhook endpoints
+
+webhooks_jira:
+  post:
+    tags: [webhooks]
+    summary: Jira webhook
+    description: |
+      Receives webhook events from Jira for issue tracking integration.
+      This endpoint is called by Jira, not by API consumers.
+    responses:
+      '200':
+        description: Webhook processed
+      '400':
+        description: Invalid webhook payload
