@@ -15,7 +15,11 @@
     "test": "bun test",
     "jsdoc": "jsdoc -d static/docs/js -rgoo api",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
-    "eslint": "eslint ."
+    "eslint": "eslint .",
+    "openapi:generate": "bun scripts/generate-openapi.mjs",
+    "openapi:bundle": "redocly bundle docs/openapi/openapi.yaml -o docs/openapi/bundled.yaml",
+    "openapi:lint": "redocly lint docs/openapi/openapi.yaml --config docs/openapi/redocly.yaml",
+    "openapi:build": "bun run openapi:generate && bun run openapi:bundle && bun scripts/openapi-post-process.mjs"
   },
   "license": "BSD-3",
   "dependencies": {
@@ -55,6 +59,7 @@
     "@babel/eslint-parser": "^7.28.6",
     "@babel/plugin-proposal-decorators": "^7.29.0",
     "@eslint/js": "^10.0.1",
+    "@redocly/cli": "^2.29.0",
     "ajv": "^8.18.0",
     "eslint": "^9",
     "globals": "^17.5.0",

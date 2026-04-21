@@ -9,15 +9,19 @@ export default class Passkey extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** WebAuthn credential identifier */
   @column(type.STRING)
   static credentialId = undefined
 
+  /** WebAuthn credential public key */
   @column(type.TEXT)
   static publicKey = undefined
 
+  /** WebAuthn signature counter for replay detection */
   @column(type.INTEGER)
   static counter = 0
 
+  /** User-assigned passkey label */
   @column(type.STRING, { name: 'name' })
   static passkeyName = undefined
 

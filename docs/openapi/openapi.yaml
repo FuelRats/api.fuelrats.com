@@ -307,6 +307,12 @@ tags:
     description: Real-time WebSocket API communication
   - name: statistics
     description: Platform statistics and leaderboards
+  - name: epics
+    description: Epic rescue nominations
+  - name: sso
+    description: Single sign-on integrations
+  - name: webhooks
+    description: External webhook integrations
   - name: version
     description: API version information
 
@@ -327,10 +333,7 @@ paths:
   /resets:
     $ref: './routes/resets.yaml#/resets_create'
   /resets/{token}:
-    get:
-      $ref: './routes/resets.yaml#/resets_validate'
-    post:
-      $ref: './routes/resets.yaml#/resets_execute'
+    $ref: './routes/resets.yaml#/resets_token'
   
   # Users
   /users:
@@ -364,10 +367,7 @@ paths:
   /users/{id}/sessions/{sessionId}:
     $ref: './routes/sessions.yaml#/users_session'
   /users/{id}/passkeys:
-    get:
-      $ref: './routes/passkeys.yaml#/users_passkeys'
-    post:
-      $ref: './routes/passkeys.yaml#/users_passkeys_create'
+    $ref: './routes/passkeys.yaml#/users_passkeys'
   /users/{id}/passkeys/register:
     $ref: './routes/passkeys.yaml#/users_passkeys_register'
   /users/{id}/passkeys/{passkeyId}:
@@ -395,6 +395,8 @@ paths:
             application/json:
               schema:
                 type: object
+        '404':
+          description: Not found
   /.well-known/jwks.json:
     get:
       tags: [oauth2]
@@ -407,6 +409,8 @@ paths:
             application/json:
               schema:
                 type: object
+        '404':
+          description: Not found
   /oauth2/userinfo:
     get:
       tags: [oauth2]
@@ -421,6 +425,8 @@ paths:
             application/json:
               schema:
                 type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   # Rats
   /rats:
@@ -512,14 +518,54 @@ paths:
   /users/{id}/alerts:
     $ref: './routes/web-push.yaml#/users_alerts'
   
+  # SSO
+  /sso/jira:
+    $ref: './routes/sso.yaml#/sso_jira'
+  /sso/grafana:
+    $ref: './routes/sso.yaml#/sso_grafana'
+  /sso/nextcloud:
+    $ref: './routes/sso.yaml#/sso_nextcloud'
+
+  # Rescue Revisions
+  /rescues/{id}/revisions:
+    $ref: './routes/rescues.yaml#/rescues_revisions'
+
+  # Epics
+  /epics:
+    $ref: './routes/epics.yaml#/epics'
+  /epics/{id}:
+    $ref: './routes/epics.yaml#/epics_by_id'
+  /epics/{id}/relationships/nominees:
+    $ref: './routes/epics.yaml#/epics_nominees_relationship'
+  /epics/{id}/relationships/nominatedBy:
+    $ref: './routes/epics.yaml#/epics_nominatedby_relationship'
+  /epics/{id}/relationships/approvedBy:
+    $ref: './routes/epics.yaml#/epics_approvedby_relationship'
+  /epics/{id}/relationships/rescue:
+    $ref: './routes/epics.yaml#/epics_rescue_relationship'
+
+  # Anniversaries
+  /anniversaries:
+    $ref: './routes/anniversaries.yaml#/anniversaries'
+
+  # Frontier SSO
+  /frontier/login:
+    $ref: './routes/frontier.yaml#/frontier_login'
+  /frontier/create:
+    $ref: './routes/frontier.yaml#/frontier_create'
+
+  # Webhooks
+  /webhooks/jira:
+    $ref: './routes/webhooks.yaml#/webhooks_jira'
+
   # WebSocket Real-time API
   /:
     $ref: './routes/websockets.yaml#/websocket_connection'
-  
+
   # Statistics and Leaderboard
   /leaderboard:
     $ref: './routes/statistics.yaml#/leaderboard'
-  
+
   # Version
   /version:
     $ref: './routes/version.yaml#/version'

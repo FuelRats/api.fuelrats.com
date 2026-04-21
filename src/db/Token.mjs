@@ -13,10 +13,12 @@ export default class Token extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** Granted OAuth permission scopes */
   @validate({ scope: Permission.assertOAuthScopes })
   @column(type.ARRAY(type.STRING(oAuthScopeMaxLength)))
   static scope = []
 
+  /** OAuth token string */
   @validate({})
   @column(type.TEXT)
   static value = undefined
@@ -29,15 +31,19 @@ export default class Token extends Model {
   @column(type.UUID)
   static clientId = undefined
 
+  /** IP address that created the token */
   @column(type.STRING, { allowNull: true })
   static ipAddress = undefined
 
+  /** User-Agent string of the requesting client */
   @column(type.TEXT, { allowNull: true })
   static userAgent = undefined
 
+  /** Authentication method used to obtain the token */
   @column(type.STRING, { allowNull: true })
   static authMethod = undefined
 
+  /** Timestamp of last token usage */
   @column(type.DATE, { allowNull: true })
   static lastAccess = undefined
 

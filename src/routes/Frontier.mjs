@@ -22,10 +22,7 @@ export default class Frontier extends API {
     return 'frontier-logins'
   }
 
-  /**
-   * Login with a frontier token
-   * @endpoint
-   */
+  /** @summary Login with Frontier */
   @POST('/frontier/login')
   async login (ctx) {
     const { code } = getJSONAPIData({ ctx, type: 'frontier-logins' }).attributes
@@ -141,10 +138,7 @@ export default class Frontier extends API {
     return new DatabaseDocument({ query, newToken, type: TokenView })
   }
 
-  /**
-   * Create a linked frontier account
-   * @endpoint
-   */
+  /** @summary Create Frontier-linked account */
   @POST('/frontier/create')
   async create (ctx) {
     const { token, nickname, password } = getJSONAPIData({ ctx, type: 'user' }).attributes

@@ -25,10 +25,7 @@ export default class Webhooks extends API {
     return 'webhooks'
   }
 
-  /**
-   * Jira Drill Update webhook
-   * @endpoint
-   */
+  /** @summary Jira webhook */
   @POST('/webhooks/jira')
   @IPAuthenticated
   async jira (ctx) {

@@ -11,6 +11,7 @@ export default class Epic extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** Description of the epic rescue nomination */
   @validate({ len: [0, epicsNotesFieldMaxLength] })
   @column(type.TEXT)
   static notes = ''

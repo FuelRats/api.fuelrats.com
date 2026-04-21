@@ -1,0 +1,40 @@
+# Frontier SSO endpoints
+
+frontier_login:
+  post:
+    tags: [oauth2]
+    summary: Frontier SSO login
+    description: |
+      Authenticate using Frontier Developments SSO. Links the Frontier account
+      to an existing Fuel Rats account and returns an access token.
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+    responses:
+      '200':
+        description: Login successful, access token returned
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+
+frontier_create:
+  post:
+    tags: [oauth2]
+    summary: Frontier SSO account creation
+    description: |
+      Create a new Fuel Rats account using Frontier Developments SSO.
+      Automatically creates the user, links their Frontier account,
+      and registers their commander name.
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+    responses:
+      '201':
+        description: Account created, access token returned
+      '409':
+        $ref: '../components/responses.yaml#/Conflict'

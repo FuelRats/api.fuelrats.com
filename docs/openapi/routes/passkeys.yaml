@@ -170,7 +170,6 @@ users_passkeys_register:
       '404':
         $ref: '../components/responses.yaml#/NotFound'
 
-users_passkeys_create:
   post:
     tags: [passkeys]
     summary: Register new passkey

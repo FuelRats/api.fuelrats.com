@@ -1,4 +1,5 @@
-# User resource schemas
+# Auto-generated from User model + UserView
+# Regenerate with: bun run openapi:generate
 
 User:
   allOf:
@@ -13,48 +14,54 @@ User:
           properties:
             data:
               type: object
-              description: User metadata (**Write Permission:** `users.write` or self-access)
+              description: "Arbitrary user metadata (writable by: owner or admin)"
             email:
               type: string
               format: email
-              description: User email address (**Write Permission:** Admin/sudo only)
-            password:
-              type: string
-              writeOnly: true
-              description: User password (**Write Permission:** Admin/sudo only)
+              description: "User's email address (writable by: admin only)"
             status:
               type: string
               enum: [active, inactive, legacy, deactivated]
-              description: User account status (**Write Permission:** Custom logic - admin can change any status, users can only deactivate their own account)
+              description: Account status
             suspended:
               type: string
               format: date-time
               nullable: true
-              description: Suspension date if user is suspended (**Write Permission:** Admin/sudo only)
+              description: "Suspension expiry date (writable by: admin only)"
             stripeId:
               type: string
-              nullable: true
-              description: Stripe customer ID (**Write Permission:** `users.write` or self-access)
+              description: "Writable by: owner or admin"
             frontierId:
-              type: string
+              type: integer
               nullable: true
-              description: Frontier account ID (**Write Permission:** Internal system only)
+              description: "Frontier Developments account identifier (writable by: system only)"
             createdAt:
               type: string
               format: date-time
-              description: Account creation timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
             updatedAt:
               type: string
               format: date-time
-              description: Last update timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
             deletedAt:
               type: string
               format: date-time
-              nullable: true
-              description: Account deletion timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
         relationships:
           type: object
           properties:
+            avatar:
+              type: object
+              properties:
+                data:
+                  nullable: true
+                  allOf:
+                    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                    - properties:
+                        type:
+                          enum: [avatar]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
             rats:
               type: object
               properties:
@@ -65,7 +72,32 @@ User:
                       - $ref: '../components/schemas.yaml#/ResourceIdentifier'
                       - properties:
                           type:
-                            enum: [rats]
+                            enum: [rat]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            nicknames:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [nickname]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            displayRat:
+              type: object
+              properties:
+                data:
+                  nullable: true
+                  allOf:
+                    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                    - properties:
+                        type:
+                          enum: [rat]
                 links:
                   $ref: '../components/schemas.yaml#/Links'
             groups:
@@ -78,7 +110,58 @@ User:
                       - $ref: '../components/schemas.yaml#/ResourceIdentifier'
                       - properties:
                           type:
-                            enum: [groups]
+                            enum: [group]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            clients:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [client]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            epics:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [epic]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            decals:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                      - properties:
+                          type:
+                            enum: [decal]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
+            authenticator:
+              type: object
+              properties:
+                data:
+                  nullable: true
+                  allOf:
+                    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                    - properties:
+                        type:
+                          enum: [authenticator]
                 links:
                   $ref: '../components/schemas.yaml#/Links'
 

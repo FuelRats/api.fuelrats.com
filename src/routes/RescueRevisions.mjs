@@ -20,10 +20,7 @@ export default class RescueRevisions extends APIResource {
     return 'rescue-revisions'
   }
 
-  /**
-   * List all revisions of a rescue
-   * @param {Context} ctx Request context
-   */
+  /** @summary List rescue revisions */
   @GET('/rescues/:id/revisions')
   @websocket('rescues', 'revisions', 'search')
   @authenticated
@@ -54,9 +51,7 @@ export default class RescueRevisions extends APIResource {
   }
 
 
-  /**
-   * Compare two rescue revisions
-   */
+  /** @summary Compare rescue revisions */
   @GET('/rescues/:id/revisions/:revision/compare/:revision')
   @authenticated
   rescueRevisionById () {

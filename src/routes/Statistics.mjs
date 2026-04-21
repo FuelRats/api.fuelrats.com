@@ -22,10 +22,7 @@ class Statistics extends API {
     return 'statistics'
   }
 
-  /**
-   * Get the leaderboard
-   * @endpoint
-   */
+  /** @summary Get leaderboard */
   @GET('/leaderboard')
   @websocket('leaderboard')
   async leaderboard (ctx) {
@@ -82,10 +79,7 @@ class Statistics extends API {
     })
   }
 
-  /**
-   * Get statistics for a user
-   * @endpoint
-   */
+  /** @summary Get user statistics */
   @GET('/users/:id/statistics')
   @websocket('users', 'statistics')
   @parameters('id')

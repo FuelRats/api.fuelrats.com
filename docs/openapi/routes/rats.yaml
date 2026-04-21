@@ -84,6 +84,8 @@ rats:
                     first: "/rats?page[offset]=0&page[limit]=20"
                     last: "/rats?page[offset]=140&page[limit]=20"
                     next: "/rats?page[offset]=20&page[limit]=20"
+      '400':
+        $ref: '../components/responses.yaml#/BadRequest'
 
   post:
     tags: [rats]

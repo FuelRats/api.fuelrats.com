@@ -110,6 +110,8 @@ websocket_connection:
           type: string
         example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     responses:
+      '200':
+        description: WebSocket connection available
       '101':
         description: Switching Protocols - WebSocket connection established
       '400':

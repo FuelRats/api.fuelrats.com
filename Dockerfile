@@ -9,12 +9,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package.json bun.lockb* ./
-RUN bun install --production
+COPY package.json bun.lock* ./
+RUN bun install
 
 COPY . .
 
 RUN bun run build:info
+RUN bun run openapi:build
+RUN bun install --production
 
 RUN mkdir -p /app/geoip \
     && curl -L -o /app/geoip/GeoLite2-City.mmdb "https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-City.mmdb" \

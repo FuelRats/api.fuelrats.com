@@ -1,0 +1,17 @@
+# Anniversaries endpoint
+
+anniversaries:
+  get:
+    tags: [users]
+    summary: List user anniversaries
+    description: Get users with upcoming or recent Fuel Rats membership anniversaries.
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '../components/parameters.yaml#/PageOffset'
+      - $ref: '../components/parameters.yaml#/PageLimit'
+    responses:
+      '200':
+        description: List of user anniversaries
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'

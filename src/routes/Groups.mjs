@@ -30,10 +30,7 @@ export default class Groups extends APIResource {
     return 'groups'
   }
 
-  /**
-   * Search user groups
-   * @endpoint
-   */
+  /** @summary Search groups */
   @GET('/groups')
   @websocket('groups', 'search')
   @authenticated
@@ -43,10 +40,7 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
-  /**
-   * Get user group byi d
-   * @endpoint
-   */
+  /** @summary Get group by ID */
   @GET('/groups/:id')
   @websocket('groups', 'read')
   @parameters('id')
@@ -57,10 +51,7 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
-  /**
-   * Create a user permission group
-   * @endpoint
-   */
+  /** @summary Create group */
   @POST('/groups')
   @websocket('groups', 'create')
   @authenticated
@@ -83,10 +74,7 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
-  /**
-   * Update a user permission group
-   * @endpoint
-   */
+  /** @summary Update group */
   @PUT('/groups/:id')
   @websocket('groups', 'update')
   @parameters('id')
@@ -106,10 +94,7 @@ export default class Groups extends APIResource {
     return new DatabaseDocument({ query, result, type: GroupView })
   }
 
-  /**
-   * Delete a user permission group
-   * @endpoint
-   */
+  /** @summary Delete group */
   @DELETE('/groups/:id')
   @websocket('groups', 'delete')
   @parameters('id')

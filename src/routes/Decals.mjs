@@ -70,10 +70,7 @@ export default class Decals extends APIResource {
     return 'decals'
   }
 
-  /**
-   * Search decals
-   * @endpoint
-   */
+  /** @summary Search decals */
   @GET('/decals')
   @websocket('decals', 'search')
   @authenticated
@@ -85,10 +82,7 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
-  /**
-   * Get a decal by ID
-   * @endpoint
-   */
+  /** @summary Get decal by ID */
   @GET('/decals/:id')
   @websocket('decals', 'read')
   @authenticated
@@ -98,10 +92,7 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
-  /**
-   * Create a decal
-   * @endpoint
-   */
+  /** @summary Create decal */
   @POST('/decals')
   @websocket('decals', 'create')
   @authenticated
@@ -123,10 +114,7 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
-  /**
-   * Update a decal by ID
-   * @endpoint
-   */
+  /** @summary Update decal */
   @PUT('/decals/:id')
   @websocket('decals', 'update')
   @parameters('id')
@@ -149,10 +137,7 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
-  /**
-   * Delete a decal by ID
-   * @endpoint
-   */
+  /** @summary Delete decal */
   @DELETE('/decals/:id')
   @websocket('decals', 'delete')
   @parameters('id')
@@ -179,10 +164,7 @@ export default class Decals extends APIResource {
     return true
   }
 
-  /**
-   * Get a decal's rat relationship
-   * @endpoint
-   */
+  /** @summary Get decal rat relationship */
   @GET('/decals/:id/relationships/rat')
   @websocket('decals', 'rat', 'view')
   @parameters('id')
@@ -198,10 +180,7 @@ export default class Decals extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView, view: DocumentViewType.meta })
   }
 
-  /**
-   * Set a decal's rat relationship
-   * @endpoint
-   */
+  /** @summary Set decal rat relationship */
   @PATCH('/decals/:id/relationships/rat')
   @websocket('decals', 'rat', 'patch')
   @parameters('id')

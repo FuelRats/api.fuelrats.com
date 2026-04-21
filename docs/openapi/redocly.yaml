@@ -1,0 +1,12 @@
+extends:
+  - recommended
+
+rules:
+  # OpenAPI 3.0 uses nullable: true, which conflicts with allOf �� this is expected
+  nullable-type-sibling: off
+  # Security schemes are defined in openapi.yaml but not visible when linting split route files
+  security-defined: off
+  # operationIds are added by post-processing step after bundling
+  operation-operationId: off
+  # JSONAPI uses relative URL paths in links which don't match uri format
+  no-invalid-media-type-examples: off

@@ -10,20 +10,25 @@ export default class Rat extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** Commander name */
   @validate({ is: CMDRname }, { name: 'name' })
   @column(type.STRING, { name: 'name' })
   static ratName = undefined
 
+  /** Arbitrary rat metadata */
   @validate({ JSONObject })
   @column(type.JSONB)
   static data = {}
 
+  /** Gaming platform */
   @column(type.ENUM('pc', 'xb', 'ps'))
   static platform = undefined
 
+  /** Game expansion version */
   @column(type.ENUM('horizons3', 'horizons4', 'odyssey'))
   static expansion = undefined
 
+  /** Frontier Developments commander identifier */
   @column(type.INTEGER, { allowNull: true })
   static frontierId = undefined
 

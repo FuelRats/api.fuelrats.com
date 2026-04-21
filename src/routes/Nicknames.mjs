@@ -40,8 +40,8 @@ export default class Nickname extends APIResource {
   }
 
   /**
-   * Search nicknames
-   * @endpoint
+   * @summary Search nicknames
+   * @description Supports exact match via nick param or case-insensitive LIKE via filter[nick][iLike].
    */
   @GET('/nicknames')
   @websocket('nicknames', 'search')
@@ -63,8 +63,7 @@ export default class Nickname extends APIResource {
   }
 
   /**
-   * Get info about a nickname
-   * @endpoint
+   * @summary Get nickname by ID
    */
   @GET('/nicknames/:id')
   @websocket('nicknames', 'read')
@@ -81,8 +80,8 @@ export default class Nickname extends APIResource {
   }
 
   /**
-   * Register a nickname
-   * @endpoint
+   * @summary Register nickname
+   * @description Admins with nicknames.write can provide a userId to register for another user.
    */
   @POST('/nicknames')
   @websocket('nicknames', 'create')
@@ -136,8 +135,7 @@ export default class Nickname extends APIResource {
   }
 
   /**
-   * Set display nickname
-   * @endpoint
+   * @summary Set display nickname
    */
   @PUT('/nicknames/:id/display')
   @websocket('nicknames', 'display', 'update')
@@ -169,8 +167,7 @@ export default class Nickname extends APIResource {
   }
 
   /**
-   * Drop a nickname
-   * @endpoint
+   * @summary Delete nickname
    */
   @DELETE('/nicknames/:id')
   @websocket('nicknames', 'delete')
@@ -193,10 +190,7 @@ export default class Nickname extends APIResource {
     return true
   }
 
-  /**
-   * @param {Context} ctx Request context
-   * @returns {DatabaseDocument}
-   */
+  /** @summary Get nickname's user relationship */
   @GET('/nicknames/:id/relationships/user')
   @websocket('nicknames', 'user', 'read')
   @parameters('id')
@@ -219,10 +213,7 @@ export default class Nickname extends APIResource {
     return new DatabaseDocument({ query, result: user, type: UserView })
   }
 
-  /**
-   * Get a nicknames' linked rat relationship
-   * @endpoint
-   */
+  /** @summary Get nickname's rat relationship */
   @GET('/nicknames/:nick/relationships/rat')
   @websocket('nicknames', 'rat', 'read')
   @authenticated
@@ -245,10 +236,7 @@ export default class Nickname extends APIResource {
     return new DatabaseDocument({ query, result: rat, type: NicknameView, view: DocumentViewType.meta })
   }
 
-  /**
-   * Set a user's display rat relationship
-   * @endpoint
-   */
+  /** @summary Set nickname's rat relationship */
   @PATCH('/nicknames/:nick/relationships/rat')
   @websocket('nicknames', 'rat', 'patch')
   @authenticated

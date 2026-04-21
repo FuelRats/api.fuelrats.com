@@ -1,4 +1,5 @@
-# Group resource schemas
+# Auto-generated from Group model + GroupView
+# Regenerate with: bun run openapi:generate
 
 Group:
   allOf:
@@ -13,62 +14,41 @@ Group:
           properties:
             name:
               type: string
-              description: Group name
+              description: Unique group identifier name
             displayName:
               type: string
               nullable: true
-              description: Human-friendly display name for the group
+              description: Human-readable group display name
             vhost:
               type: string
-              description: Virtual host for the group (**Write Permission:** Admin/sudo only)
+              nullable: true
+              description: "IRC virtual host suffix assigned to group members (writable by: admin only)"
+            withoutPrefix:
+              type: boolean
+              description: "Whether the vhost is used without a rat name prefix (writable by: admin only)"
             priority:
               type: integer
-              description: Group priority level (**Write Permission:** Admin/sudo only)
+              description: "Group priority for vhost and permission ordering (writable by: admin only)"
             permissions:
               type: array
               items:
                 type: string
-              description: List of permissions (**Write Permission:** Admin/sudo only)
-            withoutPrefix:
-              type: boolean
-              description: Whether group operates without command prefix (**Write Permission:** Admin/sudo only)
-            isAdministrator:
-              type: boolean
-              description: Administrator privileges
+              description: "OAuth permission scopes granted to group members (writable by: admin only)"
             channels:
-              type: array
-              items:
-                type: string
-              description: IRC channels associated with group (**Write Permission:** Admin/sudo only)
+              type: object
+              description: "IRC channel access flags for group members (writable by: admin only)"
             createdAt:
               type: string
               format: date-time
-              description: Creation timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
             updatedAt:
               type: string
               format: date-time
-              description: Last update timestamp (**Write Permission:** Internal system only)
+              description: "Writable by: system only"
             deletedAt:
               type: string
               format: date-time
-              nullable: true
-              description: Deletion timestamp (**Write Permission:** Internal system only)
-        relationships:
-          type: object
-          properties:
-            users:
-              type: object
-              properties:
-                data:
-                  type: array
-                  items:
-                    allOf:
-                      - $ref: '../components/schemas.yaml#/ResourceIdentifier'
-                      - properties:
-                          type:
-                            enum: [users]
-                links:
-                  $ref: '../components/schemas.yaml#/Links'
+              description: "Writable by: system only"
 
 GroupDocument:
   allOf:

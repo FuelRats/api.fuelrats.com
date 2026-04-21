@@ -9,12 +9,15 @@ export default class Authenticator extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** User-assigned label for this TOTP authenticator */
   @column(type.STRING)
   static description = undefined
 
+  /** TOTP shared secret */
   @column(type.STRING)
   static secret = undefined
 
+  /** One-time backup codes for account recovery */
   @column(type.ARRAY(type.STRING), { defaultValue: [] })
   static recoveryCodes = []
 

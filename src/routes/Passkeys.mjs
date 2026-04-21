@@ -53,8 +53,7 @@ export default class Passkeys extends APIResource {
   }
 
   /**
-   * Get user's passkeys
-   * @endpoint
+   * @summary List user's passkeys
    */
   @GET('/users/:id/passkeys')
   @authenticated
@@ -76,8 +75,7 @@ export default class Passkeys extends APIResource {
   }
 
   /**
-   * Generate passkey registration options
-   * @endpoint
+   * @summary Get passkey registration options
    */
   @GET('/users/:id/passkeys/register')
   @authenticated
@@ -121,8 +119,7 @@ export default class Passkeys extends APIResource {
   }
 
   /**
-   * Register a new passkey
-   * @endpoint
+   * @summary Register new passkey
    */
   @POST('/users/:id/passkeys')
   @authenticated
@@ -221,8 +218,7 @@ export default class Passkeys extends APIResource {
   }
 
   /**
-   * Generate passkey authentication options
-   * @endpoint
+   * @summary Start passkey authentication
    */
   @POST('/passkeys/authenticate')
   async generateAuthenticationOptions (ctx) {
@@ -277,8 +273,7 @@ export default class Passkeys extends APIResource {
   }
 
   /**
-   * Verify passkey authentication and issue a bearer token
-   * @endpoint
+   * @summary Verify passkey authentication
    */
   @POST('/passkeys/verify')
   @clientAuthenticated
@@ -374,8 +369,7 @@ export default class Passkeys extends APIResource {
   }
 
   /**
-   * Delete a passkey
-   * @endpoint
+   * @summary Delete passkey
    */
   @DELETE('/users/:id/passkeys/:passkeyId')
   @authenticated

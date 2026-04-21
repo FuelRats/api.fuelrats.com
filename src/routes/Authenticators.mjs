@@ -40,8 +40,7 @@ export default class Authenticators extends APIResource {
   }
 
   /**
-   * Request an authenticator secret
-   * @endpoint
+   * @summary Generate TOTP secret
    */
   @GET('/users/:id/authenticator')
   @authenticated
@@ -81,8 +80,7 @@ export default class Authenticators extends APIResource {
   }
 
   /**
-   * Link an authenticator
-   * @endpoint
+   * @summary Link TOTP authenticator
    */
   @POST('/users/:id/authenticator')
   @authenticated
@@ -143,9 +141,7 @@ export default class Authenticators extends APIResource {
   }
 
   /**
-   * Regenerate recovery codes for an existing authenticator.
-   * Requires a valid TOTP code or existing recovery code via x-verify header.
-   * @endpoint
+   * @summary Regenerate recovery codes
    */
   @POST('/users/:id/authenticator/recovery-codes')
   @authenticated
@@ -200,8 +196,8 @@ export default class Authenticators extends APIResource {
   }
 
   /**
-   * Delete an authenticator
-   * @endpoint
+   * @summary Remove TOTP authenticator
+   * @description Admins with users.write can remove another user's authenticator without verification.
    */
   @DELETE('/users/:id/authenticator')
   @authenticated

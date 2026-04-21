@@ -418,16 +418,15 @@ nicknames_rat_relationship:
               type: object
               properties:
                 data:
-                  oneOf:
-                    - type: object
-                      properties:
-                        type:
-                          type: string
-                          enum: [rats]
-                        id:
-                          type: string
-                          format: uuid
-                    - type: 'null'
+                  nullable: true
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [rats]
+                    id:
+                      type: string
+                      format: uuid
                 links:
                   type: object
                   properties:
@@ -475,18 +474,17 @@ nicknames_rat_relationship:
             required: [data]
             properties:
               data:
-                oneOf:
-                  - type: object
-                    required: [type, id]
-                    properties:
-                      type:
-                        type: string
-                        enum: [rats]
-                      id:
-                        type: string
-                        format: uuid
-                  - type: 'null'
-                    description: Set to null to remove the relationship
+                nullable: true
+                type: object
+                description: Set to null to remove the relationship
+                required: [type, id]
+                properties:
+                  type:
+                    type: string
+                    enum: [rats]
+                  id:
+                    type: string
+                    format: uuid
     responses:
       '204':
         description: Relationship updated successfully
