@@ -108,18 +108,26 @@ SingleResourceDocument:
   required: [data]
   properties:
     data:
-      oneOf:
-        - $ref: '#/components/schemas/ResourceIdentifier'
-        - type: 'null'
+      nullable: true
+      allOf:
+        - $ref: '#/ResourceIdentifier'
     included:
       type: array
       items:
-        $ref: '#/components/schemas/ResourceIdentifier'
+        $ref: '#/ResourceIdentifier'
       description: Related resources included in the response
     meta:
-      $ref: '#/components/schemas/Meta'
+      $ref: '#/Meta'
     links:
-      $ref: '#/components/schemas/Links'
+      $ref: '#/Links'
+
+# Pagination metadata
+PaginationMeta:
+  $ref: '#/Meta'
+
+# Pagination links
+PaginationLinks:
+  $ref: '#/Links'
 
 # Template for collection response - to be extended by specific resources
 CollectionDocument:
@@ -129,13 +137,13 @@ CollectionDocument:
     data:
       type: array
       items:
-        $ref: '#/components/schemas/ResourceIdentifier'
+        $ref: '#/ResourceIdentifier'
     included:
       type: array
       items:
-        $ref: '#/components/schemas/ResourceIdentifier'
+        $ref: '#/ResourceIdentifier'
       description: Related resources included in the response
     meta:
-      $ref: '#/components/schemas/Meta'
+      $ref: '#/Meta'
     links:
-      $ref: '#/components/schemas/Links'
+      $ref: '#/Links'

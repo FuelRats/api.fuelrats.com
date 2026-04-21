@@ -58,7 +58,7 @@ resets_create:
       '422':
         $ref: '../components/responses.yaml#/UnprocessableEntity'
 
-resets_validate:
+resets_token:
   get:
     tags: [resets]
     summary: Validate reset token
@@ -101,7 +101,6 @@ resets_validate:
                   source:
                     parameter: 'token'
 
-resets_execute:
   post:
     tags: [resets]
     summary: Execute password reset

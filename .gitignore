@@ -12,6 +12,20 @@ static/docs/
 database.json
 dist/
 static/geoip/*
+docs/openapi/generated/
+docs/openapi/schemas/rescues.yaml
+docs/openapi/schemas/users.yaml
+docs/openapi/schemas/rats.yaml
+docs/openapi/schemas/clients.yaml
+docs/openapi/schemas/decals.yaml
+docs/openapi/schemas/groups.yaml
+docs/openapi/schemas/epics.yaml
+docs/openapi/schemas/passkeys.yaml
+docs/openapi/schemas/sessions.yaml
+docs/openapi/schemas/avatars.yaml
+docs/openapi/schemas/authenticators.yaml
+docs/openapi/schemas/web-push-subscriptions.yaml
+docs/openapi/bundled.yaml
 
 .idea/*
 

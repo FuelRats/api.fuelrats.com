@@ -1,0 +1,49 @@
+# Common base schemas for JSONAPI resources
+
+Document:
+  type: object
+  properties:
+    jsonapi:
+      type: object
+      properties:
+        version:
+          type: string
+    meta:
+      type: object
+    links:
+      type: object
+
+Collection:
+  type: object
+  properties:
+    jsonapi:
+      type: object
+      properties:
+        version:
+          type: string
+    data:
+      type: array
+    included:
+      type: array
+    meta:
+      type: object
+    links:
+      type: object
+
+Resource:
+  type: object
+  required: [type, id]
+  properties:
+    type:
+      type: string
+    id:
+      type: string
+      format: uuid
+    attributes:
+      type: object
+    relationships:
+      type: object
+    meta:
+      type: object
+    links:
+      type: object
