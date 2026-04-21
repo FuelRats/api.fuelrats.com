@@ -21,63 +21,79 @@ export default class Rescue extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** Client commander name */
   @validate({ notEmpty: true })
   @column(type.STRING)
   static client = undefined
 
+  /** Client IRC nickname */
   @validate({ notEmpty: true })
   @column(type.STRING, { allowNull: true })
   static clientNick = undefined
 
+  /** Client preferred language */
   @column(type.STRING, { allowNull: true })
   static clientLanguage = undefined
 
+  /** Rescue case number */
   @validate({ isInt: true, min: 0 })
   @column(type.INTEGER, { allowNull: true })
   static commandIdentifier = undefined
 
+  /** Whether this is a code red (emergency, client on fumes) */
   @column(type.BOOLEAN)
   static codeRed = false
 
+  /** Whether the client was rescued by fleet carrier */
   @column(type.BOOLEAN)
   static carrier = false
 
+  /** Additional rescue metadata */
   @validate({ JSONObject })
   @column(type.JSONB)
   static data = {}
 
+  /** Rescue notes and paperwork */
   @validate({ len: [0, rescueNotesMaxLength] })
   @column(type.TEXT)
   static notes = ''
 
+  /** Gaming platform */
   @column(type.ENUM('pc', 'xb', 'ps'), { allowNull: true })
   static platform = undefined
 
+  /** Game expansion */
   @column(type.ENUM('horizons3', 'horizons4', 'odyssey'), { allowNull: true })
   static expansion = undefined
 
+  /** Rescue chat quotes */
   @validate({ RescueQuote })
   @column(type.ARRAY(type.JSONB))
   static quotes = []
 
+  /** Rescue status */
   @validate({ notEmpty: true, isIn: [['open', 'inactive', 'queued', 'closed']] })
   @column(type.ENUM('open', 'inactive', 'queued', 'closed'))
   static status = 'open'
 
+  /** Star system location */
   @validate({ len: [1, rescueSystemMaxLength], isUppercase: true })
   @column(type.STRING, { allowNull: true })
   static system = undefined
 
+  /** Rescue title */
   @validate({ len: [1, rescueTitleMaxLength] })
   @column(type.STRING, { allowNull: true })
   static title = undefined
 
+  /** Rescue outcome */
   @validate({ notEmpty: true, isIn: [['success', 'failure', 'invalid', 'other', 'purge']] })
   @column(type.ENUM(
     'success', 'failure', 'invalid', 'other', 'purge',
   ), { allowNull: true })
   static outcome = undefined
 
+  /** Unidentified commanders involved in this rescue */
   @column(type.ARRAY(type.STRING))
   static unidentifiedRats = []
 

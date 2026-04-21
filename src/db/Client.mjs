@@ -16,14 +16,17 @@ export default class Client extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** OAuth client display name */
   @validate({ is: OAuthClientName }, { name: 'name' })
   @column(type.STRING, { name: 'name' })
   static clientName = undefined
 
+  /** OAuth client secret (bcrypt hashed) */
   @validate({ len: [clientSecretMinLength, clientSecretMaxLength] })
   @column(type.STRING(clientSecretEncodedMaxLength))
   static secret = undefined
 
+  /** OAuth redirect URI */
   @validate({ isURL })
   @column(type.STRING, { allowNull: true })
   static redirectUri = undefined
@@ -32,9 +35,11 @@ export default class Client extends Model {
   @column(type.UUID, { allowNull: true })
   static userId = undefined
 
+  /** Allowed OAuth scopes for this client */
   @column(type.ARRAY(type.STRING))
   static namespaces = []
 
+  /** Whether this is a first-party Fuel Rats client */
   @column(type.BOOLEAN)
   static firstParty = false
 

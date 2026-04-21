@@ -28,25 +28,31 @@ export default class User extends Model {
   @column(type.UUID, { primaryKey: true })
   static id = type.UUIDV4
 
+  /** Arbitrary user metadata */
   @validate({ JSONObject })
   @column(type.JSONB)
   static data = {}
 
+  /** User's email address */
   @validate({ isEmail: true })
   @column(type.STRING)
   static email = undefined
 
+  /** User password (bcrypt hashed) */
   @validate({ len: [passwordMinLength, passwordMaxLength] })
   @column(type.STRING(passwordMaxLength))
   static password = undefined
 
+  /** Frontier Developments account identifier */
   @validate({ isInt: true })
   @column(type.INTEGER, { allowNull: true })
   static frontierId = undefined
 
+  /** Account status */
   @column(type.ENUM('active', 'inactive', 'legacy', 'deactivated'))
   static status = 'active'
 
+  /** Suspension expiry date */
   @column(type.DATE, { allowNull: true })
   static suspended = undefined
 
