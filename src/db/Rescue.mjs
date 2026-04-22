@@ -141,6 +141,14 @@ export default class Rescue extends Model {
             as: 'lastEditUser',
             required: false,
           },
+          {
+            model: model.User.scope('public'),
+            as: 'dispatchers',
+            required: false,
+            through: {
+              attributes: [],
+            },
+          },
         ],
       }, {
         override: true,
@@ -178,6 +186,15 @@ export default class Rescue extends Model {
     })
 
     models.Rescue.hasMany(models.Epic, { foreignKey: 'rescueId', as: 'epics' })
+
+    models.Rescue.belongsToMany(models.User, {
+      as: 'dispatchers',
+      foreignKey: 'rescueId',
+      otherKey: 'userId',
+      through: {
+        model: models.RescueDispatchers,
+      },
+    })
   }
 
   /**

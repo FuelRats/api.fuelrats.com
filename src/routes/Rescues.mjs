@@ -13,7 +13,7 @@ import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import DatabaseQuery from '../query/DatabaseQuery'
 
-import { RescueView, RatView } from '../view'
+import { RescueView, RatView, UserView } from '../view'
 import {
   permissions,
   authenticated,
@@ -471,6 +471,85 @@ export default class Rescues extends APIResource {
     return true
   }
 
+  /** @summary Get rescue's dispatchers */
+  @GET('/rescues/:id/relationships/dispatchers')
+  @websocket('rescues', 'dispatchers', 'read')
+  @parameters('id')
+  @authenticated
+  async relationshipDispatchersView (ctx) {
+    const result = await this.relationshipView({
+      ctx,
+      databaseType: Rescue,
+      relationship: 'dispatchers',
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    return new DatabaseDocument({ query, result, type: UserView, view: DocumentViewType.relationship })
+  }
+
+  /** @summary Assign dispatchers to rescue */
+  @POST('/rescues/:id/relationships/dispatchers')
+  @websocket('rescues', 'dispatchers', 'create')
+  @parameters('id')
+  @authenticated
+  async relationshipDispatchersCreate (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Rescue,
+      change: 'add',
+      relationship: 'dispatchers',
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
+
+  /** @summary Update rescue's dispatchers */
+  @PATCH('/rescues/:id/relationships/dispatchers')
+  @websocket('rescues', 'dispatchers', 'patch')
+  @parameters('id')
+  @authenticated
+  async relationshipDispatchersPatch (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Rescue,
+      change: 'patch',
+      relationship: 'dispatchers',
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
+
+  /** @summary Remove dispatchers from rescue */
+  @DELETE('/rescues/:id/relationships/dispatchers')
+  @websocket('rescues', 'dispatchers', 'delete')
+  @parameters('id')
+  @authenticated
+  async relationshipDispatchersDelete (ctx) {
+    const result = await this.relationshipChange({
+      ctx,
+      databaseType: Rescue,
+      change: 'remove',
+      relationship: 'dispatchers',
+    })
+
+    const query = new DatabaseQuery({ connection: ctx })
+    const document = new DatabaseDocument({ query, result, type: RescueView })
+    Event.broadcast('fuelrats.rescueupdate', ctx.state.user, ctx.params.id, document)
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
+
   /**
    * @summary Send rescue alert
    * @description Broadcast a web push notification for this rescue to all subscribed devices whose platform/expansion filters match.
@@ -643,6 +722,48 @@ export default class Rescues extends APIResource {
           },
         }
 
+      case 'dispatchers':
+        return {
+          many: true,
+
+          hasPermission (connection) {
+            return Permission.granted({
+              permissions: ['dispatch.write', 'rescues.write'],
+              connection,
+            })
+          },
+
+          async add ({ entity, ids, ctx, transaction }) {
+            await entity.addDispatchers(ids, {
+              through: {
+                assignerUserId: ctx.state.user.id,
+                assignerClientId: ctx.state.clientId,
+              },
+              transaction,
+            })
+
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
+          },
+
+          async patch ({ entity, ids, ctx, transaction }) {
+            await entity.setDispatchers(ids, {
+              through: { assignerUserId: ctx.state.user.id, assignerClientId: ctx.state.clientId },
+              transaction,
+            })
+
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
+          },
+
+          async remove ({ entity, ids, ctx, transaction }) {
+            await entity.removeDispatchers(ids, { transaction })
+
+            entity.setChangelogDetails(ctx)
+            return entity.save({ transaction })
+          },
+        }
+
       default:
         return undefined
     }
@@ -655,6 +776,7 @@ export default class Rescues extends APIResource {
     return {
       rats: 'rats',
       firstLimpet: 'rats',
+      dispatchers: 'users',
     }
   }
 }
