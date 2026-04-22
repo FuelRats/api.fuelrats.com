@@ -34,7 +34,7 @@ import Mail from '../classes/Mail'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
-import { User, Decal, Avatar, db } from '../db'
+import { User, Rat, Decal, Avatar, db } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
 import { DocumentViewType } from '../Documents/Document'
 import emailChangeEmail from '../emails/emailchange'
@@ -624,12 +624,126 @@ export default class Users extends APIResource {
   @parameters('id')
   @authenticated
   async delete (ctx) {
-    await super.delete({
-      ctx,
-      databaseType: User,
+    const user = await User.findByPk(ctx.params.id)
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    // Check all rats can be safely deleted (none have rescues or first limpets)
+    const rats = await Rat.scope('rescues').findAll({ where: { userId: user.id } })
+    const undeletableRat = rats.find((rat) => {
+      return rat.rescues.length > 0 || rat.firstLimpet.length > 0
+    })
+    if (undeletableRat) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/relationships/rats',
+        detail: `Rat "${undeletableRat.name}" has rescue assignments. Transfer them before deleting this account.`,
+      })
+    }
+
+    // Refuse deletion if user owns OAuth clients
+    const [[{ count: clientCount }]] = await db.query(
+      'SELECT COUNT(*) AS count FROM "Clients" WHERE "userId" = :id',
+      { replacements: { id: user.id } },
+    )
+    if (parseInt(clientCount, 10) > 0) {
+      throw new UnprocessableEntityAPIError({
+        pointer: '/data/relationships/clients',
+        detail: 'User owns OAuth clients. Delete or transfer them before deleting this account.',
+      })
+    }
+
+    await db.transaction(async (transaction) => {
+      // Delete all rats (already verified none have rescues)
+      for (const rat of rats) {
+        await rat.destroy({ transaction })
+      }
+      // Clean up associated data
+      await db.query('DELETE FROM "Tokens" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Passkeys" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "WebPushSubscriptions" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Codes" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Resets" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "VerificationTokens" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Authenticators" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Avatars" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      // Soft-delete user
+      await user.destroy({ transaction })
     })
 
-    await Anope.deleteAccount(ctx.state.user.email)
+    await Anope.deleteAccount(user.email)
+
+    ctx.response.status = StatusCode.noContent
+    return true
+  }
+
+  /**
+   * @summary GDPR anonymise user
+   * @description Irreversibly anonymise a user account. Strips all personal data,
+   * anonymises rat names, and deletes all credentials. The user record and rescue
+   * history are preserved with anonymised identifiers.
+   */
+  @POST('/users/:id/gdpr-anonymise')
+  @parameters('id')
+  @authenticated
+  @permissions('users.write')
+  async anonymise (ctx) {
+    const user = await User.findByPk(ctx.params.id)
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    const anonymousId = user.id.slice(0, 8)
+    const anonymousEmail = `deleted-${anonymousId}@fuelrats.com`
+
+    await db.transaction(async (transaction) => {
+      // Anonymise user record
+      await user.update({
+        email: anonymousEmail,
+        password: null,
+        data: {},
+        status: 'deactivated',
+        frontierId: null,
+      }, { transaction })
+
+      // Anonymise rat names but preserve rescue associations
+      const rats = await Rat.findAll({ where: { userId: user.id }, transaction })
+      for (let i = 0; i < rats.length; i++) {
+        await rats[i].update({
+          name: `Deleted CMDR ${anonymousId}-${i + 1}`,
+          data: {},
+          frontierId: null,
+        }, { transaction })
+      }
+
+      // Delete all credentials and personal data
+      await db.query('DELETE FROM "Tokens" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Passkeys" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "WebPushSubscriptions" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Codes" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Resets" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "VerificationTokens" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Authenticators" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Avatars" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+      await db.query('DELETE FROM "Clients" WHERE "userId" = :id', { replacements: { id: user.id }, transaction })
+
+      // Soft-delete the user
+      await user.destroy({ transaction })
+    })
+
+    // Remove IRC account
+    try {
+      await Anope.deleteAccount(user.email)
+    } catch {
+      // IRC account may not exist, continue
+    }
+
+    logMetric('user_gdpr_anonymised', {
+      _user_id: user.id,
+      _anonymised_by: ctx.state.user.id,
+      _rat_count: (await Rat.count({ where: { userId: user.id }, paranoid: false })),
+    }, `User GDPR anonymised: ${user.id} by ${ctx.state.user.id}`)
 
     ctx.response.status = StatusCode.noContent
     return true

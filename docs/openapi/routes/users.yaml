@@ -1230,6 +1230,47 @@ users_groups_relationship:
       '422':
         $ref: '../components/responses.yaml#/UnprocessableEntity'
 
+users_gdpr_anonymise:
+  post:
+    tags: [users]
+    summary: GDPR anonymise user
+    description: |
+      Irreversibly anonymise a user account for GDPR compliance.
+
+      **Required Permission:** `users.write`
+
+      This endpoint:
+      - Replaces email with `deleted-{id}@fuelrats.com`
+      - Clears password, user data, and Frontier ID
+      - Sets account status to `deactivated`
+      - Anonymises rat names to `Deleted CMDR {id}-N` (preserving rescue associations)
+      - Hard-deletes all tokens, passkeys, push subscriptions, auth codes, resets,
+        verification tokens, authenticators, avatars, and OAuth clients
+      - Removes the IRC account
+      - Soft-deletes the user record
+
+      This action is irreversible. The user record and rescue history are preserved
+      with anonymised identifiers.
+    security:
+      - bearerAuth: [users.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID to anonymise
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: User anonymised successfully
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../components/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+
 users_image:
   get:
     tags: [users]

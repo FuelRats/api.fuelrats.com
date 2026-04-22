@@ -354,6 +354,8 @@ paths:
     $ref: './routes/users.yaml#/users_rats_relationship'
   /users/{id}/relationships/groups:
     $ref: './routes/users.yaml#/users_groups_relationship'
+  /users/{id}/gdpr-anonymise:
+    $ref: './routes/users.yaml#/users_gdpr_anonymise'
   /users/{id}/image:
     $ref: './routes/users.yaml#/users_image'
   /users/{id}/statistics:

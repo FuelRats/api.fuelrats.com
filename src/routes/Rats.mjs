@@ -142,15 +142,15 @@ export default class Rats extends APIResource {
       ctx,
       databaseType: Rat.scope('rescues'),
       hasPermission: (entity) => {
+        if (entity.rescues.length > 0 || entity.firstLimpet.length > 0) {
+          return false
+        }
+
         if (Permission.granted({ permissions: ['rats.write'], connection: ctx })) {
           return true
         }
 
-        if (entity.userId !== ctx.state.user.id) {
-          return false
-        }
-
-        return entity.rescues.length === 0 && entity.firstLimpet.length === 0
+        return entity.userId === ctx.state.user.id
       },
     })
 
