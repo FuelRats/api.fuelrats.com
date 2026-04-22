@@ -449,6 +449,8 @@ paths:
     $ref: './routes/rescues.yaml#/rescues_rats_relationship'
   /rescues/{id}/relationships/firstLimpet:
     $ref: './routes/rescues.yaml#/rescues_firstlimpet_relationship'
+  /rescues/{id}/relationships/dispatchers:
+    $ref: './routes/rescues.yaml#/rescues_dispatchers_relationship'
   /rescues/{id}/alert:
     $ref: './routes/rescues.yaml#/rescues_alert'
   

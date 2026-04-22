@@ -13,6 +13,7 @@ import Group from './Group'
 import Passkey from './Passkey'
 import Rat from './Rat'
 import Rescue from './Rescue'
+import RescueDispatchers from './RescueDispatchers'
 import RescueHistory from './RescueHistory'
 import RescueRats from './RescueRats'
 import RescueRatsHistory from './RescueRatsHistory'
@@ -31,6 +32,7 @@ const models = {
   Rat,
   Rescue,
   RescueRats,
+  RescueDispatchers,
   Client,
   Code,
   Token,
@@ -156,6 +158,7 @@ export {
   Rescue,
   RescueHistory,
   RescueRats,
+  RescueDispatchers,
   RescueRatsHistory,
   Reset,
   Session,

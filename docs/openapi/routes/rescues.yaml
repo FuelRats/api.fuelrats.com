@@ -912,3 +912,149 @@ rescues_revisions:
         $ref: '../components/responses.yaml#/Unauthorized'
       '404':
         $ref: '../components/responses.yaml#/NotFound'
+
+rescues_dispatchers_relationship:
+  get:
+    tags: [rescues]
+    summary: Get rescue's dispatchers
+    description: Retrieve the dispatchers assigned to a rescue.
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Rescue's dispatcher relationship data
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+  post:
+    tags: [rescues]
+    summary: Assign dispatchers to rescue
+    description: Add dispatchers to a rescue's dispatcher list.
+    security:
+      - bearerAuth: [dispatch.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [users]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Dispatchers assigned
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+  patch:
+    tags: [rescues]
+    summary: Update rescue's dispatchers
+    description: Replace the entire list of dispatchers for a rescue.
+    security:
+      - bearerAuth: [dispatch.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [users]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Dispatchers updated
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
+  delete:
+    tags: [rescues]
+    summary: Remove dispatchers from rescue
+    description: Remove dispatchers from a rescue's dispatcher list.
+    security:
+      - bearerAuth: [dispatch.write]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Rescue ID
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [type, id]
+                  properties:
+                    type:
+                      type: string
+                      enum: [users]
+                    id:
+                      type: string
+                      format: uuid
+    responses:
+      '204':
+        description: Dispatchers removed
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../components/responses.yaml#/NotFound'
