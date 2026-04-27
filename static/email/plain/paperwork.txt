@@ -1,0 +1,10 @@
+Hi %{name},
+
+You have %{rescueCount} rescue(s) with unfiled paperwork. Please complete them when you get a chance:
+
+%{rescueList}
+
+Complete your paperwork at https://fuelrats.com
+
+Thank you,
+The Fuel Rats

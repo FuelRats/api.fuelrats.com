@@ -325,6 +325,10 @@ const wsManager = new WebSocket({ trafficManager: traffic })
       GELF: true,
       _event: 'startup',
     }, `HTTP Server listening on ${config.server.hostname} port ${config.server.port}`)
+
+    // Schedule daily paperwork reminders
+    const { schedulePaperworkReminders } = await import('./cron/paperworkReminders.mjs')
+    schedulePaperworkReminders()
   } catch (error) {
     logError(error, { _event: 'startup' }, 'Failed to start server')
     process.exit(1)

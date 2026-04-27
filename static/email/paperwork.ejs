@@ -1,0 +1,25 @@
+<%- include('layout/header'); %>
+    <p>Hi <%= name %>,</p>
+    <p>You have <strong><%= rescueCount %></strong> rescue<%= rescueCount === 1 ? '' : 's' %> with unfiled paperwork:</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+        <tr style="background: #333; color: #fff;">
+            <th style="padding: 8px; text-align: left;">Client</th>
+            <th style="padding: 8px; text-align: left;">System</th>
+            <th style="padding: 8px; text-align: left;">Platform</th>
+            <th style="padding: 8px; text-align: left;">Closed</th>
+            <th style="padding: 8px; text-align: left;"></th>
+        </tr>
+        <% rescues.forEach(function(rescue) { %>
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 8px;"><%= rescue.client %></td>
+            <td style="padding: 8px;"><%= rescue.system %></td>
+            <td style="padding: 8px;"><%= rescue.platform.toUpperCase() %></td>
+            <td style="padding: 8px;"><%= rescue.timeLabel %></td>
+            <td style="padding: 8px;">
+                <a href="<%= rescue.link %>" style="color: #d65050; text-decoration: none; font-weight: bold;">File &rarr;</a>
+            </td>
+        </tr>
+        <% }); %>
+    </table>
+    <p>Please complete your paperwork as soon as possible.</p>
+<%- include('layout/footer'); %>
