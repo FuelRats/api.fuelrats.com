@@ -705,7 +705,7 @@ export default class Users extends APIResource {
         data: {},
         status: 'deactivated',
         frontierId: null,
-      }, { transaction })
+      }, { transaction, validate: false })
 
       // Anonymise rat names but preserve rescue associations
       const rats = await Rat.findAll({ where: { userId: user.id }, transaction })
