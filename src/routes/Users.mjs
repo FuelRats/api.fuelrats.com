@@ -896,6 +896,45 @@ export default class Users extends APIResource {
     return new DatabaseDocument({ query, result, type: DecalView })
   }
 
+  /**
+   * Get memo mail preference for a user
+   * @endpoint
+   */
+  @GET('/users/:id/memo-mail')
+  @parameters('id')
+  @authenticated
+  async getMemoMail (ctx) {
+    const user = await User.scope('norelations').findOne({ where: { id: ctx.params.id } })
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    const enabled = await Anope.getMemoMail(user.email)
+    return { data: { type: 'memo-mail', id: user.id, attributes: { enabled } } }
+  }
+
+  /**
+   * Set memo mail preference for a user
+   * @endpoint
+   */
+  @PUT('/users/:id/memo-mail')
+  @parameters('id')
+  @authenticated
+  async setMemoMail (ctx) {
+    const user = await User.scope('norelations').findOne({ where: { id: ctx.params.id } })
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    this.requireWritePermission({ connection: ctx, entity: user })
+
+    const { enabled } = getJSONAPIData({ ctx, type: 'memo-mail' }).attributes
+    await Anope.setMemoMail(user.email, enabled)
+    return { data: { type: 'memo-mail', id: user.id, attributes: { enabled: Boolean(enabled) } } }
+  }
+
   // Relationships
 
   /**
