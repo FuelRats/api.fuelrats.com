@@ -538,6 +538,44 @@ class Anope {
   }
 
   /**
+   * Get the memo mail preference for an Anope account
+   * @param {string} email the user's email
+   * @returns {Promise<boolean>} whether memo mail is enabled
+   */
+  static async getMemoMail (email) {
+    if (!config.anope.database) {
+      return false
+    }
+
+    try {
+      const result = await mysql.select('MEMO_MAIL')
+        .from('anope_db_NickCore')
+        .whereRaw('lower(email) = lower(?)', [email])
+        .first()
+
+      return result?.MEMO_MAIL === '1'
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Set the memo mail preference for an Anope account
+   * @param {string} email the user's email
+   * @param {boolean} enabled whether to enable memo mail
+   * @returns {Promise<undefined>} resolves when completed
+   */
+  static async setMemoMail (email, enabled) {
+    if (!config.anope.database) {
+      return
+    }
+
+    await mysql('anope_db_NickCore')
+      .whereRaw('lower(email) = lower(?)', [email])
+      .update({ MEMO_MAIL: enabled ? '1' : null })
+  }
+
+  /**
    * Remove a nickname from the Anope database
    * @param {string} nickname the nickname to remove
    * @returns {Promise<undefined>} resolves a promise when completed successfully
