@@ -373,13 +373,18 @@ class Authentication {
    * @returns {Promise<Client>}  OAuth client
    */
   static requireClientAuthentication ({ connection }) {
-    let [clientId, clientSecret] = getBasicAuth(connection)
-    if (!clientId && connection.data) {
-      clientId = connection.data.client_id
-      clientSecret = connection.data.client_secret
+    const [basicClientId, basicClientSecret] = getBasicAuth(connection)
+    if (basicClientId) {
+      return Authentication.authenticateBasicClient({
+        clientId: basicClientId,
+        secret: basicClientSecret,
+      })
     }
-    if (clientId) {
-      return Authentication.clientAuthenticate({ clientId, secret: clientSecret })
+    if (connection.data && connection.data.client_id) {
+      return Authentication.clientAuthenticate({
+        clientId: connection.data.client_id,
+        secret: connection.data.client_secret,
+      })
     }
     throw new UnauthorizedAPIError({})
   }
@@ -432,6 +437,51 @@ class Authentication {
       return client
     }
     throw new UnauthorizedAPIError({})
+  }
+
+  /**
+   * Attempt to authenticate an OAuth client, returning undefined instead of throwing
+   * when the credentials are rejected, so an alternate credential encoding can be tried.
+   * @param {object} arg function arguments object
+   * @param {string} arg.clientId the ID of the OAuth client to authenticate
+   * @param {string} arg.secret the secret key of the OAuth client to authenticate
+   * @returns {Promise<Client|undefined>} the authenticated client, or undefined if rejected
+   */
+  static async tryClientAuthenticate ({ clientId, secret }) {
+    try {
+      return await Authentication.clientAuthenticate({ clientId, secret })
+    } catch (error) {
+      if (error instanceof UnauthorizedAPIError) {
+        return undefined
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Authenticate an OAuth client presented via HTTP Basic auth (client_secret_basic).
+   * RFC 6749 section 2.3.1 requires the client id and secret to be form-urlencoded before
+   * Base64 encoding, so reserved characters (e.g. = @ % }) arrive percent-encoded. The
+   * decoded credentials are tried first, falling back to the raw values so both
+   * spec-compliant clients and any legacy raw-Basic clients continue to authenticate.
+   * @param {object} arg function arguments object
+   * @param {string} arg.clientId the raw client id from the Authorization header
+   * @param {string} arg.secret the raw client secret from the Authorization header
+   * @returns {Promise<Client>} the authenticated OAuth client
+   */
+  static async authenticateBasicClient ({ clientId, secret }) {
+    const decodedId = decodeClientCredential(clientId)
+    const decodedSecret = decodeClientCredential(secret)
+    if (decodedId !== clientId || decodedSecret !== secret) {
+      const decodedClient = await Authentication.tryClientAuthenticate({
+        clientId: decodedId,
+        secret: decodedSecret,
+      })
+      if (decodedClient) {
+        return decodedClient
+      }
+    }
+    return Authentication.clientAuthenticate({ clientId, secret })
   }
 
   /**
@@ -559,6 +609,25 @@ function getBearerToken (ctx) {
     }
   }
   return undefined
+}
+
+/**
+ * Decode a client credential component supplied via HTTP Basic authentication.
+ * Per RFC 6749 section 2.3.1, client_secret_basic clients form-urlencode the client id and
+ * secret before Base64 encoding, so reserved characters arrive percent-encoded. Returns the
+ * decoded value, falling back to the original for non-encoded or malformed input.
+ * @param {string} value the raw credential component
+ * @returns {string} the decoded credential component
+ */
+function decodeClientCredential (value) {
+  if (typeof value !== 'string') {
+    return value
+  }
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
 }
 
 /**
