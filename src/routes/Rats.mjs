@@ -166,6 +166,10 @@ export default class Rats extends APIResource {
         _rescue_count: rat.rescues?.length ?? 0,
         _first_limpet_count: rat.firstLimpet?.length ?? 0,
       }, `Rat deleted: ${rat.name} (${rat.id}) by user ${ctx.state.user.id}`)
+
+      // Notify subscribers that the owner's rats changed so clients (e.g. the dispatch
+      // board) can drop the now-deleted rat. Mirrors the create/update broadcasts above.
+      Event.broadcast('fuelrats.userupdate', ctx.state.user, rat.userId, {})
     }
 
     ctx.response.status = StatusCode.noContent
