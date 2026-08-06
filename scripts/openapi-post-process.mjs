@@ -9,8 +9,6 @@ import { join } from 'path'
 
 const BUNDLED = join(import.meta.dir, '..', 'docs', 'openapi', 'bundled.yaml')
 
-const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete']
-
 /**
  * Generate an operationId from method + path
  * e.g. GET /users/{id}/passkeys → getUsers_id_passkeys
@@ -44,13 +42,13 @@ async function main () {
     const line = lines[i]
 
     // Detect path: "  /some/path:" at 2-space indent
-    const pathMatch = line.match(/^  (\/[^:]+):$/)
+    const pathMatch = line.match(/^ {2}(\/[^:]+):$/)
     if (pathMatch) {
       currentPath = pathMatch[1]
     }
 
     // Detect method: "    get:" at 4-space indent
-    const methodMatch = line.match(/^    (get|post|put|patch|delete):$/)
+    const methodMatch = line.match(/^ {4}(get|post|put|patch|delete):$/)
     if (methodMatch && currentPath) {
       const method = methodMatch[1]
       output.push(line)
@@ -63,7 +61,7 @@ async function main () {
           break
         }
         // Stop checking at next key at same or lower indent
-        if (lines[j].match(/^    \w/) || lines[j].match(/^  \//)) {
+        if (lines[j].match(/^ {4}\w/) || lines[j].match(/^ {2}\//)) {
           break
         }
       }
