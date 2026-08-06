@@ -26,6 +26,7 @@ import {
   BadRequestAPIError,
   InternalServerError,
   ImATeapotAPIError,
+  UnprocessableEntityAPIError,
 } from '../classes/APIError'
 import Authentication from '../classes/Authentication'
 import Event from '../classes/Event'
