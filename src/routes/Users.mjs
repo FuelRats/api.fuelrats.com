@@ -674,6 +674,10 @@ export default class Users extends APIResource {
 
     await Anope.deleteAccount(user.email)
 
+    // Notify subscribers that this account (and its now-deleted rats) is gone so clients
+    // can reconcile any cached references.
+    Event.broadcast('fuelrats.userupdate', ctx.state.user, user.id, {})
+
     ctx.response.status = StatusCode.noContent
     return true
   }
