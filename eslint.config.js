@@ -50,6 +50,7 @@ export default [
       'src/model/',
       'data/',
       'tools/',
+      'static/scalar.js',
     ],
   },
 ]

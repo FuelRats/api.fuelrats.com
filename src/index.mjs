@@ -231,7 +231,7 @@ honoApp.get('/', (c) => {
   return c.html(html)
 })
 
-honoApp.get('/static/scalar.js', async (c) => {
+honoApp.get('/static/scalar.js', async (_c) => {
   const fs = await import('fs/promises')
   const path = await import('path')
   const filePath = path.resolve('static/scalar.js')
