@@ -61,13 +61,38 @@ class ErrorDocument extends Document {
           }))
           break
 
-        case (error.name === 'SequelizeForeignKeyConstraintError'):
+        case (error.name === 'SequelizeForeignKeyConstraintError'): {
+          const fkFields = Array.isArray(error.fields) ? error.fields : Object.keys(error.fields ?? {})
+          // The underlying pg error spells out which key was missing or still referenced,
+          // e.g. `Key (ratId)=(...) is not present in table "Rats".`
+          const fkDetail = error.parent?.detail ?? error.message
+          logger.error({
+            GELF: true,
+            _event: 'sequelize_foreign_key_error',
+            _error_message: error.message,
+            _constraint: error.index ?? error.parent?.constraint,
+            _table: error.table ?? error.parent?.table,
+            _fields: fkFields.join(', '),
+            _detail: fkDetail,
+          }, `Sequelize foreign key constraint error: ${fkDetail}`)
+          logger.error(`Failing SQL: ${error.sql}`)
           errorAcc.push(new UnprocessableEntityAPIError({
             pointer: '/data/id',
+            detail: fkDetail,
           }))
           break
+        }
 
         case (error.name === 'SequelizeUniqueConstraintError'):
+          logger.error({
+            GELF: true,
+            _event: 'sequelize_unique_constraint_error',
+            _error_message: error.message,
+            _constraint: error.parent?.constraint,
+            _table: error.parent?.table,
+            _fields: Object.keys(error.fields ?? {}).join(', '),
+            _detail: error.parent?.detail,
+          }, `Sequelize unique constraint error: ${error.parent?.detail ?? error.message}`)
           errorAcc.push(...error.errors.map((validationError) => {
             const pointer = validationError.path === 'id' ? '/data/id' : `/data/attributes/${validationError.path}`
             return new ConflictAPIError({
