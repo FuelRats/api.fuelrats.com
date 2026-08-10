@@ -376,6 +376,8 @@ class Anope {
         LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
         WHERE
             lower(anope_db_NickAlias.nick) = lower(?)
+        ORDER BY anope_db_NickCore.id IS NULL
+        LIMIT 1
     `, [nickname])
     if (!account) {
       return undefined
@@ -580,15 +582,48 @@ class Anope {
    * @param {string} nickname the nickname to remove
    * @returns {Promise<undefined>} resolves a promise when completed successfully
    */
-  static removeNickname (nickname) {
+  static async removeNickname (nickname) {
     if (!config.anope.database) {
       return undefined
     }
 
-    return mysql.raw(`
+    const alias = await mysql('anope_db_NickAlias')
+      .whereRaw('lower(nick) = lower(?)', [nickname])
+      .first('nc')
+
+    await mysql.raw(`
       DELETE FROM anope_db_NickAlias
       WHERE  lower(nick) = lower(?)
     `, [nickname])
+
+    // If that was the group's last alias, remove the now-orphaned account so it can't
+    // resurface as a nick with no listable aliases (and no whois-resolvable account).
+    if (alias?.nc) {
+      const remaining = await mysql('anope_db_NickAlias')
+        .where({ nc: alias.nc })
+        .count({ count: '*' })
+        .first()
+
+      if (Number(remaining?.count ?? 0) === 0) {
+        await mysql('anope_db_NickCore').where({ display: alias.nc }).del()
+      }
+    }
+
+    return undefined
+  }
+
+  /**
+   * Remove a nickname from the Anope database by its Anope alias id
+   * @param {number} anopeId the Anope NickAlias id to remove
+   * @returns {Promise<undefined>} resolves a promise when completed successfully
+   */
+  static async removeNicknameByAnopeId (anopeId) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
+    await mysql('anope_db_NickAlias').where({ id: anopeId }).del()
+    return undefined
   }
 
   /**
@@ -650,7 +685,7 @@ class Anope {
 
       const existingNickname = await Anope.findNickname(nick)
       if (existingNickname) {
-        if (existingNickname.email.toLowerCase() === email.toLowerCase()) {
+        if (existingNickname.email?.toLowerCase() === email.toLowerCase()) {
           return existingNickname
         }
         throw new ConflictAPIError({
@@ -677,7 +712,10 @@ class Anope {
         }).into('anope_db_NickCore')
       }
 
-      const accountNick = user ? user.nc : nick
+      // Group the new alias under the account's display nick. `user.nc` comes from the
+      // NickCore→NickAlias left join and is null when the account has no aliases yet,
+      // which would create an orphaned alias (nc = NULL); the display is always the group key.
+      const accountNick = user ? (user.display ?? user.nc) : nick
 
       const insertedNickname = await transaction.insert({
         nc: accountNick,
