@@ -115,7 +115,13 @@ export default class Nickname extends APIResource {
 
     const existingNick = await Anope.findNickname(nick)
     if (existingNick) {
-      throw new ConflictAPIError({ pointer: '/data/attributes/nick' })
+      // A dangling alias with no backing account (email is null) is not a real
+      // registration — it can't be listed or resolved via whois. Rather than block the
+      // nick forever, clear the stale row (by its exact id) and continue registering.
+      if (existingNick.email) {
+        throw new ConflictAPIError({ pointer: '/data/attributes/nick' })
+      }
+      await Anope.removeNicknameByAnopeId(existingNick.anopeId)
     }
 
     const encryptedPassword = `bcrypt:${targetUser.password}`
