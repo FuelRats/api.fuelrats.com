@@ -162,6 +162,7 @@ class OAuth extends API {
 
     if (scopes.includes('groups')) {
       idTokenPayload.groups = this.extractJiraRoles(user.groups)
+      idTokenPayload.frgroups = user.groups.map((group) => group.name)
     }
 
     // Using HMAC SHA-256 signing
@@ -740,6 +741,7 @@ class OAuth extends API {
 
     if (user.groups && (!scope || scope.includes('*') || scope.includes('groups'))) {
       userinfo.groups = this.extractJiraRoles(user.groups)
+      userinfo.frgroups = user.groups.map((group) => group.name)
     }
 
     return userinfo
@@ -789,6 +791,7 @@ class OAuth extends API {
         'email',
         'email_verified',
         'groups',
+        'frgroups',
         'profile',
         'updated_at',
       ],
