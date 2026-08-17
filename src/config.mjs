@@ -38,7 +38,12 @@ const config = {
     port: required('FRAPI_ANOPE_PORT', [toNumber], 3306),
     username: required('FRAPI_ANOPE_USERNAME', [], 'anope'),
     password: optional('FRAPI_ANOPE_PASSWORD', [], undefined),
-    xmlrpc: optional('FRAPI_ANOPE_XMLRPC', [], undefined),
+    // Anope SQL table prefix. Anope 2.0 wrote `anope_db_`; 2.1 defaults to `anope21_`.
+    tablePrefix: required('FRAPI_ANOPE_TABLE_PREFIX', [], 'anope_db_'),
+    // Anope 2.1 JSON-RPC endpoint (e.g. https://services.fuelrats.com:6080/jsonrpc)
+    // and its bearer token. Replaces the removed XML-RPC interface.
+    jsonrpc: optional('FRAPI_ANOPE_JSONRPC', [], undefined),
+    jsonrpcToken: optional('FRAPI_ANOPE_JSONRPC_TOKEN', [], undefined),
   },
   irc: {
     server: recommended('FRAPI_IRC_SERVER', [], undefined),

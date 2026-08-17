@@ -1,6 +1,4 @@
-import xmlrpc from 'homematic-xmlrpc'
 import { hashPassword } from '../helpers/password'
-import { encode } from 'html-entities'
 import knex from 'knex'
 import config from '../config'
 import { User, Rat } from '../db'
@@ -15,10 +13,26 @@ const {
   hostname,
   port,
   password,
+  tablePrefix,
 } = config.anope
 const anopeBcryptRounds = 10
 const nickUpdateWait = 5000
 // const defaultMaximumEditDistance = 5
+
+// Anope SQL table names. The prefix differs between Anope 2.0 (`anope_db_`) and
+// Anope 2.1 (`anope21_`) and is set via FRAPI_ANOPE_TABLE_PREFIX. Anope 2.1 also
+// links a NickAlias to its NickCore by the numeric `ncid` (= NickCore.uniqueid)
+// rather than the 2.0 string join (NickCore.display = NickAlias.nc), and stores
+// certificate fingerprints in a dedicated NSCert table.
+const NICK_CORE = `${tablePrefix}NickCore`
+const NICK_ALIAS = `${tablePrefix}NickAlias`
+const CHAN_ACCESS = `${tablePrefix}ChanAccess`
+const MODE_LOCK = `${tablePrefix}ModeLock`
+const NS_CERT = `${tablePrefix}NSCert`
+
+// Correlated subquery that surfaces an account's certificate fingerprint (moved
+// to NSCert in 2.1) as a `cert` column so the Nickname mapper keeps working.
+const CERT_SUBQUERY = `(SELECT fingerprint FROM ${NS_CERT} WHERE account = ${NICK_CORE}.uniqueid LIMIT 1) AS cert`
 
 
 const mysql = knex({
@@ -29,15 +43,32 @@ const mysql = knex({
     user: username,
     database,
     password,
+    // Anope's account key (NickCore.uniqueid = NickAlias.ncid) is a BIGINT that
+    // exceeds JS's safe integer range; return big numbers as strings so the value
+    // (and the account link derived from it) is not silently truncated.
+    supportBigNumbers: true,
+    bigNumberStrings: true,
   },
   pool: {
     afterCreate (conn, done) {
-      conn.query('ALTER TABLE anope_db_NickAlias ADD COLUMN IF NOT EXISTS rat_id BINARY(16);', (err) => {
+      conn.query(`ALTER TABLE ${NICK_ALIAS} ADD COLUMN IF NOT EXISTS rat_id BINARY(16);`, (err) => {
         done(err, conn)
       })
     },
   },
 })
+
+
+/**
+ * Generate an Anope account uniqueid: a large positive integer stored as a
+ * string, used as the NickCore.uniqueid and the NickAlias.ncid link key.
+ * @returns {string} a uniqueid value
+ */
+function generateUniqueId () {
+  const high = Math.floor(Math.random() * 0x7fffffff)
+  const low = Math.floor(Math.random() * 0xffffffff)
+  return ((BigInt(high) << 32n) | BigInt(low)).toString()
+}
 
 
 /**
@@ -55,8 +86,8 @@ class Anope {
       return undefined
     }
     const results = await mysql.select('*')
-      .from('anope_db_NickCore')
-      .leftJoin('anope_db_NickAlias', 'anope_db_NickCore.display', 'anope_db_NickAlias.nc')
+      .from(NICK_CORE)
+      .leftJoin(NICK_ALIAS, `${NICK_CORE}.uniqueid`, `${NICK_ALIAS}.ncid`)
       .whereRaw('lower(email) = lower(?)', [email])
 
     if (results.length > 0) {
@@ -66,35 +97,43 @@ class Anope {
   }
 
   /**
+   * Run an Anope services command via the Anope 2.1 JSON-RPC interface.
    * @param {string} service the anope service to command (e.g NickServ)
-   * @param {string} user the user to act as when callign the command
+   * @param {string} user the user to act as when calling the command
    * @param {string} command the command to run
    * @returns {Promise<*>} a promise that resolves with the result of the command
    */
-  static runCommand (service, user, command) {
-    let client = null
-
-    if (config.anope.xmlrpc.startsWith('https')) {
-      client = xmlrpc.createSecureClient(config.anope.xmlrpc)
-    } else {
-      client = xmlrpc.createClient(config.anope.xmlrpc)
+  static async runCommand (service, user, command) {
+    if (!config.anope.jsonrpc) {
+      throw new Error('Anope JSON-RPC not configured')
     }
 
-    return new Promise((resolve, reject) => {
-      const encodedService = encode(service, { level: 'xml' })
-      const encodedUser = encode(user, { level: 'xml' })
-      const encodedCommand = encode(command, { level: 'xml' })
-      client.methodCall('command', [[encodedService, encodedUser, encodedCommand]], (error, data) => {
-        if (error) {
-          return reject(error)
-        }
-        const response = processAnopeResponse(data)
-        if (response instanceof APIError) {
-          return reject(response)
-        }
-        return resolve(response)
-      })
+    const headers = { 'Content-Type': 'application/json' }
+    if (config.anope.jsonrpcToken) {
+      // Anope's JSON-RPC expects `Bearer <base64(token)>` and base64-decodes it
+      // server-side before comparing to the configured token.
+      headers.Authorization = `Bearer ${Buffer.from(config.anope.jsonrpcToken).toString('base64')}`
+    }
+
+    const response = await fetch(config.anope.jsonrpc, {
+      method: 'POST',
+      headers,
+      // anope.command takes [account, service, command] — note the account/service
+      // order is reversed from the removed XML-RPC `command` method.
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'anope.command',
+        params: [user, service, command],
+        id: 1,
+      }),
     })
+
+    const data = await response.json()
+    const processed = processAnopeResponse(data.error ?? data.result ?? {})
+    if (processed instanceof APIError) {
+      throw processed
+    }
+    return processed
   }
 
   /**
@@ -111,13 +150,13 @@ class Anope {
    * @param {any} user the user to update the state of
    */
   static async updateIRCState (user) {
-    if (!config.anope.xmlrpc) {
+    if (!config.anope.jsonrpc) {
       return
     }
 
     const results = await mysql.select('*')
-      .from('anope_db_NickCore')
-      .leftJoin('anope_db_NickAlias', 'anope_db_NickCore.display', 'anope_db_NickAlias.nc')
+      .from(NICK_CORE)
+      .leftJoin(NICK_ALIAS, `${NICK_CORE}.uniqueid`, `${NICK_ALIAS}.ncid`)
       .whereRaw('lower(email) = lower(?)', [user.email])
 
     if (results.length === 0) {
@@ -128,7 +167,7 @@ class Anope {
       return new Nickname(result, user)
     })
 
-     
+
     for (const nick of nicks) {
       await Anope.runCommand('NickServ', nick.nick, 'UPDATE')
     }
@@ -140,17 +179,33 @@ class Anope {
    * @param {string} fingerprint the fingerprint to set
    * @returns {Promise<undefined>} resolves a promise when completed
    */
-  static setFingerprint (email, fingerprint) {
+  static async setFingerprint (email, fingerprint) {
     if (!config.anope.database) {
       return undefined
     }
-    return mysql.raw(`
-        UPDATE anope_db_NickCore
-        SET
-            cert = ?
-        WHERE
-            lower(anope_db_NickCore.email) = lower(?)
-        `, [fingerprint, email])
+
+    const account = await mysql(NICK_CORE)
+      .whereRaw('lower(email) = lower(?)', [email])
+      .first('uniqueid')
+
+    if (!account) {
+      return undefined
+    }
+
+    // 2.1 stores certificates in NSCert. Mirror the previous single-cert `SET`
+    // behaviour: clear the account's existing cert(s) and set the new one.
+    await mysql(NS_CERT).where({ account: account.uniqueid }).del()
+
+    if (fingerprint) {
+      await mysql(NS_CERT).insert({
+        fingerprint,
+        account: account.uniqueid,
+        created: Math.floor(Date.now() / 1000),
+        creator: 'API',
+      })
+    }
+
+    return undefined
   }
 
   /**
@@ -165,11 +220,12 @@ class Anope {
     const [results] = await mysql.raw(`
         SELECT
                *,
-               anope_db_NickAlias.id AS id,
-               anope_db_NickCore.id AS accountId
-        FROM anope_db_NickAlias
-                 LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
-        WHERE anope_db_NickAlias.nick = :nickname
+               ${NICK_ALIAS}.id AS id,
+               ${NICK_CORE}.id AS accountId,
+               ${CERT_SUBQUERY}
+        FROM ${NICK_ALIAS}
+                 LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
+        WHERE ${NICK_ALIAS}.nick = :nickname
         LIMIT 10
     `, { nickname })
 
@@ -210,11 +266,12 @@ class Anope {
     const [results] = await mysql.raw(`
         SELECT
                *,
-               anope_db_NickAlias.id AS id,
-               anope_db_NickCore.id AS accountId
-        FROM anope_db_NickAlias
-                 LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
-        WHERE LOWER(anope_db_NickAlias.nick) LIKE LOWER(:pattern)
+               ${NICK_ALIAS}.id AS id,
+               ${NICK_CORE}.id AS accountId,
+               ${CERT_SUBQUERY}
+        FROM ${NICK_ALIAS}
+                 LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
+        WHERE LOWER(${NICK_ALIAS}.nick) LIKE LOWER(:pattern)
         LIMIT 10
     `, { pattern })
 
@@ -257,10 +314,11 @@ class Anope {
     const [results] = await mysql.raw(`
         SELECT
             *,
-            anope_db_NickAlias.id AS id,
-            anope_db_NickCore.id AS accountId
-        FROM anope_db_NickAlias
-        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+            ${NICK_ALIAS}.id AS id,
+            ${NICK_CORE}.id AS accountId,
+            ${CERT_SUBQUERY}
+        FROM ${NICK_ALIAS}
+        LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE lower(email) = lower(:email)
     `, {
       email: user.email,
@@ -296,10 +354,11 @@ class Anope {
     const [results] = await mysql.raw(`
         SELECT
             *,
-            anope_db_NickAlias.id AS id,
-            anope_db_NickCore.id AS accountId
-        FROM anope_db_NickAlias
-        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+            ${NICK_ALIAS}.id AS id,
+            ${NICK_CORE}.id AS accountId,
+            ${CERT_SUBQUERY}
+        FROM ${NICK_ALIAS}
+        LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE lower(email) IN (:emails)
     `, {
       emails: userEmails,
@@ -335,12 +394,13 @@ class Anope {
     let [[account]] = await mysql.raw(`
         SELECT
             *,
-            anope_db_NickAlias.id AS id,
-            anope_db_NickCore.id AS accountId
-        FROM anope_db_NickAlias
-        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+            ${NICK_ALIAS}.id AS id,
+            ${NICK_CORE}.id AS accountId,
+            ${CERT_SUBQUERY}
+        FROM ${NICK_ALIAS}
+        LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE
-            lower(anope_db_NickAlias.id) = ?
+            lower(${NICK_ALIAS}.id) = ?
     `, [anopeId])
     if (!account) {
       return undefined
@@ -370,13 +430,14 @@ class Anope {
     let [[account]] = await mysql.raw(`
         SELECT
             *,
-            anope_db_NickAlias.id AS id,
-            anope_db_NickCore.id AS accountId
-        FROM anope_db_NickAlias
-        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+            ${NICK_ALIAS}.id AS id,
+            ${NICK_CORE}.id AS accountId,
+            ${CERT_SUBQUERY}
+        FROM ${NICK_ALIAS}
+        LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE
-            lower(anope_db_NickAlias.nick) = lower(?)
-        ORDER BY anope_db_NickCore.id IS NULL
+            lower(${NICK_ALIAS}.nick) = lower(?)
+        ORDER BY ${NICK_CORE}.id IS NULL
         LIMIT 1
     `, [nickname])
     if (!account) {
@@ -405,7 +466,7 @@ class Anope {
       return
     }
 
-    await mysql('anope_db_NickCore')
+    await mysql(NICK_CORE)
       .whereRaw('lower(email) = lower(?)', [currentEmail])
       .update({
         email: newEmail,
@@ -424,14 +485,14 @@ class Anope {
     }
 
     await mysql.raw(`
-        UPDATE anope_db_NickAlias
-        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        UPDATE ${NICK_ALIAS}
+        LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         SET
             vhost_creator = 'API',
             vhost_time = UNIX_TIMESTAMP(),
             vhost_host = ?
         WHERE
-            lower(anope_db_NickCore.email) = lower(?)
+            lower(${NICK_CORE}.email) = lower(?)
         `, [vhost, email])
   }
 
@@ -505,7 +566,7 @@ class Anope {
 
     const encryptedPassword = await hashPassword(newPassword, anopeBcryptRounds)
 
-    await mysql('anope_db_NickCore')
+    await mysql(NICK_CORE)
       .whereRaw('lower(email) = lower(?)', [email])
       .update({
         pass: `bcrypt:${encryptedPassword}`,
@@ -551,7 +612,7 @@ class Anope {
 
     try {
       const result = await mysql.select('MEMO_MAIL')
-        .from('anope_db_NickCore')
+        .from(NICK_CORE)
         .whereRaw('lower(email) = lower(?)', [email])
         .first()
 
@@ -572,7 +633,7 @@ class Anope {
       return
     }
 
-    await mysql('anope_db_NickCore')
+    await mysql(NICK_CORE)
       .whereRaw('lower(email) = lower(?)', [email])
       .update({ MEMO_MAIL: enabled ? '1' : null })
   }
@@ -587,25 +648,25 @@ class Anope {
       return undefined
     }
 
-    const alias = await mysql('anope_db_NickAlias')
+    const alias = await mysql(NICK_ALIAS)
       .whereRaw('lower(nick) = lower(?)', [nickname])
-      .first('nc')
+      .first('ncid')
 
     await mysql.raw(`
-      DELETE FROM anope_db_NickAlias
+      DELETE FROM ${NICK_ALIAS}
       WHERE  lower(nick) = lower(?)
     `, [nickname])
 
     // If that was the group's last alias, remove the now-orphaned account so it can't
     // resurface as a nick with no listable aliases (and no whois-resolvable account).
-    if (alias?.nc) {
-      const remaining = await mysql('anope_db_NickAlias')
-        .where({ nc: alias.nc })
+    if (alias?.ncid) {
+      const remaining = await mysql(NICK_ALIAS)
+        .where({ ncid: alias.ncid })
         .count({ count: '*' })
         .first()
 
       if (Number(remaining?.count ?? 0) === 0) {
-        await mysql('anope_db_NickCore').where({ display: alias.nc }).del()
+        await mysql(NICK_CORE).where({ uniqueid: alias.ncid }).del()
       }
     }
 
@@ -622,7 +683,7 @@ class Anope {
       return undefined
     }
 
-    await mysql('anope_db_NickAlias').where({ id: anopeId }).del()
+    await mysql(NICK_ALIAS).where({ id: anopeId }).del()
     return undefined
   }
 
@@ -637,17 +698,17 @@ class Anope {
     }
 
     await mysql.raw(`
-        DELETE anope_db_NickAlias.* FROM anope_db_NickAlias
-        LEFT JOIN anope_db_NickCore ON anope_db_NickCore.display = anope_db_NickAlias.nc
+        DELETE ${NICK_ALIAS}.* FROM ${NICK_ALIAS}
+        LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE
-            lower(anope_db_NickCore.email) = lower(:email)
+            lower(${NICK_CORE}.email) = lower(:email)
 
     `, { email })
 
     return mysql.raw(`
-        DELETE FROM anope_db_NickCore
+        DELETE FROM ${NICK_CORE}
         WHERE
-            lower(anope_db_NickCore.email) = lower(:email)
+            lower(${NICK_CORE}.email) = lower(:email)
     `, { email })
   }
 
@@ -695,37 +756,41 @@ class Anope {
 
       const createdUnixTime = Math.floor(Date.now() / 1000)
       const user = await Anope.getAccount(email)
-      if (!user) {
+
+      // Anope 2.1 links a NickAlias to its account by ncid = NickCore.uniqueid.
+      // Reuse the account's uniqueid when it already exists, otherwise mint one
+      // for the freshly created NickCore.
+      let accountUniqueId
+      if (user) {
+        accountUniqueId = user.uniqueid
+      } else {
+        accountUniqueId = generateUniqueId()
         await transaction.insert({
           AUTOOP: 1,
           HIDE_EMAIL: 1,
           HIDE_MASK: 1,
-          KILLPROTECT: 1,
+          PROTECT: 1,
           MEMO_RECEIVE: 1,
           MEMO_SIGNON: 1,
           NS_PRIVATE: 1,
-          NS_SECURE: 1,
           display: nick,
           email,
           memomax: 20,
           pass: encryptedPassword,
-        }).into('anope_db_NickCore')
+          uniqueid: accountUniqueId,
+          registered: createdUnixTime,
+        }).into(NICK_CORE)
       }
 
-      // Group the new alias under the account's display nick. `user.nc` comes from the
-      // NickCore→NickAlias left join and is null when the account has no aliases yet,
-      // which would create an orphaned alias (nc = NULL); the display is always the group key.
-      const accountNick = user ? (user.display ?? user.nc) : nick
-
       const insertedNickname = await transaction.insert({
-        nc: accountNick,
+        ncid: accountUniqueId,
         nick,
-        time_registered: createdUnixTime,
+        registered: createdUnixTime,
         vhost_creator: 'API',
         vhost_time: createdUnixTime,
         vhost_host: vhost,
         NS_NO_EXPIRE: 1,
-      }).into('anope_db_NickAlias')
+      }).into(NICK_ALIAS)
 
       await transaction.commit()
       return new Nickname(insertedNickname)
@@ -741,12 +806,12 @@ class Anope {
    */
   static getFlags ({ channel, user }) {
     return mysql.raw(`
-        SELECT anope_db_ChanAccess.*
-        FROM anope_db_ChanAccess
-        LEFT JOIN anope_db_NickCore ON lower(email) = lower(:email)
+        SELECT ${CHAN_ACCESS}.*
+        FROM ${CHAN_ACCESS}
+        LEFT JOIN ${NICK_CORE} ON lower(email) = lower(:email)
         WHERE
-          lower(anope_db_ChanAccess.ci) = lower(:channel) AND
-          anope_db_ChanAccess.mask = anope_db_NickCore.display
+          lower(${CHAN_ACCESS}.ci) = lower(:channel) AND
+          ${CHAN_ACCESS}.mask = ${NICK_CORE}.display
     `, { channel, email: user.email })
   }
 
@@ -760,18 +825,18 @@ class Anope {
    */
   static insertFlags ({ channel, user, flags }) {
     return mysql.raw(`
-      INSERT INTO anope_db_ChanAccess (timestamp, ci, created, creator, data, last_seen, mask, provider)
+      INSERT INTO ${CHAN_ACCESS} (timestamp, ci, created, creator, data, last_seen, mask, provider)
       SELECT
           CURRENT_TIMESTAMP AS timestamp,
           :channel AS ci,
           UNIX_TIMESTAMP() AS created,
           'API' as creator,
           :flags AS data,
-          anope_db_NickAlias.last_seen AS last_seen,
-          anope_db_NickCore.display AS mask,
+          ${NICK_ALIAS}.last_seen AS last_seen,
+          ${NICK_CORE}.display AS mask,
           'access/flags' AS provider
-      FROM anope_db_NickCore
-      INNER JOIN anope_db_NickAlias ON anope_db_NickAlias.nc = anope_db_NickCore.display
+      FROM ${NICK_CORE}
+      INNER JOIN ${NICK_ALIAS} ON ${NICK_ALIAS}.ncid = ${NICK_CORE}.uniqueid
       WHERE
           lower(email) = lower(:email)
       LIMIT 1
@@ -788,15 +853,15 @@ class Anope {
    */
   static updateFlags ({ channel, user, flags }) {
     return mysql.raw(`
-        UPDATE anope_db_ChanAccess
-        LEFT JOIN anope_db_NickCore ON lower(email) = lower(:email)
+        UPDATE ${CHAN_ACCESS}
+        LEFT JOIN ${NICK_CORE} ON lower(email) = lower(:email)
         SET
-            anope_db_ChanAccess.creator = 'API',
-            anope_db_ChanAccess.timestamp = CURRENT_TIMESTAMP,
-            anope_db_ChanAccess.data = :flags
+            ${CHAN_ACCESS}.creator = 'API',
+            ${CHAN_ACCESS}.timestamp = CURRENT_TIMESTAMP,
+            ${CHAN_ACCESS}.data = :flags
         WHERE
-            lower(anope_db_ChanAccess.ci) = lower(:channel) AND
-            anope_db_ChanAccess.mask = anope_db_NickCore.display
+            lower(${CHAN_ACCESS}.ci) = lower(:channel) AND
+            ${CHAN_ACCESS}.mask = ${NICK_CORE}.display
       `, { channel, email: user.email, flags: flags.join('') })
   }
 
@@ -812,13 +877,13 @@ class Anope {
     }
 
     await mysql.raw(`
-        UPDATE anope_db_ChanAccess
-        LEFT JOIN anope_db_NickCore ON lower(email) = lower(:email)
+        UPDATE ${CHAN_ACCESS}
+        LEFT JOIN ${NICK_CORE} ON lower(email) = lower(:email)
         SET
-            anope_db_ChanAccess.timestamp = NULL
+            ${CHAN_ACCESS}.timestamp = NULL
         WHERE
-            lower(anope_db_ChanAccess.ci) = lower(:channel) AND
-            anope_db_ChanAccess.mask = anope_db_NickCore.display
+            lower(${CHAN_ACCESS}.ci) = lower(:channel) AND
+            ${CHAN_ACCESS}.mask = ${NICK_CORE}.display
 
 `, { channel, email: user.email })
   }
@@ -850,23 +915,23 @@ class Anope {
    */
   static setInvite ({ channel, user }) {
     return mysql.raw(`
-    INSERT INTO anope_db_ModeLock (timestamp, ci, created, name, param, \`set\`, setter)
+    INSERT INTO ${MODE_LOCK} (timestamp, ci, created, name, param, \`set\`, setter)
     SELECT
         CURRENT_TIMESTAMP,
         :channel,
         UNIX_TIMESTAMP(),
         'INVITEOVERRIDE',
-        CONCAT('~a:', anope_db_NickCore.display),
+        CONCAT('~a:', ${NICK_CORE}.display),
         1,
         'API'
-    FROM anope_db_NickCore
+    FROM ${NICK_CORE}
     WHERE
-        lower(anope_db_NickCore.email) = lower(:email) AND
+        lower(${NICK_CORE}.email) = lower(:email) AND
         NOT EXISTS(
-            SELECT 1 FROM anope_db_ModeLock WHERE
+            SELECT 1 FROM ${MODE_LOCK} WHERE
                 ci = :channel AND
                 name = 'INVITEOVERRIDE' AND
-                param = CONCAT('~a:', anope_db_NickCore.display)
+                param = CONCAT('~a:', ${NICK_CORE}.display)
         )
     `, { channel, email: user.email })
   }
@@ -885,13 +950,13 @@ class Nickname {
     this.id = intToUuid(obj.id)
     this.anopeId = obj.id
     this.lastQuit = obj.last_quit
-    this.lastRealHost = obj.last_realhost
+    this.lastRealHost = obj.last_userhost_real
     this.lastRealName = obj.last_realname
     this.lastSeen = new Date(obj.last_seen * 1000)
-    this.lastUserMask = obj.last_usermask
-    this.display = obj.display ?? obj.nc
+    this.lastUserMask = obj.last_userhost
+    this.display = obj.display
     this.nick = obj.nick
-    this.createdAt = new Date(obj.time_registered * 1000)
+    this.createdAt = new Date(obj.registered * 1000)
     this.updatedAt = obj.timestamp
     this.vhostSetBy = obj.vhost_creator
     this.vhost = obj.vhost_host
@@ -933,7 +998,7 @@ function intToUuid (number) {
 
 
 const responseTranslations = {
-  'isn&#39;t registered': new NotFoundAPIError({ pointer: '/data/attributes/nickname' }),
+  'isn\'t registered': new NotFoundAPIError({ pointer: '/data/attributes/nickname' }),
   'Password authentication required': new UnauthorizedAPIError({ pointer: '/data/attributes/password' }),
   'more obscure password': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
   'password is too long': new UnprocessableEntityAPIError({ pointer: '/data/attributes/password' }),
@@ -945,18 +1010,15 @@ const responseTranslations = {
 
 /**
  * Process an Anope response into a useable result
- * @param {any} result an unrpocessed Anope response
+ * @param {any} result an unprocessed Anope response (JSON-RPC result or error)
  * @returns {*} a processed result or an APIError
  */
 function processAnopeResponse (result) {
-  let [, translation] = Object.entries(responseTranslations).find(([key]) => {
-    const response = result.return ?? result.error
-    return new RegExp(key, 'giu').test(response)
+  const haystack = typeof result === 'string' ? result : JSON.stringify(result ?? {})
+  const [, translation] = Object.entries(responseTranslations).find(([key]) => {
+    return new RegExp(key, 'giu').test(haystack)
   }) ?? []
-  if (!translation) {
-    translation = result
-  }
-  return translation
+  return translation ?? result
 }
 
 export default Anope
