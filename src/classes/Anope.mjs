@@ -30,9 +30,11 @@ const CHAN_ACCESS = `${tablePrefix}ChanAccess`
 const MODE_LOCK = `${tablePrefix}ModeLock`
 const NS_CERT = `${tablePrefix}NSCert`
 
-// Correlated subquery that surfaces an account's certificate fingerprint (moved
-// to NSCert in 2.1) as a `cert` column so the Nickname mapper keeps working.
-const CERT_SUBQUERY = `(SELECT fingerprint FROM ${NS_CERT} WHERE account = ${NICK_CORE}.uniqueid LIMIT 1) AS cert`
+// Extra SELECT columns for the nickname joins: the alias's OWN registration time
+// aliased to avoid the `SELECT *` collision with NickCore.registered (which would
+// otherwise win and give the account's registration, not the nick's), plus the
+// account's certificate fingerprint (moved to the NSCert table in 2.1).
+const NICK_EXTRA_SELECT = `${NICK_ALIAS}.registered AS nick_registered, (SELECT fingerprint FROM ${NS_CERT} WHERE account = ${NICK_CORE}.uniqueid LIMIT 1) AS cert`
 
 
 const mysql = knex({
@@ -222,7 +224,7 @@ class Anope {
                *,
                ${NICK_ALIAS}.id AS id,
                ${NICK_CORE}.id AS accountId,
-               ${CERT_SUBQUERY}
+               ${NICK_EXTRA_SELECT}
         FROM ${NICK_ALIAS}
                  LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE ${NICK_ALIAS}.nick = :nickname
@@ -268,7 +270,7 @@ class Anope {
                *,
                ${NICK_ALIAS}.id AS id,
                ${NICK_CORE}.id AS accountId,
-               ${CERT_SUBQUERY}
+               ${NICK_EXTRA_SELECT}
         FROM ${NICK_ALIAS}
                  LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE LOWER(${NICK_ALIAS}.nick) LIKE LOWER(:pattern)
@@ -316,7 +318,7 @@ class Anope {
             *,
             ${NICK_ALIAS}.id AS id,
             ${NICK_CORE}.id AS accountId,
-            ${CERT_SUBQUERY}
+            ${NICK_EXTRA_SELECT}
         FROM ${NICK_ALIAS}
         LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE lower(email) = lower(:email)
@@ -356,7 +358,7 @@ class Anope {
             *,
             ${NICK_ALIAS}.id AS id,
             ${NICK_CORE}.id AS accountId,
-            ${CERT_SUBQUERY}
+            ${NICK_EXTRA_SELECT}
         FROM ${NICK_ALIAS}
         LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE lower(email) IN (:emails)
@@ -396,7 +398,7 @@ class Anope {
             *,
             ${NICK_ALIAS}.id AS id,
             ${NICK_CORE}.id AS accountId,
-            ${CERT_SUBQUERY}
+            ${NICK_EXTRA_SELECT}
         FROM ${NICK_ALIAS}
         LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE
@@ -432,7 +434,7 @@ class Anope {
             *,
             ${NICK_ALIAS}.id AS id,
             ${NICK_CORE}.id AS accountId,
-            ${CERT_SUBQUERY}
+            ${NICK_EXTRA_SELECT}
         FROM ${NICK_ALIAS}
         LEFT JOIN ${NICK_CORE} ON ${NICK_CORE}.uniqueid = ${NICK_ALIAS}.ncid
         WHERE
@@ -951,12 +953,14 @@ class Nickname {
     this.anopeId = obj.id
     this.lastQuit = obj.last_quit
     this.lastRealHost = obj.last_userhost_real
-    this.lastRealName = obj.last_realname
+    // Anope 2.1 dropped the realname column; emit null (not undefined) so the
+    // attribute key is still serialised for API consumers that require it.
+    this.lastRealName = obj.last_realname ?? null
     this.lastSeen = new Date(obj.last_seen * 1000)
     this.lastUserMask = obj.last_userhost
     this.display = obj.display
     this.nick = obj.nick
-    this.createdAt = new Date(obj.registered * 1000)
+    this.createdAt = new Date(obj.nick_registered * 1000)
     this.updatedAt = obj.timestamp
     this.vhostSetBy = obj.vhost_creator
     this.vhost = obj.vhost_host
