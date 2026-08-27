@@ -10,5 +10,6 @@
   "rescue-revisions": ["read", "write"],
   "resources": ["forcedelete"],
   "twitter": ["write"],
-  "dispatch": ["read"]
+  "dispatch": ["read"],
+  "anope": ["read"]
 }

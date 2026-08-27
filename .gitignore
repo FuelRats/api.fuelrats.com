@@ -153,3 +153,6 @@ bun.lockb
 # Docker dev secrets
 .docker/secrets/
 fuelratsdev.dump
+
+# Local research/plan notes (Claude /research, /plan)
+thoughts/
