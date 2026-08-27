@@ -446,6 +446,7 @@ export default class Users extends APIResource {
     this.requireWritePermission({ connection: ctx, entity: user })
 
     await Anope.updatePermissions(user)
+    await Anope.enqueueGroupSync(user.email)
 
     const result = await Anope.mapNickname(user)
 
@@ -979,7 +980,7 @@ export default class Users extends APIResource {
       relationship: 'rats',
     })
 
-    await Anope.updatePermissions(updatedEntity)
+    await Anope.updateVhost(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -1002,7 +1003,7 @@ export default class Users extends APIResource {
       relationship: 'rats',
     })
 
-    await Anope.updatePermissions(updatedEntity)
+    await Anope.updateVhost(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -1025,7 +1026,7 @@ export default class Users extends APIResource {
       relationship: 'rats',
     })
 
-    await Anope.updatePermissions(updatedEntity)
+    await Anope.updateVhost(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -1070,7 +1071,7 @@ export default class Users extends APIResource {
       relationship: 'displayRat',
     })
 
-    await Anope.updatePermissions(updatedEntity)
+    await Anope.updateVhost(updatedEntity)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -1114,6 +1115,7 @@ export default class Users extends APIResource {
     })
 
     await Anope.updatePermissions(updatedEntity)
+    await Anope.enqueueGroupSync(updatedEntity.email)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
     return true
@@ -1137,6 +1139,7 @@ export default class Users extends APIResource {
     })
 
     await Anope.updatePermissions(updatedEntity)
+    await Anope.enqueueGroupSync(updatedEntity.email)
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent
@@ -1168,6 +1171,7 @@ export default class Users extends APIResource {
     })
     await Promise.all(removedGroupPermissions)
     Anope.updatePermissions(updatedEntity)
+    await Anope.enqueueGroupSync(updatedEntity.email)
 
     Event.broadcast('fuelrats.userupdate', ctx.state.user, ctx.params.id, {})
     ctx.response.status = StatusCode.noContent

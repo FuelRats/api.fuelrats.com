@@ -112,6 +112,7 @@ export default class Verifications extends API {
       where: { id: user.id },
     })
     await Anope.updatePermissions(updatedUser)
+    await Anope.enqueueGroupSync(updatedUser.email)
     await verification.destroy()
 
     // Log verification completion metrics

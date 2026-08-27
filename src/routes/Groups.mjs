@@ -1,9 +1,11 @@
+import { Op } from 'sequelize'
 import { UnsupportedMediaAPIError } from '../classes/APIError'
+import Anope from '../classes/Anope'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
-import { Group } from '../db'
+import { Group, User, UserGroups } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
-import { logMetric } from '../logging'
+import logger, { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { GroupView } from '../view'
 import {
@@ -18,6 +20,65 @@ import {
 } from './API'
 import APIResource from './APIResource'
 
+
+/**
+ * Whether two channel-access maps are equivalent (order-insensitive).
+ * @param {object} [a] a group's `channels` map
+ * @param {object} [b] another group's `channels` map
+ * @returns {boolean} true if they hold the same channel→flags entries
+ */
+function channelsEqual (a = {}, b = {}) {
+  const keysA = Object.keys(a).sort()
+  const keysB = Object.keys(b).sort()
+  return keysA.length === keysB.length
+    && keysA.every((key, index) => keysB[index] === key && a[key] === b[key])
+}
+
+/**
+ * Fan a group-definition change out to its members immediately (Risk 47).
+ *
+ * A channel-access change enqueues a coalesced groupsync push per member; a
+ * vhost change reapplies each member's vhost (HostServ-managed, so it rides the
+ * legacy vhost writer rather than groupsync). Members are (re)loaded by group id
+ * *after* the mutation so their merged access reflects the new definition, which
+ * also covers deletion (the join rows survive a paranoid soft-delete). Runs in
+ * the background and never rejects — large groups (e.g. `verified`) are paced by
+ * the outbox worker and self-correct on login for the offline majority.
+ * @param {object} arg options
+ * @param {string} arg.groupId the affected group's id
+ * @param {boolean} arg.channelsChanged whether channel access changed
+ * @param {boolean} arg.vhostChanged whether the vhost changed
+ * @returns {Promise<void>} resolves once the fan-out has been dispatched
+ */
+async function fanOutGroupChange ({ groupId, channelsChanged, vhostChanged }) {
+  if (!channelsChanged && !vhostChanged) {
+    return
+  }
+
+  try {
+    const memberships = await UserGroups.findAll({ where: { groupId }, attributes: ['userId'] })
+    const userIds = memberships.map((membership) => membership.userId)
+    if (userIds.length === 0) {
+      return
+    }
+
+    const members = await User.findAll({ where: { id: { [Op.in]: userIds } } })
+    for (const member of members) {
+      try {
+        if (channelsChanged) {
+          await Anope.enqueueGroupSync(member.email)
+        }
+        if (vhostChanged) {
+          await Anope.updateVhost(member)
+        }
+      } catch (error) {
+        logger.error({ message: 'groupsync group fan-out failed for a member', error })
+      }
+    }
+  } catch (error) {
+    logger.error({ message: 'groupsync group fan-out failed', error })
+  }
+}
 
 /**
  * Endpoints for managing user permission groups
@@ -81,6 +142,11 @@ export default class Groups extends APIResource {
   @authenticated
   @permissions('groups.write')
   async update (ctx) {
+    const existing = await Group.findByPk(ctx.params.id)
+    const before = existing
+      ? { channels: existing.channels, vhost: existing.vhost, withoutPrefix: existing.withoutPrefix }
+      : null
+
     const result = await super.update({ ctx, databaseType: Group, updateSearch: { id: ctx.params.id } })
 
     // Log group update metrics
@@ -89,6 +155,15 @@ export default class Groups extends APIResource {
       _updated_by_user_id: ctx.state.user.id,
       _permissions_count: result.permissions?.length || 0,
     }, `Permission group updated: ${result.id} by admin ${ctx.state.user.id}`)
+
+    if (before) {
+      // Fire-and-forget so a large group's fan-out doesn't block the response.
+      fanOutGroupChange({
+        groupId: result.id,
+        channelsChanged: !channelsEqual(before.channels, result.channels),
+        vhostChanged: before.vhost !== result.vhost || before.withoutPrefix !== result.withoutPrefix,
+      })
+    }
 
     const query = new DatabaseQuery({ connection: ctx })
     return new DatabaseDocument({ query, result, type: GroupView })
@@ -113,6 +188,11 @@ export default class Groups extends APIResource {
         _deleted_by_user_id: ctx.state.user.id,
         _permissions_count: group.permissions?.length || 0,
       }, `Permission group deleted: ${group.id} by admin ${ctx.state.user.id}`)
+
+      // Removing the group strips its channels and (possibly) vhost from every
+      // member — resync all of them. Fire-and-forget; the join rows survive the
+      // soft-delete so members still resolve by group id.
+      fanOutGroupChange({ groupId: group.id, channelsChanged: true, vhostChanged: true })
     }
 
     ctx.response.status = StatusCode.noContent
