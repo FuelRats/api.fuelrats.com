@@ -1,5 +1,6 @@
 import Model, { column, table, validate, type } from './Model'
 import Permission from '../classes/Permission'
+import { assertValidGroupChannels } from '../helpers/GroupChannels'
 import { IRCVirtualHost } from '../helpers/Validators'
 
 /**
@@ -44,6 +45,7 @@ export default class Group extends Model {
   static permissions = []
 
   /** IRC channel access flags for group members */
+  @validate({ channels: assertValidGroupChannels })
   @column(type.JSONB)
   static channels = {}
 

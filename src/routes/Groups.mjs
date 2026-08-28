@@ -35,6 +35,20 @@ function channelsEqual (a = {}, b = {}) {
 }
 
 /**
+ * Diff two channel-access maps for audit logging. A channel edit now grants
+ * durable ChanServ modes to members via groupsync, so record exactly what moved.
+ * @param {object} [before] the group's channels before the edit
+ * @param {object} [after] the group's channels after the edit
+ * @returns {{added: string[], removed: string[], changed: string[]}} the per-channel diff
+ */
+function channelDiff (before = {}, after = {}) {
+  const added = Object.keys(after).filter((channel) => !(channel in before))
+  const removed = Object.keys(before).filter((channel) => !(channel in after))
+  const changed = Object.keys(after).filter((channel) => channel in before && before[channel] !== after[channel])
+  return { added, removed, changed }
+}
+
+/**
  * Fan a group-definition change out to its members immediately (Risk 47).
  *
  * A channel-access change enqueues a coalesced groupsync push per member; a
@@ -149,11 +163,16 @@ export default class Groups extends APIResource {
 
     const result = await super.update({ ctx, databaseType: Group, updateSearch: { id: ctx.params.id } })
 
-    // Log group update metrics
+    // Log group update metrics, including the per-channel diff — a channel edit
+    // now grants durable ChanServ modes to members via groupsync.
+    const channels = channelDiff(before?.channels, result.channels)
     logMetric('group_updated', {
       _group_id: result.id,
       _updated_by_user_id: ctx.state.user.id,
       _permissions_count: result.permissions?.length || 0,
+      _channels_added: channels.added,
+      _channels_removed: channels.removed,
+      _channels_changed: channels.changed,
     }, `Permission group updated: ${result.id} by admin ${ctx.state.user.id}`)
 
     if (before) {

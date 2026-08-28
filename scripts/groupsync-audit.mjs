@@ -14,15 +14,13 @@
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { VALID_FLAG_LETTERS } from '../src/helpers/groupFlagLetters'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const research = join(here, '..', 'thoughts', 'research')
 
 const policy = JSON.parse(readFileSync(join(research, 'groupsync-group-channels.json'), 'utf8'))
 const live = JSON.parse(readFileSync(join(research, 'groupsync-live-channels.json'), 'utf8'))
-
-// The only FLAGS letters Anope 2.1.26 honors (prod chanserv.conf, 2026-08-27).
-const VALID_FLAGS = new Set('ABFGHIKNOQUV abcfhikmoqstuv'.replace(/\s/gu, ''))
 
 const norm = (chan) => (chan.startsWith('#') ? chan : `#${chan}`).toLowerCase()
 const registered = new Set(live.registered.map(norm))
@@ -41,7 +39,7 @@ for (const [role, channels] of Object.entries(policy)) {
       unregistered.get(nc).add(role)
     }
     for (const letter of flags) {
-      if (!VALID_FLAGS.has(letter)) {
+      if (!VALID_FLAG_LETTERS.has(letter)) {
         if (!invalidFlags.has(letter)) invalidFlags.set(letter, new Set())
         invalidFlags.get(letter).add(`${role}:${chan}`)
       }
