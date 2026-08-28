@@ -1,10 +1,12 @@
 import { Op } from 'sequelize'
-import { UnsupportedMediaAPIError } from '../classes/APIError'
+import { BadRequestAPIError, NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import Anope from '../classes/Anope'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
-import { Group, User, UserGroups } from '../db'
+import { db, Group, User, UserGroups } from '../db'
 import DatabaseDocument from '../Documents/DatabaseDocument'
+import { isValidChannelKey } from '../helpers/GroupChannels'
+import { VALID_FLAG_LETTERS } from '../helpers/groupFlagLetters'
 import logger, { logMetric } from '../logging'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { GroupView } from '../view'
@@ -46,6 +48,56 @@ function channelDiff (before = {}, after = {}) {
   const removed = Object.keys(before).filter((channel) => !(channel in after))
   const changed = Object.keys(after).filter((channel) => channel in before && before[channel] !== after[channel])
   return { added, removed, changed }
+}
+
+/**
+ * Transactionally read-modify-write a single group's `channels` map, then log
+ * the diff and fan out the change to members. `apply` mutates a copy of the map
+ * (set or delete one key). The row is locked for the read-modify-write so
+ * concurrent single-channel edits don't clobber each other; the model validator
+ * runs on save (rejects invalid FLAGS as a 422).
+ * @param {object} arg options
+ * @param {Context} arg.ctx request context
+ * @param {string} arg.groupId the group to edit
+ * @param {(channels: object) => void} arg.apply mutation applied to the channels copy
+ * @returns {Promise<DatabaseDocument>} the updated group document
+ */
+async function mutateGroupChannel ({ ctx, groupId, apply }) {
+  const { group, before } = await db.transaction(async (transaction) => {
+    const target = await Group.findByPk(groupId, { transaction, lock: transaction.LOCK.UPDATE })
+    if (!target) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    const previous = { ...(target.channels ?? {}) }
+    const channels = { ...previous }
+    apply(channels)
+
+    target.channels = channels
+    target.changed('channels', true)
+    await target.save({ transaction })
+    return { group: target, before: previous }
+  })
+
+  const diff = channelDiff(before, group.channels)
+  logMetric('group_updated', {
+    _group_id: group.id,
+    _updated_by_user_id: ctx.state.user.id,
+    _permissions_count: group.permissions?.length || 0,
+    _channels_added: diff.added,
+    _channels_removed: diff.removed,
+    _channels_changed: diff.changed,
+  }, `Permission group channels updated: ${group.id} by admin ${ctx.state.user.id}`)
+
+  // Fire-and-forget so a large group's fan-out doesn't block the response.
+  fanOutGroupChange({
+    groupId: group.id,
+    channelsChanged: !channelsEqual(before, group.channels),
+    vhostChanged: false,
+  })
+
+  const query = new DatabaseQuery({ connection: ctx })
+  return new DatabaseDocument({ query, result: group, type: GroupView })
 }
 
 /**
@@ -216,6 +268,55 @@ export default class Groups extends APIResource {
 
     ctx.response.status = StatusCode.noContent
     return true
+  }
+
+  /**
+   * @summary Add or update a single channel's access flags on a group
+   * Body: `{ "flags": "OV" }` (or JSON:API `{ data: { attributes: { flags } } }`).
+   * The `:channel` path segment is the bare channel key (no `#`).
+   */
+  @PUT('/groups/:id/channels/:channel')
+  @websocket('groups', 'channels', 'set')
+  @parameters('id', 'channel')
+  @authenticated
+  @permissions('groups.write')
+  async setChannel (ctx) {
+    const { channel } = ctx.params
+    const flags = ctx.data?.flags ?? ctx.data?.data?.attributes?.flags
+
+    if (!isValidChannelKey(channel)) {
+      throw new BadRequestAPIError({ parameter: 'channel' })
+    }
+    if (typeof flags !== 'string' || flags.length === 0
+      || ![...flags].every((letter) => VALID_FLAG_LETTERS.has(letter))) {
+      throw new BadRequestAPIError({ pointer: '/flags' })
+    }
+
+    return mutateGroupChannel({
+      ctx,
+      groupId: ctx.params.id,
+      apply: (channels) => {
+        channels[channel] = flags
+      },
+    })
+  }
+
+  /**
+   * @summary Remove a single channel from a group (idempotent)
+   */
+  @DELETE('/groups/:id/channels/:channel')
+  @websocket('groups', 'channels', 'delete')
+  @parameters('id', 'channel')
+  @authenticated
+  @permissions('groups.write')
+  async deleteChannel (ctx) {
+    return mutateGroupChannel({
+      ctx,
+      groupId: ctx.params.id,
+      apply: (channels) => {
+        delete channels[ctx.params.channel]
+      },
+    })
   }
 
   /**
