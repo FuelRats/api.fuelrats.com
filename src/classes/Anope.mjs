@@ -768,6 +768,7 @@ class Anope {
       } else {
         accountUniqueId = generateUniqueId()
         await transaction.insert({
+          AUTOLOGIN: 1,
           AUTOOP: 1,
           HIDE_EMAIL: 1,
           HIDE_MASK: 1,
