@@ -1,3 +1,4 @@
+import Anope from '../classes/Anope'
 import { BadRequestAPIError, NotFoundAPIError } from '../classes/APIError'
 import { Group, User } from '../db'
 import API, {
@@ -156,5 +157,21 @@ export default class AnopeSync extends API {
 
     ctx._status = 200
     return result
+  }
+
+  /**
+   * GET /anope/channels - every channel registered with ChanServ, ordered by name.
+   * Backs the group-management channel autocomplete and the bot's registered-channel
+   * guard. Gated on `groups.read` (held by the admin/netadmin roles that manage groups).
+   * @endpoint
+   */
+  @GET('/anope/channels')
+  @authenticated
+  @permissions('groups.read')
+  async getRegisteredChannels (ctx) {
+    const channels = await Anope.getRegisteredChannels()
+
+    ctx._status = 200
+    return { channels }
   }
 }

@@ -53,6 +53,7 @@ function assertSafeEmail (email) {
 const NICK_CORE = `${tablePrefix}NickCore`
 const NICK_ALIAS = `${tablePrefix}NickAlias`
 const CHAN_ACCESS = `${tablePrefix}ChanAccess`
+const CHANNEL_INFO = `${tablePrefix}ChannelInfo`
 const MODE_LOCK = `${tablePrefix}ModeLock`
 const NS_CERT = `${tablePrefix}NSCert`
 
@@ -122,6 +123,24 @@ class Anope {
       return results[0]
     }
     return undefined
+  }
+
+  /**
+   * List every channel registered with ChanServ, ordered by name. Backs the
+   * group-management channel-access autocomplete and the bot's registered-channel
+   * guard, so access can only be granted to channels that actually exist.
+   * @returns {Promise<string[]>} registered channel names (e.g. `#fuelrats`); empty when Anope is unconfigured
+   */
+  static async getRegisteredChannels () {
+    if (!config.anope.database) {
+      return []
+    }
+    const results = await mysql.select('name')
+      .from(CHANNEL_INFO)
+      .orderBy('name')
+    return results.map((row) => {
+      return row.name
+    })
   }
 
   /**
