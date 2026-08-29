@@ -1,6 +1,7 @@
 import { Op } from 'sequelize'
 import { BadRequestAPIError, NotFoundAPIError, UnsupportedMediaAPIError } from '../classes/APIError'
 import Anope from '../classes/Anope'
+import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { websocket } from '../classes/WebSocket'
 import { db, Group, User, UserGroups } from '../db'
@@ -95,6 +96,65 @@ async function mutateGroupChannel ({ ctx, groupId, apply }) {
     channelsChanged: !channelsEqual(before, group.channels),
     vhostChanged: false,
   })
+
+  const query = new DatabaseQuery({ connection: ctx })
+  return new DatabaseDocument({ query, result: group, type: GroupView })
+}
+
+/**
+ * Diff two permission (OAuth scope) lists for audit logging. Granting a scope to
+ * a group grants it to every member's effective permissions, so record what moved.
+ * @param {string[]} [before] the group's permissions before the edit
+ * @param {string[]} [after] the group's permissions after the edit
+ * @returns {{added: string[], removed: string[]}} the per-scope diff
+ */
+function permissionDiff (before = [], after = []) {
+  const beforeSet = new Set(before)
+  const afterSet = new Set(after)
+  const added = after.filter((scope) => !beforeSet.has(scope))
+  const removed = before.filter((scope) => !afterSet.has(scope))
+  return { added, removed }
+}
+
+/**
+ * Transactionally read-modify-write a single group's `permissions` array, then
+ * log the diff. `apply` mutates a copy of the array (add or remove one scope).
+ * The row is locked for the read-modify-write so concurrent single-scope edits
+ * don't clobber each other; the model validator (`Permission.assertOAuthScopes`)
+ * runs on save and rejects an invalid scope as a 422. Unlike a channel edit, a
+ * permission change has no IRC side effect (scopes gate the API, not ChanServ),
+ * so there is no member fan-out — effective permissions recompute per request.
+ * @param {object} arg options
+ * @param {Context} arg.ctx request context
+ * @param {string} arg.groupId the group to edit
+ * @param {(permissions: string[]) => void} arg.apply mutation applied to the permissions copy
+ * @returns {Promise<DatabaseDocument>} the updated group document
+ */
+async function mutateGroupPermission ({ ctx, groupId, apply }) {
+  const { group, before } = await db.transaction(async (transaction) => {
+    const target = await Group.findByPk(groupId, { transaction, lock: transaction.LOCK.UPDATE })
+    if (!target) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
+    const previous = [...(target.permissions ?? [])]
+    const permissions = [...previous]
+    apply(permissions)
+
+    target.permissions = permissions
+    target.changed('permissions', true)
+    await target.save({ transaction })
+    return { group: target, before: previous }
+  })
+
+  const diff = permissionDiff(before, group.permissions)
+  logMetric('group_updated', {
+    _group_id: group.id,
+    _updated_by_user_id: ctx.state.user.id,
+    _permissions_count: group.permissions?.length || 0,
+    _permissions_added: diff.added,
+    _permissions_removed: diff.removed,
+  }, `Permission group scopes updated: ${group.id} by admin ${ctx.state.user.id}`)
 
   const query = new DatabaseQuery({ connection: ctx })
   return new DatabaseDocument({ query, result: group, type: GroupView })
@@ -320,6 +380,56 @@ export default class Groups extends APIResource {
   }
 
   /**
+   * @summary Grant a single OAuth permission scope to a group (idempotent)
+   * The `:scope` path segment is the permission string (e.g. `rescues.write`).
+   */
+  @PUT('/groups/:id/permissions/:scope')
+  @websocket('groups', 'permissions', 'set')
+  @parameters('id', 'scope')
+  @authenticated
+  @permissions('groups.write')
+  async setPermission (ctx) {
+    const { scope } = ctx.params
+
+    if (!Permission.isValidOAuthScope(scope)) {
+      throw new BadRequestAPIError({ parameter: 'scope' })
+    }
+
+    return mutateGroupPermission({
+      ctx,
+      groupId: ctx.params.id,
+      apply: (permissions) => {
+        if (!permissions.includes(scope)) {
+          permissions.push(scope)
+        }
+      },
+    })
+  }
+
+  /**
+   * @summary Revoke a single OAuth permission scope from a group (idempotent)
+   */
+  @DELETE('/groups/:id/permissions/:scope')
+  @websocket('groups', 'permissions', 'delete')
+  @parameters('id', 'scope')
+  @authenticated
+  @permissions('groups.write')
+  async deletePermission (ctx) {
+    const { scope } = ctx.params
+
+    return mutateGroupPermission({
+      ctx,
+      groupId: ctx.params.id,
+      apply: (permissions) => {
+        const index = permissions.indexOf(scope)
+        if (index !== -1) {
+          permissions.splice(index, 1)
+        }
+      },
+    })
+  }
+
+  /**
    * @inheritdoc
    */
   changeRelationship () {
@@ -345,6 +455,8 @@ export default class Groups extends APIResource {
    */
   get writePermissionsForFieldAccess () {
     return {
+      name: WritePermission.sudo,
+      displayName: WritePermission.sudo,
       vhost: WritePermission.sudo,
       withoutPrefix: WritePermission.sudo,
       priority: WritePermission.sudo,
