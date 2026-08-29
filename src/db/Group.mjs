@@ -10,7 +10,7 @@ import { IRCVirtualHost } from '../helpers/Validators'
 export default class Group extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
-  static id = undefined
+  static id = type.UUIDV4
 
   /** Unique group identifier name */
   @validate({ isAlphanumeric: true, notEmpty: true }, { name: 'name' })
