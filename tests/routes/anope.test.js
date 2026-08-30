@@ -95,6 +95,8 @@ describe('GET /anope', () => {
     const roleByName = new Map(roles.map((role) => [role.name, role.display]))
     expect(roleByName.get('gstesta')).toBe('is a GroupSync Test A')
     expect(roleByName.get('gstestb')).toBe('is a gstestb')
+    // non-oper/service roles are shown (not hidden)
+    expect(roles.find((role) => role.name === 'gstesta').hidden).toBe(false)
   })
 
   it('returns explicit empty channels for a user with groups but no channel access', async () => {
