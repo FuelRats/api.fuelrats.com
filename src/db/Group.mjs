@@ -1,5 +1,6 @@
 import Model, { column, table, validate, type } from './Model'
 import Permission from '../classes/Permission'
+import { assertValidGroupChannels } from '../helpers/GroupChannels'
 import { IRCVirtualHost } from '../helpers/Validators'
 
 /**
@@ -9,7 +10,7 @@ import { IRCVirtualHost } from '../helpers/Validators'
 export default class Group extends Model {
   @validate({ isUUID: 4 })
   @column(type.UUID, { primaryKey: true })
-  static id = undefined
+  static id = type.UUIDV4
 
   /** Unique group identifier name */
   @validate({ isAlphanumeric: true, notEmpty: true }, { name: 'name' })
@@ -44,6 +45,7 @@ export default class Group extends Model {
   static permissions = []
 
   /** IRC channel access flags for group members */
+  @validate({ channels: assertValidGroupChannels })
   @column(type.JSONB)
   static channels = {}
 

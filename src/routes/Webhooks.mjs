@@ -73,6 +73,7 @@ export default class Webhooks extends API {
       where: { id: user.id },
     })
     await Anope.updatePermissions(updatedUser)
+    await Anope.enqueueGroupSync(updatedUser.email)
     Event.broadcast('fuelrats.userupdate', ctx.state.user, updatedUser.id, {})
     await Announcer.sendDrillMessage({
       message: `[API] Permissions has been updated for user ${updatedUser.displayName()}`,
