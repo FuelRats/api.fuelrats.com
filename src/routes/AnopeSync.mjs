@@ -57,6 +57,13 @@ const SWHOIS_SKIP_ROLES = new Set(['admin', 'netadmin', 'groupsync'])
 // ("is Verified", not "is a Verified").
 const SWHOIS_NO_ARTICLE = new Set(['verified'])
 
+// Roles whose whois reads better with a hand-written phrase than the generic
+// "is a/an <display>" — e.g. a collective noun a person belongs to rather than
+// is ("is on the Operations Team", not "is an Operations Team").
+const SWHOIS_PHRASE = new Map([
+  ['operations', 'is on the Operations Team'],
+])
+
 /**
  * The whois text for a role, phrased as a sentence completion of "<nick> …"
  * (e.g. "is an Overseer", "is Verified", "is a Drilled Rat").
@@ -64,6 +71,10 @@ const SWHOIS_NO_ARTICLE = new Set(['verified'])
  * @returns {string} the SWHOIS line text
  */
 function swhoisText (group) {
+  const override = SWHOIS_PHRASE.get(group.name)
+  if (override) {
+    return override
+  }
   const display = group.displayName || group.name
   if (SWHOIS_NO_ARTICLE.has(group.name)) {
     return `is ${display}`
