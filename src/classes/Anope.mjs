@@ -1,7 +1,7 @@
 import { hashPassword } from '../helpers/password'
 import knex from 'knex'
 import config from '../config'
-import { User, Rat } from '../db'
+import { User, Rat, IrcOutbox } from '../db'
 import logger from '../logging'
 import {
   APIError, ForbiddenAPIError, UnauthorizedAPIError, UnprocessableEntityAPIError, ConflictAPIError, NotFoundAPIError,
@@ -19,6 +19,32 @@ const anopeBcryptRounds = 10
 const nickUpdateWait = 5000
 // const defaultMaximumEditDistance = 5
 
+// Injection hardening (Risk 37): values interpolated into a services command
+// string sent over JSON-RPC must not carry whitespace/control characters, which
+// Anope's command tokenizer would split into extra arguments (or, via a newline,
+// smuggle a second command). These patterns reject anything with an embedded
+// space, tab, newline, or other separator before it can reach `runCommand`.
+const EMAIL_MAX_LENGTH = 254
+const SAFE_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u
+const SAFE_IRC_CHANNEL_PATTERN = /^#[^\s,]{1,64}$/u
+const SAFE_IRC_NICK_PATTERN = /^[^\s,]{1,64}$/u
+
+/**
+ * Assert an email is safe to interpolate into a services command.
+ * @param {*} email candidate email
+ * @returns {string} the email, if safe
+ * @throws {UnprocessableEntityAPIError} when the value is unsafe
+ */
+function assertSafeEmail (email) {
+  if (typeof email !== 'string'
+    || email.length === 0
+    || email.length > EMAIL_MAX_LENGTH
+    || !SAFE_EMAIL_PATTERN.test(email)) {
+    throw new UnprocessableEntityAPIError({ parameter: 'email' })
+  }
+  return email
+}
+
 // Anope SQL table names. The prefix differs between Anope 2.0 (`anope_db_`) and
 // Anope 2.1 (`anope21_`) and is set via FRAPI_ANOPE_TABLE_PREFIX. Anope 2.1 also
 // links a NickAlias to its NickCore by the numeric `ncid` (= NickCore.uniqueid)
@@ -27,6 +53,7 @@ const nickUpdateWait = 5000
 const NICK_CORE = `${tablePrefix}NickCore`
 const NICK_ALIAS = `${tablePrefix}NickAlias`
 const CHAN_ACCESS = `${tablePrefix}ChanAccess`
+const CHANNEL_INFO = `${tablePrefix}ChannelInfo`
 const MODE_LOCK = `${tablePrefix}ModeLock`
 const NS_CERT = `${tablePrefix}NSCert`
 
@@ -99,6 +126,24 @@ class Anope {
   }
 
   /**
+   * List every channel registered with ChanServ, ordered by name. Backs the
+   * group-management channel-access autocomplete and the bot's registered-channel
+   * guard, so access can only be granted to channels that actually exist.
+   * @returns {Promise<string[]>} registered channel names (e.g. `#fuelrats`); empty when Anope is unconfigured
+   */
+  static async getRegisteredChannels () {
+    if (!config.anope.database) {
+      return []
+    }
+    const results = await mysql.select('name')
+      .from(CHANNEL_INFO)
+      .orderBy('name')
+    return results.map((row) => {
+      return row.name
+    })
+  }
+
+  /**
    * Run an Anope services command via the Anope 2.1 JSON-RPC interface.
    * @param {string} service the anope service to command (e.g NickServ)
    * @param {string} user the user to act as when calling the command
@@ -144,6 +189,9 @@ class Anope {
    * @returns {Promise<*>} a promise that resolves with the result of the command
    */
   static syncChannel (channel) {
+    if (!SAFE_IRC_CHANNEL_PATTERN.test(channel)) {
+      throw new UnprocessableEntityAPIError({ parameter: 'channel' })
+    }
     return Anope.runCommand('ChanServ', 'xlexious', `SYNC ${channel}`)
   }
 
@@ -171,8 +219,76 @@ class Anope {
 
 
     for (const nick of nicks) {
+      // nick.nick originates from the Anope DB, but validate defensively before
+      // it is interpolated into the command string (Risk 37).
+      if (!SAFE_IRC_NICK_PATTERN.test(nick.nick ?? '')) {
+        continue
+      }
       await Anope.runCommand('NickServ', nick.nick, 'UPDATE')
     }
+  }
+
+  /**
+   * Push a channel-role resync for an account to the groupsync module.
+   *
+   * Fires the module's oper-only `NickServ GROUPSYNC <email>` command over
+   * JSON-RPC, impersonating the configured services-oper actor. The module
+   * fetches the account's roles from the API and reapplies channel modes
+   * synchronously, replying with a machine-parseable acknowledgement. This
+   * resolves only once that ack confirms the resync was *applied* (Risk 48) —
+   * a bare transport success is not treated as delivered.
+   * @param {string} email the account email to resync
+   * @returns {Promise<{applied: boolean, response: string}>} the delivery result
+   */
+  static async groupSync (email) {
+    if (!config.anope.jsonrpc) {
+      throw new Error('Anope JSON-RPC not configured')
+    }
+
+    assertSafeEmail(email)
+
+    const result = await Anope.runCommand('NickServ', config.anope.groupsyncActor, `GROUPSYNC ${email}`)
+    const response = typeof result === 'string' ? result : JSON.stringify(result ?? {})
+    return { applied: /\bapplied\b/iu.test(response), response }
+  }
+
+  /**
+   * Enqueue a durable, coalesced groupsync push for an account.
+   *
+   * Writes a pending row to the IRC outbox; the outbox worker delivers it with
+   * retry/backoff. The partial unique index collapses repeated changes to the
+   * same account onto the single outstanding row. Never throws into the request
+   * handler — a failure to enqueue is logged, not surfaced.
+   * @param {string} email the account email to resync
+   * @returns {Promise<undefined>} resolves once the row is enqueued (or skipped)
+   */
+  static async enqueueGroupSync (email) {
+    if (!config.anope.jsonrpc) {
+      return undefined
+    }
+
+    let normalized
+    try {
+      normalized = assertSafeEmail(email).toLowerCase()
+    } catch {
+      logger.warn('Refusing to enqueue groupsync for an invalid email')
+      return undefined
+    }
+
+    try {
+      await IrcOutbox.findOrCreate({
+        where: { email: normalized, status: 'pending' },
+        defaults: {
+          email: normalized,
+          status: 'pending',
+          attempts: 0,
+          nextRetryAt: new Date(),
+        },
+      })
+    } catch (error) {
+      logger.error({ message: 'Failed to enqueue groupsync', error })
+    }
+    return undefined
   }
 
   /**
@@ -499,7 +615,39 @@ class Anope {
   }
 
   /**
-   * Update IRC permissions for a user
+   * Update the virtual host (and nickname IRC state) for a user.
+   *
+   * Vhost is HostServ-managed and is never owned by the groupsync module, so
+   * this path stays regardless of the channel-access source of truth. Called on
+   * vhost-affecting events (rat/display-rat changes) and as part of a full
+   * permission update.
+   * @param {User} user the user to update the vhost for
+   * @returns {Promise<void>} resolves a promise when completed
+   */
+  static async updateVhost (user) {
+    if (!config.anope.database) {
+      return undefined
+    }
+
+    try {
+      await Anope.setVirtualHost(user.email, user.vhost())
+
+      setTimeout(() => {
+        Anope.updateIRCState(user)
+      }, nickUpdateWait)
+    } catch {
+      logger.error('Failed to update vhost for user', user)
+    }
+    return undefined
+  }
+
+  /**
+   * Update IRC permissions for a user: the vhost plus, while the legacy path is
+   * enabled, the direct channel-access flag writes.
+   *
+   * The channel-flag writes are gated behind `FRAPI_ANOPE_LEGACY_CHANNEL_WRITES`
+   * so they can be retired once the groupsync module is the sole source of truth
+   * for channel access; the vhost update always runs.
    * @param {User} user the user to update permissions for
    * @returns {Promise<void>} resolves a promise when completed
    */
@@ -508,9 +656,13 @@ class Anope {
       return undefined
     }
 
-    try {
-      await Anope.setVirtualHost(user.email, user.vhost())
+    await Anope.updateVhost(user)
 
+    if (!config.anope.legacyChannelWrites) {
+      return undefined
+    }
+
+    try {
       const channels = user.flags()
       if (!channels) {
         return undefined
@@ -524,12 +676,8 @@ class Anope {
       for (const channel of Object.keys(channels)) {
         await Anope.syncChannel(channel)
       }
-
-      setTimeout(() => {
-        Anope.updateIRCState(user)
-      }, nickUpdateWait)
     } catch {
-      logger.error('Failed to update permissions for user', user)
+      logger.error('Failed to update channel permissions for user', user)
     }
     return undefined
   }
@@ -541,7 +689,7 @@ class Anope {
    * @returns {Promise<undefined>} resolves a promise when completed
    */
   static removeChannelPermissions (user, group) {
-    if (!config.anope.database) {
+    if (!config.anope.database || !config.anope.legacyChannelWrites) {
       return undefined
     }
 
@@ -553,6 +701,87 @@ class Anope {
       return Anope.removeFlags({ channel, user })
     })
     return Promise.all(permissionChanges)
+  }
+
+  /**
+   * Audit the API-created channel-access footprint ahead of the groupsync
+   * cutover purge (Risk 42). Read-only.
+   *
+   * Reports the creator breakdown (so a human can confirm `API` is not also used
+   * by people), the API-owned `ChanAccess` rows split by active vs soft-deleted
+   * (`timestamp IS NULL`), a sample, and the API-set `INVITEOVERRIDE` mode-locks.
+   * @returns {Promise<object|null>} the audit, or null when Anope DB is unconfigured
+   */
+  static async auditApiChannelAccess () {
+    if (!config.anope.database) {
+      return null
+    }
+
+    const byCreator = await mysql(CHAN_ACCESS)
+      .select('creator')
+      .count({ count: '*' })
+      .groupBy('creator')
+
+    const [active] = await mysql(CHAN_ACCESS)
+      .where({ creator: 'API' })
+      .whereNotNull('timestamp')
+      .count({ count: '*' })
+
+    const [softDeleted] = await mysql(CHAN_ACCESS)
+      .where({ creator: 'API' })
+      .whereNull('timestamp')
+      .count({ count: '*' })
+
+    const sample = await mysql(CHAN_ACCESS)
+      .where({ creator: 'API' })
+      .select('ci', 'mask', 'data', 'provider', 'timestamp')
+      .limit(10)
+
+    const [inviteModeLocks] = await mysql(MODE_LOCK)
+      .where({ setter: 'API', name: 'INVITEOVERRIDE' })
+      .count({ count: '*' })
+
+    return {
+      byCreator,
+      apiActive: Number(active?.count ?? 0),
+      apiSoftDeleted: Number(softDeleted?.count ?? 0),
+      inviteModeLocks: Number(inviteModeLocks?.count ?? 0),
+      sample,
+    }
+  }
+
+  /**
+   * Purge the API-created channel-access rows once groupsync is the source of
+   * truth (Phase G). Dry-run by default — pass `execute: true` to delete.
+   *
+   * Only rows stamped `creator = 'API'` are removed (human-created access is
+   * left untouched); soft-deleted API rows are included. `INVITEOVERRIDE`
+   * mode-locks set by the API are only removed when `includeModeLocks` is set.
+   * @param {object} [arg] options
+   * @param {boolean} [arg.execute] actually delete (default false = dry-run)
+   * @param {boolean} [arg.includeModeLocks] also delete API `INVITEOVERRIDE` mode-locks
+   * @returns {Promise<object|null>} the audit (dry-run) or deletion counts (execute)
+   */
+  static async purgeApiChannelAccess ({ execute = false, includeModeLocks = false } = {}) {
+    if (!config.anope.database) {
+      return null
+    }
+
+    const audit = await Anope.auditApiChannelAccess()
+    if (!execute) {
+      return { dryRun: true, ...audit }
+    }
+
+    const deletedAccess = await mysql(CHAN_ACCESS).where({ creator: 'API' }).del()
+
+    let deletedModeLocks = 0
+    if (includeModeLocks) {
+      deletedModeLocks = await mysql(MODE_LOCK)
+        .where({ setter: 'API', name: 'INVITEOVERRIDE' })
+        .del()
+    }
+
+    return { dryRun: false, deletedAccess, deletedModeLocks }
   }
 
   /**
@@ -768,6 +997,7 @@ class Anope {
       } else {
         accountUniqueId = generateUniqueId()
         await transaction.insert({
+          AUTOLOGIN: 1,
           AUTOOP: 1,
           HIDE_EMAIL: 1,
           HIDE_MASK: 1,

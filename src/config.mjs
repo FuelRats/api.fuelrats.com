@@ -44,6 +44,14 @@ const config = {
     // and its bearer token. Replaces the removed XML-RPC interface.
     jsonrpc: optional('FRAPI_ANOPE_JSONRPC', [], undefined),
     jsonrpcToken: optional('FRAPI_ANOPE_JSONRPC_TOKEN', [], undefined),
+    // Services-oper account the groupsync push impersonates when calling the
+    // module's oper-only `NickServ GROUPSYNC` command over JSON-RPC.
+    groupsyncActor: optional('FRAPI_ANOPE_GROUPSYNC_ACTOR', [], 'xlexious'),
+    // Whether the API still writes channel access flags directly to the Anope DB.
+    // On during the groupsync dual-run soak; turned off at cutover once the
+    // groupsync module is the sole source of truth for channel access. Vhost
+    // writes are unaffected (vhost is HostServ-managed, never groupsync's job).
+    legacyChannelWrites: optional('FRAPI_ANOPE_LEGACY_CHANNEL_WRITES', [toStrictBoolean], true),
   },
   irc: {
     server: recommended('FRAPI_IRC_SERVER', [], undefined),

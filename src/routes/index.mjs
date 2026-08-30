@@ -1,4 +1,5 @@
 export { default as Anniversaries } from './Anniversaries'
+export { default as AnopeSync } from './AnopeSync'
 export { default as Authenticator } from './Authenticators'
 export { default as Clients } from './Clients'
 export { default as Decals } from './Decals'

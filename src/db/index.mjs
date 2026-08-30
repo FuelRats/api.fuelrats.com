@@ -10,6 +10,7 @@ import Decal from './Decal'
 import Epic from './Epic'
 import EpicUsers from './EpicUsers'
 import Group from './Group'
+import IrcOutbox from './IrcOutbox'
 import Passkey from './Passkey'
 import Rat from './Rat'
 import Rescue from './Rescue'
@@ -41,6 +42,7 @@ const models = {
   EpicUsers,
   Decal,
   Group,
+  IrcOutbox,
   Passkey,
   UserGroups,
   VerificationToken,
@@ -153,6 +155,7 @@ export {
   Epic,
   EpicUsers,
   Group,
+  IrcOutbox,
   Passkey,
   Rat,
   Rescue,

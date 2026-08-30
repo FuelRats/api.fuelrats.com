@@ -329,6 +329,10 @@ const wsManager = new WebSocket({ trafficManager: traffic })
     // Schedule daily paperwork reminders
     const { schedulePaperworkReminders } = await import('./cron/paperworkReminders.mjs')
     schedulePaperworkReminders()
+
+    // Start the IRC groupsync outbox worker
+    const { scheduleGroupsyncOutbox } = await import('./cron/groupsyncOutbox.mjs')
+    scheduleGroupsyncOutbox()
   } catch (error) {
     logError(error, { _event: 'startup' }, 'Failed to start server')
     process.exit(1)
