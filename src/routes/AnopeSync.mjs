@@ -86,19 +86,21 @@ function swhoisText (group) {
 /**
  * The module-facing view of a user: their merged channel access and roles.
  * Each role carries the group machine `name` (used by the module as a stable
- * SWHOIS line tag) and a human `display` (the whois text). Roles Anope already
- * whois-tags (opers) and the internal service group are omitted.
+ * SWHOIS line tag), a human `display` (the whois text), and `hidden`. Hidden
+ * roles (opers Anope already whois-tags, and the internal service group) are
+ * still returned so the module can retract any stale line for them — it just
+ * never sets them.
  * @param {User} user a user loaded with its `groups`
- * @returns {{channels: object, roles: Array<{name: string, display: string}>}} groupsync payload
+ * @returns {{channels: object, roles: Array<{name: string, display: string, hidden: boolean}>}} groupsync payload
  */
 function anopeView (user) {
-  const roles = (user.groups ?? [])
-    .filter((group) => {
-      return !SWHOIS_SKIP_ROLES.has(group.name)
-    })
-    .map((group) => {
-      return { name: group.name, display: swhoisText(group) }
-    })
+  const roles = (user.groups ?? []).map((group) => {
+    return {
+      name: group.name,
+      display: swhoisText(group),
+      hidden: SWHOIS_SKIP_ROLES.has(group.name),
+    }
+  })
   return { channels: flattenChannels(user.flags()), roles }
 }
 
