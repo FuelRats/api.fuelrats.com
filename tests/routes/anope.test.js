@@ -89,18 +89,19 @@ describe('GET /anope', () => {
     expect(channels['#dnd']).toBe('V')
     expect(sortLetters(channels['#snickers'])).toBe('HV')
 
-    // roles carry the group name (SWHOIS tag) and a display (whois text),
-    // display falling back to the group name when unset
+    // roles carry the group name (SWHOIS tag) and a display (whois text)
+    // phrased as a "<nick> …" completion, display falling back to the group
+    // name when unset
     const roleByName = new Map(roles.map((role) => [role.name, role.display]))
-    expect(roleByName.get('gstesta')).toBe('GroupSync Test A')
-    expect(roleByName.get('gstestb')).toBe('gstestb')
+    expect(roleByName.get('gstesta')).toBe('is a GroupSync Test A')
+    expect(roleByName.get('gstestb')).toBe('is a gstestb')
   })
 
   it('returns explicit empty channels for a user with groups but no channel access', async () => {
     const response = await client(READ_TOKEN).get('/anope', { params: { email: NOACCESS_EMAIL } })
     expect(response.status).toBe(200)
     expect(response.data.channels).toEqual({})
-    expect(response.data.roles.map((role) => role.display)).toContain('GroupSync Empty')
+    expect(response.data.roles.map((role) => role.display)).toContain('is a GroupSync Empty')
   })
 
   it('returns 404 for an unknown user', async () => {

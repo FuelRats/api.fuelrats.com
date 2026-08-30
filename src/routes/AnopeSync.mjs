@@ -47,18 +47,58 @@ function flattenChannels (flags) {
   return channels
 }
 
+// Roles the groupsync module must NOT render as a SWHOIS line. `admin` and
+// `netadmin` are opers whose "Network Moderator"/"Network Administrator" whois
+// is already set by Anope's opertype — a groupsync line would duplicate it.
+// `groupsync` is the internal service-account group, not a human role.
+const SWHOIS_SKIP_ROLES = new Set(['admin', 'netadmin', 'groupsync'])
+
+// Displays that read as a state rather than a title take no article
+// ("is Verified", not "is a Verified").
+const SWHOIS_NO_ARTICLE = new Set(['verified'])
+
+// Roles whose whois reads better with a hand-written phrase than the generic
+// "is a/an <display>" — e.g. a collective noun a person belongs to rather than
+// is ("is on the Operations Team", not "is an Operations Team").
+const SWHOIS_PHRASE = new Map([
+  ['operations', 'is on the Operations Team'],
+])
+
+/**
+ * The whois text for a role, phrased as a sentence completion of "<nick> …"
+ * (e.g. "is an Overseer", "is Verified", "is a Drilled Rat").
+ * @param {Group} group the role group
+ * @returns {string} the SWHOIS line text
+ */
+function swhoisText (group) {
+  const override = SWHOIS_PHRASE.get(group.name)
+  if (override) {
+    return override
+  }
+  const display = group.displayName || group.name
+  if (SWHOIS_NO_ARTICLE.has(group.name)) {
+    return `is ${display}`
+  }
+  const article = (/^[aeiou]/iu).test(display) ? 'an' : 'a'
+  return `is ${article} ${display}`
+}
+
 /**
  * The module-facing view of a user: their merged channel access and roles.
  * Each role carries the group machine `name` (used by the module as a stable
- * SWHOIS line tag) and a human `display` (the whois text).
+ * SWHOIS line tag) and a human `display` (the whois text). Roles Anope already
+ * whois-tags (opers) and the internal service group are omitted.
  * @param {User} user a user loaded with its `groups`
  * @returns {{channels: object, roles: Array<{name: string, display: string}>}} groupsync payload
  */
 function anopeView (user) {
-  const roles = (user.groups ?? []).map((group) => ({
-    name: group.name,
-    display: group.displayName || group.name,
-  }))
+  const roles = (user.groups ?? [])
+    .filter((group) => {
+      return !SWHOIS_SKIP_ROLES.has(group.name)
+    })
+    .map((group) => {
+      return { name: group.name, display: swhoisText(group) }
+    })
   return { channels: flattenChannels(user.flags()), roles }
 }
 
