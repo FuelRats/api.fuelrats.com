@@ -290,10 +290,10 @@ export default class Rescues extends APIResource {
         _rescue_id: result.id,
         _total_rescues: rescueCount,
         _outcome: outcome,
-        _is_milestone: rescueCount % 1000 === 0,
+        _is_milestone: outcome === 'success' && rescueCount % 1000 === 0,
       }, `Rescue completed: ${result.id} (total: ${rescueCount})`)
 
-      if (rescueCount % 1000 === 0) {
+      if (outcome === 'success' && rescueCount % 1000 === 0) {
         await Announcer.sendRescueMessage({ message: `This was rescue #${rescueCount}!` })
 
         // Log milestone achievement
