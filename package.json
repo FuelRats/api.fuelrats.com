@@ -42,7 +42,7 @@
     "maxmind": "^5.0.6",
     "mysql": "^2.18.1",
     "nanoid": "^5.1.7",
-    "nodemailer": "^8.0.5",
+    "nodemailer": "^9.0.1",
     "npid": "^0.4.0",
     "obscenity": "^0.4.6",
     "otplib": "^13.4.0",
