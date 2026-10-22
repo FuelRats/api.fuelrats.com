@@ -599,7 +599,10 @@ class Authentication {
  * @returns {*} A string with the bearer token or null if none was found.
  */
 function getBearerToken (ctx) {
-  if (ctx.query.bearer) {
+  // A bearer must be a string. Query parsing turns `?bearer[ne]=x` into an object,
+  // which would otherwise reach the token lookup as a Sequelize operator and match an
+  // arbitrary token. Only a plain `?bearer=<token>` string is accepted here.
+  if (typeof ctx.query.bearer === 'string') {
     return ctx.query.bearer
   }
   if (ctx.get('Authorization')) {
