@@ -586,7 +586,20 @@ class Authentication {
       throw new GoneAPIError({ parameter: 'representing' })
     }
 
-    ctx.state.user = representedUser
+    // Reload under the default scope so the represented user's groups/permissions are present,
+    // then refuse representation that would grant any permission the caller does not already hold.
+    // ctx.state.permissions here is still the caller's own set (recomputed after this returns).
+    const scopedUser = await User.findOne({ where: { id: representedUser.id } })
+    const callerPermissions = ctx.state.permissions ?? []
+    const representedPermissions = scopedUser?.permissions ?? []
+    const escalates = representedPermissions.some((permission) => {
+      return callerPermissions.includes(permission) === false
+    })
+    if (escalates) {
+      throw new ForbiddenAPIError({ parameter: 'representing' })
+    }
+
+    ctx.state.user = scopedUser ?? representedUser
     return true
   }
 }
