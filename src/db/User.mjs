@@ -171,6 +171,10 @@ export default class User extends Model {
       return group2.priority - group1.priority
     })
 
+    if (!group) {
+      return undefined
+    }
+
     if (group.withoutPrefix) {
       return group.vhost
     }
