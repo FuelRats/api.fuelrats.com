@@ -864,6 +864,10 @@ export default class Users extends APIResource {
       },
     })
 
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
     this.requireWritePermission({ connection: ctx, entity: user })
 
     const redeemable = await Decals.getEligibleDecalCount({ user })
@@ -1275,7 +1279,7 @@ export default class Users extends APIResource {
       email: WritePermission.sudo,
       password: WritePermission.sudo,
       status: (ctx, entity, value) => {
-        if (ctx.state.user.permissions.includes('users.write')) {
+        if (ctx.state.permissions.includes('users.write')) {
           return true
         }
 
@@ -1333,7 +1337,7 @@ export default class Users extends APIResource {
           many: false,
 
           hasPermission (connection, entity, id) {
-            const hasRat = connection.state.user.rats.some((rat) => {
+            const hasRat = (connection.state.user.rats ?? []).some((rat) => {
               return rat.id === id
             })
             return hasRat || Permission.granted({ permissions: ['rats.write'], connection })
