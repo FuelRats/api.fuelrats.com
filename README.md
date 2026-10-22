@@ -1,102 +1,132 @@
 # api.fuelrats.com
 
-[![node](https://img.shields.io/node/v/api.fuelrats.com.svg?style=flat-square)](https://nodejs.org)
-[![Dependencies](http://img.shields.io/david/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://david-dm.org/FuelRats/api.fuelrats.com)
-[![Open Github Issues](http://img.shields.io/github/issues/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://github.com/FuelRats/api.fuelrats.com/issues)
-[![Travis CI Build](http://img.shields.io/travis/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://travis-ci.org/FuelRats/api.fuelrats.com)
+[![Deploy](https://github.com/FuelRats/api.fuelrats.com/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/FuelRats/api.fuelrats.com/actions/workflows/deploy.yml)
+[![Open GitHub Issues](https://img.shields.io/github/issues/FuelRats/api.fuelrats.com.svg?style=flat-square)](https://github.com/FuelRats/api.fuelrats.com/issues)
 
-## Setting up
-<!--
-### With Vagrant
+The Fuel Rats API: a JSON:API service for rescues, rats, users, groups and OAuth2/OIDC sign-in, with
+IRC services (Anope) integration. It runs on [Bun](https://bun.sh) with [Hono](https://hono.dev) and
+[Sequelize](https://sequelize.org) on PostgreSQL.
 
-[Vagrant](vagrantup.com) allows us to run a local virtual machine clone of our production environment with ease. Make sure you have Vagrant installed (Check out [this article](https://servercheck.in/blog/running-ansible-within-windows) if you're on Windows), then run:
+## Requirements
 
-Please make note that you need a 64-bit system for this to work.
+- [Bun](https://bun.sh) 1.4.3 (the version pinned in the `Dockerfile` and CI)
+- [Docker](https://docs.docker.com/get-docker/) with Compose, for PostgreSQL 17 and [Mailpit](https://mailpit.axllent.org)
+- [Node.js](https://nodejs.org) 22 or newer, only for running database migrations (`sequelize-cli` does not run on Bun)
 
-    vagrant up
+## Getting started
 
-Vagrant will do everything we need:
+These steps run the API on your machine with Bun, against PostgreSQL and Mailpit in Docker. The commands
+assume a POSIX shell such as bash or zsh.
 
-1. Download an Ubuntu virtual machine image;
-1. Set up SSH access on the vm which we can access with `vagrant ssh`;
-1. Provision our vm using Ansible to set up Node and all the dependencies we need;
-1. Start our API with [`forever`](https://www.npmjs.com/package/forever); and
-1. Import all archived rats and rescues from the Google spreadsheets.
+1. Install dependencies:
 
-Once Vagrant finishes doing its thing you should be able to hit the API at `http://localhost:8080`. When you're done you can kill the Vagrant machine with `vagrant destroy` or, if you don't want to wait for the VM to be rebuilt from scratch, you can just pause the VM with `vagrant halt`.
+       git clone https://github.com/FuelRats/api.fuelrats.com.git
+       cd api.fuelrats.com
+       bun install
 
-### Without Vagrant
+2. Create the development secrets that Compose mounts into its containers:
 
-So you wanna do it the hard way? Fine. Make sure you install all of the dependencies:
--->
+       mkdir -p .docker/secrets
+       for secret in frapi_postgres_password frapi_cookie frapi_jwt_secret; do
+         openssl rand -hex 32 > .docker/secrets/$secret
+       done
 
-So, first of you need to fetch a few things and install. These should be available as packages from your favorite package manager.
+3. Start PostgreSQL and Mailpit:
 
-1. [`nvm`](https://github.com/creationix/nvm)
-2. [`yarn`](https://yarnpkg.com/lang/en/docs/install/)
-3. [`Postgres v9.4`](https://www.postgresql.org/)
+       docker compose up -d db mailpit
 
-Grab the repo:
+4. Load a development database. The dump is not in the repository (`fuelratsdev.dump` is gitignored), so
+   ask a maintainer for one. Restore it, mark the migrations it already contains, then apply the rest:
 
-    git clone https://github.com/FuelRats/api.fuelrats.com.git
+       docker compose exec -T db pg_restore -U fuelrats -d fuelrats --no-owner --no-privileges < fuelratsdev.dump
+       docker compose exec -T db psql -U fuelrats -d fuelrats < scripts/sequelize-meta-baseline.sql
+       bun run db:migrate --url "postgres://fuelrats:$(cat .docker/secrets/frapi_postgres_password)@localhost:5432/fuelrats"
 
-Install all of the required Node modules:
+   Skip the `sequelize-meta-baseline.sql` step if the dump already has a `SequelizeMeta` table. A database
+   volume created by an older PostgreSQL major version will not start on 17; remove it with
+   `docker compose down -v` and restore again.
 
-    cd api.fuelrats.com
-    nvm install 8.8.1
-    yarn
+5. Download the GeoLite2 databases (the same mirror the `Dockerfile` uses):
 
-Start postgres and create the databases required:
+       mkdir -p static/geoip
+       for db in City ASN; do
+         curl -L -o static/geoip/GeoLite2-$db.mmdb "https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-$db.mmdb"
+       done
 
-    su postgres
-    psql -c 'CREATE DATABASE fuelrats;' -U postgres
-    psql -c 'CREATE EXTENSION citext;' -U postgres fuelrats
-    psql -c 'CREATE DATABASE fuelratsTest;' -U postgres
-    psql -c 'CREATE EXTENSION citext;' -U postgres fuelratstest
-    psql -c 'CREATE USER fuelrats;' -U postgres
-    psql -c "ALTER USER fuelrats PASSWORD 'SqueakBaby';" -U postgres
-    exit
+6. Create a `.env` file (gitignored; Bun loads it automatically) and generate `build.json`:
 
-If you want to use a different username or password, you can use them instead and set the new ones in your `config.json`
+       cat > .env <<EOF
+       FRAPI_COOKIE=$(cat .docker/secrets/frapi_cookie)
+       FRAPI_JWT_SECRET=$(cat .docker/secrets/frapi_jwt_secret)
+       FRAPI_POSTGRES_PASSWORD=$(cat .docker/secrets/frapi_postgres_password)
+       FRAPI_GEOIP_DIRECTORY=static/geoip
+       FRAPI_SMTP_HOSTNAME=localhost
+       FRAPI_SMTP_PORT=1025
+       EOF
+       bun run build:info
 
-Now start the server!
+7. Start the API, restarting on file changes:
 
-    node index.js
+       bun run dev
 
-This will start the API service on either port 8082 or whatever port you've set in `config.json`.
+The API listens on http://localhost:8080 and serves its API reference at http://localhost:8080/. Mail the
+API sends shows up in Mailpit at http://localhost:8025.
 
-## Common Problems
+### Running everything in Docker
 
-### "Missing indexes" or an empty object is returned
+`docker compose up --build` builds the API image and runs it with PostgreSQL, Mailpit and an SSH tunnel to
+the development Anope database. The tunnel needs SSH access to `services.fuelrats.dev` with the key in
+`~/.ssh/id_rsa`, and the API container waits for it to be healthy. Without that access, use the setup above.
 
-Your databases are empty.  You will need to either import some archived data or create some random test data
-with the example [generator script](tools/createTestDB.js)
+## Configuration
 
-## Generating the docs
+All configuration comes from `FRAPI_*` environment variables, defined with their defaults and validation in
+[`src/config.mjs`](src/config.mjs). A variable can also be provided as a Docker secret file at
+`/run/secrets/<variable name in lower case>`, which is how Compose passes `FRAPI_COOKIE`,
+`FRAPI_JWT_SECRET` and `FRAPI_POSTGRES_PASSWORD`.
 
-It's so easy a DerryBear could do it! Just run the generator scripts:
+On startup the API prints a warning for every recommended variable that is missing and exits if a required
+one is invalid. `FRAPI_COOKIE`, `FRAPI_JWT_SECRET` and `FRAPI_GEOIP_DIRECTORY` have no defaults. The Anope
+integration stays disabled until `FRAPI_ANOPE_DATABASE` is set.
 
-    npm run jsdoc
-    npm run apidoc
+## Development
 
-The docs will be created under static/docs and therefore accessible
-via `http://[server]:[port]/docs/` e.g. http://localhost:8081/docs/js or http://localhost:8081/docs/api
+| Command | What it does |
+| --- | --- |
+| `bun run dev` | Start the API and restart it on file changes |
+| `bun run eslint` | Lint the project |
+| `bun test` | Run the integration tests |
+| `bun run db:migrate --url <postgres url>` | Apply pending migrations |
+| `bun run db:migrate:status --url <postgres url>` | List migrations and whether they are applied |
+| `bun run openapi:build` | Regenerate the OpenAPI spec in `docs/openapi/` |
+| `bun run openapi:lint` | Validate the OpenAPI spec |
 
-## Running Tests
+### Tests
 
-The test suite is comprised of a number of [nodeunit](https://github.com/caolan/nodeunit) tests.  To run the entire suite, simply use:
+The tests in `tests/` are integration tests: they send requests to a running API (`FRAPI_TEST_URL`,
+default `http://localhost:8080`) and seed and remove their own records with `psql` inside the database
+container (`FRAPI_TEST_DB_CONTAINER`, default `apifuelratscom-db-1`). Run them against a development
+database only.
 
-    npm test
+### Migrations
 
-If you wish to run individual tests, you can launch either an individual group:
+Schema changes are CommonJS files in [`migrations/`](migrations), named `<timestamp>-<description>.js`
+and applied with `bun run db:migrate`, which runs `sequelize-cli` on Node.
 
-    npm test login
+### API documentation
 
-or even specify a single test within the group:
+The API serves an interactive reference (Scalar) at `/`, built from `docs/openapi/bundled.yaml`. The spec is
+generated from the route definitions in `src/routes/` and the hand-written files in `docs/openapi/`; run
+`bun run openapi:build` after changing either. The Docker build regenerates it as well.
 
-    npm test login resetPassword
+## Deployment
 
-When running the entire test suite or a test group, any ouput to stderr or stdout is muted to keep the build process clean.  If you run the tests individually, this output is restored to aid test development.
+GitHub Actions builds the Docker image, pushes it to `ghcr.io/fuelrats/api.fuelrats.com` and updates the
+Docker Swarm service: pushes to `develop` deploy to the development API, pushes to `main` to production. Pull
+requests run ESLint and a Docker build. Dependabot opens update pull requests against `develop`.
+
+The Bun version is pinned in the `Dockerfile` and in both workflows in `.github/workflows/`; change all three
+together.
 
 ## License
 Copyright 2017 The Fuel Rats Mischief
@@ -109,4 +139,4 @@ Redistribution and use in source and binary forms, with or without modification,
 
 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.    
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
