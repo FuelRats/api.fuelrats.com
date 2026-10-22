@@ -110,6 +110,7 @@ export default class Users extends APIResource {
         email: user.email,
         password,
         code: totpCode,
+        ip: ctx.request?.ip,
       })
 
       if (!authenticatedUser) {

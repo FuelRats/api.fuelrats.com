@@ -614,7 +614,7 @@ class OAuth extends API {
     }
 
     /* Validate username and password */
-    const user = await Authentication.passwordAuthenticate({ email: username, password, code })
+    const user = await Authentication.passwordAuthenticate({ email: username, password, code, ip: ctx.request?.ip })
     if (!user) {
       throw new UnauthorizedAPIError({})
     }
