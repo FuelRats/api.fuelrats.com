@@ -8,6 +8,7 @@ import config from '../config'
 import { detectPlatform, detectExpansion } from '../helpers/platformDetect'
 import serializeSubscriptions from '../helpers/serializeSubscriptions'
 import { buildBroadcastPayload } from '../helpers/pushPayload'
+import isAllowedPushEndpoint from '../helpers/pushEndpoint'
 import { createWorkerPool } from '../helpers/workerPool'
 import DatabaseQuery from '../query/DatabaseQuery'
 import { WebPushSubscriptionView } from '../view'
@@ -58,12 +59,23 @@ export default class WebPushSubscriptions extends APIResource {
       throw new UnprocessableEntityAPIError({ pointer: 'endpoint' })
     }
 
+    // Only accept endpoints that point at a known browser push service over https (prevents SSRF)
+    if (!isAllowedPushEndpoint(endpoint)) {
+      throw new UnprocessableEntityAPIError({ pointer: 'endpoint' })
+    }
+
     if (!auth) {
       throw new UnprocessableEntityAPIError({ pointer: 'keys/auth' })
     }
 
     if (!p256dh) {
       throw new UnprocessableEntityAPIError({ pointer: 'keys/p256dh' })
+    }
+
+    // Do not let a subscriber overwrite another user's subscription for the same endpoint
+    const existing = await WebPushSubscription.findOne({ where: { endpoint } })
+    if (existing && existing.userId !== ctx.state.user.id) {
+      throw new UnprocessableEntityAPIError({ pointer: 'endpoint' })
     }
 
     await WebPushSubscription.upsert({
