@@ -663,6 +663,50 @@ export default class Rescues extends APIResource {
   }
 
   /**
+   * Rescue editing is intentionally permissive: a holder of rescues.write.me may edit any rescue,
+   * including through representing the case's dispatcher, who is often not an assigned rat. This
+   * keeps the long-standing dispatch/honour-system workflow working. The stricter group-only rule
+   * for sudo/self fields (introduced for users and clients) does not apply to rescues.
+   * @param {object} arg function arguments object
+   * @param {Context} arg.ctx a request context
+   * @param {object} arg.attributes attributes list
+   * @param {object} arg.entity the entity to validate
+   */
+  async validateUpdateAccess ({ ctx, attributes, entity }) {
+    const isGroup = Permission.granted({ permissions: [`${this.type}.write`], connection: ctx })
+      || Permission.granted({ permissions: [`${this.type}.write.me`], connection: ctx })
+    const isSelf = this.isSelf({ ctx, entity }) && Permission.granted({
+      permissions: [`${this.type}.write.me`],
+      connection: ctx,
+    })
+    const isInternal = Permission.granted({
+      permissions: [`${this.type}.internal`],
+      connection: ctx,
+    })
+    await this.validatePermissionForFields({
+      attributes,
+      isInternal,
+      isGroup,
+      isSelf,
+      ctx,
+      entity,
+    })
+  }
+
+  /**
+   * Resource-level write gate for rescues. A holder of rescues.write.me may update any rescue
+   * (the dispatch/honour-system workflow, including editing through representing the dispatcher,
+   * who is often not an assigned rat), so this is not restricted to assigned rats / first limpets.
+   * Per-field limits still apply via validateUpdateAccess; deletion keeps its own rescues.write.
+   * @param {object} arg function arguments object
+   * @param {Context} arg.connection a request context
+   * @returns {boolean} whether the caller may write this rescue
+   */
+  hasWritePermission ({ connection }) {
+    return Permission.granted({ permissions: ['rescues.write', 'rescues.write.me'], connection })
+  }
+
+  /**
    * @inheritdoc
    */
   changeRelationship ({ relationship }) {
