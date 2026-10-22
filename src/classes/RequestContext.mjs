@@ -1,3 +1,5 @@
+import config from '../config'
+import resolveClientIp from '../helpers/clientIp'
 import parseQuery from '../helpers/parseQuery'
 
 /**
@@ -44,8 +46,12 @@ export class RequestContext {
       headers[key] = value
     })
 
-    const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim()
-      || '127.0.0.1'
+    // Bun passes its server as the fetch env, exposing the socket peer via requestIP.
+    const ip = resolveClientIp({
+      forwardedFor: c.req.header('x-forwarded-for'),
+      socketAddress: c.env?.requestIP?.(c.req.raw)?.address,
+      proxyEnabled: config.server.proxyEnabled,
+    })
 
     this.request = {
       body: this.data,
