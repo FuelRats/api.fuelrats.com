@@ -134,7 +134,10 @@ export default class Rescues extends APIResource {
         countConditions.push(`"Rescue"."${key}" = :${key}`)
       } else if (value && typeof value === 'object') {
         const opIn = value[Op.in]
-        if (opIn) {
+        if (opIn?.length === 0) {
+          // An empty list matches nothing, and `IN ()` isn't valid SQL
+          countConditions.push('FALSE')
+        } else if (opIn) {
           countReplacements[`${key}List`] = opIn
           countConditions.push(`"Rescue"."${key}" IN (:${key}List)`)
         }
