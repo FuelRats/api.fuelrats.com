@@ -717,7 +717,7 @@ export default class Rescues extends APIResource {
 
           hasPermission (connection, entity) {
             return this.isSelf({ ctx: connection, entity }) || Permission.granted({
-              permissions: ['rescues.write'],
+              permissions: ['rescues.write', 'rescues.write.me'],
               connection,
             })
           },
@@ -759,7 +759,7 @@ export default class Rescues extends APIResource {
 
           hasPermission (connection, entity) {
             return this.isSelf({ ctx: connection, entity }) || Permission.granted({
-              permissions: ['rescues.write'],
+              permissions: ['rescues.write', 'rescues.write.me'],
               connection,
             })
           },
