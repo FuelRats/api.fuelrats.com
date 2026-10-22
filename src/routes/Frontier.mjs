@@ -39,7 +39,7 @@ export default class Frontier extends API {
     if (existingLink) {
       const newToken = await Token.create({
         value: await oAuthTokenGenerator(),
-        clientId: config.frontned.clientId,
+        clientId: config.frontier.clientId,
         userId: existingLink.id,
         scope: ['*'],
       })
@@ -197,7 +197,7 @@ export default class Frontier extends API {
 
     const newToken = await Token.create({
       value: await oAuthTokenGenerator(),
-      clientId: config.ropcClientId,
+      clientId: config.frontier.clientId,
       userId: newUser.id,
       scope: ['*'],
     })

@@ -111,6 +111,11 @@ export default class Resets extends API {
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 
+    if (reset.expires < Date.now()) {
+      await reset.destroy()
+      throw new NotFoundAPIError({ parameter: 'token' })
+    }
+
     return true
   }
 
@@ -125,6 +130,11 @@ export default class Resets extends API {
     })
 
     if (!reset) {
+      throw new NotFoundAPIError({ parameter: 'token' })
+    }
+
+    if (reset.expires < Date.now()) {
+      await reset.destroy()
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 

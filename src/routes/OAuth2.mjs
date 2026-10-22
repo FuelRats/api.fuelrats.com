@@ -501,7 +501,7 @@ class OAuth extends API {
     }
 
     /* Only 10 minutes is allowed to pass between requesting an auth code and exchanging it for a token */
-    if (Date() - authCode.createdAt > transactionTimeout) {
+    if (Date.now() - authCode.createdAt.getTime() > transactionTimeout) {
       throw new InvalidRequestOAuthError('code')
     }
 
@@ -514,6 +514,9 @@ class OAuth extends API {
     if (authCode.redirectUri !== redirectUri) {
       throw new InvalidRequestOAuthError('redirect_uri')
     }
+
+    /* Authorization codes are single use: consume it before issuing the token */
+    await authCode.destroy()
 
     /* Exchange successful, return bearer token */
     let tokenValue
@@ -614,7 +617,7 @@ class OAuth extends API {
     }
 
     /* Validate username and password */
-    const user = await Authentication.passwordAuthenticate({ email: username, password, code })
+    const user = await Authentication.passwordAuthenticate({ email: username, password, code, ip: ctx.request?.ip })
     if (!user) {
       throw new UnauthorizedAPIError({})
     }
@@ -660,7 +663,7 @@ class OAuth extends API {
       value: await oAuthTokenGenerator(),
       clientId: client.id,
       userId: user.id,
-      scope: ['*'],
+      scope: scopes,
       ...tokenMetadata(ctx, 'password'),
     })
 

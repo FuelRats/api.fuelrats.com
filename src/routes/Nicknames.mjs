@@ -271,6 +271,9 @@ export default class Nickname extends APIResource {
    * @inheritdoc
    */
   isSelf ({ ctx, entity }) {
+    if (!entity?.email || !ctx.state.user?.email) {
+      return false
+    }
     if (entity.email.toLowerCase() === ctx.state.user.email.toLowerCase()) {
       return Permission.granted({ permissions: ['users.write.me'], connection: ctx })
     }

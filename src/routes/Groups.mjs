@@ -222,7 +222,7 @@ export default class Groups extends APIResource {
   @websocket('groups', 'search')
   @authenticated
   async search (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: GroupView })
     const result = await Group.findAndCountAll(query.searchObject)
     return new DatabaseDocument({ query, result, type: GroupView })
   }

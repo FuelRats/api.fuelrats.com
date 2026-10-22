@@ -18,7 +18,9 @@ import {
   UnauthorizedAPIError,
   ResetRequiredAPIError,
   ForbiddenAPIError,
+  TooManyRequestsAPIError,
 } from './APIError'
+import loginThrottle from './LoginThrottle'
 import Permission from './Permission'
 
 const bearerTokenHeaderOffset = 7
@@ -38,12 +40,15 @@ class Authentication {
    * @param {string} [arg.code] optional 2FA code
    * @returns {Promise<undefined|Promise<db.Model>>} A promise returning the authenticated user object
    */
-  static async passwordAuthenticate ({ email, password, code }) {
+  static async passwordAuthenticate ({ email, password, code, ip }) {
     if (!email || !password) {
       return undefined
     }
 
-    // const user = await User.findByEmail(email)
+    // Throttle before any database lookup or bcrypt verify so locked-out accounts/IPs cost nothing
+    if (loginThrottle.isLimited({ email, ip })) {
+      throw new TooManyRequestsAPIError({})
+    }
 
     const user = await User.findOne({
       where: {
@@ -53,6 +58,7 @@ class Authentication {
       },
     })
     if (!user) {
+      loginThrottle.recordFailure({ email, ip })
       return undefined
     }
 
@@ -71,6 +77,7 @@ class Authentication {
 
     const result = await verifyPassword(password, user.password)
     if (result === false) {
+      loginThrottle.recordFailure({ email, ip })
       logMetric('authentication_failure', {
         _auth_method: 'password',
         _failure_reason: 'invalid_password',
@@ -125,6 +132,7 @@ class Authentication {
       }
 
       if (!isValidCode) {
+        loginThrottle.recordFailure({ email, ip })
         logMetric('authentication_failure', {
           _auth_method: 'password_2fa',
           _failure_reason: 'invalid_2fa_code',
@@ -142,6 +150,9 @@ class Authentication {
         }, `Recovery code used for user ${user.id}`)
       }
     }
+
+    // Fully authenticated (password and any 2FA): clear the account's failure count
+    loginThrottle.recordSuccess({ email })
 
     // Log successful password authentication
     logMetric('authentication_success', {
@@ -398,7 +409,7 @@ class Authentication {
   static basicUserAuthentication ({ connection }) {
     const [email, password, code] = getBasicAuth(connection)
     if (email && password) {
-      return Authentication.passwordAuthenticate({ email, password, code })
+      return Authentication.passwordAuthenticate({ email, password, code, ip: connection.request?.ip })
     }
     return undefined
   }
@@ -586,7 +597,20 @@ class Authentication {
       throw new GoneAPIError({ parameter: 'representing' })
     }
 
-    ctx.state.user = representedUser
+    // Reload under the default scope so the represented user's groups/permissions are present,
+    // then refuse representation that would grant any permission the caller does not already hold.
+    // ctx.state.permissions here is still the caller's own set (recomputed after this returns).
+    const scopedUser = await User.findOne({ where: { id: representedUser.id } })
+    const callerPermissions = ctx.state.permissions ?? []
+    const representedPermissions = scopedUser?.permissions ?? []
+    const escalates = representedPermissions.some((permission) => {
+      return callerPermissions.includes(permission) === false
+    })
+    if (escalates) {
+      throw new ForbiddenAPIError({ parameter: 'representing' })
+    }
+
+    ctx.state.user = scopedUser ?? representedUser
     return true
   }
 }
@@ -599,7 +623,10 @@ class Authentication {
  * @returns {*} A string with the bearer token or null if none was found.
  */
 function getBearerToken (ctx) {
-  if (ctx.query.bearer) {
+  // A bearer must be a string. Query parsing turns `?bearer[ne]=x` into an object,
+  // which would otherwise reach the token lookup as a Sequelize operator and match an
+  // arbitrary token. Only a plain `?bearer=<token>` string is accepted here.
+  if (typeof ctx.query.bearer === 'string') {
     return ctx.query.bearer
   }
   if (ctx.get('Authorization')) {

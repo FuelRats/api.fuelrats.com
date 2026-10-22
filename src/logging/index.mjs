@@ -28,7 +28,13 @@ const logConfig = {
       subject: 'Fuel Rats API Problem',
       sender: 'blackhole@fuelrats.com',
       recipients: 'techrats@fuelrats.com',
-      SMTP: config.smtp,
+      SMTP: {
+        host: config.smtp.hostname,
+        port: config.smtp.port,
+        auth: config.smtp.username && config.smtp.password
+          ? { user: config.smtp.username, pass: config.smtp.password }
+          : undefined,
+      },
       sendInterval: 3600,
     },
   },

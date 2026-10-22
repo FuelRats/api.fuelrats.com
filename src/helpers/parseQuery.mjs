@@ -33,6 +33,11 @@ function convertArrayLikes (value) {
   return converted
 }
 
+// Keys that can corrupt the prototype chain if used as path segments. Assigning `obj.__proto__`
+// invokes the prototype setter, so such a segment would silently vanish from own-key iteration
+// (sidestepping validation) and is a prototype-pollution footgun. They are never valid query keys.
+const forbiddenKeys = new Set(['__proto__', 'prototype', 'constructor'])
+
 /**
  * Deep merge source into target object
  * @param {object} target target object
@@ -42,11 +47,13 @@ function convertArrayLikes (value) {
 function deepMerge (target, source) {
   const result = { ...target }
   for (const [key, value] of Object.entries(source)) {
-    if (value && typeof value !== 'string' && typeof value === 'object' && !Array.isArray(value)
-      && result[key] && typeof result[key] === 'object' && !Array.isArray(result[key])) {
-      result[key] = deepMerge(result[key], value)
-    } else {
-      result[key] = value
+    if (forbiddenKeys.has(key) === false) {
+      if (value && typeof value !== 'string' && typeof value === 'object' && !Array.isArray(value)
+        && result[key] && typeof result[key] === 'object' && !Array.isArray(result[key])) {
+        result[key] = deepMerge(result[key], value)
+      } else {
+        result[key] = value
+      }
     }
   }
   return result
@@ -64,7 +71,12 @@ export default function parseQuery (query) {
   const result = Object.entries(query).reduce((acc, [key, value]) => {
     // Normalise bracket notation to dot notation: page[size] → page.size
     const normalised = key.replace(/\[([^\]]*)\]/gu, '.$1')
-    const [last, ...paths] = normalised.split('.').reverse()
+    const segments = normalised.split('.')
+    // Drop any parameter whose path uses a prototype-corrupting segment
+    if (segments.some((segment) => forbiddenKeys.has(segment))) {
+      return acc
+    }
+    const [last, ...paths] = segments.reverse()
     const object = paths.reduce((pathAcc, el) => {
       return { [el]: pathAcc }
     }, { [last]: value })

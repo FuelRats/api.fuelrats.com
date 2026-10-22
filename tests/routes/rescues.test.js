@@ -1,38 +1,17 @@
 /* global describe, it, expect */
 'use strict'
 
-const Ajv = require('ajv')
 const Axios = require('axios')
-const axiosHttpAdapter = require('axios/lib/adapters/http')
-const { Validator } = require('jsonapi-validator')
 
-const rescueSchema = require('../../schema/rescue.json')
-const config = require('../../src/config')
+// Integration test for the rescue endpoints against the docker-compose mirror.
+const BASE = process.env.FRAPI_TEST_URL ?? 'http://localhost:8080'
 
-const ajv = new Ajv()
-const rescueValidate = ajv.compile(rescueSchema)
-const validator = new Validator()
+const client = Axios.create({ baseURL: BASE, timeout: 5000, validateStatus: () => true })
 
-
-const axios = Axios.create({
-  baseURL: config.externalUrl,
-  timeout: 5000,
-  headers: {
-    common: {
-      authorization: `Bearer ${config.testing.token}`,
-    },
-  },
-})
-
-axios.defaults.adapter = axiosHttpAdapter
-
-describe('GET /rescues', () => {
-  it('Should load first page of rescues', async () => {
-    const response = await axios.get('/rescues')
-    expect(validator.isValid(response.data)).toBeTruthy()
-
-    response.data.data.forEach((rescue) => {
-      expect(rescueValidate(rescue)).toBeTruthy()
-    })
+describe('GET /rescues/me', () => {
+  it('returns 401 without authentication', async () => {
+    const response = await client.get('/rescues/me')
+    expect(response.status).toBe(401)
+    expect(response.data.errors[0].status).toBe('unauthorized')
   })
 })

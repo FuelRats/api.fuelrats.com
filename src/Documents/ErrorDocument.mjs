@@ -55,9 +55,9 @@ class ErrorDocument extends Document {
             _error_message: error.message,
           }, `Sequelize database error: ${error.message}`)
           logger.error(`Failing SQL: ${error.sql}`)
+          // The raw Postgres message names columns/constraints; keep it in the log, not the response.
           errorAcc.push(new UnprocessableEntityAPIError({
             parameter: 'filter',
-            detail: error.message,
           }))
           break
 
@@ -76,9 +76,9 @@ class ErrorDocument extends Document {
             _detail: fkDetail,
           }, `Sequelize foreign key constraint error: ${fkDetail}`)
           logger.error(`Failing SQL: ${error.sql}`)
+          // fkDetail spells out the missing/colliding key; keep it in the log, not the response.
           errorAcc.push(new UnprocessableEntityAPIError({
             pointer: '/data/id',
-            detail: fkDetail,
           }))
           break
         }
@@ -117,7 +117,7 @@ class ErrorDocument extends Document {
             _event: 'invalid_value_error',
             _error_message: error.message,
           }, `Invalid value error: ${error.message}`)
-          errorAcc.push(new BadRequestAPIError({ parameter: 'filter', detail: error.message }))
+          errorAcc.push(new BadRequestAPIError({ parameter: 'filter' }))
           break
 
         default: {

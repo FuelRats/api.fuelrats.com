@@ -73,7 +73,7 @@ export default class UserView extends DatabaseView {
    * @inheritdoc
    */
   get relationships () {
-    return {
+    const relationships = {
       avatar: AvatarView,
       rats: RatView,
       nicknames: NicknameView,
@@ -82,8 +82,13 @@ export default class UserView extends DatabaseView {
       clients: ClientView,
       epics: EpicView,
       decals: DecalView,
-      authenticator: AuthenticatorView,
     }
+    // Whether a user has 2FA enrolled is sensitive; expose the authenticator relationship only to
+    // the user themselves or to staff who may read the user.
+    if (this.isSelf || this.isGroup) {
+      relationships.authenticator = AuthenticatorView
+    }
+    return relationships
   }
 
   /**

@@ -29,12 +29,15 @@ export default class Webhooks extends API {
   @POST('/webhooks/jira')
   @IPAuthenticated
   async jira (ctx) {
-    if (!ctx.data.issue || !ctx.data.issue.fields.issuetype || !ctx.data.issue.fields.issuetype.id) {
+    if (!ctx.data?.issue?.fields?.issuetype?.id) {
       throw new UnprocessableEntityAPIError({ pointer: '/data/issue/fields/issuetype/id' })
     }
 
     const { fields } = ctx.data.issue
     const cmdrName = fields[cmdrNameField]
+    if (!cmdrName) {
+      throw new UnprocessableEntityAPIError({ pointer: `/data/issue/fields/${cmdrNameField}` })
+    }
 
     const user = await User.findOne({
       where: {},

@@ -4,6 +4,7 @@ import enumerable from '../helpers/Enum'
 const defaultOffset = 0
 const defaultLimit = 100
 const defaultSize = 25
+const maxPageSize = 1000
 
 
 /**
@@ -108,7 +109,7 @@ export default class Query {
   get offset () {
     const { number, size = defaultSize, offset = defaultOffset } = this.page
     if (number) {
-      return (number - 1) * size
+      return (number - 1) * Math.min(size, maxPageSize)
     }
     return offset
   }
@@ -120,9 +121,9 @@ export default class Query {
   get limit () {
     const { number, size = defaultSize, limit = defaultLimit } = this.page
     if (number) {
-      return size
+      return Math.min(size, maxPageSize)
     }
-    return limit
+    return Math.min(limit, maxPageSize)
   }
 
   /**

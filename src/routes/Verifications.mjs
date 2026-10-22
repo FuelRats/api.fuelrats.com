@@ -47,17 +47,17 @@ export default class Verifications extends API {
       },
     })
 
-    const verified = user.groups.some((group) => {
-      return group.name === 'verified'
-    })
-
-    if (verified) {
-      throw new ConflictAPIError({
-        pointer: '/data/attributes/email',
-      })
-    }
-
     if (user) {
+      const verified = user.groups.some((group) => {
+        return group.name === 'verified'
+      })
+
+      if (verified) {
+        throw new ConflictAPIError({
+          pointer: '/data/attributes/email',
+        })
+      }
+
       await Verifications.createVerification(user)
 
       // Log verification request metrics
@@ -87,6 +87,11 @@ export default class Verifications extends API {
     })
 
     if (!verification) {
+      throw new NotFoundAPIError({ parameter: 'token' })
+    }
+
+    if (verification.expires < Date.now()) {
+      await verification.destroy()
       throw new NotFoundAPIError({ parameter: 'token' })
     }
 

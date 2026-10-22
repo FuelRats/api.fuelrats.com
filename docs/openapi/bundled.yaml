@@ -1791,6 +1791,130 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /users/{id}/memo-mail:
+    get:
+      operationId: getUsersIdMemomail
+      tags:
+        - users
+      summary: Get memo mail preference
+      description: |
+        Get whether the user has memo-by-email notifications enabled.
+        When enabled, IRC memos sent to the user are also forwarded to their email.
+
+        **Permission:** Self or admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Memo mail preference
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: memo-mail
+                      id:
+                        type: string
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: putUsersIdMemomail
+      tags:
+        - users
+      summary: Set memo mail preference
+      description: |
+        Enable or disable memo-by-email notifications for the user.
+        When enabled, IRC memos sent to the user are also forwarded to their email.
+
+        **Permission:** Self or admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  required:
+                    - type
+                    - attributes
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - memo-mail
+                    attributes:
+                      type: object
+                      required:
+                        - enabled
+                      properties:
+                        enabled:
+                          type: boolean
+            example:
+              data:
+                type: memo-mail
+                attributes:
+                  enabled: true
+      responses:
+        '200':
+          description: Updated memo mail preference
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: memo-mail
+                      id:
+                        type: string
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /users/{id}/certificate:
     post:
       operationId: postUsersIdCertificate
@@ -2391,6 +2515,49 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /users/{id}/gdpr-anonymise:
+    post:
+      operationId: postUsersIdGdpranonymise
+      tags:
+        - users
+      summary: GDPR anonymise user
+      description: |
+        Irreversibly anonymise a user account for GDPR compliance.
+
+        **Required Permission:** `users.write`
+
+        This endpoint:
+        - Replaces email with `deleted-{id}@fuelrats.com`
+        - Clears password, user data, and Frontier ID
+        - Sets account status to `deactivated`
+        - Anonymises rat names to `Deleted CMDR {id}-N` (preserving rescue associations)
+        - Hard-deletes all tokens, passkeys, push subscriptions, auth codes, resets,
+          verification tokens, authenticators, avatars, and OAuth clients
+        - Removes the IRC account
+        - Soft-deletes the user record
+
+        This action is irreversible. The user record and rescue history are preserved
+        with anonymised identifiers.
+      security:
+        - bearerAuth:
+            - users.write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID to anonymise
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User anonymised successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /users/{id}/image:
     get:
       operationId: getUsersIdImage
@@ -5082,6 +5249,174 @@ paths:
             application/vnd.api+json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /rescues/{id}/relationships/dispatchers:
+    get:
+      operationId: getRescuesIdRelationshipsDispatchers
+      tags:
+        - rescues
+      summary: Get rescue's dispatchers
+      description: Retrieve the dispatchers assigned to a rescue.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Rescue ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Rescue's dispatcher relationship data
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: postRescuesIdRelationshipsDispatchers
+      tags:
+        - rescues
+      summary: Assign dispatchers to rescue
+      description: Add dispatchers to a rescue's dispatcher list.
+      security:
+        - bearerAuth:
+            - dispatch.write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Rescue ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - id
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - users
+                      id:
+                        type: string
+                        format: uuid
+      responses:
+        '204':
+          description: Dispatchers assigned
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: patchRescuesIdRelationshipsDispatchers
+      tags:
+        - rescues
+      summary: Update rescue's dispatchers
+      description: Replace the entire list of dispatchers for a rescue.
+      security:
+        - bearerAuth:
+            - dispatch.write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Rescue ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - id
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - users
+                      id:
+                        type: string
+                        format: uuid
+      responses:
+        '204':
+          description: Dispatchers updated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteRescuesIdRelationshipsDispatchers
+      tags:
+        - rescues
+      summary: Remove dispatchers from rescue
+      description: Remove dispatchers from a rescue's dispatcher list.
+      security:
+        - bearerAuth:
+            - dispatch.write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Rescue ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - id
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - users
+                      id:
+                        type: string
+                        format: uuid
+      responses:
+        '204':
+          description: Dispatchers removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /rescues/{id}/alert:
     post:
       operationId: postRescuesIdAlert
@@ -9290,6 +9625,19 @@ components:
                                 - user
                     links:
                       $ref: '#/components/schemas/Links'
+                dispatchers:
+                  type: object
+                  properties:
+                    data:
+                      nullable: true
+                      allOf:
+                        - $ref: '#/components/schemas/ResourceIdentifier'
+                        - properties:
+                            type:
+                              enum:
+                                - user
+                    links:
+                      $ref: '#/components/schemas/Links'
     RescueCollection:
       allOf:
         - $ref: '#/components/schemas/CollectionDocument'
@@ -9365,11 +9713,11 @@ components:
               properties:
                 name:
                   type: string
-                  description: Unique group identifier name
+                  description: 'Unique group identifier name (writable by: admin only)'
                 displayName:
                   type: string
                   nullable: true
-                  description: Human-readable group display name
+                  description: 'Human-readable group display name (writable by: admin only)'
                 vhost:
                   type: string
                   nullable: true
@@ -9608,7 +9956,7 @@ components:
           value: createdAt
           summary: Sort by creation date (ascending)
         descending:
-          value: '-createdAt'
+          value: -createdAt
           summary: Sort by creation date (descending)
         multiple:
           value: name,-createdAt

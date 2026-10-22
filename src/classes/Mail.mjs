@@ -80,7 +80,6 @@ export default class Mail {
   static render (template, params) {
     return ejs.renderFile(`static/email/${template}.ejs`, params, {
       cache: true,
-      fiilename: template,
       rmWhitespace: true,
     })
   }
