@@ -663,7 +663,7 @@ class OAuth extends API {
       value: await oAuthTokenGenerator(),
       clientId: client.id,
       userId: user.id,
-      scope: ['*'],
+      scope: scopes,
       ...tokenMetadata(ctx, 'password'),
     })
 
