@@ -110,6 +110,7 @@ export default class Users extends APIResource {
         email: user.email,
         password,
         code: totpCode,
+        ip: ctx.request?.ip,
       })
 
       if (!authenticatedUser) {
@@ -133,8 +134,9 @@ export default class Users extends APIResource {
   @GET('/users')
   @websocket('users', 'search')
   @authenticated
+  @permissions('users.read')
   async search (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: UserView })
     const { searchObject } = query
 
     // ?_groups=name1,name2 — filter users by group membership
@@ -356,7 +358,7 @@ export default class Users extends APIResource {
   @authenticated
   @required()
   async setEmail (ctx) {
-    const { email: newEmail } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
+    const { email: newEmail, password, code } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
 
     const user = await User.findOne({
       where: {
@@ -371,6 +373,32 @@ export default class Users extends APIResource {
     const oldEmail = user.email
 
     this.requireWritePermission({ connection: ctx, entity: user })
+
+    // Changing your own login email requires re-authentication, so a leaked session cannot
+    // silently redirect the account. Admins acting on another user are not challenged.
+    if (user.id === ctx.state.user.id) {
+      const reauthenticated = await Authentication.passwordAuthenticate({
+        email: user.email,
+        password,
+        code,
+        ip: ctx.request?.ip,
+      })
+      if (!reauthenticated) {
+        throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
+      }
+    }
+
+    // Email is the account identity and the Anope key, so it must be unique across active users.
+    const { Op } = await import('sequelize')
+    const duplicate = await User.findOne({
+      where: {
+        email: { iLike: newEmail },
+        id: { [Op.ne]: user.id },
+      },
+    })
+    if (duplicate) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/email' })
+    }
 
     await db.transaction(async (transaction) => {
       user.email = newEmail
@@ -863,6 +891,10 @@ export default class Users extends APIResource {
       },
     })
 
+    if (!user) {
+      throw new NotFoundAPIError({ parameter: 'id' })
+    }
+
     this.requireWritePermission({ connection: ctx, entity: user })
 
     const redeemable = await Decals.getEligibleDecalCount({ user })
@@ -1274,7 +1306,7 @@ export default class Users extends APIResource {
       email: WritePermission.sudo,
       password: WritePermission.sudo,
       status: (ctx, entity, value) => {
-        if (ctx.state.user.permissions.includes('users.write')) {
+        if (ctx.state.permissions.includes('users.write')) {
           return true
         }
 
@@ -1332,7 +1364,7 @@ export default class Users extends APIResource {
           many: false,
 
           hasPermission (connection, entity, id) {
-            const hasRat = connection.state.user.rats.some((rat) => {
+            const hasRat = (connection.state.user.rats ?? []).some((rat) => {
               return rat.id === id
             })
             return hasRat || Permission.granted({ permissions: ['rats.write'], connection })

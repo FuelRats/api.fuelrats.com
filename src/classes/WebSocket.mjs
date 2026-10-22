@@ -1,4 +1,6 @@
 import UUID from 'pure-uuid'
+import config from '../config'
+import resolveClientIp from '../helpers/clientIp'
 import * as constants from '../constants'
 import logger from '../logging'
 import {
@@ -68,9 +70,11 @@ export default class WebSocket {
         url: url.pathname + url.search,
         bearer,
         headers,
-        ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-          || server.requestIP(req)?.address
-          || '127.0.0.1',
+        ip: resolveClientIp({
+          forwardedFor: req.headers.get('x-forwarded-for'),
+          socketAddress: server.requestIP(req)?.address,
+          proxyEnabled: config.server.proxyEnabled,
+        }),
         clientId: new UUID(constants.uuidVersion),
         subscriptions: [],
         user: undefined,

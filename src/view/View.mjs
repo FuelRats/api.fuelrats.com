@@ -244,6 +244,61 @@ export default class View {
   }
 
   /**
+   * The attribute keys this connection is permitted to filter and sort on, derived from the
+   * same per-field ReadPermission used for rendering. A field absent from the view (e.g. a
+   * password hash) is never readable and therefore never filterable, which closes the blind
+   * filter oracle. Row-level `self` access does not grant filtering on a collection search,
+   * since that would leak other rows; it is granted only on inherently self-scoped endpoints.
+   * @param {object} arg function arguments object
+   * @param {boolean} [arg.selfScoped] whether the query is limited to the caller's own rows
+   * @returns {string[]} filterable attribute keys
+   */
+  filterableFields ({ selfScoped = false } = {}) {
+    const attributeClass = this.attributes
+    if (!attributeClass) {
+      return []
+    }
+    return Object.entries(attributeClass).reduce((acc, [attribute, declared]) => {
+      const permission = typeof declared === 'undefined' ? this.defaultReadPermission : declared
+      let allowed
+      try {
+        allowed = this.resolveFilterPermission(permission, selfScoped)
+      } catch {
+        allowed = false
+      }
+      if (allowed) {
+        acc.push(attribute)
+      }
+      return acc
+    }, [])
+  }
+
+  /**
+   * Resolve whether a field with the given read permission may be filtered/sorted on
+   * @param {ReadPermission} permission the field's read permission
+   * @param {boolean} selfScoped whether the query is limited to the caller's own rows
+   * @returns {boolean} whether filtering on the field is permitted
+   */
+  resolveFilterPermission (permission, selfScoped) {
+    switch (permission) {
+      case ReadPermission.all:
+        return true
+
+      case ReadPermission.internal:
+        return Boolean(this.isInternal)
+
+      case ReadPermission.group:
+        return Boolean(this.isGroup) || selfScoped
+
+      case ReadPermission.self:
+        return selfScoped
+
+      default:
+        return false
+    }
+  }
+
+  /**
    * Get an attribute from a key
    * @returns {any}
    * @abstract

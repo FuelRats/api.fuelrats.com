@@ -63,7 +63,7 @@ const config = {
     directory: required('FRAPI_GEOIP_DIRECTORY', [], undefined),
   },
   announcer: {
-    url: recommended('FRAPI_ANNOUNCER,URL', [], 'https://announcer-dev.fuelrats.com/api'),
+    url: recommended('FRAPI_ANNOUNCER_URL', [], 'https://announcer-dev.fuelrats.com/api'),
     secret: recommended('FRAPI_ANNOUNCER_SECRET', [], undefined),
     destinations: {
       rescue: recommended('FRAPI_ANNOUNCER_DESTINATION_RESCUE', [isIrcChannel], '#ratchat'),

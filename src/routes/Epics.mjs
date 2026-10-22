@@ -35,7 +35,7 @@ export default class Epics extends APIResource {
   @websocket('epics', 'search')
   @authenticated
   async search (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: EpicView })
     const result = await Epic.findAndCountAll(query.searchObject)
     return new DatabaseDocument({ query, result, type: EpicView })
   }

@@ -63,8 +63,9 @@ export default class Rescues extends APIResource {
    * @queryparam {string} _firstLimpet - Set to `me` to filter to rescues where you were first limpet
    */
   @GET('/rescues/me')
+  @authenticated
   async ownRescues (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: RescueView, selfScoped: true })
     const { searchObject } = query
 
     // ?_firstLimpet=me — filter to rescues where user was first limpet
@@ -81,6 +82,9 @@ export default class Rescues extends APIResource {
 
     // ?_rat=<uuid> — filter to rescues where a specific rat is assigned
     if (ctx.query._rat) {
+      if (typeof ctx.query._rat !== 'string' || /^[0-9a-f-]{36}$/iu.test(ctx.query._rat) === false) {
+        throw new UnprocessableEntityAPIError({ parameter: '_rat' })
+      }
       ratWhere.id = ctx.query._rat
     }
 
@@ -121,13 +125,22 @@ export default class Rescues extends APIResource {
     const countReplacements = { userId: ctx.state.user.id }
     const countConditions = ['"Rats"."userId" = :userId', '"Rescue"."deletedAt" IS NULL']
     const { Op } = await import('sequelize')
+    const safeColumn = /^[A-Za-z0-9_]+$/u
     for (const [key, value] of Object.entries(searchObject.where)) {
+      // The filter is already column-validated by DatabaseQuery; this is a defence-in-depth
+      // check so a key can never be spliced into the raw identifier unless it is a plain name.
+      if (safeColumn.test(key) === false) {
+        throw new UnprocessableEntityAPIError({ parameter: 'filter' })
+      }
       if (typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
         countReplacements[key] = value
         countConditions.push(`"Rescue"."${key}" = :${key}`)
       } else if (value && typeof value === 'object') {
         const opIn = value[Op.in]
-        if (opIn) {
+        if (opIn?.length === 0) {
+          // An empty list matches nothing, and `IN ()` isn't valid SQL
+          countConditions.push('FALSE')
+        } else if (opIn) {
           countReplacements[`${key}List`] = opIn
           countConditions.push(`"Rescue"."${key}" IN (:${key}List)`)
         }
@@ -166,7 +179,7 @@ export default class Rescues extends APIResource {
   @websocket('rescues', 'search')
   @authenticated
   async search (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: RescueView })
     const { searchObject } = query
 
     // ?_rats=id1,id2 — filter to rescues with any of the specified rats assigned
@@ -323,16 +336,9 @@ export default class Rescues extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    if (ctx.state.forceDelete) {
-      await Rescue.destroy({
-        force: true,
-      })
-    } else {
-      await Rescue.update({
-        deletedAt: new Date(),
-        lastModifiedById: ctx.state.user.id,
-      }, { where: { id: rescue.result.id } })
-    }
+    // Target the resolved rescue; a bare Rescue.destroy({force:true}) has no where and would
+    // attempt to delete every rescue.
+    await rescue.result.destroy({ force: ctx.state.forceDelete })
 
 
     Event.broadcast('fuelrats.rescuedelete', ctx.state.user, ctx.params.id)

@@ -18,7 +18,7 @@ export default class AnniversaryView extends DatabaseView {
    */
   get attributes () {
     return class {
-      static email = ReadPermission.all
+      static email = ReadPermission.group
       static preferredName
       static years
       static joined

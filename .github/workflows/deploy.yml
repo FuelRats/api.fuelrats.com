@@ -14,10 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
 
       - name: Install dependencies
         run: bun install
@@ -44,13 +46,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -58,7 +60,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -66,7 +68,7 @@ jobs:
             type=sha
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -101,5 +103,8 @@ jobs:
 
       - name: Deploy to Docker Swarm
         run: |
+          # Deploy the immutable sha tag (matches docker/metadata-action's type=sha, 7-char short).
+          # The mutable branch tag does not change the service spec string, so Swarm never re-pulls.
+          IMAGE_TAG="sha-${GITHUB_SHA:0:7}"
           ssh fuelrats@mozzarella.fuelrats.com \
-            "docker service update --image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} ${{ steps.service.outputs.name }}"
+            "docker service update --image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG} ${{ steps.service.outputs.name }}"

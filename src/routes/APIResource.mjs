@@ -533,8 +533,11 @@ export default class APIResource extends API {
    */
   async validateUpdateAccess ({ ctx, attributes, entity }) {
      
+    // Group access requires the group-level write permission. Self-level write (`write.me`) must
+    // only satisfy `self`/`group` fields via isSelf below, never `sudo` fields — otherwise a user
+    // could set admin-only attributes (e.g. their own email/password, or a client's firstParty flag)
+    // on resources they own.
     const isGroup = Permission.granted({ permissions: [`${this.type}.write`], connection: ctx })
-      || Permission.granted({ permissions: [`${this.type}.write.me`], connection: ctx })
     const isSelf = this.isSelf({ ctx, entity }) && Permission.granted({
       permissions: [`${this.type}.write.me`],
       connection: ctx,

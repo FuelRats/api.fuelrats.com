@@ -119,7 +119,7 @@ honoApp.use('*', async (c, next) => {
     // Handle permanent deletion
     if (ctx.get('X-Permanent-Deletion')) {
       const basicUser = await Authentication.basicUserAuthentication({ connection: ctx })
-      if (basicUser.id !== ctx.state.user.id) {
+      if (!basicUser || !ctx.state.user || basicUser.id !== ctx.state.user.id) {
         throw new UnauthorizedAPIError({})
       }
 
@@ -303,7 +303,7 @@ const wsManager = new WebSocket({ trafficManager: traffic })
     Bun.serve({
       port: config.server.port,
       hostname: config.server.hostname,
-      fetch (req, server) {
+      async fetch (req, server) {
         // Try WebSocket upgrade first
         if (req.headers.get('upgrade')?.toLowerCase() === 'websocket') {
           if (WebSocket.handleUpgrade(req, server)) {
@@ -311,8 +311,13 @@ const wsManager = new WebSocket({ trafficManager: traffic })
           }
           return new Response('WebSocket upgrade failed', { status: 400 })
         }
-        // Otherwise handle as normal HTTP via Hono
-        return honoApp.fetch(req, server)
+        // Otherwise handle as normal HTTP via Hono, then apply security headers to every response
+        const response = await honoApp.fetch(req, server)
+        response.headers.set('X-Content-Type-Options', 'nosniff')
+        response.headers.set('X-Frame-Options', 'DENY')
+        response.headers.set('Referrer-Policy', 'no-referrer')
+        response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains')
+        return response
       },
       websocket: {
         open (ws) { wsManager.onOpen(ws) },

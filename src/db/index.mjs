@@ -99,17 +99,23 @@ const operatorsAliases = {
   col: Op.col,
 }
 
+const statementTimeout = 15000
+
 const db = new Sequelize(database, username, password, {
   host: hostname,
   port,
   dialect: 'postgres',
-  logging: (message) => {
-    const maxLogLength = 2000
-    const truncated = message.length > maxLogLength
-      ? `${message.slice(0, maxLogLength)}... (truncated, ${message.length} chars total)`
-      : message
-    logger.info(truncated)
-  },
+  // Query logging inlines WHERE literals for SELECTs (bearer/reset/verification tokens), so it is
+  // disabled unless explicitly enabled for local debugging via FRAPI_SQL_DEBUG.
+  logging: process.env.FRAPI_SQL_DEBUG === 'true'
+    ? (message) => {
+      const maxLogLength = 2000
+      const truncated = message.length > maxLogLength
+        ? `${message.slice(0, maxLogLength)}... (truncated, ${message.length} chars total)`
+        : message
+      logger.info(truncated)
+    }
+    : false,
 
   pool: {
     idle: 1000,
@@ -117,6 +123,10 @@ const db = new Sequelize(database, username, password, {
     acquire: 30000,
   },
   operatorsAliases,
+  dialectOptions: {
+    // Bound any single statement server-side so a catastrophic regexp filter cannot hang a connection
+    statement_timeout: statementTimeout,
+  },
 })
 
  
@@ -147,6 +157,7 @@ export {
   db as sequelize,
   Sequelize,
   Op,
+  operatorsAliases,
   Authenticator,
   Avatar,
   Client,

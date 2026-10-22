@@ -65,7 +65,7 @@ const NICK_EXTRA_SELECT = `${NICK_ALIAS}.registered AS nick_registered, (SELECT 
 
 
 const mysql = knex({
-  client: 'mysql',
+  client: 'mysql2',
   connection: {
     host: hostname,
     port,

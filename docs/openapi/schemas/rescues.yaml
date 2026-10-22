@@ -141,6 +141,18 @@ Rescue:
                           enum: [user]
                 links:
                   $ref: '../components/schemas.yaml#/Links'
+            dispatchers:
+              type: object
+              properties:
+                data:
+                  nullable: true
+                  allOf:
+                    - $ref: '../components/schemas.yaml#/ResourceIdentifier'
+                    - properties:
+                        type:
+                          enum: [user]
+                links:
+                  $ref: '../components/schemas.yaml#/Links'
 
 RescueDocument:
   allOf:
