@@ -63,6 +63,7 @@ export default class Rescues extends APIResource {
    * @queryparam {string} _firstLimpet - Set to `me` to filter to rescues where you were first limpet
    */
   @GET('/rescues/me')
+  @authenticated
   async ownRescues (ctx) {
     const query = new DatabaseQuery({ connection: ctx })
     const { searchObject } = query
