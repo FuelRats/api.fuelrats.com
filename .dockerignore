@@ -1,0 +1,14 @@
+# Secrets and local environment — never copy into the image (secrets are mounted at runtime)
+.env
+.env.*
+.docker/
+
+# Development database dumps — contain real user data and password hashes
+*.dump
+
+# Internal notes and scratch
+thoughts/
+
+# Dependencies are installed in-image; PID files are runtime artifacts
+node_modules
+*.pid
