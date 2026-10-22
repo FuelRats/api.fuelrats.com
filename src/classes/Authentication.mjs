@@ -132,6 +132,7 @@ class Authentication {
       }
 
       if (!isValidCode) {
+        loginThrottle.recordFailure({ email, ip })
         logMetric('authentication_failure', {
           _auth_method: 'password_2fa',
           _failure_reason: 'invalid_2fa_code',
