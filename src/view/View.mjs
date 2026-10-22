@@ -254,23 +254,36 @@ export default class View {
    * @returns {string[]} filterable attribute keys
    */
   filterableFields ({ selfScoped = false } = {}) {
+    const fields = []
     const attributeClass = this.attributes
-    if (!attributeClass) {
-      return []
+    if (attributeClass) {
+      Object.entries(attributeClass).forEach(([attribute, declared]) => {
+        const permission = typeof declared === 'undefined' ? this.defaultReadPermission : declared
+        let allowed
+        try {
+          allowed = this.resolveFilterPermission(permission, selfScoped)
+        } catch {
+          allowed = false
+        }
+        if (allowed) {
+          fields.push(attribute)
+        }
+      })
     }
-    return Object.entries(attributeClass).reduce((acc, [attribute, declared]) => {
-      const permission = typeof declared === 'undefined' ? this.defaultReadPermission : declared
-      let allowed
-      try {
-        allowed = this.resolveFilterPermission(permission, selfScoped)
-      } catch {
-        allowed = false
-      }
-      if (allowed) {
-        acc.push(attribute)
-      }
-      return acc
-    }, [])
+
+    // The primary key and the foreign keys behind readable relationships are legitimate,
+    // non-sensitive filter/sort targets (they reference relationships already exposed), so include
+    // them. This keeps foreign-key filters like /rescues?filter[firstLimpetId] working.
+    fields.push('id')
+    try {
+      Object.keys(this.relationships ?? {}).forEach((relationship) => {
+        fields.push(`${relationship}Id`)
+      })
+    } catch {
+      // Some views compute relationships from a rendered object; without one, skip their FKs.
+    }
+
+    return fields
   }
 
   /**
