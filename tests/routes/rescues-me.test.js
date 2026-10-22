@@ -53,13 +53,13 @@ describe('GET /rescues/me', () => {
   it('returns an empty list for a user without rats', async () => {
     const response = await client.get('/rescues/me')
     expect(response.status).toBe(200)
-    expect(response.data.data ?? []).toEqual([])
+    expect(response.data.data).toEqual([])
   })
 
   it('returns an empty list when filtering by first limpet for a user without rats', async () => {
     const filter = JSON.stringify({ status: { eq: 'closed' }, outcome: { is: null } })
     const response = await client.get('/rescues/me', { params: { filter, _firstLimpet: 'me' } })
     expect(response.status).toBe(200)
-    expect(response.data.data ?? []).toEqual([])
+    expect(response.data.data).toEqual([])
   })
 })
