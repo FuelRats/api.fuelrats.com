@@ -134,6 +134,7 @@ export default class Users extends APIResource {
   @GET('/users')
   @websocket('users', 'search')
   @authenticated
+  @permissions('users.read')
   async search (ctx) {
     const query = new DatabaseQuery({ connection: ctx, view: UserView })
     const { searchObject } = query
@@ -357,7 +358,7 @@ export default class Users extends APIResource {
   @authenticated
   @required()
   async setEmail (ctx) {
-    const { email: newEmail } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
+    const { email: newEmail, password, code } = getJSONAPIData({ ctx, type: 'email-changes' }).attributes
 
     const user = await User.findOne({
       where: {
@@ -372,6 +373,32 @@ export default class Users extends APIResource {
     const oldEmail = user.email
 
     this.requireWritePermission({ connection: ctx, entity: user })
+
+    // Changing your own login email requires re-authentication, so a leaked session cannot
+    // silently redirect the account. Admins acting on another user are not challenged.
+    if (user.id === ctx.state.user.id) {
+      const reauthenticated = await Authentication.passwordAuthenticate({
+        email: user.email,
+        password,
+        code,
+        ip: ctx.request?.ip,
+      })
+      if (!reauthenticated) {
+        throw new UnauthorizedAPIError({ pointer: '/data/attributes/password' })
+      }
+    }
+
+    // Email is the account identity and the Anope key, so it must be unique across active users.
+    const { Op } = await import('sequelize')
+    const duplicate = await User.findOne({
+      where: {
+        email: { iLike: newEmail },
+        id: { [Op.ne]: user.id },
+      },
+    })
+    if (duplicate) {
+      throw new UnprocessableEntityAPIError({ pointer: '/data/attributes/email' })
+    }
 
     await db.transaction(async (transaction) => {
       user.email = newEmail
