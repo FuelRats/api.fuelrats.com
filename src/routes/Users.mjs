@@ -134,7 +134,7 @@ export default class Users extends APIResource {
   @websocket('users', 'search')
   @authenticated
   async search (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: UserView })
     const { searchObject } = query
 
     // ?_groups=name1,name2 — filter users by group membership

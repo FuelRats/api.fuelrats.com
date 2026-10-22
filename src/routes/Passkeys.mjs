@@ -66,7 +66,7 @@ export default class Passkeys extends APIResource {
     }
     this.requireReadPermission({ connection: ctx, entity: user })
 
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: PasskeyView, selfScoped: true })
     const searchObject = query.searchObject
     searchObject.where = { ...searchObject.where, userId: user.id }
     const result = await Passkey.findAndCountAll(searchObject)

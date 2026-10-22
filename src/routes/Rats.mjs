@@ -41,7 +41,7 @@ export default class Rats extends APIResource {
   @GET('/rats')
   @websocket('rats', 'search')
   async search (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: RatView })
     const result = await Rat.findAndCountAll(query.searchObject)
     return new DatabaseDocument({ query, result, type: RatView })
   }

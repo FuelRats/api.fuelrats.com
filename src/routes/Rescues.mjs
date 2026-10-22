@@ -65,7 +65,7 @@ export default class Rescues extends APIResource {
   @GET('/rescues/me')
   @authenticated
   async ownRescues (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: RescueView, selfScoped: true })
     const { searchObject } = query
 
     // ?_firstLimpet=me — filter to rescues where user was first limpet
@@ -122,7 +122,13 @@ export default class Rescues extends APIResource {
     const countReplacements = { userId: ctx.state.user.id }
     const countConditions = ['"Rats"."userId" = :userId', '"Rescue"."deletedAt" IS NULL']
     const { Op } = await import('sequelize')
+    const safeColumn = /^[A-Za-z0-9_]+$/u
     for (const [key, value] of Object.entries(searchObject.where)) {
+      // The filter is already column-validated by DatabaseQuery; this is a defence-in-depth
+      // check so a key can never be spliced into the raw identifier unless it is a plain name.
+      if (safeColumn.test(key) === false) {
+        throw new UnprocessableEntityAPIError({ parameter: 'filter' })
+      }
       if (typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
         countReplacements[key] = value
         countConditions.push(`"Rescue"."${key}" = :${key}`)
@@ -167,7 +173,7 @@ export default class Rescues extends APIResource {
   @websocket('rescues', 'search')
   @authenticated
   async search (ctx) {
-    const query = new DatabaseQuery({ connection: ctx })
+    const query = new DatabaseQuery({ connection: ctx, view: RescueView })
     const { searchObject } = query
 
     // ?_rats=id1,id2 — filter to rescues with any of the specified rats assigned
