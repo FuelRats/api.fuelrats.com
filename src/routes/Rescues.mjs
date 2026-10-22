@@ -82,6 +82,9 @@ export default class Rescues extends APIResource {
 
     // ?_rat=<uuid> — filter to rescues where a specific rat is assigned
     if (ctx.query._rat) {
+      if (typeof ctx.query._rat !== 'string' || /^[0-9a-f-]{36}$/iu.test(ctx.query._rat) === false) {
+        throw new UnprocessableEntityAPIError({ parameter: '_rat' })
+      }
       ratWhere.id = ctx.query._rat
     }
 
@@ -333,16 +336,9 @@ export default class Rescues extends APIResource {
       throw new NotFoundAPIError({ parameter: 'id' })
     }
 
-    if (ctx.state.forceDelete) {
-      await Rescue.destroy({
-        force: true,
-      })
-    } else {
-      await Rescue.update({
-        deletedAt: new Date(),
-        lastModifiedById: ctx.state.user.id,
-      }, { where: { id: rescue.result.id } })
-    }
+    // Target the resolved rescue; a bare Rescue.destroy({force:true}) has no where and would
+    // attempt to delete every rescue.
+    await rescue.result.destroy({ force: ctx.state.forceDelete })
 
 
     Event.broadcast('fuelrats.rescuedelete', ctx.state.user, ctx.params.id)
