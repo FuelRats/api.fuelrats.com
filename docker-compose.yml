@@ -77,7 +77,7 @@ services:
       FRAPI_SMTP_HOSTNAME: mailpit
       FRAPI_SMTP_PORT: "1025"
       FRAPI_WEBPUSH_PUBLIC_KEY: "BPLSb1TQ3Mj_AO_dkwuIiMZub4Jn5ena5wgjL-c8OuMXguK2fiHWuZh0sxYluEcmGpMR4dWN8ORDWArTNt6le30"
-      FRAPI_WEBPUSH_PRIVATE_KEY: "ComQb6oVfGGbQGGQ3kSv8h2mVPzzB-8uOklnkdmAnN8"
+      FRAPI_WEBPUSH_PRIVATE_KEY: "${FRAPI_WEBPUSH_PRIVATE_KEY:-}"
     secrets:
       - frapi_cookie
       - frapi_jwt_secret
