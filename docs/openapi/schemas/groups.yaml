@@ -14,11 +14,11 @@ Group:
           properties:
             name:
               type: string
-              description: Unique group identifier name
+              description: "Unique group identifier name (writable by: admin only)"
             displayName:
               type: string
               nullable: true
-              description: Human-readable group display name
+              description: "Human-readable group display name (writable by: admin only)"
             vhost:
               type: string
               nullable: true
