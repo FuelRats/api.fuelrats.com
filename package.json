@@ -13,6 +13,8 @@
     "start": "bun src/index.mjs",
     "build:info": "bun scripts/build-info.mjs",
     "test": "bun test",
+    "db:migrate": "sequelize-cli --options-path .sequelizerc.cjs db:migrate",
+    "db:migrate:status": "sequelize-cli --options-path .sequelizerc.cjs db:migrate:status",
     "apidoc": "apidoc -o static/docs/api/ -i test/",
     "eslint": "eslint .",
     "openapi:generate": "bun scripts/generate-openapi.mjs",
