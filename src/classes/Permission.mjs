@@ -3,6 +3,19 @@ import permissionList from '../files/permissions'
 
 const defaultPermissions = ['users.read.me', 'rats.read.me']
 
+// Permissions that let a holder escalate their own authority or cause broad harm. Representation
+// (the x-representing header) must never grant one of these to a caller who does not already hold
+// it. Benign permissions (reads, .me-scoped writes, dispatch) are absent here, so the dispatch bot
+// can keep representing dispatchers who hold such permissions.
+const escalationSensitivePermissions = new Set([
+  'groups.write',
+  'users.write',
+  'users.read',
+  'clients.write',
+  'resources.forcedelete',
+  'nicknames.write',
+])
+
 /**
  * Class for managing user permissions
  */
@@ -46,6 +59,24 @@ export default class Permission {
       })
     }
     return permissions
+  }
+
+  /**
+   * Apply the x-representing privilege ceiling. Starting from the permissions the represented
+   * identity would grant, drop any escalation-sensitive permission the caller does not already
+   * hold, so representation can change identity but never raise the caller's authority. Every
+   * non-sensitive permission, and any sensitive permission the caller already holds, passes
+   * through unchanged.
+   * @param {object} arg function arguments object
+   * @param {string[]} arg.callerPermissions permissions the caller holds in its own right
+   * @param {string[]} arg.representedPermissions permissions computed for the represented identity
+   * @returns {string[]} the permissions the connection may use while representing
+   */
+  static applyRepresentationCeiling ({ callerPermissions, representedPermissions }) {
+    const caller = new Set(callerPermissions)
+    return representedPermissions.filter((permission) => {
+      return escalationSensitivePermissions.has(permission) === false || caller.has(permission)
+    })
   }
 
   /**

@@ -110,10 +110,15 @@ honoApp.use('*', async (c, next) => {
     // Handle representing header
     const representing = ctx.get('x-representing')
     if (representing) {
+      const callerPermissions = ctx.state.permissions
       if (await Authentication.authenticateRepresenting({ ctx, representing }) === false) {
         throw new UnauthorizedAPIError({ parameter: 'representing' })
       }
-      ctx.state.permissions = Permission.getConnectionPermissions({ connection: ctx })
+      const representedPermissions = Permission.getConnectionPermissions({ connection: ctx })
+      ctx.state.permissions = Permission.applyRepresentationCeiling({
+        callerPermissions,
+        representedPermissions,
+      })
     }
 
     // Handle permanent deletion
