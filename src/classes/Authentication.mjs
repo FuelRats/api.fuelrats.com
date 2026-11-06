@@ -597,10 +597,15 @@ class Authentication {
       throw new GoneAPIError({ parameter: 'representing' })
     }
 
-    // NOTE: the FR-07 privilege-ceiling check was reverted — it blocked legitimate representation
-    // of users holding benign extra permissions (e.g. the developer group's developer.read /
-    // clients.write.me), breaking the dispatch bot. A narrower re-fix (block only escalation to
-    // admin-tier permissions) is tracked separately.
+    if (representedUser.isDeactivated()) {
+      return false
+    }
+
+    // Representation changes identity only. On the HTTP path the request middleware recomputes the
+    // connection's permissions and caps them with Permission.applyRepresentationCeiling, so
+    // representation can never grant an escalation-sensitive permission the caller lacks. The
+    // websocket path keeps the permissions computed for the authenticated user at connection time
+    // and does not recompute them here, so representation cannot raise authority there either.
     ctx.state.user = representedUser
     return true
   }
