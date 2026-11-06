@@ -2,7 +2,7 @@ FROM oven/bun:1.4.3
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     libvips \
     git \
     openssl \
