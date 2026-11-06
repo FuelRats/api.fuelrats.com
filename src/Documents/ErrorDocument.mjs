@@ -138,13 +138,20 @@ class ErrorDocument extends Document {
 
     for (const error of errorList) {
       if (error instanceof Error && (error instanceof InternalServerError) === false) {
+        // APIErrors carry no message; the status, code and source say what was rejected.
+        const source = Object.entries(error.source ?? {}).map(([key, value]) => {
+          return `${key}: ${value}`
+        }).join(', ')
         logger.info({
           GELF: true,
           _event: 'error',
           _error_id: error.id.toString(),
+          _error_code: error.code,
+          _error_status: error.status,
+          _error_source: source,
           _error_message: error.message,
           _stack: error.stack,
-        }, `Server Error: ${error.message}`)
+        }, `API Error: ${error.code} ${error.status}${source ? ` (${source})` : ''}`)
       }
     }
 
