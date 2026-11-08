@@ -2,6 +2,9 @@ FROM oven/bun:1.4.4
 
 WORKDIR /app
 
+# deploy.yml sets this per run, so the apt layer below never comes from the build
+# cache and every image carries the Debian security updates of its build day.
+ARG SECURITY_REFRESH=local
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     libvips \
     git \
