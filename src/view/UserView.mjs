@@ -49,7 +49,7 @@ export default class UserView extends DatabaseView {
    * @inheritdoc
    */
   get isSelf () {
-    if (this.query.connection.state.user && this.object.id === this.query.connection.state.user.id) {
+    if (this.query.connection.state.user && this.object?.id === this.query.connection.state.user.id) {
       return this.query.connection.state.permissions.includes('users.read.me')
     }
     return false
