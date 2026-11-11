@@ -177,6 +177,8 @@ class OAuth extends API {
   @authenticated
   @parameters('client_id')
   async authorize (ctx) {
+    await assertFullUserCredential(ctx)
+
     const {
       response_type: responseType,
       client_id: clientId,
@@ -218,11 +220,11 @@ class OAuth extends API {
     }
 
     if (!responseType) {
-      return callbackError(redirectUri, new InvalidRequestOAuthError('response_type'))
+      return callbackError(redirectUri, new InvalidRequestOAuthError('response_type'), state)
     }
 
     if (typeof scope !== 'string' || scope.length === 0) {
-      return callbackError(redirectUri, new InvalidRequestOAuthError('scope'))
+      return callbackError(redirectUri, new InvalidRequestOAuthError('scope'), state)
     }
 
     /* Check valid scopes */
@@ -231,13 +233,13 @@ class OAuth extends API {
       return Permission.isValidOAuthScope(scopeEntry) === false
     })
     if (invalidScopes.length > 0) {
-      return callbackError(redirectUri, new InvalidScopeOAuthError(invalidScopes.join(',')))
+      return callbackError(redirectUri, new InvalidScopeOAuthError(invalidScopes.join(',')), state)
     }
 
     if (client.public) {
       /* Public clients may only use the authorization code grant with PKCE */
       if (responseType !== 'code') {
-        return callbackError(redirectUri, new UnauthorisedClientOAuthError('response_type'))
+        return callbackError(redirectUri, new UnauthorisedClientOAuthError('response_type'), state)
       }
 
       /* Public clients may only request named permission scopes. OpenID Connect scopes yield a signed
@@ -246,21 +248,21 @@ class OAuth extends API {
         return Permission.allPermissions.includes(scopeEntry) === false
       })
       if (nonPermissionScopes.length > 0) {
-        return callbackError(redirectUri, new InvalidScopeOAuthError(nonPermissionScopes.join(',')))
+        return callbackError(redirectUri, new InvalidScopeOAuthError(nonPermissionScopes.join(',')), state)
       }
     }
 
     /* PKCE (RFC 7636): only S256 is accepted. A challenge without a method means "plain", which is rejected */
     if (typeof codeChallenge !== 'undefined' || typeof codeChallengeMethod !== 'undefined') {
       if (codeChallengeMethod !== pkceMethodS256) {
-        return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge_method'))
+        return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge_method'), state)
       }
 
       if (!isValidS256Challenge(codeChallenge)) {
-        return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge'))
+        return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge'), state)
       }
     } else if (client.public) {
-      return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge'))
+      return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge'), state)
     }
 
     const pkce = {
@@ -381,13 +383,15 @@ class OAuth extends API {
       }
     }
 
-    return callbackError(redirectUri, new UnsupportedResponseTypeOAuthError())
+    return callbackError(redirectUri, new UnsupportedResponseTypeOAuthError(), state)
   }
 
   /** @summary OAuth2 authorize decision */
   @POST('/oauth2/authorize')
   @authenticated
   async decision (ctx) {
+    await assertFullUserCredential(ctx)
+
     const { transactionId, allow } = ctx.request.body
 
     /* Validate parameters */
@@ -431,7 +435,7 @@ class OAuth extends API {
 
     /* User denied access to the application */
     if (!allow) {
-      return callbackError(redirectUri, new AccessDeniedOAuthError('allow'))
+      return callbackError(redirectUri, new AccessDeniedOAuthError('allow'), state)
     }
 
     /* User allowed access, return authorization code */
@@ -780,17 +784,31 @@ class OAuth extends API {
       throw new InvalidRequestOAuthError('token')
     }
 
+    const { client } = ctx.state
     const authToken = await Token.findOne({
       where: {
         value: token,
-        clientId: ctx.state.client.id,
+        clientId: client.id,
       },
     })
 
-    if (authToken) {
-      await authToken.destroy()
+    if (!authToken) {
+      return {}
     }
 
+    /* Every login of a public client adds a token row, and any row of the user for the client counts as consent
+    * at authorize, expired rows included. Revoking deletes them all, so the next login asks for consent again */
+    if (client.public) {
+      await Token.destroy({
+        where: {
+          userId: authToken.userId,
+          clientId: client.id,
+        },
+      })
+      return {}
+    }
+
+    await authToken.destroy()
     return {}
   }
 
@@ -918,9 +936,11 @@ function callbackResponse (redirectUri, object) {
  * Transform the error output of an endpoint into an OAuth callback uri that the front-end will redirect to
  * @param {string} redirectUri base redirect uri
  * @param {OAuthError} error oauth error
+ * @param {string} [state] the state the client sent with the authorization request, returned with the error
+ * (RFC 6749 section 4.1.2.1)
  * @returns {{redirect: string}} Redirect uri for the front-end
  */
-function callbackError (redirectUri, error) {
+function callbackError (redirectUri, error, state) {
   const url = new URL(redirectUri)
   url.searchParams.append('error', error.error)
 
@@ -928,12 +948,42 @@ function callbackError (redirectUri, error) {
     url.searchParams.append('error_description', error.description)
   }
 
-  if (error.state) {
-    url.searchParams.append('state', error.state)
+  if (state) {
+    url.searchParams.append('state', state)
   }
 
   return {
     redirect: url.toString(),
+  }
+}
+
+/**
+ * Require a credential that stands for the user in full before the authorize endpoints run: a password login or
+ * session (no token scope), or a bearer token with the '*' scope that does not belong to a public client. A token
+ * with narrower scope, or one held by a public client, could otherwise authorize a client and approve the consent
+ * itself, and so obtain a token with permissions the user never saw on the consent screen. A request that
+ * represents another user is refused as well: the credential is the caller's, not the represented user's
+ * @param {Context} ctx request context
+ * @returns {Promise<void>} resolves when the credential is accepted
+ * @throws {ForbiddenAPIError} when the request is authenticated with a narrower credential or represents a user
+ */
+async function assertFullUserCredential (ctx) {
+  if (ctx.get('x-representing')) {
+    throw new ForbiddenAPIError({ parameter: 'x-representing' })
+  }
+
+  const { scope, clientId } = ctx.state
+  if (typeof scope === 'undefined') {
+    return
+  }
+
+  if (!Array.isArray(scope) || !scope.includes('*')) {
+    throw new ForbiddenAPIError({})
+  }
+
+  const client = clientId ? await Client.findOne({ where: { id: clientId } }) : undefined
+  if (client?.public) {
+    throw new ForbiddenAPIError({})
   }
 }
 

@@ -14,6 +14,10 @@ const API_CONTAINER = process.env.FRAPI_TEST_API_CONTAINER ?? 'apifuelratscom-ap
 
 const USER_ID = 'd2d2d2d2-0000-4000-8000-0000000000a1'
 const USER_EMAIL = 'pkce-test-rat@fuelrats.test'
+// Holds users.write, so the request middleware lets it represent the user
+const REPRESENTING_USER_ID = 'd2d2d2d2-0000-4000-8000-0000000000a2'
+const REPRESENTING_GROUP_ID = 'd2d2d2d2-0000-4000-8000-0000000000b1'
+const USER_IDS = [USER_ID, REPRESENTING_USER_ID]
 
 const WEBSITE_CLIENT_ID = 'd2d2d2d2-0000-4000-8000-0000000000c1'
 const PUBLIC_CLIENT_ID = 'd2d2d2d2-0000-4000-8000-0000000000c2'
@@ -28,31 +32,46 @@ const PUBLIC_SECRET = 'Hn4bW8kPz2cV6mQ1tX9rJ3sL7fG5dA0y' // gitleaks:allow (test
 
 // Stands in for the bearer the website holds for the signed-in user
 const WEBSITE_TOKEN = 'pkcetestwebsitetoken0000000000001'
+// A narrow token the user granted the confidential client
+const CONFIDENTIAL_NARROW_TOKEN = 'pkcetestconfidentialnarrowtoken01'
+// The representing caller's own website token
+const REPRESENTING_TOKEN = 'pkcetestrepresentingtoken00000001'
 const SEED_SECRET = '$2b$12$seedonlyseedonlyseedonlyseedonlyseedonlyseedonlyseedonlyoK'
 const LEGACY_CODE = 'pkcetestlegacycodewithoutchallenge01'
 
 const SCOPE = 'rats.read.me'
+// A scope the user has not granted to any of the clients, so authorize asks for consent
+const UNGRANTED_SCOPE = 'users.read.me'
 const PUBLIC_LIFETIME_SECONDS = 12 * 60 * 60
 const RETENTION_DAYS = 30
 
 const cleanupSql = `
-DELETE FROM "Codes" WHERE "clientId" IN ('${CLIENT_IDS.join("','")}') OR "userId" = '${USER_ID}';
-DELETE FROM "Tokens" WHERE "clientId" IN ('${CLIENT_IDS.join("','")}') OR "userId" = '${USER_ID}';
+DELETE FROM "Codes" WHERE "clientId" IN ('${CLIENT_IDS.join("','")}') OR "userId" IN ('${USER_IDS.join("','")}');
+DELETE FROM "Tokens" WHERE "clientId" IN ('${CLIENT_IDS.join("','")}') OR "userId" IN ('${USER_IDS.join("','")}');
+DELETE FROM "UserGroups" WHERE "userId" IN ('${USER_IDS.join("','")}');
 DELETE FROM "Clients" WHERE id IN ('${CLIENT_IDS.join("','")}');
-DELETE FROM "Users" WHERE id = '${USER_ID}';
+DELETE FROM "Users" WHERE id IN ('${USER_IDS.join("','")}');
+DELETE FROM "Groups" WHERE id = '${REPRESENTING_GROUP_ID}';
 `
 
 const seedSql = ({ publicSecretHash, confidentialSecretHash }) => {
   return `
 BEGIN;
 INSERT INTO "Users"(id,email,password,status,"createdAt","updatedAt") VALUES
- ('${USER_ID}','${USER_EMAIL}','disabled','active',now(),now());
+ ('${USER_ID}','${USER_EMAIL}','disabled','active',now(),now()),
+ ('${REPRESENTING_USER_ID}','pkce-test-representing@fuelrats.test','disabled','active',now(),now());
+INSERT INTO "Groups"(id,name,"displayName",priority,channels,permissions,"createdAt","updatedAt") VALUES
+ ('${REPRESENTING_GROUP_ID}','pkcetestrepresenting','PKCE Test Representing',10,'{}',ARRAY['users.write']::varchar[],now(),now());
+INSERT INTO "UserGroups"(id,"userId","groupId","createdAt","updatedAt") VALUES
+ (gen_random_uuid(),'${REPRESENTING_USER_ID}','${REPRESENTING_GROUP_ID}',now(),now());
 INSERT INTO "Clients"(id,name,secret,"redirectUri","userId","firstParty","public","createdAt","updatedAt") VALUES
  ('${WEBSITE_CLIENT_ID}','PKCE Test Website','${SEED_SECRET}',NULL,'${USER_ID}',true,false,now(),now()),
  ('${PUBLIC_CLIENT_ID}','PKCE Test Kiwi','${publicSecretHash}','${PUBLIC_REDIRECT}','${USER_ID}',false,true,now(),now()),
  ('${CONFIDENTIAL_CLIENT_ID}','PKCE Test Dispatch','${confidentialSecretHash}','${CONFIDENTIAL_REDIRECT}','${USER_ID}',false,false,now(),now());
 INSERT INTO "Tokens"(id,value,scope,"userId","clientId","createdAt","updatedAt") VALUES
- (gen_random_uuid(),'${WEBSITE_TOKEN}',ARRAY['*']::varchar[],'${USER_ID}','${WEBSITE_CLIENT_ID}',now(),now());
+ (gen_random_uuid(),'${WEBSITE_TOKEN}',ARRAY['*']::varchar[],'${USER_ID}','${WEBSITE_CLIENT_ID}',now(),now()),
+ (gen_random_uuid(),'${CONFIDENTIAL_NARROW_TOKEN}',ARRAY['decals.read.me']::varchar[],'${USER_ID}','${CONFIDENTIAL_CLIENT_ID}',now(),now()),
+ (gen_random_uuid(),'${REPRESENTING_TOKEN}',ARRAY['*']::varchar[],'${REPRESENTING_USER_ID}','${WEBSITE_CLIENT_ID}',now(),now());
 COMMIT;
 `
 }
@@ -84,21 +103,21 @@ const pkcePair = () => {
   return { verifier, challenge }
 }
 
-const authorize = (params) => {
+const authorize = (params, bearer = WEBSITE_TOKEN) => {
   return api.get('/oauth2/authorize', {
     params: { response_type: 'code', state: crypto.randomBytes(8).toString('hex'), ...params },
-    headers: { authorization: `Bearer ${WEBSITE_TOKEN}` },
+    headers: { authorization: `Bearer ${bearer}` },
   })
 }
 
-const authorizePublic = (params = {}) => {
-  return authorize({ client_id: PUBLIC_CLIENT_ID, redirect_uri: PUBLIC_REDIRECT, scope: SCOPE, ...params })
+const authorizePublic = (params = {}, bearer = WEBSITE_TOKEN) => {
+  return authorize({ client_id: PUBLIC_CLIENT_ID, redirect_uri: PUBLIC_REDIRECT, scope: SCOPE, ...params }, bearer)
 }
 
-const decide = (authorizeResponse) => {
+const decide = (authorizeResponse, { allow = true, bearer = WEBSITE_TOKEN } = {}) => {
   const cookie = (authorizeResponse.headers['set-cookie'] ?? []).map((value) => value.split(';')[0]).join('; ')
-  return api.post('/oauth2/authorize', { transactionId: authorizeResponse.data.transactionId, allow: true }, {
-    headers: { authorization: `Bearer ${WEBSITE_TOKEN}`, cookie },
+  return api.post('/oauth2/authorize', { transactionId: authorizeResponse.data.transactionId, allow }, {
+    headers: { authorization: `Bearer ${bearer}`, cookie },
   })
 }
 
@@ -145,6 +164,29 @@ const issuePublicToken = async () => {
   const response = await exchangePublic(code, verifier)
   expect(response.status).toBe(200)
   return response.data.access_token
+}
+
+/* A full public client login driven by the website token, through the consent screen when it is shown */
+const loginPublic = async () => {
+  const { verifier, challenge } = pkcePair()
+  const authorizeResponse = await authorizePublic({ code_challenge: challenge, code_challenge_method: 'S256' })
+  expect(authorizeResponse.status).toBe(200)
+  const response = authorizeResponse.data.redirect ? authorizeResponse : await decide(authorizeResponse)
+  const code = redirectParams(response).get('code')
+  expect(code).toBeTruthy()
+  const exchange = await exchangePublic(code, verifier)
+  expect(exchange.status).toBe(200)
+  return exchange.data.access_token
+}
+
+const publicTokenCount = () => {
+  return querySql(`SELECT count(*) FROM "Tokens" WHERE "userId" = '${USER_ID}' AND "clientId" = '${PUBLIC_CLIENT_ID}';`)
+}
+
+const revokePublic = (token) => {
+  return api.post('/oauth2/revoke', new URLSearchParams({ client_id: PUBLIC_CLIENT_ID, token }).toString(), {
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+  })
 }
 
 beforeAll(async () => {
@@ -333,18 +375,6 @@ describe('public client authorization code flow with PKCE', () => {
     expect(querySql(`SELECT count(*) FROM "Tokens" WHERE value = '${firstToken}';`)).toBe('1')
   })
 
-  it('revokes its own token with the client id alone', async () => {
-    const token = await issuePublicToken()
-    expect((await userinfo(token)).status).toBe(200)
-
-    const response = await api.post('/oauth2/revoke', new URLSearchParams({ client_id: PUBLIC_CLIENT_ID, token }).toString(), {
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    })
-    expect(response.status).toBe(200)
-    expect((await userinfo(token)).status).toBe(401)
-    expect(querySql(`SELECT count(*) FROM "Tokens" WHERE value = '${token}';`)).toBe('0')
-  })
-
   it('cannot revoke a token through an operator object instead of the token value', async () => {
     const token = await issuePublicToken()
     const response = await api.post('/oauth2/revoke', { client_id: PUBLIC_CLIENT_ID, token: { ne: '' } })
@@ -365,6 +395,76 @@ describe('public client authorization code flow with PKCE', () => {
     expect(response.status).toBe(400)
     expect(response.data.error).toBe('invalid_request')
     expect(querySql(`SELECT count(*) FROM "Codes" WHERE value = '${code}';`)).toBe('1')
+  })
+
+  it('revokes its own token with the client id alone and deletes every row of the user for the client', async () => {
+    const token = await issuePublicToken()
+    expect((await userinfo(token)).status).toBe(200)
+    runSql(`INSERT INTO "Tokens"(id,value,scope,"userId","clientId","expiresAt","createdAt","updatedAt") VALUES
+      (gen_random_uuid(),'pkcetestexpiredconsent01',ARRAY['${SCOPE}']::varchar[],'${USER_ID}','${PUBLIC_CLIENT_ID}',now() - interval '1 day',now(),now());`)
+    expect(Number(publicTokenCount())).toBeGreaterThan(1)
+
+    const response = await revokePublic(token)
+    expect(response.status).toBe(200)
+    expect((await userinfo(token)).status).toBe(401)
+    expect(publicTokenCount()).toBe('0')
+    expect((await userinfo(WEBSITE_TOKEN)).status).toBe(200)
+
+    /* No consent record is left, so the next login shows the consent screen */
+    const { challenge } = pkcePair()
+    const next = await authorizePublic({ code_challenge: challenge, code_challenge_method: 'S256' })
+    expect(next.status).toBe(200)
+    expect(next.data.redirect).toBeUndefined()
+    expect(next.data.transactionId).toBeTruthy()
+  })
+
+  it('skips consent when the only row of the user for the client has expired', async () => {
+    runSql(`DELETE FROM "Tokens" WHERE "userId" = '${USER_ID}' AND "clientId" = '${PUBLIC_CLIENT_ID}';
+      INSERT INTO "Tokens"(id,value,scope,"userId","clientId","expiresAt","createdAt","updatedAt") VALUES
+      (gen_random_uuid(),'pkcetestexpiredonly01',ARRAY['${SCOPE}']::varchar[],'${USER_ID}','${PUBLIC_CLIENT_ID}',now() - interval '1 day',now(),now());`)
+    expect(publicTokenCount()).toBe('1')
+
+    const { verifier, challenge } = pkcePair()
+    const code = await repeatPublicCode(challenge)
+    const response = await exchangePublic(code, verifier)
+    expect(response.status).toBe(200)
+  })
+
+  it('cannot revoke a token of another client with its client id', async () => {
+    const before = publicTokenCount()
+    expect(Number(before)).toBeGreaterThan(0)
+
+    const response = await revokePublic(WEBSITE_TOKEN)
+    expect(response.status).toBe(200)
+    expect(querySql(`SELECT count(*) FROM "Tokens" WHERE value = '${WEBSITE_TOKEN}';`)).toBe('1')
+    expect((await userinfo(WEBSITE_TOKEN)).status).toBe(200)
+    expect(publicTokenCount()).toBe(before)
+  })
+
+  it('returns the request state with error redirects, including a denied consent', async () => {
+    const state = 'pkce-test-state-0001'
+    const missingChallenge = await authorizePublic({ state })
+    const missingParams = redirectParams(missingChallenge)
+    expect(missingParams.get('error')).toBe('invalid_request')
+    expect(missingParams.get('state')).toBe(state)
+
+    const { challenge } = pkcePair()
+    const badScope = await authorizePublic({ state, scope: `openid ${SCOPE}`, code_challenge: challenge, code_challenge_method: 'S256' })
+    expect(redirectParams(badScope).get('state')).toBe(state)
+
+    const authorizeResponse = await authorizePublic({
+      state,
+      scope: UNGRANTED_SCOPE,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+    })
+    expect(authorizeResponse.data.transactionId).toBeTruthy()
+    const denied = await decide(authorizeResponse, { allow: false })
+    expect(denied.status).toBe(200)
+    const deniedParams = redirectParams(denied)
+    expect(deniedParams.get('error')).toBe('access_denied')
+    expect(deniedParams.get('state')).toBe(state)
+    expect(deniedParams.get('code')).toBeNull()
   })
 
   it('cannot log in with a passkey, which issues a full-scope token that does not expire', async () => {
@@ -451,6 +551,123 @@ describe('confidential client authorization code flow', () => {
 
     const withVerifier = await tokenRequest({ ...fields, code: await authorizeChallenge(), code_verifier: verifier })
     expect(withVerifier.status).toBe(200)
+  })
+})
+
+describe('authorize endpoints with a token narrower than the user', () => {
+  const narrowBearers = {}
+
+  beforeAll(async () => {
+    narrowBearers.public = await loginPublic()
+    narrowBearers.confidential = CONFIDENTIAL_NARROW_TOKEN
+  })
+
+  it('refuse a narrow token on the consent-skip path and on the consent path', async () => {
+    for (const bearer of Object.values(narrowBearers)) {
+      for (const scope of [SCOPE, UNGRANTED_SCOPE]) {
+        const { challenge } = pkcePair()
+        const response = await authorizePublic({ scope, code_challenge: challenge, code_challenge_method: 'S256' }, bearer)
+        expect(response.status).toBe(403)
+        expect(response.data.redirect).toBeUndefined()
+        expect(response.data.transactionId).toBeUndefined()
+      }
+    }
+  })
+
+  it('refuse a narrow token on the implicit grant', async () => {
+    for (const bearer of Object.values(narrowBearers)) {
+      const response = await authorize({
+        response_type: 'token',
+        client_id: CONFIDENTIAL_CLIENT_ID,
+        redirect_uri: CONFIDENTIAL_REDIRECT,
+        scope: '*',
+      }, bearer)
+      expect(response.status).toBe(403)
+      expect(response.data.redirect).toBeUndefined()
+      expect(response.data.transactionId).toBeUndefined()
+    }
+  })
+
+  it('refuse a narrow token on the consent decision, which the website token can still make', async () => {
+    const { challenge } = pkcePair()
+    const authorizeResponse = await authorizePublic({ scope: UNGRANTED_SCOPE, code_challenge: challenge, code_challenge_method: 'S256' })
+    expect(authorizeResponse.data.transactionId).toBeTruthy()
+
+    for (const bearer of Object.values(narrowBearers)) {
+      const response = await decide(authorizeResponse, { bearer })
+      expect(response.status).toBe(403)
+      expect(response.data.redirect).toBeUndefined()
+    }
+
+    const decision = await decide(authorizeResponse)
+    expect(decision.status).toBe(200)
+    expect(redirectParams(decision).get('code')).toBeTruthy()
+  })
+
+  it('refuse a full-scope token that represents the user, on both endpoints', async () => {
+    const representingAuthorize = (scope) => {
+      const { challenge } = pkcePair()
+      return api.get('/oauth2/authorize', {
+        params: {
+          response_type: 'code',
+          client_id: PUBLIC_CLIENT_ID,
+          redirect_uri: PUBLIC_REDIRECT,
+          scope,
+          state: crypto.randomBytes(8).toString('hex'),
+          code_challenge: challenge,
+          code_challenge_method: 'S256',
+        },
+        headers: { 'authorization': `Bearer ${REPRESENTING_TOKEN}`, 'x-representing': USER_ID },
+      })
+    }
+
+    for (const scope of [SCOPE, UNGRANTED_SCOPE]) {
+      const response = await representingAuthorize(scope)
+      expect(response.status).toBe(403)
+      expect(response.data.redirect).toBeUndefined()
+      expect(response.data.transactionId).toBeUndefined()
+      expect(response.data.errors[0].source).toEqual({ parameter: 'x-representing' })
+    }
+
+    const { challenge } = pkcePair()
+    const authorizeResponse = await authorizePublic({ scope: UNGRANTED_SCOPE, code_challenge: challenge, code_challenge_method: 'S256' })
+    expect(authorizeResponse.data.transactionId).toBeTruthy()
+    const cookie = (authorizeResponse.headers['set-cookie'] ?? []).map((value) => value.split(';')[0]).join('; ')
+    const representingDecision = await api.post('/oauth2/authorize', {
+      transactionId: authorizeResponse.data.transactionId,
+      allow: true,
+    }, { headers: { 'authorization': `Bearer ${REPRESENTING_TOKEN}`, 'x-representing': USER_ID, cookie } })
+    expect(representingDecision.status).toBe(403)
+    expect(representingDecision.data.redirect).toBeUndefined()
+
+    const decision = await decide(authorizeResponse)
+    expect(decision.status).toBe(200)
+    expect(redirectParams(decision).get('code')).toBeTruthy()
+  })
+})
+
+describe('session listing', () => {
+  const EXPIRED_SESSION_ID = 'd2d2d2d2-0000-4000-8000-0000000000e1'
+  const LIVE_SESSION_ID = 'd2d2d2d2-0000-4000-8000-0000000000e2'
+
+  it('lists unexpired and non-expiring tokens only', async () => {
+    runSql(`INSERT INTO "Tokens"(id,value,scope,"userId","clientId","expiresAt","createdAt","updatedAt") VALUES
+      ('${EXPIRED_SESSION_ID}','pkcetestsessionexpired',ARRAY['${SCOPE}']::varchar[],'${USER_ID}','${PUBLIC_CLIENT_ID}',now() - interval '1 hour',now(),now()),
+      ('${LIVE_SESSION_ID}','pkcetestsessionlive',ARRAY['${SCOPE}']::varchar[],'${USER_ID}','${PUBLIC_CLIENT_ID}',now() + interval '1 hour',now(),now());`)
+    const websiteSessionId = querySql(`SELECT id FROM "Tokens" WHERE value = '${WEBSITE_TOKEN}';`)
+    const listed = querySql(`SELECT count(*) FROM "Tokens" WHERE "userId" = '${USER_ID}' AND ("expiresAt" IS NULL OR "expiresAt" > now());`)
+
+    const response = await api.get(`/users/${USER_ID}/sessions`, {
+      params: { 'page[size]': 100 },
+      headers: { authorization: `Bearer ${WEBSITE_TOKEN}` },
+    })
+    expect(response.status).toBe(200)
+    const ids = response.data.data.map((session) => session.id)
+    expect(ids).toContain(LIVE_SESSION_ID)
+    expect(ids).toContain(websiteSessionId)
+    expect(ids).not.toContain(EXPIRED_SESSION_ID)
+    expect(String(ids.length)).toBe(listed)
+    expect(String(response.data.meta.total)).toBe(listed)
   })
 })
 
