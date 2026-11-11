@@ -12,5 +12,6 @@
   "resources": ["forcedelete"],
   "twitter": ["write"],
   "dispatch": ["read", "write"],
-  "anope": ["read"]
+  "anope": ["read"],
+  "irc": ["login"]
 }

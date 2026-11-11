@@ -126,6 +126,25 @@ class Anope {
   }
 
   /**
+   * Find an alias of one Anope account by nickname
+   * @param {string} accountId the account's NickCore.uniqueid (the NickAlias.ncid link key)
+   * @param {string} nickname the nickname to look up, matched case-insensitively
+   * @returns {Promise<string|undefined>} the alias as registered, or undefined if the account has no such alias
+   */
+  static async findAccountAlias (accountId, nickname) {
+    // A missing id would become `ncid IS NULL` and match aliases linked to no account
+    if (!config.anope.database || !accountId) {
+      return undefined
+    }
+    const alias = await mysql(NICK_ALIAS)
+      .where({ ncid: accountId })
+      .whereRaw('lower(nick) = lower(?)', [nickname])
+      .first('nick')
+
+    return alias?.nick
+  }
+
+  /**
    * List every channel registered with ChanServ, ordered by name. Backs the
    * group-management channel-access autocomplete and the bot's registered-channel
    * guard, so access can only be granted to channels that actually exist.

@@ -74,6 +74,7 @@ services:
       FRAPI_ANOPE_DATABASE: anope
       FRAPI_ANOPE_USERNAME: anope2
       FRAPI_ANOPE_XMLRPC: "http://services.fuelrats.dev:6080/xmlrpc"
+      FRAPI_IRC_TOKEN_SECRET: "${FRAPI_IRC_TOKEN_SECRET:-}"
       FRAPI_SMTP_HOSTNAME: mailpit
       FRAPI_SMTP_PORT: "1025"
       FRAPI_WEBPUSH_PUBLIC_KEY: "BPLSb1TQ3Mj_AO_dkwuIiMZub4Jn5ena5wgjL-c8OuMXguK2fiHWuZh0sxYluEcmGpMR4dWN8ORDWArTNt6le30"

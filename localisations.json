@@ -85,6 +85,11 @@
       "not_implemented": {
         "title": "Not Implemented",
         "detail": "The server does not support the functionality required to fulfill the request."
+      },
+
+      "service_unavailable": {
+        "title": "Service Unavailable",
+        "detail": "The server is currently unable to handle the request."
       }
     }
   }
