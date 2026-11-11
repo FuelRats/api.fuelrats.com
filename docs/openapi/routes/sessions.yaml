@@ -8,7 +8,8 @@ users_sessions:
     description: |
       Returns the authenticated user's active login sessions. Each session
       is an OAuth token with associated device metadata (IP, user agent,
-      auth method, last access time).
+      auth method, last access time). Expired tokens, such as those of
+      public clients after 12 hours, are not listed.
 
       The session used for this request has `meta.current: true`.
 

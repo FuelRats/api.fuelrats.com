@@ -108,6 +108,22 @@ default `http://localhost:8080`) and seed and remove their own records with `psq
 container (`FRAPI_TEST_DB_CONTAINER`, default `apifuelratscom-db-1`). Run them against a development
 database only.
 
+Some tests have more prerequisites:
+
+- `tests/routes/oauth-pkce.test.js` and `tests/routes/irc-sasl-token.test.js` also run scripts inside the
+  API container with `docker exec` (`FRAPI_TEST_API_CONTAINER`, default `apifuelratscom-api-1`).
+- `tests/routes/irc-sasl-token.test.js` needs an API with `FRAPI_IRC_TOKEN_SECRET` set (Compose passes it
+  through from your shell, for example `FRAPI_IRC_TOKEN_SECRET=$(openssl rand -hex 32) docker compose up -d`)
+  and working Anope reads, such as the development Anope database through the tunnel. It looks up two
+  Anope accounts with a `@fuelrats.test` email whose display nick is one of their aliases, and fails if
+  there are fewer. It only reads Anope.
+- `tests/routes/irc-sasl-token-unconfigured.test.js` needs an API without the secret. Run it against a
+  one-off container of the `api` service, which shares the database:
+
+      docker compose run -d --rm --no-deps --name frapi-api-unconfigured -e FRAPI_IRC_TOKEN_SECRET= -p 18081:8080 api
+      FRAPI_TEST_URL=http://localhost:18081 bun test tests/routes/irc-sasl-token-unconfigured.test.js
+      docker stop frapi-api-unconfigured
+
 ### Migrations
 
 Schema changes are CommonJS files in [`migrations/`](migrations), named `<timestamp>-<description>.js`

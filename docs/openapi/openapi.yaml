@@ -45,16 +45,20 @@ info:
 
     ### Authorization Code (Recommended)
 
-    The most secure method. Use when you can hide the client secret (native
-    apps, server-side code). **Do not** use in client-side web applications
-    where the secret would be visible in source code.
+    The most secure method, and the one to use for every kind of
+    application. Applications that can hide the client secret (native apps,
+    server-side code) exchange the code with their client credentials.
+    Client-side web applications, where a secret would be visible in the
+    source code, use it as a public client with PKCE instead (see
+    Public Clients and PKCE below).
 
     **Flow:**
 
     1. Open the fuelrats.com authorisation page in the user's browser
     2. User approves or rejects the request
     3. Your application receives an **authorisation code** via redirect
-    4. Exchange the code for an **access token** using your client credentials
+    4. Exchange the code for an **access token** using your client credentials,
+       or your client ID and PKCE code verifier for a public client
 
     #### Authorisation URL
 
@@ -69,6 +73,11 @@ info:
     | `scope` | Space-separated list of permissions |
     | `redirect_uri` | Where to redirect after approval. Set to `DISPLAY` to show the code on-screen instead |
     | `state` | An opaque value returned in the callback to prevent CSRF |
+    | `code_challenge` | PKCE (RFC 7636) challenge: the base64url SHA-256 of your code verifier, 43 characters. Required for public clients, optional for others |
+    | `code_challenge_method` | Must be `S256` when `code_challenge` is sent. `plain` is refused |
+
+    When `code_challenge` is sent, the token exchange must include the
+    matching `code_verifier`, for any client.
 
     **Redirect options for different application types:**
     - **Website:** Redirect to your web page
@@ -83,9 +92,14 @@ info:
 
     **Failure:** `https://yourapp.com/callback?error=ERROR_CODE&error_description=MESSAGE&state=YOUR_STATE`
 
+    An unknown `client_id`, or a public client's `redirect_uri` that is not
+    its registered one, is shown to the user as an error and never
+    redirected.
+
     #### Token Exchange
 
     `POST https://api.fuelrats.com/oauth2/token` with Basic auth (client_id:client_secret).
+    A public client sends `client_id` in the body instead and no secret.
 
     Body (`application/x-www-form-urlencoded`):
 
@@ -94,6 +108,11 @@ info:
     | `grant_type` | `authorization_code` |
     | `code` | The authorisation code from the callback |
     | `redirect_uri` | Must match the URI used in the authorisation step |
+    | `code_verifier` | The PKCE code verifier, when the authorisation request carried a `code_challenge` |
+    | `client_id` | Public clients only: your OAuth client ID |
+
+    A code is single use: an exchange that fails the verifier check still
+    consumes it.
 
     **Success response (200):**
 
@@ -101,16 +120,39 @@ info:
     { "access_token": "...", "token_type": "bearer" }
     ```
 
+    Tokens issued to a public client also carry `"expires_in": 43200`: they
+    stop working after 12 hours.
+
     **Error response (400):**
 
     ```json
     { "error": "error_code", "error_description": "Human readable message" }
     ```
 
+    ### Public Clients and PKCE
+
+    A public client is an OAuth client that cannot keep a secret, such as a
+    browser application. A Fuel Rats administrator registers a client as
+    public; it then has these rules:
+
+    - Only the Authorization Code grant, with PKCE (`code_challenge_method=S256`)
+      on every authorisation request. The implicit and password grants get
+      `unauthorised_client`.
+    - `redirect_uri` must be exactly the redirect URI registered for the client.
+    - Only named permission scopes. `*`, `openid`, `profile`, `email` and
+      `groups` get `invalid_scope`.
+    - The token exchange and revocation authenticate with `client_id` alone
+      (token endpoint auth method `none`); a secret, if sent, is still checked.
+    - Access tokens expire after 12 hours (`expires_in` in the token response).
+    - Revoking one of its tokens deletes every token of that user for the
+      client, so the user is asked for consent again on the next login.
+      `POST /oauth2/revokeall` and passkey login are refused.
+
     ### Implicit Grant
 
-    For client-side web applications where the secret cannot be hidden.
-    Less secure than Authorization Code — use that instead if possible.
+    **Not recommended.** Browser applications should use the Authorization
+    Code grant as a public client with PKCE instead. Public clients cannot
+    use the implicit grant.
 
     Same authorisation step as Authorization Code with these differences:
     - `response_type` must be `token` (not `code`)
@@ -169,9 +211,20 @@ info:
 
     ### Token Revocation
 
-    `POST /oauth2/revoke` with Basic auth (client_id:client_secret).
+    `POST /oauth2/revoke` with Basic auth (client_id:client_secret). A public
+    client sends `client_id` in the body instead and no secret.
 
     Body: `token=THE_TOKEN_TO_REVOKE`
+
+    Only tokens issued to the authenticating client are revoked; any other
+    token value is left alone. For a public client, revoking a token deletes
+    every token of that user for the client.
+
+    ### IRC Login
+
+    `POST /irc/sasl-token` with a bearer token that has the `irc.login`
+    scope returns a one-time SASL PLAIN password, valid for 60 seconds, for
+    the IRC account registered with the user's verified email address.
 
     ### WebSocket Authentication
 
@@ -194,6 +247,9 @@ info:
     - `rescues.read.me` - View only your assigned rescues
     - `rats.write` - Modify any commander record
     - `users.read` - View any user information
+
+    `irc.login` (log in to IRC as you) is held by every user, like
+    `users.read.me` and `rats.read.me`.
     
     ## Filtering & Query Parameters
     
@@ -293,6 +349,8 @@ tags:
     description: Permission group management
   - name: oauth2
     description: OAuth2 authentication
+  - name: irc
+    description: IRC login credentials
   - name: passkeys
     description: WebAuthn/Passkey authentication
   - name: sessions
@@ -485,6 +543,10 @@ paths:
     $ref: './routes/oauth2.yaml#/oauth2_revoke'
   /oauth2/revokeall:
     $ref: './routes/oauth2.yaml#/oauth2_revokeall'
+
+  # IRC
+  /irc/sasl-token:
+    $ref: './routes/irc.yaml#/irc_sasl_token'
   
   # OAuth Clients
   /clients:
@@ -631,6 +693,9 @@ components:
             nicknames.write: Register and modify IRC nicknames
             nicknames.read.me: Read your own nicknames only
             nicknames.write.me: Modify your own nicknames only
+
+            # IRC permissions
+            irc.login: Log in to IRC as you (held by every user)
         
         implicit:
           authorizationUrl: /oauth2/authorize

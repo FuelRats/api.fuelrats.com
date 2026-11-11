@@ -45,16 +45,20 @@ info:
 
     ### Authorization Code (Recommended)
 
-    The most secure method. Use when you can hide the client secret (native
-    apps, server-side code). **Do not** use in client-side web applications
-    where the secret would be visible in source code.
+    The most secure method, and the one to use for every kind of
+    application. Applications that can hide the client secret (native apps,
+    server-side code) exchange the code with their client credentials.
+    Client-side web applications, where a secret would be visible in the
+    source code, use it as a public client with PKCE instead (see
+    Public Clients and PKCE below).
 
     **Flow:**
 
     1. Open the fuelrats.com authorisation page in the user's browser
     2. User approves or rejects the request
     3. Your application receives an **authorisation code** via redirect
-    4. Exchange the code for an **access token** using your client credentials
+    4. Exchange the code for an **access token** using your client credentials,
+       or your client ID and PKCE code verifier for a public client
 
     #### Authorisation URL
 
@@ -69,6 +73,11 @@ info:
     | `scope` | Space-separated list of permissions |
     | `redirect_uri` | Where to redirect after approval. Set to `DISPLAY` to show the code on-screen instead |
     | `state` | An opaque value returned in the callback to prevent CSRF |
+    | `code_challenge` | PKCE (RFC 7636) challenge: the base64url SHA-256 of your code verifier, 43 characters. Required for public clients, optional for others |
+    | `code_challenge_method` | Must be `S256` when `code_challenge` is sent. `plain` is refused |
+
+    When `code_challenge` is sent, the token exchange must include the
+    matching `code_verifier`, for any client.
 
     **Redirect options for different application types:**
     - **Website:** Redirect to your web page
@@ -83,9 +92,14 @@ info:
 
     **Failure:** `https://yourapp.com/callback?error=ERROR_CODE&error_description=MESSAGE&state=YOUR_STATE`
 
+    An unknown `client_id`, or a public client's `redirect_uri` that is not
+    its registered one, is shown to the user as an error and never
+    redirected.
+
     #### Token Exchange
 
     `POST https://api.fuelrats.com/oauth2/token` with Basic auth (client_id:client_secret).
+    A public client sends `client_id` in the body instead and no secret.
 
     Body (`application/x-www-form-urlencoded`):
 
@@ -94,6 +108,11 @@ info:
     | `grant_type` | `authorization_code` |
     | `code` | The authorisation code from the callback |
     | `redirect_uri` | Must match the URI used in the authorisation step |
+    | `code_verifier` | The PKCE code verifier, when the authorisation request carried a `code_challenge` |
+    | `client_id` | Public clients only: your OAuth client ID |
+
+    A code is single use: an exchange that fails the verifier check still
+    consumes it.
 
     **Success response (200):**
 
@@ -101,16 +120,39 @@ info:
     { "access_token": "...", "token_type": "bearer" }
     ```
 
+    Tokens issued to a public client also carry `"expires_in": 43200`: they
+    stop working after 12 hours.
+
     **Error response (400):**
 
     ```json
     { "error": "error_code", "error_description": "Human readable message" }
     ```
 
+    ### Public Clients and PKCE
+
+    A public client is an OAuth client that cannot keep a secret, such as a
+    browser application. A Fuel Rats administrator registers a client as
+    public; it then has these rules:
+
+    - Only the Authorization Code grant, with PKCE (`code_challenge_method=S256`)
+      on every authorisation request. The implicit and password grants get
+      `unauthorised_client`.
+    - `redirect_uri` must be exactly the redirect URI registered for the client.
+    - Only named permission scopes. `*`, `openid`, `profile`, `email` and
+      `groups` get `invalid_scope`.
+    - The token exchange and revocation authenticate with `client_id` alone
+      (token endpoint auth method `none`); a secret, if sent, is still checked.
+    - Access tokens expire after 12 hours (`expires_in` in the token response).
+    - Revoking one of its tokens deletes every token of that user for the
+      client, so the user is asked for consent again on the next login.
+      `POST /oauth2/revokeall` and passkey login are refused.
+
     ### Implicit Grant
 
-    For client-side web applications where the secret cannot be hidden.
-    Less secure than Authorization Code — use that instead if possible.
+    **Not recommended.** Browser applications should use the Authorization
+    Code grant as a public client with PKCE instead. Public clients cannot
+    use the implicit grant.
 
     Same authorisation step as Authorization Code with these differences:
     - `response_type` must be `token` (not `code`)
@@ -169,9 +211,20 @@ info:
 
     ### Token Revocation
 
-    `POST /oauth2/revoke` with Basic auth (client_id:client_secret).
+    `POST /oauth2/revoke` with Basic auth (client_id:client_secret). A public
+    client sends `client_id` in the body instead and no secret.
 
     Body: `token=THE_TOKEN_TO_REVOKE`
+
+    Only tokens issued to the authenticating client are revoked; any other
+    token value is left alone. For a public client, revoking a token deletes
+    every token of that user for the client.
+
+    ### IRC Login
+
+    `POST /irc/sasl-token` with a bearer token that has the `irc.login`
+    scope returns a one-time SASL PLAIN password, valid for 60 seconds, for
+    the IRC account registered with the user's verified email address.
 
     ### WebSocket Authentication
 
@@ -194,6 +247,9 @@ info:
     - `rescues.read.me` - View only your assigned rescues
     - `rats.write` - Modify any commander record
     - `users.read` - View any user information
+
+    `irc.login` (log in to IRC as you) is held by every user, like
+    `users.read.me` and `rats.read.me`.
 
     ## Filtering & Query Parameters
 
@@ -290,6 +346,8 @@ tags:
     description: Permission group management
   - name: oauth2
     description: OAuth2 authentication
+  - name: irc
+    description: IRC login credentials
   - name: passkeys
     description: WebAuthn/Passkey authentication
   - name: sessions
@@ -3022,7 +3080,8 @@ paths:
       description: |
         Returns the authenticated user's active login sessions. Each session
         is an OAuth token with associated device metadata (IP, user agent,
-        auth method, last access time).
+        auth method, last access time). Expired tokens, such as those of
+        public clients after 12 hours, are not listed.
 
         The session used for this request has `meta.current: true`.
 
@@ -6343,11 +6402,17 @@ paths:
       summary: OAuth2 authorization endpoint
       description: |
         Initiate OAuth2 authorization flow. Supports both Authorization Code and Implicit Grant flows.
+        The fuelrats.com authorisation page calls this endpoint for the signed-in user.
 
-        If the user has previously granted the requested permissions to the client, they will be 
-        immediately redirected back with the authorization code or token without seeing the consent screen.
+        If the user has previously granted the requested permissions to the client, the response
+        carries the redirect back with the authorization code or token, and no consent screen is shown.
 
-        **Authentication Required:** Bearer token authentication
+        Public clients must use `response_type=code` with PKCE (`code_challenge` and
+        `code_challenge_method=S256`), their registered `redirect_uri`, and only named permission scopes.
+
+        **Authentication Required:** the user's own full credential: a bearer token with the `*` scope
+        that was not issued to a public client, such as the token the website holds. A token with
+        narrower scope, or any token of a public client, gets 403.
       security:
         - bearerAuth: []
       parameters:
@@ -6361,8 +6426,8 @@ paths:
               - code
               - token
             description: |
-              - `code`: Authorization Code flow (recommended)
-              - `token`: Implicit Grant flow (for client-side apps)
+              - `code`: Authorization Code flow (recommended, the only one for public clients)
+              - `token`: Implicit Grant flow (not recommended; browser apps should use `code` as a public client)
         - name: client_id
           in: query
           required: true
@@ -6374,8 +6439,8 @@ paths:
           in: query
           required: true
           description: |
-            Redirect URI after authorization. For Implicit Grant (token), this must match exactly
-            the redirectUri stored in the OAuth client configuration.
+            Redirect URI after authorization. For Implicit Grant (token) and for public clients, this
+            must match exactly the redirectUri stored in the OAuth client configuration.
           schema:
             type: string
             format: uri
@@ -6385,7 +6450,9 @@ paths:
           description: |
             Space-separated list of requested permissions.
             Available scopes: `users.read`, `users.write`, `users.write.me`, `rats.read`, `rats.write`,
-            `rescues.read`, `rescues.write`, and namespace-specific scopes.
+            `rescues.read`, `rescues.write`, `irc.login`, and namespace-specific scopes.
+            Public clients may request only named permission scopes, not `*`, `openid`, `profile`,
+            `email` or `groups`.
           schema:
             type: string
             example: users.read rats.read
@@ -6394,12 +6461,33 @@ paths:
           required: true
           description: |
             Client state parameter for CSRF protection. This value will be returned unchanged
-            in the callback to verify the response matches the request.
+            in the callback, with the code or with an error, to verify the response matches the request.
           schema:
             type: string
+        - name: code_challenge
+          in: query
+          required: false
+          description: |
+            PKCE (RFC 7636) code challenge: the base64url-encoded SHA-256 of the code verifier,
+            43 characters. Required for public clients. When it is sent, the token exchange must
+            present the matching `code_verifier`.
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{43}$
+        - name: code_challenge_method
+          in: query
+          required: false
+          description: PKCE challenge method. Required with `code_challenge`; only `S256` is accepted.
+          schema:
+            type: string
+            enum:
+              - S256
       responses:
         '200':
-          description: Authorization consent screen data (when user consent is needed)
+          description: |
+            Authorization consent screen data when user consent is needed. Otherwise an object with
+            `redirect`: the callback URL with the authorization code or token (consent given before),
+            or with `error`, `error_description` and `state` (an invalid request).
           content:
             application/json:
               schema:
@@ -6426,38 +6514,41 @@ paths:
                   state:
                     type: string
                     description: State parameter from the request
-              example:
-                transactionId: abc123def456
-                scopes:
-                  - users.read
-                  - rats.read
-                clientId: 110e8400-e29b-41d4-a716-446655440001
-                clientName: My Rescue Tool
-                firstParty: false
-                state: xyz789
-        '302':
-          description: |
-            Redirect to callback with authorization code or token (when user has previously consented)
-          headers:
-            Location:
-              description: Redirect URL with code/token or error
-              schema:
-                type: string
-                format: uri
-                example: https://example.com/callback?code=abc123&state=xyz789
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
                   redirect:
                     type: string
                     format: uri
-                    description: Redirect URL with error parameters
-                example:
-                  redirect: https://example.com/callback?error=invalid_request&error_description=Missing+state+parameter
+                    description: Callback URL with the code, token or error, when no consent screen is needed
+              examples:
+                consent:
+                  value:
+                    transactionId: abc123def456
+                    scopes:
+                      - users.read
+                      - rats.read
+                    clientId: 110e8400-e29b-41d4-a716-446655440001
+                    clientName: My Rescue Tool
+                    firstParty: false
+                    state: xyz789
+                code:
+                  value:
+                    redirect: https://example.com/callback?code=abc123&state=xyz789
+                error:
+                  value:
+                    redirect: https://example.com/callback?error=invalid_request&error_description=code_challenge&state=xyz789
+        '400':
+          description: |
+            Invalid `client_id` or `redirect_uri` (unknown client, or a public client's redirect URI
+            that is not its registered one). Shown to the user and never redirected.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: The request is authenticated with a token narrower than the user's full credential
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
       operationId: postOauth2Authorize
       tags:
@@ -6466,8 +6557,10 @@ paths:
       description: |
         Handle user's authorization decision (allow or deny access).
         This endpoint is called after the user views the consent screen.
+        A denial returns the callback URL with `error=access_denied` and the request's `state`.
 
-        **Authentication Required:** Bearer token or session authentication
+        **Authentication Required:** the same full credential as `GET /oauth2/authorize`; a token with
+        narrower scope, or any token of a public client, gets 403
       security:
         - bearerAuth: []
         - sessionAuth: []
@@ -6507,7 +6600,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
-          description: Invalid transaction or user mismatch
+          description: Invalid transaction, user mismatch, or a token narrower than the user's full credential
           content:
             application/vnd.api+json:
               schema:
@@ -6525,9 +6618,15 @@ paths:
         - `authorization_code`: Exchange code for token (standard OAuth2 flow)
         - `password`: Resource Owner Password Credentials (first-party clients only)
 
-        **Authentication Required:** Basic authentication with client credentials
+        A public client authenticates with `client_id` in the body and no secret (token endpoint auth
+        method `none`) and may use only `authorization_code`, with the PKCE `code_verifier`. Its tokens
+        expire after 12 hours, given as `expires_in`.
+
+        **Authentication Required:** Basic authentication with client credentials, or `client_id` alone
+        for a public client
       security:
         - basicAuth: []
+        - {}
       requestBody:
         required: true
         content:
@@ -6551,6 +6650,16 @@ paths:
                       type: string
                       format: uri
                       description: Must match the redirect_uri used in the authorization request
+                    code_verifier:
+                      type: string
+                      description: |
+                        PKCE code verifier (RFC 7636, 43 to 128 characters). Required when the authorization
+                        request carried a `code_challenge`. A wrong or missing verifier gives `invalid_grant`
+                        and consumes the code.
+                    client_id:
+                      type: string
+                      format: uuid
+                      description: Client ID, for a public client that sends no Basic authentication
                 - type: object
                   required:
                     - grant_type
@@ -6579,6 +6688,13 @@ paths:
                   grant_type: authorization_code
                   code: AUTH_CODE_HERE
                   redirect_uri: https://example.com/callback
+              public_client:
+                value:
+                  grant_type: authorization_code
+                  client_id: 110e8400-e29b-41d4-a716-446655440001
+                  code: AUTH_CODE_HERE
+                  redirect_uri: https://example.com/callback.html
+                  code_verifier: CODE_VERIFIER_HERE
               password:
                 value:
                   grant_type: password
@@ -6605,6 +6721,9 @@ paths:
                     enum:
                       - bearer
                     description: Token type (always "bearer")
+                  expires_in:
+                    type: integer
+                    description: Seconds until the token expires (43200); only for tokens issued to a public client
                   scope:
                     type: string
                     description: Granted scopes (only for implicit grant)
@@ -6612,7 +6731,9 @@ paths:
                 access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                 token_type: bearer
         '400':
-          description: Invalid request or grant
+          description: |
+            Invalid request or grant. `unauthorised_client` is returned for a grant type the client may not
+            use, such as `password` for a public client.
           content:
             application/json:
               schema:
@@ -6624,7 +6745,7 @@ paths:
                       - invalid_request
                       - invalid_client
                       - invalid_grant
-                      - unauthorized_client
+                      - unauthorised_client
                       - unsupported_grant_type
                       - invalid_scope
                   error_description:
@@ -6656,11 +6777,17 @@ paths:
       summary: Revoke access token
       description: |
         Revoke a specific access token. The token will immediately become invalid.
-        Only tokens issued to the authenticated client can be revoked.
+        Only tokens issued to the authenticated client can be revoked; any other token value is left alone.
 
-        **Authentication Required:** Basic authentication with client credentials
+        A public client revokes with `client_id` in the body and no secret. Revoking one of its tokens
+        deletes every token of that user for the client, which also removes the user's consent, so the
+        next login shows the consent screen again.
+
+        **Authentication Required:** Basic authentication with client credentials, or `client_id` alone
+        for a public client
       security:
         - basicAuth: []
+        - {}
       requestBody:
         required: true
         content:
@@ -6673,6 +6800,10 @@ paths:
                 token:
                   type: string
                   description: The access token to revoke
+                client_id:
+                  type: string
+                  format: uuid
+                  description: Client ID, for a public client that sends no Basic authentication
             example:
               token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
@@ -6710,6 +6841,7 @@ paths:
       description: |
         Revoke all access tokens issued to the authenticated client.
         This is useful when a client's credentials may have been compromised.
+        Public clients are refused, because their client ID is not a secret.
 
         **Authentication Required:** Basic authentication with client credentials
       security:
@@ -6722,8 +6854,106 @@ paths:
               schema:
                 type: object
               example: {}
+        '400':
+          description: The client is a public client
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - unauthorised_client
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /irc/sasl-token:
+    post:
+      operationId: postIrcSasltoken
+      tags:
+        - irc
+      summary: Mint a one-time IRC login
+      description: |
+        Returns a one-time SASL PLAIN password for an alias of the IRC (Anope) account registered
+        with the user's email address. The password is valid for 60 seconds and for one login.
+        `account` is the alias as registered: send it unchanged as the SASL authentication identity
+        and as the nick, because the password is bound to that exact string.
+
+        The request and response bodies are plain JSON, not JSON:API.
+
+        The user's email address must be verified. A request that represents another user
+        (`x-representing`) is refused.
+
+        **Required Permission:** `irc.login`, held by every user. The token's scope must include
+        `irc.login` or `*`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nick:
+                  type: string
+                  description: |
+                    An alias of the user's account to log in as, in any case. Without it the account's
+                    display nick is used.
+            example:
+              nick: Jameson
+      responses:
+        '200':
+          description: One-time IRC login
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - account
+                  - password
+                  - expiresIn
+                properties:
+                  account:
+                    type: string
+                    description: The alias as registered, to send as the SASL authentication identity and as the nick
+                  password:
+                    type: string
+                    description: One-time SASL PLAIN password, `frk1:<unix seconds>:<64 lowercase hex characters>`
+                  expiresIn:
+                    type: integer
+                    description: Seconds the password stays valid (60)
+              example:
+                account: Jameson
+                password: frk1:1762819200:<64 hex characters>
+                expiresIn: 60
+        '400':
+          description: |
+            - Without `source`: the user has no IRC account, or has not verified the email address of
+              their account (with a `detail` asking them to verify it). `links.about` points at the
+              profile page in both cases.
+            - With `source.pointer` `/nick`: the nick is malformed, not registered, or an alias of
+              another account.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: |
+            The token's scope lacks `irc.login`, or the request represents another user
+            (`source.parameter` `x-representing`)
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: IRC login passwords are not configured on this API
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /clients:
     get:
       operationId: getClients
@@ -8902,6 +9132,7 @@ components:
             nicknames.write: Register and modify IRC nicknames
             nicknames.read.me: Read your own nicknames only
             nicknames.write.me: Modify your own nicknames only
+            irc.login: Log in to IRC as you (held by every user)
         implicit:
           authorizationUrl: /oauth2/authorize
           scopes:
@@ -9789,6 +10020,9 @@ components:
                 firstParty:
                   type: boolean
                   description: 'Whether this is a first-party Fuel Rats client (writable by: admin only)'
+                public:
+                  type: boolean
+                  description: 'Writable by: admin only'
                 createdAt:
                   type: string
                   format: date-time
