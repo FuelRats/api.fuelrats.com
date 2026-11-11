@@ -1,6 +1,7 @@
 import Anope from '../classes/Anope'
-import { BadRequestAPIError, ServiceUnavailableAPIError } from '../classes/APIError'
+import { BadRequestAPIError, ForbiddenAPIError, ServiceUnavailableAPIError } from '../classes/APIError'
 import config from '../config'
+import { Token } from '../db'
 import { mintSaslToken, saslTokenLifetimeSeconds } from '../helpers/saslToken'
 import { IRCNickname } from '../helpers/Validators'
 import { logMetric } from '../logging'
@@ -17,6 +18,23 @@ const millisecondsPerSecond = 1000
  * where registering a nickname creates the account.
  */
 class AnopeAccountRequiredAPIError extends BadRequestAPIError {
+  get links () {
+    return {
+      about: `${config.frontend.url}/profile/overview`,
+    }
+  }
+}
+
+/**
+ * Refusal for a user who has not verified the email address of their website account. The Anope account is
+ * found by that email, so an unverified address must not lead to an IRC login. `links.about` points at the
+ * profile page, which offers to send the verification email again.
+ */
+class VerifiedEmailRequiredAPIError extends BadRequestAPIError {
+  get detail () {
+    return 'Verify the email address of your Fuel Rats account before logging in to IRC with it'
+  }
+
   get links () {
     return {
       about: `${config.frontend.url}/profile/overview`,
@@ -48,12 +66,30 @@ export default class IRC extends API {
       throw new ServiceUnavailableAPIError({})
     }
 
+    // While representing, ctx.state.user is the represented user, so a token would log the caller in to IRC
+    // as them. The caller is known only through the bearer token, whose row names the user it was issued to.
+    if (ctx.get('x-representing')) {
+      const { currentTokenValue } = ctx.state
+      const callerToken = currentTokenValue ? await Token.findOne({ where: { value: currentTokenValue } }) : null
+      const callerUserId = callerToken?.userId
+      logMetric('irc_sasl_token_representing_refused', {
+        _caller_user_id: callerUserId,
+        _client_id: ctx.state.clientId,
+        _represented_user_id: ctx.state.user.id,
+      }, `IRC SASL token refused for user ${callerUserId ?? 'unknown'} representing user ${ctx.state.user.id}`)
+      throw new ForbiddenAPIError({ parameter: 'x-representing' })
+    }
+
     const nick = ctx.data?.nick ?? undefined
     if (typeof nick !== 'undefined' && (typeof nick !== 'string' || IRCNickname.test(nick) === false)) {
       throw new BadRequestAPIError({ pointer: '/nick' })
     }
 
     const { user } = ctx.state
+    if (!user.isConfirmed()) {
+      throw new VerifiedEmailRequiredAPIError({})
+    }
+
     const anopeAccount = await Anope.getAccount(user.email)
     if (!anopeAccount) {
       throw new AnopeAccountRequiredAPIError({})
