@@ -244,6 +244,7 @@ export default class Clients extends APIResource {
       redirectUri: WritePermission.group,
       namespaces: WritePermission.sudo,
       firstParty: WritePermission.sudo,
+      public: WritePermission.sudo,
       secret: WritePermission.internal,
       createdAt: WritePermission.internal,
       updatedAt: WritePermission.internal,

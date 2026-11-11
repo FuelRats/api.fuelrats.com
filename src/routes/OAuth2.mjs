@@ -16,6 +16,7 @@ import Authentication from '../classes/Authentication'
 import {
   AccessDeniedOAuthError,
   InvalidClientOAuthError,
+  InvalidGrantOAuthError,
   InvalidRequestOAuthError,
   InvalidScopeOAuthError, UnauthorisedClientOAuthError,
   UnsupportedGrantTypeOAuthError,
@@ -27,7 +28,9 @@ import config from '../config'
 import { Client, Code, User } from '../db'
 import Token from '../db/Token'
 import tokenMetadata from '../helpers/issueSession'
-import { isValidRedirectUri } from '../helpers/Validators'
+import { isValidS256Challenge, pkceMethodS256, verifyCodeVerifier } from '../helpers/pkce'
+import { publicTokenExpiry, publicTokenLifetimeSeconds } from '../helpers/tokenExpiry'
+import { isValidRedirectUri, UUID as UUIDPattern } from '../helpers/Validators'
 import { logMetric } from '../logging'
 
 const transactionTimeoutMinutes = 10
@@ -181,10 +184,32 @@ class OAuth extends API {
       scope,
       state,
       nonce,
+      code_challenge: codeChallenge,
+      code_challenge_method: codeChallengeMethod,
     } = ctx.query
 
     /* Check valid parameters */
     if (!isValidRedirectUri(redirectUri)) {
+      throw new BadRequestAPIError({ parameter: 'redirect_uri' })
+    }
+
+    /* Load the OAuth client before any error is redirected. An unknown client, or a public client whose
+    * redirect_uri is not its registered one, gets an error shown to the user and is never redirected
+    * (RFC 6749 section 4.1.2.1) */
+    UUIDPattern.lastIndex = 0
+    if (typeof clientId !== 'string' || !UUIDPattern.test(clientId)) {
+      throw new BadRequestAPIError({ parameter: 'client_id' })
+    }
+
+    const client = await Client.findOne({
+      where: { id: clientId },
+    })
+    if (!client) {
+      throw new BadRequestAPIError({ parameter: 'client_id' })
+    }
+
+    /* A public client has no secret, so its registered redirectUri is what binds the authorization response to it */
+    if (client.public && redirectUri !== client.redirectUri) {
       throw new BadRequestAPIError({ parameter: 'redirect_uri' })
     }
 
@@ -209,19 +234,45 @@ class OAuth extends API {
       return callbackError(redirectUri, new InvalidScopeOAuthError(invalidScopes.join(',')))
     }
 
-    /* Check if OAuth client exists */
-    const client = await Client.findOne({
-      where: { id: clientId },
-    })
-    if (!client) {
-      return callbackError(redirectUri, new InvalidRequestOAuthError('client'))
+    if (client.public) {
+      /* Public clients may only use the authorization code grant with PKCE */
+      if (responseType !== 'code') {
+        return callbackError(redirectUri, new UnauthorisedClientOAuthError('response_type'))
+      }
+
+      /* Public clients may only request named permission scopes. OpenID Connect scopes yield a signed
+      * JWT access token that cannot be expired early or revoked, and '*' grants every permission */
+      const nonPermissionScopes = scopes.filter((scopeEntry) => {
+        return Permission.allPermissions.includes(scopeEntry) === false
+      })
+      if (nonPermissionScopes.length > 0) {
+        return callbackError(redirectUri, new InvalidScopeOAuthError(nonPermissionScopes.join(',')))
+      }
+    }
+
+    /* PKCE (RFC 7636): only S256 is accepted. A challenge without a method means "plain", which is rejected */
+    if (typeof codeChallenge !== 'undefined' || typeof codeChallengeMethod !== 'undefined') {
+      if (codeChallengeMethod !== pkceMethodS256) {
+        return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge_method'))
+      }
+
+      if (!isValidS256Challenge(codeChallenge)) {
+        return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge'))
+      }
+    } else if (client.public) {
+      return callbackError(redirectUri, new InvalidRequestOAuthError('code_challenge'))
+    }
+
+    const pkce = {
+      codeChallenge: codeChallenge ?? null,
+      codeChallengeMethod: codeChallengeMethod ?? null,
     }
 
     /* Implicit Grant requires the redirectUri to be the same as stored in the OAuth client database entry
     * as the redirectUri serves as the only form of client authentication */
     if (responseType === 'token') {
       if (redirectUri !== client.redirectUri) {
-        return callbackError(redirectUri, new InvalidRequestOAuthError('redirect_uri'))
+        throw new BadRequestAPIError({ parameter: 'redirect_uri' })
       }
     }
 
@@ -246,6 +297,7 @@ class OAuth extends API {
           clientId,
           userId: ctx.state.user.id,
           nonce,
+          ...pkce,
         })
 
         return callbackResponse(redirectUri, {
@@ -310,6 +362,7 @@ class OAuth extends API {
         clientId,
         state,
         nonce,
+        ...pkce,
         userId: ctx.state.user.id,
       })
 
@@ -360,6 +413,8 @@ class OAuth extends API {
       userId,
       state,
       nonce,
+      codeChallenge,
+      codeChallengeMethod,
     } = transaction
 
     /* As a security measure transaction ID is both stored as a session cookie and as a request parameter
@@ -388,6 +443,8 @@ class OAuth extends API {
         clientId,
         userId,
         nonce,
+        codeChallenge,
+        codeChallengeMethod,
       })
 
       return callbackResponse(redirectUri, {
@@ -457,6 +514,11 @@ class OAuth extends API {
       throw new InvalidRequestOAuthError('grant_type')
     }
 
+    /* Public clients authenticate without a secret, so only the PKCE-bound authorization code grant is open to them */
+    if (ctx.state.client.public && grantType !== 'authorization_code') {
+      throw new UnauthorisedClientOAuthError('grant_type')
+    }
+
     if (grantType === 'authorization_code') {
       return this.authoriseTokenExchange(ctx)
     }
@@ -477,10 +539,11 @@ class OAuth extends API {
     const {
       code,
       redirect_uri: redirectUri,
+      code_verifier: codeVerifier,
     } = ctx.request.body
 
-    /* Validate parameters */
-    if (!code) {
+    /* Validate parameters. A JSON body can carry an object, which the lookup below would read as a query operator */
+    if (!code || typeof code !== 'string') {
       throw new InvalidRequestOAuthError('code')
     }
 
@@ -518,6 +581,23 @@ class OAuth extends API {
     /* Authorization codes are single use: consume it before issuing the token */
     await authCode.destroy()
 
+    /* PKCE (RFC 7636 section 4.6). The code is already consumed, so a failed verification cannot be retried.
+    * A public client has no other proof that it requested the code, so its codes must carry a challenge */
+    if (client.public && !authCode.codeChallenge) {
+      throw new InvalidGrantOAuthError('code_challenge')
+    }
+
+    if (authCode.codeChallenge) {
+      const verified = verifyCodeVerifier({
+        verifier: codeVerifier,
+        challenge: authCode.codeChallenge,
+        method: authCode.codeChallengeMethod,
+      })
+      if (!verified) {
+        throw new InvalidGrantOAuthError('code_verifier')
+      }
+    }
+
     /* Exchange successful, return bearer token */
     let tokenValue
     let user
@@ -540,12 +620,17 @@ class OAuth extends API {
       scope: authCode.scope,
       userId: authCode.userId,
       clientId: authCode.clientId,
+      expiresAt: client.public ? publicTokenExpiry() : null,
       ...tokenMetadata(ctx, 'authorization_code'),
     })
 
     const response = {
       access_token: token.value,
       token_type: 'bearer',
+    }
+
+    if (client.public) {
+      response.expires_in = publicTokenLifetimeSeconds
     }
 
     // Generate ID token if openid scope is requested
@@ -689,7 +774,9 @@ class OAuth extends API {
   async revoke (ctx) {
     const { token } = ctx.request.body
 
-    if (!token) {
+    /* A public client revokes with its client id alone, so the token must be a plain value and not an
+    * object the lookup below would read as a query operator matching another user's token */
+    if (!token || typeof token !== 'string') {
       throw new InvalidRequestOAuthError('token')
     }
 
@@ -711,6 +798,11 @@ class OAuth extends API {
   @POST('/oauth2/revokeall')
   @clientAuthenticated
   async revokeAll (ctx) {
+    /* A public client's id is not a secret, so it cannot be allowed to revoke the tokens of every user */
+    if (ctx.state.client.public) {
+      throw new UnauthorisedClientOAuthError()
+    }
+
     await Token.destroy({
       where: {
         clientId: ctx.state.client.id,
@@ -786,7 +878,7 @@ class OAuth extends API {
       id_token_signing_alg_values_supported: ['HS256'],
       scopes_supported: ['openid', 'profile', 'email', 'groups'],
        
-      token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],
+      token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post', 'none'],
       claims_supported: [
         'sub',
         'name',
@@ -798,7 +890,7 @@ class OAuth extends API {
         'profile',
         'updated_at',
       ],
-      code_challenge_methods_supported: [],
+      code_challenge_methods_supported: [pkceMethodS256],
       response_modes_supported: ['query', 'fragment'],
     }
   }

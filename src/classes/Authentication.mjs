@@ -8,6 +8,7 @@ import * as constants from '../constants'
 import {
   User, Token, Client, Reset, Authenticator, Passkey,
 } from '../db'
+import { isTokenExpired } from '../helpers/tokenExpiry'
 import { UUID as UUIDPattern } from '../helpers/Validators'
 import { logMetric } from '../logging'
 
@@ -336,6 +337,17 @@ class Authentication {
       }, 'Bearer token authentication failed - token not found')
       return false
     }
+
+    /* Expired rows are kept: they are the record of consent the authorize endpoint looks up */
+    if (isTokenExpired(token.expiresAt)) {
+      logMetric('authentication_failure', {
+        _auth_method: 'bearer_token',
+        _failure_reason: 'token_expired',
+        _client_id: token.clientId,
+      }, 'Bearer token authentication failed - token expired')
+      return false
+    }
+
     const userInstance = await User.findOne({
       where: { id: token.userId },
     })
@@ -415,10 +427,12 @@ class Authentication {
   }
 
   /**
-   * Authenticate an OAuth client using client id and client secret
+   * Authenticate an OAuth client using client id and client secret.
+   * A public client may present its client id alone (token_endpoint_auth_method "none"); a secret
+   * that is presented is always verified. Endpoints restrict what public clients may do.
    * @param {object} arg function arguments object
    * @param {string} arg.clientId the ID of the OAuth client to authenticate
-   * @param {string} arg.secret the secret key of the OAuth client to authenticate
+   * @param {string} [arg.secret] the secret key of the OAuth client to authenticate
    * @returns {Promise<Client>} A promise returning the authenticated OAuth client object
    */
   static async clientAuthenticate ({ clientId, secret }) {
@@ -429,6 +443,17 @@ class Authentication {
     const client = await Client.scope('user').findByPk(clientId)
     if (!client) {
       return undefined
+    }
+
+    const secretPresented = typeof secret !== 'undefined' && secret !== null && secret !== ''
+    if (!secretPresented) {
+      if (!client.public) {
+        throw new UnauthorizedAPIError({})
+      }
+      if (client.user.isSuspended()) {
+        throw new GoneAPIError({})
+      }
+      return client
     }
 
     const authorised = await verifyPassword(secret, client.secret)

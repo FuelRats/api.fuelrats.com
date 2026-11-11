@@ -11,6 +11,7 @@ import {
   UnprocessableEntityAPIError,
   UnsupportedMediaAPIError,
 } from '../classes/APIError'
+import { UnauthorisedClientOAuthError } from '../classes/OAuthError'
 import Permission from '../classes/Permission'
 import StatusCode from '../classes/StatusCode'
 import { oAuthTokenGenerator } from '../classes/TokenGenerators'
@@ -279,6 +280,11 @@ export default class Passkeys extends APIResource {
   @clientAuthenticated
   @required('response')
   async verifyPasskey (ctx) {
+    /* Passkey login issues a full-scope token that does not expire, which a public client may not hold */
+    if (ctx.state.client.public) {
+      throw new UnauthorisedClientOAuthError()
+    }
+
     const attributes = ctx.data?.data?.attributes
     if (!attributes) {
       throw new UnprocessableEntityAPIError({
