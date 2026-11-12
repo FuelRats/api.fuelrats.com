@@ -39,6 +39,14 @@ export default class Code extends Model {
   @column(type.STRING, { allowNull: true })
   static nonce = undefined
 
+  /** PKCE code challenge (RFC 7636) sent with the authorization request */
+  @column(type.STRING, { allowNull: true })
+  static codeChallenge = undefined
+
+  /** PKCE code challenge method, always S256 when a challenge is stored */
+  @column(type.STRING, { allowNull: true })
+  static codeChallengeMethod = undefined
+
   /**
    * @inheritdoc
    */

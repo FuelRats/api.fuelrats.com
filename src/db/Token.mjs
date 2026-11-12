@@ -47,6 +47,10 @@ export default class Token extends Model {
   @column(type.DATE, { allowNull: true })
   static lastAccess = undefined
 
+  /** Time after which the token no longer authenticates, null for tokens that do not expire */
+  @column(type.DATE, { allowNull: true })
+  static expiresAt = undefined
+
   /**
    * @inheritdoc
    */

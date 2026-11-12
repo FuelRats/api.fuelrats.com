@@ -44,6 +44,13 @@ export default class Client extends Model {
   static firstParty = false
 
   /**
+   * Whether this is a public client (RFC 6749 section 2.1) that cannot keep its secret confidential.
+   * Public clients authenticate with their client id alone, must use PKCE and receive expiring tokens.
+   */
+  @column(type.BOOLEAN)
+  static public = false
+
+  /**
    * Function that runs when one attempts to set a new value to the client secret field, hashing the value
    * @param {Client} instance client model instance
    * @returns {Promise<void>}
