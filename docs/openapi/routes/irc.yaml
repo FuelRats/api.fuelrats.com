@@ -1,0 +1,84 @@
+# IRC login endpoints
+
+irc_sasl_token:
+  post:
+    tags: [irc]
+    summary: Mint a one-time IRC login
+    description: |
+      Returns a one-time SASL PLAIN password for an alias of the IRC (Anope) account registered
+      with the user's email address. The password is valid for 60 seconds and for one login.
+      `account` is the alias as registered: send it unchanged as the SASL authentication identity
+      and as the nick, because the password is bound to that exact string.
+
+      The request and response bodies are plain JSON, not JSON:API.
+
+      The user's email address must be verified. A request that represents another user
+      (`x-representing`) is refused.
+
+      **Required Permission:** `irc.login`, held by every user. The token's scope must include
+      `irc.login` or `*`.
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              nick:
+                type: string
+                description: |
+                  An alias of the user's account to log in as, in any case. Without it the account's
+                  display nick is used.
+          example:
+            nick: "Jameson"
+    responses:
+      '200':
+        description: One-time IRC login
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [account, password, expiresIn]
+              properties:
+                account:
+                  type: string
+                  description: The alias as registered, to send as the SASL authentication identity and as the nick
+                password:
+                  type: string
+                  description: 'One-time SASL PLAIN password, `frk1:<unix seconds>:<64 lowercase hex characters>`'
+                expiresIn:
+                  type: integer
+                  description: Seconds the password stays valid (60)
+            example:
+              account: "Jameson"
+              password: "frk1:1762819200:<64 hex characters>"
+              expiresIn: 60
+      '400':
+        description: |
+          - Without `source`: the user has no IRC account. `links.about` points at the profile page.
+          - With `source.pointer` `/email`: the user has not verified the email address of their
+            account, with a `detail` asking them to verify it. `links.about` points at the profile page.
+          - With `source.pointer` `/nick`: the nick is malformed, not registered, or an alias of
+            another account.
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '401':
+        $ref: '../components/responses.yaml#/Unauthorized'
+      '403':
+        description: |
+          The token's scope lacks `irc.login`, or the request represents another user
+          (`source.parameter` `x-representing`)
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '503':
+        description: IRC login passwords are not configured on this API
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'

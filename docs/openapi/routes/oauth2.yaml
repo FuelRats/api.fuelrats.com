@@ -6,11 +6,19 @@ oauth2_authorize:
     summary: OAuth2 authorization endpoint
     description: |
       Initiate OAuth2 authorization flow. Supports both Authorization Code and Implicit Grant flows.
-      
-      If the user has previously granted the requested permissions to the client, they will be 
-      immediately redirected back with the authorization code or token without seeing the consent screen.
-      
-      **Authentication Required:** Bearer token authentication
+      The fuelrats.com authorisation page calls this endpoint for the signed-in user.
+
+      If the user has previously granted the requested permissions to the client, the response
+      carries the redirect back with the authorization code or token, and no consent screen is shown.
+
+      Public clients must use `response_type=code` with PKCE (`code_challenge` and
+      `code_challenge_method=S256`), their registered `redirect_uri`, and only named permission scopes.
+
+      **Authentication Required:** the user's own full credential: a bearer token with the `*` scope
+      that was not issued to a public client, such as the token the website holds. A token with
+      narrower scope, or any token of a public client, gets 403. A request that represents another
+      user (`x-representing`) gets 403 with `source.parameter` `x-representing`: the credential is
+      the caller's, not the represented user's.
     security:
       - bearerAuth: []
     parameters:
@@ -22,8 +30,8 @@ oauth2_authorize:
           type: string
           enum: [code, token]
           description: |
-            - `code`: Authorization Code flow (recommended)
-            - `token`: Implicit Grant flow (for client-side apps)
+            - `code`: Authorization Code flow (recommended, the only one for public clients)
+            - `token`: Implicit Grant flow (not recommended; browser apps should use `code` as a public client)
       - name: client_id
         in: query
         required: true
@@ -35,8 +43,8 @@ oauth2_authorize:
         in: query
         required: true
         description: |
-          Redirect URI after authorization. For Implicit Grant (token), this must match exactly
-          the redirectUri stored in the OAuth client configuration.
+          Redirect URI after authorization. For Implicit Grant (token) and for public clients, this
+          must match exactly the redirectUri stored in the OAuth client configuration.
         schema:
           type: string
           format: uri
@@ -46,7 +54,9 @@ oauth2_authorize:
         description: |
           Space-separated list of requested permissions.
           Available scopes: `users.read`, `users.write`, `users.write.me`, `rats.read`, `rats.write`,
-          `rescues.read`, `rescues.write`, and namespace-specific scopes.
+          `rescues.read`, `rescues.write`, `irc.login`, and namespace-specific scopes.
+          Public clients may request only named permission scopes, not `*`, `openid`, `profile`,
+          `email` or `groups`.
         schema:
           type: string
           example: "users.read rats.read"
@@ -55,12 +65,32 @@ oauth2_authorize:
         required: true
         description: |
           Client state parameter for CSRF protection. This value will be returned unchanged
-          in the callback to verify the response matches the request.
+          in the callback, with the code or with an error, to verify the response matches the request.
         schema:
           type: string
+      - name: code_challenge
+        in: query
+        required: false
+        description: |
+          PKCE (RFC 7636) code challenge: the base64url-encoded SHA-256 of the code verifier,
+          43 characters. Required for public clients. When it is sent, the token exchange must
+          present the matching `code_verifier`.
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{43}$'
+      - name: code_challenge_method
+        in: query
+        required: false
+        description: PKCE challenge method. Required with `code_challenge`; only `S256` is accepted.
+        schema:
+          type: string
+          enum: [S256]
     responses:
       '200':
-        description: Authorization consent screen data (when user consent is needed)
+        description: |
+          Authorization consent screen data when user consent is needed. Otherwise an object with
+          `redirect`: the callback URL with the authorization code or token (consent given before),
+          or with `error`, `error_description` and `state` (an invalid request).
         content:
           application/json:
             schema:
@@ -87,36 +117,41 @@ oauth2_authorize:
                 state:
                   type: string
                   description: State parameter from the request
-            example:
-              transactionId: "abc123def456"
-              scopes: ["users.read", "rats.read"]
-              clientId: "110e8400-e29b-41d4-a716-446655440001"
-              clientName: "My Rescue Tool"
-              firstParty: false
-              state: "xyz789"
-      '302':
-        description: |
-          Redirect to callback with authorization code or token (when user has previously consented)
-        headers:
-          Location:
-            description: Redirect URL with code/token or error
-            schema:
-              type: string
-              format: uri
-              example: "https://example.com/callback?code=abc123&state=xyz789"
-      '400':
-        description: Invalid request parameters
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
                 redirect:
                   type: string
                   format: uri
-                  description: Redirect URL with error parameters
-              example:
-                redirect: "https://example.com/callback?error=invalid_request&error_description=Missing+state+parameter"
+                  description: Callback URL with the code, token or error, when no consent screen is needed
+            examples:
+              consent:
+                value:
+                  transactionId: "abc123def456"
+                  scopes: ["users.read", "rats.read"]
+                  clientId: "110e8400-e29b-41d4-a716-446655440001"
+                  clientName: "My Rescue Tool"
+                  firstParty: false
+                  state: "xyz789"
+              code:
+                value:
+                  redirect: "https://example.com/callback?code=abc123&state=xyz789"
+              error:
+                value:
+                  redirect: "https://example.com/callback?error=invalid_request&error_description=code_challenge&state=xyz789"
+      '400':
+        description: |
+          Invalid `client_id` or `redirect_uri` (unknown client, or a public client's redirect URI
+          that is not its registered one). Shown to the user and never redirected.
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
+      '403':
+        description: |
+          The request is authenticated with a token narrower than the user's full credential, or
+          represents another user (`source.parameter` `x-representing`)
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '../components/schemas.yaml#/Error'
 
   post:
     tags: [oauth2]
@@ -124,8 +159,11 @@ oauth2_authorize:
     description: |
       Handle user's authorization decision (allow or deny access).
       This endpoint is called after the user views the consent screen.
-      
-      **Authentication Required:** Bearer token or session authentication
+      A denial returns the callback URL with `error=access_denied` and the request's `state`.
+
+      **Authentication Required:** the same full credential as `GET /oauth2/authorize`; a token with
+      narrower scope, or any token of a public client, gets 403, and so does a request that represents
+      another user (`x-representing`, with `source.parameter` `x-representing`)
     security:
       - bearerAuth: []
       - sessionAuth: []
@@ -163,7 +201,9 @@ oauth2_authorize:
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '403':
-        description: Invalid transaction or user mismatch
+        description: |
+          Invalid transaction, user mismatch, a token narrower than the user's full credential, or a
+          request that represents another user (`source.parameter` `x-representing`)
         content:
           application/vnd.api+json:
             schema:
@@ -179,10 +219,16 @@ oauth2_token:
       Supports grant types:
       - `authorization_code`: Exchange code for token (standard OAuth2 flow)
       - `password`: Resource Owner Password Credentials (first-party clients only)
-      
-      **Authentication Required:** Basic authentication with client credentials
+
+      A public client authenticates with `client_id` in the body and no secret (token endpoint auth
+      method `none`) and may use only `authorization_code`, with the PKCE `code_verifier`. Its tokens
+      expire after 12 hours, given as `expires_in`.
+
+      **Authentication Required:** Basic authentication with client credentials, or `client_id` alone
+      for a public client
     security:
       - basicAuth: []
+      - {}
     requestBody:
       required: true
       content:
@@ -202,6 +248,16 @@ oauth2_token:
                     type: string
                     format: uri
                     description: Must match the redirect_uri used in the authorization request
+                  code_verifier:
+                    type: string
+                    description: |
+                      PKCE code verifier (RFC 7636, 43 to 128 characters). Required when the authorization
+                      request carried a `code_challenge`. A wrong or missing verifier gives `invalid_grant`
+                      and consumes the code.
+                  client_id:
+                    type: string
+                    format: uuid
+                    description: Client ID, for a public client that sends no Basic authentication
               - type: object
                 required: [grant_type, username, password]
                 properties:
@@ -226,6 +282,13 @@ oauth2_token:
                 grant_type: authorization_code
                 code: "AUTH_CODE_HERE"
                 redirect_uri: "https://example.com/callback"
+            public_client:
+              value:
+                grant_type: authorization_code
+                client_id: "110e8400-e29b-41d4-a716-446655440001"
+                code: "AUTH_CODE_HERE"
+                redirect_uri: "https://example.com/callback.html"
+                code_verifier: "CODE_VERIFIER_HERE"
             password:
               value:
                 grant_type: password
@@ -249,6 +312,9 @@ oauth2_token:
                   type: string
                   enum: [bearer]
                   description: Token type (always "bearer")
+                expires_in:
+                  type: integer
+                  description: Seconds until the token expires (43200); only for tokens issued to a public client
                 scope:
                   type: string
                   description: Granted scopes (only for implicit grant)
@@ -256,7 +322,9 @@ oauth2_token:
               access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
               token_type: "bearer"
       '400':
-        description: Invalid request or grant
+        description: |
+          Invalid request or grant. `unauthorised_client` is returned for a grant type the client may not
+          use, such as `password` for a public client.
         content:
           application/json:
             schema:
@@ -264,7 +332,7 @@ oauth2_token:
               properties:
                 error:
                   type: string
-                  enum: [invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope]
+                  enum: [invalid_request, invalid_client, invalid_grant, unauthorised_client, unsupported_grant_type, invalid_scope]
                 error_description:
                   type: string
               example:
@@ -292,11 +360,17 @@ oauth2_revoke:
     summary: Revoke access token
     description: |
       Revoke a specific access token. The token will immediately become invalid.
-      Only tokens issued to the authenticated client can be revoked.
-      
-      **Authentication Required:** Basic authentication with client credentials
+      Only tokens issued to the authenticated client can be revoked; any other token value is left alone.
+
+      A public client revokes with `client_id` in the body and no secret. Revoking one of its tokens
+      deletes every token of that user for the client, which also removes the user's consent, so the
+      next login shows the consent screen again.
+
+      **Authentication Required:** Basic authentication with client credentials, or `client_id` alone
+      for a public client
     security:
       - basicAuth: []
+      - {}
     requestBody:
       required: true
       content:
@@ -308,6 +382,10 @@ oauth2_revoke:
               token:
                 type: string
                 description: The access token to revoke
+              client_id:
+                type: string
+                format: uuid
+                description: Client ID, for a public client that sends no Basic authentication
           example:
             token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     responses:
@@ -343,7 +421,8 @@ oauth2_revokeall:
     description: |
       Revoke all access tokens issued to the authenticated client.
       This is useful when a client's credentials may have been compromised.
-      
+      Public clients are refused, because their client ID is not a secret.
+
       **Authentication Required:** Basic authentication with client credentials
     security:
       - basicAuth: []
@@ -355,5 +434,15 @@ oauth2_revokeall:
             schema:
               type: object
             example: {}
+      '400':
+        description: The client is a public client
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  enum: [unauthorised_client]
       '401':
         $ref: '../components/responses.yaml#/Unauthorized'

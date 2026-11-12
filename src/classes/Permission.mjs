@@ -1,7 +1,7 @@
 import { UnprocessableEntityAPIError } from './APIError'
 import permissionList from '../files/permissions'
 
-const defaultPermissions = ['users.read.me', 'rats.read.me']
+const defaultPermissions = ['users.read.me', 'rats.read.me', 'irc.login']
 
 // Permissions that let a holder escalate their own authority or cause broad harm. Representation
 // (the x-representing header) must never grant one of these to a caller who does not already hold

@@ -343,6 +343,10 @@ const wsManager = new WebSocket({ trafficManager: traffic })
     // Start the IRC groupsync outbox worker
     const { scheduleGroupsyncOutbox } = await import('./cron/groupsyncOutbox.mjs')
     scheduleGroupsyncOutbox()
+
+    // Schedule the daily cleanup of expired public OAuth client tokens
+    const { schedulePublicTokenCleanup } = await import('./cron/publicTokenCleanup.mjs')
+    schedulePublicTokenCleanup()
   } catch (error) {
     logError(error, { _event: 'startup' }, 'Failed to start server')
     process.exit(1)

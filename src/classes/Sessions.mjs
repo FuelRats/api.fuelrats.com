@@ -43,10 +43,12 @@ export default class Sessions extends APIResource {
     const query = new DatabaseQuery({ connection: ctx })
     const searchObject = query.searchObject
     searchObject.where = { ...searchObject.where, userId: user.id }
+    // Expired token rows are kept for a while as the record of consent, but they are no longer sessions
+    const now = new Date()
     const rows = await db.query(
-      `SELECT * FROM "Tokens" WHERE "userId" = :userId ORDER BY "createdAt" DESC LIMIT :limit OFFSET :offset`,
+      `SELECT * FROM "Tokens" WHERE "userId" = :userId AND ("expiresAt" IS NULL OR "expiresAt" > :now) ORDER BY "createdAt" DESC LIMIT :limit OFFSET :offset`,
       {
-        replacements: { userId: user.id, limit: searchObject.limit, offset: searchObject.offset },
+        replacements: { userId: user.id, now, limit: searchObject.limit, offset: searchObject.offset },
         type: db.QueryTypes.SELECT,
         model: Token,
         mapToModel: true,
@@ -62,8 +64,8 @@ export default class Sessions extends APIResource {
       token.client = clientMap[token.clientId] ?? null
     }
     const [{ count }] = await db.query(
-      'SELECT COUNT(*) AS count FROM "Tokens" WHERE "userId" = :userId',
-      { replacements: { userId: user.id }, type: db.QueryTypes.SELECT },
+      'SELECT COUNT(*) AS count FROM "Tokens" WHERE "userId" = :userId AND ("expiresAt" IS NULL OR "expiresAt" > :now)',
+      { replacements: { userId: user.id, now }, type: db.QueryTypes.SELECT },
     )
     const result = { rows, count: parseInt(count, 10) }
 
