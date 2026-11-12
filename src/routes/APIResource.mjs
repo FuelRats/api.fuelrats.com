@@ -15,6 +15,26 @@ import { UUID } from '../helpers/Validators'
 import DatabaseQuery from '../query/DatabaseQuery'
 
 /**
+ * Wait until every promise has settled, then reject with the first failure. A transaction must not be rolled back
+ * while one of its queries is still running: that query then fails on the finished transaction with nothing
+ * awaiting it, and the unhandled rejection ends the process.
+ * @param {Array<Promise>} promises the promises to wait for
+ * @returns {Promise<Array>} the fulfilled values, in order
+ */
+async function settleAll (promises) {
+  const results = await Promise.allSettled(promises)
+  const failure = results.find((result) => {
+    return result.status === 'rejected'
+  })
+  if (failure) {
+    throw failure.reason
+  }
+  return results.map((result) => {
+    return result.value
+  })
+}
+
+/**
  * @class
  * @classdesc Base class for FuelRats API endpoints
  */
@@ -102,13 +122,13 @@ export default class APIResource extends API {
       }
 
       if (dataObj.relationships instanceof Object) {
-        const relationshipChanges = Object.entries(dataObj.relationships).map(([relationship, data]) => {
+        const relationshipChanges = Object.entries(dataObj.relationships).map(async ([relationship, data]) => {
           return this.generateRelationshipChange({
             ctx, data: data.data, entity, change: 'add', relationship, transaction,
           })
         })
 
-        await Promise.all(relationshipChanges)
+        await settleAll(relationshipChanges)
       }
     } catch (ex) {
       await transaction.rollback()
@@ -170,7 +190,7 @@ export default class APIResource extends API {
       }
 
       if (relationships instanceof Object) {
-        const relationshipChanges = Object.entries(relationships).map(([relationship, data]) => {
+        const relationshipChanges = Object.entries(relationships).map(async ([relationship, data]) => {
           if (relationship === 'lastEditUser') {
             return undefined
           }
@@ -179,7 +199,7 @@ export default class APIResource extends API {
           })
         })
 
-        await Promise.all(relationshipChanges)
+        await settleAll(relationshipChanges)
       }
     } catch (ex) {
       await transaction.rollback()
