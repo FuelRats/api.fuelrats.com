@@ -16,6 +16,10 @@ info:
     Authorization: Bearer yourtokenhere
     ```
 
+    Only access tokens authenticate. An OpenID Connect ID token (`id_token`)
+    identifies the user to the client it was issued to, and is refused like
+    an invalid token (401).
+
     For WebSocket connections, provide the token as a query parameter:
 
     ```
@@ -3832,7 +3836,8 @@ paths:
       tags:
         - oauth2
       summary: Get user info
-      description: OpenID Connect UserInfo endpoint
+      description: |
+        OpenID Connect UserInfo endpoint. Authenticate with the access token; an ID token gets 401.
       security:
         - bearerAuth: []
       responses:
@@ -6412,7 +6417,9 @@ paths:
 
         **Authentication Required:** the user's own full credential: a bearer token with the `*` scope
         that was not issued to a public client, such as the token the website holds. A token with
-        narrower scope, or any token of a public client, gets 403.
+        narrower scope, or any token of a public client, gets 403. A request that represents another
+        user (`x-representing`) gets 403 with `source.parameter` `x-representing`: the credential is
+        the caller's, not the represented user's.
       security:
         - bearerAuth: []
       parameters:
@@ -6544,7 +6551,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: The request is authenticated with a token narrower than the user's full credential
+          description: |
+            The request is authenticated with a token narrower than the user's full credential, or
+            represents another user (`source.parameter` `x-representing`)
           content:
             application/vnd.api+json:
               schema:
@@ -6560,7 +6569,8 @@ paths:
         A denial returns the callback URL with `error=access_denied` and the request's `state`.
 
         **Authentication Required:** the same full credential as `GET /oauth2/authorize`; a token with
-        narrower scope, or any token of a public client, gets 403
+        narrower scope, or any token of a public client, gets 403, and so does a request that represents
+        another user (`x-representing`, with `source.parameter` `x-representing`)
       security:
         - bearerAuth: []
         - sessionAuth: []
@@ -6600,7 +6610,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
-          description: Invalid transaction, user mismatch, or a token narrower than the user's full credential
+          description: |
+            Invalid transaction, user mismatch, a token narrower than the user's full credential, or a
+            request that represents another user (`source.parameter` `x-representing`)
           content:
             application/vnd.api+json:
               schema:
@@ -6929,9 +6941,9 @@ paths:
                 expiresIn: 60
         '400':
           description: |
-            - Without `source`: the user has no IRC account, or has not verified the email address of
-              their account (with a `detail` asking them to verify it). `links.about` points at the
-              profile page in both cases.
+            - Without `source`: the user has no IRC account. `links.about` points at the profile page.
+            - With `source.pointer` `/email`: the user has not verified the email address of their
+              account, with a `detail` asking them to verify it. `links.about` points at the profile page.
             - With `source.pointer` `/nick`: the nick is malformed, not registered, or an alias of
               another account.
           content:
@@ -9335,132 +9347,6 @@ components:
                   type: string
                   format: date-time
                   description: 'Writable by: system only'
-            relationships:
-              type: object
-              properties:
-                avatar:
-                  type: object
-                  properties:
-                    data:
-                      nullable: true
-                      allOf:
-                        - $ref: '#/components/schemas/ResourceIdentifier'
-                        - properties:
-                            type:
-                              enum:
-                                - avatar
-                    links:
-                      $ref: '#/components/schemas/Links'
-                rats:
-                  type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        allOf:
-                          - $ref: '#/components/schemas/ResourceIdentifier'
-                          - properties:
-                              type:
-                                enum:
-                                  - rat
-                    links:
-                      $ref: '#/components/schemas/Links'
-                nicknames:
-                  type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        allOf:
-                          - $ref: '#/components/schemas/ResourceIdentifier'
-                          - properties:
-                              type:
-                                enum:
-                                  - nickname
-                    links:
-                      $ref: '#/components/schemas/Links'
-                displayRat:
-                  type: object
-                  properties:
-                    data:
-                      nullable: true
-                      allOf:
-                        - $ref: '#/components/schemas/ResourceIdentifier'
-                        - properties:
-                            type:
-                              enum:
-                                - rat
-                    links:
-                      $ref: '#/components/schemas/Links'
-                groups:
-                  type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        allOf:
-                          - $ref: '#/components/schemas/ResourceIdentifier'
-                          - properties:
-                              type:
-                                enum:
-                                  - group
-                    links:
-                      $ref: '#/components/schemas/Links'
-                clients:
-                  type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        allOf:
-                          - $ref: '#/components/schemas/ResourceIdentifier'
-                          - properties:
-                              type:
-                                enum:
-                                  - client
-                    links:
-                      $ref: '#/components/schemas/Links'
-                epics:
-                  type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        allOf:
-                          - $ref: '#/components/schemas/ResourceIdentifier'
-                          - properties:
-                              type:
-                                enum:
-                                  - epic
-                    links:
-                      $ref: '#/components/schemas/Links'
-                decals:
-                  type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        allOf:
-                          - $ref: '#/components/schemas/ResourceIdentifier'
-                          - properties:
-                              type:
-                                enum:
-                                  - decal
-                    links:
-                      $ref: '#/components/schemas/Links'
-                authenticator:
-                  type: object
-                  properties:
-                    data:
-                      nullable: true
-                      allOf:
-                        - $ref: '#/components/schemas/ResourceIdentifier'
-                        - properties:
-                            type:
-                              enum:
-                                - authenticator
-                    links:
-                      $ref: '#/components/schemas/Links'
     UserCollection:
       allOf:
         - $ref: '#/components/schemas/CollectionDocument'

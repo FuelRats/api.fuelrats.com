@@ -16,7 +16,9 @@ oauth2_authorize:
 
       **Authentication Required:** the user's own full credential: a bearer token with the `*` scope
       that was not issued to a public client, such as the token the website holds. A token with
-      narrower scope, or any token of a public client, gets 403.
+      narrower scope, or any token of a public client, gets 403. A request that represents another
+      user (`x-representing`) gets 403 with `source.parameter` `x-representing`: the credential is
+      the caller's, not the represented user's.
     security:
       - bearerAuth: []
     parameters:
@@ -143,7 +145,9 @@ oauth2_authorize:
             schema:
               $ref: '../components/schemas.yaml#/Error'
       '403':
-        description: The request is authenticated with a token narrower than the user's full credential
+        description: |
+          The request is authenticated with a token narrower than the user's full credential, or
+          represents another user (`source.parameter` `x-representing`)
         content:
           application/vnd.api+json:
             schema:
@@ -158,7 +162,8 @@ oauth2_authorize:
       A denial returns the callback URL with `error=access_denied` and the request's `state`.
 
       **Authentication Required:** the same full credential as `GET /oauth2/authorize`; a token with
-      narrower scope, or any token of a public client, gets 403
+      narrower scope, or any token of a public client, gets 403, and so does a request that represents
+      another user (`x-representing`, with `source.parameter` `x-representing`)
     security:
       - bearerAuth: []
       - sessionAuth: []
@@ -196,7 +201,9 @@ oauth2_authorize:
       '400':
         $ref: '../components/responses.yaml#/BadRequest'
       '403':
-        description: Invalid transaction, user mismatch, or a token narrower than the user's full credential
+        description: |
+          Invalid transaction, user mismatch, a token narrower than the user's full credential, or a
+          request that represents another user (`source.parameter` `x-representing`)
         content:
           application/vnd.api+json:
             schema:

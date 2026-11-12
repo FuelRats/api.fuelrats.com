@@ -57,9 +57,9 @@ irc_sasl_token:
               expiresIn: 60
       '400':
         description: |
-          - Without `source`: the user has no IRC account, or has not verified the email address of
-            their account (with a `detail` asking them to verify it). `links.about` points at the
-            profile page in both cases.
+          - Without `source`: the user has no IRC account. `links.about` points at the profile page.
+          - With `source.pointer` `/email`: the user has not verified the email address of their
+            account, with a `detail` asking them to verify it. `links.about` points at the profile page.
           - With `source.pointer` `/nick`: the nick is malformed, not registered, or an alias of
             another account.
         content:

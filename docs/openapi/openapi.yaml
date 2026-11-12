@@ -16,6 +16,10 @@ info:
     Authorization: Bearer yourtokenhere
     ```
 
+    Only access tokens authenticate. An OpenID Connect ID token (`id_token`)
+    identifies the user to the client it was issued to, and is refused like
+    an invalid token (401).
+
     For WebSocket connections, provide the token as a query parameter:
 
     ```
@@ -477,7 +481,8 @@ paths:
     get:
       tags: [oauth2]
       summary: Get user info
-      description: OpenID Connect UserInfo endpoint
+      description: |
+        OpenID Connect UserInfo endpoint. Authenticate with the access token; an ID token gets 401.
       security:
         - bearerAuth: []
       responses:
