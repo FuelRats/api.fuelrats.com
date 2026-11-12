@@ -58,6 +58,9 @@ const config = {
     serverName: recommended('FRAPI_IRC_SERVERNAME', [], undefined),
     port: recommended('FRAPI_IRC_PORT', [toNumber], 6900),
     password: recommended('FRAPI_IRC_PASSWORD', [], undefined),
+    // Secret shared with the groupsync Anope module (its `sasltoken_secretfile`) for minting
+    // one-time SASL PLAIN passwords. POST /irc/sasl-token answers 503 while it is unset.
+    tokenSecret: optional('FRAPI_IRC_TOKEN_SECRET', [], undefined),
   },
   geoip: {
     directory: required('FRAPI_GEOIP_DIRECTORY', [], undefined),

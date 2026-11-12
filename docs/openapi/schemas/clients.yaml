@@ -27,6 +27,9 @@ Client:
             firstParty:
               type: boolean
               description: "Whether this is a first-party Fuel Rats client (writable by: admin only)"
+            public:
+              type: boolean
+              description: "Writable by: admin only"
             createdAt:
               type: string
               format: date-time

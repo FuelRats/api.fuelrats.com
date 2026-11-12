@@ -236,3 +236,13 @@ export class NotImplementedAPIError extends APIError {
     return 'not_implemented'
   }
 }
+
+export class ServiceUnavailableAPIError extends APIError {
+  get code () {
+    return StatusCode.serviceUnavailable
+  }
+
+  get status () {
+    return 'service_unavailable'
+  }
+}
