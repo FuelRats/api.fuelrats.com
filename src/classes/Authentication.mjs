@@ -277,6 +277,12 @@ class Authentication {
         return null
       }
 
+      // Only access tokens carry token_type. An OpenID Connect ID token is signed with the same secret but
+      // only identifies the user to its client, so it is not accepted as a credential
+      if (decoded.token_type !== 'Bearer') {
+        return null
+      }
+
       return decoded
     } catch {
       // JWT validation failed

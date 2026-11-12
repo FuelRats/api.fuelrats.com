@@ -398,16 +398,22 @@ describe('public client authorization code flow with PKCE', () => {
   })
 
   it('revokes its own token with the client id alone and deletes every row of the user for the client', async () => {
+    // A login of another user with the same client, which the revoke must leave alone
+    const otherUserToken = 'pkcetestotheruserkiwi01'
     const token = await issuePublicToken()
     expect((await userinfo(token)).status).toBe(200)
     runSql(`INSERT INTO "Tokens"(id,value,scope,"userId","clientId","expiresAt","createdAt","updatedAt") VALUES
-      (gen_random_uuid(),'pkcetestexpiredconsent01',ARRAY['${SCOPE}']::varchar[],'${USER_ID}','${PUBLIC_CLIENT_ID}',now() - interval '1 day',now(),now());`)
+      (gen_random_uuid(),'pkcetestexpiredconsent01',ARRAY['${SCOPE}']::varchar[],'${USER_ID}','${PUBLIC_CLIENT_ID}',now() - interval '1 day',now(),now()),
+      (gen_random_uuid(),'${otherUserToken}',ARRAY['${SCOPE}']::varchar[],'${REPRESENTING_USER_ID}','${PUBLIC_CLIENT_ID}',now() + interval '1 hour',now(),now());`)
     expect(Number(publicTokenCount())).toBeGreaterThan(1)
 
     const response = await revokePublic(token)
     expect(response.status).toBe(200)
     expect((await userinfo(token)).status).toBe(401)
     expect(publicTokenCount()).toBe('0')
+    expect(querySql(`SELECT count(*) FROM "Tokens" WHERE value = '${otherUserToken}';`)).toBe('1')
+    expect((await userinfo(otherUserToken)).status).toBe(200)
+    runSql(`DELETE FROM "Tokens" WHERE value = '${otherUserToken}';`)
     expect((await userinfo(WEBSITE_TOKEN)).status).toBe(200)
 
     /* No consent record is left, so the next login shows the consent screen */
@@ -431,6 +437,10 @@ describe('public client authorization code flow with PKCE', () => {
   })
 
   it('cannot revoke a token of another client with its client id', async () => {
+    // A public client row of the user, which a revoke that matched the website token would delete
+    const seededToken = 'pkcetestrevokeotherclient01'
+    runSql(`INSERT INTO "Tokens"(id,value,scope,"userId","clientId","expiresAt","createdAt","updatedAt") VALUES
+      (gen_random_uuid(),'${seededToken}',ARRAY['${SCOPE}']::varchar[],'${USER_ID}','${PUBLIC_CLIENT_ID}',now() + interval '1 hour',now(),now());`)
     const before = publicTokenCount()
     expect(Number(before)).toBeGreaterThan(0)
 
@@ -439,6 +449,7 @@ describe('public client authorization code flow with PKCE', () => {
     expect(querySql(`SELECT count(*) FROM "Tokens" WHERE value = '${WEBSITE_TOKEN}';`)).toBe('1')
     expect((await userinfo(WEBSITE_TOKEN)).status).toBe(200)
     expect(publicTokenCount()).toBe(before)
+    runSql(`DELETE FROM "Tokens" WHERE value = '${seededToken}';`)
   })
 
   it('returns the request state with error redirects, including a denied consent', async () => {
@@ -643,6 +654,97 @@ describe('authorize endpoints with a token narrower than the user', () => {
     const decision = await decide(authorizeResponse)
     expect(decision.status).toBe(200)
     expect(redirectParams(decision).get('code')).toBeTruthy()
+  })
+})
+
+describe('OpenID Connect ID token as a bearer', () => {
+  const OPENID_SCOPE = 'openid profile'
+  const INVALID_BEARER = 'pkcetestnotatoken000000000000001'
+  const openIdTokens = {}
+
+  /* The claims of a JWT, decoded without verifying it */
+  const jwtClaims = (token) => {
+    return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
+  }
+
+  const profile = (bearer) => {
+    return api.get('/profile', { headers: { authorization: `Bearer ${bearer}` } })
+  }
+
+  /* The fields of the first error that do not change per request */
+  const errorOf = (response) => {
+    const [{ status, code, title, detail, source }] = response.data.errors
+    return { status, code, title, detail, source }
+  }
+
+  /* A real OpenID Connect login of the user at the confidential client, through consent when it is shown */
+  beforeAll(async () => {
+    const authorizeResponse = await authorize({
+      client_id: CONFIDENTIAL_CLIENT_ID,
+      redirect_uri: CONFIDENTIAL_REDIRECT,
+      scope: OPENID_SCOPE,
+    })
+    expect(authorizeResponse.status).toBe(200)
+    const response = authorizeResponse.data.redirect ? authorizeResponse : await decide(authorizeResponse)
+    const code = redirectParams(response).get('code')
+    expect(code).toBeTruthy()
+
+    const basic = Buffer.from(`${CONFIDENTIAL_CLIENT_ID}:${CONFIDENTIAL_SECRET}`).toString('base64')
+    const exchange = await tokenRequest({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: CONFIDENTIAL_REDIRECT,
+    }, { authorization: `Basic ${basic}` })
+    expect(exchange.status).toBe(200)
+    openIdTokens.id = exchange.data.id_token
+    openIdTokens.access = exchange.data.access_token
+  })
+
+  it('refuses the ID token with the 401 of an invalid token, on a plain endpoint and on both authorize endpoints', async () => {
+    const idClaims = jwtClaims(openIdTokens.id)
+    expect(idClaims.sub).toBe(USER_ID)
+    expect(idClaims.aud).toBe(CONFIDENTIAL_CLIENT_ID)
+    expect(idClaims.token_type).toBeUndefined()
+
+    const invalid = await profile(INVALID_BEARER)
+    expect(invalid.status).toBe(401)
+    const refused = await profile(openIdTokens.id)
+    expect(refused.status).toBe(401)
+    expect(errorOf(refused)).toEqual(errorOf(invalid))
+
+    for (const scope of [SCOPE, UNGRANTED_SCOPE]) {
+      const { challenge } = pkcePair()
+      const response = await authorizePublic({ scope, code_challenge: challenge, code_challenge_method: 'S256' }, openIdTokens.id)
+      expect(response.status).toBe(401)
+      expect(response.data.redirect).toBeUndefined()
+      expect(response.data.transactionId).toBeUndefined()
+      expect(errorOf(response)).toEqual(errorOf(invalid))
+    }
+
+    const { challenge } = pkcePair()
+    const authorizeResponse = await authorizePublic({ scope: UNGRANTED_SCOPE, code_challenge: challenge, code_challenge_method: 'S256' })
+    expect(authorizeResponse.data.transactionId).toBeTruthy()
+    const refusedDecision = await decide(authorizeResponse, { bearer: openIdTokens.id })
+    expect(refusedDecision.status).toBe(401)
+    expect(refusedDecision.data.redirect).toBeUndefined()
+    expect(errorOf(refusedDecision)).toEqual(errorOf(invalid))
+
+    const decision = await decide(authorizeResponse)
+    expect(decision.status).toBe(200)
+    expect(redirectParams(decision).get('code')).toBeTruthy()
+  })
+
+  it('accepts the JWT access token of the same login by its signature', async () => {
+    expect(jwtClaims(openIdTokens.access).token_type).toBe('Bearer')
+
+    /* Without its row the access token can only authenticate as a JWT */
+    runSql(`DELETE FROM "Tokens" WHERE value = '${openIdTokens.access}';`)
+    expect(querySql(`SELECT count(*) FROM "Tokens" WHERE value = '${openIdTokens.access}';`)).toBe('0')
+
+    const info = await userinfo(openIdTokens.access)
+    expect(info.status).toBe(200)
+    expect(info.data.sub).toBe(USER_ID)
+    expect((await profile(openIdTokens.access)).status).toBe(200)
   })
 })
 
