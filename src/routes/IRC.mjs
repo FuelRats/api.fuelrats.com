@@ -28,7 +28,8 @@ class AnopeAccountRequiredAPIError extends BadRequestAPIError {
 /**
  * Refusal for a user who has not verified the email address of their website account. The Anope account is
  * found by that email, so an unverified address must not lead to an IRC login. `links.about` points at the
- * profile page, which offers to send the verification email again.
+ * profile page, which offers to send the verification email again. Thrown with `source.pointer` `/email`,
+ * which tells it apart from the no-account refusal: both are 400 with the same link.
  */
 class VerifiedEmailRequiredAPIError extends BadRequestAPIError {
   get detail () {
@@ -87,7 +88,7 @@ export default class IRC extends API {
 
     const { user } = ctx.state
     if (!user.isConfirmed()) {
-      throw new VerifiedEmailRequiredAPIError({})
+      throw new VerifiedEmailRequiredAPIError({ pointer: '/email' })
     }
 
     const anopeAccount = await Anope.getAccount(user.email)

@@ -4,6 +4,7 @@
 const Axios = require('axios')
 const crypto = require('crypto')
 const { execSync } = require('child_process')
+const localisations = require('../../localisations.json')
 
 // Integration test for POST /irc/sasl-token against the docker-compose mirror, whose API must have
 // FRAPI_IRC_TOKEN_SECRET set (the unset case is irc-sasl-token-unconfigured.test.js). Anope is read-only
@@ -30,8 +31,12 @@ const GROUP_IDS = [VERIFIED_GROUP_ID, REPRESENTING_GROUP_ID]
 
 const WEBSITE_CLIENT_ID = 'e3e3e3e3-0000-4000-8000-0000000000c1'
 const PUBLIC_CLIENT_ID = 'e3e3e3e3-0000-4000-8000-0000000000c2'
-const CLIENT_IDS = [WEBSITE_CLIENT_ID, PUBLIC_CLIENT_ID]
+// A confidential OpenID Connect relying party, which receives an ID token for the user
+const RELYING_PARTY_CLIENT_ID = 'e3e3e3e3-0000-4000-8000-0000000000c3'
+const CLIENT_IDS = [WEBSITE_CLIENT_ID, PUBLIC_CLIENT_ID, RELYING_PARTY_CLIENT_ID]
 const PUBLIC_REDIRECT = 'http://localhost:8099/static/fuelrats-rat/callback.html'
+const RELYING_PARTY_REDIRECT = 'https://wiki.fuelrats.test/oidc/callback'
+const RELYING_PARTY_SECRET = 'Vm3kQ8wZr5tN1bX7cL2pH9sJ4fD6gY0a' // gitleaks:allow (test fixture)
 const SEED_SECRET = '$2b$12$seedonlyseedonlyseedonlyseedonlyseedonlyseedonlyseedonlyoK'
 
 const FULL_SCOPE_TOKEN = 'irctestfullscopetoken00000000001'
@@ -53,7 +58,7 @@ DELETE FROM "Users" WHERE id IN ('${USER_IDS.join("','")}');
 DELETE FROM "Groups" WHERE id IN ('${GROUP_IDS.join("','")}');
 `
 
-const seedSql = ({ email, unverifiedEmail }) => {
+const seedSql = ({ email, unverifiedEmail, relyingPartySecretHash }) => {
   return `
 BEGIN;
 INSERT INTO "Users"(id,email,password,status,"createdAt","updatedAt") VALUES
@@ -74,7 +79,8 @@ INSERT INTO "UserGroups"(id,"userId","groupId","createdAt","updatedAt") VALUES
  (gen_random_uuid(),'${REPRESENTING_USER_ID}','${REPRESENTING_GROUP_ID}',now(),now());
 INSERT INTO "Clients"(id,name,secret,"redirectUri","userId","firstParty","public","createdAt","updatedAt") VALUES
  ('${WEBSITE_CLIENT_ID}','SASL Token Test Website','${SEED_SECRET}',NULL,'${USER_ID}',true,false,now(),now()),
- ('${PUBLIC_CLIENT_ID}','SASL Token Test Kiwi','${SEED_SECRET}','${PUBLIC_REDIRECT}','${USER_ID}',false,true,now(),now());
+ ('${PUBLIC_CLIENT_ID}','SASL Token Test Kiwi','${SEED_SECRET}','${PUBLIC_REDIRECT}','${USER_ID}',false,true,now(),now()),
+ ('${RELYING_PARTY_CLIENT_ID}','SASL Token Test Wiki','${relyingPartySecretHash}','${RELYING_PARTY_REDIRECT}','${USER_ID}',false,false,now(),now());
 INSERT INTO "Tokens"(id,value,scope,"userId","clientId","createdAt","updatedAt") VALUES
  (gen_random_uuid(),'${FULL_SCOPE_TOKEN}',ARRAY['*']::varchar[],'${USER_ID}','${WEBSITE_CLIENT_ID}',now(),now()),
  (gen_random_uuid(),'${NO_IRC_SCOPE_TOKEN}',ARRAY['rats.read.me']::varchar[],'${USER_ID}','${WEBSITE_CLIENT_ID}',now(),now()),
@@ -142,21 +148,15 @@ const saslToken = (bearer, body) => {
   return api.post('/irc/sasl-token', body, { headers })
 }
 
-/* Runs the public client's authorize, consent and PKCE exchange for the seeded user and returns the bearer */
-const publicClientToken = async (scope) => {
-  const verifier = crypto.randomBytes(32).toString('base64url')
-  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url')
+/* Runs authorize, and consent when it is shown, with the seeded user's website token and returns the code */
+const websiteAuthorizeCode = async (params) => {
   const websiteAuth = { authorization: `Bearer ${FULL_SCOPE_TOKEN}` }
 
   const authorizeResponse = await api.get('/oauth2/authorize', {
     params: {
       response_type: 'code',
-      client_id: PUBLIC_CLIENT_ID,
-      redirect_uri: PUBLIC_REDIRECT,
-      scope,
       state: crypto.randomBytes(8).toString('hex'),
-      code_challenge: challenge,
-      code_challenge_method: 'S256',
+      ...params,
     },
     headers: websiteAuth,
   })
@@ -174,6 +174,20 @@ const publicClientToken = async (scope) => {
   }
   const code = new URL(redirect).searchParams.get('code')
   expect(code).toBeTruthy()
+  return code
+}
+
+/* Runs the public client's authorize, consent and PKCE exchange for the seeded user and returns the bearer */
+const publicClientToken = async (scope) => {
+  const verifier = crypto.randomBytes(32).toString('base64url')
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url')
+  const code = await websiteAuthorizeCode({
+    client_id: PUBLIC_CLIENT_ID,
+    redirect_uri: PUBLIC_REDIRECT,
+    scope,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+  })
 
   const exchange = await api.post('/oauth2/token', new URLSearchParams({
     grant_type: 'authorization_code',
@@ -184,6 +198,24 @@ const publicClientToken = async (scope) => {
   }).toString(), { headers: { 'content-type': 'application/x-www-form-urlencoded' } })
   expect(exchange.status).toBe(200)
   return exchange.data.access_token
+}
+
+/* Runs an OpenID Connect login of the seeded user at the relying party and returns its token response */
+const relyingPartyTokens = async () => {
+  const code = await websiteAuthorizeCode({
+    client_id: RELYING_PARTY_CLIENT_ID,
+    redirect_uri: RELYING_PARTY_REDIRECT,
+    scope: 'openid profile',
+  })
+
+  const basic = Buffer.from(`${RELYING_PARTY_CLIENT_ID}:${RELYING_PARTY_SECRET}`).toString('base64')
+  const exchange = await api.post('/oauth2/token', new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: RELYING_PARTY_REDIRECT,
+  }).toString(), { headers: { 'content-type': 'application/x-www-form-urlencoded', 'authorization': `Basic ${basic}` } })
+  expect(exchange.status).toBe(200)
+  return exchange.data
 }
 
 /* Asserts a successful response for `account` and that its password verifies under the API's secret */
@@ -207,14 +239,15 @@ const expectValidToken = (response, account) => {
 let ownAccount
 let otherAccount
 
-beforeAll(() => {
+beforeAll(async () => {
   const { accounts, unregisteredHasAccount } = findAnopeFixtures()
   expect(accounts.length).toBe(2)
   expect(unregisteredHasAccount).toBe(false)
   ;[ownAccount, otherAccount] = accounts
 
+  const relyingPartySecretHash = await Bun.password.hash(RELYING_PARTY_SECRET, { algorithm: 'bcrypt', cost: 12 })
   runSql(cleanupSql)
-  runSql(seedSql({ email: ownAccount.email, unverifiedEmail: otherAccount.email }))
+  runSql(seedSql({ email: ownAccount.email, unverifiedEmail: otherAccount.email, relyingPartySecretHash }))
 })
 
 afterAll(() => {
@@ -237,6 +270,7 @@ describe('POST /irc/sasl-token', () => {
     expect(response.status).toBe(400)
     const [error] = response.data.errors
     expect(error.status).toBe('bad_request')
+    expect(error.detail).toBe(localisations.en.translation.bad_request.detail)
     expect(error.source).toEqual({})
     expect(error.links.about.endsWith('/profile/overview')).toBe(true)
   })
@@ -292,7 +326,25 @@ describe('POST /irc/sasl-token', () => {
     const [error] = response.data.errors
     expect(error.status).toBe('bad_request')
     expect(error.detail).toContain('Verify the email address')
+    expect(error.source).toEqual({ pointer: '/email' })
     expect(error.links.about.endsWith('/profile/overview')).toBe(true)
+  })
+
+  it('refuses an OpenID Connect ID token with the 401 of an invalid token', async () => {
+    const tokens = await relyingPartyTokens()
+    expect(tokens.id_token).toBeTruthy()
+
+    const invalid = await saslToken('irctestnotatoken0000000000000001', {})
+    expect(invalid.status).toBe(401)
+    const response = await saslToken(tokens.id_token, {})
+    expect(response.status).toBe(401)
+    expect(response.data.password).toBeUndefined()
+    expect(response.data.errors[0].status).toBe(invalid.data.errors[0].status)
+    expect(response.data.errors[0].detail).toBe(invalid.data.errors[0].detail)
+
+    /* The access token of the same login authenticates, and its scope lacks irc.login */
+    const access = await saslToken(tokens.access_token, {})
+    expect(access.status).toBe(403)
   })
 
   it('refuses a request that represents another user', async () => {
